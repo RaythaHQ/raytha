@@ -1,0 +1,24 @@
+﻿@model TableColumnHeader_ViewModel
+
+@{
+    Layout = null;
+}
+
+<th class="border-0 @( Model.IsFirst ? "rounded-start" : string.Empty ) @( Model.IsLast ? "rounded-end" : string.Empty )">
+    <a asp-action="@Model.Model.ActionName" asp-route-search="@Model.Model.Search" asp-route-orderBy="@(Model.OrderBy)"
+       asp-route-pageNumber="@Model.Model.PageNumber" asp-route-pageSize="@Model.Model.PageSize">
+        @Model.DisplayName
+        @if (!Model.IsCurrentlySorting)
+        {
+            <svg class="icon icon-xs" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l4-4 4 4m0 6l-4 4-4-4"></path></svg>
+        }
+        else if (Model.Model.OrderByDirection == "desc")
+        {
+            <svg class="icon icon-xs" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+        }
+        else
+        {
+            <svg class="icon icon-xs" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"></path></svg>
+        }
+    </a>
+</th>

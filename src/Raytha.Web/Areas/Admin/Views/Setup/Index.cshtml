@@ -1,0 +1,172 @@
+@model Setup_ViewModel
+@{
+    ViewData["Title"] = "Setup";
+    Layout = "_AuthLayout";
+}
+
+<section class="mt-5 mt-lg-0 bg-soft d-flex align-items-center">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-6 col-md-12 d-flex align-items-center justify-content-center py-4">
+                <div class="card border-0 shadow mb-4">
+                    <div class="card-body">
+                        <div class="text-center text-md-center mb-4 mt-md-0">
+                            <img class="col-6" src="~/raytha_admin/assets/img/brand/color-no-background.svg" alt="Raytha logo" />
+                            <h1 class="mb-0 mt-2 h3">Initial Setup</h1>
+                        </div>
+                        @if (ViewData["ErrorMessage"] != null)
+                        {
+                            <div class="alert alert-danger alert-dismissible fade show mt-2" role="alert">
+                                @ViewData["ErrorMessage"]
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+
+                        }
+                        @if (ViewData["WarningMessage"] != null)
+                        {
+                            <div class="alert alert-warning alert-dismissible fade show mt-2" role="alert">
+                                @ViewData["WarningMessage"]
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        }
+                        @if (ViewData["SuccessMessage"] != null)
+                        {
+                            <div class="alert alert-success alert-dismissible fade show mt-2" role="alert">
+                                @ViewData["SuccessMessage"]
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        }
+                        <form asp-route="setupindex" method="post">
+                            <h5>Super administrator account</h5>
+                            <div class="row">
+                                <div class="col">
+                                    <div class="mb-3">
+                                        <label class="form-label raytha-required" asp-for="FirstName"></label>
+                                        <input type="text" class="form-control @Model.HasError("FirstName")" asp-for="FirstName" required>
+                                        <div class="invalid-feedback">@Model.ErrorMessageFor("FirstName")</div>
+                                    </div>
+                                </div>
+                                <div class="col">
+                                    <div class="mb-3">
+                                        <label class="form-label raytha-required" asp-for="LastName"></label>
+                                        <input type="text" class="form-control @Model.HasError("LastName")" asp-for="LastName" required>
+                                        <div class="invalid-feedback">@Model.ErrorMessageFor("LastName")</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-lg-12">
+                                <div class="mb-3">
+                                    <label class="form-label raytha-required" asp-for="SuperAdminEmailAddress"></label>
+                                    <input type="email" class="form-control @Model.HasError("SuperAdminEmailAddress")"
+                                        asp-for="SuperAdminEmailAddress" required>
+                                    <div class="invalid-feedback">@Model.ErrorMessageFor("SuperAdminEmailAddress")</div>
+                                </div>
+                            </div>
+                            <div class="col-lg-12">
+                                <div class="mb-3">
+                                    <label class="form-label raytha-required" asp-for="SuperAdminPassword"></label>
+                                    <input type="password" class="form-control @Model.HasError("SuperAdminPassword")"
+                                        asp-for="SuperAdminPassword" required minlength="8">
+                                    <div class="invalid-feedback">@Model.ErrorMessageFor("SuperAdminPassword")</div>
+                                    <div class="form-text">Password must be at least 8 characters.</div>
+                                </div>
+                            </div>
+                            <hr/>
+                            <h5>Basic configuration</h5>
+                            <div class="col-lg-12">
+                                <div class="mb-3">
+                                    <label class="form-label raytha-required" asp-for="OrganizationName"></label>
+                                    <input type="text" class="form-control @Model.HasError("OrganizationName")"
+                                        asp-for="OrganizationName" required>
+                                    <div class="invalid-feedback">@Model.ErrorMessageFor("OrganizationName")</div>
+                                </div>
+                            </div>
+                            <div class="col-lg-12">
+                                <div class="mb-3">
+                                    <label class="form-label raytha-required" asp-for="WebsiteUrl"></label>
+                                    <input type="url" class="form-control @Model.HasError("WebsiteUrl")"
+                                        asp-for="WebsiteUrl" required>
+                                    <div class="invalid-feedback">@Model.ErrorMessageFor("WebsiteUrl")</div>
+                                </div>
+                            </div>
+                            <div class="col-lg-12">
+                                <div class="mb-3">
+                                    <label class="form-label raytha-required" asp-for="TimeZone"></label>
+                                    <select class="form-select @Model.HasError("TimeZone")" asp-for="TimeZone"
+                                        asp-items="@(new SelectList(Model.TimeZones, "Key", "Value"))" required>
+                                    </select>
+                                    <div class="invalid-feedback">@Model.ErrorMessageFor("TimeZone")</div>
+                                </div>
+                            </div>
+                            <hr />
+                            <h5>Default email settings</h5>
+                            <p>When the platform sends emails out, the email will appear to come from the name and email
+                                address specified below. You will have the opportunity to override these settings on
+                                each individual email template.</p>
+                            <div class="col-lg-12">
+                                <div class="mb-3">
+                                    <label class="form-label raytha-required" asp-for="SmtpDefaultFromName"></label>
+                                    <input type="text" class="form-control @Model.HasError("SmtpDefaultFromName")"
+                                        asp-for="SmtpDefaultFromName" required
+                                        aria-describedby="SmtpDefaultFromNameHelp">
+                                    <div class="invalid-feedback">@Model.ErrorMessageFor("SmtpDefaultFromName")</div>
+                                </div>
+                            </div>
+                            <div class="col-lg-12">
+                                <div class="mb-3">
+                                    <label class="form-label raytha-required" asp-for="SmtpDefaultFromAddress"></label>
+                                    <input type="email" class="form-control @Model.HasError("SmtpDefaultFromAddress")"
+                                        asp-for="SmtpDefaultFromAddress" required>
+                                    <div class="invalid-feedback">@Model.ErrorMessageFor("SmtpDefaultFromAddress")</div>
+                                </div>
+                            </div>
+                            <hr />
+                            @if (Model.MissingSmtpEnvironmentVariables)
+                            {
+                                <h5>SMTP Settings</h5>
+                                <div class="alert alert-warning mt-2" role="alert">
+                                    The server administrator has not set SMTP environment variables (SMTP_HOST, SMTP_PORT, SMTP_USERNAME, SMTP_PASSWORD) on this host. Therefore you must specify SMTP server details below.
+                                </div>
+                                <p>An SMTP server is required for the system to send password reset and confirmation emails.</p>
+                                <div class="col-lg-12">
+                                    <div class="mb-3">
+                                        <label class="form-label raytha-required" asp-for="SmtpHost"></label>
+                                        <input type="text" class="form-control @Model.HasError("SmtpHost")"
+                                            asp-for="SmtpHost" required>
+                                        <div class="invalid-feedback">@Model.ErrorMessageFor("SmtpHost")</div>
+                                    </div>
+                                </div>
+                                <div class="col-lg-3">
+                                    <div class="mb-3">
+                                        <label class="form-label raytha-required" asp-for="SmtpPort"></label>
+                                        <input type="number" class="form-control @Model.HasError("SmtpPort")"
+                                            asp-for="SmtpPort" required max="65535">
+                                        <div class="invalid-feedback">@Model.ErrorMessageFor("SmtpPort")</div>
+                                    </div>
+                                </div>
+                                <div class="col-lg-12">
+                                    <div class="mb-3">
+                                        <label class="form-label" asp-for="SmtpUsername"></label>
+                                        <input type="text" class="form-control @Model.HasError("SmtpUsername")"
+                                            asp-for="SmtpUsername">
+                                        <div class="invalid-feedback">@Model.ErrorMessageFor("SmtpUsername")</div>
+                                    </div>
+                                </div>
+                                <div class="col-lg-12">
+                                    <div class="mb-3">
+                                        <label class="form-label" asp-for="SmtpPassword"></label>
+                                        <input type="password" class="form-control @Model.HasError("SmtpPassword")"
+                                            asp-for="SmtpPassword">
+                                        <div class="invalid-feedback">@Model.ErrorMessageFor("SmtpPassword")</div>
+                                    </div>
+                                </div>
+                            }
+                            <input type="hidden" asp-for="MissingSmtpEnvironmentVariables">
+                            <button type="submit" class="btn btn-success mt-4">Save changes</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

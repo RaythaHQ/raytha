@@ -1,0 +1,59 @@
+@using Microsoft.AspNetCore.Authorization
+@using Raytha.Domain.Entities
+@using Raytha.Web.Utils;
+@inject IAuthorizationService AuthorizationService
+@model ContentItemsActionsMenu_ViewModel
+
+@functions {
+    public string IsActivePage(string menuItem)
+    {
+      if ((string)ViewData["ActiveSubMenu"] == menuItem) 
+      {
+        return "active";
+      }
+      return string.Empty;
+    }
+}
+
+<div class="col-lg-3 col-md-12">
+    <div class="card border-0 shadow mb-4">
+        <div class="card-body">
+            <div class="nav-wrapper position-relative">
+                <ul class="nav nav-pills square nav-fill flex-column vertical-tab">
+                    <li class="nav-item">
+                        <a class="nav-link d-inline-flex align-items-center justify-content-center @IsActivePage("Edit")"
+                            asp-route="contentitemsedit" asp-route-id="@Model.Id" asp-route-contentType="@Model.ContentTypeDeveloperName">
+                            <svg class="icon icon-sm mx-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                            Edit @Model.ContentTypeLabelSingular.ToLower()
+                        </a>
+                    </li>
+                    @if ((await AuthorizationService.AuthorizeAsync(User, Model.ContentTypeDeveloperName, Operations.Edit)).Succeeded)
+                    {
+                        <li class="nav-item">
+                            <a class="nav-link @IsActivePage("Settings")" asp-route="contentitemssettings"
+                           asp-route-id="@Model.Id" asp-route-contentType="@Model.ContentTypeDeveloperName">
+                                <svg class="icon icon-xs" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                                Settings
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link @IsActivePage("Revisions")" asp-route="contentitemsrevisions"
+                           asp-route-id="@Model.Id" asp-route-contentType="@Model.ContentTypeDeveloperName">
+                                <svg class="icon icon-sm" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12.066 11.2a1 1 0 000 1.6l5.334 4A1 1 0 0019 16V8a1 1 0 00-1.6-.8l-5.333 4zM4.066 11.2a1 1 0 000 1.6l5.334 4A1 1 0 0011 16V8a1 1 0 00-1.6-.8l-5.334 4z"></path></svg>
+                                Revisions
+                            </a>
+                        </li>
+                        <li class="nav-item" data-controller="shared--confirmaction" data-shared--confirmaction-title-value="Are you sure you want to delete this @Model.ContentTypeLabelSingular.ToLower()? This action cannot be undone.">
+                            <form method="post" asp-route="contentitemsdelete" asp-route-id="@Model.Id" asp-route-contentType="@Model.ContentTypeDeveloperName" data-shared--confirmaction-target="form">
+                                <button class="nav-link d-inline-flex align-items-center justify-content-center text-danger" data-action="click->shared--confirmaction#warning">
+                                    <svg class="icon icon-sm mx-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                    Delete @Model.ContentTypeLabelSingular.ToLower()
+                                </button>
+                            </form>
+                        </li>
+                    }
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>

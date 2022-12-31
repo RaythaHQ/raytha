@@ -1,0 +1,76 @@
+@model UsersActionsMenu_ViewModel
+
+@functions {
+    public string IsActivePage(string menuItem)
+    {
+        if ((string)ViewData["ActiveSubMenu"] == menuItem) 
+        {
+            return "active";
+        }
+        return string.Empty;
+    }
+
+    public string DisableIfEditingMyselfOrAdmin()
+    {
+        return Model.EditingMyself || Model.IsAdmin ? "disabled" : string.Empty;
+    }
+}
+
+<div class="col-lg-3 col-md-12">
+    <div class="card border-0 shadow mb-4">
+        <div class="card-body">
+            <div class="nav-wrapper position-relative">
+                <ul class="nav nav-pills square nav-fill flex-column vertical-tab">
+                    <li class="nav-item">
+                        <a class="nav-link d-inline-flex align-items-center justify-content-center @IsActivePage("Edit")"
+                            asp-route="usersedit" asp-route-id="@Model.Id">
+                            <svg class="icon icon-sm mx-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                            Edit user
+                        </a>
+                    </li>
+                    @if (Model.EmailAndPasswordEnabledForUsers)
+                    {
+                        <li class="nav-item @DisableIfEditingMyselfOrAdmin()">
+                            <a class="nav-link @DisableIfEditingMyselfOrAdmin() @IsActivePage("Reset password")"
+                           asp-route="usersresetpassword" asp-route-id="@Model.Id">
+                                <svg class="icon icon-sm" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"></path></svg>
+                                Reset password
+                            </a>
+                        </li>
+                    }
+                    @if (Model.IsActive)
+                    {
+                        <li class="nav-item">
+                            <form method="post" asp-route="userssuspend" , asp-route-id="@Model.Id">
+                                <button class="nav-link d-inline-flex align-items-center justify-content-center" @DisableIfEditingMyselfOrAdmin()>
+                                <svg class="icon icon-sm mx-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+                                Suspend account access
+                            </button>
+                            </form>
+                        </li>
+                    }
+                    else
+                    {
+                        <li class="nav-item">
+                            <form method="post" asp-route="usersrestore" , asp-route-id="@Model.Id">
+                                <button class="nav-link d-inline-flex align-items-center justify-content-center" @DisableIfEditingMyselfOrAdmin()>
+                                <svg class="icon icon-sm mx-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z"></path></svg>
+                                Restore account access
+                            </button>
+                            </form>
+                        </li>
+                    }
+
+                    <li class="nav-item" data-controller="shared--confirmaction" data-shared--confirmaction-title-value="Are you sure you want to delete this user? This action cannot be undone.">
+                        <form method="post" asp-route="userssdelete", asp-route-id="@Model.Id" data-shared--confirmaction-target="form">
+                            <button class="nav-link d-inline-flex align-items-center justify-content-center text-danger" data-action="click->shared--confirmaction#warning" @DisableIfEditingMyselfOrAdmin()>
+                            <svg class="icon icon-sm mx-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                            Delete user
+                        </button>
+                        </form>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>

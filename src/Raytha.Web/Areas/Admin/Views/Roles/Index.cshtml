@@ -1,0 +1,67 @@
+@model List_ViewModel<RolesListItem_ViewModel>
+@{
+    ViewData["Title"] = "Roles";
+}
+
+@(await Html.PartialAsync("_PageHeader", new PageHeader_ViewModel
+{
+    Title = ViewData["Title"].ToString(),
+}))
+
+<ul class="nav nav-tabs">
+  <li class="nav-item">
+    <a class="nav-link" aria-current="page" asp-route="adminsindex">
+        <svg class="icon icon-xs" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+        Admins</a>
+  </li>
+  <li class="nav-item">
+    <a class="nav-link active" asp-route="rolesindex">
+        <svg class="icon icon-xs" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"></path></svg>
+        Roles</a>
+  </li>
+</ul>
+
+@(await Html.PartialAsync("_TableCreateAndSearchBar", new TableCreateAndSearchBar_ViewModel()
+{
+    Model = Model,
+    EntityName = "role",
+    CreateActionName = "rolescreate"
+}))
+
+<div class="raytha-data-card mb-4">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-centered table-nowrap mb-0 rounded">
+                <thead class="thead-light">
+                    <tr>
+                        @(await Html.PartialAsync("_TableColumnHeader", new TableColumnHeader_ViewModel()
+                        {
+                            Model = Model,
+                            PropertyName = "Label",
+                            IsFirst = true,
+                            DisplayName = ViewModelExtensions.GetDisplayName<RolesListItem_ViewModel>(p => p.Label)
+                        }))
+                        @(await Html.PartialAsync("_TableColumnHeader", new TableColumnHeader_ViewModel()
+                        {
+                            Model = Model,
+                            PropertyName = "DeveloperName",
+                            DisplayName = ViewModelExtensions.GetDisplayName<RolesListItem_ViewModel>(p => p.DeveloperName)
+                        }))
+                        <th class="border-0 rounded-end">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model.Items)
+                    {
+                        <tr>
+                            <td>@item.Label</td>
+                            <td>@item.DeveloperName</td>
+                            <td><a asp-route="rolesedit" asp-route-id="@item.Id">Edit</a></td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+            <partial name="_TablePagination" model="@Model" />
+        </div>
+    </div>
+</div>

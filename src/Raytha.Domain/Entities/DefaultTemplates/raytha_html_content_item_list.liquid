@@ -1,0 +1,63 @@
+<section class="ud-wrapper ud-page">
+  <div class="container">
+    <div class="d-flex justify-content-center">
+      <div class="col-lg-8">
+        <h3>{{ Target.Label }}</h3>
+        {% for item in Target.Items %}
+          <div class="ud-single-blog">
+            <div class="ud-blog-content">
+              <span class="ud-blog-date">{{ item.CreationTime | date: "%b %d, %Y" }}</span>
+              <h2 class="ud-blog-title">
+                <a href="/{{ item.RoutePath }}">
+                  {{ item.PrimaryField }}
+                </a>
+              </h2>
+              {% if item.PublishedContent.content %}
+                <div class="ud-blog-desc">
+                  {{ item.PublishedContent.content | strip_html | truncate: 280, "..." }}
+                  <a href="/{{ item.RoutePath }}">read more</a>
+                </div>
+              {% endif %}
+            </div>
+          </div>
+          <hr/>
+        {% endfor %}
+        <nav aria-label="page navigation" class="py-4">
+          {% if Target.TotalCount == 1 %}
+            <p>{{ Target.TotalCount }} result</p>
+          {% else %}
+            <p>{{ Target.TotalCount }} results</p>
+          {% endif %}
+          <ul class="pagination">
+            <li class="page-item {% if Target.PreviousDisabledCss %}disabled{% endif %}">
+              <a href="/{{ Target.RoutePath }}?pageNumber={{ Target.PageNumber | minus: 1 }}" class="page-link">
+				 «
+			  </a>
+            </li>
+            {% if Target.FirstVisiblePageNumber > 1 %}
+              <li class="page-item disabled">
+                <a class="page-link">...</a>
+              </li>
+            {% endif %}
+            {% for i in (Target.FirstVisiblePageNumber..Target.LastVisiblePageNumber) %}
+              <li class="page-item {% if Target.PageNumber == i %}active{% endif %}">
+                <a href="/{{ Target.RoutePath }}?pageNumber={{ i }}" class="page-link">{{ i }}</a>
+              </li>
+            {% endfor %}
+
+            {% if Target.LastVisiblePageNumber < Target.TotalPages %}
+              <li class="page-item disabled">
+                <a class="page-link">...</a>
+              </li>
+            {% endif %}
+            <li class="page-item {% if Target.NextDisabledCss %}disabled{% endif %}">
+              <a href="/{{ Target.RoutePath }}?pageNumber={{ Target.PageNumber | plus: 1 }}" class="page-link">
+				 »
+			  </a>
+            </li>
+          </ul>
+        </nav>
+      </div>
+    </div>
+  </div>
+</section>

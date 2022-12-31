@@ -1,0 +1,64 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Raytha</title>
+    <link rel="stylesheet" href="~/raytha_admin/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/raytha_admin/css/volt.css" />
+    <link rel="stylesheet" href="~/raytha_admin/css/site.css" />
+    @RenderSection("headstyles", false)
+    
+    <script src="~/raytha_admin/js/dist/main.js" asp-append-version="true"></script>
+
+</head>
+<body>   
+
+<nav class="navbar navbar-dark bg-raytha-blue px-4 col-12 d-lg-none">
+    <a class="navbar-brand me-lg-5" href="~/raytha">
+        <img class="navbar-brand-dark" src="~/raytha_admin/assets/img/brand/white.svg" alt="Raytha logo" />
+    </a>
+    <div class="d-flex align-items-center">
+        <button class="navbar-toggler d-lg-none collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#sidebarMenu" aria-controls="sidebarMenu" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+    </div>
+</nav>
+
+<partial name="_Sidebar" />
+    
+<main class="content">
+
+@if (ViewData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show mt-2 col-lg-6" role="alert">
+        @ViewData["ErrorMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+
+}
+@if (ViewData["WarningMessage"] != null)
+{
+    <div class="alert alert-warning alert-dismissible fade show mt-2 col-lg-6" role="alert">
+        @ViewData["WarningMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+@if (ViewData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show mt-2 col-lg-6" role="alert">
+        @ViewData["SuccessMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+@RenderBody()
+
+<partial name="_Footer" />
+</main>
+
+
+    
+</body>
+
+</html>

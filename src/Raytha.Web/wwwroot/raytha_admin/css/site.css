@@ -1,0 +1,123 @@
+﻿.bg-raytha-blue {
+    background-color: #646ECB;
+}
+
+.sidebar .nav-link .sidebar-icon {
+    color: white;
+}
+
+.raytha-view-nav .active {
+    border-bottom-width: 1px;
+    border-bottom-style: solid;
+    font-weight: 700;
+}
+
+.raytha-view-nav .active {
+    border-bottom-width: 1px;
+    border-bottom-style: solid;
+    font-weight: 700;
+}
+
+.raytha-view-nav {
+    background-color: white;
+    border-color: #e9ecef #e9ecef #dee2e6;
+    border-right-color: rgb(222, 226, 230);
+    border-right-width: 1px;
+    border-left-color: rgb(222, 226, 230);
+    border-left-width: 1px;
+    border-top:0px;
+    border-bottom:0px;
+    border-style:solid;
+}
+
+.nav-tabs .nav-item.show .nav-link, .nav-tabs .nav-link.active {
+    color: #495057;
+    background-color: #fff;
+    border-color: #dee2e6 #dee2e6 #fff;
+    border-top-color: rgb(222, 226, 230);
+    border-right-color: rgb(222, 226, 230);
+    border-bottom-color: rgb(255, 255, 255);
+    border-left-color: rgb(222, 226, 230);
+}
+
+.nav-tabs .nav-link {
+    margin-bottom: -1px;
+    background: 0 0;
+    border: 1px solid transparent;
+    border-top-left-radius: .25rem;
+    border-top-right-radius: .25rem;
+    border-bottom-color: rgb(222, 226, 230);
+}
+
+.nav-link {
+    display: block;
+    padding: .5rem 1rem;
+    color: #646ECB;
+    text-decoration: none;
+    transition: color .15s ease-in-out,background-color .15s ease-in-out,border-color .15s ease-in-out;
+}
+
+.nav-pills.vertical-tab .nav-link {
+    border: 1px solid #9CA3AF;
+}
+
+.nav-tabs {
+    border-color: #e9ecef #e9ecef #dee2e6;
+}
+
+.nav-tabs .nav-link:focus, .nav-tabs .nav-link:hover {
+    border-color: #e9ecef #e9ecef #dee2e6;
+    isolation: isolate;
+}
+
+.raytha-data-card {
+    background-color: white;
+    border-right-color: rgb(222, 226, 230);
+    border-right-width: 1px;
+    border-left-color: rgb(222, 226, 230);
+    border-left-width: 1px;
+    border-bottom-color: rgb(222, 226, 230);
+    border-bottom-width: 1px;
+    border-top:0px;
+    border-style:solid;
+}
+
+.raytha-dropdown-text {
+    width: auto!important;
+}
+
+.raytha-required:after {
+    content: "\00a0*";
+    color: red;
+}
+
+.raytha-draggable {
+    cursor: move;
+}
+
+.raytha-autocomplete-item:hover {
+    color: #495057 !important;
+    text-decoration: none !important;
+    background-color: #f8f9fa !important;
+    cursor: pointer!important;
+}
+
+input[readonly] {
+    cursor: not-allowed;
+}
+
+input[disabled] {
+    cursor: not-allowed;
+}
+
+select[disabled] {
+    cursor: not-allowed;
+}
+
+button:disabled {
+    cursor: not-allowed;
+}
+
+li.nav-item.disabled {
+    cursor: not-allowed;
+}

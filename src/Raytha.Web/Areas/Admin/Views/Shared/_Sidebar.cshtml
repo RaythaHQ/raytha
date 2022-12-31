@@ -1,0 +1,238 @@
+@using Raytha.Application.Common.Interfaces
+@using Microsoft.AspNetCore.Authorization
+@using Raytha.Domain.Entities
+@using Raytha.Web.Utils;
+@inject IAuthorizationService AuthorizationService
+@inject ICurrentOrganization CurrentOrganization
+@inject ICurrentUser CurrentUser
+@functions {
+    public string IsActivePage(string menuItem)
+    {
+      if ((string)ViewData["ActiveMenu"] == menuItem) 
+      {
+        return "active";
+      }
+      return string.Empty;
+    }
+
+    public string ExpandSubMenu(string menuItem)
+    {
+      return ViewData.ContainsKey(menuItem) ? "show" : string.Empty;
+    }
+
+    public string SubMenuIsExpanded(string menuItem)
+    {
+      return ViewData.ContainsKey(menuItem) ? "true" : "false";
+    }
+}
+
+<nav id="sidebarMenu" class="sidebar d-lg-block bg-raytha-blue text-white collapse" data-simplebar>
+  <div class="sidebar-inner px-4 pt-3">
+    <div class="user-card d-flex d-md-none align-items-center justify-content-between justify-content-md-center pb-4">
+      <div class="d-flex align-items-center">
+        <div class="d-block">
+                    <h2 class="h5 mb-3">Hi, @CurrentUser.FirstName</h2>
+          <a asp-route="adminlogout" class="btn btn-secondary btn-sm d-inline-flex align-items-center">
+            <svg class="icon icon-xxs me-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>            
+            Log out
+          </a>
+        </div>
+      </div>
+      <div class="collapse-close d-md-none">
+        <a href="#sidebarMenu" data-bs-toggle="collapse"
+            data-bs-target="#sidebarMenu" aria-controls="sidebarMenu" aria-expanded="true"
+            aria-label="Toggle navigation">
+            <svg class="icon icon-xs" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
+          </a>
+      </div>
+    </div>
+    <ul class="nav flex-column pt-3 pt-md-0">
+      <li class="nav-item">
+        <a href="~/raytha" class="nav-link d-flex align-items-center">
+          <span class="sidebar-icon">
+            <img src="~/raytha_admin/assets/img/brand/white.svg" height="50" alt="Raytha logo">
+          </span>
+        </a>
+      </li>
+      <li class="nav-item @(IsActivePage("Dashboard"))">
+        <a href="~/raytha" class="nav-link">
+          <span class="sidebar-icon">
+            <svg class="icon icon-xs me-2" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M2 10a8 8 0 018-8v8h8a8 8 0 11-16 0z"></path><path d="M12 2.252A8.014 8.014 0 0117.748 8H12V2.252z"></path></svg>
+          </span> 
+          <span class="sidebar-text">Dashboard</span>
+        </a>
+      </li>
+      @if ((await AuthorizationService.AuthorizeAsync(User, BuiltInSystemPermission.MANAGE_USERS_PERMISSION)).Succeeded)
+      {
+          <li class="nav-item @(IsActivePage("Users"))">
+            <a asp-route="usersindex" class="nav-link d-flex justify-content-between">
+              <span>
+                <span class="sidebar-icon">
+                  <svg class="icon icon-xs me-2" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd"></path></svg>
+                </span>
+                <span class="sidebar-text">Users</span>
+              </span>
+            </a>
+          </li>
+      }
+
+      @foreach (var contentType in CurrentOrganization.ContentTypes)
+      {
+        if ((await AuthorizationService.AuthorizeAsync(User, contentType.DeveloperName, Operations.Read)).Succeeded)
+        {
+            <li class="nav-item @(IsActivePage(contentType.DeveloperName))">
+                <a asp-route="contentitemsdefault" asp-route-contentType="@contentType.DeveloperName" class="nav-link d-flex justify-content-between">
+                    <span>
+                        <span class="sidebar-icon invisible">
+                            <svg class="icon icon-xs me-2" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" d="M9 17.25v1.007a3 3 0 01-.879 2.122L7.5 21h9l-.621-.621A3 3 0 0115 18.257V17.25m6-12V15a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 15V5.25m18 0A2.25 2.25 0 0018.75 3H5.25A2.25 2.25 0 003 5.25m18 0V12a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 12V5.25" /></svg>
+                        </span>
+                        <span class="sidebar-text">@contentType.LabelPlural</span>
+                    </span>
+                </a>
+            </li>
+        }
+      }
+
+      @if ((await AuthorizationService.AuthorizeAsync(User, BuiltInSystemPermission.MANAGE_CONTENT_TYPES_PERMISSION)).Succeeded)
+      {
+        <li class="nav-item nav-item d-flex align-items-center justify-content-between justify-content-md-center pt-4">
+            <a asp-route="contenttypescreate" class="btn btn-secondary d-inline-flex align-items-center me-2 dropdown-toggle">
+                <svg class="icon icon-xs me-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+                New Content Type
+            </a>
+        </li>
+      }
+
+      <li role="separator" class="dropdown-divider mt-4 mb-3 border-gray-700"></li>
+      <li class="nav-item">
+        <a href="/" target="_blank" class="nav-link d-flex justify-content-between">
+          <span>
+            <span class="sidebar-icon">
+              <svg class="icon icon-xs me-2" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" clip-rule="evenodd"></path></svg>
+            </span>
+            <span class="sidebar-text">Live Website</span>
+          </span>
+        </a>
+      </li>
+
+      @if ((await AuthorizationService.AuthorizeAsync(User, BuiltInSystemPermission.MANAGE_TEMPLATES_PERMISSION)).Succeeded)
+      {
+        <li class="nav-item @(IsActivePage("Templates"))">
+            <a asp-route="webtemplatesindex" class="nav-link d-flex justify-content-between">
+                <span>
+                    <span class="sidebar-icon">
+                        <svg class="icon icon-xs me-2" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z" clip-rule="evenodd"></path></svg>
+                    </span>
+                    <span class="sidebar-text">Templates</span>
+                </span>
+            </a>
+        </li>
+      }
+
+            @if ((await AuthorizationService.AuthorizeAsync(User, BuiltInSystemPermission.MANAGE_AUDIT_LOGS_PERMISSION)).Succeeded)
+      {
+        <li class="nav-item @(IsActivePage("Audit Log"))">
+            <a asp-route="auditlogsindex" class="nav-link d-flex justify-content-between">
+              <span>
+                <span class="sidebar-icon">
+                  <svg class="icon icon-xs me-2" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"></path></svg>
+                </span>
+                <span class="sidebar-text">Audit Log</span>
+              </span>
+            </a>
+          </li>
+      }
+
+    @{
+        var hasManageSystem = (await AuthorizationService.AuthorizeAsync(User, BuiltInSystemPermission.MANAGE_AUDIT_LOGS_PERMISSION)).Succeeded;
+        var hasManageAdministrators = (await AuthorizationService.AuthorizeAsync(User, BuiltInSystemPermission.MANAGE_ADMINISTRATORS_PERMISSION)).Succeeded;
+    }
+        @if (hasManageSystem || hasManageAdministrators)
+            {
+                <li class="nav-item">
+                    <span class="nav-link  collapsed  d-flex justify-content-between align-items-center"
+                      data-bs-toggle="collapse" data-bs-target="#submenu-settings" aria-expanded="@(SubMenuIsExpanded("ExpandSettingsMenu"))">
+                        <span>
+                            <span class="sidebar-icon">
+                                <svg class="icon icon-xs me-2" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" clip-rule="evenodd"></path></svg>
+                            </span>
+                            <span class="sidebar-text">Settings</span>
+                        </span>
+                        <span class="link-arrow">
+                            <svg class="icon icon-sm" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path></svg>
+                        </span>
+                    </span>
+                    <div class="multi-level collapse @(ExpandSubMenu("ExpandSettingsMenu"))"
+                     role="list" id="submenu-settings">
+                        <ul class="flex-column nav">
+                            @if (hasManageAdministrators)
+                            {
+                                <li class="nav-item @(IsActivePage("Admins"))">
+                                    <a class="nav-link" asp-route="adminsindex">
+                                        <span class="sidebar-text">Admins</span>
+                                    </a>
+                                </li>
+                            }
+                            @if (hasManageSystem)
+                            {
+                                <li class="nav-item @(IsActivePage("Configuration"))">
+                                <a class="nav-link" asp-route="configurationindex">
+                                    <span class="sidebar-text">Configuration</span>
+                                </a>
+                                </li>
+                                <li class="nav-item @(IsActivePage("Authentication Schemes"))">
+                                    <a class="nav-link" asp-route="authenticationschemesindex">
+                                        <span class="sidebar-text">Authentication</span>
+                                    </a>
+                                </li>
+                                <li class="nav-item @(IsActivePage("SMTP"))">
+                                    <a class="nav-link" asp-route="smtpindex">
+                                        <span class="sidebar-text">SMTP</span>
+                                    </a>
+                                </li>
+                            }
+                        </ul>
+                    </div>
+                </li>
+            }
+
+      <li role="separator" class="dropdown-divider mt-4 mb-3 border-gray-700"></li>
+      <li class="nav-item">
+        <span
+          class="nav-link  collapsed  d-flex justify-content-between align-items-center"
+          data-bs-toggle="collapse" data-bs-target="#submenu-account" aria-expanded="@(SubMenuIsExpanded("ExpandProfileMenu"))">
+          <span></span>
+          <span>
+            <span class="sidebar-text">@CurrentUser.FullName</span>
+          </span>
+          <span class="link-arrow">
+            <svg class="icon icon-sm" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path></svg>
+          </span>
+        </span>
+        <div class="multi-level collapse @(ExpandSubMenu("ExpandProfileMenu"))" role="list"
+          id="submenu-account">
+          <ul class="flex-column nav">
+            <li class="nav-item @(IsActivePage("My Profile"))">
+              <a class="nav-link" asp-route="adminprofile">
+                <span class="sidebar-text">My Profile</span>
+              </a>
+            </li>
+            @if (CurrentOrganization.EmailAndPasswordIsEnabledForAdmins)
+            {
+              <li class="nav-item @(IsActivePage("Change Password"))">
+                <a class="nav-link" asp-route="adminchangepassword">
+                  <span class="sidebar-text">Change Password</span>
+                </a>
+              </li>
+            }
+            <li class="nav-item">
+              <a class="nav-link" asp-route="adminlogout">
+                <span class="sidebar-text">Log out</span>                             
+              </a>
+            </li>
+          </ul>
+        </div>
+      </li>
+    </ul>
+  </div>
+</nav>

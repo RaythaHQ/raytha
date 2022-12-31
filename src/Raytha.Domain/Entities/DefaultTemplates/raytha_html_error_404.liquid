@@ -1,0 +1,10 @@
+<section class="ud-wrapper ud-page">
+	<div class="container">
+		<div class="row">
+			<p>The resource you attempted to visit was not found</p>
+			{% if Target.ErrorId %}
+			<p>Error id: {{ Target.ErrorId }}</p>
+			{% endif %}
+		</div>
+	</div>
+</section>

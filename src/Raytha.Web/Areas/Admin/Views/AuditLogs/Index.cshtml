@@ -1,0 +1,183 @@
+@model AuditLogsPagination_ViewModel
+@{
+    ViewData["Title"] = "Audit logs";
+}
+
+@(await Html.PartialAsync("_PageHeader", new PageHeader_ViewModel
+{
+    Title = ViewData["Title"].ToString(),
+}))
+
+<div class="raytha-data-card mb-4">
+    <div class="card-body">
+        <form asp-action="@Model.ActionName" method="get">
+            <div class="row">
+                <div class="col-lg-3 col-md-12">
+                    <div class="mb-3">
+                        <label for="birthday">Start date</label>
+                        <div class="input-group">
+                            <span class="input-group-text">
+                                <svg class="icon icon-xs text-gray-600" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"></path></svg> 
+                            </span>
+                            <input data-datepicker="" class="form-control datepicker-input" id="start-date" type="text" placeholder="mm/dd/yyyy" name="startDate" value="@Model.StartDate">
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-12">
+                    <div class="mb-3">
+                        <label for="birthday">End date</label>
+                        <div class="input-group">
+                            <span class="input-group-text">
+                                <svg class="icon icon-xs text-gray-600" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"></path></svg> 
+                            </span>
+                            <input data-datepicker="" class="form-control datepicker-input" id="end-date" type="text" placeholder="mm/dd/yyyy" name="endDate" value="@Model.EndDate">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-lg-3 col-md-12">
+                    <div class="mb-3">
+                        <label class="form-label">Email address</label>
+                        <input type="email" class="form-control" name="emailAddress" value="@Model.UserEmail" />
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-lg-3 col-md-12">
+                    <div class="mb-3">
+                        <label class="form-label">Unique entity id</label>
+                        <input type="text" class="form-control" name="entityId" value="@Model.EntityId" />
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-lg-3 col-md-12">
+                    <div class="mb-3">
+                        <label class="form-label">Category</label>
+                        <select class="form-select" name="category" asp-for="Category" asp-items="@(new SelectList(Model.LogCategories, "Key", "Value"))">
+                            <option value="">-- SELECT --</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <button type="submit" class="btn btn-primary mb-4">Apply filter</button>
+        </form>
+
+
+        <div class="table-responsive">
+            <table class="table table-centered table-nowrap mb-0 rounded">
+                <thead class="thead-light">
+                    <tr>
+                        <th class="border-0 rounded-start">
+                            <a asp-action="@Model.ActionName" 
+                            asp-route-emailAddress="@Model.UserEmail" 
+                            asp-route-category="@Model.Category"
+                            asp-route-startDate="@Model.StartDate"
+                            asp-route-endDate="@Model.EndDate"
+                            asp-route-entityId="@Model.EntityId"
+                            asp-route-orderBy="@(Model.OrderByThisColumn("CreationTime"))"
+                            asp-route-pageNumber="@Model.PageNumber" 
+                            asp-route-pageSize="@Model.PageSize">
+                                Created at
+                                @if (Model.OrderByPropertyName != "CreationTime")
+                                {
+                                    <svg class="icon icon-xs" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l4-4 4 4m0 6l-4 4-4-4"></path></svg>
+                                }
+                                else if (Model.OrderByDirection == "desc")
+                                {
+                                    <svg class="icon icon-xs" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                                }
+                                else
+                                {
+                                    <svg class="icon icon-xs" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"></path></svg>
+                                }
+                            </a>
+                        </th>
+                        <th class="border-0">
+                            <a asp-action="@Model.ActionName" 
+                            asp-route-emailAddress="@Model.UserEmail"
+                               asp-route-category="@Model.Category"
+                               asp-route-startDate="@Model.StartDate"
+                               asp-route-endDate="@Model.EndDate"
+                               asp-route-entityId="@Model.EntityId"
+                            asp-route-orderBy="@(Model.OrderByThisColumn("Category"))"
+                               asp-route-pageNumber="@Model.PageNumber"
+                               asp-route-pageSize="@Model.PageSize">
+                                Category
+                                @if (Model.OrderByPropertyName != "Category")
+                                {
+                                    <svg class="icon icon-xs" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l4-4 4 4m0 6l-4 4-4-4"></path></svg>
+                                }
+                                else if (Model.OrderByDirection == "desc")
+                                {
+                                    <svg class="icon icon-xs" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                                }
+                                else
+                                {
+                                    <svg class="icon icon-xs" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"></path></svg>
+                                }
+                            </a>
+                        </th>
+                        <th class="border-0">Ip Address</th>
+                        <th class="border-0">
+                            <a asp-action="@Model.ActionName"
+                               asp-route-emailAddress="@Model.UserEmail"
+                               asp-route-category="@Model.Category"
+                               asp-route-startDate="@Model.StartDate"
+                               asp-route-endDate="@Model.EndDate"
+                               asp-route-entityId="@Model.EntityId"
+                            asp-route-orderBy="@(Model.OrderByThisColumn("UserEmail"))"
+                               asp-route-pageNumber="@Model.PageNumber"
+                               asp-route-pageSize="@Model.PageSize">
+                                User
+                                @if (Model.OrderByPropertyName != "UserEmail")
+                                {
+                                    <svg class="icon icon-xs" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l4-4 4 4m0 6l-4 4-4-4"></path></svg>
+                                }
+                                else if (Model.OrderByDirection == "desc")
+                                {
+                                    <svg class="icon icon-xs" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                                }
+                                else
+                                {
+                                    <svg class="icon icon-xs" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"></path></svg>
+                                }
+                            </a>
+                        </th>
+                        <th class="border-0">Unique entity id</th>
+                        <th class="border-0">Request</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model.Items)
+                    {
+                        <tr>
+                            <td>@item.CreationTime</td>
+                            <td>@item.Category</td>
+                            <td>@item.IpAddress</td>
+                            <td>@item.UserEmail</td>
+                            <td>@item.EntityId</td>
+                            <td><button type="button" class="btn btn-sm btn-block btn-gray-800" data-bs-toggle="modal" data-bs-target="#modal-@item.Id">Show</button></td>
+                        </tr>
+                        <div class="modal fade" id="modal-@item.Id" tabindex="-1" aria-labelledby="modal-default" style="display: none;"
+                            aria-hidden="true">
+                            <div class="modal-dialog modal-dialog-centered" role="document">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h2 class="h6 modal-title">Request</h2><button type="button" class="btn-close"
+                                        data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <code>@item.Request</code>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </tbody>
+            </table>
+            <partial name="_TablePagination" model="Model" />
+        </div>
+    </div>
+</div>

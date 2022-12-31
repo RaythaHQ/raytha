@@ -1,0 +1,28 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+	<RootNamespace>Raytha.Infrastructure</RootNamespace>
+	<AssemblyName>Raytha.Infrastructure</AssemblyName>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Raytha.Application\Raytha.Application.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+	<PackageReference Include="AWSSDK.S3" Version="3.7.101.44" />
+	<PackageReference Include="Azure.Storage.Blobs" Version="12.14.1" />
+	<PackageReference Include="Dapper.SqlBuilder" Version="2.0.78" />
+	<PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="7.0.0-rc.2.22472.11" />
+	<PackageReference Include="Microsoft.OData.Core" Version="7.12.4" />
+	<PackageReference Include="Microsoft.AspNetCore.OData" Version="8.0.11" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Migrations\" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,40 @@
+{
+  "name": "js",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "webpack"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@babel/core": "^7.16.5",
+    "@babel/preset-env": "^7.16.5",
+    "babel-loader": "^8.2.3",
+    "vanillajs-datepicker": "^1.1.4",
+    "webpack": "^5.65.0",
+    "webpack-cli": "^4.9.1"
+  },
+  "dependencies": {
+    "@hotwired/turbo": "^7.1.0",
+    "@popperjs/core": "^2.11.0",
+    "@uppy/aws-s3": "^3.0.4",
+    "@uppy/core": "^3.0.4",
+    "@uppy/file-input": "^3.0.1",
+    "@uppy/progress-bar": "^3.0.1",
+    "@uppy/xhr-upload": "^3.0.4",
+    "bootstrap": "^5.2.2",
+    "lodash.debounce": "^4.0.8",
+    "notyf": "^3.10.0",
+    "simplebar": "^5.3.6",
+    "sortablejs": "^1.15.0",
+    "stimulus": "^3.0.1",
+    "stimulus-sortable": "^3.2.0",
+    "sweetalert2": "^11.3.2",
+    "trix": "^2.0.4",
+    "uuid": "^9.0.0"
+  }
+}

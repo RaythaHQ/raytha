@@ -1,0 +1,100 @@
+@model List_ViewModel<AdminsListItem_ViewModel>
+@{
+    ViewData["Title"] = "Admins";
+}
+
+@(await Html.PartialAsync("_PageHeader", new PageHeader_ViewModel
+{
+    Title = ViewData["Title"].ToString(),
+}))
+
+<ul class="nav nav-tabs">
+  <li class="nav-item">
+    <a class="nav-link active" aria-current="page" asp-route="adminsindex">
+        <svg class="icon icon-xs" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+        Admins</a>
+  </li>
+  <li class="nav-item">
+    <a class="nav-link" asp-route="rolesindex">
+        <svg class="icon icon-xs" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"></path></svg>
+        Roles</a>
+  </li>
+</ul>
+
+@(await Html.PartialAsync("_TableCreateAndSearchBar", new TableCreateAndSearchBar_ViewModel()
+{
+    Model = Model,
+    EntityName = "admin",
+    CreateActionName = "adminscreate"
+}))
+
+
+<div class="raytha-data-card mb-4">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-centered table-nowrap mb-0 rounded">
+                <thead class="thead-light">
+                    <tr>
+                        @(await Html.PartialAsync("_TableColumnHeader", new TableColumnHeader_ViewModel() 
+                        { 
+                            Model = Model,
+                            PropertyName = "FirstName", 
+                            IsFirst = true, 
+                            DisplayName = ViewModelExtensions.GetDisplayName<AdminsListItem_ViewModel>(p => p.FirstName) 
+                        }))
+                        @(await Html.PartialAsync("_TableColumnHeader", new TableColumnHeader_ViewModel()
+                        {
+                            Model = Model,
+                            PropertyName = "LastName",
+                            DisplayName = ViewModelExtensions.GetDisplayName<AdminsListItem_ViewModel>(p => p.LastName)
+                        }))
+                        @(await Html.PartialAsync("_TableColumnHeader", new TableColumnHeader_ViewModel()
+                        {
+                            Model = Model,
+                            PropertyName = "EmailAddress",
+                            DisplayName = ViewModelExtensions.GetDisplayName<AdminsListItem_ViewModel>(p => p.EmailAddress)
+                        }))
+                        @(await Html.PartialAsync("_TableColumnHeader", new TableColumnHeader_ViewModel()
+                        {
+                            Model = Model,
+                            PropertyName = "CreationTime",
+                            DisplayName = ViewModelExtensions.GetDisplayName<AdminsListItem_ViewModel>(p => p.CreationTime)
+                        }))
+                        @(await Html.PartialAsync("_TableColumnHeader", new TableColumnHeader_ViewModel()
+                        {
+                            Model = Model,
+                            PropertyName = "LastLoggedInTime",
+                            DisplayName = ViewModelExtensions.GetDisplayName<AdminsListItem_ViewModel>(p => p.LastLoggedInTime)
+                        }))
+                        @(await Html.PartialAsync("_TableColumnHeader", new TableColumnHeader_ViewModel()
+                        {
+                            Model = Model,
+                            PropertyName = "IsActive",
+                            DisplayName = ViewModelExtensions.GetDisplayName<AdminsListItem_ViewModel>(p => p.IsActive)
+                        }))
+                        <th class="border-0">
+                            Roles
+                        </th>
+                        <th class="border-0 rounded-end">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model.Items)
+                    {
+                        <tr>
+                            <td>@item.FirstName</td>
+                            <td>@item.LastName</td>
+                            <td>@item.EmailAddress</td>
+                            <td>@item.CreationTime</td>
+                            <td>@item.LastLoggedInTime</td>
+                            <td>@item.IsActive</td>
+                            <td>@item.Roles</td>
+                            <td><a asp-route="adminsedit" asp-route-id="@item.Id">Edit</a></td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+            <partial name="_TablePagination" model="@Model" />
+        </div>
+    </div>
+</div>

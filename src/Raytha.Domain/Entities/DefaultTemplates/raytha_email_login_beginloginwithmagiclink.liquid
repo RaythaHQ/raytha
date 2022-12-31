@@ -1,0 +1,12 @@
+<p>Hello {{ Target.FirstName }},</p>
+
+<p>You may login to the {{ CurrentOrganization.OrganizationName }} website by clicking on the link below.</p>
+
+<p>
+  <a href="{{ Target.LoginWithMagicLinkCompleteUrl }}">{{ Target.LoginWithMagicLinkCompleteUrl }}</a>
+</p>
+
+<p>The link expires after {{ Target.MagicLinkExpiresInSeconds }} seconds.</p>
+
+<p>Thank you,<br/>
+  {{ CurrentOrganization.OrganizationName }}</p>

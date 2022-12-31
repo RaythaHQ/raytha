@@ -1,0 +1,108 @@
+@using Raytha.Domain.ValueObjects.FieldTypes
+@model FilterSubtree_ViewModel
+@removeTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+
+@{
+    Layout = null;
+}
+
+@if  (Model != null)
+{
+    <li class="parent_li" data-shared--filter-target="filterItem" data-type="@Model.FilterCondition.Type.DeveloperName" data-id="@Model.FilterCondition.Id" data-parentid="@Model.FilterCondition.ParentId">
+    <div class="card">
+        <div class="card-body">
+            @if (Model.FilterCondition.Type.DeveloperName == Domain.ValueObjects.FilterConditionType.FilterConditionGroup)
+            {
+                <div class="form-check form-check-inline">
+                        <input class="form-check-input" name="groupOperator-@Model.FilterCondition.Id" id="andChoice-@Model.FilterCondition.Id" type="radio" value="and" data-forId="@Model.FilterCondition.Id" data-shared--filter-target="groupOperator" @(Model.FilterCondition.GroupOperator.DeveloperName == Domain.ValueObjects.BooleanOperator.AND ? "checked" : string.Empty)>
+                        <label class="form-check-label" for="andChoice-@Model.FilterCondition.Id">AND</label>
+                </div>
+                <div class="form-check form-check-inline">
+                        <input class="form-check-input" name="groupOperator-@Model.FilterCondition.Id" id="orChoice-@Model.FilterCondition.Id" type="radio" value="or" data-forId="@Model.FilterCondition.Id" data-shared--filter-target="groupOperator" @(Model.FilterCondition.GroupOperator.DeveloperName == Domain.ValueObjects.BooleanOperator.OR ? "checked" : string.Empty)>
+                        <label class="form-check-label" for="orChoice-@Model.FilterCondition.Id">OR</label>
+                </div>
+                <div class="float-end">
+                        <button type="button" class="btn btn-sm btn-outline-primary" data-action="shared--filter#addFilter" data-forid="@Model.FilterCondition.Id" data-shared--filter-target="addFilterButton">Add filter</button>
+                        <button type="button" class="btn btn-sm btn-outline-primary" data-action="shared--filter#addFilterGroup" data-forid="@Model.FilterCondition.Id" data-shared--filter-target="addFilterGroupButton">Add filter group</button>
+                        @if (Model.FilterCondition.ParentId.HasValue)
+                    {
+                            <button type="button" class="btn btn-sm btn-outline-danger" data-action="shared--filter#remove" data-forid="@Model.FilterCondition.Id" data-shared--filter-target="removeButton"><svg class="icon icon-xs mx-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>
+                    }
+                </div>
+            }
+            else
+            {
+                var field = Model.ContentTypeFields.First(p => p.DeveloperName == Model.FilterCondition.Field);
+                
+                <form class="row gy-2 gx-3 align-items-center">
+                    <div class="col-md-3">
+                        <label class="visually-hidden" for="field">Field</label>
+                        <select class="form-select" id="field-@Model.FilterCondition.Id" data-forid="@Model.FilterCondition.Id" data-shared--filter-target="chooseField" data-action="shared--filter#chooseField">
+                            <option value="">Choose field...</option>
+                            @foreach(var option in Model.ContentTypeFields)
+                            {
+                                    <option value="@option.DeveloperName" @(Model.FilterCondition.Field == option.DeveloperName ? "selected": string.Empty)>@option.DeveloperName</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="visually-hidden" for="operator">Operator</label>
+                        <select class="form-select" id="operator-@Model.FilterCondition.Id" data-forid="@Model.FilterCondition.Id" data-shared--filter-target="chooseOperator" data-action="shared--filter#chooseOperator">
+                            <option value="">Choose operator...</option>
+                            @foreach (var option in field.FieldType.SupportedConditionOperators)
+                            {
+                                <option value="@option.DeveloperName" @(Model.FilterCondition.ConditionOperator.DeveloperName == option.DeveloperName ? "selected" : string.Empty)>@option.Label</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="col-md-5">
+                        <label class="visually-hidden">Value</label>
+                            <div data-shared--filter-target="filterValueContainer" data-forid="@Model.FilterCondition.Id">
+                            @if (Model.FilterCondition.ConditionOperator.HasFieldValue)
+                            {
+                                if (field.FieldType.HasChoices)
+                                {
+                                    <select class="form-select" id="filter-value-@Model.FilterCondition.Id" data-forid="@Model.FilterCondition.Id" data-shared--filter-target="filterValue">
+                                        <option value="" selected>Choose value...</option>
+                                        @foreach (var choice in field.Choices)
+                                        {
+                                            <option value="@choice" @(choice == Model.FilterCondition.Value ? "selected": string.Empty)>@choice</option>
+                                        }
+                                    </select>
+                                }
+                                else if (field.FieldType.DeveloperName == BaseFieldType.Date)
+                                {
+                                    <input type="date" class="form-control" data-shared--filter-target="filterValue" data-forid="@Model.FilterCondition.Id" id="filter-value-@Model.FilterCondition.Id" value="@Model.FilterCondition.Value">
+                                }
+                                else if (field.FieldType.DeveloperName == BaseFieldType.Number)
+                                {
+                                    <input type="number" class="form-control" data-shared--filter-target="filterValue" data-forid="@Model.FilterCondition.Id" id="filter-value-@Model.FilterCondition.Id" value="@Model.FilterCondition.Value">
+                                }
+                                else
+                                {
+                                    <input type="text" class="form-control" data-shared--filter-target="filterValue" data-forid="@Model.FilterCondition.Id" id="filter-value-@Model.FilterCondition.Id" value="@Model.FilterCondition.Value">
+                                }
+                            }
+                        </div>
+                    </div>
+                    <div class="col-md-1 ms-auto">
+                            <button data-forid="@Model.FilterCondition.Id" data-shared--filter-target="removeButton" data-action="shared--filter#remove" type="button" class="btn btn-sm btn-outline-danger"><svg class="icon icon-xs mx-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>
+                    </div>
+                </form>
+            }
+
+                <ul data-shared--filter-target="filterItemSubtree" data-forid="@Model.FilterCondition.Id">
+                    @foreach (var child in Model.CurrentView.Filter.Where(p => p.ParentId == Model.FilterCondition.Id))
+                {
+                    @await Html.PartialAsync("_FilterSubtree", new FilterSubtree_ViewModel
+                    {
+                        FilterCondition = child,
+                        ContentTypeFields = Model.ContentTypeFields,
+                        CurrentView = Model.CurrentView
+                    })
+                }
+            </ul>
+        </div>
+    </div>
+</li>
+}

@@ -1,0 +1,86 @@
+@model List_ViewModel<AuthenticationSchemesListItem_ViewModel>
+@{
+    ViewData["Title"] = "Authentication schemes";
+}
+
+@(await Html.PartialAsync("_PageHeader", new PageHeader_ViewModel
+{
+    Title = ViewData["Title"].ToString(),
+}))
+
+@(await Html.PartialAsync("_TableCreateAndSearchBar", new TableCreateAndSearchBar_ViewModel()
+{
+    Model = Model,
+    EntityName = "authentication scheme",
+    CreateActionName = "authenticationschemescreate"
+}))
+
+<div class="raytha-data-card mb-4">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-centered table-nowrap mb-0 rounded">
+                <thead class="thead-light">
+                    <tr>
+                        @(await Html.PartialAsync("_TableColumnHeader", new TableColumnHeader_ViewModel()
+                        {
+                            Model = Model,
+                            PropertyName = "Label",
+                            IsFirst = true,
+                            DisplayName = ViewModelExtensions.GetDisplayName<AuthenticationSchemesListItem_ViewModel>(p => p.Label)
+                        }))
+                        @(await Html.PartialAsync("_TableColumnHeader", new TableColumnHeader_ViewModel()
+                        {
+                            Model = Model,
+                            PropertyName = "DeveloperName",
+                            DisplayName = ViewModelExtensions.GetDisplayName<AuthenticationSchemesListItem_ViewModel>(p => p.DeveloperName)
+                        }))
+                        @(await Html.PartialAsync("_TableColumnHeader", new TableColumnHeader_ViewModel()
+                        {
+                            Model = Model,
+                            PropertyName = "LastModificationTime",
+                            DisplayName = ViewModelExtensions.GetDisplayName<AuthenticationSchemesListItem_ViewModel>(p => p.LastModificationTime)
+                        }))
+                        <th class="border-0">
+                            Last modified by
+                        </th>
+                        @(await Html.PartialAsync("_TableColumnHeader", new TableColumnHeader_ViewModel()
+                        {
+                            Model = Model,
+                            PropertyName = "AuthenticationSchemeType",
+                            DisplayName = ViewModelExtensions.GetDisplayName<AuthenticationSchemesListItem_ViewModel>(p => p.AuthenticationSchemeType)
+                        }))
+                        @(await Html.PartialAsync("_TableColumnHeader", new TableColumnHeader_ViewModel()
+                        {
+                            Model = Model,
+                            PropertyName = "IsEnabledForUsers",
+                            DisplayName = ViewModelExtensions.GetDisplayName<AuthenticationSchemesListItem_ViewModel>(p => p.IsEnabledForUsers)
+                        }))
+                        @(await Html.PartialAsync("_TableColumnHeader", new TableColumnHeader_ViewModel()
+                        {
+                            Model = Model,
+                            PropertyName = "IsEnabledForAdmins",
+                            DisplayName = ViewModelExtensions.GetDisplayName<AuthenticationSchemesListItem_ViewModel>(p => p.IsEnabledForAdmins)
+                        }))
+                        <th class="border-0 rounded-end">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model.Items)
+                    {
+                        <tr>
+                            <td>@item.Label</td>
+                            <td>@item.DeveloperName</td>
+                            <td>@item.LastModificationTime</td>
+                            <td>@item.LastModifierUser</td>
+                            <td>@item.AuthenticationSchemeType</td>
+                            <td>@item.IsEnabledForUsers</td>
+                            <td>@item.IsEnabledForAdmins</td>
+                            <td><a asp-route="authenticationschemesedit" asp-route-id="@item.Id">Edit</a></td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+            <partial name="_TablePagination" model="Model" />
+        </div>
+    </div>
+</div>

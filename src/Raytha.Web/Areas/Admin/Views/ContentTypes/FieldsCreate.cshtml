@@ -1,0 +1,149 @@
+@model FieldsCreate_ViewModel
+@{
+    ViewData["Title"] = $"{Model.CurrentView.ContentTypeLabelPlural} > Fields > Create field";
+}
+
+@(await Html.PartialAsync("_PageHeader", new PageHeader_ViewModel
+{
+    Title = ViewData["Title"].ToString(),
+    Description = Model.CurrentView.ContentTypeDescription
+}))
+
+<div class="row mb-4" data-controller="shared--developername shared--fieldchoices shared--relatedcontenttype" data-shared--fieldchoices-nextitemnumber-value="@Model.Choices.Count()">
+    <div class="col-xxl-7 col-xl-8 col-lg-9 col-md-12">
+        <div class="card border-0 shadow mb-4">
+            <div class="card-body">
+                @(await Html.PartialAsync("_BackToList", Model.CurrentView.ContentTypeDeveloperName))
+                <form asp-route="contenttypesfieldscreate" method="post" class="py-4">
+                    <div class="col-lg-12 col-md-12">
+                        <div class="mb-3">
+                            <label class="form-label raytha-required" asp-for="Label"></label>
+                            <input type="text" class="form-control @Model.HasError("Label")" asp-for="Label" required
+                                data-shared--developername-target="label"
+                                data-action="keyup->shared--developername#setDeveloperName change->shared--developername#setDeveloperName">
+                            <div class="invalid-feedback">@Model.ErrorMessageFor("Label")</div>
+                        </div>
+                    </div>
+                    <div class="col-lg-12 col-md-12">
+                        <div class="mb-3">
+                            <label class="form-label raytha-required" asp-for="DeveloperName"></label>
+                            <input type="text" class="form-control @Model.HasError("DeveloperName")"
+                                asp-for="DeveloperName" required data-shared--developername-target="developername">
+                            <div class="invalid-feedback">@Model.ErrorMessageFor("DeveloperName")</div>
+                            <div class="form-text">You cannot change the developer name after it has been created.</div>
+                        </div>
+                    </div>
+                    <div class="col-lg-12">
+                        <div class="mb-3">
+                            <label class="form-label raytha-required" asp-for="FieldType"></label>
+                            <select class="form-select @Model.HasError("FieldType")" asp-for="FieldType"
+                                asp-items="@(new SelectList(Model.AvailableFieldTypes, "Key", "Value"))"
+                                data-shared--fieldchoices-target="fieldType"
+                                data-shared--relatedcontenttype-target="fieldType"
+                                data-action="change->shared--fieldchoices#toggleChoicesSection change->shared--relatedcontenttype#toggleSection" required>
+                                <option value="">-- SELECT --</option>
+                            </select>
+                            <div class="invalid-feedback">@Model.ErrorMessageFor("FieldType")</div>
+                            <div class="form-text">You cannot change the field type after it has been created.</div>
+                        </div>
+                    </div>
+                    <div class="col-lg-12" data-shared--relatedcontenttype-target="relatedContentTypeSection">
+                        <div class="mb-3">
+                            <label class="form-label raytha-required" asp-for="RelatedContentTypeId"></label>
+                            <select class="form-select @Model.HasError("RelatedContentType")" asp-for="RelatedContentTypeId" data-shared--relatedcontenttype-target="relatedContentTypeValue"
+                                asp-items="@(new SelectList(Model.AvailableContentTypes, "Key", "Value"))" required>
+                                <option value="">-- SELECT --</option>
+                            </select>
+                            <div class="invalid-feedback">@Model.ErrorMessageFor("RelatedContentTypeId")</div>
+                            <div class="form-text">You cannot change this value after it has been created.</div>
+                        </div>
+                    </div>
+                    <div class="col-lg-12" data-shared--fieldchoices-target="choicesSection">
+                        <div class="mb-3">
+                            <label class="form-label raytha-required" asp-for="Choices">Choices</label>
+                            <div id="choicesList" data-shared--fieldchoices-target="choices">
+                                @for (int i = 0; i < Model.Choices.Count(); i++)
+                                {
+                                    <div class="row form-row">
+                                        <div class="col-4">
+                                            <div class="mb-3">
+                                                <input type="text" name="Choices[@i].Label"
+                                                class="form-control form-row-field @Model.HasError("Choices")" required
+                                                value="@(Model.Choices[i].Label)"
+                                                data-action="keyup->shared--fieldchoices#setDeveloperName change->shared--fieldchoices#setDeveloperName"
+                                                data-ordinal="@i">
+                                                @if (i == Model.Choices.Count() - 1)
+                                                {
+                                                    <div class="invalid-feedback">@Model.ErrorMessageFor("Choices")</div>
+                                                }
+                                            </div>
+                                        </div>
+                                        <div class="col-4">
+                                            <div class="mb-3">
+                                                <input type="text" name="Choices[@i].DeveloperName"
+                                                class="form-control form-row-field @Model.HasError("Choices")" value="@(Model.Choices[i].DeveloperName)"
+                                                data-shared--fieldchoices-target="developername" required>
+                                            </div>
+                                        </div>
+                                        <div class="col-3">
+                                            <div class="mb-3">
+                                                <div class="form-check">
+                                                    <input class="form-check-input form-row-field" type="checkbox"
+                                                    name="Choices[@i].Disabled"
+                                                    value="@(Model.Choices[i].Disabled ? "true": "false")"
+                                                    @(Model.Choices[i].Disabled ? "checked" : "")
+                                                    data-action="shared--fieldchoices#handleChangeCheckbox">
+                                                    <label class="form-check-label">
+                                                        Disabled
+                                                    </label>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="col-1">
+                                            <div class="dropdown">
+                                                <a class="dropdown-toggle" data-bs-toggle="dropdown" data-bs-auto-close="true" href="#" role="button" aria-expanded="false"><svg class="icon icon-sm" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h.01M12 12h.01M19 12h.01M6 12a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0z"></path></svg></a>
+                                                <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+                                                    <li><a class="dropdown-item" href="javascript:void(0);" data-action="shared--fieldchoices#insert"><svg class="icon icon-xs" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" /></svg> Insert</a></li>
+                                                    <li data-shared--fieldchoices-target="moveUpButton"><a class="dropdown-item"  href="javascript:void(0);" data-action="shared--fieldchoices#moveUp"><svg class="icon icon-xs" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"></path></svg> Move up</a></li>
+                                                    <li data-shared--fieldchoices-target="moveDownButton"><a class="dropdown-item" href="javascript:void(0);" data-action="shared--fieldchoices#moveDown"><svg class="icon icon-xs" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path></svg> Move down</a></li>
+                                                    <li><hr class="dropdown-divider"></li>
+                                                    <li><a class="dropdown-item link-danger" href="javascript:void(0);" data-action="shared--fieldchoices#remove"><svg class="icon icon-sm" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>Remove</a></li>                                  
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                            <div class="row">
+                                <div class="col-12">
+                                    <a href="javascript:void(0);" class="btn btn-sm btn-secondary"
+                                        data-action="shared--fieldchoices#addanother">Add another choice</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-12 mt-4">
+                        <div class="mb-3">
+                            <label class="form-label" asp-for="@Model.IsRequired"></label>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" asp-for="@Model.IsRequired"> 
+                            </div>
+                            <div class="invalid-feedback">@Model.ErrorMessageFor("IsRequired")</div>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-12 mt-4">
+                        <div class="mb-3">
+                            <label class="form-label" asp-for="@Model.Description"></label>
+                            <textarea class="form-control @Model.HasError("Description")" asp-for="@Model.Description"></textarea>
+                            <div class="invalid-feedback">@Model.ErrorMessageFor("Description")</div>
+                        </div>
+                    </div>
+                    <input type="hidden" asp-for="@Model.ContentTypeId">
+                    <button type="submit" class="btn btn-success mt-4">Save changes</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,15 @@
+<p>Hello {{ Target.FirstName }},</p>
+
+<p>An administrator of {{ CurrentOrganization.OrganizationName }} has created an account on your behalf. You may login at
+  <a href="{{ Target.LoginUrl }}">this link.</a>
+</p>
+
+{% if Target.LoginWithEmailAndPasswordIsEnabled and Target.IsNewlyCreatedUser %}
+  <p>Login with the email address and auto-generated password below:
+  </p>
+  <p>Email address: {{ Target.EmailAddress }} <br/>
+    Password: {{ Target.NewPassword }}</p>
+{% endif %}
+
+<p>Thank you,<br/>
+  {{ CurrentOrganization.OrganizationName }}</p>

@@ -1,0 +1,44 @@
+@model ViewsEdit_ViewModel
+@{
+    ViewData["Title"] = $"{Model.CurrentView.ContentTypeLabelPlural} > Views > Edit view";
+}
+
+@(await Html.PartialAsync("_PageHeader", new PageHeader_ViewModel
+{
+    Title = ViewData["Title"].ToString(),
+    Description = Model.CurrentView.ContentTypeDescription
+}))
+
+<div class="row mb-4">
+    <div class="col-xxl-7 col-xl-8 col-lg-9 col-md-12">
+        <div class="card border-0 shadow mb-4">
+            <div class="card-body">
+                @(await Html.PartialAsync("_BackToList", Model.CurrentView.ContentTypeDeveloperName))
+                <form asp-route="viewsedit" asp-route-contentType="@Model.CurrentView.ContentTypeDeveloperName" asp-route-viewId="@Model.Id" method="post" class="py-4">
+                    <div class="col-lg-12 col-md-12">
+                        <div class="mb-3">
+                            <label class="form-label raytha-required" asp-for="Label"></label>
+                            <input type="text" class="form-control @Model.HasError("Label")" asp-for="Label" required>
+                            <div class="invalid-feedback">@Model.ErrorMessageFor("Label")</div>
+                        </div>
+                    </div>
+                    <div class="col-lg-12 col-md-12">
+                        <div class="mb-3">
+                            <label class="form-label raytha-required" asp-for="DeveloperName"></label>
+                            <input type="text" class="form-control" asp-for="DeveloperName" readonly>
+                        </div>
+                    </div>
+                    <div class="col-lg-12 mt-4">
+                        <div class="mb-3">
+                            <label class="form-label" asp-for="@Model.Description"></label>
+                            <textarea class="form-control @Model.HasError("Description")" asp-for="@Model.Description"></textarea>
+                            <div class="invalid-feedback">@Model.ErrorMessageFor("Description")</div>
+                        </div>
+                    </div>  
+                    <input type="hidden" asp-for="@Model.Id">
+                    <button type="submit" class="btn btn-success">Save changes</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

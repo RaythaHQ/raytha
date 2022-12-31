@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>
+      {% if Target.PrimaryField %}
+        {{ Target.PrimaryField }} - {{ ContentType.LabelPlural }} | {{ CurrentOrganization.OrganizationName }}
+      {% elsif ContentType.LabelPlural %}
+        {{ ContentType.LabelPlural }} | {{ CurrentOrganization.OrganizationName }}
+      {% else %}
+        {{ CurrentOrganization.OrganizationName }}
+      {% endif %}
+    </title>
+
+    <link
+      rel="shortcut icon"
+      href="/raytha_default_2023/assets/images/favicon.ico"
+      type="image/x-icon" />
+
+    <link rel="stylesheet" href="/raytha_default_2023/assets/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="/raytha_default_2023/assets/css/animate.css" />
+    <link rel="stylesheet" href="/raytha_default_2023/assets/css/lineicons.css" />
+    <link rel="stylesheet" href="/raytha_default_2023/assets/css/ud-styles.css" />
+
+<style>
+.ud-header { background-color: rgb(255,255,255,1.0); }
+</style>
+  </head>
+
+  <body>
+
+    <header class="ud-header sticky">
+      <div class="container">
+        <div class="row">
+          <div class="col-lg-12">
+            <nav class="navbar navbar-expand-lg">
+              <a class="navbar-brand" href="/">
+                {{ CurrentOrganization.OrganizationName }}
+              </a>
+              <button class="navbar-toggler">
+                <span class="toggler-icon"></span>
+                <span class="toggler-icon"></span>
+                <span class="toggler-icon"></span>
+              </button>
+              <div class="navbar-collapse">
+                <ul id="nav" class="navbar-nav mx-auto">
+                  <li class="nav-item">
+                    <a href="/">Home</a>
+                  </li>
+                  <li class="nav-item">
+                    <a href="/about">About</a>
+                  </li>
+                  <li class="nav-item">
+                    <a href="/posts">Blog</a>
+                  </li>
+                  {% if CurrentUser.IsAuthenticated %}
+                    <li class="nav-item nav-item-has-children d-lg-none">
+                      <a href="javascript:void(0)">
+                        {{ CurrentUser.FullName }}
+                      </a>
+                      <ul class="ud-submenu">
+                        <li class="ud-submenu-item">
+                          <a href="/account/me" class="ud-submenu-link">
+                            My profile
+                          </a>
+                        </li>
+                        {% if CurrentOrganization.EmailAndPasswordIsEnabledForUsers %}
+                          <li class="ud-submenu-item">
+                            <a href="/account/me/change-password" class="ud-submenu-link">
+                              Change password
+                            </a>
+                          </li>
+                        {% endif %}
+                        {% if CurrentUser.IsAdmin %}
+                          <li class="ud-submenu-item">
+                            <a href="/raytha" class="ud-submenu-link">
+                              Admin panel
+                            </a>
+                          </li>
+                        {% endif %}
+                        <li class="ud-submenu-item">
+                          <a href="/account/logout" class="ud-submenu-link">
+                            Log out
+                          </a>
+                        </li>
+                      </ul>
+                    </li>
+                  {% else %}
+                    <li class="nav-item d-lg-none">
+                      <a href="/account/login">Log in</a>
+                    </li>
+                    {% if CurrentOrganization.EmailAndPasswordIsEnabledForUsers %}
+                      <li class="nav-item d-lg-none">
+                        <a href="/account/create">Create account</a>
+                      </li>
+                    {% endif %}
+                  {% endif %}
+                  </ul>
+                </div>
+                {% if CurrentUser.IsAuthenticated %}
+                  <div class="navbar-btn d-none d-lg-inline-block">
+                    <ul id="nav" class="navbar-nav mx-auto">
+                      <li class="nav-item nav-item-has-children">
+                        <a href="javascript:void(0)">
+                          {{ CurrentUser.FullName }}
+                        </a>
+                        <ul class="ud-submenu">
+                          <li class="ud-submenu-item">
+                            <a href="/account/me" class="ud-submenu-link">
+                              My profile
+                            </a>
+                          </li>
+                          {% if CurrentOrganization.EmailAndPasswordIsEnabledForUsers %}
+                            <li class="ud-submenu-item">
+                              <a href="/account/me/change-password" class="ud-submenu-link">
+                                Change password
+                              </a>
+                            </li>
+                          {% endif %}
+                          {% if CurrentUser.IsAdmin %}
+                            <li class="ud-submenu-item">
+                              <a href="/raytha" class="ud-submenu-link">
+                                Admin panel
+                              </a>
+                            </li>
+                          {% endif %}
+                          <li class="ud-submenu-item">
+                            <a href="/account/logout" class="ud-submenu-link">
+                              Log out
+                            </a>
+                          </li>
+                        </ul>
+                      </li>
+                    </ul>
+                  </div>
+                {% else %}
+                  <div class="navbar-btn d-none d-lg-inline-block">
+                    <a href="/account/login" class="ud-main-btn ud-login-btn">
+                      Log in
+                    </a>
+                    {% if CurrentOrganization.EmailAndPasswordIsEnabledForUsers %}
+                      <a href="/account/create" class="ud-main-btn ud-white-btn">
+                        Create account
+                      </a>
+                    {% endif %}
+                    </div>
+                  {% endif %}
+                </nav>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        {% renderbody %}
+
+        <footer class="ud-footer">
+          <div class="ud-footer-bottom">
+            <div class="container">
+              <div class="row">
+                <div class="col-md-8">
+                  <ul class="ud-footer-bottom-left">
+                    <li>
+                      <a href="#">Privacy policy</a>
+                    </li>
+                    <li>
+                      <a href="#">Terms of service</a>
+                    </li>
+                  </ul>
+                </div>
+                <div class="col-md-4">
+                  <p class="ud-footer-bottom-right">
+                    Content Management System by
+                    <a href="https://raytha.com" rel="nofollow">Raytha</a>
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </footer>
+
+        <script src="/raytha_default_2023/assets/js/bootstrap.bundle.min.js"></script>
+        <script src="/raytha_default_2023/assets/js/main.js"></script>
+      </body>
+    </body>
+  </body>
+</html>

@@ -1,0 +1,59 @@
+<div class="ud-login-logo">
+  <h3>Login</h3>
+</div>
+{% if Target.ValidationFailures["__ValidationSummary"] %}
+  <div class="alert alert-danger">
+    {{ Target.ValidationFailures["__ValidationSummary"] }}
+  </div>
+{% endif %}
+<form
+  class="ud-login-form"
+  action="/account/login/magic-link"
+  method="post">
+  <div class="ud-form-group">
+    <label for="email" class="form-label">Email address</label>
+    <input
+      id="email"
+      type="email"
+      name="EmailAddress">
+  </div>
+  <div class="ud-form-group">
+    <button type="submit" class="ud-main-btn w-100">Login</button>
+  </div>
+  <input
+    name="__RequestVerificationToken"
+    type="hidden"
+    value="{{ Target.RequestVerificationToken }}" />
+</form>
+{% if Target.HasLoginByEmailAndPassword or Target.HasLoginBySingleSignOn %}
+  <div class="ud-socials-connect">
+    <p>or login with</p>
+    <ul>
+      {% if Target.HasLoginByEmailAndPassword %}
+        <li>
+          <a href="/account/login" class="btn btn-secondary">
+            {{ Target.EmailAndPassword.LoginButtonText }}
+          </a>
+        </li>
+      {% endif %}
+      {% if Target.HasLoginBySingleSignOn %}
+        {% for sso in Target.SingleSignOns %}
+          <li>
+            <a href="/account/login/sso/{{ sso.DeveloperName }}" class="btn btn-secondary">
+              {{ sso.LoginButtonText }}
+            </a>
+          </li>
+        {% endfor %}
+      {% endif %}
+    </ul>
+  </div>
+{% endif %}
+
+{% if Target.HasLoginByEmailAndPassword %}
+  <p class="signup-option">
+    No account?
+    <a href="/account/create">
+      Create account
+    </a>
+  </p>
+{% endif %}
