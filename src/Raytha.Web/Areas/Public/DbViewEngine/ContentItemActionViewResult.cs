@@ -1,11 +1,14 @@
 using MediatR;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Primitives;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Models.RenderModels;
 using Raytha.Application.ContentTypes;
 using Raytha.Application.Templates.Web;
 using Raytha.Application.Templates.Web.Queries;
+using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 
@@ -47,7 +50,8 @@ public class ContentItemActionViewResult : IActionResult
             CurrentOrganization = CurrentOrganization_RenderModel.GetProjection(currentOrg),
             CurrentUser = CurrentUser_RenderModel.GetProjection(currentUser),
             ContentType = _contentType,
-            Target = _target
+            Target = _target,
+            QueryParams = QueryCollectionToDictionary(httpContext.Request.Query)
         };
 
         await using (var sw = new StreamWriter(httpContext.Response.Body))
@@ -55,5 +59,17 @@ public class ContentItemActionViewResult : IActionResult
             var body = renderer.RenderAsHtml(sourceWithParents, renderModel);
             await sw.WriteAsync(body);
         }
+    }
+
+    Dictionary<string, string> QueryCollectionToDictionary(IQueryCollection query)
+    {
+        var dict = new Dictionary<string, string>();
+        foreach (var key in query.Keys)
+        {
+            StringValues value = string.Empty;
+            query.TryGetValue(key, out @value);
+            dict.Add(key, @value);
+        }
+        return dict;
     }
 }

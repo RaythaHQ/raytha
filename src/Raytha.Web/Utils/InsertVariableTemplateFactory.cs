@@ -41,6 +41,7 @@ public class InsertVariableTemplateFactory
         return type;
     }
 
+    public static InsertVariableTemplateFactory Request => new("Request", "Request", new Wrapper_RenderModel());
     public static InsertVariableTemplateFactory AdminWelcomeEmail => new(BuiltInEmailTemplate.AdminWelcomeEmail, "Target", new SendAdminWelcomeEmail_RenderModel());
     public static InsertVariableTemplateFactory AdminPasswordChangedEmail => new(BuiltInEmailTemplate.AdminPasswordChangedEmail, "Target", new SendAdminPasswordChanged_RenderModel());
     public static InsertVariableTemplateFactory AdminPasswordResetEmail => new(BuiltInEmailTemplate.AdminPasswordResetEmail, "Target", new SendAdminPasswordReset_RenderModel());
@@ -82,6 +83,8 @@ public class InsertVariableTemplateFactory
     {
         get
         {
+            yield return Request;
+
             yield return AdminWelcomeEmail;
             yield return AdminPasswordChangedEmail;
             yield return AdminPasswordResetEmail;

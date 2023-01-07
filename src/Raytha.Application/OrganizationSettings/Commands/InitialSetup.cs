@@ -41,19 +41,18 @@ public class InitialSetup
 
         [JsonIgnore]
         public string SmtpPassword { get; init; } = null!;
-        public bool MissingSmtpEnvironmentVariables { get; init; }
     }
 
     public class Validator : AbstractValidator<Command>
     {
-        public Validator()
+        public Validator(IEmailer emailer)
         {
             RuleFor(x => x.SuperAdminPassword).NotEmpty().MinimumLength(8);
             RuleFor(x => x.SuperAdminEmailAddress).EmailAddress();
             RuleFor(x => x.FirstName).NotEmpty();
             RuleFor(x => x.LastName).NotEmpty();
-            RuleFor(x => x.SmtpHost).NotEmpty().When(p => p.MissingSmtpEnvironmentVariables);
-            RuleFor(x => x.SmtpPort).NotNull().GreaterThan(0).LessThanOrEqualTo(65535).When(p => p.MissingSmtpEnvironmentVariables);
+            RuleFor(x => x.SmtpHost).NotEmpty().When(p => emailer.IsMissingSmtpEnvVars());
+            RuleFor(x => x.SmtpPort).NotNull().GreaterThan(0).LessThanOrEqualTo(65535).When(p => emailer.IsMissingSmtpEnvVars());
             RuleFor(x => x.OrganizationName).NotEmpty();
             RuleFor(x => x.TimeZone).Must(DateTimeExtensions.IsValidTimeZone)
                 .WithMessage(p => $"{p.TimeZone} timezone is unrecognized.");
@@ -89,9 +88,11 @@ public class InitialSetup
         Guid orgSettingsGuid = Guid.NewGuid();
 
         private readonly IRaythaDbContext _db;
-        public Handler(IRaythaDbContext db)
+        private readonly IEmailer _emailer;
+        public Handler(IRaythaDbContext db, IEmailer emailer)
         {
             _db = db;
+            _emailer = emailer;
         }
         public async Task<CommandResponseDto<ShortGuid>> Handle(Command request, CancellationToken cancellationToken)
         {
@@ -123,7 +124,7 @@ public class InitialSetup
                 SmtpPort = request.SmtpPort,
                 SmtpUsername = request.SmtpUsername,
                 SmtpPassword = request.SmtpPassword,
-                SmtpOverrideSystem = request.MissingSmtpEnvironmentVariables,
+                SmtpOverrideSystem = _emailer.IsMissingSmtpEnvVars(),
                 OrganizationName = request.OrganizationName,
                 TimeZone = request.TimeZone,
                 DateFormat = DateTimeExtensions.DEFAULT_DATE_FORMAT,

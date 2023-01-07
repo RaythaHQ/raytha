@@ -4,9 +4,9 @@ namespace Raytha.Application.Common.Models.RenderModels;
 
 public abstract record BaseFormSubmit_RenderModel : IInsertTemplateVariable
 {
-    public string SuccessMessage { get; init; }
-    public string RequestVerificationToken { get; init; }
-    public Dictionary<string, string> ValidationFailures { get; set; }
+    public string? SuccessMessage { get; set; }
+    public string? RequestVerificationToken { get; set; }
+    public Dictionary<string, string>? ValidationFailures { get; set; }
 
     public virtual IEnumerable<string> GetDeveloperNames()
     {

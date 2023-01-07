@@ -7,7 +7,7 @@
 @functions {
     public string IsActivePage(string menuItem)
     {
-      if ((string)ViewData["ActiveSubMenu"] == menuItem) 
+      if (Model.ActivePage == menuItem) 
       {
         return "active";
       }

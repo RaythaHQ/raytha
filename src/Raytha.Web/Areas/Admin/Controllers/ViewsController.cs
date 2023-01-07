@@ -18,6 +18,7 @@ using Raytha.Domain.ValueObjects.FieldTypes;
 using Raytha.Application.Templates.Web.Queries;
 using Microsoft.AspNetCore.Authorization;
 using Raytha.Application.Common.Utils;
+using Azure;
 
 namespace Raytha.Web.Areas.Admin.Controllers;
 
@@ -321,7 +322,7 @@ public class ViewsController : BaseController
     [Authorize(Policy = BuiltInContentTypePermission.CONTENT_TYPE_EDIT_PERMISSION)]
     [Route($"{RAYTHA_ROUTE_PREFIX}/{{contentType}}/views/{{viewId}}/columns/reorder/{{developerName}}", Name = "viewscolumnsreorderajax")]
     [HttpPatch]
-    public async Task<IActionResult> ColumnsReorderAjax(string developerName)
+    public async Task<JsonResult> ColumnsReorderAjax(string developerName)
     {
         var position = Request.Form["position"];
         var input = new ReorderColumn.Command
@@ -331,11 +332,10 @@ public class ViewsController : BaseController
             NewFieldOrder = Convert.ToInt32(position)
         };
 
-        var result = await Mediator.Send(input);
-        if (result.Success)
-            return Ok(result);
-        else
-            return BadRequest(result);
+        var response = await Mediator.Send(input);
+        if (!response.Success)
+            HttpContext.Response.StatusCode = (int)HttpStatusCode.BadRequest;
+        return Json(response);
     }
 
     [ServiceFilter(typeof(GetOrSetRecentlyAccessedViewFilterAttribute))]
@@ -460,11 +460,10 @@ public class ViewsController : BaseController
             NewFieldOrder = Convert.ToInt32(position)
         };
 
-        var result = await Mediator.Send(input);
-        if (result.Success)
-            return Ok(result);
-        else
-            return BadRequest(result);
+        var response = await Mediator.Send(input);
+        if (!response.Success)
+            HttpContext.Response.StatusCode = (int)HttpStatusCode.BadRequest;
+        return Json(response);
     }
 
     [ServiceFilter(typeof(GetOrSetRecentlyAccessedViewFilterAttribute))]

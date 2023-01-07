@@ -24,6 +24,20 @@ public class DeleteWebTemplate
                 if (entity == null)
                     throw new NotFoundException("Template", request.Id);
 
+                var anyContentItemsUsingTemplate = db.ContentItems.Any(p => p.WebTemplateId == entity.Id);
+                if (anyContentItemsUsingTemplate)
+                {
+                    context.AddFailure(Constants.VALIDATION_SUMMARY, "This template is currently being used by content items. You must change the template those content items are using before deleting this one.");
+                    return;
+                }
+
+                var anyViewsUsingTemplate = db.Views.Any(p => p.WebTemplateId == entity.Id);
+                if (anyViewsUsingTemplate)
+                {
+                    context.AddFailure(Constants.VALIDATION_SUMMARY, "This template is currently being used by list views. You must change the template those list views are using before deleting this one.");
+                    return;
+                }
+
                 if (entity.IsBuiltInTemplate)
                 {
                     context.AddFailure(Constants.VALIDATION_SUMMARY, "You cannot remove built-in templates.");

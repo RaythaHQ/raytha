@@ -233,12 +233,13 @@ public class WebTemplatesController : BaseController
         if (response.Success)
         {
             SetSuccessMessage($"Template has been deleted.");
+            return RedirectToAction("Index");
         }
         else
         {
             SetErrorMessage("There was an error deleting this template", response.GetErrors());
+            return RedirectToAction("Edit", new { id });
         }
-        return RedirectToAction("Index");
     }
 
     [ServiceFilter(typeof(SetPaginationInformationFilterAttribute))]
@@ -302,6 +303,11 @@ public class WebTemplatesController : BaseController
     protected Dictionary<string, IEnumerable<InsertVariableListItem_ViewModel>> GetInsertVariablesViewModel(string templateName, bool isBuiltInTemplate, IEnumerable<ContentTypeDto> contentTypes)
     {
         var templateVariableDictionary = new Dictionary<string, IEnumerable<InsertVariableListItem_ViewModel>>();
+        var requestVariables = InsertVariableTemplateFactory.Request.TemplateInfo.GetTemplateVariables().Select(p => new InsertVariableListItem_ViewModel
+        {
+            DeveloperName = p.Key,
+            TemplateVariable = p.Value
+        });
 
         var currentOrgVariables = InsertVariableTemplateFactory.CurrentOrganization.TemplateInfo.GetTemplateVariables().Select(p => new InsertVariableListItem_ViewModel
         {
@@ -315,6 +321,7 @@ public class WebTemplatesController : BaseController
             TemplateVariable = p.Value
         });
 
+        templateVariableDictionary.Add(InsertVariableTemplateFactory.Request.VariableCategoryName, requestVariables);
         templateVariableDictionary.Add(InsertVariableTemplateFactory.CurrentOrganization.VariableCategoryName, currentOrgVariables);
         templateVariableDictionary.Add(InsertVariableTemplateFactory.CurrentUser.VariableCategoryName, currentUserVariables);
 

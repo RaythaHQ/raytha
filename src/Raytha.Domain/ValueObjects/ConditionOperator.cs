@@ -91,6 +91,17 @@ public class ConditionOperator : ValueObject
         }
     }
 
+    public static IEnumerable<ConditionOperator> OperatorsWithoutValues
+    {
+        get
+        {
+            yield return IS_TRUE;
+            yield return IS_FALSE;
+            yield return IS_EMPTY;
+            yield return IS_NOT_EMPTY;
+        }
+    }
+
     protected override IEnumerable<object> GetEqualityComponents()
     {
         yield return DeveloperName;

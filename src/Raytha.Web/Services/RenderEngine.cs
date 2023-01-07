@@ -7,10 +7,11 @@ namespace Raytha.Web.Services;
 
 public class RenderEngine : IRenderEngine
 {
+    private static readonly FluidParser _parser = new FluidParser(new FluidParserOptions { AllowFunctions = true });
+
     public string RenderAsHtml(string source, object entity)
     {
-        var parser = new FluidParser();
-        if (parser.TryParse(source, out var template, out var error))
+        if (_parser.TryParse(source, out var template, out var error))
         {
             var options = new TemplateOptions();
             options.MemberAccessStrategy = new UnsafeMemberAccessStrategy();

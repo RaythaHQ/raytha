@@ -7,19 +7,18 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="EFCore.BulkExtensions" Version="6.5.6" />
-    <PackageReference Include="MediatR" Version="11.0.0" />
+    <PackageReference Include="EFCore.BulkExtensions" Version="6.6.5" />
+    <PackageReference Include="MediatR" Version="11.1.0" />
     <PackageReference Include="MediatR.Extensions.Microsoft.DependencyInjection" Version="11.0.0" />
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Scripting" Version="4.3.1" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="7.0.0-rc.2.22472.11">
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Scripting" Version="4.4.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="7.0.1">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="7.0.0-rc.2.22472.11" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="7.0.1" />
     <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.17.0" />
-    <PackageReference Include="StringToExpression" Version="1.1.1" />
-    <PackageReference Include="Fluid.Core" Version="2.2.16" />
-    <PackageReference Include="Fluid.ViewEngine" Version="2.2.16" />
+    <PackageReference Include="Fluid.Core" Version="2.3.1" />
+    <PackageReference Include="Fluid.ViewEngine" Version="2.3.1" />
     <PackageReference Include="System.Text.RegularExpressions" Version="4.3.1" />
   </ItemGroup>
 

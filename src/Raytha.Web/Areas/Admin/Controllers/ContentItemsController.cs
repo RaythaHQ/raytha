@@ -142,7 +142,7 @@ public class ContentItemsController : BaseController
                     DeveloperName = b.DeveloperName,
                     Disabled = b.Disabled,
                     Value = p.FieldType.DeveloperName == BaseFieldType.MultipleSelect ? model.FieldValues.First(c => c.DeveloperName.ToDeveloperName() == p.DeveloperName)
-                                                    .AvailableChoices.Where(a => a.Value == "true").Select(z => z.DeveloperName.ToDeveloperName()).Contains(b.DeveloperName).ToString() : "false"
+                                                    .AvailableChoices.Where(a => a.Value == "true").Select(z => z.DeveloperName.ToDeveloperName()).Contains(b.DeveloperName).ToString() : b.DeveloperName
                 }).ToArray(),
                 FieldType = p.FieldType,
                 IsRequired = p.IsRequired,
@@ -251,7 +251,7 @@ public class ContentItemsController : BaseController
                         DeveloperName = b.DeveloperName,
                         Disabled = b.Disabled,
                         Value = p.FieldType.DeveloperName == BaseFieldType.MultipleSelect ? model.FieldValues.First(c => c.DeveloperName.ToDeveloperName() == p.DeveloperName)
-                                                    .AvailableChoices.Where(a => a.Value == "true").Select(z => z.DeveloperName.ToDeveloperName()).Contains(b.DeveloperName).ToString() : "false"
+                                                    .AvailableChoices.Where(a => a.Value == "true").Select(z => z.DeveloperName.ToDeveloperName()).Contains(b.DeveloperName).ToString() : b.DeveloperName
                     }).ToArray(),
                     FieldType = p.FieldType,
                     IsRequired = p.IsRequired,
