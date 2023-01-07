@@ -233,12 +233,13 @@ public class WebTemplatesController : BaseController
         if (response.Success)
         {
             SetSuccessMessage($"Template has been deleted.");
+            return RedirectToAction("Index");
         }
         else
         {
             SetErrorMessage("There was an error deleting this template", response.GetErrors());
+            return RedirectToAction("Edit", new { id });
         }
-        return RedirectToAction("Index");
     }
 
     [ServiceFilter(typeof(SetPaginationInformationFilterAttribute))]
