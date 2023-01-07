@@ -36,7 +36,7 @@ public class LoginWithSaml
             {
                 var developerName = request.DeveloperName.ToDeveloperName();
                 var authScheme = db.AuthenticationSchemes.FirstOrDefault(p =>
-                    p.AuthenticationSchemeType == developerName);
+                    p.DeveloperName == developerName);
 
                 if (authScheme == null)
                 {
