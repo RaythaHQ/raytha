@@ -2,7 +2,7 @@ import Sortable from 'stimulus-sortable'
 import { Notyf } from 'notyf';
 
 export default class extends Sortable {
-  end({ item, newIndex }) {
+  onUpdate({ item, newIndex }) {
     if (!item.dataset.sortableUpdateUrl) return
 
     const param = this.resourceNameValue ? `${this.resourceNameValue}[${this.paramNameValue}]` : this.paramNameValue
