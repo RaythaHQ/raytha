@@ -7,7 +7,7 @@ namespace Raytha.Web.Services;
 
 public class RenderEngine : IRenderEngine
 {
-    private static readonly FluidParser _parser = new FluidParser();
+    private static readonly FluidParser _parser = new FluidParser(new FluidParserOptions { AllowFunctions = true });
 
     public string RenderAsHtml(string source, object entity)
     {
