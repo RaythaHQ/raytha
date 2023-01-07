@@ -78,4 +78,9 @@ public class Emailer : IEmailer
             smtpClient.Send(messageToSend);
         }
     }
+
+    public bool IsMissingSmtpEnvVars()
+    {
+        return string.IsNullOrEmpty(_configuration["SMTP_HOST"]);
+    }
 }

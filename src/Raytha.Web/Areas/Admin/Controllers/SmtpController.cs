@@ -2,7 +2,6 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
-using Microsoft.Extensions.Configuration;
 using Raytha.Application.OrganizationSettings.Commands;
 using Raytha.Application.OrganizationSettings.Queries;
 using Raytha.Domain.Entities;
@@ -14,19 +13,12 @@ namespace Raytha.Web.Areas.Admin.Controllers;
 [Authorize(Policy = BuiltInSystemPermission.MANAGE_SYSTEM_SETTINGS_PERMISSION)]
 public class SmtpController : BaseController
 {
-    private readonly IConfiguration _config;
-    public SmtpController(IConfiguration config) : base() 
-    {
-        _config = config;
-    }
-
     [Route(RAYTHA_ROUTE_PREFIX + "/settings/smtp", Name = "smtpindex")]
     public async Task<IActionResult> Index()
     {
         var input = new GetOrganizationSettings.Query();
         var response = await Mediator.Send(input);
-        bool isMissingSmtpEnvVars = string.IsNullOrEmpty(_config["SMTP_HOST"]);
-        
+        var isMissingSmtpEnvVars = Emailer.IsMissingSmtpEnvVars();
         var viewModel = new Smtp_ViewModel
         {
             SmtpOverrideSystem = isMissingSmtpEnvVars ? true : response.Result.SmtpOverrideSystem,
@@ -54,8 +46,7 @@ public class SmtpController : BaseController
             SmtpHost = model.SmtpHost,
             SmtpPort = model.SmtpPort,
             SmtpUsername = model.SmtpUsername,
-            SmtpPassword = model.SmtpPassword,
-            MissingSmtpEnvironmentVariables = model.MissingSmtpEnvironmentVariables
+            SmtpPassword = model.SmtpPassword
         };
 
         var response = await Mediator.Send(input);

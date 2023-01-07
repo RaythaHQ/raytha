@@ -24,14 +24,13 @@ public class EditSmtp
 
         [JsonIgnore]
         public string SmtpPassword { get; init; } = null!;
-        public bool MissingSmtpEnvironmentVariables { get; init; }
     }
 
     public class Validator : AbstractValidator<Command>
     {
-        public Validator()
+        public Validator(IEmailer emailer)
         {
-            RuleFor(x => x.SmtpOverrideSystem).Equal(true).When(p => p.MissingSmtpEnvironmentVariables)
+            RuleFor(x => x.SmtpOverrideSystem).Equal(true).When(p => emailer.IsMissingSmtpEnvVars())
                 .WithMessage("The server administrator did not set SMTP environment variables, so you must override the system defaults.");
             RuleFor(x => x.SmtpHost).NotEmpty().When(p => p.SmtpOverrideSystem);
             RuleFor(x => x.SmtpPort).NotNull().GreaterThan(0).LessThanOrEqualTo(65535).When(p => p.SmtpOverrideSystem);
