@@ -56,6 +56,6 @@ For general help using Raytha, please refer to official documentation on [raytha
 
 Raytha is open-source software, freely distributable under the terms of an MIT license.
 
-We welcome contributions in the form of feature requests, bug reports, pull requests, or thoughtful discussions in the GitHub discussions and issue tracker. Please see the Code of Conduct for our pledge to contributors.
+We welcome contributions in the form of feature requests, bug reports, pull requests, or thoughtful discussions in the GitHub discussions and issue tracker. Please see the [CONTRIBUTING](https://github.com/RaythaHQ/raytha/blob/main/CONTRIBUTING.md) document for more information.
 
-Raytha was created by Zack Schwartz [@apexdodge](https://twitter.com/apexdodge)
+Raytha was founded by Zack Schwartz [@apexdodge](https://twitter.com/apexdodge)
