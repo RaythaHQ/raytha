@@ -1,5 +1,7 @@
 using System.Threading.Tasks;
+using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.DependencyInjection;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.OrganizationSettings.Commands;
 using Raytha.Domain.Entities;
@@ -8,8 +10,18 @@ using Raytha.Web.Areas.Admin.Views.Setup;
 namespace Raytha.Web.Areas.Admin.Controllers;
 
 [Area("Admin")]
-public class SetupController : BaseController
+public class SetupController : Controller
 {
+    public const string RAYTHA_ROUTE_PREFIX = "raytha";
+
+    private ISender _mediator;
+    private ICurrentOrganization _currentOrganization;
+    private IEmailer _emailer;
+
+    protected ISender Mediator => _mediator ??= HttpContext.RequestServices.GetRequiredService<ISender>();
+    protected ICurrentOrganization CurrentOrganization => _currentOrganization ??= HttpContext.RequestServices.GetRequiredService<ICurrentOrganization>();
+    protected IEmailer Emailer => _emailer ??= HttpContext.RequestServices.GetRequiredService<IEmailer>();
+
     [Route(RAYTHA_ROUTE_PREFIX + "/setup", Name = "setupindex")]
     public IActionResult Index()
     {
