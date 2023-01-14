@@ -89,13 +89,13 @@ public record ContentItem_RenderModel : IInsertTemplateVariable
 
 public record ContentItemListResult_RenderModel : IInsertTemplateVariable
 {
-    public IEnumerable<ContentItem_RenderModel> Items { get; set; }
-    public string Search { get; set; } = string.Empty;
-    public string Filter { get; set; } = string.Empty;
-    public int PageNumber { get; set; } = 0;
-    public int PageSize { get; set; } = 0;
-    public string OrderBy { get; set; } = string.Empty;
-    public int TotalCount { get; set;  }
+    public IEnumerable<ContentItem_RenderModel> Items { get; init; }
+    public string Search { get; init; } = string.Empty;
+    public string Filter { get; init; } = string.Empty;
+    public int PageNumber { get; init; } = 0;
+    public int PageSize { get; init; } = 0;
+    public string OrderBy { get; init; } = string.Empty;
+    public int TotalCount { get; init;  }
 
     public bool PreviousDisabledCss => TotalPages == 0 || PageNumber == 1;
     public bool NextDisabledCss => TotalPages == 0 || PageNumber == TotalPages;
@@ -103,9 +103,10 @@ public record ContentItemListResult_RenderModel : IInsertTemplateVariable
     public int LastVisiblePageNumber => Math.Min(TotalPages, Math.Max(1, PageNumber - 1) + 3);
     public int TotalPages => (int)Math.Ceiling((double)(TotalCount) / PageSize);
 
-    public string RoutePath { get; set; }
-    public string DeveloperName { get; set; }
-    public string Label { get; set; }
+    public string RoutePath { get; init; }
+    public string DeveloperName { get; init; }
+    public string Label { get; init; }
+    public string Description { get; init; }
 
     public static ContentItemListResult_RenderModel GetProjection(
         ListResultDto<ContentItemDto> entity,
@@ -128,7 +129,8 @@ public record ContentItemListResult_RenderModel : IInsertTemplateVariable
             PageNumber = pageNumber < 1 ? 1 : pageNumber,
             RoutePath = view.RoutePath,
             DeveloperName = view.DeveloperName,
-            Label = view.Label
+            Label = view.Label,
+            Description = view.Description
         };
     }
 
@@ -151,6 +153,7 @@ public record ContentItemListResult_RenderModel : IInsertTemplateVariable
         yield return (nameof(RoutePath));
         yield return (nameof(DeveloperName));
         yield return (nameof(Label));
+        yield return (nameof(Description));
     }
 
     public IEnumerable<KeyValuePair<string, string>> GetTemplateVariables()

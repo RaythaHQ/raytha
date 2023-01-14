@@ -9,6 +9,7 @@ public record ContentType_RenderModel : IInsertTemplateVariable
     public string LabelPlural { get; init; }
     public string LabelSingular { get; init; }
     public string DeveloperName { get; init; }
+    public string Description { get; init; }
 
     public static ContentType_RenderModel GetProjection(ContentTypeDto entity)
     {
@@ -20,7 +21,8 @@ public record ContentType_RenderModel : IInsertTemplateVariable
             Id = entity.Id,
             LabelPlural = entity.LabelPlural,
             LabelSingular = entity.LabelSingular,
-            DeveloperName = entity.DeveloperName
+            DeveloperName = entity.DeveloperName,
+            Description = entity.Description
         };
     }
 
@@ -30,6 +32,7 @@ public record ContentType_RenderModel : IInsertTemplateVariable
         yield return nameof(LabelPlural);
         yield return nameof(LabelSingular);
         yield return nameof(DeveloperName);
+        yield return nameof(Description);
     }
 
     public IEnumerable<KeyValuePair<string, string>> GetTemplateVariables()
