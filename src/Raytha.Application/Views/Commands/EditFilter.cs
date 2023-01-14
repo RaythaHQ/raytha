@@ -21,11 +21,12 @@ public class EditFilter
 
     public class Validator : AbstractValidator<Command>
     {
-        public Validator(IRaythaDbContext db)
+        public Validator(IRaythaDbContext db, IRaythaDbJsonQueryEngine jsonQueryEngine)
         {
             RuleFor(x => x).Custom((request, context) =>
             {
                 var entity = db.Views
+                    .Include(p => p.ContentType)
                     .FirstOrDefault(p => p.Id == request.Id.Guid);
 
                 if (entity == null)
@@ -58,6 +59,42 @@ public class EditFilter
                 catch (UnsupportedConditionOperatorException)
                 {
                     context.AddFailure(Constants.VALIDATION_SUMMARY, "Filter conditions missing operators.");
+                    return;
+                }
+
+                try
+                {
+                    var searchOnColumns = entity.Columns != null ? entity.Columns.ToArray() : new string[0];
+                    var viewFilter = request.Filter;
+                    var conditionToODataUtility = new FilterConditionToODataUtility(entity.ContentType);
+
+                    var filterConditions = new List<FilterCondition>();
+                    foreach (var condition in request.Filter)
+                    {
+                        filterConditions.Add(new FilterCondition
+                        {
+                            Field = condition.Field,
+                            Value = condition.Value,
+                            ConditionOperator = string.IsNullOrEmpty(condition.ConditionOperator) ? null : ConditionOperator.From(condition.ConditionOperator),
+                            GroupOperator = string.IsNullOrEmpty(condition.GroupOperator) ? null : BooleanOperator.From(condition.GroupOperator),
+                            Type = FilterConditionType.From(condition.Type),
+                            Id = condition.Id,
+                            ParentId = condition.ParentId
+                        });
+                    }
+
+                    var oDataFromFilter = conditionToODataUtility.ToODataFilter(filterConditions);
+                    var queryResult = jsonQueryEngine.QueryContentItems(entity.ContentTypeId,
+                                                      searchOnColumns,
+                                                      string.Empty,
+                                                      new string[] { oDataFromFilter },
+                                                      1,
+                                                      1,
+                                                      $"{BuiltInContentTypeField.PrimaryField.DeveloperName} {SortOrder.ASCENDING}");
+                }
+                catch (Exception ex)
+                {
+                    context.AddFailure(Constants.VALIDATION_SUMMARY, "A filter value specified did not pass OData validation.");
                     return;
                 }
             });
