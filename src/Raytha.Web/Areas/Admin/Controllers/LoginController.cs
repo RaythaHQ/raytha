@@ -379,7 +379,7 @@ public class LoginController : BaseController
         else
         {
             var errorModel = new GenericError_RenderModel { ErrorId = ShortGuid.NewGuid() };
-            return new ErrorActionViewResult(BuiltInWebTemplate.Error403, 403, errorModel);
+            return new ErrorActionViewResult(BuiltInWebTemplate.Error403, 403, errorModel, ViewData);
         }
     }
 

@@ -35,11 +35,11 @@ public class MainController : BaseController
                 var response = await Mediator.Send(input);
                 if (!response.Result.IsPublished)
                 {
-                    return new ErrorActionViewResult(BuiltInWebTemplate.Error404, 404, new GenericError_RenderModel());
+                    return new ErrorActionViewResult(BuiltInWebTemplate.Error404, 404, new GenericError_RenderModel(), ViewData);
                 }
                 var model = ContentItem_RenderModel.GetProjection(response.Result);
                 var contentType = ContentType_RenderModel.GetProjection(response.Result.ContentType);
-                return new ContentItemActionViewResult(response.Result.WebTemplate.DeveloperName, model, contentType);
+                return new ContentItemActionViewResult(response.Result.WebTemplate.DeveloperName, model, contentType, ViewData);
             }
             else
             {
@@ -51,18 +51,18 @@ public class MainController : BaseController
                     var contentItem = await Mediator.Send(new GetContentItemById.Query { Id = response.Result.ContentItemId.Value });
                     if (!contentItem.Result.IsPublished)
                     {
-                        return new ErrorActionViewResult(BuiltInWebTemplate.Error404, 404, new GenericError_RenderModel());
+                        return new ErrorActionViewResult(BuiltInWebTemplate.Error404, 404, new GenericError_RenderModel(), ViewData);
                     }
                     var model = ContentItem_RenderModel.GetProjection(contentItem.Result);
                     var contentType = ContentType_RenderModel.GetProjection(contentItem.Result.ContentType);
-                    return new ContentItemActionViewResult(contentItem.Result.WebTemplate.DeveloperName, model, contentType);
+                    return new ContentItemActionViewResult(contentItem.Result.WebTemplate.DeveloperName, model, contentType, ViewData);
                 }
                 else if (response.Result.PathType == "View")
                 {
                     var view = await Mediator.Send(new GetViewById.Query { Id = response.Result.ViewId.Value });
                     if (!view.Result.IsPublished)
                     {
-                        return new ErrorActionViewResult(BuiltInWebTemplate.Error404, 404, new GenericError_RenderModel());
+                        return new ErrorActionViewResult(BuiltInWebTemplate.Error404, 404, new GenericError_RenderModel(), ViewData);
                     }
                     var contentItems = await Mediator.Send(new GetContentItems.Query
                     {
@@ -79,7 +79,8 @@ public class MainController : BaseController
                     return new ContentItemActionViewResult(
                         view.Result.WebTemplate.DeveloperName,
                         modelAsList,
-                        contentType);
+                        contentType, 
+                        ViewData);
                 }
                 throw new Exception("Unknown content type");
             }
@@ -87,17 +88,17 @@ public class MainController : BaseController
         catch (NotFoundException)
         {
             var errorModel = new GenericError_RenderModel { ErrorId = ShortGuid.NewGuid() };
-            return new ErrorActionViewResult(BuiltInWebTemplate.Error404, 404, errorModel);
+            return new ErrorActionViewResult(BuiltInWebTemplate.Error404, 404, errorModel, ViewData);
         }
         catch (UnauthorizedAccessException)
         {
             var errorModel = new GenericError_RenderModel { ErrorId = ShortGuid.NewGuid() };
-            return new ErrorActionViewResult(BuiltInWebTemplate.Error403, 403, errorModel);
+            return new ErrorActionViewResult(BuiltInWebTemplate.Error403, 403, errorModel, ViewData);
         }
         catch (Exception)
         {
             var errorModel = new GenericError_RenderModel { ErrorId = ShortGuid.NewGuid() };
-            return new ErrorActionViewResult(BuiltInWebTemplate.Error500, 500, errorModel);
+            return new ErrorActionViewResult(BuiltInWebTemplate.Error500, 500, errorModel, ViewData);
         }
     }
 
@@ -105,6 +106,6 @@ public class MainController : BaseController
     public IActionResult Error()
     {
         var errorModel = new GenericError_RenderModel { ErrorId = ShortGuid.NewGuid() };
-        return new ErrorActionViewResult(BuiltInWebTemplate.Error500, 500, errorModel);
+        return new ErrorActionViewResult(BuiltInWebTemplate.Error500, 500, errorModel, ViewData);
     }
 }

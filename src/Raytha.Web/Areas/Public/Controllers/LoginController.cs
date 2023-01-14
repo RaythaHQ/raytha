@@ -53,7 +53,7 @@ public class LoginController : BaseController
             AuthenticationSchemes = CurrentOrganization_RenderModel.GetProjection(CurrentOrganization).AuthenticationSchemes.Where(p => p.IsEnabledForUsers)
         };
 
-        return new AccountActionViewResult(BuiltInWebTemplate.LoginWithEmailAndPasswordPage, viewModel);
+        return new AccountActionViewResult(BuiltInWebTemplate.LoginWithEmailAndPasswordPage, viewModel, ViewData);
     }
 
     [Route("account/login", Name = "userloginemailandpassword")]
@@ -90,7 +90,7 @@ public class LoginController : BaseController
                 AuthenticationSchemes = CurrentOrganization_RenderModel.GetProjection(CurrentOrganization).AuthenticationSchemes.Where(p => p.IsEnabledForUsers)
             };
 
-            return new AccountActionViewResult(BuiltInWebTemplate.LoginWithEmailAndPasswordPage, viewModel);
+            return new AccountActionViewResult(BuiltInWebTemplate.LoginWithEmailAndPasswordPage, viewModel, ViewData);
         }
     }
 
@@ -120,7 +120,7 @@ public class LoginController : BaseController
             AuthenticationSchemes = CurrentOrganization_RenderModel.GetProjection(CurrentOrganization).AuthenticationSchemes.Where(p => p.IsEnabledForUsers)
         };
 
-        return new AccountActionViewResult(BuiltInWebTemplate.LoginWithMagicLinkPage, viewModel);
+        return new AccountActionViewResult(BuiltInWebTemplate.LoginWithMagicLinkPage, viewModel, ViewData);
     }
 
     [Route("account/login/magic-link", Name = "userloginmagiclink")]
@@ -148,7 +148,7 @@ public class LoginController : BaseController
                 AuthenticationSchemes = CurrentOrganization_RenderModel.GetProjection(CurrentOrganization).AuthenticationSchemes.Where(p => p.IsEnabledForUsers)
             };
 
-            return new AccountActionViewResult(BuiltInWebTemplate.LoginWithMagicLinkPage, viewModel);
+            return new AccountActionViewResult(BuiltInWebTemplate.LoginWithMagicLinkPage, viewModel, ViewData);
         }
     }
 
@@ -156,7 +156,7 @@ public class LoginController : BaseController
     public IActionResult LoginWithMagicLinkSent()
     {
         var viewModel = new EmptyTarget_RenderModel();
-        return new AccountActionViewResult(BuiltInWebTemplate.LoginWithMagicLinkSentPage, viewModel);
+        return new AccountActionViewResult(BuiltInWebTemplate.LoginWithMagicLinkSentPage, viewModel, ViewData);
     }
 
     [Route("account/login/magic-link/complete/{token?}", Name = "userloginmagiclinkcomplete")]
@@ -164,7 +164,7 @@ public class LoginController : BaseController
     {
         if (string.IsNullOrEmpty(token))
         {
-            return new ErrorActionViewResult(BuiltInWebTemplate.Error403, 403, new GenericError_RenderModel());
+            return new ErrorActionViewResult(BuiltInWebTemplate.Error403, 403, new GenericError_RenderModel(), ViewData);
         }
 
         var response = await Mediator.Send(new CompleteLoginWithMagicLink.Command { Id = token });
@@ -245,7 +245,7 @@ public class LoginController : BaseController
     {
         if (!CurrentOrganization.EmailAndPasswordIsEnabledForUsers)
         {
-            return new ErrorActionViewResult(BuiltInWebTemplate.Error403, 403, new GenericError_RenderModel());
+            return new ErrorActionViewResult(BuiltInWebTemplate.Error403, 403, new GenericError_RenderModel(), ViewData);
         }
 
         ForgotPasswordSubmit_RenderModel viewModel = new ForgotPasswordSubmit_RenderModel
@@ -253,7 +253,7 @@ public class LoginController : BaseController
             RequestVerificationToken = Antiforgery.GetAndStoreTokens(HttpContext).RequestToken
         };
 
-        return new AccountActionViewResult(BuiltInWebTemplate.ForgotPasswordPage, viewModel);
+        return new AccountActionViewResult(BuiltInWebTemplate.ForgotPasswordPage, viewModel, ViewData);
         
     }
 
@@ -264,13 +264,13 @@ public class LoginController : BaseController
     {
         if (!CurrentOrganization.EmailAndPasswordIsEnabledForUsers)
         {
-            return new ErrorActionViewResult(BuiltInWebTemplate.Error403, 403, new GenericError_RenderModel());
+            return new ErrorActionViewResult(BuiltInWebTemplate.Error403, 403, new GenericError_RenderModel(), ViewData);
         }
 
         var response = await Mediator.Send(new BeginForgotPassword.Command { EmailAddress = model.EmailAddress });
         if (response.Success)
         {
-            return new AccountActionViewResult(BuiltInWebTemplate.ForgotPasswordResetLinkSentPage, new EmptyTarget_RenderModel());
+            return new AccountActionViewResult(BuiltInWebTemplate.ForgotPasswordResetLinkSentPage, new EmptyTarget_RenderModel(), ViewData);
         }
         else
         {
@@ -280,14 +280,14 @@ public class LoginController : BaseController
                 RequestVerificationToken = Antiforgery.GetAndStoreTokens(HttpContext).RequestToken
             };
 
-            return new AccountActionViewResult(BuiltInWebTemplate.ForgotPasswordPage, viewModel);
+            return new AccountActionViewResult(BuiltInWebTemplate.ForgotPasswordPage, viewModel, ViewData);
         }
     }
 
     [Route("account/login/forgot-password/sent", Name = "userforgotpasswordsent")]
     public IActionResult ForgotPasswordSent()
     {
-        return new AccountActionViewResult(BuiltInWebTemplate.ForgotPasswordResetLinkSentPage, new EmptyTarget_RenderModel());
+        return new AccountActionViewResult(BuiltInWebTemplate.ForgotPasswordResetLinkSentPage, new EmptyTarget_RenderModel(), ViewData);
     }
 
     [Route("account/login/forgot-password/complete/{token?}", Name = "userforgotpasswordcomplete")]
@@ -295,18 +295,18 @@ public class LoginController : BaseController
     {
         if (!CurrentOrganization.EmailAndPasswordIsEnabledForUsers)
         {
-            return new ErrorActionViewResult(BuiltInWebTemplate.Error403, 403, new GenericError_RenderModel());
+            return new ErrorActionViewResult(BuiltInWebTemplate.Error403, 403, new GenericError_RenderModel(), ViewData);
         }
 
         if (string.IsNullOrEmpty(token))
         {
-            return new ErrorActionViewResult(BuiltInWebTemplate.Error403, 403, new GenericError_RenderModel());
+            return new ErrorActionViewResult(BuiltInWebTemplate.Error403, 403, new GenericError_RenderModel(), ViewData);
         }
 
         var isTokenValidResult = await Mediator.Send(new GetForgotPasswordTokenValidity.Query { Id = token });
         if (!isTokenValidResult.Success)
         {
-            return new ErrorActionViewResult(BuiltInWebTemplate.Error403, 403, new GenericError_RenderModel());
+            return new ErrorActionViewResult(BuiltInWebTemplate.Error403, 403, new GenericError_RenderModel(), ViewData);
         }
 
         ForgotPasswordCompleteSubmit_RenderModel viewModel = new ForgotPasswordCompleteSubmit_RenderModel
@@ -315,7 +315,7 @@ public class LoginController : BaseController
             RequestVerificationToken = Antiforgery.GetAndStoreTokens(HttpContext).RequestToken
         };
 
-        return new AccountActionViewResult(BuiltInWebTemplate.ForgotPasswordCompletePage, viewModel);
+        return new AccountActionViewResult(BuiltInWebTemplate.ForgotPasswordCompletePage, viewModel, ViewData);
     }
 
     [Route("account/login/forgot-password/complete/{token?}", Name = "userforgotpasswordcomplete")]
@@ -325,12 +325,12 @@ public class LoginController : BaseController
     {
         if (!CurrentOrganization.EmailAndPasswordIsEnabledForUsers)
         {
-            return new ErrorActionViewResult(BuiltInWebTemplate.Error403, 403, new GenericError_RenderModel());
+            return new ErrorActionViewResult(BuiltInWebTemplate.Error403, 403, new GenericError_RenderModel(), ViewData);
         }
 
         if (string.IsNullOrEmpty(token))
         {
-            return new ErrorActionViewResult(BuiltInWebTemplate.Error403, 403, new GenericError_RenderModel());
+            return new ErrorActionViewResult(BuiltInWebTemplate.Error403, 403, new GenericError_RenderModel(), ViewData);
         }
 
         var command = new CompleteForgotPassword.Command
@@ -343,7 +343,7 @@ public class LoginController : BaseController
         var response = await Mediator.Send(command);
         if (response.Success)
         {
-            return new AccountActionViewResult(BuiltInWebTemplate.ForgotPasswordSuccessPage, new EmptyTarget_RenderModel());
+            return new AccountActionViewResult(BuiltInWebTemplate.ForgotPasswordSuccessPage, new EmptyTarget_RenderModel(), ViewData);
         }
         else
         {
@@ -353,7 +353,7 @@ public class LoginController : BaseController
                 ValidationFailures = response.GetErrors()?.ToDictionary(k => k.PropertyName, v => v.ErrorMessage),
                 RequestVerificationToken = Antiforgery.GetAndStoreTokens(HttpContext).RequestToken
             };
-            return new AccountActionViewResult(BuiltInWebTemplate.ForgotPasswordCompletePage, viewModel);
+            return new AccountActionViewResult(BuiltInWebTemplate.ForgotPasswordCompletePage, viewModel, ViewData);
         }
     }
 
@@ -362,7 +362,7 @@ public class LoginController : BaseController
     {
         if (!CurrentOrganization.EmailAndPasswordIsEnabledForUsers)
         {
-            return new ErrorActionViewResult(BuiltInWebTemplate.Error403, 403, new GenericError_RenderModel());
+            return new ErrorActionViewResult(BuiltInWebTemplate.Error403, 403, new GenericError_RenderModel(), ViewData);
         }
 
         CreateUserSubmit_RenderModel viewModel = new CreateUserSubmit_RenderModel
@@ -370,7 +370,7 @@ public class LoginController : BaseController
             RequestVerificationToken = Antiforgery.GetAndStoreTokens(HttpContext).RequestToken
         };
 
-        return new AccountActionViewResult(BuiltInWebTemplate.UserRegistrationForm, viewModel);
+        return new AccountActionViewResult(BuiltInWebTemplate.UserRegistrationForm, viewModel, ViewData);
     }
 
     [Route("account/create", Name = "usercreate")]
@@ -380,7 +380,7 @@ public class LoginController : BaseController
     {
         if (!CurrentOrganization.EmailAndPasswordIsEnabledForUsers)
         {
-            return new ErrorActionViewResult(BuiltInWebTemplate.Error403, 403, new GenericError_RenderModel());
+            return new ErrorActionViewResult(BuiltInWebTemplate.Error403, 403, new GenericError_RenderModel(), ViewData);
         }
 
         var command = new CreateUser.Command
@@ -395,7 +395,7 @@ public class LoginController : BaseController
         var response = await Mediator.Send(command);
         if (response.Success)
         {
-            return new AccountActionViewResult(BuiltInWebTemplate.UserRegistrationFormSuccess, new EmptyTarget_RenderModel());
+            return new AccountActionViewResult(BuiltInWebTemplate.UserRegistrationFormSuccess, new EmptyTarget_RenderModel(), ViewData);
         }
         else
         {
@@ -407,7 +407,7 @@ public class LoginController : BaseController
                 ValidationFailures = response.GetErrors()?.ToDictionary(k => k.PropertyName, v => v.ErrorMessage),
                 RequestVerificationToken = Antiforgery.GetAndStoreTokens(HttpContext).RequestToken
             };
-            return new AccountActionViewResult(BuiltInWebTemplate.UserRegistrationForm, viewModel);
+            return new AccountActionViewResult(BuiltInWebTemplate.UserRegistrationForm, viewModel, ViewData);
         }
     }
 
@@ -430,7 +430,7 @@ public class LoginController : BaseController
             return new ErrorActionViewResult(BuiltInWebTemplate.Error403, 403, new GenericError_RenderModel
             {
                 ErrorMessage = result.Error
-            });
+            }, ViewData);
         }
     }
 

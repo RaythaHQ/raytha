@@ -11,9 +11,14 @@ public record Wrapper_RenderModel : IInsertTemplateVariable
     public object Target { get; init; }
     public Dictionary<string, string> QueryParams { get; init; } = new Dictionary<string, string>();
 
+    public string? RequestVerificationToken { get; set; }
+    public object? ViewData { get; set; }
+
     public virtual IEnumerable<string> GetDeveloperNames()
     {
         yield return nameof(QueryParams);
+        yield return nameof(RequestVerificationToken);
+        yield return nameof(ViewData);
     }
 
     public virtual IEnumerable<KeyValuePair<string, string>> GetTemplateVariables()
