@@ -1,20 +1,13 @@
-using Azure;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Raytha.Application.AuthenticationSchemes.Queries;
 using Raytha.Application.Common.Models.RenderModels;
-using Raytha.Application.Common.Security;
-using Raytha.Application.Login;
 using Raytha.Application.Login.Commands;
 using Raytha.Application.Users;
-using Raytha.Application.Users.Commands;
 using Raytha.Domain.Entities;
-using Raytha.Domain.ValueObjects;
 using Raytha.Web.Areas.Public.DbViewEngine;
 using Raytha.Web.Areas.Public.Views.Profile;
-using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
@@ -33,7 +26,7 @@ public class ProfileController : BaseController
             RequestVerificationToken = Antiforgery.GetAndStoreTokens(HttpContext).RequestToken
         };
 
-        return new AccountActionViewResult(BuiltInWebTemplate.ChangeProfilePage, viewModel);
+        return new AccountActionViewResult(BuiltInWebTemplate.ChangeProfilePage, viewModel, ViewData);
     }
 
     [Route("account/me", Name = "userprofile")]
@@ -73,7 +66,7 @@ public class ProfileController : BaseController
             ClaimsPrincipal principal = new ClaimsPrincipal(identity);
             await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(principal), new AuthenticationProperties() { IsPersistent = true });
 
-            return new AccountActionViewResult(BuiltInWebTemplate.ChangeProfilePage, viewModel);
+            return new AccountActionViewResult(BuiltInWebTemplate.ChangeProfilePage, viewModel, ViewData);
         }
         else
         {
@@ -83,7 +76,7 @@ public class ProfileController : BaseController
                 RequestVerificationToken = Antiforgery.GetAndStoreTokens(HttpContext).RequestToken
             };
 
-            return new AccountActionViewResult(BuiltInWebTemplate.ChangeProfilePage, viewModel);
+            return new AccountActionViewResult(BuiltInWebTemplate.ChangeProfilePage, viewModel, ViewData);
         }
     }
 
@@ -92,7 +85,7 @@ public class ProfileController : BaseController
     {
         if (!CurrentOrganization.EmailAndPasswordIsEnabledForUsers)
         {
-            return new ErrorActionViewResult(BuiltInWebTemplate.Error403, 403, new GenericError_RenderModel());
+            return new ErrorActionViewResult(BuiltInWebTemplate.Error403, 403, new GenericError_RenderModel(), ViewData);
         }
 
         ChangePasswordSubmit_RenderModel viewModel = new ChangePasswordSubmit_RenderModel
@@ -100,7 +93,7 @@ public class ProfileController : BaseController
             RequestVerificationToken = Antiforgery.GetAndStoreTokens(HttpContext).RequestToken
         };
 
-        return new AccountActionViewResult(BuiltInWebTemplate.ChangePasswordPage, viewModel);
+        return new AccountActionViewResult(BuiltInWebTemplate.ChangePasswordPage, viewModel, ViewData);
     }
 
     [Route("account/me/change-password", Name = "userchangepassword")]
@@ -110,7 +103,7 @@ public class ProfileController : BaseController
     {
         if (!CurrentOrganization.EmailAndPasswordIsEnabledForUsers)
         {
-            return new ErrorActionViewResult(BuiltInWebTemplate.Error403, 403, new GenericError_RenderModel());
+            return new ErrorActionViewResult(BuiltInWebTemplate.Error403, 403, new GenericError_RenderModel(), ViewData);
         }
 
         var response = await Mediator.Send(new ChangePassword.Command
@@ -129,7 +122,7 @@ public class ProfileController : BaseController
                 RequestVerificationToken = Antiforgery.GetAndStoreTokens(HttpContext).RequestToken
             };
 
-            return new AccountActionViewResult(BuiltInWebTemplate.ChangePasswordPage, viewModel);
+            return new AccountActionViewResult(BuiltInWebTemplate.ChangePasswordPage, viewModel, ViewData);
         }
         else
         {
@@ -139,7 +132,7 @@ public class ProfileController : BaseController
                 RequestVerificationToken = Antiforgery.GetAndStoreTokens(HttpContext).RequestToken
             };
 
-            return new AccountActionViewResult(BuiltInWebTemplate.ChangePasswordPage, viewModel);
+            return new AccountActionViewResult(BuiltInWebTemplate.ChangePasswordPage, viewModel, ViewData);
         }
     }
 }

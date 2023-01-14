@@ -325,7 +325,7 @@ public class WebTemplatesController : BaseController
         templateVariableDictionary.Add(InsertVariableTemplateFactory.CurrentOrganization.VariableCategoryName, currentOrgVariables);
         templateVariableDictionary.Add(InsertVariableTemplateFactory.CurrentUser.VariableCategoryName, currentUserVariables);
 
-        if (!isBuiltInTemplate)
+        if (ShowContentVariablesForTemplate(templateName) || !isBuiltInTemplate)
         {
             var contentTypeVariables = InsertVariableTemplateFactory.ContentType.TemplateInfo.GetTemplateVariables().Select(p => new InsertVariableListItem_ViewModel
             {
@@ -381,6 +381,11 @@ public class WebTemplatesController : BaseController
     protected string RenderValueProperty(BaseFieldType fieldType)
     {
         return fieldType.DeveloperName != BaseFieldType.OneToOneRelationship.DeveloperName ? $".Text" : string.Empty;
+    }
+
+    protected bool ShowContentVariablesForTemplate(string templateName)
+    {
+        return BuiltInWebTemplate._Layout.DeveloperName == templateName;
     }
 
     public override void OnActionExecuted(ActionExecutedContext context)
