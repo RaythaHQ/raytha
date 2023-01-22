@@ -9,6 +9,9 @@ using System.Data;
 using Raytha.Infrastructure.JsonQueryEngine;
 using Raytha.Infrastructure.FileStorage;
 using Raytha.Application.Common.Utils;
+using Microsoft.Extensions.Options;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
+using MySqlConnector;
 
 namespace Microsoft.Extensions.DependencyInjection;
 
@@ -16,17 +19,33 @@ public static class ConfigureServices
 {
     public static IServiceCollection AddInfrastructureServices(this IServiceCollection services, IConfiguration configuration)
     {
-        var dbConnectionString = configuration.GetConnectionString("DefaultConnection");
+        switch (configuration["DATABASE_PROVIDER"])
+        {
+            case "mssql":
+                var mssqlConnectionString = configuration.GetConnectionString("mssqlConnection");
+                services.AddDbContext<RaythaDbContext>(options =>
+                    options.UseSqlServer(mssqlConnectionString));
+                services.AddTransient<IDbConnection>((sp) => new SqlConnection(mssqlConnectionString));
+                break;
+            case "mysql":
+                var mysqlConnectionString = configuration.GetConnectionString("mysqlConnection");
+                var serverVersion = ServerVersion.AutoDetect(mysqlConnectionString);
+                services.AddDbContext<RaythaDbContext>(options =>
+                    options.UseMySql(
+                    mysqlConnectionString,
+                    serverVersion
+                //, x => x.MigrationsAssembly(typeof(Migrations.MySql.Marker).Assembly.GetName().Name!)
+                ));
+                services.AddTransient<IDbConnection>((sp) => new MySqlConnection(mysqlConnectionString));
+                break;
+            default:
+                throw new Exception("database provider unknown");
+        }
 
         //entity framework
         services.AddScoped<AuditableEntitySaveChangesInterceptor>();
-        services.AddDbContext<RaythaDbContext>(options =>
-            options.UseSqlServer(dbConnectionString));
 
         services.AddScoped<IRaythaDbContext>(provider => provider.GetRequiredService<RaythaDbContext>());
-
-        //direct to db
-        services.AddTransient<IDbConnection>((sp) => new SqlConnection(dbConnectionString));
 
         services.AddScoped<IEmailer, Emailer>();
         services.AddTransient<IRaythaDbJsonQueryEngine, RaythaDbJsonQueryEngine>();
