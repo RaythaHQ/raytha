@@ -22,7 +22,7 @@ A priority of Raytha is to keep the technology footprint small for getting up an
 
 * .NET 6+
 * npm for compiling javascript
-* SQL Server Express
+* SQL Server Express or MariaDB/MySQL
 * SMTP
 * Visual Studio 2022 or VS Code. All tutorials will assume Visual Studio.
 
@@ -32,13 +32,19 @@ The steps to run Raytha locally are that of any typical .NET application.
 ```
 git clone https://github.com/RaythaHQ/raytha.git
 ```
-2. Ensure your appsettings.config has a valid database connection string and SMTP credentials. If you do not have access to an SMTP server for local development, [check out Papercut-SMTP](https://github.com/ChangemakerStudios/Papercut-SMTP). Super convenient.
+2. Ensure your appsettings.config has a valid database provider, a database connection string and SMTP credentials. If you do not have access to an SMTP server for local development, [check out Papercut-SMTP](https://github.com/ChangemakerStudios/Papercut-SMTP). Super convenient.
 
 3. Make sure Raytha.Web is set as the Default Project. Open the `Package Manager Console` and run Entity Framework database migrations:
 
+For MSSql:
 ```
-dotnet ef database update --project .\src\Raytha.Infrastructure --startup-project .\src\Raytha.Web
+dotnet ef database update --project .\src\Raytha.Infrastructure.Migrations.Mssql --startup-project .\src\Raytha.Web
 ```
+or for MariadDB/MySQL:
+```
+dotnet ef database update --project .\src\Raytha.Infrastructure.Migrations.Mysql --startup-project .\src\Raytha.Web
+```
+
 
 Alternatively you can create your database manually and then run the `FreshCreateOnLatestVersion.sql` script in the /db directory.
 

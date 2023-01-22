@@ -11,11 +11,11 @@
     <PackageReference Include="MediatR" Version="11.1.0" />
     <PackageReference Include="MediatR.Extensions.Microsoft.DependencyInjection" Version="11.0.0" />
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Scripting" Version="4.4.0" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="7.0.1">
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="7.0.2">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="7.0.1" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="7.0.2" />
     <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.17.0" />
     <PackageReference Include="Fluid.Core" Version="2.3.1" />
     <PackageReference Include="Fluid.ViewEngine" Version="2.3.1" />
@@ -30,6 +30,8 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Raytha.Application\Raytha.Application.csproj" />
+    <ProjectReference Include="..\Raytha.Infrastructure.Migrations.Mssql\Raytha.Infrastructure.Migrations.Mssql.csproj" />
+    <ProjectReference Include="..\Raytha.Infrastructure.Migrations.Mysql\Raytha.Infrastructure.Migrations.Mysql.csproj" />
     <ProjectReference Include="..\Raytha.Infrastructure\Raytha.Infrastructure.csproj" />
   </ItemGroup>
 
