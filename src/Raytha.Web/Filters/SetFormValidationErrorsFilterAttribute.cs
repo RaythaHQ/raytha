@@ -24,5 +24,9 @@ public class SetFormValidationErrorsFilterAttribute : ActionFilterAttribute
                 }
             }
         }
+        else
+        {
+            await next();
+        }
     }
 }

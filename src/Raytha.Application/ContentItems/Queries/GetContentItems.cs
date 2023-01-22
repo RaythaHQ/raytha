@@ -31,7 +31,7 @@ public class GetContentItems
         {
             IEnumerable<ContentItemDto> items;
             int count = 0;
-            if (request.ViewId.HasValue)
+            if (request.ViewId.HasValue && request.ViewId.Value != ShortGuid.Empty)
             {
                 View view = _entityFrameworkDb.Views
                     .FirstOrDefault(p => p.Id == request.ViewId.Value.Guid);

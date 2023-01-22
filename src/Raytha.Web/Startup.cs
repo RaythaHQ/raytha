@@ -62,16 +62,24 @@ public class Startup
             });
         }
 
+        app.UseSwagger(c =>
+        {
+            c.RouteTemplate = "raytha/api/{documentName}/swagger.json";
+        });
+
+        app.UseSwaggerUI(c =>
+        {
+            c.SwaggerEndpoint("/raytha/api/v1/swagger.json", "Raytha API - V1");
+            c.RoutePrefix = $"raytha/api";
+        });
+
         app.UseRouting();
         app.UseAuthentication();
         app.UseAuthorization();
 
         app.UseEndpoints(endpoints =>
         {
-            endpoints.MapControllerRoute(
-                name: "default",
-                pattern: "/{*route}",
-                defaults: new { area = "Public", controller = "Main", action = "Index" });
+            endpoints.MapControllers();
         });
     }
 }
