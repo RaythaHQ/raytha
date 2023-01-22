@@ -1,17 +1,15 @@
-﻿using Raytha.Infrastructure.Persistence.Interceptors;
-using Raytha.Application.Common.Interfaces;
-using Raytha.Infrastructure.Persistence;
-using Raytha.Infrastructure.Services;
+﻿using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Data.SqlClient;
-using System.Data;
-using Raytha.Infrastructure.JsonQueryEngine;
-using Raytha.Infrastructure.FileStorage;
-using Raytha.Application.Common.Utils;
-using Microsoft.Extensions.Options;
-using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 using MySqlConnector;
+using Raytha.Application.Common.Interfaces;
+using Raytha.Application.Common.Utils;
+using Raytha.Infrastructure.FileStorage;
+using Raytha.Infrastructure.JsonQueryEngine;
+using Raytha.Infrastructure.Persistence;
+using Raytha.Infrastructure.Persistence.Interceptors;
+using Raytha.Infrastructure.Services;
+using System.Data;
 
 namespace Microsoft.Extensions.DependencyInjection;
 
@@ -24,7 +22,9 @@ public static class ConfigureServices
             case "mssql":
                 var mssqlConnectionString = configuration.GetConnectionString("mssqlConnection");
                 services.AddDbContext<RaythaDbContext>(options =>
-                    options.UseSqlServer(mssqlConnectionString));
+                    options.UseSqlServer(
+                        mssqlConnectionString,
+                        b => b.MigrationsAssembly("Raytha.Infrastructure.Migrations.Mssql")));
                 services.AddTransient<IDbConnection>((sp) => new SqlConnection(mssqlConnectionString));
                 break;
             case "mysql":
@@ -32,10 +32,9 @@ public static class ConfigureServices
                 var serverVersion = ServerVersion.AutoDetect(mysqlConnectionString);
                 services.AddDbContext<RaythaDbContext>(options =>
                     options.UseMySql(
-                    mysqlConnectionString,
-                    serverVersion
-                //, x => x.MigrationsAssembly(typeof(Migrations.MySql.Marker).Assembly.GetName().Name!)
-                ));
+                        mysqlConnectionString,
+                        serverVersion,
+                        b => b.MigrationsAssembly("Raytha.Infrastructure.Migrations.Mysql")));
                 services.AddTransient<IDbConnection>((sp) => new MySqlConnection(mysqlConnectionString));
                 break;
             default:
