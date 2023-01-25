@@ -1,6 +1,6 @@
 ﻿namespace Raytha.Domain.Events;
 
-public class AdminCreatedEvent : BaseEvent
+public class AdminCreatedEvent : BaseEvent, IBeforeSaveChangesNotification
 {
     public User User { get; private set; }
     public bool SendEmail { get; private set; }

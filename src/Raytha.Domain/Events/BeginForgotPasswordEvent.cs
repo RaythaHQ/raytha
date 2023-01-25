@@ -1,6 +1,6 @@
 ﻿namespace Raytha.Domain.Events;
 
-public class BeginForgotPasswordEvent : BaseEvent
+public class BeginForgotPasswordEvent : BaseEvent, IBeforeSaveChangesNotification
 {
     public User User { get; private set; }
     public bool SendEmail { get; private set; }

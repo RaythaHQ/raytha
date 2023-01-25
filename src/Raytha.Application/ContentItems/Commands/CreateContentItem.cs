@@ -7,6 +7,7 @@ using Raytha.Application.Common.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Raytha.Application.Common.Exceptions;
 using Raytha.Application.Common.Utils;
+using Raytha.Domain.Events;
 
 namespace Raytha.Application.ContentItems.Commands;
 
@@ -109,6 +110,7 @@ public class CreateContentItem
             };
 
             _db.ContentItems.Add(entity);
+            entity.AddDomainEvent(new ContentItemCreatedEvent(entity));
 
             await _db.SaveChangesAsync(cancellationToken);
 
