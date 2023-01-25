@@ -107,7 +107,7 @@ public class MediaItemsController : BaseController
     public IActionResult RedirectToFileUrlByObjectKey(string objectKey)
     {
         var downloadUrl = FileStorageProvider.GetDownloadUrlAsync(objectKey, FileStorageUtility.GetDefaultExpiry()).Result;
-        return RedirectPermanent(downloadUrl);
+        return Redirect(downloadUrl);
     }
 
     [Route($"{RAYTHA_ROUTE_PREFIX}/media-items/id/{{id}}", Name = "mediaitemsredirecttofileurlbyid")]
