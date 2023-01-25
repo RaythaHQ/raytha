@@ -8,11 +8,13 @@ namespace Raytha.Infrastructure.FileStorage;
 public class AzureBlobFileStorageProvider : IFileStorageProvider
 {
     private static BlobContainerClient _client;
+    private string _customDomain = string.Empty;
 
     public AzureBlobFileStorageProvider(IFileStorageProviderSettings configuration)
     {
         string connectionString = configuration.AzureBlobConnectionString;
         string container = configuration.AzureBlobContainer;
+        _customDomain = configuration.AzureBlobCustomDomain;
 
         if (string.IsNullOrEmpty(connectionString) || string.IsNullOrEmpty(container))
             throw new InvalidOperationException("Azure Environment Variables were not found");
@@ -38,10 +40,11 @@ public class AzureBlobFileStorageProvider : IFileStorageProvider
         BlobSasBuilder sasPermissions = new BlobSasBuilder(BlobSasPermissions.Read, expiresAt)
         {
             ContentDisposition = inline ? $"inline" : $"attachment; filename={key}",
-            Protocol = SasProtocol.Https
+            Protocol = SasProtocol.HttpsAndHttp
         };
 
         downloadUrl = blobClient.GenerateSasUri(sasPermissions).AbsoluteUri;
+        downloadUrl = UseCustomDomain(downloadUrl);
         return downloadUrl;
     }
 
@@ -55,10 +58,11 @@ public class AzureBlobFileStorageProvider : IFileStorageProvider
         {
             ContentDisposition = inline ? $"inline" : $"attachment; filename={key}",
             ContentType = contentType,
-            Protocol = SasProtocol.Https
+            Protocol = SasProtocol.HttpsAndHttp
         };
         
         downloadUrl = blobClient.GenerateSasUri(sasPermissions).AbsoluteUri;
+        downloadUrl = UseCustomDomain(downloadUrl);
         return downloadUrl;
     }
 
@@ -69,9 +73,10 @@ public class AzureBlobFileStorageProvider : IFileStorageProvider
         {
             ContentDisposition = inline ? $"inline" : $"attachment; filename={fileName}",
             ContentType = contentType,
-            Protocol = SasProtocol.Https
+            Protocol = SasProtocol.HttpsAndHttp
         };
         string uploadUrl = blobClient.GenerateSasUri(sasPermissions).AbsoluteUri;
+        uploadUrl = UseCustomDomain(uploadUrl);
         return uploadUrl;
     }
 
@@ -85,7 +90,7 @@ public class AzureBlobFileStorageProvider : IFileStorageProvider
         {
             ContentDisposition = inline ? $"inline" : $"attachment; filename={fileName}",
             ContentType = contentType,
-            Protocol = SasProtocol.Https
+            Protocol = SasProtocol.HttpsAndHttp
         };
         downloadUrl = blobClient.GenerateSasUri(sasPermissions).AbsoluteUri;
 
@@ -96,11 +101,22 @@ public class AzureBlobFileStorageProvider : IFileStorageProvider
             await blobClient.UploadAsync(ms);
         }
 
+        downloadUrl = UseCustomDomain(downloadUrl);
         return downloadUrl;
     }
 
     public string GetName()
     {
         return FileStorageUtility.AZUREBLOB;
+    }
+
+    private string UseCustomDomain(string downloadUrl)
+    {
+        if (string.IsNullOrEmpty(_customDomain))
+            return downloadUrl;
+
+        var builder = new UriBuilder(downloadUrl);
+        builder.Host = _customDomain;
+        return builder.Uri.ToString();
     }
 }
