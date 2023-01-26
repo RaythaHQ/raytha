@@ -7,6 +7,7 @@ using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Models;
 using Raytha.Application.Common.Utils;
 using Raytha.Domain.Entities;
+using Raytha.Domain.Events;
 using Raytha.Domain.ValueObjects.FieldValues;
 
 namespace Raytha.Application.ContentItems.Commands;
@@ -84,6 +85,7 @@ public class DeleteContentItem
             _entityFrameworkDb.ContentItems.Remove(entityToDelete);
             _entityFrameworkDb.Routes.Remove(entityToDelete.Route);
 
+            entityToDelete.AddDomainEvent(new ContentItemDeletedEvent(entityToDelete));
             await _entityFrameworkDb.SaveChangesAsync(cancellationToken);
             return new CommandResponseDto<ShortGuid>(request.Id);
         }

@@ -68,8 +68,10 @@ public class RaythaDbContext : DbContext, IRaythaDbContext
 
     public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
-        await _mediator.DispatchDomainEvents(this);
+        await _mediator.DispatchDomainEventsBeforeSaveChanges(this);
+        var numItems = await base.SaveChangesAsync(cancellationToken);
+        await _mediator.DispatchDomainEventsAfterSaveChanges(this);
 
-        return await base.SaveChangesAsync(cancellationToken);
+        return numItems;
     }
 }

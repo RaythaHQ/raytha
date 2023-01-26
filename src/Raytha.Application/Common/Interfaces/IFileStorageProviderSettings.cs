@@ -10,6 +10,7 @@ public interface IFileStorageProviderSettings
     string LocalDirectory { get; }
     string AzureBlobConnectionString { get; }
     string AzureBlobContainer { get; }
+    string AzureBlobCustomDomain { get; }
     string S3AccessKey { get; }
     string S3SecretKey { get; }
     string S3ServiceUrl { get; }

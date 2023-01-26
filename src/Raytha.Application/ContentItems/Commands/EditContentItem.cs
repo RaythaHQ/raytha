@@ -7,6 +7,7 @@ using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Models;
 using Raytha.Application.Common.Utils;
 using Raytha.Domain.Entities;
+using Raytha.Domain.Events;
 
 namespace Raytha.Application.ContentItems.Commands;
 
@@ -97,6 +98,7 @@ public class EditContentItem
                 });
                 entity.PublishedContent = request.Content;
             }
+            entity.AddDomainEvent(new ContentItemUpdatedEvent(entity));
 
             await _db.SaveChangesAsync(cancellationToken);
 

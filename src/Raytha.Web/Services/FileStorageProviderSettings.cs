@@ -46,6 +46,8 @@ public class FileStorageProviderSettings : IFileStorageProviderSettings
 
     public string AzureBlobContainer => _configuration[FileStorageUtility.AZUREBLOB_CONTAINER_CONFIG_NAME];
 
+    public string AzureBlobCustomDomain => _configuration[FileStorageUtility.AZUREBLOB_CUSTOM_DOMAIN];
+
     public string S3AccessKey => _configuration[FileStorageUtility.S3_ACCESS_KEY_CONFIG_NAME];
 
     public string S3SecretKey => _configuration[FileStorageUtility.S3_SECRET_KEY_CONFIG_NAME];
