@@ -12,6 +12,9 @@ public record AuditableUserDto : BaseEntityDto
     {
         get
         {
+            if (string.IsNullOrEmpty(FirstName) && string.IsNullOrEmpty(LastName))
+                return string.Empty;
+
             return $"{FirstName} {LastName}";
         }
     }

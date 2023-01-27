@@ -14,6 +14,9 @@ using System.Text.Json;
 using Swashbuckle.AspNetCore.SwaggerGen;
 using System.Linq;
 using System.Collections.Generic;
+using System.Text.Json.Serialization;
+using CSharpVitamins;
+using Raytha.Application.Common.Models;
 
 namespace Microsoft.Extensions.DependencyInjection;
 
@@ -82,6 +85,8 @@ public static class ConfigureServices
             o.JsonSerializerOptions.DictionaryKeyPolicy = JsonNamingPolicy.CamelCase;
             o.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
             o.JsonSerializerOptions.WriteIndented = true;
+            o.JsonSerializerOptions.Converters.Add(new ShortGuidConverter());
+            o.JsonSerializerOptions.Converters.Add(new AuditableUserDtoConverter());
         });
         services.AddScoped<ICurrentUser, CurrentUser>();
         services.AddScoped<ICurrentOrganization, CurrentOrganization>();
@@ -95,7 +100,6 @@ public static class ConfigureServices
         services.AddScoped<IAuthorizationHandler, RaythaAdminAuthorizationHandler>();
         services.AddScoped<IAuthorizationHandler, RaythaAdminContentTypeAuthorizationHandler>();
         services.AddScoped<IAuthorizationHandler, RaythaApiAuthorizationHandler>();
-        //services.AddScoped<IAuthorizationHandler, RaythaApiContentTypeAuthorizationHandler>();
         services.AddRouting();
         services.AddDataProtection();
         services.AddHttpContextAccessor();
@@ -107,6 +111,8 @@ public static class ConfigureServices
                 Title = "Raytha API - V1",
                 Version = "v1"
             });
+
+            c.MapType<ShortGuid>(() => new OpenApiSchema { Type = "string" });
 
             c.AddSecurityDefinition("ApiKey", new OpenApiSecurityScheme
             {
@@ -150,4 +156,62 @@ public class LowercaseDocumentFilter : IDocumentFilter
     }
 
     private static string LowercaseEverythingButParameters(string key) => string.Join('/', key.Split('/').Select(x => x.Contains("{") ? x : x.ToLower()));
+}
+
+
+
+public class ShortGuidConverter : JsonConverter<ShortGuid>
+{
+    public override ShortGuid Read(
+        ref Utf8JsonReader reader,
+        Type typeToConvert,
+        JsonSerializerOptions options) =>
+            new ShortGuid(reader.GetString());
+
+    public override void Write(
+        Utf8JsonWriter writer,
+        ShortGuid shortGuid,
+        JsonSerializerOptions options)
+    {
+        if (shortGuid.Value == ShortGuid.Empty)
+        {
+            writer.WriteNullValue();
+        }
+        else
+        {
+            writer.WriteStringValue(shortGuid.Value);
+        }
+    }
+}
+
+public class AuditableUserDtoConverter : JsonConverter<AuditableUserDto>
+{
+    public override AuditableUserDto Read(
+        ref Utf8JsonReader reader,
+        Type typeToConvert,
+        JsonSerializerOptions options) =>
+            throw new NotImplementedException();
+
+    public override void Write(
+        Utf8JsonWriter writer,
+        AuditableUserDto user,
+        JsonSerializerOptions options)
+    {
+        if (user.Id.Value == ShortGuid.Empty)
+        {
+            writer.WriteNullValue();
+        }
+        else
+        {
+            var jsonOptions = new JsonSerializerOptions
+            {
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+                DictionaryKeyPolicy = JsonNamingPolicy.CamelCase,
+                PropertyNameCaseInsensitive = true,
+                WriteIndented = true
+            };
+            jsonOptions.Converters.Add(new ShortGuidConverter());
+            System.Text.Json.JsonSerializer.Serialize(writer, user, user.GetType(), jsonOptions);
+        }
+    }
 }
