@@ -11,9 +11,6 @@ namespace Raytha.Web.Areas.Api.Controllers.V1;
 [Route("raytha/api/v1/[controller]")]
 public class BaseController : ControllerBase
 {
-    protected const string RAYTHA_API_VERSION = "1.0";
-    protected const string RAYTHA_ROUTE_PREFIX = "raytha/api/" + RAYTHA_API_VERSION;
-
     private ISender _mediator;
     private ICurrentOrganization _currentOrganization;
     private ICurrentUser _currentUser;

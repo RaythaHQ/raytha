@@ -15,7 +15,8 @@ using System.Collections.Generic;
 using Microsoft.AspNetCore.Authorization.Policy;
 using System.Net;
 using System.Text;
-using Newtonsoft.Json;
+using System.Text.Json;
+using Raytha.Application.Common.Exceptions;
 
 namespace Raytha.Web.Utils;
 
@@ -246,170 +247,105 @@ public class RaythaApiAuthorizationHandler : IAuthorizationHandler
         {
             return;
         }
-        byte[] errorBytes;
         if (!_httpContextAccessor.HttpContext.Request.Headers.Any(p => p.Key.ToUpper() == X_API_KEY))
         {
-            errorBytes = Encoding.UTF8.GetBytes($"Missing Api Key");
-            _httpContextAccessor.HttpContext.Response.StatusCode = 401;
-            _httpContextAccessor.HttpContext.Response.ContentType = "application/json";
-            await _httpContextAccessor.HttpContext.Response.Body.WriteAsync(errorBytes, 0, errorBytes.Length);
+            WriteErrorResponse("Missing Api Key");
             return;
         }
 
         var apiKey = _httpContextAccessor.HttpContext.Request.Headers.FirstOrDefault(p => p.Key.ToUpper() == X_API_KEY).Value.FirstOrDefault();
         if (string.IsNullOrEmpty(apiKey))
         {
-            errorBytes = Encoding.UTF8.GetBytes($"Missing Api Key");
-            _httpContextAccessor.HttpContext.Response.StatusCode = 401;
-            _httpContextAccessor.HttpContext.Response.ContentType = "application/json";
-            await _httpContextAccessor.HttpContext.Response.Body.WriteAsync(errorBytes, 0, errorBytes.Length);
+            WriteErrorResponse("Missing Api Key");
             return;
         }
 
-        var user = await _mediator.Send(new LoginWithApiKey.Command { ApiKey = apiKey });
-
-        if (!user.Success)
+        try
         {
-            errorBytes = Encoding.UTF8.GetBytes($"Invalid Api Key: {user.Error}");
-            _httpContextAccessor.HttpContext.Response.StatusCode = 401;
-            _httpContextAccessor.HttpContext.Response.ContentType = "application/json";
-            await _httpContextAccessor.HttpContext.Response.Body.WriteAsync(errorBytes, 0, errorBytes.Length);
-            return;
-        }
+            var user = await _mediator.Send(new LoginWithApiKey.Command { ApiKey = apiKey });
 
-
-        var systemPermissions = new List<string>();
-        var contentTypePermissions = new List<string>();
-
-        foreach (var role in user.Result.Roles)
-        {
-            systemPermissions.AddRange(role.SystemPermissions);
-
-            foreach (var contentTypePermission in role.ContentTypePermissionsFriendlyNames)
+            if (!user.Success)
             {
-                foreach (var granularPermission in contentTypePermission.Value)
+                WriteErrorResponse($"Invalid Api Key: {user.Error}");
+                return;
+            }
+
+            var systemPermissions = new List<string>();
+            var contentTypePermissions = new List<string>();
+
+            foreach (var role in user.Result.Roles)
+            {
+                systemPermissions.AddRange(role.SystemPermissions);
+
+                foreach (var contentTypePermission in role.ContentTypePermissionsFriendlyNames)
                 {
-                    contentTypePermissions.Add($"{contentTypePermission.Key}_{granularPermission}");
+                    foreach (var granularPermission in contentTypePermission.Value)
+                    {
+                        contentTypePermissions.Add($"{contentTypePermission.Key}_{granularPermission}");
+                    }
                 }
             }
-        }
 
-        foreach (var requirement in pendingRequirements)
-        {
-            if (requirement is ApiIsAdminRequirement)
+            foreach (var requirement in pendingRequirements)
             {
-                context.Succeed(requirement);
-            }
-
-            if (requirement is ApiManageContentTypesRequirement)
-            {
-                if (systemPermissions.Contains(BuiltInSystemPermission.MANAGE_CONTENT_TYPES_PERMISSION))
+                if (requirement is ApiIsAdminRequirement)
                 {
                     context.Succeed(requirement);
                 }
-            }
-            else if (requirement is ApiContentTypePermissionRequirement)
-            {
-                if (systemPermissions.Contains(BuiltInSystemPermission.MANAGE_CONTENT_TYPES_PERMISSION))
-                {
-                    context.Succeed(requirement);
-                }
-                else
-                {
-                    var permission = ((ApiContentTypePermissionRequirement)requirement).Permission;
-                    string contentTypeDeveloperName = _httpContextAccessor.HttpContext.GetRouteValue("contentType") as string;
 
-                    if (contentTypePermissions.Contains($"{contentTypeDeveloperName.ToDeveloperName()}_{permission}"))
+                if (requirement is ApiManageContentTypesRequirement)
+                {
+                    if (systemPermissions.Contains(BuiltInSystemPermission.MANAGE_CONTENT_TYPES_PERMISSION))
                     {
                         context.Succeed(requirement);
                     }
                 }
-            }
-        }
-    }
-}
-
-public class RaythaApiContentTypeAuthorizationHandler :
-    AuthorizationHandler<OperationAuthorizationRequirement, string>
-{
-    private readonly IHttpContextAccessor _httpContextAccessor = null;
-    private readonly IMediator _mediator;
-    private static string X_API_KEY = "X-API-KEY";
-
-    public RaythaApiContentTypeAuthorizationHandler(IHttpContextAccessor httpContextAccessor, IMediator mediator)
-    {
-        _httpContextAccessor = httpContextAccessor;
-        _mediator = mediator;
-    }
-
-    protected override async Task HandleRequirementAsync(AuthorizationHandlerContext context,
-                                                   OperationAuthorizationRequirement requirement,
-                                                   string resource)
-    {
-        if (requirement is IHasApiKeyRequirement == false)
-            return;
-
-        byte[] errorBytes;
-        if (!_httpContextAccessor.HttpContext.Request.Headers.Any(p => p.Key.ToUpper() == X_API_KEY))
-        {
-            errorBytes = Encoding.UTF8.GetBytes($"Missing Api Key");
-            _httpContextAccessor.HttpContext.Response.StatusCode = 401;
-            _httpContextAccessor.HttpContext.Response.ContentType = "application/json";
-            await _httpContextAccessor.HttpContext.Response.Body.WriteAsync(errorBytes, 0, errorBytes.Length);
-            return;
-        }
-
-        var apiKey = _httpContextAccessor.HttpContext.Request.Headers.FirstOrDefault(p => p.Key.ToUpper() == X_API_KEY).Value.FirstOrDefault();
-        if (string.IsNullOrEmpty(apiKey))
-        {
-            errorBytes = Encoding.UTF8.GetBytes($"Missing Api Key");
-            _httpContextAccessor.HttpContext.Response.StatusCode = 401;
-            _httpContextAccessor.HttpContext.Response.ContentType = "application/json";
-            await _httpContextAccessor.HttpContext.Response.Body.WriteAsync(errorBytes, 0, errorBytes.Length);
-            return;
-        }
-
-        var user = await _mediator.Send(new LoginWithApiKey.Command { ApiKey = apiKey });
-
-        if (!user.Success)
-        {
-            errorBytes = Encoding.UTF8.GetBytes($"Invalid Api Key: {user.Error}");
-            _httpContextAccessor.HttpContext.Response.StatusCode = 401;
-            _httpContextAccessor.HttpContext.Response.ContentType = "application/json";
-            await _httpContextAccessor.HttpContext.Response.Body.WriteAsync(errorBytes, 0, errorBytes.Length);
-            return;
-        }
-
-        var systemPermissions = new List<string>();
-        var contentTypePermissions = new List<string>();
-
-        foreach (var role in user.Result.Roles)
-        {
-            systemPermissions.AddRange(role.SystemPermissions);
-
-            foreach (var contentTypePermission in role.ContentTypePermissionsFriendlyNames)
-            {
-                foreach (var granularPermission in contentTypePermission.Value)
+                else if (requirement is ApiContentTypePermissionRequirement)
                 {
-                    contentTypePermissions.Add($"{contentTypePermission.Key}_{granularPermission}");
+                    if (systemPermissions.Contains(BuiltInSystemPermission.MANAGE_CONTENT_TYPES_PERMISSION))
+                    {
+                        context.Succeed(requirement);
+                    }
+                    else
+                    {
+                        var permission = ((ApiContentTypePermissionRequirement)requirement).Permission;
+                        string contentTypeDeveloperName = _httpContextAccessor.HttpContext.GetRouteValue("contentType") as string;
+
+                        if (contentTypePermissions.Contains($"{contentTypeDeveloperName.ToDeveloperName()}_{permission}"))
+                        {
+                            context.Succeed(requirement);
+                        }
+                    }
                 }
             }
         }
-
-        if (systemPermissions.Contains(BuiltInSystemPermission.MANAGE_CONTENT_TYPES_PERMISSION))
+        catch (UnauthorizedAccessException ex)
         {
-            context.Succeed(requirement);
+            WriteErrorResponse($"Account deactivated.");
+            return;
         }
-        else
+        catch (NotFoundException ex)
         {
-            if (contentTypePermissions.Contains($"{resource}_{requirement.Name}"))
-            {
-                context.Succeed(requirement);
-            }
+            WriteErrorResponse($"Invalid Api Key.");
+            return;
         }
     }
-}
 
+    private byte[] GetErrorMessageAsByteArray(string message)
+    {
+        string json = JsonSerializer.Serialize(new { success = false, error = message });
+        return Encoding.UTF8.GetBytes(json);
+    }
+
+    private async void WriteErrorResponse(string message)
+    {
+        var errorBytes = GetErrorMessageAsByteArray(message);
+        _httpContextAccessor.HttpContext.Response.StatusCode = 401;
+        _httpContextAccessor.HttpContext.Response.ContentType = "application/json";
+        await _httpContextAccessor.HttpContext.Response.Body.WriteAsync(errorBytes, 0, errorBytes.Length);
+        await _httpContextAccessor.HttpContext.Response.CompleteAsync(); // <-- THIS!!!
+    }
+}
 
 public static class Operations
 {
@@ -433,14 +369,27 @@ public class ApiKeyAuthorizationMiddlewareResultHandler : IAuthorizationMiddlewa
         PolicyAuthorizationResult policyAuthorizationResult)
     {
 
-        if (policyAuthorizationResult.Challenged && !policyAuthorizationResult.Succeeded && authorizationPolicy.Requirements.Any(requirement => requirement is IHasApiKeyRequirement))
+        if (!policyAuthorizationResult.Succeeded && authorizationPolicy.Requirements.Any(requirement => requirement is IHasApiKeyRequirement))
         {
+            var currentStatusCode = (HttpStatusCode)httpContext.Response.StatusCode;
+            if (currentStatusCode != HttpStatusCode.OK)
+                return;
+            var errorBytes = GetErrorMessageAsByteArray("You do not have access permissions for this action.");
             httpContext.Response.StatusCode = (int)HttpStatusCode.Forbidden;
+            httpContext.Response.ContentType = "application/json";
+            await httpContext.Response.Body.WriteAsync(errorBytes, 0, errorBytes.Length);
+            await httpContext.Response.CompleteAsync();
             return;
         }
 
         // Fallback to the default implementation.
         await DefaultHandler.HandleAsync(requestDelegate, httpContext, authorizationPolicy,
                                policyAuthorizationResult);
+    }
+
+    private byte[] GetErrorMessageAsByteArray(string message)
+    {
+        string json = JsonSerializer.Serialize(new { success = false, error = message });
+        return Encoding.UTF8.GetBytes(json);
     }
 }

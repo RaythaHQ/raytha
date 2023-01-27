@@ -95,7 +95,7 @@ public static class ConfigureServices
         services.AddScoped<IAuthorizationHandler, RaythaAdminAuthorizationHandler>();
         services.AddScoped<IAuthorizationHandler, RaythaAdminContentTypeAuthorizationHandler>();
         services.AddScoped<IAuthorizationHandler, RaythaApiAuthorizationHandler>();
-        services.AddScoped<IAuthorizationHandler, RaythaApiContentTypeAuthorizationHandler>();
+        //services.AddScoped<IAuthorizationHandler, RaythaApiContentTypeAuthorizationHandler>();
         services.AddRouting();
         services.AddDataProtection();
         services.AddHttpContextAccessor();

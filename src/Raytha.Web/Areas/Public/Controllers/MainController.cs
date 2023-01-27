@@ -107,4 +107,11 @@ public class MainController : BaseController
         var errorModel = new GenericError_RenderModel { ErrorId = ShortGuid.NewGuid() };
         return new ErrorActionViewResult(BuiltInWebTemplate.Error500, 500, errorModel);
     }
+
+    [Route("raytha/forbidden", Name = "forbidden")]
+    public IActionResult Forbidden()
+    {
+        var errorModel = new GenericError_RenderModel { ErrorId = ShortGuid.NewGuid() };
+        return new ErrorActionViewResult(BuiltInWebTemplate.Error403, 403, errorModel);
+    }
 }
