@@ -17,6 +17,7 @@ using System.Collections.Generic;
 using System.Text.Json.Serialization;
 using CSharpVitamins;
 using Raytha.Application.Common.Models;
+using Microsoft.AspNetCore.Mvc.Filters;
 
 namespace Microsoft.Extensions.DependencyInjection;
 
@@ -211,7 +212,7 @@ public class AuditableUserDtoConverter : JsonConverter<AuditableUserDto>
                 WriteIndented = true
             };
             jsonOptions.Converters.Add(new ShortGuidConverter());
-            System.Text.Json.JsonSerializer.Serialize(writer, user, user.GetType(), jsonOptions);
+            JsonSerializer.Serialize(writer, user, user.GetType(), jsonOptions);
         }
     }
 }

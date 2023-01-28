@@ -7,6 +7,7 @@ using Raytha.Application.Common.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Raytha.Application.Common.Exceptions;
 using Raytha.Application.Common.Utils;
+using System.Dynamic;
 
 namespace Raytha.Application.ContentItems.Commands;
 
@@ -17,7 +18,7 @@ public class CreateContentItem
         public bool SaveAsDraft { get; init; }
         public ShortGuid TemplateId { get; init; }
         public ShortGuid ContentTypeId { get; init; }
-        public dynamic Content { get; init; }
+        public ExpandoObject Content { get; init; }
     }
 
     public class Validator : AbstractValidator<Command>
@@ -58,7 +59,7 @@ public class CreateContentItem
                     return;
                 }
 
-                foreach (var field in request.Content as IDictionary<string, dynamic>)
+                foreach (var field in (IDictionary<string, dynamic>)request.Content)
                 {
                     var fieldDefinition = contentTypeDefinition.ContentTypeFields.FirstOrDefault(p => p.DeveloperName == field.Key);
                     if (fieldDefinition == null)
@@ -124,7 +125,7 @@ public class CreateContentItem
             var routePathTemplate = contentType.DefaultRouteTemplate;
 
             string primaryFieldDeveloperName = contentType.ContentTypeFields.First(p => p.Id == contentType.PrimaryFieldId).DeveloperName;
-            var primaryField = content[primaryFieldDeveloperName] as string;
+            var primaryField = ((IDictionary<string, dynamic>)content)[primaryFieldDeveloperName] as string;
 
             string path = routePathTemplate.IfNullOrEmpty($"{BuiltInContentTypeField.PrimaryField.DeveloperName}")
                                            .Replace($"{{{BuiltInContentTypeField.PrimaryField.DeveloperName}}}", primaryField.IfNullOrEmpty((ShortGuid)entityId))
