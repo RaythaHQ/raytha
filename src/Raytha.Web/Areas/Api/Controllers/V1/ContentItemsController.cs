@@ -76,7 +76,7 @@ public class ContentItemsController : BaseController
         {
             return BadRequest(response);
         }
-        return CreatedAtAction(nameof(GetContentItemById), new { contentTypeDeveloperName, contentTypeId = response.Result }, response);
+        return CreatedAtAction(nameof(GetContentItemById), new { contentTypeDeveloperName, contentItemId = response.Result }, response);
     }
 
     [HttpPut("{contentTypeDeveloperName}/{contentItemId}", Name = "EditContentItem")]

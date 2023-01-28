@@ -309,7 +309,7 @@ public class RaythaApiAuthorizationHandler : IAuthorizationHandler
                     else
                     {
                         var permission = ((ApiContentTypePermissionRequirement)requirement).Permission;
-                        string contentTypeDeveloperName = _httpContextAccessor.HttpContext.GetRouteValue("contentType") as string;
+                        string contentTypeDeveloperName = _httpContextAccessor.HttpContext.GetRouteValue("contentTypeDeveloperName") as string;
 
                         if (contentTypePermissions.Contains($"{contentTypeDeveloperName.ToDeveloperName()}_{permission}"))
                         {
