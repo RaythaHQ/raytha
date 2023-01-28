@@ -24,8 +24,6 @@ namespace Raytha.Application.Users
 
         public IEnumerable<UserGroupDto> UserGroups { get; init; } = new List<UserGroupDto>();
 
-        public dynamic CustomAttributes { get; init; }
-
         public static Expression<Func<User, UserDto>> GetProjection()
         {
             return entity => GetProjection(entity);
