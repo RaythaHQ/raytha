@@ -14,6 +14,7 @@ public class GetContentItems
     public record Query : GetPagedEntitiesInputDto, IRequest<IQueryResponseDto<ListResultDto<ContentItemDto>>>
     {
         public ShortGuid? ViewId { get; init; }
+
         public string? ContentType { get; init; }
         public string? Filter { get; init; }
     }

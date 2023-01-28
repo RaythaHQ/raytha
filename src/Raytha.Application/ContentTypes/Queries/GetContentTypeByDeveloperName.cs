@@ -1,6 +1,7 @@
 ﻿using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Raytha.Application.Common.Attributes;
 using Raytha.Application.Common.Exceptions;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Models;
@@ -12,6 +13,7 @@ public class GetContentTypeByDeveloperName
 {
     public record Query : IRequest<IQueryResponseDto<ContentTypeDto>>
     {
+        [ExcludePropertyFromOpenApiDocs]
         public string DeveloperName { get; init; } = null!;
     }
 

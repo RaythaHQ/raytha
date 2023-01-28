@@ -17,7 +17,8 @@ using System.Collections.Generic;
 using System.Text.Json.Serialization;
 using CSharpVitamins;
 using Raytha.Application.Common.Models;
-using Microsoft.AspNetCore.Mvc.Filters;
+using System.Reflection;
+using Raytha.Application.Common.Attributes;
 
 namespace Microsoft.Extensions.DependencyInjection;
 
@@ -106,7 +107,9 @@ public static class ConfigureServices
         services.AddHttpContextAccessor();
         services.AddEndpointsApiExplorer();
         services.AddSwaggerGen(c => {
+            c.CustomSchemaIds(type => type.ToString());
             c.DocumentFilter<LowercaseDocumentFilter>();
+            c.SchemaFilter<ExcludePropertyFromOpenApiDocsFilter>();
             c.SwaggerDoc("v1", new OpenApiInfo
             {
                 Title = "Raytha API - V1",
@@ -213,6 +216,31 @@ public class AuditableUserDtoConverter : JsonConverter<AuditableUserDto>
             };
             jsonOptions.Converters.Add(new ShortGuidConverter());
             JsonSerializer.Serialize(writer, user, user.GetType(), jsonOptions);
+        }
+    }
+}
+
+public class ExcludePropertyFromOpenApiDocsFilter : ISchemaFilter
+{
+    public void Apply(OpenApiSchema schema, SchemaFilterContext context)
+    {
+        if (schema?.Properties == null)
+            return;
+
+        var excludedProperties =
+            context.Type.GetProperties().Where(
+                t => t.GetCustomAttribute<ExcludePropertyFromOpenApiDocs>() != null);
+
+        foreach (var excludedProperty in excludedProperties)
+        {
+            var propertyToRemove =
+                schema.Properties.Keys.SingleOrDefault(
+                    x => x.ToLower() == excludedProperty.Name.ToLower());
+
+            if (propertyToRemove != null)
+            {
+                schema.Properties.Remove(propertyToRemove);
+            }
         }
     }
 }

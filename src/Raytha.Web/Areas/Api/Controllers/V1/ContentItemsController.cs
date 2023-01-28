@@ -18,10 +18,10 @@ namespace Raytha.Web.Areas.Api.Controllers.V1;
 
 public class ContentItemsController : BaseController
 {
-    [HttpGet("{contentType}", Name = "GetContentItems")]
+    [HttpGet("{contentTypeDeveloperName}", Name = "GetContentItems")]
     [Authorize(Policy = RaythaApiAuthorizationHandler.POLICY_PREFIX + BuiltInContentTypePermission.CONTENT_TYPE_READ_PERMISSION)]
     public async Task<ActionResult<IQueryResponseDto<ListResultDto<ContentItemDto>>>> GetContentItems(
-                                           string contentType,
+                                           string contentTypeDeveloperName,
                                            string viewId = "",
                                            string search = "",
                                            string filter = "",
@@ -29,51 +29,119 @@ public class ContentItemsController : BaseController
                                            int pageNumber = 1,
                                            int pageSize = 50)
     {
-        if (!string.IsNullOrEmpty(viewId) && ShortGuid.TryParse(viewId, out ShortGuid shortGuid))
-        {
-            return BadRequest(new { success = false, error = "Invalid format of view id." });
-        }
-        var input = new GetContentItems.Query
-        {
-            Search = search,
-            ContentType = contentType,
+        var input = new GetContentItems.Query 
+        { 
+            ContentType = contentTypeDeveloperName,
             ViewId = viewId,
-            PageNumber = pageNumber,
-            PageSize = pageSize,
+            Search = search,
+            Filter = filter,
             OrderBy = orderBy,
-            Filter = filter
+            PageNumber = pageNumber,
+            PageSize = pageSize
         };
         var response = await Mediator.Send(input) as QueryResponseDto<ListResultDto<ContentItemDto>>;
         return response;
     }
 
-    [HttpGet("{contentType}/{contentItemId}", Name = "GetContentItemById")]
+    [HttpGet("{contentTypeDeveloperName}/trash", Name = "GetDeletedContentItems")]
+    [Authorize(Policy = RaythaApiAuthorizationHandler.POLICY_PREFIX + BuiltInContentTypePermission.CONTENT_TYPE_CONFIG_PERMISSION)]
+    public async Task<ActionResult<IQueryResponseDto<ListResultDto<ContentItemDto>>>> GetDeletedContentItems(
+                                           string contentTypeDeveloperName)
+    {
+        var input = new GetDeletedContentItems.Query { DeveloperName = contentTypeDeveloperName };
+        var response = await Mediator.Send(input) as QueryResponseDto<ListResultDto<ContentItemDto>>;
+        return response;
+    }
+
+    [HttpGet("{contentTypeDeveloperName}/{contentItemId}", Name = "GetContentItemById")]
     [Authorize(Policy = RaythaApiAuthorizationHandler.POLICY_PREFIX + BuiltInContentTypePermission.CONTENT_TYPE_READ_PERMISSION)]
     public async Task<ActionResult<IQueryResponseDto<ContentItemDto>>> GetContentItemById(
-                                       string contentType,
+                                       string contentTypeDeveloperName,
                                        string contentItemId)
     {
-        ShortGuid shortGuid;
-        if (!ShortGuid.TryParse(contentItemId, out shortGuid))
-        {
-            return BadRequest(new { success = false, error = "Invalid format of content item id." });
-        }
-        var input = new GetContentItemById.Query { Id = shortGuid };
+        var input = new GetContentItemById.Query { Id = contentItemId };
         var response = await Mediator.Send(input) as QueryResponseDto<ContentItemDto>;
         return response;
     }
 
-    [HttpPost("{contentType}", Name = "CreateContentItem")]
+    [HttpPost("{contentTypeDeveloperName}", Name = "CreateContentItem")]
     [Authorize(Policy = RaythaApiAuthorizationHandler.POLICY_PREFIX + BuiltInContentTypePermission.CONTENT_TYPE_EDIT_PERMISSION)]
-    public async Task<ActionResult<ICommandResponseDto<ShortGuid>>> CreateContentItem(string contentType, [FromBody] CreateContentItem.Command request)
+    public async Task<ActionResult<ICommandResponseDto<ShortGuid>>> CreateContentItem(
+                                        string contentTypeDeveloperName, 
+                                        [FromBody] CreateContentItem.Command request)
     {
-        var contentTypeResponse = await Mediator.Send(new GetContentTypeByDeveloperName.Query { DeveloperName = contentType });
-        var input = request with { ContentTypeId = contentTypeResponse.Result.Id };
+        var input = request with { ContentTypeDeveloperName = contentTypeDeveloperName };
         var response = await Mediator.Send(input);
+        if (!response.Success)
+        {
+            return BadRequest(response);
+        }
+        return CreatedAtAction(nameof(GetContentItemById), new { contentTypeDeveloperName, contentTypeId = response.Result }, response);
+    }
+
+    [HttpPut("{contentTypeDeveloperName}/{contentItemId}", Name = "EditContentItem")]
+    [Authorize(Policy = RaythaApiAuthorizationHandler.POLICY_PREFIX + BuiltInContentTypePermission.CONTENT_TYPE_EDIT_PERMISSION)]
+    public async Task<ActionResult<ICommandResponseDto<ShortGuid>>> EditContentItem(
+                            string contentType, 
+                            string contentItemId,
+                            [FromBody] EditContentItem.Command request)
+    {
+        var input = request with { Id = contentItemId };
+        var response = await Mediator.Send(input);
+        if (!response.Success)
+        {
+            return BadRequest(response);
+        }
         return response;
     }
 
-    [HttpGet("{contentType}/route/{routePath}", Name = "GetRouteByPath")]
+    [HttpPut("{contentTypeDeveloperName}/{contentItemId}/settings", Name = "EditContentItemSettings")]
+    [Authorize(Policy = RaythaApiAuthorizationHandler.POLICY_PREFIX + BuiltInContentTypePermission.CONTENT_TYPE_EDIT_PERMISSION)]
+    public async Task<ActionResult<ICommandResponseDto<ShortGuid>>> EditContentItemSettings(
+                            string contentTypeDeveloperName,
+                            string contentItemId,
+                            [FromBody] EditContentItemSettings.Command request)
+    {
+        var input = request with { Id = contentItemId };
+        var response = await Mediator.Send(input);
+        if (!response.Success)
+        {
+            return BadRequest(response);
+        }
+        return response;
+    }
+
+    [HttpPut("{contentTypeDeveloperName}/{contentItemId}/unpublish", Name = "UnpublishContentItem")]
+    [Authorize(Policy = RaythaApiAuthorizationHandler.POLICY_PREFIX + BuiltInContentTypePermission.CONTENT_TYPE_EDIT_PERMISSION)]
+    public async Task<ActionResult<ICommandResponseDto<ShortGuid>>> UnpublishContentItem(
+                            string contentTypeDeveloperName,
+                            string contentItemId)
+    {
+        var input = new UnpublishContentItem.Command { Id = contentItemId };
+        var response = await Mediator.Send(input);
+        if (!response.Success)
+        {
+            return BadRequest(response);
+        }
+        return response;
+    }
+
+    [HttpDelete("{contentTypeDeveloperName}/{contentItemId}", Name = "DeleteContentItem")]
+    [Authorize(Policy = RaythaApiAuthorizationHandler.POLICY_PREFIX + BuiltInContentTypePermission.CONTENT_TYPE_EDIT_PERMISSION)]
+    public async Task<ActionResult<ICommandResponseDto<ShortGuid>>> DeleteContentItem(
+                            string contentTypeDeveloperName,
+                            string contentItemId)
+    {
+        var input = new DeleteContentItem.Command { Id = contentItemId };
+        var response = await Mediator.Send(input);
+        if (!response.Success)
+        {
+            return BadRequest(response);
+        }
+        return response;
+    }
+
+    [HttpGet("{contentTypeDeveloperName}/route/{routePath}", Name = "GetRouteByPath")]
     [Authorize(Policy = RaythaApiAuthorizationHandler.POLICY_PREFIX + BuiltInContentTypePermission.CONTENT_TYPE_READ_PERMISSION)]
     public async Task<ActionResult<IQueryResponseDto<RouteDto>>> GetRouteByPath(
                                        string routePath)

@@ -1,5 +1,4 @@
 ﻿using MediatR;
-using Microsoft.EntityFrameworkCore;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Models;
 using Raytha.Application.Common.Utils;
@@ -7,24 +6,23 @@ using Raytha.Domain.ValueObjects;
 
 namespace Raytha.Application.ContentTypes.Queries;
 
-public class GetContentTypes
+public class GetContentTypesAsListItems
 {
-    public record Query : GetPagedEntitiesInputDto, IRequest<IQueryResponseDto<ListResultDto<ContentTypeDto>>>
+    public record Query : GetPagedEntitiesInputDto, IRequest<IQueryResponseDto<ListResultDto<ContentTypeListItemDto>>>
     {
         public override string OrderBy { get; init; } = $"LabelPlural {SortOrder.Ascending}";
     }
 
-    public class Handler : RequestHandler<Query, IQueryResponseDto<ListResultDto<ContentTypeDto>>>
+    public class Handler : RequestHandler<Query, IQueryResponseDto<ListResultDto<ContentTypeListItemDto>>>
     {
         private readonly IRaythaDbContext _db;
         public Handler(IRaythaDbContext db)
         {
             _db = db;
         }
-        protected override IQueryResponseDto<ListResultDto<ContentTypeDto>> Handle(Query request)
+        protected override IQueryResponseDto<ListResultDto<ContentTypeListItemDto>> Handle(Query request)
         {
             var query = _db.ContentTypes
-                .Include(p => p.ContentTypeFields)
                 .AsQueryable();
 
             if (!string.IsNullOrEmpty(request.Search))
@@ -37,9 +35,9 @@ public class GetContentTypes
             }
 
             var total = query.Count();
-            var items = query.ApplyPaginationInput(request).Select(ContentTypeDto.GetProjection()).ToArray();
+            var items = query.ApplyPaginationInput(request).Select(ContentTypeListItemDto.GetProjection()).ToArray();
 
-            return new QueryResponseDto<ListResultDto<ContentTypeDto>>(new ListResultDto<ContentTypeDto>(items, total));
+            return new QueryResponseDto<ListResultDto<ContentTypeListItemDto>>(new ListResultDto<ContentTypeListItemDto>(items, total));
         }
     }
 }

@@ -7,6 +7,7 @@ using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Models;
 using Raytha.Application.Common.Utils;
 using Raytha.Domain.Entities;
+using System.Dynamic;
 
 namespace Raytha.Application.ContentItems.Commands;
 
@@ -15,8 +16,7 @@ public class EditContentItem
     public record Command : LoggableEntityRequest<CommandResponseDto<ShortGuid>>
     {
         public bool SaveAsDraft { get; init; }
-        public ShortGuid ContentTypeId { get; init; }
-        public dynamic Content { get; init; }
+        public ExpandoObject Content { get; init; }
     }
 
     public class Validator : AbstractValidator<Command>
@@ -25,22 +25,17 @@ public class EditContentItem
         {
             RuleFor(x => x).Custom((request, context) =>
             {
-                if (request.ContentTypeId == ShortGuid.Empty)
-                {
-                    context.AddFailure(Constants.VALIDATION_SUMMARY, "ContentTypeId is required.");
-                    return;
-                }
+                var entity = db.ContentItems
+                    .Include(p => p.ContentType)
+                    .ThenInclude(p => p.ContentTypeFields)
+                    .FirstOrDefault(p => p.Id == request.Id.Guid);
 
-                var entity = db.ContentItems.FirstOrDefault(p => p.Id == request.Id.Guid);
                 if (entity == null)
                     throw new NotFoundException("Content Item", request.Id);
 
-                var contentTypeDefinition = db.ContentTypes
-                    .Include(p => p.ContentTypeFields)
-                    .FirstOrDefault(p => p.Id == request.ContentTypeId.Guid);
-
+                var contentTypeDefinition = entity.ContentType;
                 if (contentTypeDefinition == null)
-                    throw new NotFoundException("Content Type", request.ContentTypeId);
+                    throw new NotFoundException("Content Type");
 
                 foreach (var field in request.Content as IDictionary<string, dynamic>)
                 {

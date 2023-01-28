@@ -112,7 +112,7 @@ public class ContentItemsController : BaseController
         {
             SaveAsDraft = model.SaveAsDraft,
             TemplateId = model.TemplateId,
-            ContentTypeId = CurrentView.ContentTypeId,
+            ContentTypeDeveloperName = CurrentView.ContentType.DeveloperName,
             Content = mappedFieldValuesFromModel
         };
         var response = await Mediator.Send(input);
@@ -217,7 +217,6 @@ public class ContentItemsController : BaseController
         {
             Id = id,
             SaveAsDraft = model.SaveAsDraft,
-            ContentTypeId = CurrentView.ContentTypeId,
             Content = MapFromFieldValueModel(model.FieldValues)
         };
         var editResponse = await Mediator.Send(input);

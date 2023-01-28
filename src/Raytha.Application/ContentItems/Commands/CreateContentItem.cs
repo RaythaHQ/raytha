@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using Raytha.Application.Common.Exceptions;
 using Raytha.Application.Common.Utils;
 using System.Dynamic;
+using Raytha.Application.Common.Attributes;
 
 namespace Raytha.Application.ContentItems.Commands;
 
@@ -17,7 +18,9 @@ public class CreateContentItem
     {
         public bool SaveAsDraft { get; init; }
         public ShortGuid TemplateId { get; init; }
-        public ShortGuid ContentTypeId { get; init; }
+
+        [ExcludePropertyFromOpenApiDocs]
+        public string ContentTypeDeveloperName { get; init; } = string.Empty;
         public ExpandoObject Content { get; init; }
     }
 
@@ -27,9 +30,9 @@ public class CreateContentItem
         {
             RuleFor(x => x).Custom((request, context) =>
             {
-                if (request.ContentTypeId == ShortGuid.Empty)
+                if (string.IsNullOrEmpty(request.ContentTypeDeveloperName))
                 {
-                    context.AddFailure(Constants.VALIDATION_SUMMARY, "ContentTypeId is required.");
+                    context.AddFailure(Constants.VALIDATION_SUMMARY, "ContentTypeDeveloperName is required.");
                     return;
                 }
 
@@ -41,10 +44,10 @@ public class CreateContentItem
 
                 var contentTypeDefinition = db.ContentTypes
                     .Include(p => p.ContentTypeFields)
-                    .FirstOrDefault(p => p.Id == request.ContentTypeId.Guid);
+                    .FirstOrDefault(p => p.DeveloperName == request.ContentTypeDeveloperName.ToDeveloperName());
 
                 if (contentTypeDefinition == null)
-                    throw new NotFoundException("Content Type", request.ContentTypeId);
+                    throw new NotFoundException("Content Type", request.ContentTypeDeveloperName.ToDeveloperName());
 
                 var template = db.WebTemplates
                     .Include(p => p.TemplateAccessToModelDefinitions)
@@ -59,7 +62,7 @@ public class CreateContentItem
                     return;
                 }
 
-                foreach (var field in (IDictionary<string, dynamic>)request.Content)
+                foreach (var field in request.Content as IDictionary<string, dynamic>)
                 {
                     var fieldDefinition = contentTypeDefinition.ContentTypeFields.FirstOrDefault(p => p.DeveloperName == field.Key);
                     if (fieldDefinition == null)
@@ -91,8 +94,12 @@ public class CreateContentItem
         }
         public async Task<CommandResponseDto<ShortGuid>> Handle(Command request, CancellationToken cancellationToken)
         {
+            var contentTypeDefinition = _db.ContentTypes
+                .Include(p => p.ContentTypeFields)
+                .First(p => p.DeveloperName == request.ContentTypeDeveloperName.ToDeveloperName());
+
             var newEntityId = Guid.NewGuid();
-            var path = GetRoutePath(request.Content, newEntityId, request.ContentTypeId);
+            var path = GetRoutePath(request.Content, newEntityId, contentTypeDefinition.Id);
             var entity = new ContentItem
             {
                 Id = newEntityId,
@@ -101,7 +108,7 @@ public class CreateContentItem
                 DraftContent = request.Content,
                 PublishedContent = request.Content,
                 WebTemplateId = request.TemplateId,
-                ContentTypeId = request.ContentTypeId,
+                ContentTypeId = contentTypeDefinition.Id,
                 Route = new Route
                 {
                     Path = path,
