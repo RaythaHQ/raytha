@@ -43,7 +43,7 @@ public class UserGroupsController : BaseController
         {
             return BadRequest(response);
         }
-        return CreatedAtAction(nameof(GetUserGroupById), new { userId = response.Result }, response);
+        return CreatedAtAction(nameof(GetUserGroupById), new { userGroupId = response.Result }, response);
     }
 
     [HttpPut("{userGroupId}", Name = "EditUserGroup")]
