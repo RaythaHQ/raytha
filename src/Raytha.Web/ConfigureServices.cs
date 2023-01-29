@@ -19,6 +19,10 @@ using CSharpVitamins;
 using Raytha.Application.Common.Models;
 using System.Reflection;
 using Raytha.Application.Common.Attributes;
+using System.Net;
+using Raytha.Application.Common.Exceptions;
+using Microsoft.AspNetCore.Mvc.Filters;
+using System.Text;
 
 namespace Microsoft.Extensions.DependencyInjection;
 
@@ -83,6 +87,7 @@ public static class ConfigureServices
         services.AddScoped<CustomCookieAuthenticationEvents>();
         services.AddControllersWithViews(options =>
         {
+            options.Filters.Add<NotFoundFilterAttribute>();
             options.Filters.Add<SetFormValidationErrorsFilterAttribute>();
         }).AddJsonOptions(o => {
             o.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
@@ -244,5 +249,33 @@ public class ExcludePropertyFromOpenApiDocsFilter : ISchemaFilter
                 schema.Properties.Remove(propertyToRemove);
             }
         }
+    }
+}
+
+public class NotFoundFilterAttribute : AspNetCore.Mvc.Filters.ExceptionFilterAttribute
+{
+    public override void OnException(ExceptionContext context)
+    {
+        var currentStatusCode = (HttpStatusCode)context.HttpContext.Response.StatusCode;
+        if (currentStatusCode != HttpStatusCode.OK)
+            return;
+
+        if (context.Exception is NotFoundException)
+        {
+            if (context.Exception is NotFoundException)
+            {
+                var errorBytes = GetErrorMessageAsByteArray("The resource you request was not found.");
+                context.HttpContext.Response.StatusCode = (int)HttpStatusCode.NotFound;
+                context.HttpContext.Response.ContentType = "application/json";
+                context.HttpContext.Response.Body.WriteAsync(errorBytes, 0, errorBytes.Length);
+                context.HttpContext.Response.CompleteAsync();
+            }
+        }
+    }
+
+    private byte[] GetErrorMessageAsByteArray(string message)
+    {
+        string json = JsonSerializer.Serialize(new { success = false, error = message });
+        return Encoding.UTF8.GetBytes(json);
     }
 }
