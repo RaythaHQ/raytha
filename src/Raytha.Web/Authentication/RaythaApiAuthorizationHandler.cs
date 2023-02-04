@@ -32,6 +32,10 @@ public class ApiManageContentTypesRequirement : IHasApiKeyRequirement
 {
 }
 
+public class ApiManageMediaItemsRequirement : IHasApiKeyRequirement
+{
+}
+
 public class ApiContentTypePermissionRequirement : IHasApiKeyRequirement
 {
     public ApiContentTypePermissionRequirement(string permission) =>
@@ -120,6 +124,20 @@ public class RaythaApiAuthorizationHandler : IAuthorizationHandler
                 if (systemPermissions.Contains(BuiltInSystemPermission.MANAGE_TEMPLATES_PERMISSION))
                 {
                     context.Succeed(requirement);
+                }
+            }
+            else if (requirement is ApiManageMediaItemsRequirement)
+            {
+                if (systemPermissions.Contains(BuiltInSystemPermission.MANAGE_CONTENT_TYPES_PERMISSION))
+                {
+                    context.Succeed(requirement);
+                }
+                else
+                {
+                    if (contentTypePermissions.Any(p => p.EndsWith(BuiltInContentTypePermission.CONTENT_TYPE_EDIT_PERMISSION)))
+                    {
+                        context.Succeed(requirement);
+                    }
                 }
             }
             else if (requirement is ApiContentTypePermissionRequirement)

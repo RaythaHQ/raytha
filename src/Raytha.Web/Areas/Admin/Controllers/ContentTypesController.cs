@@ -1,5 +1,4 @@
-﻿using CSharpVitamins;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using System.Threading.Tasks;
 using System;
 using System.Linq;
@@ -17,7 +16,6 @@ using Raytha.Application.ContentItems.Queries;
 using Raytha.Application.ContentItems.Commands;
 using Microsoft.AspNetCore.Authorization;
 using Raytha.Domain.Entities;
-using Raytha.Application.AuthenticationSchemes.Commands;
 
 namespace Raytha.Web.Areas.Admin.Controllers;
 

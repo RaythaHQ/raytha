@@ -40,6 +40,10 @@ public class ManageAuditLogsRequirement : IAuthorizationRequirement
 {
 }
 
+public class ManageMediaItemsRequirement : IAuthorizationRequirement
+{
+}
+
 public class ContentTypePermissionRequirement : IAuthorizationRequirement
 {
     public ContentTypePermissionRequirement(string permission) =>
@@ -118,6 +122,20 @@ public class RaythaAdminAuthorizationHandler : IAuthorizationHandler
                 if (systemPermissionsClaims.Contains(BuiltInSystemPermission.MANAGE_ADMINISTRATORS_PERMISSION))
                 {
                     context.Succeed(requirement);
+                }
+            }
+            else if (requirement is ManageMediaItemsRequirement)
+            {
+                if (systemPermissionsClaims.Contains(BuiltInSystemPermission.MANAGE_CONTENT_TYPES_PERMISSION))
+                {
+                    context.Succeed(requirement);
+                }
+                else
+                {
+                    if (contentTypePermissionsClaims.Any(p => p.EndsWith(BuiltInContentTypePermission.CONTENT_TYPE_EDIT_PERMISSION)))
+                    {
+                        context.Succeed(requirement);
+                    }
                 }
             }
             else if (requirement is ContentTypePermissionRequirement)

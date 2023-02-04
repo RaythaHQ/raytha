@@ -20,7 +20,7 @@ public class EditContentItem
 
     public class Validator : AbstractValidator<Command>
     {
-        public Validator(IRaythaDbContext db)
+        public Validator(IRaythaDbContext db, IContentTypeInRoutePath contentTypeInRoutePath)
         {
             RuleFor(x => x).Custom((request, context) =>
             {
@@ -35,6 +35,8 @@ public class EditContentItem
                 var contentTypeDefinition = entity.ContentType;
                 if (contentTypeDefinition == null)
                     throw new NotFoundException("Content Type");
+
+                contentTypeInRoutePath.ValidateContentTypeInRoutePathMatchesValue(entity.ContentType.DeveloperName);
 
                 foreach (var field in request.Content as IDictionary<string, dynamic>)
                 {

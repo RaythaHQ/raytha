@@ -38,10 +38,12 @@ public class DeleteContentItem
     {
         private readonly IRaythaDbContext _entityFrameworkDb;
         private readonly IRaythaDbJsonQueryEngine _db;
-        public Handler(IRaythaDbContext entityFrameworkDb, IRaythaDbJsonQueryEngine db)
+        private readonly IContentTypeInRoutePath _contentTypeInRoutePath;
+        public Handler(IRaythaDbContext entityFrameworkDb, IRaythaDbJsonQueryEngine db, IContentTypeInRoutePath contentTypeInRoutePath)
         {
             _entityFrameworkDb = entityFrameworkDb;
             _db = db;
+            _contentTypeInRoutePath = contentTypeInRoutePath;
         }
         public async Task<CommandResponseDto<ShortGuid>> Handle(Command request, CancellationToken cancellationToken)
         {
@@ -52,6 +54,9 @@ public class DeleteContentItem
                 throw new NotFoundException("Content item", request.Id);
 
             var contentType = _entityFrameworkDb.ContentTypes.Include(p => p.ContentTypeFields).First(p => p.Id == entityFromRaythaEngine.ContentTypeId);
+
+            _contentTypeInRoutePath.ValidateContentTypeInRoutePathMatchesValue(contentType.DeveloperName);
+
             var primaryField = contentType.ContentTypeFields.First(p => p.Id == contentType.PrimaryFieldId);
 
             var publishedContent = (Dictionary<string, dynamic>)entityFromRaythaEngine.PublishedContent;

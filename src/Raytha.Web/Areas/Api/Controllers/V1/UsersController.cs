@@ -11,11 +11,10 @@ using System.Threading.Tasks;
 
 namespace Raytha.Web.Areas.Api.Controllers.V1;
 
-
+[Authorize(Policy = RaythaApiAuthorizationHandler.POLICY_PREFIX + BuiltInSystemPermission.MANAGE_USERS_PERMISSION)]
 public class UsersController : BaseController
 {
     [HttpGet("", Name = "GetUsers")]
-    [Authorize(Policy = RaythaApiAuthorizationHandler.POLICY_PREFIX + BuiltInSystemPermission.MANAGE_USERS_PERMISSION)]
     public async Task<ActionResult<IQueryResponseDto<ListResultDto<UserDto>>>> GetUsers(
                                            [FromQuery] GetUsers.Query request)
     {
@@ -24,7 +23,6 @@ public class UsersController : BaseController
     }
 
     [HttpGet("{userId}", Name = "GetUserById")]
-    [Authorize(Policy = RaythaApiAuthorizationHandler.POLICY_PREFIX + BuiltInSystemPermission.MANAGE_USERS_PERMISSION)]
     public async Task<ActionResult<IQueryResponseDto<UserDto>>> GetUserById(
                                         string userId)
     {
@@ -34,7 +32,6 @@ public class UsersController : BaseController
     }
 
     [HttpPost("", Name = "CreateUser")]
-    [Authorize(Policy = RaythaApiAuthorizationHandler.POLICY_PREFIX + BuiltInSystemPermission.MANAGE_USERS_PERMISSION)]
     public async Task<ActionResult<ICommandResponseDto<ShortGuid>>> CreateUser(
                                         [FromBody] CreateUser.Command request)
     {
@@ -47,7 +44,6 @@ public class UsersController : BaseController
     }
 
     [HttpPut("{userId}", Name = "EditUser")]
-    [Authorize(Policy = RaythaApiAuthorizationHandler.POLICY_PREFIX + BuiltInSystemPermission.MANAGE_USERS_PERMISSION)]
     public async Task<ActionResult<ICommandResponseDto<ShortGuid>>> EditUser(
                                         string userId,
                                         [FromBody] EditUser.Command request)
@@ -62,7 +58,6 @@ public class UsersController : BaseController
     }
 
     [HttpDelete("{userId}", Name = "DeleteUser")]
-    [Authorize(Policy = RaythaApiAuthorizationHandler.POLICY_PREFIX + BuiltInSystemPermission.MANAGE_USERS_PERMISSION)]
     public async Task<ActionResult<ICommandResponseDto<ShortGuid>>> DeleteUser(
                                         string userId)
     {
@@ -76,7 +71,6 @@ public class UsersController : BaseController
     }
 
     [HttpPut("{userId}/password", Name = "ResetPassword")]
-    [Authorize(Policy = RaythaApiAuthorizationHandler.POLICY_PREFIX + BuiltInSystemPermission.MANAGE_USERS_PERMISSION)]
     public async Task<ActionResult<ICommandResponseDto<ShortGuid>>> ResetPassword(
                                         string userId,
                                         [FromBody] ResetPassword_RequestModel request)
@@ -97,7 +91,6 @@ public class UsersController : BaseController
     }
 
     [HttpPut("{userId}/is-active", Name = "SetIsActive")]
-    [Authorize(Policy = RaythaApiAuthorizationHandler.POLICY_PREFIX + BuiltInSystemPermission.MANAGE_USERS_PERMISSION)]
     public async Task<ActionResult<ICommandResponseDto<ShortGuid>>> SetIsActive(
                                         string userId,
                                         [FromBody] SetIsActive.Command request)

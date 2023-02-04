@@ -3,7 +3,7 @@ using Raytha.Domain.Entities;
 
 namespace Raytha.Web.Authentication;
 
-public static class Operations
+public static class ContentItemOperations
 {
     public static OperationAuthorizationRequirement Read =
         new OperationAuthorizationRequirement { Name = BuiltInContentTypePermission.CONTENT_TYPE_READ_PERMISSION };

@@ -11,11 +11,10 @@ using System.Threading.Tasks;
 
 namespace Raytha.Web.Areas.Api.Controllers.V1;
 
-
+[Authorize(Policy = RaythaApiAuthorizationHandler.POLICY_PREFIX + BuiltInSystemPermission.MANAGE_USERS_PERMISSION)]
 public class UserGroupsController : BaseController
 {
     [HttpGet("", Name = "GetUserGroups")]
-    [Authorize(Policy = RaythaApiAuthorizationHandler.POLICY_PREFIX + BuiltInSystemPermission.MANAGE_USERS_PERMISSION)]
     public async Task<ActionResult<IQueryResponseDto<ListResultDto<UserGroupDto>>>> GetUserGroups(
                                            [FromQuery] GetUserGroups.Query request)
     {
@@ -24,7 +23,6 @@ public class UserGroupsController : BaseController
     }
 
     [HttpGet("{userGroupId}", Name = "GetUserGroupById")]
-    [Authorize(Policy = RaythaApiAuthorizationHandler.POLICY_PREFIX + BuiltInSystemPermission.MANAGE_USERS_PERMISSION)]
     public async Task<ActionResult<IQueryResponseDto<UserGroupDto>>> GetUserGroupById(
                                         string userGroupId)
     {
@@ -34,7 +32,6 @@ public class UserGroupsController : BaseController
     }
 
     [HttpPost("", Name = "CreateUserGroup")]
-    [Authorize(Policy = RaythaApiAuthorizationHandler.POLICY_PREFIX + BuiltInSystemPermission.MANAGE_USERS_PERMISSION)]
     public async Task<ActionResult<ICommandResponseDto<ShortGuid>>> CreateUserGroup(
                                         [FromBody] CreateUserGroup.Command request)
     {
@@ -47,7 +44,6 @@ public class UserGroupsController : BaseController
     }
 
     [HttpPut("{userGroupId}", Name = "EditUserGroup")]
-    [Authorize(Policy = RaythaApiAuthorizationHandler.POLICY_PREFIX + BuiltInSystemPermission.MANAGE_USERS_PERMISSION)]
     public async Task<ActionResult<ICommandResponseDto<ShortGuid>>> EditUserGroup(
                                         string userGroupId,
                                         [FromBody] EditUserGroup.Command request)
@@ -62,7 +58,6 @@ public class UserGroupsController : BaseController
     }
 
     [HttpDelete("{userGroupId}", Name = "DeleteUserGroup")]
-    [Authorize(Policy = RaythaApiAuthorizationHandler.POLICY_PREFIX + BuiltInSystemPermission.MANAGE_USERS_PERMISSION)]
     public async Task<ActionResult<ICommandResponseDto<ShortGuid>>> DeleteUserGroup(
                                         string userGroupId)
     {

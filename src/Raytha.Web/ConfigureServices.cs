@@ -50,6 +50,8 @@ public static class ConfigureServices
                 policy => policy.Requirements.Add(new ManageAuditLogsRequirement()));
             options.AddPolicy(BuiltInSystemPermission.MANAGE_SYSTEM_SETTINGS_PERMISSION,
                 policy => policy.Requirements.Add(new ManageSystemSettingsRequirement()));
+            options.AddPolicy(BuiltInSystemPermission.MANAGE_MEDIA_ITEMS,
+                policy => policy.Requirements.Add(new ManageMediaItemsRequirement()));
             options.AddPolicy(BuiltInContentTypePermission.CONTENT_TYPE_CONFIG_PERMISSION,
                 policy => policy.Requirements.Add(new ContentTypePermissionRequirement(BuiltInContentTypePermission.CONTENT_TYPE_CONFIG_PERMISSION)));
             options.AddPolicy(BuiltInContentTypePermission.CONTENT_TYPE_READ_PERMISSION,
@@ -64,6 +66,8 @@ public static class ConfigureServices
                 policy => policy.Requirements.Add(new ApiManageUsersRequirement()));
             options.AddPolicy(RaythaApiAuthorizationHandler.POLICY_PREFIX + BuiltInSystemPermission.MANAGE_TEMPLATES_PERMISSION,
                 policy => policy.Requirements.Add(new ApiManageTemplatesRequirement()));
+            options.AddPolicy(RaythaApiAuthorizationHandler.POLICY_PREFIX + BuiltInSystemPermission.MANAGE_MEDIA_ITEMS,
+                policy => policy.Requirements.Add(new ApiManageMediaItemsRequirement()));
             options.AddPolicy(RaythaApiAuthorizationHandler.POLICY_PREFIX + BuiltInSystemPermission.MANAGE_CONTENT_TYPES_PERMISSION,
                 policy => policy.Requirements.Add(new ApiManageContentTypesRequirement()));
             options.AddPolicy(RaythaApiAuthorizationHandler.POLICY_PREFIX + BuiltInContentTypePermission.CONTENT_TYPE_READ_PERMISSION,
@@ -88,15 +92,18 @@ public static class ConfigureServices
         services.AddScoped<ICurrentUser, CurrentUser>();
         services.AddScoped<ICurrentOrganization, CurrentOrganization>();
         services.AddScoped<IRelativeUrlBuilder, RelativeUrlBuilder>();
+        services.AddScoped<IRenderEngine, RenderEngine>();
+        services.AddScoped<IContentTypeInRoutePath, ContentTypeInRoutePath>();
         services.AddSingleton<IFileStorageProviderSettings, FileStorageProviderSettings>();
         services.AddSingleton<ICurrentVersion, CurrentVersion>();
-        services.AddScoped<IRenderEngine, RenderEngine>();
+
         services.AddScoped<GetOrSetRecentlyAccessedViewFilterAttribute>();
         services.AddScoped<SetPaginationInformationFilterAttribute>();
-        services.AddSingleton<IAuthorizationMiddlewareResultHandler, ApiKeyAuthorizationMiddleware>();
         services.AddScoped<IAuthorizationHandler, RaythaAdminAuthorizationHandler>();
         services.AddScoped<IAuthorizationHandler, RaythaAdminContentTypeAuthorizationHandler>();
         services.AddScoped<IAuthorizationHandler, RaythaApiAuthorizationHandler>();
+        services.AddSingleton<IAuthorizationMiddlewareResultHandler, ApiKeyAuthorizationMiddleware>();
+
         services.AddRouting();
         services.AddDataProtection();
         services.AddHttpContextAccessor();

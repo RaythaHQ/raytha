@@ -15,14 +15,14 @@ using System.Threading.Tasks;
 namespace Raytha.Web.Areas.Admin.Controllers;
 
 [Area("Admin")]
+[Authorize(Policy = BuiltInSystemPermission.MANAGE_MEDIA_ITEMS)]
 public class MediaItemsController : BaseController
 {
     private IRelativeUrlBuilder _relativeUrlBuilder;
     protected IRelativeUrlBuilder RelativeUrlBuilder => _relativeUrlBuilder ??= HttpContext.RequestServices.GetRequiredService<IRelativeUrlBuilder>();
 
-    [Authorize(Policy = BuiltInContentTypePermission.CONTENT_TYPE_EDIT_PERMISSION)]
-    [Route($"{RAYTHA_ROUTE_PREFIX}/media-items/{{contentType}}/presign", Name = "mediaitemspresignuploadurl")]
     [HttpPost]
+    [Route($"{RAYTHA_ROUTE_PREFIX}/media-items/presign", Name = "mediaitemspresignuploadurl")]
     public async Task<IActionResult> CloudUploadPresignRequest(string contentType, [FromBody] MediaItemPresignRequest_ViewModel body)
     {
         var idForKey = ShortGuid.NewGuid();
@@ -32,9 +32,8 @@ public class MediaItemsController : BaseController
         return Json(new { url, fields = new { id = idForKey.ToString(), fileName = body.filename, body.contentType, objectKey } });
     }
 
-    [Authorize(Policy = BuiltInContentTypePermission.CONTENT_TYPE_EDIT_PERMISSION)]
-    [Route($"{RAYTHA_ROUTE_PREFIX}/media-items/{{contentType}}/create-after-upload", Name = "mediaitemscreate")]
     [HttpPost]
+    [Route($"{RAYTHA_ROUTE_PREFIX}/media-items/create-after-upload", Name = "mediaitemscreate")]
     public async Task<IActionResult> CloudUploadCreateAfterUpload(string contentType, [FromBody] MediaItemCreateAfterUpload_ViewModel body)
     {
         var input = new CreateMediaItem.Command
@@ -60,8 +59,7 @@ public class MediaItemsController : BaseController
     }
 
     [HttpPost]
-    [Authorize(Policy = BuiltInContentTypePermission.CONTENT_TYPE_EDIT_PERMISSION)]
-    [Route($"{RAYTHA_ROUTE_PREFIX}/media-items/{{contentType}}/upload", Name = "mediaitemslocalstorageupload")]
+    [Route($"{RAYTHA_ROUTE_PREFIX}/media-items/upload", Name = "mediaitemslocalstorageupload")]
     public async Task<IActionResult> LocalStorageUpload(IFormFile file, string contentType)
     {
         if (file.Length <= 0)
@@ -103,6 +101,7 @@ public class MediaItemsController : BaseController
         }     
     }
 
+    [AllowAnonymous]
     [Route($"{RAYTHA_ROUTE_PREFIX}/media-items/objectkey/{{objectKey}}", Name = "mediaitemsredirecttofileurlbyobjectkey")]
     public IActionResult RedirectToFileUrlByObjectKey(string objectKey)
     {
@@ -110,6 +109,7 @@ public class MediaItemsController : BaseController
         return RedirectPermanent(downloadUrl);
     }
 
+    [AllowAnonymous]
     [Route($"{RAYTHA_ROUTE_PREFIX}/media-items/id/{{id}}", Name = "mediaitemsredirecttofileurlbyid")]
     public async Task<IActionResult> RedirectToFileUrlById(string id)
     {

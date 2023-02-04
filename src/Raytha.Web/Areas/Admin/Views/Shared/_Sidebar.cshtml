@@ -1,8 +1,8 @@
-@    using Raytha.Application.Common.Interfaces
-@    using Microsoft.AspNetCore.Authorization
-@    using Raytha.Domain.Entities
-@    using Raytha.Web.Utils;
-    using Raytha.Web.Authentication;
+@using Raytha.Application.Common.Interfaces
+@using Microsoft.AspNetCore.Authorization
+@using Raytha.Domain.Entities
+@using Raytha.Web.Utils;
+@using Raytha.Web.Authentication;
 @inject IAuthorizationService AuthorizationService
 @inject ICurrentOrganization CurrentOrganization
 @inject ICurrentUser CurrentUser
@@ -79,7 +79,7 @@
 
       @foreach (var contentType in CurrentOrganization.ContentTypes)
       {
-        if ((await AuthorizationService.AuthorizeAsync(User, contentType.DeveloperName, Operations.Read)).Succeeded)
+        if ((await AuthorizationService.AuthorizeAsync(User, contentType.DeveloperName, ContentItemOperations.Read)).Succeeded)
         {
             <li class="nav-item @(IsActivePage(contentType.DeveloperName))">
                 <a asp-route="contentitemsdefault" asp-route-contentType="@contentType.DeveloperName" class="nav-link d-flex justify-content-between">

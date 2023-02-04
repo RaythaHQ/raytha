@@ -14,11 +14,10 @@ using System.Threading.Tasks;
 
 namespace Raytha.Web.Areas.Api.Controllers.V1;
 
-
+[Authorize(Policy = RaythaApiAuthorizationHandler.POLICY_PREFIX + BuiltInSystemPermission.MANAGE_MEDIA_ITEMS)]
 public class MediaItemsController : BaseController
 {
     [HttpGet("", Name = "GetMediaItems")]
-    [Authorize(Policy = RaythaApiAuthorizationHandler.POLICY_PREFIX + BuiltInSystemPermission.MANAGE_CONTENT_TYPES_PERMISSION)]
     public async Task<ActionResult<IQueryResponseDto<ListResultDto<MediaItemDto>>>> GetMediaItems(
                                            [FromQuery] GetMediaItems.Query request)
     {
@@ -27,7 +26,6 @@ public class MediaItemsController : BaseController
     }
 
     [HttpGet("{objectKey}", Name = "GetMediaItemUrlByObjectKey")]
-    [Authorize(Policy = RaythaApiAuthorizationHandler.POLICY_PREFIX + BuiltInSystemPermission.MANAGE_CONTENT_TYPES_PERMISSION)]
     public async Task<ActionResult<IQueryResponseDto<MediaItemDto>>> GetMediaItemUrlByObjectKey(
                                         string objectKey)
     {
@@ -36,7 +34,6 @@ public class MediaItemsController : BaseController
     }
 
     [HttpPost]
-    [Authorize(Policy = RaythaApiAuthorizationHandler.POLICY_PREFIX + BuiltInContentTypePermission.CONTENT_TYPE_EDIT_PERMISSION)]
     [Route($"{{contentTypeDeveloperName}}/upload-direct", Name = "UploadDirect")]
     public async Task<IActionResult> UploadDirect(string contentTypeDeveloperName, IFormFile file)
     {

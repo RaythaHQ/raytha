@@ -1,7 +1,7 @@
-@    using Microsoft.AspNetCore.Authorization
-@    using Raytha.Domain.Entities
-@    using Raytha.Web.Utils;
-    using Raytha.Web.Authentication;
+@using Microsoft.AspNetCore.Authorization
+@using Raytha.Domain.Entities
+@using Raytha.Web.Utils;
+@using Raytha.Web.Authentication;
 @inject IAuthorizationService AuthorizationService
 @model ContentItemsActionsMenu_ViewModel
 
@@ -28,7 +28,7 @@
                             Edit @Model.ContentTypeLabelSingular.ToLower()
                         </a>
                     </li>
-                    @if ((await AuthorizationService.AuthorizeAsync(User, Model.ContentTypeDeveloperName, Operations.Edit)).Succeeded)
+                    @if ((await AuthorizationService.AuthorizeAsync(User, Model.ContentTypeDeveloperName, ContentItemOperations.Edit)).Succeeded)
                     {
                         <li class="nav-item">
                             <a class="nav-link @IsActivePage("Settings")" asp-route="contentitemssettings"
