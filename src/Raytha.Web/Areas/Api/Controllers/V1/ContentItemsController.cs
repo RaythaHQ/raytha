@@ -10,7 +10,7 @@ using Raytha.Application.ContentTypes.Queries;
 using Raytha.Application.Routes;
 using Raytha.Application.Routes.Queries;
 using Raytha.Domain.Entities;
-using Raytha.Web.Utils;
+using Raytha.Web.Authentication;
 using System.Threading.Tasks;
 
 namespace Raytha.Web.Areas.Api.Controllers.V1;

@@ -8,6 +8,7 @@ using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Hosting;
 using Raytha.Application;
 using Raytha.Application.Common.Utils;
+using Raytha.Web.Middlewares;
 using System.IO;
 
 namespace Raytha.Web;
@@ -30,13 +31,10 @@ public class Startup
 
     public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
     {
-        if (env.IsDevelopment())
+        app.UseExceptionHandler(ExceptionsMiddleware.ErrorHandler());
+
+        if (!env.IsDevelopment())
         {
-            app.UseDeveloperExceptionPage();
-        }
-        else
-        {
-            app.UseExceptionHandler("/error");
             app.UseHsts();
         }
 

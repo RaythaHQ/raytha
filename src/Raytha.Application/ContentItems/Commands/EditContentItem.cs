@@ -7,7 +7,6 @@ using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Models;
 using Raytha.Application.Common.Utils;
 using Raytha.Domain.Entities;
-using System.Dynamic;
 
 namespace Raytha.Application.ContentItems.Commands;
 
@@ -16,7 +15,7 @@ public class EditContentItem
     public record Command : LoggableEntityRequest<CommandResponseDto<ShortGuid>>
     {
         public bool SaveAsDraft { get; init; }
-        public ExpandoObject Content { get; init; }
+        public IDictionary<string, dynamic> Content { get; init; }
     }
 
     public class Validator : AbstractValidator<Command>

@@ -8,7 +8,7 @@ using Raytha.Application.MediaItems;
 using Raytha.Application.MediaItems.Commands;
 using Raytha.Application.MediaItems.Queries;
 using Raytha.Domain.Entities;
-using Raytha.Web.Utils;
+using Raytha.Web.Authentication;
 using System.IO;
 using System.Threading.Tasks;
 

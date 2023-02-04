@@ -9,7 +9,6 @@ namespace Raytha.Web.Areas.Api.Controllers.V1;
 [ApiExplorerSettings(IgnoreApi = false, GroupName = "v1")]
 [ApiController]
 [Route("raytha/api/v1/[controller]")]
-[NotFoundFilter]
 public class BaseController : ControllerBase
 {
     private ISender _mediator;

@@ -33,10 +33,10 @@ public class LoginWithApiKey
                 .FirstOrDefault(p => p.ApiKeyHash == hashedApiKey);
 
             if (entity == null)
-                throw new NotFoundException("Api Key", request.ApiKey);
+                throw new InvalidApiKeyException("Api key was not found.");
 
             if (!entity.User.IsActive || !entity.User.IsAdmin)
-                throw new UnauthorizedAccessException("Api key is not connected to an active administrator");
+                throw new InvalidApiKeyException("Api key is not connected to an active administrator");
 
             return new CommandResponseDto<LoginDto>(LoginDto.GetProjection(entity.User));
         }

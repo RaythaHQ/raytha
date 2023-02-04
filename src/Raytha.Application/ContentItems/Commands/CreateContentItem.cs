@@ -7,7 +7,6 @@ using Raytha.Application.Common.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Raytha.Application.Common.Exceptions;
 using Raytha.Application.Common.Utils;
-using System.Dynamic;
 using Raytha.Application.Common.Attributes;
 
 namespace Raytha.Application.ContentItems.Commands;
@@ -21,7 +20,7 @@ public class CreateContentItem
 
         [ExcludePropertyFromOpenApiDocs]
         public string ContentTypeDeveloperName { get; init; } = string.Empty;
-        public ExpandoObject Content { get; init; }
+        public IDictionary<string, dynamic> Content { get; init; }
     }
 
     public class Validator : AbstractValidator<Command>

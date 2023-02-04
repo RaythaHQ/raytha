@@ -6,7 +6,7 @@ using Raytha.Application.Users;
 using Raytha.Application.Users.Commands;
 using Raytha.Application.Users.Queries;
 using Raytha.Domain.Entities;
-using Raytha.Web.Utils;
+using Raytha.Web.Authentication;
 using System.Threading.Tasks;
 
 namespace Raytha.Web.Areas.Api.Controllers.V1;

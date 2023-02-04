@@ -6,23 +6,13 @@ using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Security;
 using Raytha.Domain.Entities;
 using Raytha.Web.Filters;
-using Raytha.Web.Helpers;
 using Raytha.Web.Services;
-using Raytha.Web.Utils;
 using System;
 using System.Text.Json;
-using Swashbuckle.AspNetCore.SwaggerGen;
-using System.Linq;
 using System.Collections.Generic;
-using System.Text.Json.Serialization;
 using CSharpVitamins;
-using Raytha.Application.Common.Models;
-using System.Reflection;
-using Raytha.Application.Common.Attributes;
-using System.Net;
-using Raytha.Application.Common.Exceptions;
-using Microsoft.AspNetCore.Mvc.Filters;
-using System.Text;
+using Raytha.Web.Authentication;
+using Raytha.Web.Middlewares;
 
 namespace Microsoft.Extensions.DependencyInjection;
 
@@ -39,7 +29,7 @@ public static class ConfigureServices
                 options.Cookie.HttpOnly = true;
                 options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
                 options.Cookie.SameSite = SameSiteMode.None;
-                options.AccessDeniedPath = new PathString("/raytha/forbidden");
+                options.AccessDeniedPath = new PathString("/raytha/403");
                 options.ExpireTimeSpan = TimeSpan.FromDays(30);
                 options.EventsType = typeof(CustomCookieAuthenticationEvents);
             });
@@ -83,11 +73,9 @@ public static class ConfigureServices
 
         });
 
-        services.AddScoped<SetFormValidationErrorsFilterAttribute>();
         services.AddScoped<CustomCookieAuthenticationEvents>();
         services.AddControllersWithViews(options =>
         {
-            options.Filters.Add<NotFoundFilterAttribute>();
             options.Filters.Add<SetFormValidationErrorsFilterAttribute>();
         }).AddJsonOptions(o => {
             o.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
@@ -105,7 +93,7 @@ public static class ConfigureServices
         services.AddScoped<IRenderEngine, RenderEngine>();
         services.AddScoped<GetOrSetRecentlyAccessedViewFilterAttribute>();
         services.AddScoped<SetPaginationInformationFilterAttribute>();
-        services.AddSingleton<IAuthorizationMiddlewareResultHandler, ApiKeyAuthorizationMiddlewareResultHandler>();
+        services.AddSingleton<IAuthorizationMiddlewareResultHandler, ApiKeyAuthorizationMiddleware>();
         services.AddScoped<IAuthorizationHandler, RaythaAdminAuthorizationHandler>();
         services.AddScoped<IAuthorizationHandler, RaythaAdminContentTypeAuthorizationHandler>();
         services.AddScoped<IAuthorizationHandler, RaythaApiAuthorizationHandler>();
@@ -153,129 +141,3 @@ public static class ConfigureServices
     }
 }
 
-public class LowercaseDocumentFilter : IDocumentFilter
-{
-    public void Apply(OpenApiDocument swaggerDoc, DocumentFilterContext context)
-    {
-        var paths = swaggerDoc.Paths.ToDictionary(entry => LowercaseEverythingButParameters(entry.Key),
-            entry => entry.Value);
-        swaggerDoc.Paths = new OpenApiPaths();
-        foreach (var (key, value) in paths)
-        {
-            swaggerDoc.Paths.Add(key, value);
-        }
-    }
-
-    private static string LowercaseEverythingButParameters(string key) => string.Join('/', key.Split('/').Select(x => x.Contains("{") ? x : x.ToLower()));
-}
-
-
-
-public class ShortGuidConverter : JsonConverter<ShortGuid>
-{
-    public override ShortGuid Read(
-        ref Utf8JsonReader reader,
-        Type typeToConvert,
-        JsonSerializerOptions options) =>
-            new ShortGuid(reader.GetString());
-
-    public override void Write(
-        Utf8JsonWriter writer,
-        ShortGuid shortGuid,
-        JsonSerializerOptions options)
-    {
-        if (shortGuid.Value == ShortGuid.Empty)
-        {
-            writer.WriteNullValue();
-        }
-        else
-        {
-            writer.WriteStringValue(shortGuid.Value);
-        }
-    }
-}
-
-public class AuditableUserDtoConverter : JsonConverter<AuditableUserDto>
-{
-    public override AuditableUserDto Read(
-        ref Utf8JsonReader reader,
-        Type typeToConvert,
-        JsonSerializerOptions options) =>
-            throw new NotImplementedException();
-
-    public override void Write(
-        Utf8JsonWriter writer,
-        AuditableUserDto user,
-        JsonSerializerOptions options)
-    {
-        if (user.Id.Value == ShortGuid.Empty)
-        {
-            writer.WriteNullValue();
-        }
-        else
-        {
-            var jsonOptions = new JsonSerializerOptions
-            {
-                PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-                DictionaryKeyPolicy = JsonNamingPolicy.CamelCase,
-                PropertyNameCaseInsensitive = true,
-                WriteIndented = true
-            };
-            jsonOptions.Converters.Add(new ShortGuidConverter());
-            JsonSerializer.Serialize(writer, user, user.GetType(), jsonOptions);
-        }
-    }
-}
-
-public class ExcludePropertyFromOpenApiDocsFilter : ISchemaFilter
-{
-    public void Apply(OpenApiSchema schema, SchemaFilterContext context)
-    {
-        if (schema?.Properties == null)
-            return;
-
-        var excludedProperties =
-            context.Type.GetProperties().Where(
-                t => t.GetCustomAttribute<ExcludePropertyFromOpenApiDocs>() != null);
-
-        foreach (var excludedProperty in excludedProperties)
-        {
-            var propertyToRemove =
-                schema.Properties.Keys.SingleOrDefault(
-                    x => x.ToLower() == excludedProperty.Name.ToLower());
-
-            if (propertyToRemove != null)
-            {
-                schema.Properties.Remove(propertyToRemove);
-            }
-        }
-    }
-}
-
-public class NotFoundFilterAttribute : AspNetCore.Mvc.Filters.ExceptionFilterAttribute
-{
-    public override void OnException(ExceptionContext context)
-    {
-        var currentStatusCode = (HttpStatusCode)context.HttpContext.Response.StatusCode;
-        if (currentStatusCode != HttpStatusCode.OK)
-            return;
-
-        if (context.Exception is NotFoundException)
-        {
-            if (context.Exception is NotFoundException)
-            {
-                var errorBytes = GetErrorMessageAsByteArray("The resource you request was not found.");
-                context.HttpContext.Response.StatusCode = (int)HttpStatusCode.NotFound;
-                context.HttpContext.Response.ContentType = "application/json";
-                context.HttpContext.Response.Body.WriteAsync(errorBytes, 0, errorBytes.Length);
-                context.HttpContext.Response.CompleteAsync();
-            }
-        }
-    }
-
-    private byte[] GetErrorMessageAsByteArray(string message)
-    {
-        string json = JsonSerializer.Serialize(new { success = false, error = message });
-        return Encoding.UTF8.GetBytes(json);
-    }
-}
