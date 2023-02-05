@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Utils;
+using Raytha.Web.Utils;
 using System;
 
 namespace Raytha.Web.Services;
@@ -13,7 +14,7 @@ public class ContentTypeInRoutePath : IContentTypeInRoutePath
         _httpContextAccessor = httpContextAccessor;
     }
 
-    public string ContentTypeDeveloperName => ((string)_httpContextAccessor.HttpContext.Request.RouteValues["contentType"]).ToDeveloperName();
+    public string ContentTypeDeveloperName => ((string)_httpContextAccessor.HttpContext.Request.RouteValues[RouteConstants.CONTENT_TYPE_DEVELOPER_NAME]).ToDeveloperName();
 
     public bool ValidateContentTypeInRoutePathMatchesValue(string developerName, bool throwExceptionOnFailure = true)
     {

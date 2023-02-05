@@ -9,6 +9,7 @@ using MediatR;
 using Raytha.Application.Login.Commands;
 using System.Collections.Generic;
 using Raytha.Application.Common.Exceptions;
+using Raytha.Web.Utils;
 
 namespace Raytha.Web.Authentication;
 
@@ -149,7 +150,7 @@ public class RaythaApiAuthorizationHandler : IAuthorizationHandler
                 else
                 {
                     var permission = ((ApiContentTypePermissionRequirement)requirement).Permission;
-                    string contentTypeDeveloperName = _httpContextAccessor.HttpContext.GetRouteValue("contentTypeDeveloperName") as string;
+                    string contentTypeDeveloperName = _httpContextAccessor.HttpContext.GetRouteValue(RouteConstants.CONTENT_TYPE_DEVELOPER_NAME) as string;
 
                     if (contentTypePermissions.Contains($"{contentTypeDeveloperName.ToDeveloperName()}_{permission}"))
                     {

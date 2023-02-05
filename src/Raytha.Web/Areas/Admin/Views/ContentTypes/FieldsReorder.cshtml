@@ -24,7 +24,7 @@
                     class="list-group mt-4">
                     @foreach (var item in Model.Items)
                     {
-                        <li data-sortable-update-url="@Url.Action("FieldsReorderAjax", new { contentType = Model.CurrentView.ContentTypeDeveloperName, id = item.Id })" class="list-group-item border raytha-draggable d-flex justify-content-between">
+                        <li data-sortable-update-url="@Url.Action("FieldsReorderAjax", new { contentTypeDeveloperName = Model.CurrentView.ContentTypeDeveloperName, id = item.Id })" class="list-group-item border raytha-draggable d-flex justify-content-between">
                             <div>
                                 @item.Label <small>@item.DeveloperName</small>
                             </div>

@@ -16,6 +16,7 @@ using Raytha.Application.ContentItems.Queries;
 using Raytha.Application.ContentItems.Commands;
 using Microsoft.AspNetCore.Authorization;
 using Raytha.Domain.Entities;
+using Raytha.Web.Utils;
 
 namespace Raytha.Web.Areas.Admin.Controllers;
 
@@ -53,7 +54,7 @@ public class ContentTypesController : BaseController
         if (response.Success)
         {
             SetSuccessMessage($"{model.LabelPlural} edit successfully.");
-            return RedirectToAction("Index", "ContentItems", new { contentType = model.DeveloperName.ToDeveloperName() });
+            return RedirectToAction("Index", "ContentItems", new { contentTypeDeveloperName = model.DeveloperName.ToDeveloperName() });
         }
         else
         {
@@ -65,7 +66,7 @@ public class ContentTypesController : BaseController
 
     [Authorize(Policy = BuiltInContentTypePermission.CONTENT_TYPE_CONFIG_PERMISSION)]
     [ServiceFilter(typeof(GetOrSetRecentlyAccessedViewFilterAttribute))]
-    [Route($"{RAYTHA_ROUTE_PREFIX}/{{contentType}}/configuration", Name = "contenttypesconfiguration")]
+    [Route($"{RAYTHA_ROUTE_PREFIX}/{{{RouteConstants.CONTENT_TYPE_DEVELOPER_NAME}}}/configuration", Name = "contenttypesconfiguration")]
     public async Task<IActionResult> Configuration()
     {
         var viewModel = new ContentTypesEdit_ViewModel
@@ -86,7 +87,7 @@ public class ContentTypesController : BaseController
 
     [Authorize(Policy = BuiltInContentTypePermission.CONTENT_TYPE_CONFIG_PERMISSION)]
     [ServiceFilter(typeof(GetOrSetRecentlyAccessedViewFilterAttribute))]
-    [Route($"{RAYTHA_ROUTE_PREFIX}/{{contentType}}/configuration", Name = "contenttypesconfiguration")]
+    [Route($"{RAYTHA_ROUTE_PREFIX}/{{{RouteConstants.CONTENT_TYPE_DEVELOPER_NAME}}}/configuration", Name = "contenttypesconfiguration")]
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Configuration(ContentTypesEdit_ViewModel model)
@@ -119,7 +120,7 @@ public class ContentTypesController : BaseController
     [Authorize(Policy = BuiltInContentTypePermission.CONTENT_TYPE_CONFIG_PERMISSION)]
     [ServiceFilter(typeof(GetOrSetRecentlyAccessedViewFilterAttribute))]
     [ServiceFilter(typeof(SetPaginationInformationFilterAttribute))]
-    [Route($"{RAYTHA_ROUTE_PREFIX}/{{contentType}}/fields", Name = "contenttypesfieldslist")]
+    [Route($"{RAYTHA_ROUTE_PREFIX}/{{{RouteConstants.CONTENT_TYPE_DEVELOPER_NAME}}}/fields", Name = "contenttypesfieldslist")]
     public async Task<IActionResult> FieldsList(string search = "", string orderBy = $"FieldOrder {SortOrder.ASCENDING}", int pageNumber = 1, int pageSize = 50)
     {
         var input = new GetContentTypeFields.Query
@@ -150,7 +151,7 @@ public class ContentTypesController : BaseController
     [Authorize(Policy = BuiltInContentTypePermission.CONTENT_TYPE_CONFIG_PERMISSION)]
     [ServiceFilter(typeof(GetOrSetRecentlyAccessedViewFilterAttribute))]
     [ServiceFilter(typeof(SetPaginationInformationFilterAttribute))]
-    [Route($"{RAYTHA_ROUTE_PREFIX}/{{contentType}}/deleted-fields", Name = "contenttypesfieldslistdeleted")]
+    [Route($"{RAYTHA_ROUTE_PREFIX}/{{{RouteConstants.CONTENT_TYPE_DEVELOPER_NAME}}}/deleted-fields", Name = "contenttypesfieldslistdeleted")]
     public async Task<IActionResult> FieldsListDeleted(string search = "", string orderBy = $"FieldOrder {SortOrder.ASCENDING}", int pageNumber = 1, int pageSize = 50)
     {
         var input = new GetContentTypeFields.Query
@@ -180,7 +181,7 @@ public class ContentTypesController : BaseController
 
     [Authorize(Policy = BuiltInContentTypePermission.CONTENT_TYPE_CONFIG_PERMISSION)]
     [ServiceFilter(typeof(GetOrSetRecentlyAccessedViewFilterAttribute))]
-    [Route($"{RAYTHA_ROUTE_PREFIX}/{{contentType}}/fields/create", Name = "contenttypesfieldscreate")]
+    [Route($"{RAYTHA_ROUTE_PREFIX}/{{{RouteConstants.CONTENT_TYPE_DEVELOPER_NAME}}}/fields/create", Name = "contenttypesfieldscreate")]
     public async Task<IActionResult> FieldsCreate()
     {
         var contentTypes = await Mediator.Send(new GetContentTypes.Query());
@@ -197,7 +198,7 @@ public class ContentTypesController : BaseController
 
     [Authorize(Policy = BuiltInContentTypePermission.CONTENT_TYPE_CONFIG_PERMISSION)]
     [ServiceFilter(typeof(GetOrSetRecentlyAccessedViewFilterAttribute))]
-    [Route($"{RAYTHA_ROUTE_PREFIX}/{{contentType}}/fields/create", Name = "contenttypesfieldscreate")]
+    [Route($"{RAYTHA_ROUTE_PREFIX}/{{{RouteConstants.CONTENT_TYPE_DEVELOPER_NAME}}}/fields/create", Name = "contenttypesfieldscreate")]
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> FieldsCreate(FieldsCreate_ViewModel model)
@@ -218,7 +219,7 @@ public class ContentTypesController : BaseController
         if (response.Success)
         {
             SetSuccessMessage($"{model.Label} was created successfully.");
-            return RedirectToAction("FieldsList", new { contentType = CurrentView.ContentType.DeveloperName });
+            return RedirectToAction("FieldsList", new { contentTypeDeveloperName = CurrentView.ContentType.DeveloperName });
         }
         else
         {
@@ -233,7 +234,7 @@ public class ContentTypesController : BaseController
 
     [Authorize(Policy = BuiltInContentTypePermission.CONTENT_TYPE_CONFIG_PERMISSION)]
     [ServiceFilter(typeof(GetOrSetRecentlyAccessedViewFilterAttribute))]
-    [Route($"{RAYTHA_ROUTE_PREFIX}/{{contentType}}/fields/edit/{{id}}", Name = "contenttypesfieldsedit")]
+    [Route($"{RAYTHA_ROUTE_PREFIX}/{{{RouteConstants.CONTENT_TYPE_DEVELOPER_NAME}}}/fields/edit/{{id}}", Name = "contenttypesfieldsedit")]
     public async Task<IActionResult> FieldsEdit(string id)
     {
         var response = await Mediator.Send(new GetContentTypeFieldById.Query { Id = id });
@@ -258,7 +259,7 @@ public class ContentTypesController : BaseController
 
     [Authorize(Policy = BuiltInContentTypePermission.CONTENT_TYPE_CONFIG_PERMISSION)]
     [ServiceFilter(typeof(GetOrSetRecentlyAccessedViewFilterAttribute))]
-    [Route($"{RAYTHA_ROUTE_PREFIX}/{{contentType}}/fields/edit/{{id}}", Name = "contenttypesfieldsedit")]
+    [Route($"{RAYTHA_ROUTE_PREFIX}/{{{RouteConstants.CONTENT_TYPE_DEVELOPER_NAME}}}/fields/edit/{{id}}", Name = "contenttypesfieldsedit")]
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> FieldsEdit(EditField_ViewModel model, string id)
@@ -276,7 +277,7 @@ public class ContentTypesController : BaseController
         if (response.Success)
         {
             SetSuccessMessage($"{model.Label} was edited successfully.");
-            return RedirectToAction("FieldsList", new { contentType = CurrentView.ContentType.DeveloperName });
+            return RedirectToAction("FieldsList", new { contentTypeDeveloperName = CurrentView.ContentType.DeveloperName });
         }
         else
         {
@@ -292,7 +293,7 @@ public class ContentTypesController : BaseController
     [Authorize(Policy = BuiltInContentTypePermission.CONTENT_TYPE_CONFIG_PERMISSION)]
     [ServiceFilter(typeof(GetOrSetRecentlyAccessedViewFilterAttribute))]
     [HttpPost]
-    [Route($"{RAYTHA_ROUTE_PREFIX}/{{contentType}}/fields/delete/{{id}}", Name = "contenttypesfieldsdelete")]
+    [Route($"{RAYTHA_ROUTE_PREFIX}/{{{RouteConstants.CONTENT_TYPE_DEVELOPER_NAME}}}/fields/delete/{{id}}", Name = "contenttypesfieldsdelete")]
     public async Task<IActionResult> FieldsDelete(string id)
     {
         var input = new DeleteContentTypeField.Command { Id = id };
@@ -300,18 +301,18 @@ public class ContentTypesController : BaseController
         if (response.Success)
         {
             SetSuccessMessage($"Content type field has been deleted.");
-            return RedirectToAction("FieldsList", new { contentType = CurrentView.ContentType.DeveloperName });
+            return RedirectToAction("FieldsList", new { contentTypeDeveloperName = CurrentView.ContentType.DeveloperName });
         }
         else
         {
             SetErrorMessage("There was an error deleting this content type field", response.GetErrors());
-            return RedirectToAction("FieldsEdit", new { contentType = CurrentView.ContentType.DeveloperName, id });
+            return RedirectToAction("FieldsEdit", new { contentTypeDeveloperName = CurrentView.ContentType.DeveloperName, id });
         }
     }
 
     [Authorize(Policy = BuiltInContentTypePermission.CONTENT_TYPE_CONFIG_PERMISSION)]
     [ServiceFilter(typeof(GetOrSetRecentlyAccessedViewFilterAttribute))]
-    [Route($"{RAYTHA_ROUTE_PREFIX}/{{contentType}}/fields/reorder", Name = "contenttypesfieldsreorder")]
+    [Route($"{RAYTHA_ROUTE_PREFIX}/{{{RouteConstants.CONTENT_TYPE_DEVELOPER_NAME}}}/fields/reorder", Name = "contenttypesfieldsreorder")]
     public async Task<IActionResult> FieldsReorder()
     {
         var input = new GetContentTypeFields.Query
@@ -339,7 +340,7 @@ public class ContentTypesController : BaseController
 
     [Authorize(Policy = BuiltInContentTypePermission.CONTENT_TYPE_CONFIG_PERMISSION)]
     [ServiceFilter(typeof(GetOrSetRecentlyAccessedViewFilterAttribute))]
-    [Route($"{RAYTHA_ROUTE_PREFIX}/{{contentType}}/fields/reorder/{{id}}", Name = "contenttypesfieldsreorderajax")]
+    [Route($"{RAYTHA_ROUTE_PREFIX}/{{{RouteConstants.CONTENT_TYPE_DEVELOPER_NAME}}}/fields/reorder/{{id}}", Name = "contenttypesfieldsreorderajax")]
     [HttpPatch]
     public async Task<IActionResult> FieldsReorderAjax(string id)
     {
@@ -360,7 +361,7 @@ public class ContentTypesController : BaseController
     [Authorize(Policy = BuiltInContentTypePermission.CONTENT_TYPE_CONFIG_PERMISSION)]
     [ServiceFilter(typeof(GetOrSetRecentlyAccessedViewFilterAttribute))]
     [ServiceFilter(typeof(SetPaginationInformationFilterAttribute))]
-    [Route($"{RAYTHA_ROUTE_PREFIX}/{{contentType}}/trash", Name = "contenttypesdeletedcontentitemslist")]
+    [Route($"{RAYTHA_ROUTE_PREFIX}/{{{RouteConstants.CONTENT_TYPE_DEVELOPER_NAME}}}/trash", Name = "contenttypesdeletedcontentitemslist")]
     public async Task<IActionResult> DeletedContentItemsList(string search = "", string orderBy = $"CreationTime {SortOrder.DESCENDING}", int pageNumber = 1, int pageSize = 50)
     {
         var input = new GetDeletedContentItems.Query
@@ -389,7 +390,7 @@ public class ContentTypesController : BaseController
 
     [Authorize(Policy = BuiltInContentTypePermission.CONTENT_TYPE_CONFIG_PERMISSION)]
     [ServiceFilter(typeof(GetOrSetRecentlyAccessedViewFilterAttribute))]
-    [Route($"{RAYTHA_ROUTE_PREFIX}/{{contentType}}/trash/restore/{{id}}", Name = "contenttypesdeletedcontentitemsrestore")]
+    [Route($"{RAYTHA_ROUTE_PREFIX}/{{{RouteConstants.CONTENT_TYPE_DEVELOPER_NAME}}}/trash/restore/{{id}}", Name = "contenttypesdeletedcontentitemsrestore")]
     [HttpPost]
     public async Task<IActionResult> DeletedContentItemsRestore(string id)
     {
@@ -398,18 +399,18 @@ public class ContentTypesController : BaseController
         if (response.Success)
         {
             SetSuccessMessage($"{CurrentView.ContentType.LabelSingular} has been restored.");
-            return RedirectToAction("Edit", "ContentItems", new { id = response.Result.ToString(), contentType = CurrentView.ContentType.DeveloperName });
+            return RedirectToAction("Edit", "ContentItems", new { id = response.Result.ToString(), contentTypeDeveloperName = CurrentView.ContentType.DeveloperName });
         }
         else
         {
             SetErrorMessage($"There was an error restoring this {CurrentView.ContentType.LabelSingular.ToLower()}", response.GetErrors());
-            return RedirectToAction("DeletedContentItemsList", new { contentType = CurrentView.ContentType.DeveloperName });
+            return RedirectToAction("DeletedContentItemsList", new { contentTypeDeveloperName = CurrentView.ContentType.DeveloperName });
         }
     }
 
     [Authorize(Policy = BuiltInContentTypePermission.CONTENT_TYPE_CONFIG_PERMISSION)]
     [ServiceFilter(typeof(GetOrSetRecentlyAccessedViewFilterAttribute))]
-    [Route($"{RAYTHA_ROUTE_PREFIX}/{{contentType}}/trash/clear/{{id}}", Name = "contenttypesdeletedcontentitemsclear")]
+    [Route($"{RAYTHA_ROUTE_PREFIX}/{{{RouteConstants.CONTENT_TYPE_DEVELOPER_NAME}}}/trash/clear/{{id}}", Name = "contenttypesdeletedcontentitemsclear")]
     [HttpPost]
     public async Task<IActionResult> DeletedContentItemsClear(string id)
     {
@@ -423,7 +424,7 @@ public class ContentTypesController : BaseController
         {
             SetErrorMessage($"There was an error permanently removing this {CurrentView.ContentType.LabelSingular.ToLower()}", response.GetErrors());
         }
-        return RedirectToAction("DeletedContentItemsList", new { contentType = CurrentView.ContentType.DeveloperName });
+        return RedirectToAction("DeletedContentItemsList", new { contentTypeDeveloperName = CurrentView.ContentType.DeveloperName });
     }
 
     protected ViewDto CurrentView

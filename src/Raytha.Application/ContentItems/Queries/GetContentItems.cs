@@ -1,5 +1,6 @@
 ﻿using CSharpVitamins;
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 using Raytha.Application.Common.Exceptions;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Models;
@@ -23,10 +24,12 @@ public class GetContentItems
     {
         private readonly IRaythaDbJsonQueryEngine _db;
         private readonly IRaythaDbContext _entityFrameworkDb;
-        public Handler(IRaythaDbJsonQueryEngine db, IRaythaDbContext entityFrameworkDb)
+        private readonly IContentTypeInRoutePath _contentTypeInRoutePath;
+        public Handler(IRaythaDbJsonQueryEngine db, IRaythaDbContext entityFrameworkDb, IContentTypeInRoutePath contentTypeInRoutePath)
         {
             _db = db;
             _entityFrameworkDb = entityFrameworkDb;
+            _contentTypeInRoutePath = contentTypeInRoutePath;
         }
         protected override IQueryResponseDto<ListResultDto<ContentItemDto>> Handle(Query request)
         {
@@ -35,10 +38,13 @@ public class GetContentItems
             if (request.ViewId.HasValue && request.ViewId.Value != ShortGuid.Empty)
             {
                 View view = _entityFrameworkDb.Views
+                    .Include(p => p.ContentType)
                     .FirstOrDefault(p => p.Id == request.ViewId.Value.Guid);
 
                 if (view == null)
                     throw new NotFoundException("View", request.ViewId);
+
+                _contentTypeInRoutePath.ValidateContentTypeInRoutePathMatchesValue(view.ContentType.DeveloperName);
 
                 var searchOnColumns = view.Columns != null ? view.Columns.ToArray() : new string[0];
                 var viewFilter = view.Filter;

@@ -9,6 +9,7 @@ using Raytha.Application.Routes;
 using Raytha.Application.Routes.Queries;
 using Raytha.Domain.Entities;
 using Raytha.Web.Authentication;
+using Raytha.Web.Utils;
 using System.Threading.Tasks;
 
 namespace Raytha.Web.Areas.Api.Controllers.V1;
@@ -16,7 +17,7 @@ namespace Raytha.Web.Areas.Api.Controllers.V1;
 
 public class ContentItemsController : BaseController
 {
-    [HttpGet("{contentTypeDeveloperName}", Name = "GetContentItems")]
+    [HttpGet($"{{{RouteConstants.CONTENT_TYPE_DEVELOPER_NAME}}}", Name = "GetContentItems")]
     [Authorize(Policy = RaythaApiAuthorizationHandler.POLICY_PREFIX + BuiltInContentTypePermission.CONTENT_TYPE_READ_PERMISSION)]
     public async Task<ActionResult<IQueryResponseDto<ListResultDto<ContentItemDto>>>> GetContentItems(
                                            string contentTypeDeveloperName,
@@ -41,7 +42,7 @@ public class ContentItemsController : BaseController
         return response;
     }
 
-    [HttpGet("{contentTypeDeveloperName}/trash", Name = "GetDeletedContentItems")]
+    [HttpGet($"{{{RouteConstants.CONTENT_TYPE_DEVELOPER_NAME}}}/trash", Name = "GetDeletedContentItems")]
     [Authorize(Policy = RaythaApiAuthorizationHandler.POLICY_PREFIX + BuiltInContentTypePermission.CONTENT_TYPE_CONFIG_PERMISSION)]
     public async Task<ActionResult<IQueryResponseDto<ListResultDto<ContentItemDto>>>> GetDeletedContentItems(
                                            string contentTypeDeveloperName)
@@ -51,7 +52,7 @@ public class ContentItemsController : BaseController
         return response;
     }
 
-    [HttpGet("{contentTypeDeveloperName}/{contentItemId}", Name = "GetContentItemById")]
+    [HttpGet($"{{{RouteConstants.CONTENT_TYPE_DEVELOPER_NAME}}}/{{contentItemId}}", Name = "GetContentItemById")]
     [Authorize(Policy = RaythaApiAuthorizationHandler.POLICY_PREFIX + BuiltInContentTypePermission.CONTENT_TYPE_READ_PERMISSION)]
     public async Task<ActionResult<IQueryResponseDto<ContentItemDto>>> GetContentItemById(
                                        string contentTypeDeveloperName,
@@ -62,7 +63,7 @@ public class ContentItemsController : BaseController
         return response;
     }
 
-    [HttpPost("{contentTypeDeveloperName}", Name = "CreateContentItem")]
+    [HttpPost($"{{{RouteConstants.CONTENT_TYPE_DEVELOPER_NAME}}}", Name = "CreateContentItem")]
     [Authorize(Policy = RaythaApiAuthorizationHandler.POLICY_PREFIX + BuiltInContentTypePermission.CONTENT_TYPE_EDIT_PERMISSION)]
     public async Task<ActionResult<ICommandResponseDto<ShortGuid>>> CreateContentItem(
                                         string contentTypeDeveloperName, 
@@ -77,10 +78,10 @@ public class ContentItemsController : BaseController
         return CreatedAtAction(nameof(GetContentItemById), new { contentTypeDeveloperName, contentItemId = response.Result }, response);
     }
 
-    [HttpPut("{contentTypeDeveloperName}/{contentItemId}", Name = "EditContentItem")]
+    [HttpPut($"{{{RouteConstants.CONTENT_TYPE_DEVELOPER_NAME}}}/{{contentItemId}}", Name = "EditContentItem")]
     [Authorize(Policy = RaythaApiAuthorizationHandler.POLICY_PREFIX + BuiltInContentTypePermission.CONTENT_TYPE_EDIT_PERMISSION)]
     public async Task<ActionResult<ICommandResponseDto<ShortGuid>>> EditContentItem(
-                            string contentType, 
+                            string contentTypeDeveloperName, 
                             string contentItemId,
                             [FromBody] EditContentItem.Command request)
     {
@@ -93,7 +94,7 @@ public class ContentItemsController : BaseController
         return response;
     }
 
-    [HttpPut("{contentTypeDeveloperName}/{contentItemId}/settings", Name = "EditContentItemSettings")]
+    [HttpPut($"{{{RouteConstants.CONTENT_TYPE_DEVELOPER_NAME}}}/{{contentItemId}}/settings", Name = "EditContentItemSettings")]
     [Authorize(Policy = RaythaApiAuthorizationHandler.POLICY_PREFIX + BuiltInContentTypePermission.CONTENT_TYPE_EDIT_PERMISSION)]
     public async Task<ActionResult<ICommandResponseDto<ShortGuid>>> EditContentItemSettings(
                             string contentTypeDeveloperName,
@@ -109,7 +110,7 @@ public class ContentItemsController : BaseController
         return response;
     }
 
-    [HttpPut("{contentTypeDeveloperName}/{contentItemId}/unpublish", Name = "UnpublishContentItem")]
+    [HttpPut($"{{{RouteConstants.CONTENT_TYPE_DEVELOPER_NAME}}}/{{contentItemId}}/unpublish", Name = "UnpublishContentItem")]
     [Authorize(Policy = RaythaApiAuthorizationHandler.POLICY_PREFIX + BuiltInContentTypePermission.CONTENT_TYPE_EDIT_PERMISSION)]
     public async Task<ActionResult<ICommandResponseDto<ShortGuid>>> UnpublishContentItem(
                             string contentTypeDeveloperName,
@@ -124,7 +125,7 @@ public class ContentItemsController : BaseController
         return response;
     }
 
-    [HttpDelete("{contentTypeDeveloperName}/{contentItemId}", Name = "DeleteContentItem")]
+    [HttpDelete($"{{{RouteConstants.CONTENT_TYPE_DEVELOPER_NAME}}}/{{contentItemId}}", Name = "DeleteContentItem")]
     [Authorize(Policy = RaythaApiAuthorizationHandler.POLICY_PREFIX + BuiltInContentTypePermission.CONTENT_TYPE_EDIT_PERMISSION)]
     public async Task<ActionResult<ICommandResponseDto<ShortGuid>>> DeleteContentItem(
                             string contentTypeDeveloperName,
@@ -139,7 +140,7 @@ public class ContentItemsController : BaseController
         return response;
     }
 
-    [HttpGet("{contentTypeDeveloperName}/route/{routePath}", Name = "GetRouteByPath")]
+    [HttpGet($"{{{RouteConstants.CONTENT_TYPE_DEVELOPER_NAME}}}/route/{{routePath}}", Name = "GetRouteByPath")]
     [Authorize(Policy = RaythaApiAuthorizationHandler.POLICY_PREFIX + BuiltInContentTypePermission.CONTENT_TYPE_READ_PERMISSION)]
     public async Task<ActionResult<IQueryResponseDto<RouteDto>>> GetRouteByPath(
                                        string routePath)

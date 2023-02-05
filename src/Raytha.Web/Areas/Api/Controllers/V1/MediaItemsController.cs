@@ -34,8 +34,8 @@ public class MediaItemsController : BaseController
     }
 
     [HttpPost]
-    [Route($"{{contentTypeDeveloperName}}/upload-direct", Name = "UploadDirect")]
-    public async Task<IActionResult> UploadDirect(string contentTypeDeveloperName, IFormFile file)
+    [Route($"upload-direct", Name = "UploadDirect")]
+    public async Task<IActionResult> UploadDirect(IFormFile file)
     {
         if (file.Length <= 0)
         {

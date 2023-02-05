@@ -22,6 +22,7 @@ using Raytha.Domain.ValueObjects.FieldTypes;
 using Raytha.Domain.ValueObjects.FieldValues;
 using Raytha.Web.Areas.Admin.Views.ContentItems;
 using Raytha.Web.Filters;
+using Raytha.Web.Utils;
 
 namespace Raytha.Web.Areas.Admin.Controllers;
 
@@ -31,8 +32,8 @@ public class ContentItemsController : BaseController
     [Authorize(Policy = BuiltInContentTypePermission.CONTENT_TYPE_READ_PERMISSION)]
     [ServiceFilter(typeof(GetOrSetRecentlyAccessedViewFilterAttribute))]
     [ServiceFilter(typeof(SetPaginationInformationFilterAttribute))]
-    [Route($"{RAYTHA_ROUTE_PREFIX}/{{contentType}}", Name = "contentitemsdefault")]
-    [Route($"{RAYTHA_ROUTE_PREFIX}/{{contentType}}/views/{{viewId}}", Name = "contentitemsindex")]
+    [Route($"{RAYTHA_ROUTE_PREFIX}/{{{RouteConstants.CONTENT_TYPE_DEVELOPER_NAME}}}", Name = "contentitemsdefault")]
+    [Route($"{RAYTHA_ROUTE_PREFIX}/{{{RouteConstants.CONTENT_TYPE_DEVELOPER_NAME}}}/views/{{viewId}}", Name = "contentitemsindex")]
     public async Task<IActionResult> Index(string search = "",
                                            string filter = "",
                                            string orderBy = "",
@@ -63,7 +64,7 @@ public class ContentItemsController : BaseController
 
     [Authorize(Policy = BuiltInContentTypePermission.CONTENT_TYPE_EDIT_PERMISSION)]
     [ServiceFilter(typeof(GetOrSetRecentlyAccessedViewFilterAttribute))]
-    [Route($"{RAYTHA_ROUTE_PREFIX}/{{contentType}}/create", Name = "contentitemscreate")]
+    [Route($"{RAYTHA_ROUTE_PREFIX}/{{{RouteConstants.CONTENT_TYPE_DEVELOPER_NAME}}}/create", Name = "contentitemscreate")]
     public async Task<IActionResult> Create()
     {
         var webTemplates = await Mediator.Send(new GetWebTemplates.Query
@@ -102,7 +103,7 @@ public class ContentItemsController : BaseController
 
     [Authorize(Policy = BuiltInContentTypePermission.CONTENT_TYPE_EDIT_PERMISSION)]
     [ServiceFilter(typeof(GetOrSetRecentlyAccessedViewFilterAttribute))]
-    [Route($"{RAYTHA_ROUTE_PREFIX}/{{contentType}}/create", Name = "contentitemscreate")]
+    [Route($"{RAYTHA_ROUTE_PREFIX}/{{{RouteConstants.CONTENT_TYPE_DEVELOPER_NAME}}}/create", Name = "contentitemscreate")]
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create(ContentItemsCreate_ViewModel model)
@@ -120,7 +121,7 @@ public class ContentItemsController : BaseController
         if (response.Success)
         {
             SetSuccessMessage($"{CurrentView.ContentType.LabelSingular} was created successfully.");
-            return RedirectToAction("Edit", new { contentType = CurrentView.ContentType.DeveloperName, id = response.Result });
+            return RedirectToAction("Edit", new { contentTypeDeveloperName = CurrentView.ContentType.DeveloperName, id = response.Result });
         }
         else
         {
@@ -167,8 +168,8 @@ public class ContentItemsController : BaseController
 
     [Authorize(Policy = BuiltInContentTypePermission.CONTENT_TYPE_READ_PERMISSION)]
     [ServiceFilter(typeof(GetOrSetRecentlyAccessedViewFilterAttribute))]
-    [Route($"{RAYTHA_ROUTE_PREFIX}/{{contentType}}/edit/{{id}}", Name = "contentitemsedit")]
-    [Route($"{RAYTHA_ROUTE_PREFIX}/{{contentType}}/view/{{id}}", Name = "contentitemsview")]
+    [Route($"{RAYTHA_ROUTE_PREFIX}/{{{RouteConstants.CONTENT_TYPE_DEVELOPER_NAME}}}/edit/{{id}}", Name = "contentitemsedit")]
+    [Route($"{RAYTHA_ROUTE_PREFIX}/{{{RouteConstants.CONTENT_TYPE_DEVELOPER_NAME}}}/view/{{id}}", Name = "contentitemsview")]
     public async Task<IActionResult> Edit(string id, string backToListUrl = "")
     {
         var response = await Mediator.Send(new GetContentItemById.Query { Id = id });
@@ -208,7 +209,7 @@ public class ContentItemsController : BaseController
 
     [Authorize(Policy = BuiltInContentTypePermission.CONTENT_TYPE_EDIT_PERMISSION)]
     [ServiceFilter(typeof(GetOrSetRecentlyAccessedViewFilterAttribute))]
-    [Route($"{RAYTHA_ROUTE_PREFIX}/{{contentType}}/edit/{{id}}", Name = "contentitemsedit")]
+    [Route($"{RAYTHA_ROUTE_PREFIX}/{{{RouteConstants.CONTENT_TYPE_DEVELOPER_NAME}}}/edit/{{id}}", Name = "contentitemsedit")]
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Edit(ContentItemsEdit_ViewModel model, string id)
@@ -224,7 +225,7 @@ public class ContentItemsController : BaseController
         if (editResponse.Success)
         {
             SetSuccessMessage($"{CurrentView.ContentType.LabelSingular} was edited successfully.");
-            return RedirectToAction("Edit", new { id, contentType = CurrentView.ContentType.DeveloperName });
+            return RedirectToAction("Edit", new { id, contentTypeDeveloperName = CurrentView.ContentType.DeveloperName });
         }
         else
         {
@@ -266,7 +267,7 @@ public class ContentItemsController : BaseController
     }
 
     [Authorize(Policy = BuiltInContentTypePermission.CONTENT_TYPE_EDIT_PERMISSION)]
-    [Route($"{RAYTHA_ROUTE_PREFIX}/{{contentType}}/relationship/autocomplete", Name = "contentitemsrelationshipautocomplete")]
+    [Route($"{RAYTHA_ROUTE_PREFIX}/{{{RouteConstants.CONTENT_TYPE_DEVELOPER_NAME}}}/relationship/autocomplete", Name = "contentitemsrelationshipautocomplete")]
     public async Task<IActionResult> RelationshipAutocomplete(string relatedContentTypeId, string q = "")
     {
         var viewModel = new List<KeyValuePair<string, string>>();
@@ -283,7 +284,7 @@ public class ContentItemsController : BaseController
     [Authorize(Policy = BuiltInContentTypePermission.CONTENT_TYPE_EDIT_PERMISSION)]
     [ServiceFilter(typeof(SetPaginationInformationFilterAttribute))]
     [ServiceFilter(typeof(GetOrSetRecentlyAccessedViewFilterAttribute))]
-    [Route($"{RAYTHA_ROUTE_PREFIX}/{{contentType}}/revisions/{{id}}", Name = "contentitemsrevisions")]
+    [Route($"{RAYTHA_ROUTE_PREFIX}/{{{RouteConstants.CONTENT_TYPE_DEVELOPER_NAME}}}/revisions/{{id}}", Name = "contentitemsrevisions")]
     public async Task<IActionResult> Revisions(string id, string orderBy = $"CreationTime {SortOrder.DESCENDING}", int pageNumber = 1, int pageSize = 50)
     {
         var input = new GetContentItemRevisionsByContentItemId.Query
@@ -311,7 +312,7 @@ public class ContentItemsController : BaseController
     [Authorize(Policy = BuiltInContentTypePermission.CONTENT_TYPE_EDIT_PERMISSION)]
     [ServiceFilter(typeof(SetPaginationInformationFilterAttribute))]
     [ServiceFilter(typeof(GetOrSetRecentlyAccessedViewFilterAttribute))]
-    [Route($"{RAYTHA_ROUTE_PREFIX}/{{contentType}}/revisions/{{id}}/{{revisionId}}", Name = "contentitemsrevisionsrevert")]
+    [Route($"{RAYTHA_ROUTE_PREFIX}/{{{RouteConstants.CONTENT_TYPE_DEVELOPER_NAME}}}/revisions/{{id}}/{{revisionId}}", Name = "contentitemsrevisionsrevert")]
     [HttpPost]
     public async Task<IActionResult> RevisionsRevert(string id, string revisionId)
     {
@@ -320,18 +321,18 @@ public class ContentItemsController : BaseController
         if (response.Success)
         {
             SetSuccessMessage($"{CurrentView.ContentType.LabelSingular} has been reverted.");
-            return RedirectToAction("Edit", new { id, contentType = CurrentView.ContentType.DeveloperName });
+            return RedirectToAction("Edit", new { id, contentTypeDeveloperName = CurrentView.ContentType.DeveloperName });
         }
         else
         {
             SetErrorMessage("There was an error reverting this content item", response.GetErrors());
-            return RedirectToAction("Revisions", new { id, contentType = CurrentView.ContentType.DeveloperName });
+            return RedirectToAction("Revisions", new { id, contentTypeDeveloperName = CurrentView.ContentType.DeveloperName });
         }
     }
 
     [ServiceFilter(typeof(GetOrSetRecentlyAccessedViewFilterAttribute))]
     [Authorize(Policy = BuiltInContentTypePermission.CONTENT_TYPE_EDIT_PERMISSION)]
-    [Route($"{RAYTHA_ROUTE_PREFIX}/{{contentType}}/unpublish/{{id}}", Name = "contentitemsunpublish")]
+    [Route($"{RAYTHA_ROUTE_PREFIX}/{{{RouteConstants.CONTENT_TYPE_DEVELOPER_NAME}}}/unpublish/{{id}}", Name = "contentitemsunpublish")]
     [HttpPost]
     public async Task<IActionResult> Unpublish(string id)
     {
@@ -345,12 +346,12 @@ public class ContentItemsController : BaseController
         {
             SetErrorMessage("There was an error unpublishing this content item.", response.GetErrors());
         }
-        return RedirectToAction("Edit", new { id, contentType = CurrentView.ContentType.DeveloperName });
+        return RedirectToAction("Edit", new { id, contentTypeDeveloperName = CurrentView.ContentType.DeveloperName });
     }
 
     [ServiceFilter(typeof(GetOrSetRecentlyAccessedViewFilterAttribute))]
     [Authorize(Policy = BuiltInContentTypePermission.CONTENT_TYPE_EDIT_PERMISSION)]
-    [Route($"{RAYTHA_ROUTE_PREFIX}/{{contentType}}/discard-draft/{{id}}", Name = "contentitemsdiscarddraft")]
+    [Route($"{RAYTHA_ROUTE_PREFIX}/{{{RouteConstants.CONTENT_TYPE_DEVELOPER_NAME}}}/discard-draft/{{id}}", Name = "contentitemsdiscarddraft")]
     [HttpPost]
     public async Task<IActionResult> DiscardDraft(string id)
     {
@@ -364,12 +365,12 @@ public class ContentItemsController : BaseController
         {
             SetErrorMessage("There was an error discarding the draft of this content item.", response.GetErrors());
         }
-        return RedirectToAction("Edit", new { id, contentType = CurrentView.ContentType.DeveloperName });
+        return RedirectToAction("Edit", new { id, contentTypeDeveloperName = CurrentView.ContentType.DeveloperName });
     }
 
     [ServiceFilter(typeof(GetOrSetRecentlyAccessedViewFilterAttribute))]
     [Authorize(Policy = BuiltInContentTypePermission.CONTENT_TYPE_EDIT_PERMISSION)]
-    [Route($"{RAYTHA_ROUTE_PREFIX}/{{contentType}}/delete/{{id}}", Name = "contentitemsdelete")]
+    [Route($"{RAYTHA_ROUTE_PREFIX}/{{{RouteConstants.CONTENT_TYPE_DEVELOPER_NAME}}}/delete/{{id}}", Name = "contentitemsdelete")]
     [HttpPost]
     public async Task<IActionResult> Delete(string id)
     {
@@ -378,18 +379,18 @@ public class ContentItemsController : BaseController
         if (response.Success)
         {
             SetSuccessMessage($"{CurrentView.ContentType.LabelSingular} has been deleted.");
-            return RedirectToAction("Index", new { contentType = CurrentView.ContentType.DeveloperName, viewId = CurrentView.Id });
+            return RedirectToAction("Index", new { contentTypeDeveloperName = CurrentView.ContentType.DeveloperName, viewId = CurrentView.Id });
         }
         else
         {
             SetErrorMessage($"There was an error deleting this {CurrentView.ContentType.LabelSingular.ToLower()}", response.GetErrors());
-            return RedirectToAction("Edit", new { id, contentType = CurrentView.ContentType.DeveloperName });
+            return RedirectToAction("Edit", new { id, contentTypeDeveloperName = CurrentView.ContentType.DeveloperName });
         }
     }
 
     [ServiceFilter(typeof(GetOrSetRecentlyAccessedViewFilterAttribute))]
     [Authorize(Policy = BuiltInSystemPermission.MANAGE_SYSTEM_SETTINGS_PERMISSION)]
-    [Route($"{RAYTHA_ROUTE_PREFIX}/{{contentType}}/set-as-home-page/{{id}}", Name = "contentitemssetashomepage")]
+    [Route($"{RAYTHA_ROUTE_PREFIX}/{{{RouteConstants.CONTENT_TYPE_DEVELOPER_NAME}}}/set-as-home-page/{{id}}", Name = "contentitemssetashomepage")]
     [HttpPost]
     public async Task<IActionResult> SetAsHomePage(string id)
     {
@@ -398,18 +399,18 @@ public class ContentItemsController : BaseController
         if (response.Success)
         {
             SetSuccessMessage($"{CurrentView.ContentType.LabelSingular} set as home page successfully.");
-            return RedirectToAction("Settings", new { id, contentType = CurrentView.ContentType.DeveloperName });
+            return RedirectToAction("Settings", new { id, contentTypeDeveloperName = CurrentView.ContentType.DeveloperName });
         }
         else
         {
             SetErrorMessage($"There was an error setting this as the home page.", response.GetErrors());
         }
-        return RedirectToAction("Settings", new { id, contentType = CurrentView.ContentType.DeveloperName });
+        return RedirectToAction("Settings", new { id, contentTypeDeveloperName = CurrentView.ContentType.DeveloperName });
     }
 
     [ServiceFilter(typeof(GetOrSetRecentlyAccessedViewFilterAttribute))]
     [Authorize(Policy = BuiltInContentTypePermission.CONTENT_TYPE_EDIT_PERMISSION)]
-    [Route($"{RAYTHA_ROUTE_PREFIX}/{{contentType}}/settings/{{id}}", Name = "contentitemssettings")]
+    [Route($"{RAYTHA_ROUTE_PREFIX}/{{{RouteConstants.CONTENT_TYPE_DEVELOPER_NAME}}}/settings/{{id}}", Name = "contentitemssettings")]
     public async Task<IActionResult> Settings(string id)
     {
         var response = await Mediator.Send(new GetContentItemById.Query { Id = id });
@@ -434,7 +435,7 @@ public class ContentItemsController : BaseController
 
     [ServiceFilter(typeof(GetOrSetRecentlyAccessedViewFilterAttribute))]
     [Authorize(Policy = BuiltInContentTypePermission.CONTENT_TYPE_EDIT_PERMISSION)]
-    [Route($"{RAYTHA_ROUTE_PREFIX}/{{contentType}}/settings/{{id}}", Name = "contentitemssettings")]
+    [Route($"{RAYTHA_ROUTE_PREFIX}/{{{RouteConstants.CONTENT_TYPE_DEVELOPER_NAME}}}/settings/{{id}}", Name = "contentitemssettings")]
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Settings(ContentItemsSettings_ViewModel model, string id)
@@ -450,7 +451,7 @@ public class ContentItemsController : BaseController
         if (editResponse.Success)
         {
             SetSuccessMessage($"{CurrentView.ContentType.LabelSingular} was edited successfully.");
-            return RedirectToAction("Settings", new { id, contentType = CurrentView.ContentType.DeveloperName });
+            return RedirectToAction("Settings", new { id, contentTypeDeveloperName = CurrentView.ContentType.DeveloperName });
         }
         else
         {

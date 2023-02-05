@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Raytha.Application.Common.Utils;
 using Microsoft.AspNetCore.Authorization.Infrastructure;
+using Raytha.Web.Utils;
 
 namespace Raytha.Web.Authentication;
 
@@ -147,7 +148,7 @@ public class RaythaAdminAuthorizationHandler : IAuthorizationHandler
                 else
                 {
                     var permission = ((ContentTypePermissionRequirement)requirement).Permission;
-                    string contentTypeDeveloperName = _httpContextAccessor.HttpContext.GetRouteValue("contentType") as string;
+                    string contentTypeDeveloperName = _httpContextAccessor.HttpContext.GetRouteValue(RouteConstants.CONTENT_TYPE_DEVELOPER_NAME) as string;
 
                     if (contentTypePermissionsClaims.Contains($"{contentTypeDeveloperName.ToDeveloperName()}_{permission}"))
                     {

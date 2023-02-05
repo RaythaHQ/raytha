@@ -5,6 +5,7 @@ using Raytha.Application.ContentTypes;
 using Raytha.Application.ContentTypes.Queries;
 using Raytha.Domain.Entities;
 using Raytha.Web.Authentication;
+using Raytha.Web.Utils;
 using System.Threading.Tasks;
 
 namespace Raytha.Web.Areas.Api.Controllers.V1;
@@ -20,7 +21,7 @@ public class ContentTypesController : BaseController
         return response;
     }
 
-    [HttpGet("{contentTypeDeveloperName}", Name = "GetContentTypeByDeveloperName")]
+    [HttpGet($"{{{RouteConstants.CONTENT_TYPE_DEVELOPER_NAME}}}", Name = "GetContentTypeByDeveloperName")]
     public async Task<ActionResult<IQueryResponseDto<ContentTypeDto>>> GetContentTypeByDeveloperName(
                                         string contentTypeDeveloperName)
     {
