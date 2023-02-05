@@ -113,13 +113,13 @@ public class MainController : BaseController
     public IActionResult Forbidden()
     {
         var errorModel = new GenericError_RenderModel { ErrorId = ShortGuid.NewGuid() };
-        return new ErrorActionViewResult(BuiltInWebTemplate.Error403, 403, errorModel);
+        return new ErrorActionViewResult(BuiltInWebTemplate.Error403, 403, errorModel, ViewData);
     }
 
     [Route("raytha/404", Name = "notfound")]
     public IActionResult EntityNotFound()
     {
         var errorModel = new GenericError_RenderModel { ErrorId = ShortGuid.NewGuid() };
-        return new ErrorActionViewResult(BuiltInWebTemplate.Error404, 403, errorModel);
+        return new ErrorActionViewResult(BuiltInWebTemplate.Error404, 403, errorModel, ViewData);
     }
 }
