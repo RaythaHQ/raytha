@@ -27,6 +27,7 @@ public interface IRaythaDbContext
     public DbSet<DeletedContentItem> DeletedContentItems { get; }
     public DbSet<Route> Routes { get; }
     public DbSet<MediaItem> MediaItems { get; }
+    public DbSet<ApiKey> ApiKeys { get; }
 
     public DbContext DbContext { get; }
 

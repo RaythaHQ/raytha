@@ -1,5 +1,6 @@
 ﻿using CSharpVitamins;
 using MediatR;
+using Raytha.Application.Common.Attributes;
 
 namespace Raytha.Application.Common.Models;
 
@@ -24,5 +25,6 @@ public interface ILoggableEntityRequest
 
 public abstract record LoggableEntityRequest<T> : LoggableRequest<T>, ILoggableEntityRequest
 {
+    [ExcludePropertyFromOpenApiDocs]
     public virtual ShortGuid Id { get; init; }
 }

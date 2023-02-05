@@ -11,10 +11,10 @@ public class SetFormValidationErrorsFilterAttribute : ActionFilterAttribute
 {
     public override async Task OnActionExecutionAsync(ActionExecutingContext context, ActionExecutionDelegate next)
     {
+        await next();
+
         if (context.Controller is Controller controller)
         {
-            await next();
-
             if (controller.ViewData.Model is IFormValidation validationModel)
             {
                 if (controller.ViewData["ValidationErrors"] != null)

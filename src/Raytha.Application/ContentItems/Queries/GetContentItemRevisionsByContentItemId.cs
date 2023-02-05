@@ -1,6 +1,7 @@
 ﻿using CSharpVitamins;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Raytha.Application.Common.Exceptions;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Models;
 using Raytha.Application.Common.Utils;
@@ -17,12 +18,23 @@ public class GetContentItemRevisionsByContentItemId
     public class Handler : RequestHandler<Query, IQueryResponseDto<ListResultDto<ContentItemRevisionDto>>>
     {
         private readonly IRaythaDbContext _db;
-        public Handler(IRaythaDbContext db)
+        private readonly IContentTypeInRoutePath _contentTypeInRoutePath;
+        public Handler(IRaythaDbContext db, IContentTypeInRoutePath contentTypeInRoutePath)
         {
             _db = db;
+            _contentTypeInRoutePath = contentTypeInRoutePath;
         }
         protected override IQueryResponseDto<ListResultDto<ContentItemRevisionDto>> Handle(Query request)
         {
+            var entity = _db.ContentItems
+                .Include(p => p.ContentType)
+                .FirstOrDefault(p => p.Id == request.Id.Guid);
+
+            if (entity == null)
+                throw new NotFoundException("Content Item", request.Id);
+
+            _contentTypeInRoutePath.ValidateContentTypeInRoutePathMatchesValue(entity.ContentType.DeveloperName);
+
             var query = _db.ContentItemRevisions.AsQueryable()
                 .Include(p => p.LastModifierUser)
                 .Include(p => p.CreatorUser)

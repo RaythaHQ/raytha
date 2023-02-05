@@ -50,6 +50,7 @@ public class RaythaDbContext : DbContext, IRaythaDbContext
     public DbSet<DeletedContentItem> DeletedContentItems => Set<DeletedContentItem>();
     public DbSet<Route> Routes => Set<Route>();
     public DbSet<MediaItem> MediaItems => Set<MediaItem>();
+    public DbSet<ApiKey> ApiKeys => Set<ApiKey>();
 
     public DbContext DbContext => DbContext;
 

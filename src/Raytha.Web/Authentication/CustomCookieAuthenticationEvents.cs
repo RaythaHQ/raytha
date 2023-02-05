@@ -9,7 +9,7 @@ using Raytha.Application.Common.Security;
 using Raytha.Application.Common.Utils;
 using Raytha.Application.Login.Queries;
 
-namespace Raytha.Web.Helpers;
+namespace Raytha.Web.Authentication;
 
 public class CustomCookieAuthenticationEvents : CookieAuthenticationEvents
 {
@@ -67,7 +67,7 @@ public class CustomCookieAuthenticationEvents : CookieAuthenticationEvents
                 {
                     contentTypePermissions.Add($"{contentTypePermission.Key}_{granularPermission}");
                 }
-            }    
+            }
         }
 
         foreach (var systemPermission in systemPermissions.Distinct())

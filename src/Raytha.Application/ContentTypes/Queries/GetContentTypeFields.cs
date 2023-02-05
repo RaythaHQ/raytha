@@ -1,7 +1,6 @@
 ﻿using CSharpVitamins;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
-using Raytha.Application.Common.Exceptions;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Models;
 using Raytha.Application.Common.Utils;

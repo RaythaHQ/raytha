@@ -35,7 +35,7 @@
                             {
                                 <tr>
                                     <td class="align-middle" data-controller="shared--confirmaction" data-shared--confirmaction-title-value="Are you sure you want to revert?">
-                                        <form method="post" asp-route="contentitemsrevisionsrevert" asp-route-revisionId="@item.Id" asp-route-id="@Model.Id" asp-route-contentType="@Model.CurrentView.ContentTypeDeveloperName"
+                                        <form method="post" asp-route="contentitemsrevisionsrevert" asp-route-revisionId="@item.Id" asp-route-id="@Model.Id" asp-route-contentTypeDeveloperName="@Model.CurrentView.ContentTypeDeveloperName"
                                           data-shared--confirmaction-target="form">
                                             <button class="btn btn-sm btn-success"
                                                 data-action="click->shared--confirmaction#warning">

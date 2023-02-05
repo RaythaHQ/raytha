@@ -4,12 +4,12 @@ using Raytha.Application.ContentTypes;
 using Raytha.Application.Templates.Web;
 using Raytha.Domain.Entities;
 using System.Linq.Expressions;
+using System.Text.Json.Serialization;
 
 namespace Raytha.Application.ContentItems;
 
-public record ContentItemDto
+public record ContentItemDto : BaseEntityDto
 {
-    public ShortGuid Id { get; init; }
     public AuditableUserDto? CreatorUser { get; init; }
     public AuditableUserDto? LastModifierUser { get; init; }
     public DateTime CreationTime { get; init; }
@@ -17,8 +17,15 @@ public record ContentItemDto
     public bool IsPublished { get; init; }
     public bool IsDraft { get; init; }
     public ShortGuid WebTemplateId { get; init; }
+    public ShortGuid ContentTypeId { get; init; }
+
+    [JsonIgnore]
     public WebTemplateDto WebTemplate { get; init; }
+
+    [JsonIgnore]
     public ContentTypeDto? ContentType { get; init; }
+
+    [JsonIgnore]
     public ShortGuid RouteId { get; init; }
     public string RoutePath { get; init; }
     public string PrimaryField { get; init; }
@@ -42,6 +49,7 @@ public record ContentItemDto
             IsPublished = entity.IsPublished,
             WebTemplateId = entity.WebTemplateId,
             WebTemplate = WebTemplateDto.GetProjection(entity.WebTemplate),
+            ContentTypeId = entity.ContentTypeId,
             ContentType = ContentTypeDto.GetProjection(entity.ContentType),
             PrimaryField = entity.PrimaryField,
             PublishedContent = entity.PublishedContent,

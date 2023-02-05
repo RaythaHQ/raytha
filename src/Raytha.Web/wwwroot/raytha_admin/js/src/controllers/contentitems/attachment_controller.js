@@ -9,7 +9,6 @@ import Swal from 'sweetalert2'
 export default class extends Controller {
     static values = {
         fieldid: String,
-        contenttype: String,
         usedirectuploadtocloud: Boolean,
         mimetypes: String,
         maxfilesize: Number
@@ -40,7 +39,7 @@ export default class extends Controller {
 
         if (!this.usedirectuploadtocloudValue) {
             this.uppy.use(XHRUpload, {
-                endpoint: `/raytha/media-items/${this.contenttypeValue}/upload`
+                endpoint: `/raytha/media-items/upload`
             })
             this.uppy.on('upload-success', (file, response) => {
                 const URL = `/raytha/media-items/objectkey/${response.body.fields.objectKey}`;
@@ -52,7 +51,7 @@ export default class extends Controller {
         } else {
             this.uppy.use(AwsS3, {
                 getUploadParameters: file => {
-                    const URL = `/raytha/media-items/${this.contenttypeValue}/presign`;
+                    const URL = `/raytha/media-items/presign`;
                     return fetch(URL, {
                         method: 'POST',
                         headers: {
@@ -80,7 +79,7 @@ export default class extends Controller {
             })
             this.uppy.on('upload-success', (file, response) => {
                 console.log(response);
-                const CREATE_MEDIA_ENDPOINT = `/raytha/media-items/${this.contenttypeValue}/create-after-upload`;
+                const CREATE_MEDIA_ENDPOINT = `/raytha/media-items/create-after-upload`;
 
                 //make post call
                 fetch(CREATE_MEDIA_ENDPOINT, {

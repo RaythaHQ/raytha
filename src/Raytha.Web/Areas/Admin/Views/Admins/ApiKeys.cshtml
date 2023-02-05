@@ -1,0 +1,69 @@
+@model ApiKeysPagination_ViewModel
+@{
+    ViewData["Title"] = "Admins > Edit admin > Api keys";
+    ViewData["ActiveSubMenu"] = "Api keys";
+}
+
+@(await Html.PartialAsync("_PageHeader", new PageHeader_ViewModel
+{
+    Title = ViewData["Title"].ToString(),
+}))
+
+
+<div class="row mb-4">
+    <div class="col-xxl-7 col-xl-8 col-lg-9 col-md-12">
+        <div class="card border-0 shadow mb-4">
+    <div class="card-body">
+        <form method="post" asp-route="adminsapikeyscreate" asp-route-id="@Model.Id">
+            <button class="btn btn-primary">
+                        <svg class="icon icon-xs me-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg> Create api key
+            </button>
+        </form>
+
+        @if (!string.IsNullOrEmpty(Model.CreatedApiKey))
+        {
+            <div class="alert alert-success mt-2" role="alert">
+              <h4 class="alert-heading">Api key created!</h4>
+                <p>This is your api key: <strong>@Model.CreatedApiKey</strong></p>
+              <hr>
+              <p class="mb-0">Copy it and store it securely because this is the only time you will be able to view it from the platform.</p>
+            </div>
+        }
+        <div class="table-responsive mt-2">
+            <table class="table table-centered table-nowrap mb-0 rounded">
+                <thead class="thead-light">
+                    <tr>
+                        <th class="border-0 rounded-start">Created at</th>
+                        <th class="border-0 rounded-end">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model.Items)
+                    {
+                        <tr>
+                            <td>@item.CreationTime</td>
+                            <td data-controller="shared--confirmaction" data-shared--confirmaction-title-value="Are you sure you want to remove this api key?">
+                                <form method="post" asp-route="adminsapikeysdelete" asp-route-id="@Model.Id" asp-route-apikeyId="@item.Id"
+                                    data-shared--confirmaction-target="form">
+                                    <button class="btn btn-sm btn-danger"
+                                    data-action="click->shared--confirmaction#warning">
+                                        Remove
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+</div>
+    @(await Html.PartialAsync("_ActionsMenu", new AdminsActionsMenu_ViewModel
+    {
+        Id = Model.Id,
+        IsActive = Model.IsActive,
+        CurrentUserId = Model.CurrentUserId,
+        EmailAndPasswordEnabledForAdmins = Model.EmailAndPasswordEnabledForAdmins
+    }))
+</div>

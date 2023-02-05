@@ -9,12 +9,11 @@ using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.Extensions.DependencyInjection;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Utils;
-using Raytha.Web.Filters;
 
 namespace Raytha.Web.Areas.Admin.Controllers;
 
 [Area("Admin")]
-[ServiceFilter(typeof(SetFormValidationErrorsFilterAttribute))]
+[ApiExplorerSettings(IgnoreApi = true)]
 public class BaseController : Controller
 {
     public const string ErrorMessageKey = "ErrorMessage";

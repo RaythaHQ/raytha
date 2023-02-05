@@ -12,6 +12,7 @@ using System.Linq;
 namespace Raytha.Web.Areas.Public.Controllers;
 
 [Area("Public")]
+[ApiExplorerSettings(IgnoreApi = true)]
 public class BaseController : Controller
 {
     private ISender _mediator;

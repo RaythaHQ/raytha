@@ -10,6 +10,7 @@ using Raytha.Web.Areas.Admin.Views.Setup;
 namespace Raytha.Web.Areas.Admin.Controllers;
 
 [Area("Admin")]
+[ApiExplorerSettings(IgnoreApi = true)]
 public class SetupController : Controller
 {
     public const string RAYTHA_ROUTE_PREFIX = "raytha";

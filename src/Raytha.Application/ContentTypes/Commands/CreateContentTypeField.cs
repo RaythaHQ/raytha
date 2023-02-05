@@ -109,19 +109,27 @@ public class CreateContentTypeField
         public async Task<CommandResponseDto<ShortGuid>> Handle(Command request, CancellationToken cancellationToken)
         {
             var ordinal = _db.ContentTypeFields.Count(p => p.ContentTypeId == request.ContentTypeId.Guid);
+            var fieldType = BaseFieldType.From(request.FieldType);
 
+            IEnumerable<ContentTypeFieldChoice> choices = new ContentTypeFieldChoice[0];
+            if (fieldType.HasChoices)
+            {
+                choices = request.Choices.Select(p => new ContentTypeFieldChoice { DeveloperName = p.DeveloperName.ToDeveloperName(), Disabled = p.Disabled, Label = p.Label });
+            }
+
+            Guid? relatedContentTypeId = request.RelatedContentTypeId == ShortGuid.Empty || request.RelatedContentTypeId == null ? null : request.RelatedContentTypeId.Value.Guid;
             var entity = new ContentTypeField
             {
                 Id = Guid.NewGuid(),
                 Label = request.Label,
                 DeveloperName = request.DeveloperName.ToDeveloperName(),
-                FieldType = BaseFieldType.From(request.FieldType),
+                FieldType = fieldType,
                 ContentTypeId = request.ContentTypeId,
                 FieldOrder = ordinal + 1,
-                Choices = request.Choices.Select(p => new ContentTypeFieldChoice { DeveloperName = p.DeveloperName.ToDeveloperName(), Disabled = p.Disabled, Label = p.Label }),
+                Choices = choices,
                 IsRequired = request.IsRequired,
                 Description = request.Description,
-                RelatedContentTypeId = request.RelatedContentTypeId == ShortGuid.Empty || request.RelatedContentTypeId == null ? null : request.RelatedContentTypeId.Value.Guid
+                RelatedContentTypeId = relatedContentTypeId
             };
             _db.ContentTypeFields.Add(entity);
 

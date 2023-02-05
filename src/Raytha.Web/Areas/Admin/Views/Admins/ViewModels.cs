@@ -1,6 +1,8 @@
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using CSharpVitamins;
+using Raytha.Web.Areas.Admin.Views.ContentItems;
 using Raytha.Web.Areas.Admin.Views.Shared;
+using Raytha.Web.Areas.Admin.Views.Shared.ViewModels;
 
 namespace Raytha.Web.Areas.Admin.Views.Admins;
 
@@ -117,4 +119,31 @@ public class AdminsActionsMenu_ViewModel
 
     //helpers
     public bool EditingMyself => CurrentUserId == Id;
+}
+
+
+public class ApiKeysPagination_ViewModel : Pagination_ViewModel
+{
+    public string Id { get; set; }
+    public string CreatedApiKey { get; set; }
+
+    public IEnumerable<ApiKeysListItem_ViewModel> Items { get; }
+
+    public ApiKeysPagination_ViewModel(
+        IEnumerable<ApiKeysListItem_ViewModel> items, int totalCount) : base(totalCount) => Items = items;
+
+    //helpers
+    public string CurrentUserId { get; set; }
+    public bool EditingMyself => CurrentUserId == Id;
+    public bool EmailAndPasswordEnabledForAdmins { get; set; }
+    public bool IsActive { get; set; }
+}
+
+
+public class ApiKeysListItem_ViewModel
+{
+    public string Id { get; init; }
+
+    [Display(Name = "Created at")]
+    public string CreationTime { get; init; }
 }

@@ -17,9 +17,11 @@ public class RevertContentItem
     public class Handler : IRequestHandler<Command, CommandResponseDto<ShortGuid>>
     {
         private readonly IRaythaDbContext _db;
-        public Handler(IRaythaDbContext db)
+        private readonly IContentTypeInRoutePath _contentTypeInRoutePath;
+        public Handler(IRaythaDbContext db, IContentTypeInRoutePath contentTypeInRoutePath)
         {
             _db = db;
+            _contentTypeInRoutePath = contentTypeInRoutePath;
         }
         public async Task<CommandResponseDto<ShortGuid>> Handle(Command request, CancellationToken cancellationToken)
         {
@@ -30,9 +32,14 @@ public class RevertContentItem
             if (entity == null)
                 throw new NotFoundException("Content Item Revision", request.Id);
 
-            var contentItem = _db.ContentItems.FirstOrDefault(p => p.Id == entity.ContentItemId);
+            var contentItem = _db.ContentItems
+                .Include(p => p.ContentType)
+                .FirstOrDefault(p => p.Id == entity.ContentItemId);
+
             if (contentItem == null)
                 throw new BusinessException($"Content item is null {entity.ContentItemId}");
+
+            _contentTypeInRoutePath.ValidateContentTypeInRoutePathMatchesValue(contentItem.ContentType.DeveloperName);
 
             if (!contentItem.IsDraft)
             {

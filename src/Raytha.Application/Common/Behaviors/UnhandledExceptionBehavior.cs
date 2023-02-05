@@ -1,5 +1,6 @@
 ﻿using MediatR;
 using Microsoft.Extensions.Logging;
+using Raytha.Application.Common.Exceptions;
 
 namespace Raytha.Application.Common.Behaviors;
 
@@ -17,6 +18,16 @@ public class UnhandledExceptionBehaviour<TRequest, TResponse> : IPipelineBehavio
         try
         {
             return await next();
+        }
+        catch (NotFoundException ex)
+        {
+            _logger.LogInformation($"Entity Not Found: {ex.Message}");
+            throw;
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            _logger.LogInformation($"Unauthorized Access: {ex.Message}");
+            throw;
         }
         catch (Exception ex)
         {

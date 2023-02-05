@@ -18,7 +18,7 @@
     <div class="col-lg-12 col-md-12">
         <div class="card border-0 shadow mb-4">
             <div class="card-body">
-                <a asp-route="contentitemsindex" asp-route-viewId="@Model.CurrentView.Id" asp-route-contentType="@Model.CurrentView.ContentTypeDeveloperName">
+                <a asp-route="contentitemsindex" asp-route-viewId="@Model.CurrentView.Id" asp-route-contentTypeDeveloperName="@Model.CurrentView.ContentTypeDeveloperName">
                     <svg class="icon icon-sm" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16l-4-4m0 0l4-4m-4 4h18"></path></svg>
                     Back
                 </a>
@@ -35,7 +35,7 @@
                                         <div>
                                             @item.Label <small>@item.DeveloperName</small>
                                         </div>
-                                        <form method="post" asp-route="viewscolumnstoggle" asp-route-viewId="@Model.CurrentView.Id" asp-route-contentType="@Model.CurrentView.ContentTypeDeveloperName" asp-route-developerName="@item.DeveloperName">
+                                        <form method="post" asp-route="viewscolumnstoggle" asp-route-viewId="@Model.CurrentView.Id" asp-route-contentTypeDeveloperName="@Model.CurrentView.ContentTypeDeveloperName" asp-route-developerName="@item.DeveloperName">
                                             <button class="btn btn-link btn-xs">
                                                 <svg class="icon icon-xs" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
                                             </button>
@@ -57,14 +57,14 @@
                             class="list-group mt-2">
                             @foreach (var item in Model.SelectedColumns)
                             {
-                                <li data-sortable-update-url="@Url.Action("ColumnsReorderAjax", new { viewId = Model.CurrentView.Id, contentType = Model.CurrentView.ContentTypeDeveloperName, developerName = item.DeveloperName })" class="list-group-item border raytha-draggable d-flex justify-content-between">
+                                <li data-sortable-update-url="@Url.Action("ColumnsReorderAjax", new { viewId = Model.CurrentView.Id, contentTypeDeveloperName = Model.CurrentView.ContentTypeDeveloperName, developerName = item.DeveloperName })" class="list-group-item border raytha-draggable d-flex justify-content-between">
                                     <div class="col-10">
                                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="icon icon-xs me-2">
                                             <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 9h16.5m-16.5 6.75h16.5" />
                                         </svg>
                                         @item.Label <small>@item.DeveloperName</small>
                                     </div>
-                                    <form method="post" asp-route="viewscolumnstoggle" asp-route-viewId="@Model.CurrentView.Id" asp-route-contentType="@Model.CurrentView.ContentTypeDeveloperName" asp-route-developerName="@item.DeveloperName">
+                                    <form method="post" asp-route="viewscolumnstoggle" asp-route-viewId="@Model.CurrentView.Id" asp-route-contentTypeDeveloperName="@Model.CurrentView.ContentTypeDeveloperName" asp-route-developerName="@item.DeveloperName">
                                         <button class="text-danger btn btn-link btn-xs">
                                             <svg class="icon icon-sm mx-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                                         </button>
