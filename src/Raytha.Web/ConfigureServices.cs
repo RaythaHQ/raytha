@@ -13,6 +13,8 @@ using System.Collections.Generic;
 using CSharpVitamins;
 using Raytha.Web.Authentication;
 using Raytha.Web.Middlewares;
+using Microsoft.AspNetCore.DataProtection;
+using Raytha.Infrastructure.Persistence;
 
 namespace Microsoft.Extensions.DependencyInjection;
 
@@ -107,7 +109,7 @@ public static class ConfigureServices
         services.AddSingleton<IAuthorizationMiddlewareResultHandler, ApiKeyAuthorizationMiddleware>();
 
         services.AddRouting();
-        services.AddDataProtection();
+        services.AddDataProtection().SetApplicationName("Raytha").PersistKeysToDbContext<RaythaDbContext>();
         services.AddHttpContextAccessor();
         services.AddEndpointsApiExplorer();
         services.AddSwaggerGen(c => {

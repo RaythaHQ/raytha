@@ -4,10 +4,11 @@ using System.Reflection;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Domain.Entities;
 using Raytha.Infrastructure.Persistence.Interceptors;
+using Microsoft.AspNetCore.DataProtection.EntityFrameworkCore;
 
 namespace Raytha.Infrastructure.Persistence;
 
-public class RaythaDbContext : DbContext, IRaythaDbContext
+public class RaythaDbContext : DbContext, IRaythaDbContext, IDataProtectionKeyContext
 {
     private readonly IMediator _mediator;
     private readonly AuditableEntitySaveChangesInterceptor _auditableEntitySaveChangesInterceptor;
@@ -51,6 +52,7 @@ public class RaythaDbContext : DbContext, IRaythaDbContext
     public DbSet<Route> Routes => Set<Route>();
     public DbSet<MediaItem> MediaItems => Set<MediaItem>();
     public DbSet<ApiKey> ApiKeys => Set<ApiKey>();
+    public DbSet<DataProtectionKey> DataProtectionKeys { get; set; } = null!;
 
     public DbContext DbContext => DbContext;
 
