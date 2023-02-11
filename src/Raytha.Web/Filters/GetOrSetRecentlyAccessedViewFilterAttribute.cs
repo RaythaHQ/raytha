@@ -12,6 +12,8 @@ using Raytha.Application.Views;
 using Raytha.Application.Views.Queries;
 using Raytha.Domain.ValueObjects;
 using Raytha.Web.Areas.Admin.Views.Shared.ViewModels;
+using Raytha.Web.Utils;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -22,15 +24,18 @@ public class GetOrSetRecentlyAccessedViewFilterAttribute : ActionFilterAttribute
 {
     private readonly IMediator _mediator;
     private readonly ICurrentUser _currentUser;
-    public GetOrSetRecentlyAccessedViewFilterAttribute(IMediator mediator, ICurrentUser currentUser)
+    private readonly ICurrentOrganization _currentOrganization;
+
+    public GetOrSetRecentlyAccessedViewFilterAttribute(IMediator mediator, ICurrentUser currentUser, ICurrentOrganization currentOrganization)
     {
         _mediator = mediator;
         _currentUser = currentUser;
+        _currentOrganization = currentOrganization;
     }
 
     public override async Task OnActionExecutionAsync(ActionExecutingContext context, ActionExecutionDelegate next)
     {
-        string contentTypeDeveloperName = context.RouteData.Values["contentType"] as string;
+        string contentTypeDeveloperName = context.RouteData.Values[RouteConstants.CONTENT_TYPE_DEVELOPER_NAME] as string;
         ShortGuid viewId = null;
         if (context.RouteData.Values.ContainsKey("viewId"))
         {
@@ -81,6 +86,12 @@ public class GetOrSetRecentlyAccessedViewFilterAttribute : ActionFilterAttribute
             {
                 Id = viewId.Value
             });
+
+            if (response.Result.ContentType.DeveloperName != contentType.Result.DeveloperName)
+            {
+                throw new UnauthorizedAccessException("Content type in route path does not match content type for the view.");
+            }
+
             await _mediator.Send(new UpdateRecentlyAccessedView.Command
             {
                 ViewId = viewId.Value,
@@ -111,7 +122,8 @@ public class GetOrSetRecentlyAccessedViewFilterAttribute : ActionFilterAttribute
                     ContentTypeDescription = viewDto.ContentType.Description,
                     ContentTypeDeveloperName = viewDto.ContentType.DeveloperName,
                     IsPublished = viewDto.IsPublished,
-                    RoutePath = viewDto.RoutePath
+                    RoutePath = viewDto.RoutePath,
+                    IsHomePage = _currentOrganization.HomePageId == viewDto.Id
                 };
 
                 paginationModelForCurrentView.CurrentView = currentViewModel;

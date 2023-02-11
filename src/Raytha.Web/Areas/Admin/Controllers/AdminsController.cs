@@ -281,6 +281,79 @@ public class AdminsController : BaseController
         return RedirectToAction("Index");
     }
 
+
+    [Route(RAYTHA_ROUTE_PREFIX + "/settings/admins/apikeys/{id}", Name = "adminsapikeyslist")]
+    [ServiceFilter(typeof(SetPaginationInformationFilterAttribute))]
+    public async Task<IActionResult> ApiKeys(string id, string orderBy = $"CreationTime {SortOrder.ASCENDING}", int pageNumber = 1, int pageSize = 50)
+    {
+        var input = new GetApiKeysForAdmin.Query
+        {
+            UserId = id,
+            OrderBy = orderBy,
+            PageNumber = pageNumber,
+            PageSize = pageSize
+        };
+
+        var response = await Mediator.Send(input);
+
+        var items = response.Result.Items.Select(p => new ApiKeysListItem_ViewModel
+        {
+            Id = p.Id,
+            CreationTime = CurrentOrganization.TimeZoneConverter.UtcToTimeZoneAsDateTimeFormat(p.CreationTime)
+        });
+
+        var admin = await Mediator.Send(new GetAdminById.Query { Id = id });
+
+        var viewModel = new ApiKeysPagination_ViewModel(items, response.Result.TotalCount)
+        {
+            Id = admin.Result.Id,
+            IsActive = admin.Result.IsActive,
+            EmailAndPasswordEnabledForAdmins = CurrentOrganization.EmailAndPasswordIsEnabledForAdmins,
+            CurrentUserId = CurrentUser.UserId
+        };
+
+        if (TempData["ApiKey"] != null)
+        {
+            viewModel.CreatedApiKey = TempData["ApiKey"].ToString();
+        }
+
+        return View(viewModel);
+    }
+
+    [Route(RAYTHA_ROUTE_PREFIX + "/settings/admins/apikeys/{id}/create", Name = "adminsapikeyscreate")]
+    [HttpPost]
+    public async Task<IActionResult> ApiKeysCreate(string id)
+    {
+        var response = await Mediator.Send(new CreateApiKey.Command { UserId = id });
+        if (response.Success)
+        {
+            TempData["ApiKey"] = response.Result.ToString();
+        }
+        else
+        {
+            SetErrorMessage(response.Error, response.GetErrors());
+        }
+
+        return RedirectToAction("ApiKeys", new { id });
+    }
+
+    [Route(RAYTHA_ROUTE_PREFIX + "/settings/admins/apikeys/{id}/delete/{apikeyId}", Name = "adminsapikeysdelete")]
+    [HttpPost]
+    public async Task<IActionResult> ApiKeysDelete(string id, string apikeyId)
+    {
+        var response = await Mediator.Send(new DeleteApiKey.Command { Id = apikeyId });
+        if (response.Success)
+        {
+            SetSuccessMessage("Api key successfully removed.");
+        }
+        else
+        {
+            SetErrorMessage(response.Error, response.GetErrors());
+        }
+
+        return RedirectToAction("ApiKeys", new { id });
+    }
+
     public override void OnActionExecuted(ActionExecutedContext context)
     {
         base.OnActionExecuted(context);

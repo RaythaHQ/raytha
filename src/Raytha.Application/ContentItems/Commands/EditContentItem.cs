@@ -16,32 +16,28 @@ public class EditContentItem
     public record Command : LoggableEntityRequest<CommandResponseDto<ShortGuid>>
     {
         public bool SaveAsDraft { get; init; }
-        public ShortGuid ContentTypeId { get; init; }
-        public dynamic Content { get; init; }
+        public IDictionary<string, dynamic> Content { get; init; }
     }
 
     public class Validator : AbstractValidator<Command>
     {
-        public Validator(IRaythaDbContext db)
+        public Validator(IRaythaDbContext db, IContentTypeInRoutePath contentTypeInRoutePath)
         {
             RuleFor(x => x).Custom((request, context) =>
             {
-                if (request.ContentTypeId == ShortGuid.Empty)
-                {
-                    context.AddFailure(Constants.VALIDATION_SUMMARY, "ContentTypeId is required.");
-                    return;
-                }
+                var entity = db.ContentItems
+                    .Include(p => p.ContentType)
+                    .ThenInclude(p => p.ContentTypeFields)
+                    .FirstOrDefault(p => p.Id == request.Id.Guid);
 
-                var entity = db.ContentItems.FirstOrDefault(p => p.Id == request.Id.Guid);
                 if (entity == null)
                     throw new NotFoundException("Content Item", request.Id);
 
-                var contentTypeDefinition = db.ContentTypes
-                    .Include(p => p.ContentTypeFields)
-                    .FirstOrDefault(p => p.Id == request.ContentTypeId.Guid);
-
+                var contentTypeDefinition = entity.ContentType;
                 if (contentTypeDefinition == null)
-                    throw new NotFoundException("Content Type", request.ContentTypeId);
+                    throw new NotFoundException("Content Type");
+
+                contentTypeInRoutePath.ValidateContentTypeInRoutePathMatchesValue(entity.ContentType.DeveloperName);
 
                 foreach (var field in request.Content as IDictionary<string, dynamic>)
                 {

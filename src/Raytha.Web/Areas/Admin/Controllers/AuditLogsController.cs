@@ -139,7 +139,7 @@ public class AuditLogsController : BaseController
             new EditContentItemSettings.Command().GetLogName(),
             new RestoreContentItem.Command().GetLogName(),
             new RevertContentItem.Command().GetLogName(),
-            new SetAsHomePage.Command().GetLogName(),
+            new Application.ContentItems.Commands.SetAsHomePage.Command().GetLogName(),
             new UnpublishContentItem.Command().GetLogName(),
 
             //ContentTypes
@@ -200,7 +200,8 @@ public class AuditLogsController : BaseController
             new DeleteView.Command().GetLogName(),
             new EditFilter.Command().GetLogName(),
             new EditPublicSettings.Command().GetLogName(),
-            new EditView.Command().GetLogName()
+            new EditView.Command().GetLogName(),
+            new Application.Views.Commands.SetAsHomePage.Command().GetLogName(),
         };
 
         logCategories.Sort();

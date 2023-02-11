@@ -19,7 +19,7 @@ public class EditContentItemSettings
 
     public class Validator : AbstractValidator<Command>
     {
-        public Validator(IRaythaDbContext db)
+        public Validator(IRaythaDbContext db, IContentTypeInRoutePath contentTypeInRoutePath)
         {
             RuleFor(x => x.RoutePath).NotEmpty();
             RuleFor(x => x).Custom((request, context) =>
@@ -42,6 +42,8 @@ public class EditContentItemSettings
 
                 if (entity == null)
                     throw new NotFoundException("Content Item", request.Id);
+
+                contentTypeInRoutePath.ValidateContentTypeInRoutePathMatchesValue(entity.ContentType.DeveloperName);
 
                 var template = db.WebTemplates
                     .Include(p => p.TemplateAccessToModelDefinitions)

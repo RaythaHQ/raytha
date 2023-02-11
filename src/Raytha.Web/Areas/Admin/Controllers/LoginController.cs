@@ -369,20 +369,6 @@ public class LoginController : BaseController
         }
     }
 
-    [Route(RAYTHA_ROUTE_PREFIX + "/forbidden", Name = "forbidden")]
-    public IActionResult ForbiddenRedirect(string returnUrl)
-    {
-        if (returnUrl.StartsWith($"/{RAYTHA_ROUTE_PREFIX}"))
-        {
-            return View("~/Areas/Admin/Views/Shared/Forbidden.cshtml");
-        }
-        else
-        {
-            var errorModel = new GenericError_RenderModel { ErrorId = ShortGuid.NewGuid() };
-            return new ErrorActionViewResult(BuiltInWebTemplate.Error403, 403, errorModel, ViewData);
-        }
-    }
-
     private async Task<IActionResult> HandleSingleSignOnResult(ICommandResponseDto<LoginDto> result, string returnUrl)
     {
         if (result.Success)

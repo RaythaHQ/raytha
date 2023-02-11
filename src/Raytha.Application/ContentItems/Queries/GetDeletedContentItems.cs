@@ -1,5 +1,6 @@
 ﻿using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Raytha.Application.Common.Attributes;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Models;
 using Raytha.Application.Common.Utils;
@@ -11,6 +12,7 @@ public class GetDeletedContentItems
 {
     public record Query : GetPagedEntitiesInputDto, IRequest<IQueryResponseDto<ListResultDto<DeletedContentItemDto>>>
     {
+        [ExcludePropertyFromOpenApiDocs]
         public string DeveloperName { get; init; }
         public override string OrderBy { get; init; } = $"Label {SortOrder.ASCENDING}";
     }

@@ -101,6 +101,9 @@ public class BuiltInSystemPermission : ValueObject
     public const string MANAGE_CONTENT_TYPES_PERMISSION = "content_types";
     public const string MANAGE_SYSTEM_SETTINGS_PERMISSION = "system_settings";
 
+    //not an explicit permission
+    public const string MANAGE_MEDIA_ITEMS = "media_items";
+
     static BuiltInSystemPermission()
     {
     }

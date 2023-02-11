@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using Raytha.Application.Common.Exceptions;
 using Raytha.Application.Common.Utils;
 using Raytha.Domain.Events;
+using Raytha.Application.Common.Attributes;
 
 namespace Raytha.Application.ContentItems.Commands;
 
@@ -17,8 +18,10 @@ public class CreateContentItem
     {
         public bool SaveAsDraft { get; init; }
         public ShortGuid TemplateId { get; init; }
-        public ShortGuid ContentTypeId { get; init; }
-        public dynamic Content { get; init; }
+
+        [ExcludePropertyFromOpenApiDocs]
+        public string ContentTypeDeveloperName { get; init; } = string.Empty;
+        public IDictionary<string, dynamic> Content { get; init; }
     }
 
     public class Validator : AbstractValidator<Command>
@@ -27,9 +30,9 @@ public class CreateContentItem
         {
             RuleFor(x => x).Custom((request, context) =>
             {
-                if (request.ContentTypeId == ShortGuid.Empty)
+                if (string.IsNullOrEmpty(request.ContentTypeDeveloperName))
                 {
-                    context.AddFailure(Constants.VALIDATION_SUMMARY, "ContentTypeId is required.");
+                    context.AddFailure(Constants.VALIDATION_SUMMARY, "ContentTypeDeveloperName is required.");
                     return;
                 }
 
@@ -41,10 +44,10 @@ public class CreateContentItem
 
                 var contentTypeDefinition = db.ContentTypes
                     .Include(p => p.ContentTypeFields)
-                    .FirstOrDefault(p => p.Id == request.ContentTypeId.Guid);
+                    .FirstOrDefault(p => p.DeveloperName == request.ContentTypeDeveloperName.ToDeveloperName());
 
                 if (contentTypeDefinition == null)
-                    throw new NotFoundException("Content Type", request.ContentTypeId);
+                    throw new NotFoundException("Content Type", request.ContentTypeDeveloperName.ToDeveloperName());
 
                 var template = db.WebTemplates
                     .Include(p => p.TemplateAccessToModelDefinitions)
@@ -91,8 +94,12 @@ public class CreateContentItem
         }
         public async Task<CommandResponseDto<ShortGuid>> Handle(Command request, CancellationToken cancellationToken)
         {
+            var contentTypeDefinition = _db.ContentTypes
+                .Include(p => p.ContentTypeFields)
+                .First(p => p.DeveloperName == request.ContentTypeDeveloperName.ToDeveloperName());
+
             var newEntityId = Guid.NewGuid();
-            var path = GetRoutePath(request.Content, newEntityId, request.ContentTypeId);
+            var path = GetRoutePath(request.Content, newEntityId, contentTypeDefinition.Id);
             var entity = new ContentItem
             {
                 Id = newEntityId,
@@ -101,7 +108,7 @@ public class CreateContentItem
                 DraftContent = request.Content,
                 PublishedContent = request.Content,
                 WebTemplateId = request.TemplateId,
-                ContentTypeId = request.ContentTypeId,
+                ContentTypeId = contentTypeDefinition.Id,
                 Route = new Route
                 {
                     Path = path,
@@ -126,7 +133,7 @@ public class CreateContentItem
             var routePathTemplate = contentType.DefaultRouteTemplate;
 
             string primaryFieldDeveloperName = contentType.ContentTypeFields.First(p => p.Id == contentType.PrimaryFieldId).DeveloperName;
-            var primaryField = content[primaryFieldDeveloperName] as string;
+            var primaryField = ((IDictionary<string, dynamic>)content)[primaryFieldDeveloperName] as string;
 
             string path = routePathTemplate.IfNullOrEmpty($"{BuiltInContentTypeField.PrimaryField.DeveloperName}")
                                            .Replace($"{{{BuiltInContentTypeField.PrimaryField.DeveloperName}}}", primaryField.IfNullOrEmpty((ShortGuid)entityId))

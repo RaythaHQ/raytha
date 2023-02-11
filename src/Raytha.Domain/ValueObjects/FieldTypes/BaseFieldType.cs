@@ -1,5 +1,6 @@
 ﻿using Raytha.Domain.ValueObjects.FieldValues;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace Raytha.Domain.ValueObjects.FieldTypes;
 

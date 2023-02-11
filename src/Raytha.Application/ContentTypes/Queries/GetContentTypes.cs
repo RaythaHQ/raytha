@@ -11,7 +11,6 @@ public class GetContentTypes
 {
     public record Query : GetPagedEntitiesInputDto, IRequest<IQueryResponseDto<ListResultDto<ContentTypeDto>>>
     {
-        public string SearchQuery { get; init; } = string.Empty;
         public override string OrderBy { get; init; } = $"LabelPlural {SortOrder.Ascending}";
     }
 
@@ -28,9 +27,9 @@ public class GetContentTypes
                 .Include(p => p.ContentTypeFields)
                 .AsQueryable();
 
-            if (!string.IsNullOrEmpty(request.SearchQuery))
+            if (!string.IsNullOrEmpty(request.Search))
             {
-                var searchQuery = request.SearchQuery.ToLower();
+                var searchQuery = request.Search.ToLower();
                 query = query
                     .Where(d =>
                         (d.LabelPlural.ToLower().Contains(searchQuery) ||

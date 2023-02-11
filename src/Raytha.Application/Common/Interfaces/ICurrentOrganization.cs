@@ -17,6 +17,7 @@ public interface ICurrentOrganization
     bool EmailAndPasswordIsEnabledForAdmins { get; }
     bool EmailAndPasswordIsEnabledForUsers { get; }
     ShortGuid? HomePageId { get; }
+    string HomePageType { get; }
 
     OrganizationTimeZoneConverter TimeZoneConverter { get; }
     IEnumerable<AuthenticationSchemeDto> AuthenticationSchemes { get; }

@@ -19,6 +19,7 @@ using Raytha.Application.Templates.Web.Queries;
 using Microsoft.AspNetCore.Authorization;
 using Raytha.Application.Common.Utils;
 using Azure;
+using Raytha.Web.Utils;
 
 namespace Raytha.Web.Areas.Admin.Controllers;
 
@@ -27,7 +28,7 @@ public class ViewsController : BaseController
     [Authorize(Policy = BuiltInContentTypePermission.CONTENT_TYPE_READ_PERMISSION)]
     [ServiceFilter(typeof(SetPaginationInformationFilterAttribute))]
     [ServiceFilter(typeof(GetOrSetRecentlyAccessedViewFilterAttribute))]
-    [Route($"{RAYTHA_ROUTE_PREFIX}/{{contentType}}/views", Name = "viewsindex")]
+    [Route($"{RAYTHA_ROUTE_PREFIX}/{{{RouteConstants.CONTENT_TYPE_DEVELOPER_NAME}}}/views", Name = "viewsindex")]
     public async Task<IActionResult> Index(string search = "", string orderBy = $"Label {SortOrder.ASCENDING}", int pageNumber = 1, int pageSize = 50)
     {
         var favoriteViewsForAdmin = await Mediator.Send(new GetFavoriteViewsForAdmin.Query { UserId = CurrentUser.UserId.Value, ContentTypeId = CurrentView.ContentTypeId });
@@ -52,7 +53,8 @@ public class ViewsController : BaseController
             LastModifierUser = p.LastModifierUser != null ? p.LastModifierUser.FullName : "N/A",
             IsPublished = p.IsPublished.YesOrNo(),
             RoutePath = p.RoutePath,
-            IsFavoriteForAdmin = favoriteViewsForAdmin.Result.Items.Any(c => c.Id == p.Id)
+            IsFavoriteForAdmin = favoriteViewsForAdmin.Result.Items.Any(c => c.Id == p.Id),
+            IsHomePage = CurrentOrganization.HomePageId == p.Id
         });
 
         var viewModel = new ViewsPagination_ViewModel(items, response.Result.TotalCount);
@@ -61,7 +63,7 @@ public class ViewsController : BaseController
 
     [Authorize(Policy = BuiltInContentTypePermission.CONTENT_TYPE_EDIT_PERMISSION)]
     [ServiceFilter(typeof(GetOrSetRecentlyAccessedViewFilterAttribute))]
-    [Route($"{RAYTHA_ROUTE_PREFIX}/{{contentType}}/views/create", Name = "viewscreate")]
+    [Route($"{RAYTHA_ROUTE_PREFIX}/{{{RouteConstants.CONTENT_TYPE_DEVELOPER_NAME}}}/views/create", Name = "viewscreate")]
     public async Task<IActionResult> Create(string duplicateFromId)
     {
         var response = await Mediator.Send(new GetContentTypeByDeveloperName.Query { DeveloperName = CurrentView.ContentType.DeveloperName });
@@ -87,7 +89,7 @@ public class ViewsController : BaseController
 
     [Authorize(Policy = BuiltInContentTypePermission.CONTENT_TYPE_EDIT_PERMISSION)]
     [ServiceFilter(typeof(GetOrSetRecentlyAccessedViewFilterAttribute))]
-    [Route($"{RAYTHA_ROUTE_PREFIX}/{{contentType}}/views/create", Name = "viewscreate")]
+    [Route($"{RAYTHA_ROUTE_PREFIX}/{{{RouteConstants.CONTENT_TYPE_DEVELOPER_NAME}}}/views/create", Name = "viewscreate")]
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create(ViewsCreate_ViewModel model)
@@ -105,7 +107,7 @@ public class ViewsController : BaseController
         {
             SetSuccessMessage($"{model.Label} created successfully.");
             ShortGuid newViewId = response.Result;
-            return RedirectToAction("Index", "ContentItems", new { contentType = CurrentView.ContentType.DeveloperName, viewId = newViewId });
+            return RedirectToAction("Index", "ContentItems", new { contentTypeDeveloperName = CurrentView.ContentType.DeveloperName, viewId = newViewId });
         }
         else
         {
@@ -116,7 +118,7 @@ public class ViewsController : BaseController
 
     [Authorize(Policy = BuiltInContentTypePermission.CONTENT_TYPE_EDIT_PERMISSION)]
     [ServiceFilter(typeof(GetOrSetRecentlyAccessedViewFilterAttribute))]
-    [Route($"{RAYTHA_ROUTE_PREFIX}/{{contentType}}/views/edit/{{viewId}}", Name = "viewsedit")]
+    [Route($"{RAYTHA_ROUTE_PREFIX}/{{{RouteConstants.CONTENT_TYPE_DEVELOPER_NAME}}}/views/edit/{{viewId}}", Name = "viewsedit")]
     public async Task<IActionResult> Edit()
     {
         var response = await Mediator.Send(new GetViewById.Query { Id = CurrentView.Id });
@@ -134,7 +136,7 @@ public class ViewsController : BaseController
 
     [Authorize(Policy = BuiltInContentTypePermission.CONTENT_TYPE_EDIT_PERMISSION)]
     [ServiceFilter(typeof(GetOrSetRecentlyAccessedViewFilterAttribute))]
-    [Route($"{RAYTHA_ROUTE_PREFIX}/{{contentType}}/views/edit/{{viewId}}", Name = "viewsedit")]
+    [Route($"{RAYTHA_ROUTE_PREFIX}/{{{RouteConstants.CONTENT_TYPE_DEVELOPER_NAME}}}/views/edit/{{viewId}}", Name = "viewsedit")]
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Edit(ViewsEdit_ViewModel model)
@@ -150,7 +152,7 @@ public class ViewsController : BaseController
         if (response.Success)
         {
             SetSuccessMessage($"{model.Label} edit successfully.");
-            return RedirectToAction("Index", "ContentItems", new { contentType = CurrentView.ContentType.DeveloperName, id = CurrentView.Id });
+            return RedirectToAction("Index", "ContentItems", new { contentTypeDeveloperName = CurrentView.ContentType.DeveloperName, id = CurrentView.Id });
         }
         else
         {
@@ -161,7 +163,7 @@ public class ViewsController : BaseController
 
     [Authorize(Policy = BuiltInContentTypePermission.CONTENT_TYPE_EDIT_PERMISSION)]
     [ServiceFilter(typeof(GetOrSetRecentlyAccessedViewFilterAttribute))]
-    [Route($"{RAYTHA_ROUTE_PREFIX}/{{contentType}}/views/public-settings/{{viewId}}", Name = "viewspublicsettings")]
+    [Route($"{RAYTHA_ROUTE_PREFIX}/{{{RouteConstants.CONTENT_TYPE_DEVELOPER_NAME}}}/views/public-settings/{{viewId}}", Name = "viewspublicsettings")]
     public async Task<IActionResult> PublicSettings()
     {
         var response = await Mediator.Send(new GetViewById.Query { Id = CurrentView.Id });
@@ -174,7 +176,11 @@ public class ViewsController : BaseController
             IsPublished = response.Result.IsPublished,
             TemplateId = response.Result.WebTemplateId,
             AvailableTemplates = webTemplates.Result?.Items.ToDictionary(p => p.Id.ToString(), p => p.Label),
-            WebsiteUrl = CurrentOrganization.WebsiteUrl
+            WebsiteUrl = CurrentOrganization.WebsiteUrl,
+            IgnoreClientFilterAndSortQueryParams = response.Result.IgnoreClientFilterAndSortQueryParams,
+            MaxNumberOfItemsPerPage = response.Result.MaxNumberOfItemsPerPage,
+            DefaultNumberOfItemsPerPage = response.Result.DefaultNumberOfItemsPerPage,
+            IsHomePage = CurrentOrganization.HomePageId == CurrentView.Id
         };
 
         return View(viewModel);
@@ -182,7 +188,7 @@ public class ViewsController : BaseController
 
     [Authorize(Policy = BuiltInContentTypePermission.CONTENT_TYPE_EDIT_PERMISSION)]
     [ServiceFilter(typeof(GetOrSetRecentlyAccessedViewFilterAttribute))]
-    [Route($"{RAYTHA_ROUTE_PREFIX}/{{contentType}}/views/public-settings/{{viewId}}", Name = "viewspublicsettings")]
+    [Route($"{RAYTHA_ROUTE_PREFIX}/{{{RouteConstants.CONTENT_TYPE_DEVELOPER_NAME}}}/views/public-settings/{{viewId}}", Name = "viewspublicsettings")]
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> PublicSettings(ViewsPublicSettings_ViewModel model)
@@ -192,14 +198,17 @@ public class ViewsController : BaseController
             Id = model.Id,
             RoutePath = model.RoutePath,
             IsPublished = model.IsPublished,
-            TemplateId = model.TemplateId
+            TemplateId = model.TemplateId,
+            IgnoreClientFilterAndSortQueryParams = model.IgnoreClientFilterAndSortQueryParams,
+            MaxNumberOfItemsPerPage = model.MaxNumberOfItemsPerPage,
+            DefaultNumberOfItemsPerPage = model.DefaultNumberOfItemsPerPage
         };
         var response = await Mediator.Send(input);
 
         if (response.Success)
         {
             SetSuccessMessage($"Public settings updated successfully.");
-            return RedirectToAction("PublicSettings", "Views", new { contentType = CurrentView.ContentType.DeveloperName, viewId = CurrentView.Id });
+            return RedirectToAction("PublicSettings", "Views", new { contentTypeDeveloperName = CurrentView.ContentType.DeveloperName, viewId = CurrentView.Id });
         }
         else
         {
@@ -212,8 +221,28 @@ public class ViewsController : BaseController
     }
 
     [ServiceFilter(typeof(GetOrSetRecentlyAccessedViewFilterAttribute))]
+    [Authorize(Policy = BuiltInSystemPermission.MANAGE_SYSTEM_SETTINGS_PERMISSION)]
+    [Route($"{RAYTHA_ROUTE_PREFIX}/{{{RouteConstants.CONTENT_TYPE_DEVELOPER_NAME}}}/views/set-as-home-page/{{viewId}}", Name = "viewssetashomepage")]
+    [HttpPost]
+    public async Task<IActionResult> SetAsHomePage()
+    {
+        var input = new SetAsHomePage.Command { Id = CurrentView.Id };
+        var response = await Mediator.Send(input);
+        if (response.Success)
+        {
+            SetSuccessMessage($"Home page updated successfully.");
+        }
+        else
+        {
+            SetErrorMessage($"There was an error setting this as the home page.", response.GetErrors());
+        }
+
+        return RedirectToAction("PublicSettings", "Views", new { contentTypeDeveloperName = CurrentView.ContentType.DeveloperName, viewId = CurrentView.Id });
+    }
+
+    [ServiceFilter(typeof(GetOrSetRecentlyAccessedViewFilterAttribute))]
     [Authorize(Policy = BuiltInContentTypePermission.CONTENT_TYPE_READ_PERMISSION)]
-    [Route($"{RAYTHA_ROUTE_PREFIX}/{{contentType}}/views/{{viewId}}/favorite", Name = "viewsfavorite")]
+    [Route($"{RAYTHA_ROUTE_PREFIX}/{{{RouteConstants.CONTENT_TYPE_DEVELOPER_NAME}}}/views/{{viewId}}/favorite", Name = "viewsfavorite")]
     [HttpPost]
     public async Task<IActionResult> Favorite()
     {
@@ -231,12 +260,12 @@ public class ViewsController : BaseController
         {
             SetErrorMessage(response.Error);
         }
-        return RedirectToAction("Index", "ContentItems", new { contentType = CurrentView.ContentType.DeveloperName, id = CurrentView.Id });
+        return RedirectToAction("Index", "ContentItems", new { contentTypeDeveloperName = CurrentView.ContentType.DeveloperName, id = CurrentView.Id });
     }
 
     [ServiceFilter(typeof(GetOrSetRecentlyAccessedViewFilterAttribute))]
     [Authorize(Policy = BuiltInContentTypePermission.CONTENT_TYPE_READ_PERMISSION)]
-    [Route($"{RAYTHA_ROUTE_PREFIX}/{{contentType}}/views/{{viewId}}/unfavorite", Name = "viewsunfavorite")]
+    [Route($"{RAYTHA_ROUTE_PREFIX}/{{{RouteConstants.CONTENT_TYPE_DEVELOPER_NAME}}}/views/{{viewId}}/unfavorite", Name = "viewsunfavorite")]
     [HttpPost]
     public async Task<IActionResult> Unfavorite()
     {
@@ -254,12 +283,12 @@ public class ViewsController : BaseController
         {
             SetErrorMessage(response.Error);
         }
-        return RedirectToAction("Index", "ContentItems", new { contentType = CurrentView.ContentType.DeveloperName, id = CurrentView.Id });
+        return RedirectToAction("Index", "ContentItems", new { contentTypeDeveloperName = CurrentView.ContentType.DeveloperName, id = CurrentView.Id });
     }
 
     [ServiceFilter(typeof(GetOrSetRecentlyAccessedViewFilterAttribute))]
     [Authorize(Policy = BuiltInContentTypePermission.CONTENT_TYPE_EDIT_PERMISSION)]
-    [Route($"{RAYTHA_ROUTE_PREFIX}/{{contentType}}/views/{{viewId}}/delete", Name = "viewsdelete")]
+    [Route($"{RAYTHA_ROUTE_PREFIX}/{{{RouteConstants.CONTENT_TYPE_DEVELOPER_NAME}}}/views/{{viewId}}/delete", Name = "viewsdelete")]
     [HttpPost]
     public async Task<IActionResult> Delete()
     {
@@ -267,18 +296,18 @@ public class ViewsController : BaseController
         if (response.Success)
         {
             SetSuccessMessage($"Successfully deleted view.");
-            return RedirectToAction("Index", new { contentType = CurrentView.ContentType.DeveloperName });
+            return RedirectToAction("Index", new { contentTypeDeveloperName = CurrentView.ContentType.DeveloperName });
         }
         else
         {
             SetErrorMessage("There was an error deleting this view.", response.GetErrors());
-            return RedirectToAction("Index", "ContentItems", new { contentType = CurrentView.ContentType.DeveloperName, id = CurrentView.Id });
+            return RedirectToAction("Index", "ContentItems", new { contentTypeDeveloperName = CurrentView.ContentType.DeveloperName, id = CurrentView.Id });
         }
     }
 
     [ServiceFilter(typeof(GetOrSetRecentlyAccessedViewFilterAttribute))]
     [Authorize(Policy = BuiltInContentTypePermission.CONTENT_TYPE_EDIT_PERMISSION)]
-    [Route($"{RAYTHA_ROUTE_PREFIX}/{{contentType}}/views/{{viewId}}/columns", Name = "viewscolumns")]
+    [Route($"{RAYTHA_ROUTE_PREFIX}/{{{RouteConstants.CONTENT_TYPE_DEVELOPER_NAME}}}/views/{{viewId}}/columns", Name = "viewscolumns")]
     public async Task<IActionResult> Columns()
     {
         var response = await Mediator.Send(new GetContentTypeFields.Query
@@ -320,7 +349,7 @@ public class ViewsController : BaseController
 
     [ServiceFilter(typeof(GetOrSetRecentlyAccessedViewFilterAttribute))]
     [Authorize(Policy = BuiltInContentTypePermission.CONTENT_TYPE_EDIT_PERMISSION)]
-    [Route($"{RAYTHA_ROUTE_PREFIX}/{{contentType}}/views/{{viewId}}/columns/reorder/{{developerName}}", Name = "viewscolumnsreorderajax")]
+    [Route($"{RAYTHA_ROUTE_PREFIX}/{{{RouteConstants.CONTENT_TYPE_DEVELOPER_NAME}}}/views/{{viewId}}/columns/reorder/{{developerName}}", Name = "viewscolumnsreorderajax")]
     [HttpPatch]
     public async Task<JsonResult> ColumnsReorderAjax(string developerName)
     {
@@ -340,7 +369,7 @@ public class ViewsController : BaseController
 
     [ServiceFilter(typeof(GetOrSetRecentlyAccessedViewFilterAttribute))]
     [Authorize(Policy = BuiltInContentTypePermission.CONTENT_TYPE_EDIT_PERMISSION)]
-    [Route($"{RAYTHA_ROUTE_PREFIX}/{{contentType}}/views/{{viewId}}/columns/toggle/{{developerName}}", Name = "viewscolumnstoggle")]
+    [Route($"{RAYTHA_ROUTE_PREFIX}/{{{RouteConstants.CONTENT_TYPE_DEVELOPER_NAME}}}/views/{{viewId}}/columns/toggle/{{developerName}}", Name = "viewscolumnstoggle")]
     [HttpPost]
     public async Task<IActionResult> ColumnsToggle(string developerName)
     {
@@ -356,12 +385,12 @@ public class ViewsController : BaseController
         if (!response.Success)
             SetErrorMessage("There was an error adding this column to the view", response.GetErrors());
 
-        return RedirectToAction("Columns", new { contentType = CurrentView.ContentType.DeveloperName, viewId = CurrentView.Id });
+        return RedirectToAction("Columns", new { contentTypeDeveloperName = CurrentView.ContentType.DeveloperName, viewId = CurrentView.Id });
     }
 
     [ServiceFilter(typeof(GetOrSetRecentlyAccessedViewFilterAttribute))]
     [Authorize(Policy = BuiltInContentTypePermission.CONTENT_TYPE_EDIT_PERMISSION)]
-    [Route($"{RAYTHA_ROUTE_PREFIX}/{{contentType}}/views/{{viewId}}/sort", Name = "viewssort")]
+    [Route($"{RAYTHA_ROUTE_PREFIX}/{{{RouteConstants.CONTENT_TYPE_DEVELOPER_NAME}}}/views/{{viewId}}/sort", Name = "viewssort")]
     public async Task<IActionResult> Sort()
     {
         var response = await Mediator.Send(new GetContentTypeFields.Query
@@ -405,7 +434,7 @@ public class ViewsController : BaseController
 
     [ServiceFilter(typeof(GetOrSetRecentlyAccessedViewFilterAttribute))]
     [Authorize(Policy = BuiltInContentTypePermission.CONTENT_TYPE_EDIT_PERMISSION)]
-    [Route($"{RAYTHA_ROUTE_PREFIX}/{{contentType}}/views/{{viewId}}/sort/remove/{{developerName}}", Name = "viewssortremove")]
+    [Route($"{RAYTHA_ROUTE_PREFIX}/{{{RouteConstants.CONTENT_TYPE_DEVELOPER_NAME}}}/views/{{viewId}}/sort/remove/{{developerName}}", Name = "viewssortremove")]
     [HttpPost]
     public async Task<IActionResult> SortRemove(string developerName)
     {
@@ -420,12 +449,12 @@ public class ViewsController : BaseController
         if (!response.Success)
             SetErrorMessage("There was an error adding this column to the view", response.GetErrors());
 
-        return RedirectToAction("Sort", new { contentType = CurrentView.ContentType.DeveloperName, viewId = CurrentView.Id });
+        return RedirectToAction("Sort", new { contentTypeDeveloperName = CurrentView.ContentType.DeveloperName, viewId = CurrentView.Id });
     }
 
     [ServiceFilter(typeof(GetOrSetRecentlyAccessedViewFilterAttribute))]
     [Authorize(Policy = BuiltInContentTypePermission.CONTENT_TYPE_EDIT_PERMISSION)]
-    [Route($"{RAYTHA_ROUTE_PREFIX}/{{contentType}}/views/{{viewId}}/sort/add", Name = "viewssortadd")]
+    [Route($"{RAYTHA_ROUTE_PREFIX}/{{{RouteConstants.CONTENT_TYPE_DEVELOPER_NAME}}}/views/{{viewId}}/sort/add", Name = "viewssortadd")]
     [HttpPost]
     public async Task<IActionResult> SortAdd()
     {
@@ -443,12 +472,12 @@ public class ViewsController : BaseController
         if (!response.Success)
             SetErrorMessage("There was an error adding this column to the view", response.GetErrors());
 
-        return RedirectToAction("Sort", new { contentType = CurrentView.ContentType.DeveloperName, viewId = CurrentView.Id });
+        return RedirectToAction("Sort", new { contentTypeDeveloperName = CurrentView.ContentType.DeveloperName, viewId = CurrentView.Id });
     }
 
     [ServiceFilter(typeof(GetOrSetRecentlyAccessedViewFilterAttribute))]
     [Authorize(Policy = BuiltInContentTypePermission.CONTENT_TYPE_EDIT_PERMISSION)]
-    [Route($"{RAYTHA_ROUTE_PREFIX}/{{contentType}}/views/{{viewId}}/sort/reorder/{{developerName}}", Name = "viewssortreorderajax")]
+    [Route($"{RAYTHA_ROUTE_PREFIX}/{{{RouteConstants.CONTENT_TYPE_DEVELOPER_NAME}}}/views/{{viewId}}/sort/reorder/{{developerName}}", Name = "viewssortreorderajax")]
     [HttpPatch]
     public async Task<IActionResult> SortReorderAjax(string developerName)
     {
@@ -468,7 +497,7 @@ public class ViewsController : BaseController
 
     [ServiceFilter(typeof(GetOrSetRecentlyAccessedViewFilterAttribute))]
     [Authorize(Policy = BuiltInContentTypePermission.CONTENT_TYPE_EDIT_PERMISSION)]
-    [Route($"{RAYTHA_ROUTE_PREFIX}/{{contentType}}/views/{{viewId}}/filter", Name = "viewsfilter")]
+    [Route($"{RAYTHA_ROUTE_PREFIX}/{{{RouteConstants.CONTENT_TYPE_DEVELOPER_NAME}}}/views/{{viewId}}/filter", Name = "viewsfilter")]
     public async Task<IActionResult> Filter()
     {
         var response = await Mediator.Send(new GetContentTypeFields.Query
@@ -510,7 +539,7 @@ public class ViewsController : BaseController
 
     [ServiceFilter(typeof(GetOrSetRecentlyAccessedViewFilterAttribute))]
     [Authorize(Policy = BuiltInContentTypePermission.CONTENT_TYPE_EDIT_PERMISSION)]
-    [Route($"{RAYTHA_ROUTE_PREFIX}/{{contentType}}/views/{{viewId}}/filter", Name = "viewsfilter")]
+    [Route($"{RAYTHA_ROUTE_PREFIX}/{{{RouteConstants.CONTENT_TYPE_DEVELOPER_NAME}}}/views/{{viewId}}/filter", Name = "viewsfilter")]
     [HttpPost]
     public async Task<JsonResult> Filter([FromForm] string json)
     {

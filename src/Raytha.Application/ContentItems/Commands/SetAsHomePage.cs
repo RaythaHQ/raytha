@@ -3,6 +3,7 @@ using MediatR;
 using Raytha.Application.Common.Exceptions;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Models;
+using Raytha.Domain.Entities;
 
 namespace Raytha.Application.ContentItems.Commands;
 
@@ -28,6 +29,7 @@ public class SetAsHomePage
                 throw new NotFoundException("Content item not found", request.Id);
 
             entity.HomePageId = request.Id.Guid;
+            entity.HomePageType = Route.CONTENT_ITEM_TYPE;
             await _db.SaveChangesAsync(cancellationToken);
 
             return new CommandResponseDto<ShortGuid>(entity.Id);

@@ -9,9 +9,9 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Raytha.Application.Common.Utils;
 using Microsoft.AspNetCore.Authorization.Infrastructure;
-using Raytha.Application.ContentTypes;
+using Raytha.Web.Utils;
 
-namespace Raytha.Web.Utils;
+namespace Raytha.Web.Authentication;
 
 public class IsAdminRequirement : IAuthorizationRequirement
 {
@@ -41,6 +41,10 @@ public class ManageAuditLogsRequirement : IAuthorizationRequirement
 {
 }
 
+public class ManageMediaItemsRequirement : IAuthorizationRequirement
+{
+}
+
 public class ContentTypePermissionRequirement : IAuthorizationRequirement
 {
     public ContentTypePermissionRequirement(string permission) =>
@@ -48,6 +52,7 @@ public class ContentTypePermissionRequirement : IAuthorizationRequirement
 
     public string Permission { get; }
 }
+
 
 public class RaythaAdminAuthorizationHandler : IAuthorizationHandler
 {
@@ -64,10 +69,10 @@ public class RaythaAdminAuthorizationHandler : IAuthorizationHandler
         {
             return Task.CompletedTask;
         }
-        
+
         var systemPermissionsClaims = context.User.Claims.Where(p => p.Type == RaythaClaimTypes.SystemPermissions).Select(p => p.Value).ToArray();
         var contentTypePermissionsClaims = context.User.Claims.Where(c => c.Type == RaythaClaimTypes.ContentTypePermissions).Select(p => p.Value).ToArray();
-        
+
         var pendingRequirements = context.PendingRequirements.ToList();
 
         foreach (var requirement in pendingRequirements)
@@ -120,6 +125,20 @@ public class RaythaAdminAuthorizationHandler : IAuthorizationHandler
                     context.Succeed(requirement);
                 }
             }
+            else if (requirement is ManageMediaItemsRequirement)
+            {
+                if (systemPermissionsClaims.Contains(BuiltInSystemPermission.MANAGE_CONTENT_TYPES_PERMISSION))
+                {
+                    context.Succeed(requirement);
+                }
+                else
+                {
+                    if (contentTypePermissionsClaims.Any(p => p.EndsWith(BuiltInContentTypePermission.CONTENT_TYPE_EDIT_PERMISSION)))
+                    {
+                        context.Succeed(requirement);
+                    }
+                }
+            }
             else if (requirement is ContentTypePermissionRequirement)
             {
                 if (systemPermissionsClaims.Contains(BuiltInSystemPermission.MANAGE_CONTENT_TYPES_PERMISSION))
@@ -129,8 +148,8 @@ public class RaythaAdminAuthorizationHandler : IAuthorizationHandler
                 else
                 {
                     var permission = ((ContentTypePermissionRequirement)requirement).Permission;
-                    string contentTypeDeveloperName = _httpContextAccessor.HttpContext.GetRouteValue("contentType") as string;
-        
+                    string contentTypeDeveloperName = _httpContextAccessor.HttpContext.GetRouteValue(RouteConstants.CONTENT_TYPE_DEVELOPER_NAME) as string;
+
                     if (contentTypePermissionsClaims.Contains($"{contentTypeDeveloperName.ToDeveloperName()}_{permission}"))
                     {
                         context.Succeed(requirement);
@@ -192,14 +211,4 @@ public class RaythaAdminContentTypeAuthorizationHandler :
         }
         return Convert.ToBoolean(isAdminClaim.Value);
     }
-}
-
-public static class Operations
-{
-    public static OperationAuthorizationRequirement Read =
-        new OperationAuthorizationRequirement { Name = BuiltInContentTypePermission.CONTENT_TYPE_READ_PERMISSION };
-    public static OperationAuthorizationRequirement Edit =
-        new OperationAuthorizationRequirement { Name = BuiltInContentTypePermission.CONTENT_TYPE_EDIT_PERMISSION };
-    public static OperationAuthorizationRequirement Config =
-        new OperationAuthorizationRequirement { Name = BuiltInContentTypePermission.CONTENT_TYPE_CONFIG_PERMISSION };
 }

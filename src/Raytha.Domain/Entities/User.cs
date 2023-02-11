@@ -29,6 +29,7 @@ public class User : BaseAuditableEntity, IPassivable
     public virtual ICollection<Role> Roles { get; set; }
     public virtual ICollection<View> FavoriteViews { get; set; }
     public virtual ICollection<UserGroup> UserGroups { get; set; }
+    public virtual ICollection<ApiKey> ApiKeys { get; set; }
 
     [NotMapped]
     public IEnumerable<RecentlyAccessedView> RecentlyAccessedViews

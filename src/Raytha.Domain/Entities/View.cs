@@ -5,6 +5,8 @@ namespace Raytha.Domain.Entities;
 
 public class View : BaseAuditableEntity
 {
+    public const int DEFAULT_NUMBER_OF_ITEMS_PER_PAGE = 25;
+    public const int DEFAULT_MAX_ITEMS_PER_PAGE = 1000;
     public string? Label { get; set; }
     public string? DeveloperName { get; set; }
     public string? Description { get; set; }
@@ -15,6 +17,9 @@ public class View : BaseAuditableEntity
     public Guid RouteId { get; set; }
     public virtual Route Route { get; set; }
     public bool IsPublished { get; set; }
+    public int DefaultNumberOfItemsPerPage { get; set; } = DEFAULT_NUMBER_OF_ITEMS_PER_PAGE;
+    public int MaxNumberOfItemsPerPage { get; set; } = DEFAULT_MAX_ITEMS_PER_PAGE;
+    public bool IgnoreClientFilterAndSortQueryParams { get; set; } = false;
     public string? _Columns { get; set; }
     public string? _Filter { get; set; }
     public string? _Sort { get; set; }

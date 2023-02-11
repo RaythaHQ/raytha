@@ -92,6 +92,7 @@ public class RaythaDbJsonQueryEngine : IRaythaDbJsonQueryEngine
         contentItem.CreatorUser = entity.CreatorUser;
         contentItem.LastModifierUser = entity.LastModifierUser;
         contentItem.ContentType = entity.ContentType;
+        contentItem.ContentTypeId = entity.ContentTypeId;
         contentItem.Route = entity.Route;
         return contentItem;
     }
@@ -199,6 +200,7 @@ public class RaythaDbJsonQueryEngine : IRaythaDbJsonQueryEngine
             contentItem.WebTemplate = template;
             contentItem.CreatorUser = creatorUser;
             contentItem.LastModifierUser = modifierUser;
+            contentItem.ContentTypeId = contentTypeId;
             contentItem.ContentType = contentType;
             contentItem.Route = route;
             items.Add(contentItem);

@@ -17,10 +17,60 @@ namespace Raytha.Infrastructure.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "7.0.0-rc.2.22472.11")
+                .HasAnnotation("ProductVersion", "7.0.1")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
+
+            modelBuilder.Entity("Microsoft.AspNetCore.DataProtection.EntityFrameworkCore.DataProtectionKey", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("FriendlyName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Xml")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("DataProtectionKeys");
+                });
+
+            modelBuilder.Entity("Raytha.Domain.Entities.ApiKey", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<byte[]>("ApiKeyHash")
+                        .IsRequired()
+                        .HasColumnType("varbinary(900)");
+
+                    b.Property<DateTime>("CreationTime")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("CreatorUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ApiKeyHash")
+                        .IsUnique();
+
+                    b.HasIndex("CreatorUserId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("ApiKeys");
+                });
 
             modelBuilder.Entity("Raytha.Domain.Entities.AuditLog", b =>
                 {
@@ -636,6 +686,10 @@ namespace Raytha.Infrastructure.Migrations
                     b.Property<Guid?>("HomePageId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<string>("HomePageType")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("OrganizationName")
                         .HasColumnType("nvarchar(max)");
 
@@ -919,11 +973,17 @@ namespace Raytha.Infrastructure.Migrations
                     b.Property<Guid?>("CreatorUserId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<int>("DefaultNumberOfItemsPerPage")
+                        .HasColumnType("int");
+
                     b.Property<string>("Description")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("DeveloperName")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IgnoreClientFilterAndSortQueryParams")
+                        .HasColumnType("bit");
 
                     b.Property<bool>("IsPublished")
                         .HasColumnType("bit");
@@ -936,6 +996,9 @@ namespace Raytha.Infrastructure.Migrations
 
                     b.Property<Guid?>("LastModifierUserId")
                         .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("MaxNumberOfItemsPerPage")
+                        .HasColumnType("int");
 
                     b.Property<Guid>("RouteId")
                         .HasColumnType("uniqueidentifier");
@@ -1134,6 +1197,23 @@ namespace Raytha.Infrastructure.Migrations
                     b.HasIndex("UserFavoritesId");
 
                     b.ToTable("UserView");
+                });
+
+            modelBuilder.Entity("Raytha.Domain.Entities.ApiKey", b =>
+                {
+                    b.HasOne("Raytha.Domain.Entities.User", "CreatorUser")
+                        .WithMany()
+                        .HasForeignKey("CreatorUserId");
+
+                    b.HasOne("Raytha.Domain.Entities.User", "User")
+                        .WithMany("ApiKeys")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("CreatorUser");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("Raytha.Domain.Entities.AuthenticationScheme", b =>
@@ -1623,6 +1703,11 @@ namespace Raytha.Infrastructure.Migrations
 
                     b.Navigation("View")
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("Raytha.Domain.Entities.User", b =>
+                {
+                    b.Navigation("ApiKeys");
                 });
 
             modelBuilder.Entity("Raytha.Domain.Entities.WebTemplate", b =>
