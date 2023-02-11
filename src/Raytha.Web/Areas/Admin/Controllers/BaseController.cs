@@ -66,7 +66,7 @@ public class BaseController : Controller
             SetErrorMessage(message);
         }
 
-        ViewData["ValidationErrors"] = errors;
+        ViewData["ValidationErrors"] = errors?.ToDictionary(k => k.PropertyName, v => v.ErrorMessage);
         this.HttpContext.Response.StatusCode = statusCode;
     }
 
