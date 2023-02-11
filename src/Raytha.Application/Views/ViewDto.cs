@@ -16,6 +16,9 @@ namespace Raytha.Application.Views
         public IEnumerable<string> Columns { get; init; } = new List<string>();
         public IEnumerable<ColumnSortOrder> Sort { get; init; } = new List<ColumnSortOrder>();
         public IEnumerable<FilterCondition> Filter { get; init; } = new List<FilterCondition>();
+        public int DefaultNumberOfItemsPerPage { get; init; }
+        public int MaxNumberOfItemsPerPage { get; init; }
+        public bool IgnoreClientFilterAndSortQueryParams { get; init; }
         public ContentTypeDto? ContentType { get; init; }
         public ShortGuid ContentTypeId { get; init; }
         public ShortGuid? RouteId { get; init; }
@@ -54,7 +57,10 @@ namespace Raytha.Application.Views
                 RoutePath = entity.Route.Path,
                 IsPublished = entity.IsPublished,
                 WebTemplate = WebTemplateDto.GetProjection(entity.WebTemplate),
-                WebTemplateId = entity.WebTemplateId
+                WebTemplateId = entity.WebTemplateId,
+                IgnoreClientFilterAndSortQueryParams = entity.IgnoreClientFilterAndSortQueryParams,
+                DefaultNumberOfItemsPerPage = entity.DefaultNumberOfItemsPerPage,
+                MaxNumberOfItemsPerPage = entity.MaxNumberOfItemsPerPage
             };
         }
     }

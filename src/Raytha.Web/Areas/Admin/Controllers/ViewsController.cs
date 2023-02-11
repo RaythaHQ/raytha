@@ -175,7 +175,10 @@ public class ViewsController : BaseController
             IsPublished = response.Result.IsPublished,
             TemplateId = response.Result.WebTemplateId,
             AvailableTemplates = webTemplates.Result?.Items.ToDictionary(p => p.Id.ToString(), p => p.Label),
-            WebsiteUrl = CurrentOrganization.WebsiteUrl
+            WebsiteUrl = CurrentOrganization.WebsiteUrl,
+            IgnoreClientFilterAndSortQueryParams = response.Result.IgnoreClientFilterAndSortQueryParams,
+            MaxNumberOfItemsPerPage = response.Result.MaxNumberOfItemsPerPage,
+            DefaultNumberOfItemsPerPage = response.Result.DefaultNumberOfItemsPerPage
         };
 
         return View(viewModel);
@@ -193,7 +196,10 @@ public class ViewsController : BaseController
             Id = model.Id,
             RoutePath = model.RoutePath,
             IsPublished = model.IsPublished,
-            TemplateId = model.TemplateId
+            TemplateId = model.TemplateId,
+            IgnoreClientFilterAndSortQueryParams = model.IgnoreClientFilterAndSortQueryParams,
+            MaxNumberOfItemsPerPage = model.MaxNumberOfItemsPerPage,
+            DefaultNumberOfItemsPerPage = model.DefaultNumberOfItemsPerPage
         };
         var response = await Mediator.Send(input);
 

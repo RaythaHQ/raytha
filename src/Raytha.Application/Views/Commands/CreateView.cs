@@ -87,9 +87,16 @@ public class CreateView
                 entity.Filter = originalView.Filter;
                 entity.Sort = originalView.Sort;
                 entity.WebTemplateId = originalView.WebTemplateId;
+                entity.DefaultNumberOfItemsPerPage = originalView.DefaultNumberOfItemsPerPage;
+                entity.MaxNumberOfItemsPerPage = originalView.MaxNumberOfItemsPerPage;
+                entity.IgnoreClientFilterAndSortQueryParams = originalView.IgnoreClientFilterAndSortQueryParams;
             }
             else
             {
+                entity.DefaultNumberOfItemsPerPage = 25;
+                entity.MaxNumberOfItemsPerPage = 1000;
+                entity.IgnoreClientFilterAndSortQueryParams = false;
+
                 var allFieldsForContentType = _db.ContentTypeFields
                     .Where(p => p.ContentTypeId == request.ContentTypeId.Guid &&
                             !p.IsDeleted).OrderBy(p => p.FieldOrder);

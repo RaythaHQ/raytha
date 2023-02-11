@@ -92,6 +92,15 @@ public class ViewsPublicSettings_ViewModel : FormSubmit_ViewModel, IMustHaveCurr
     [Display(Name = "Is published")]
     public bool IsPublished { get; set; }
 
+    [Display(Name = "Default number of items per page")]
+    public int DefaultNumberOfItemsPerPage { get; set; }
+
+    [Display(Name = "Max number of items per page")]
+    public int MaxNumberOfItemsPerPage { get; set; }
+
+    [Display(Name = "Ignore client side filter and sort query parameters")]
+    public bool IgnoreClientFilterAndSortQueryParams { get; set; }
+
     //helpers
     public string WebsiteUrl { get; set; }
     public Dictionary<string, string> AvailableTemplates { get; set; }

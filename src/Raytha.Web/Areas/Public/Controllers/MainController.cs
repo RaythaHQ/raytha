@@ -24,11 +24,10 @@ public class MainController : BaseController
                                            string filter = "",
                                            string orderBy = "",
                                            int pageNumber = 1,
-                                           int pageSize = 25)
+                                           int pageSize = 0)
     {
         try
         {
-            pageSize = pageSize > 1000 ? 1000 : pageSize;
             if (string.IsNullOrEmpty(route) || route == "/")
             {
                 var input = new GetContentItemById.Query { Id = CurrentOrganization.HomePageId.Value };
@@ -64,6 +63,9 @@ public class MainController : BaseController
                     {
                         return new ErrorActionViewResult(BuiltInWebTemplate.Error404, 404, new GenericError_RenderModel(), ViewData);
                     }
+
+                    pageSize = pageSize <= 0 ? view.Result.DefaultNumberOfItemsPerPage : pageSize > view.Result.MaxNumberOfItemsPerPage ? view.Result.MaxNumberOfItemsPerPage : pageSize;
+
                     var contentItems = await Mediator.Send(new GetContentItems.Query
                     {
                         ViewId = response.Result.ViewId.Value,
@@ -73,6 +75,7 @@ public class MainController : BaseController
                         OrderBy = orderBy,
                         Filter = filter
                     });
+
                     var modelAsList = ContentItemListResult_RenderModel.GetProjection(contentItems.Result, view.Result, search, filter, orderBy, pageSize, pageNumber);
                     var contentType = ContentType_RenderModel.GetProjection(view.Result.ContentType);
                     

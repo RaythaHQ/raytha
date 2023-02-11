@@ -34,7 +34,7 @@
                             <textarea class="form-control @Model.HasError("Description")" asp-for="@Model.Description"></textarea>
                             <div class="invalid-feedback">@Model.ErrorMessageFor("Description")</div>
                         </div>
-                    </div>  
+                    </div>
                     <input type="hidden" asp-for="@Model.Id">
                     <button type="submit" class="btn btn-success">Save changes</button>
                 </form>
