@@ -16,6 +16,9 @@ public class EditPublicSettings
         public bool IsPublished { get; init; }
         public string RoutePath { get; init; }
         public ShortGuid TemplateId { get; init; }
+        public int DefaultNumberOfItemsPerPage { get; init; }
+        public int MaxNumberOfItemsPerPage { get; init; }
+        public bool IgnoreClientFilterAndSortQueryParams { get; init; }
     }
 
     public class Validator : AbstractValidator<Command>
@@ -23,6 +26,8 @@ public class EditPublicSettings
         public Validator(IRaythaDbContext db)
         {
             RuleFor(x => x.RoutePath).NotEmpty();
+            RuleFor(x => x.DefaultNumberOfItemsPerPage).GreaterThan(0);
+            RuleFor(x => x.MaxNumberOfItemsPerPage).GreaterThan(0).GreaterThanOrEqualTo(p => p.DefaultNumberOfItemsPerPage);
             RuleFor(x => x).Custom((request, context) =>
             {
                 if (request.Id == ShortGuid.Empty)
@@ -89,6 +94,9 @@ public class EditPublicSettings
             entity.WebTemplateId = request.TemplateId;
             entity.Route.Path = request.RoutePath.ToUrlSlug();
             entity.IsPublished = request.IsPublished;
+            entity.DefaultNumberOfItemsPerPage = request.DefaultNumberOfItemsPerPage;
+            entity.MaxNumberOfItemsPerPage = request.MaxNumberOfItemsPerPage;
+            entity.IgnoreClientFilterAndSortQueryParams = request.IgnoreClientFilterAndSortQueryParams;
 
             await _db.SaveChangesAsync(cancellationToken);
             return new CommandResponseDto<ShortGuid>(entity.Id);

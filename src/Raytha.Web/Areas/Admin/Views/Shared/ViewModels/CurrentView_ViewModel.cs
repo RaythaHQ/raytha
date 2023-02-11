@@ -21,6 +21,7 @@ public class CurrentViewForList_ViewModel
     public string ContentTypeDeveloperName { get; set; }
     public bool IsPublished { get; set; }
     public string RoutePath { get; set; }
+    public bool IsHomePage { get; set; }
 }
 
 public interface IMustHaveFavoriteViewsForList

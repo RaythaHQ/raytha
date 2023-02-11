@@ -19,6 +19,7 @@ public record OrganizationSettingsDto
     public string SmtpUsername { get; init; } = string.Empty;
     public string SmtpPassword { get; init; } = string.Empty;
     public ShortGuid? HomePageId { get; init; }
+    public string HomePageType { get; init; } = string.Empty;
 
     public static Expression<Func<Domain.Entities.OrganizationSettings, OrganizationSettingsDto>> GetProjection()
     {
@@ -43,7 +44,8 @@ public record OrganizationSettingsDto
             SmtpPort = entity.SmtpPort,
             SmtpPassword = entity.SmtpPassword,
             SmtpUsername = entity.SmtpUsername,
-            HomePageId = entity.HomePageId
+            HomePageId = entity.HomePageId,
+            HomePageType = entity.HomePageType
         };
     }
 }

@@ -326,7 +326,7 @@
                     <br />
                     @if (Model.IsPublished)
                     {
-                        <form method="post" asp-route="contentitemsunpublish" , asp-route-id="@Model.Id" asp-route-contentType="@Model.CurrentView.ContentTypeDeveloperName">
+                        <form method="post" asp-route="contentitemsunpublish" asp-route-id="@Model.Id" asp-route-contentTypeDeveloperName="@Model.CurrentView.ContentTypeDeveloperName">
                             <button class="btn btn-sm btn-link text-danger">
                                 Unpublish @Model.CurrentView.ContentTypeLabelSingular.ToLower()
                             </button>
@@ -334,15 +334,13 @@
                     }
                     @if (Model.IsDraft)
                     {
-                        <form method="post" asp-route="contentitemsdiscarddraft" , asp-route-id="@Model.Id" asp-route-contentType="@Model.CurrentView.ContentTypeDeveloperName">
+                        <form method="post" asp-route="contentitemsdiscarddraft" asp-route-id="@Model.Id" asp-route-contentTypeDeveloperName="@Model.CurrentView.ContentTypeDeveloperName">
                             <button class="btn btn-sm btn-link text-danger">
                                 Discard draft
                             </button>
                         </form>
                     }
                 }
-
-
             </div>
         </div>
     </div>

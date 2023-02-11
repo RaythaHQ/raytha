@@ -5,7 +5,7 @@ using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Models;
 using Raytha.Domain.Entities;
 
-namespace Raytha.Application.ContentItems.Commands;
+namespace Raytha.Application.Views.Commands;
 
 public class SetAsHomePage
 {
@@ -24,12 +24,12 @@ public class SetAsHomePage
         {
             var entity = _db.OrganizationSettings.First();
 
-            var contentItemExists = _db.ContentItems.FirstOrDefault(p => p.Id == request.Id.Guid);
-            if (contentItemExists == null)
-                throw new NotFoundException("Content item not found", request.Id);
+            var viewExists = _db.Views.FirstOrDefault(p => p.Id == request.Id.Guid);
+            if (viewExists == null)
+                throw new NotFoundException("View not found", request.Id);
 
             entity.HomePageId = request.Id.Guid;
-            entity.HomePageType = Route.CONTENT_ITEM_TYPE;
+            entity.HomePageType = Route.VIEW_TYPE;
             await _db.SaveChangesAsync(cancellationToken);
 
             return new CommandResponseDto<ShortGuid>(entity.Id);

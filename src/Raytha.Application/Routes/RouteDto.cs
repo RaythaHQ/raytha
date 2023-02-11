@@ -16,15 +16,15 @@ public record RouteDto : BaseEntityDto
         {
             if (ViewId != ShortGuid.Empty)
             {
-                return "View";
+                return Route.VIEW_TYPE;
             }
             else if (ContentItemId != ShortGuid.Empty)
             {
-                return "ContentItem";
+                return Route.CONTENT_ITEM_TYPE;
             }
             else
             {
-                return "Unknown";
+                return Route.UNKNOWN_TYPE;
             }
         }
     }
