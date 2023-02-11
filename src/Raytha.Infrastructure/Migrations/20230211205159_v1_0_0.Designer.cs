@@ -12,8 +12,8 @@ using Raytha.Infrastructure.Persistence;
 namespace Raytha.Infrastructure.Migrations
 {
     [DbContext(typeof(RaythaDbContext))]
-    [Migration("20230206233252_dataprotectionkeys")]
-    partial class dataprotectionkeys
+    [Migration("20230211205159_v1_0_0")]
+    partial class v100
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -689,6 +689,10 @@ namespace Raytha.Infrastructure.Migrations
                     b.Property<Guid?>("HomePageId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<string>("HomePageType")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("OrganizationName")
                         .HasColumnType("nvarchar(max)");
 
@@ -972,11 +976,17 @@ namespace Raytha.Infrastructure.Migrations
                     b.Property<Guid?>("CreatorUserId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<int>("DefaultNumberOfItemsPerPage")
+                        .HasColumnType("int");
+
                     b.Property<string>("Description")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("DeveloperName")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IgnoreClientFilterAndSortQueryParams")
+                        .HasColumnType("bit");
 
                     b.Property<bool>("IsPublished")
                         .HasColumnType("bit");
@@ -989,6 +999,9 @@ namespace Raytha.Infrastructure.Migrations
 
                     b.Property<Guid?>("LastModifierUserId")
                         .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("MaxNumberOfItemsPerPage")
+                        .HasColumnType("int");
 
                     b.Property<Guid>("RouteId")
                         .HasColumnType("uniqueidentifier");
