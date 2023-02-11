@@ -1,3 +1,6 @@
+@using Microsoft.AspNetCore.Authorization;
+@using Raytha.Domain.Entities;
+@inject IAuthorizationService AuthorizationService
 @model ViewsPublicSettings_ViewModel
 @{
     ViewData["Title"] = $"{Model.CurrentView.ContentTypeLabelPlural} > {Model.CurrentView.Label} > Public settings";
@@ -77,6 +80,23 @@
                         <button type="submit" class="btn btn-success mx-2" name="SaveAsDraft" value="false">Save changes</button>
                     </div>
                 </form>
+                <br/>
+                @if ((await AuthorizationService.AuthorizeAsync(User, BuiltInSystemPermission.MANAGE_SYSTEM_SETTINGS_PERMISSION)).Succeeded)
+                {
+                    <hr />
+                    if (!Model.IsHomePage)
+                    {
+                        <form asp-route="viewssetashomepage" method="post" class="py-4" asp-route-contentTypeDeveloperName="@Model.CurrentView.ContentTypeDeveloperName" asp-route-viewId="@Model.Id">
+                            <div class="col-lg-12">
+                                <button type="submit" class="btn btn-secondary mx-2">Set as home page</button>
+                            </div>
+                        </form>
+                    }
+                    else
+                    {
+                        <p>This list view is currently set as the home page.</p>
+                    }
+                }
             </div>
         </div>
     </div>

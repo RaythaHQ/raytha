@@ -14,4 +14,5 @@ public class OrganizationSettings : BaseEntity
     public string? SmtpDefaultFromAddress { get; set; }
     public string? SmtpDefaultFromName { get; set; }
     public Guid? HomePageId { get; set; }
+    public string HomePageType { get; set; } = Route.CONTENT_ITEM_TYPE;
 }

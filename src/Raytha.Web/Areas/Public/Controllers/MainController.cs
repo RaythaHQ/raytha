@@ -30,22 +30,56 @@ public class MainController : BaseController
         {
             if (string.IsNullOrEmpty(route) || route == "/")
             {
-                var input = new GetContentItemById.Query { Id = CurrentOrganization.HomePageId.Value };
-                var response = await Mediator.Send(input);
-                if (!response.Result.IsPublished)
+
+                if (CurrentOrganization.HomePageType == Route.CONTENT_ITEM_TYPE)
                 {
-                    return new ErrorActionViewResult(BuiltInWebTemplate.Error404, 404, new GenericError_RenderModel(), ViewData);
+                    var input = new GetContentItemById.Query { Id = CurrentOrganization.HomePageId.Value };
+                    var response = await Mediator.Send(input);
+                    if (!response.Result.IsPublished)
+                    {
+                        return new ErrorActionViewResult(BuiltInWebTemplate.Error404, 404, new GenericError_RenderModel(), ViewData);
+                    }
+                    var model = ContentItem_RenderModel.GetProjection(response.Result);
+                    var contentType = ContentType_RenderModel.GetProjection(response.Result.ContentType);
+                    return new ContentItemActionViewResult(response.Result.WebTemplate.DeveloperName, model, contentType, ViewData);
                 }
-                var model = ContentItem_RenderModel.GetProjection(response.Result);
-                var contentType = ContentType_RenderModel.GetProjection(response.Result.ContentType);
-                return new ContentItemActionViewResult(response.Result.WebTemplate.DeveloperName, model, contentType, ViewData);
+                else if (CurrentOrganization.HomePageType == Route.VIEW_TYPE)
+                {
+                    var view = await Mediator.Send(new GetViewById.Query { Id = CurrentOrganization.HomePageId.Value });
+                    if (!view.Result.IsPublished)
+                    {
+                        return new ErrorActionViewResult(BuiltInWebTemplate.Error404, 404, new GenericError_RenderModel(), ViewData);
+                    }
+
+                    pageSize = pageSize <= 0 ? view.Result.DefaultNumberOfItemsPerPage : pageSize > view.Result.MaxNumberOfItemsPerPage ? view.Result.MaxNumberOfItemsPerPage : pageSize;
+
+                    var contentItems = await Mediator.Send(new GetContentItems.Query
+                    {
+                        ViewId = view.Result.Id,
+                        Search = search,
+                        PageNumber = pageNumber,
+                        PageSize = pageSize,
+                        OrderBy = orderBy,
+                        Filter = filter
+                    });
+
+                    var modelAsList = ContentItemListResult_RenderModel.GetProjection(contentItems.Result, view.Result, search, filter, orderBy, pageSize, pageNumber);
+                    var contentType = ContentType_RenderModel.GetProjection(view.Result.ContentType);
+
+                    return new ContentItemActionViewResult(
+                        view.Result.WebTemplate.DeveloperName,
+                        modelAsList,
+                        contentType,
+                        ViewData);
+                }
+                throw new Exception("Unknown content type");
             }
             else
             {
                 var input = new GetRouteByPath.Query { Path = route.TrimEnd('/') };
                 var response = await Mediator.Send(input);
 
-                if (response.Result.PathType == "ContentItem")
+                if (response.Result.PathType == Route.CONTENT_ITEM_TYPE)
                 {
                     var contentItem = await Mediator.Send(new GetContentItemById.Query { Id = response.Result.ContentItemId.Value });
                     if (!contentItem.Result.IsPublished)
@@ -56,7 +90,7 @@ public class MainController : BaseController
                     var contentType = ContentType_RenderModel.GetProjection(contentItem.Result.ContentType);
                     return new ContentItemActionViewResult(contentItem.Result.WebTemplate.DeveloperName, model, contentType, ViewData);
                 }
-                else if (response.Result.PathType == "View")
+                else if (response.Result.PathType == Route.VIEW_TYPE)
                 {
                     var view = await Mediator.Send(new GetViewById.Query { Id = response.Result.ViewId.Value });
                     if (!view.Result.IsPublished)

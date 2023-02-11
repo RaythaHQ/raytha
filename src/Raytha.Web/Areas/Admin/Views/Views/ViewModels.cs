@@ -42,6 +42,7 @@ public class ViewsListItem_ViewModel
     public string RoutePath { get; init; }
 
     //helpers
+    public bool IsHomePage { get; set; }
     public bool IsFavoriteForAdmin { get; init; }
 }
 
@@ -100,6 +101,8 @@ public class ViewsPublicSettings_ViewModel : FormSubmit_ViewModel, IMustHaveCurr
 
     [Display(Name = "Ignore client side filter and sort query parameters")]
     public bool IgnoreClientFilterAndSortQueryParams { get; set; }
+
+    public bool IsHomePage { get; set; }
 
     //helpers
     public string WebsiteUrl { get; set; }

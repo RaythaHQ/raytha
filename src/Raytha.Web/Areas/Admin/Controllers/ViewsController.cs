@@ -53,7 +53,8 @@ public class ViewsController : BaseController
             LastModifierUser = p.LastModifierUser != null ? p.LastModifierUser.FullName : "N/A",
             IsPublished = p.IsPublished.YesOrNo(),
             RoutePath = p.RoutePath,
-            IsFavoriteForAdmin = favoriteViewsForAdmin.Result.Items.Any(c => c.Id == p.Id)
+            IsFavoriteForAdmin = favoriteViewsForAdmin.Result.Items.Any(c => c.Id == p.Id),
+            IsHomePage = CurrentOrganization.HomePageId == p.Id
         });
 
         var viewModel = new ViewsPagination_ViewModel(items, response.Result.TotalCount);
@@ -178,7 +179,8 @@ public class ViewsController : BaseController
             WebsiteUrl = CurrentOrganization.WebsiteUrl,
             IgnoreClientFilterAndSortQueryParams = response.Result.IgnoreClientFilterAndSortQueryParams,
             MaxNumberOfItemsPerPage = response.Result.MaxNumberOfItemsPerPage,
-            DefaultNumberOfItemsPerPage = response.Result.DefaultNumberOfItemsPerPage
+            DefaultNumberOfItemsPerPage = response.Result.DefaultNumberOfItemsPerPage,
+            IsHomePage = CurrentOrganization.HomePageId == CurrentView.Id
         };
 
         return View(viewModel);
@@ -216,6 +218,26 @@ public class ViewsController : BaseController
             model.WebsiteUrl = CurrentOrganization.WebsiteUrl;
             return View(model);
         }
+    }
+
+    [ServiceFilter(typeof(GetOrSetRecentlyAccessedViewFilterAttribute))]
+    [Authorize(Policy = BuiltInSystemPermission.MANAGE_SYSTEM_SETTINGS_PERMISSION)]
+    [Route($"{RAYTHA_ROUTE_PREFIX}/{{{RouteConstants.CONTENT_TYPE_DEVELOPER_NAME}}}/views/set-as-home-page/{{viewId}}", Name = "viewssetashomepage")]
+    [HttpPost]
+    public async Task<IActionResult> SetAsHomePage()
+    {
+        var input = new SetAsHomePage.Command { Id = CurrentView.Id };
+        var response = await Mediator.Send(input);
+        if (response.Success)
+        {
+            SetSuccessMessage($"Home page updated successfully.");
+        }
+        else
+        {
+            SetErrorMessage($"There was an error setting this as the home page.", response.GetErrors());
+        }
+
+        return RedirectToAction("PublicSettings", "Views", new { contentTypeDeveloperName = CurrentView.ContentType.DeveloperName, viewId = CurrentView.Id });
     }
 
     [ServiceFilter(typeof(GetOrSetRecentlyAccessedViewFilterAttribute))]

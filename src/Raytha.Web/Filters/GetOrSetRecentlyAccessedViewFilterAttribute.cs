@@ -24,10 +24,13 @@ public class GetOrSetRecentlyAccessedViewFilterAttribute : ActionFilterAttribute
 {
     private readonly IMediator _mediator;
     private readonly ICurrentUser _currentUser;
-    public GetOrSetRecentlyAccessedViewFilterAttribute(IMediator mediator, ICurrentUser currentUser)
+    private readonly ICurrentOrganization _currentOrganization;
+
+    public GetOrSetRecentlyAccessedViewFilterAttribute(IMediator mediator, ICurrentUser currentUser, ICurrentOrganization currentOrganization)
     {
         _mediator = mediator;
         _currentUser = currentUser;
+        _currentOrganization = currentOrganization;
     }
 
     public override async Task OnActionExecutionAsync(ActionExecutingContext context, ActionExecutionDelegate next)
@@ -119,7 +122,8 @@ public class GetOrSetRecentlyAccessedViewFilterAttribute : ActionFilterAttribute
                     ContentTypeDescription = viewDto.ContentType.Description,
                     ContentTypeDeveloperName = viewDto.ContentType.DeveloperName,
                     IsPublished = viewDto.IsPublished,
-                    RoutePath = viewDto.RoutePath
+                    RoutePath = viewDto.RoutePath,
+                    IsHomePage = _currentOrganization.HomePageId == viewDto.Id
                 };
 
                 paginationModelForCurrentView.CurrentView = currentViewModel;
