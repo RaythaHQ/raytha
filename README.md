@@ -12,7 +12,7 @@ With Raytha, you'll be able to quickly and easily kickstart the development of y
 * Integrated Template Engine using popular Liquid syntax
 * Audit logs, role-based access controls, and single sign-on options (SAML and Json Web Token)
 * Supports local file system storage, Azure Blob, and S3-compatible providers
-* REST API automatically generated based on content types (coming soon)
+* REST API automatically generated based on content types
 
 [Learn more about Raytha on our website.](https://raytha.com) and the [Raytha Youtube channel](https://www.youtube.com/channel/UCuQtF2WwODs2DfZ4pV-2SfA).
 
