@@ -8,7 +8,7 @@
 {% endif %}
 <form
   class="ud-login-form"
-  action="/account/login/magic-link"
+  action="{{ PathBase }}/account/login/magic-link"
   method="post">
   <div class="ud-form-group">
     <label for="email" class="form-label">Email address</label>
@@ -31,7 +31,7 @@
     <ul>
       {% if Target.HasLoginByEmailAndPassword %}
         <li>
-          <a href="/account/login" class="btn btn-secondary">
+          <a href="{{ PathBase }}/account/login" class="btn btn-secondary">
             {{ Target.EmailAndPassword.LoginButtonText }}
           </a>
         </li>
@@ -39,7 +39,7 @@
       {% if Target.HasLoginBySingleSignOn %}
         {% for sso in Target.SingleSignOns %}
           <li>
-            <a href="/account/login/sso/{{ sso.DeveloperName }}" class="btn btn-secondary">
+            <a href="{{ PathBase }}/account/login/sso/{{ sso.DeveloperName }}" class="btn btn-secondary">
               {{ sso.LoginButtonText }}
             </a>
           </li>
@@ -52,7 +52,7 @@
 {% if Target.HasLoginByEmailAndPassword %}
   <p class="signup-option">
     No account?
-    <a href="/account/create">
+    <a href="{{ PathBase }}/account/create">
       Create account
     </a>
   </p>

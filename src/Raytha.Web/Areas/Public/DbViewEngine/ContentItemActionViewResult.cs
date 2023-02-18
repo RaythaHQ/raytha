@@ -58,7 +58,8 @@ public class ContentItemActionViewResult : IActionResult
             Target = _target,
             QueryParams = QueryCollectionToDictionary(httpContext.Request.Query),
             RequestVerificationToken = antiforgery.GetAndStoreTokens(httpContext).RequestToken,
-            ViewData = _viewDictionary
+            ViewData = _viewDictionary,
+            PathBase = currentOrg.PathBase
         };
 
         await using (var sw = new StreamWriter(httpContext.Response.Body))

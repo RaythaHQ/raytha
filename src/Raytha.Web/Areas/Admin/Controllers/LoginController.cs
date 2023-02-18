@@ -359,13 +359,13 @@ public class LoginController : BaseController
     [Route(RAYTHA_ROUTE_PREFIX + "/login-redirect", Name = "loginredirect")]
     public IActionResult LoginRedirect(string returnUrl = "")
     {
-        if (returnUrl.StartsWith($"/{RAYTHA_ROUTE_PREFIX}"))
+        if (returnUrl.StartsWith($"{CurrentOrganization.PathBase}/{RAYTHA_ROUTE_PREFIX}"))
         {
             return RedirectToAction("LoginWithEmailAndPassword", "Login", new { area = "Admin", returnUrl });
         }
         else
         {
-            return Redirect($"/account/login?returnUrl={returnUrl}");
+            return RedirectToAction("LoginWithEmailAndPassword", "Login", new { area = "Public", returnUrl });
         }
     }
 

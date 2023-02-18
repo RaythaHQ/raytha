@@ -31,6 +31,9 @@ public class Startup
 
     public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
     {
+        string pathBase = Configuration["PATHBASE"] ?? string.Empty;
+        app.UsePathBase(new PathString(pathBase));
+
         app.UseExceptionHandler(ExceptionsMiddleware.ErrorHandler());
 
         if (!env.IsDevelopment())

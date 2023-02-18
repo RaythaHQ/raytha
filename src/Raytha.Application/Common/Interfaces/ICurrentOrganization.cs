@@ -19,6 +19,8 @@ public interface ICurrentOrganization
     ShortGuid? HomePageId { get; }
     string HomePageType { get; }
 
+    string PathBase { get; }
+
     OrganizationTimeZoneConverter TimeZoneConverter { get; }
     IEnumerable<AuthenticationSchemeDto> AuthenticationSchemes { get; }
     IEnumerable<ContentTypeDto> ContentTypes { get; }

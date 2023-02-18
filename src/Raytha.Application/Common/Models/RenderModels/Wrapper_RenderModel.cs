@@ -13,9 +13,11 @@ public record Wrapper_RenderModel : IInsertTemplateVariable
 
     public string? RequestVerificationToken { get; set; }
     public object? ViewData { get; set; }
+    public string? PathBase { get; set; }
 
     public virtual IEnumerable<string> GetDeveloperNames()
     {
+        yield return nameof(PathBase);
         yield return nameof(QueryParams);
         yield return nameof(RequestVerificationToken);
         yield return nameof(ViewData);
