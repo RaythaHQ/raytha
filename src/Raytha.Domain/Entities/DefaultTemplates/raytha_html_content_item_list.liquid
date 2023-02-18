@@ -6,7 +6,7 @@
         {% for item in Target.Items %}
           <div class="ud-single-blog">
             <div class="ud-blog-content">
-              <span class="ud-blog-date">{{ item.CreationTime | date: "%b %d, %Y" }}</span>
+              <span class="ud-blog-date">{{ item.CreationTime | organization_time: "%b %e %Y, %l:%M:%S %P" }}</span>
               <h2 class="ud-blog-title">
                 <a href="/{{ item.RoutePath }}">
                   {{ item.PrimaryField }}

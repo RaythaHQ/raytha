@@ -1,4 +1,5 @@
 ﻿using Fluid;
+using Fluid.Filters;
 using Fluid.Values;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Utils;
@@ -25,7 +26,8 @@ public class RenderEngine : IRenderEngine
             options.MemberAccessStrategy = new UnsafeMemberAccessStrategy();
             options.TimeZone = DateTimeExtensions.GetTimeZoneInfo(DateTimeExtensions.DEFAULT_TIMEZONE);
             options.Filters.AddFilter("raytha_attachment_url", RaythaAttachmentUrl);
-            
+            options.Filters.AddFilter("organization_time", LocalDateFilter);
+
             var context = new TemplateContext(entity, options);
             string renderedHtml = template.Render(context);
             return renderedHtml;
@@ -36,8 +38,30 @@ public class RenderEngine : IRenderEngine
         }
     }
 
-    ValueTask<FluidValue> RaythaAttachmentUrl(FluidValue input, FilterArguments arguments, TemplateContext context)
+    public ValueTask<FluidValue> RaythaAttachmentUrl(FluidValue input, FilterArguments arguments, TemplateContext context)
     {
         return new StringValue(_relativeUrlBuilder.MediaRedirectToFileUrl(input.ToStringValue()));
+    }
+
+    public static ValueTask<FluidValue> LocalDateFilter(FluidValue input, FilterArguments arguments, TemplateContext context)
+    {
+        var value = TimeZoneConverter(input, context);
+        return ReferenceEquals(value, NilValue.Instance) ? value : MiscFilters.Date(value, arguments, context);
+    }
+
+    private static FluidValue TimeZoneConverter(FluidValue input, TemplateContext context)
+    {
+        if (!input.TryGetDateTimeInput(context, out var value))
+        {
+            return NilValue.Instance;
+        }
+
+        var utc = DateTime.SpecifyKind(value.DateTime, DateTimeKind.Utc);
+
+        // Create new offset for UTC
+        var localOffset = new DateTimeOffset(utc, TimeSpan.Zero);
+
+        var result = TimeZoneInfo.ConvertTime(localOffset, context.TimeZone);
+        return new DateTimeValue(result);
     }
 }
