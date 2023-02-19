@@ -5,12 +5,13 @@ using Raytha.Application.Common.Exceptions;
 using Microsoft.AspNetCore.Diagnostics;
 using System.Net;
 using System.Text.Json;
+using Microsoft.Extensions.Configuration;
 
 namespace Raytha.Web.Middlewares;
 
 public class ExceptionsMiddleware
 {
-    public static Action<IApplicationBuilder> ErrorHandler()
+    public static Action<IApplicationBuilder> ErrorHandler(string pathBase)
     {
         return errorApp =>
         {
@@ -19,7 +20,7 @@ public class ExceptionsMiddleware
                 var error = context.Features.Get<IExceptionHandlerFeature>();
                 var path = context.Request.Path;
                 byte[] errorBytes;
-                if (path.Value.ToLower().StartsWith("/raytha/api"))
+                if (path.Value.ToLower().StartsWith($"{pathBase}/raytha/api"))
                 {
                     if (error.Error is NotFoundException)
                     {
@@ -54,19 +55,19 @@ public class ExceptionsMiddleware
                 {
                     if (error.Error is NotFoundException)
                     {
-                        context.Response.Redirect("/raytha/404");
+                        context.Response.Redirect($"{pathBase}/raytha/404");
                     }
                     else if (error.Error is FormatException)
                     {
-                        context.Response.Redirect("/raytha/404");
+                        context.Response.Redirect($"{pathBase}/raytha/404");
                     }
                     else if (error.Error is UnauthorizedAccessException)
                     {
-                        context.Response.Redirect("/raytha/403");
+                        context.Response.Redirect($"{pathBase}/raytha/403");
                     }
                     else
                     {
-                        context.Response.Redirect("/raytha/500");
+                        context.Response.Redirect($"{pathBase}/raytha/500");
                     }
                 }
             });

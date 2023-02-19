@@ -34,7 +34,7 @@ public class Startup
         string pathBase = Configuration["PATHBASE"] ?? string.Empty;
         app.UsePathBase(new PathString(pathBase));
 
-        app.UseExceptionHandler(ExceptionsMiddleware.ErrorHandler());
+        app.UseExceptionHandler(ExceptionsMiddleware.ErrorHandler(pathBase));
 
         if (!env.IsDevelopment())
         {
@@ -70,7 +70,7 @@ public class Startup
 
         app.UseSwaggerUI(c =>
         {
-            c.SwaggerEndpoint("/raytha/api/v1/swagger.json", "Raytha API - V1");
+            c.SwaggerEndpoint($"{pathBase}/raytha/api/v1/swagger.json", "Raytha API - V1");
             c.RoutePrefix = $"raytha/api";
         });
 
