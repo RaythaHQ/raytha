@@ -232,7 +232,8 @@
                                 data-contentitems--attachment-fieldid-value="@Model.FieldValues[i].DeveloperName"
                                 data-contentitems--attachment-mimetypes-value="@Model.AllowedMimeTypes"
                                 data-contentitems--attachment-usedirectuploadtocloud-value="@Model.UseDirectUploadToCloud"
-                                data-contentitems--attachment-maxfilesize-value="@Model.MaxFileSize">                          
+                                data-contentitems--attachment-maxfilesize-value="@Model.MaxFileSize",
+                                data-contentitems--attachment-pathbase-value="@Model.PathBase">                          
                                     <div class="mb-3">
                                         <label class="form-label @Model.FieldValues[i].AsteriskCssIfRequired" asp-for="@Model.FieldValues[i].Label">@Model.FieldValues[i].Label</label>
                                         <div id="@(Model.FieldValues[i].DeveloperName)-uppy" data-contentitems--attachment-target="uppyContainer"></div>
@@ -257,7 +258,7 @@
                             else if (Model.FieldValues[i].FieldType == "one_to_one_relationship")
                             {
                                 <div class="col-lg-12 col-md-12 mt-4" id="raytha_field-@Model.FieldValues[i].DeveloperName">
-                                    <div class="mb-3" data-controller="shared--autocomplete" data-shared--autocomplete-src-value="/raytha/@Model.CurrentView.ContentTypeDeveloperName/relationship/autocomplete" data-shared--autocomplete-contenttype-value="@Model.FieldValues[i].RelatedContentTypeId">
+                                    <div class="mb-3" data-controller="shared--autocomplete" data-shared--autocomplete-src-value="@Model.PathBase/raytha/@Model.CurrentView.ContentTypeDeveloperName/relationship/autocomplete" data-shared--autocomplete-contenttype-value="@Model.FieldValues[i].RelatedContentTypeId">
                                         <div>
                                             <label class="form-label @Model.FieldValues[i].AsteriskCssIfRequired" asp-for="@Model.FieldValues[i].Label">@Model.FieldValues[i].Label</label>
                                             <div class="spinner-border spinner-border-sm mt-1 ml-2" role="status" data-shared--autocomplete-target="customerspinner">
