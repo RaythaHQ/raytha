@@ -6,6 +6,7 @@
     <AssemblyName>Raytha.Domain</AssemblyName>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <Configurations>Debug;Release;Debug without JS</Configurations>
   </PropertyGroup>
 
   <ItemGroup>
