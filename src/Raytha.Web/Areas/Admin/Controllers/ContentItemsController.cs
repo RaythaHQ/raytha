@@ -96,7 +96,8 @@ public class ContentItemsController : BaseController
             FieldValues = fieldValues,
             AllowedMimeTypes = FileStorageProviderSettings.AllowedMimeTypes,
             MaxFileSize = FileStorageProviderSettings.MaxFileSize,
-            UseDirectUploadToCloud = FileStorageProviderSettings.UseDirectUploadToCloud
+            UseDirectUploadToCloud = FileStorageProviderSettings.UseDirectUploadToCloud,
+            PathBase = CurrentOrganization.PathBase
         };
         return View(viewModel);
     }
@@ -159,7 +160,8 @@ public class ContentItemsController : BaseController
                 FieldValues = fieldValues,
                 AllowedMimeTypes = FileStorageProviderSettings.AllowedMimeTypes,
                 MaxFileSize = FileStorageProviderSettings.MaxFileSize,
-                UseDirectUploadToCloud = FileStorageProviderSettings.UseDirectUploadToCloud
+                UseDirectUploadToCloud = FileStorageProviderSettings.UseDirectUploadToCloud,
+                PathBase = CurrentOrganization.PathBase
             };
 
             return View(viewModel);
@@ -183,6 +185,7 @@ public class ContentItemsController : BaseController
             AllowedMimeTypes = FileStorageProviderSettings.AllowedMimeTypes,
             MaxFileSize = FileStorageProviderSettings.MaxFileSize,
             UseDirectUploadToCloud = FileStorageProviderSettings.UseDirectUploadToCloud,
+            PathBase = CurrentOrganization.PathBase,
             FieldValues = CurrentView.ContentType.ContentTypeFields.Select(p => new FieldValue_ViewModel
             {
                 Label = p.Label,
@@ -241,6 +244,7 @@ public class ContentItemsController : BaseController
                 AllowedMimeTypes = FileStorageProviderSettings.AllowedMimeTypes,
                 MaxFileSize = FileStorageProviderSettings.MaxFileSize,
                 UseDirectUploadToCloud = FileStorageProviderSettings.UseDirectUploadToCloud,
+                PathBase = CurrentOrganization.PathBase,
                 FieldValues = CurrentView.ContentType.ContentTypeFields.Select(p => new FieldValue_ViewModel
                 {
                     Label = p.Label,
@@ -427,7 +431,7 @@ public class ContentItemsController : BaseController
             TemplateId = response.Result.WebTemplate.Id,
             IsHomePage = CurrentOrganization.HomePageId == response.Result.Id,
             RoutePath = response.Result.RoutePath,
-            WebsiteUrl = CurrentOrganization.WebsiteUrl.TrimEnd('/') + "/",
+            WebsiteUrl = CurrentOrganization.WebsiteUrl.TrimEnd('/') + CurrentOrganization.PathBase + "/",
             AvailableTemplates = webTemplates.Result?.Items.ToDictionary(p => p.Id.ToString(), p => p.Label)
         };
         return View(viewModel);
@@ -462,7 +466,7 @@ public class ContentItemsController : BaseController
             var webTemplates = await Mediator.Send(new GetWebTemplates.Query { ContentTypeId = CurrentView.ContentTypeId, PageSize = int.MaxValue });
 
             model.AvailableTemplates = webTemplates.Result?.Items.ToDictionary(p => p.Id.ToString(), p => p.Label);
-            model.WebsiteUrl = CurrentOrganization.WebsiteUrl.TrimEnd('/') + "/";
+            model.WebsiteUrl = CurrentOrganization.WebsiteUrl.TrimEnd('/') + CurrentOrganization.PathBase + "/";
             return View(model);
         }
     }

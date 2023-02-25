@@ -14,6 +14,9 @@
     "@babel/core": "^7.20.12",
     "@babel/preset-env": "^7.20.2",
     "babel-loader": "^9.1.2",
+    "css-loader": "^6.7.3",
+    "file-loader": "^6.2.0",
+    "style-loader": "^3.3.1",
     "vanillajs-datepicker": "^1.2.0",
     "webpack": "^5.75.0",
     "webpack-cli": "^5.0.1"
@@ -28,6 +31,8 @@
     "@uppy/xhr-upload": "^3.0.4",
     "bootstrap": "^5.2.3",
     "lodash.debounce": "^4.0.8",
+    "monaco-editor": "^0.35.0",
+    "monaco-editor-webpack-plugin": "^7.0.1",
     "notyf": "^3.10.0",
     "simplebar": "^5.3.9",
     "stimulus": "^3.2.1",

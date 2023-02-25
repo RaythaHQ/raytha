@@ -6,16 +6,16 @@
         {% for item in Target.Items %}
           <div class="ud-single-blog">
             <div class="ud-blog-content">
-              <span class="ud-blog-date">{{ item.CreationTime | date: "%b %d, %Y" }}</span>
+              <span class="ud-blog-date">{{ item.CreationTime | organization_time: "%b %e %Y, %l:%M:%S %P" }}</span>
               <h2 class="ud-blog-title">
-                <a href="/{{ item.RoutePath }}">
+                <a href="{{ PathBase }}/{{ item.RoutePath }}">
                   {{ item.PrimaryField }}
                 </a>
               </h2>
               {% if item.PublishedContent.content %}
                 <div class="ud-blog-desc">
                   {{ item.PublishedContent.content | strip_html | truncate: 280, "..." }}
-                  <a href="/{{ item.RoutePath }}">read more</a>
+                  <a href="{{ PathBase }}/{{ item.RoutePath }}">read more</a>
                 </div>
               {% endif %}
             </div>
@@ -30,7 +30,7 @@
           {% endif %}
           <ul class="pagination">
             <li class="page-item {% if Target.PreviousDisabledCss %}disabled{% endif %}">
-              <a href="/{{ Target.RoutePath }}?pageNumber={{ Target.PageNumber | minus: 1 }}" class="page-link">
+              <a href="{{ PathBase }}/{{ Target.RoutePath }}?pageNumber={{ Target.PageNumber | minus: 1 }}" class="page-link">
 				 «
 			  </a>
             </li>
@@ -41,7 +41,7 @@
             {% endif %}
             {% for i in (Target.FirstVisiblePageNumber..Target.LastVisiblePageNumber) %}
               <li class="page-item {% if Target.PageNumber == i %}active{% endif %}">
-                <a href="/{{ Target.RoutePath }}?pageNumber={{ i }}" class="page-link">{{ i }}</a>
+                <a href="{{ PathBase }}/{{ Target.RoutePath }}?pageNumber={{ i }}" class="page-link">{{ i }}</a>
               </li>
             {% endfor %}
 
@@ -51,7 +51,7 @@
               </li>
             {% endif %}
             <li class="page-item {% if Target.NextDisabledCss %}disabled{% endif %}">
-              <a href="/{{ Target.RoutePath }}?pageNumber={{ Target.PageNumber | plus: 1 }}" class="page-link">
+              <a href="{{ PathBase }}/{{ Target.RoutePath }}?pageNumber={{ Target.PageNumber | plus: 1 }}" class="page-link">
 				 »
 			  </a>
             </li>

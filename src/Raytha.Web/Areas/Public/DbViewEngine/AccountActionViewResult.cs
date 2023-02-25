@@ -50,7 +50,8 @@ public class AccountActionViewResult : IActionResult
             CurrentUser = CurrentUser_RenderModel.GetProjection(currentUser),
             Target = _target,
             ViewData = _viewDictionary,
-            QueryParams = QueryCollectionToDictionary(httpContext.Request.Query)
+            QueryParams = QueryCollectionToDictionary(httpContext.Request.Query),
+            PathBase = currentOrg.PathBase
         };
 
         await using (var sw = new StreamWriter(httpContext.Response.Body))

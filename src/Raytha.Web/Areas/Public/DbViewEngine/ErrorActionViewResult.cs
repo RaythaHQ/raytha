@@ -55,7 +55,8 @@ public class ErrorActionViewResult : IActionResult
             Target = _target,
             RequestVerificationToken = antiforgery.GetAndStoreTokens(httpContext).RequestToken,
             QueryParams = QueryCollectionToDictionary(httpContext.Request.Query),
-            ViewData = _viewDictionary
+            ViewData = _viewDictionary,
+            PathBase = currentOrg.PathBase
         };
 
         await using (var sw = new StreamWriter(httpContext.Response.Body))

@@ -176,7 +176,7 @@ public class ViewsController : BaseController
             IsPublished = response.Result.IsPublished,
             TemplateId = response.Result.WebTemplateId,
             AvailableTemplates = webTemplates.Result?.Items.ToDictionary(p => p.Id.ToString(), p => p.Label),
-            WebsiteUrl = CurrentOrganization.WebsiteUrl,
+            WebsiteUrl = CurrentOrganization.WebsiteUrl.TrimEnd('/') + CurrentOrganization.PathBase + "/",
             IgnoreClientFilterAndSortQueryParams = response.Result.IgnoreClientFilterAndSortQueryParams,
             MaxNumberOfItemsPerPage = response.Result.MaxNumberOfItemsPerPage,
             DefaultNumberOfItemsPerPage = response.Result.DefaultNumberOfItemsPerPage,
@@ -215,7 +215,7 @@ public class ViewsController : BaseController
             SetErrorMessage("There were validation errors with your form submission. Please correct the fields below.", response.GetErrors());
             var webTemplates = await Mediator.Send(new GetWebTemplates.Query { ContentTypeId = CurrentView.ContentTypeId, PageSize = int.MaxValue });
             model.AvailableTemplates = webTemplates.Result?.Items.ToDictionary(p => p.Id.ToString(), p => p.Label);
-            model.WebsiteUrl = CurrentOrganization.WebsiteUrl;
+            model.WebsiteUrl = CurrentOrganization.WebsiteUrl.TrimEnd('/') + CurrentOrganization.PathBase + "/";
             return View(model);
         }
     }

@@ -11,7 +11,8 @@ export default class extends Controller {
         fieldid: String,
         usedirectuploadtocloud: Boolean,
         mimetypes: String,
-        maxfilesize: Number
+        maxfilesize: Number,
+        pathbase: String
     }
 
     static targets = ['hidden', 'removeButton', 'uppyContainer', 'uppyProgress', 'uppyInfo', 'viewFile', 'uppyInfoObjectKey']
@@ -39,10 +40,10 @@ export default class extends Controller {
 
         if (!this.usedirectuploadtocloudValue) {
             this.uppy.use(XHRUpload, {
-                endpoint: `/raytha/media-items/upload`
+                endpoint: `${this.pathbaseValue}/raytha/media-items/upload`
             })
             this.uppy.on('upload-success', (file, response) => {
-                const URL = `/raytha/media-items/objectkey/${response.body.fields.objectKey}`;
+                const URL = `${this.pathbaseValue}/raytha/media-items/objectkey/${response.body.fields.objectKey}`;
                 this.hideChooseFiles();
                 this.hiddenTarget.value = response.body.fields.objectKey;
                 this.uppyInfoObjectKeyTarget.innerText = response.body.fields.objectKey;
@@ -51,7 +52,7 @@ export default class extends Controller {
         } else {
             this.uppy.use(AwsS3, {
                 getUploadParameters: file => {
-                    const URL = `/raytha/media-items/presign`;
+                    const URL = `${this.pathbaseValue}/raytha/media-items/presign`;
                     return fetch(URL, {
                         method: 'POST',
                         headers: {
@@ -79,7 +80,7 @@ export default class extends Controller {
             })
             this.uppy.on('upload-success', (file, response) => {
                 console.log(response);
-                const CREATE_MEDIA_ENDPOINT = `/raytha/media-items/create-after-upload`;
+                const CREATE_MEDIA_ENDPOINT = `${this.pathbaseValue}/raytha/media-items/create-after-upload`;
 
                 //make post call
                 fetch(CREATE_MEDIA_ENDPOINT, {
@@ -99,7 +100,7 @@ export default class extends Controller {
                 })
                 .then(response => response.json())
                 .then(data => {
-                    const URL = `/raytha/media-items/objectkey/${file.meta.objectKey}`;
+                    const URL = `${this.pathbaseValue}/raytha/media-items/objectkey/${file.meta.objectKey}`;
                     this.hideChooseFiles();
                     this.hiddenTarget.value = file.meta.objectKey;
                     this.uppyInfoObjectKeyTarget.innerText = file.meta.objectKey;

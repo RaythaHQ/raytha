@@ -20,7 +20,6 @@ using Raytha.Web.Areas.Public.DbViewEngine;
 using Raytha.Web.Areas.Public.Views.Login;
 using Microsoft.AspNetCore.Http;
 using Raytha.Application.Common.Models.RenderModels;
-using Azure;
 using Raytha.Application.Login.Queries;
 
 namespace Raytha.Web.Areas.Public.Controllers;
