@@ -15,6 +15,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{5BD14A0C-052
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{736D110C-2DEA-4E2D-A164-5BAFCB0865C6}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Raytha.Domain.UnitTests", "tests\Raytha.Domain.UnitTests\Raytha.Domain.UnitTests.csproj", "{8AE80E8A-C677-410E-BF24-17C9E8F7B94C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug without JS|Any CPU = Debug without JS|Any CPU
@@ -46,6 +48,12 @@ Global
 		{FC2608C8-0532-4548-AD82-1E51E9F972B6}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FC2608C8-0532-4548-AD82-1E51E9F972B6}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{FC2608C8-0532-4548-AD82-1E51E9F972B6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8AE80E8A-C677-410E-BF24-17C9E8F7B94C}.Debug without JS|Any CPU.ActiveCfg = Debug|Any CPU
+		{8AE80E8A-C677-410E-BF24-17C9E8F7B94C}.Debug without JS|Any CPU.Build.0 = Debug|Any CPU
+		{8AE80E8A-C677-410E-BF24-17C9E8F7B94C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8AE80E8A-C677-410E-BF24-17C9E8F7B94C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8AE80E8A-C677-410E-BF24-17C9E8F7B94C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8AE80E8A-C677-410E-BF24-17C9E8F7B94C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -55,6 +63,7 @@ Global
 		{A51C9862-86A1-4EB9-800E-0CDDEDBCAF6B} = {5BD14A0C-0528-49ED-8FB8-88A3231A842C}
 		{C429E709-CA75-4927-96BD-F34863D0ECC6} = {5BD14A0C-0528-49ED-8FB8-88A3231A842C}
 		{FC2608C8-0532-4548-AD82-1E51E9F972B6} = {5BD14A0C-0528-49ED-8FB8-88A3231A842C}
+		{8AE80E8A-C677-410E-BF24-17C9E8F7B94C} = {736D110C-2DEA-4E2D-A164-5BAFCB0865C6}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {87B54121-A5FA-4930-9CB5-C4FC73894E01}
