@@ -1,4 +1,6 @@
 const MonacoWebpackPlugin = require('monaco-editor-webpack-plugin');
+const MiniCssExtractPlugin = require('mini-css-extract-plugin');
+const HtmlWebpackPlugin = require('html-webpack-plugin');
 const path = require("path");
 
 module.exports = (env, argv) =>
@@ -39,7 +41,14 @@ module.exports = (env, argv) =>
                 }
             ],
         },
-        plugins: [new MonacoWebpackPlugin()]
+        plugins: [
+            new MonacoWebpackPlugin({ "languages": ['javascript'] }),
+            new MiniCssExtractPlugin(),
+            new HtmlWebpackPlugin({
+                title: 'Raytha HTML Webpack',
+                meta: { viewport: 'width=device-width, initial-scale=1' }
+            }),
+        ]
     };
 
     if (isDevBuild);

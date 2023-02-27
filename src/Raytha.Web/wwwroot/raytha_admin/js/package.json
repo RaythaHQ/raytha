@@ -30,7 +30,9 @@
     "@uppy/progress-bar": "^3.0.1",
     "@uppy/xhr-upload": "^3.0.4",
     "bootstrap": "^5.2.3",
+    "html-webpack-plugin": "^5.5.0",
     "lodash.debounce": "^4.0.8",
+    "mini-css-extract-plugin": "^2.7.2",
     "monaco-editor": "^0.35.0",
     "monaco-editor-webpack-plugin": "^7.0.1",
     "notyf": "^3.10.0",
@@ -38,6 +40,7 @@
     "stimulus": "^3.2.1",
     "stimulus-sortable": "^4.1.0",
     "sweetalert2": "^11.4.8",
+    "tinymce": "^6.3.2",
     "trix": "^2.0.4",
     "uuid": "^9.0.0"
   }
