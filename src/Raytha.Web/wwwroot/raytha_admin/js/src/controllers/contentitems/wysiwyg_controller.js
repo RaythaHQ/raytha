@@ -34,7 +34,9 @@ import 'tinymce/plugins/visualchars';
 
 export default class extends Controller {
     static targets = ['editor']
-    static values = { usedirectuploadtocloud: Boolean, mimetypes: String, maxfilesize: Number }
+    static values = {
+        pathbase: String
+    }
 
     connect() {
         tinymce.init({
@@ -46,7 +48,7 @@ export default class extends Controller {
             promotion: false,
             skin: false,
             content_css: false,
-            images_upload_url: '/raytha/media-items/upload',
+            images_upload_url: `${this.pathbaseValue}/raytha/media-items/upload`,
             file_picker_types: 'file image media',
             relative_urls: false,
             remove_script_host: true,

@@ -6,7 +6,12 @@ import Swal from 'sweetalert2'
 
 export default class extends Controller {
     static targets = ['editor', 'toolbar']
-    static values = { usedirectuploadtocloud: Boolean, mimetypes: String, maxfilesize: Number }
+    static values = {
+        usedirectuploadtocloud: Boolean,
+        mimetypes: String,
+        maxfilesize: Number,
+        pathbase: String
+    }
 
     connect() {
         this.boundAttachmentEvent = this.attachmentEvent.bind(this)
@@ -38,10 +43,10 @@ export default class extends Controller {
 
         if (!this.usedirectuploadtocloud) {
             uppy.use(XHRUpload, {
-                endpoint: `/raytha/media-items/upload`
+                endpoint: `${this.pathbaseValue}/raytha/media-items/upload`
             })
             uppy.on('upload-success', (file, response) => {
-                const URL = `/raytha/media-items/objectkey/${response.body.fields.objectKey}`;
+                const URL = `${this.pathbaseValue}/raytha/media-items/objectkey/${response.body.fields.objectKey}`;
                 var attributes = {
                     url: URL,
                     href: URL
@@ -51,7 +56,7 @@ export default class extends Controller {
         } else {
             uppy.use(AwsS3, {
                 getUploadParameters: file => {
-                    const URL = `/raytha/media-items/presign`;
+                    const URL = `${this.pathbaseValue}/raytha/media-items/presign`;
                     return fetch(URL, {
                         method: 'POST',
                         headers: {
@@ -79,13 +84,30 @@ export default class extends Controller {
             })
             uppy.on('upload-success', (file, response) => {
                 console.log(response);
-                const URL = `/raytha/media-items/objectkey/${file.meta.objectKey}`;
+                const URL = `${this.pathbaseValue}/raytha/media-items/objectkey/${file.meta.objectKey}`;
                 var attributes = {
                     url: URL,
                     href: URL
                 }
                 attachment.setAttributes(attributes)
+
                 //make post call
+                const CREATE_MEDIA_ENDPOINT = `${this.pathbaseValue}/raytha/media-items/create-after-upload`;
+                fetch(CREATE_MEDIA_ENDPOINT, {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        filename: file.name,
+                        contentType: file.type,
+                        extension: file.extension,
+                        id: file.meta.id,
+                        objectKey: file.meta.objectKey,
+                        length: file.size
+                    })
+                })
             })
         }
 
