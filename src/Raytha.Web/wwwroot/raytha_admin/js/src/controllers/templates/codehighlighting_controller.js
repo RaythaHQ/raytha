@@ -19,7 +19,6 @@ export default class extends Controller {
 
     updateEditorFieldValue() {
         const content = this.editor.getValue();
-        console.log(content);
         this.textareaTarget.value = content;
     }
 }

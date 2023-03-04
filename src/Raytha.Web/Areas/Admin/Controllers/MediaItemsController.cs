@@ -91,7 +91,7 @@ public class MediaItemsController : BaseController
             if (response.Success)
             {
                 var url = RelativeUrlBuilder.MediaRedirectToFileUrl(objectKey);
-                return Json(new { url, success = true, fields = new { id = idForKey.ToString(), fileName = file.FileName, file.ContentType, objectKey } });
+                return Json(new { url, location = url, success = true, fields = new { id = idForKey.ToString(), fileName = file.FileName, file.ContentType, objectKey } });
             }
             else
             {
