@@ -17,6 +17,10 @@ export default class extends Controller {
         this.editor.onDidChangeModelContent(this.boundEditorChangedEvent);
     }
 
+    disconnect() {
+        this.editor.dispose();
+    }
+
     updateEditorFieldValue() {
         const content = this.editor.getValue();
         this.textareaTarget.value = content;
