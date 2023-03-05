@@ -210,7 +210,8 @@
                                 data-controller="contentitems--longtext" 
                                 data-contentitems--longtext-mimetypes-value="@Model.AllowedMimeTypes"
                                 data-contentitems--longtext-usedirectuploadtocloud-value="@Model.UseDirectUploadToCloud"
-                                data-contentitems--longtext-maxfilesize-value="@Model.MaxFileSize">
+                                data-contentitems--longtext-maxfilesize-value="@Model.MaxFileSize"
+                                data-contentitems--longtext-pathbase-value="@Model.PathBase">
                                     <div class="mb-3">
                                         <label class="form-label @Model.FieldValues[i].AsteriskCssIfRequired" asp-for="@Model.FieldValues[i].Label">@Model.FieldValues[i].Label</label>
                                         <input class="@Model.HasError(Model.FieldValues[i].DeveloperName)" id="input-@Model.FieldValues[i].DeveloperName" value="@Model.FieldValues[i].Value" type="hidden" asp-for="@Model.FieldValues[i].Value">
@@ -224,6 +225,22 @@
                                         }
                                     </div>
                                 </div>                            
+                            }
+                            else if (Model.FieldValues[i].FieldType == "wysiwyg")
+                            {
+                                <div class="col-lg-12 mt-4" id="raytha_field-@Model.FieldValues[i].DeveloperName"
+                             data-controller="contentitems--wysiwyg"
+                             data-contentitems--attachment-pathbase-value="@Model.PathBase">
+                                    <div class="mb-3">
+                                        <label class="form-label @Model.FieldValues[i].AsteriskCssIfRequired" asp-for="@Model.FieldValues[i].Label">@Model.FieldValues[i].Label</label>
+                                        <textarea data-contentitems--wysiwyg-target="editor" data-developername="@Model.FieldValues[i].DeveloperName" id="input-@Model.FieldValues[i].DeveloperName" asp-for="@Model.FieldValues[i].Value"></textarea>
+                                        <div class="invalid-feedback">@Model.ErrorMessageFor(Model.FieldValues[i].DeveloperName)</div>
+                                        @if (!string.IsNullOrEmpty(Model.FieldValues[i].Description))
+                                        {
+                                            <div class="form-text">@Model.FieldValues[i].Description</div>
+                                        }
+                                    </div>
+                                </div>
                             }
                             else if (Model.FieldValues[i].FieldType == "attachment")
                             {

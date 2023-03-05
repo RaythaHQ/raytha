@@ -1,6 +1,5 @@
 ﻿using Raytha.Domain.ValueObjects.FieldValues;
 using System.ComponentModel.DataAnnotations.Schema;
-using System.Text.Json.Serialization;
 
 namespace Raytha.Domain.ValueObjects.FieldTypes;
 
@@ -38,6 +37,7 @@ public abstract class BaseFieldType : ValueObject
 
     public static BaseFieldType SingleLineText => new SingleLineTextFieldType();
     public static BaseFieldType LongText => new LongTextFieldType();
+    public static BaseFieldType Wysiwyg => new WysiwygFieldType();
     public static BaseFieldType Radio => new RadioFieldType();
     public static BaseFieldType Dropdown => new DropdownFieldType();
     public static BaseFieldType Checkbox => new CheckboxFieldType();
@@ -77,6 +77,7 @@ public abstract class BaseFieldType : ValueObject
         {
             yield return SingleLineText;
             yield return LongText;
+            yield return Wysiwyg;
             yield return Radio;
             yield return Dropdown;
             yield return Checkbox;

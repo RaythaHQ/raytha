@@ -26,6 +26,7 @@ public class EditWebTemplate
         public Validator(IRaythaDbContext db)
         {
             RuleFor(x => x.Label).NotEmpty();
+            RuleFor(x => x.Content).NotEmpty();
             RuleFor(x => x.Content).NotEmpty().Must(WebTemplateExtensions.HasRenderBodyTag).When(p => p.IsBaseLayout)
                 .WithMessage("Content must have the {% renderbody %} tag if it is a base layout.");
             RuleFor(x => x).Custom((request, context) =>

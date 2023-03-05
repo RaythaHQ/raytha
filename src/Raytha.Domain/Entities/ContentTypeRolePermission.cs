@@ -45,7 +45,7 @@ public class BuiltInContentTypePermission : ValueObject
 
         if (type == null)
         {
-            throw new UnsupportedTemplateTypeException(developerName);
+            throw new UnsupportedContentTypePermissionException(developerName);
         }
 
         return type;
@@ -74,7 +74,7 @@ public class BuiltInContentTypePermission : ValueObject
 
             if (type == null)
             {
-                throw new UnsupportedTemplateTypeException(developerName);
+                throw new UnsupportedContentTypePermissionException(developerName);
             }
 
             builtPermission = builtPermission | type.Permission;

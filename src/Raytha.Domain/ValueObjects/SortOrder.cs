@@ -1,6 +1,4 @@
-﻿using Raytha.Domain.Exceptions;
-
-namespace Raytha.Domain.ValueObjects;
+﻿namespace Raytha.Domain.ValueObjects;
 
 public class SortOrder : ValueObject
 {

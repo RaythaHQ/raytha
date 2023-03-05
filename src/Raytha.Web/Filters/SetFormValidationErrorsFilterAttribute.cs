@@ -19,7 +19,7 @@ public class SetFormValidationErrorsFilterAttribute : ActionFilterAttribute
             {
                 if (controller.ViewData["ValidationErrors"] != null)
                 {
-                    validationModel.ValidationFailures = controller.ViewData["ValidationErrors"] as IEnumerable<ValidationFailure>;
+                    validationModel.ValidationFailures = controller.ViewData["ValidationErrors"] as Dictionary<string, string>;
                     controller.ViewData.Model = validationModel;
                 }
             }
