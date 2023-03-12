@@ -31,6 +31,11 @@
           "toc.yml",
           "*.md"
         ]
+      },
+      {
+        "files": [
+          "apitoc/**"
+        ]
       }
     ],
     "resource": [
@@ -55,7 +60,8 @@
     "globalMetadataFiles": [],
     "fileMetadataFiles": [],
     "template": [
-      "default"
+      "default",
+      "raytha_template"
     ],
     "postProcessors": [],
     "noLangKeyword": false,

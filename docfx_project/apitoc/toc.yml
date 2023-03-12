@@ -1,0 +1,853 @@
+### YamlMime:TableOfContent
+- name: Admins
+  items:
+  - name: Commands
+    items:
+    - uid: Raytha.Application.Admins.Commands.CreateAdmin.Command
+      name: CreateAdmin
+    - uid: Raytha.Application.Admins.Commands.DeleteAdmin.Command
+      name: DeleteAdmin
+    - uid: Raytha.Application.Admins.Commands.EditAdmin.Command
+      name: EditAdmin
+    - uid: Raytha.Application.Admins.Commands.RemoveAdminAccess.Command
+      name: RemoveAdminAccess
+    - uid: Raytha.Application.Admins.Commands.ResetPassword.Command
+      name: ResetPassword
+    - uid: Raytha.Application.Admins.Commands.SetIsActive.Command
+      name: SetIsActive
+    - uid: Raytha.Application.Admins.Commands.CreateApiKey.Command
+      name: CreateApiKey
+    - uid: Raytha.Application.Admins.Commands.DeleteApiKey.Command
+      name: DeleteApiKey
+  - name: Queries
+    items:
+    - uid: Raytha.Application.Admins.Queries.GetAdminById.Query
+      name: GetAdminById
+    - uid: Raytha.Application.Admins.Queries.GetAdmins.Query
+      name: GetAdmins
+    - uid: Raytha.Application.Admins.Queries.GetApiKeysForAdmin.Query
+      name: GetApiKeysForAdmin
+- name: AuditLogs
+  items:
+    - name: Queries
+      items:
+      - uid: Raytha.Application.AuditLogs.Queries.GetAuditLogs.Query
+        name: GetAuditLogs
+- name: AuthenticationSchemes
+  items:
+    - name: Commands
+      items:
+      - uid: Raytha.Application.AuthenticationSchemes.Commands.CreateAuthenticationScheme.Command
+        name: CreateAuthenticationScheme
+      - uid: Raytha.Application.AuthenticationSchemes.Commands.DeleteAuthenticationScheme.Command
+        name: DeleteAuthenticationScheme
+      - uid: Raytha.Application.AuthenticationSchemes.Commands.EditAuthenticationScheme.Command
+        name: EditAuthenticationScheme   
+    - name: Queries
+      items:
+      - uid: Raytha.Application.AuthenticationSchemes.Queries.GetAuthenticationSchemeById.Query
+        name: GetAuthenticationSchemeById
+      - uid: Raytha.Application.AuthenticationSchemes.Queries.GetAuthenticationSchemeByName.Query
+        name: GetAuthenticationSchemeByName
+      - uid: Raytha.Application.AuthenticationSchemes.Queries.GetAuthenticationSchemes.Query
+        name: GetAuthenticationSchemes
+- name: ContentItems
+  items:
+  - name: Commands
+    items:
+    - uid: Raytha.Application.ContentItems.Commands.CreateContentItem.Command
+      name: CreateContentItem
+    - uid: Raytha.Application.ContentItems.Commands.DeleteAlreadyDeletedContentItem.Command
+      name: DeleteAlreadyDeletedContentItem
+    - uid: Raytha.Application.ContentItems.Commands.DeleteContentItem.Command
+      name: DeleteContentItem
+    - uid: Raytha.Application.ContentItems.Commands.DiscardDraftContentItem.Command
+      name: DiscardDraftContentItem
+    - uid: Raytha.Application.ContentItems.Commands.EditContentItem.Command
+      name: EditContentItem
+    - uid: Raytha.Application.ContentItems.Commands.EditContentItemSettings.Command
+      name: EditContentItemSettings
+    - uid: Raytha.Application.ContentItems.Commands.RestoreContentItem.Command
+      name: RestoreContentItem
+    - uid: Raytha.Application.ContentItems.Commands.RevertContentItem.Command
+      name: RevertContentItem
+    - uid: Raytha.Application.ContentItems.Commands.SetAsHomePage.Command
+      name: SetAsHomePage
+    - uid: Raytha.Application.ContentItems.Commands.UnpublishContentItem.Command
+      name: UnpublishContentItem
+  - name: Queries
+    items:
+    - uid: Raytha.Application.ContentItems.Queries.GetContentItemById.Query
+      name: GetContentItemById
+    - uid: Raytha.Application.ContentItems.Queries.GetContentItemRevisionsByContentItemId.Query
+      name: GetContentItemRevisionsByContentItemId
+    - uid: Raytha.Application.ContentItems.Queries.GetContentItems.Query
+      name: GetContentItems
+    - uid: Raytha.Application.ContentItems.Queries.GetDeletedContentItems.Query
+      name: GetDeletedContentItems
+- uid: Raytha.Application.ContentTypes
+  name: Raytha.Application.ContentTypes
+  items:
+  - uid: Raytha.Application.ContentTypes.ContentType_RenderModel
+    name: ContentType_RenderModel
+  - uid: Raytha.Application.ContentTypes.ContentTypeDto
+    name: ContentTypeDto
+  - uid: Raytha.Application.ContentTypes.ContentTypeFieldChoiceInputDto
+    name: ContentTypeFieldChoiceInputDto
+  - uid: Raytha.Application.ContentTypes.ContentTypeFieldDto
+    name: ContentTypeFieldDto
+  - uid: Raytha.Application.ContentTypes.ContentTypeListItemDto
+    name: ContentTypeListItemDto
+- uid: Raytha.Application.ContentTypes.Commands
+  name: Raytha.Application.ContentTypes.Commands
+  items:
+  - uid: Raytha.Application.ContentTypes.Commands.CreateContentType
+    name: CreateContentType
+  - uid: Raytha.Application.ContentTypes.Commands.CreateContentType.Command
+    name: CreateContentType.Command
+  - uid: Raytha.Application.ContentTypes.Commands.CreateContentType.Handler
+    name: CreateContentType.Handler
+  - uid: Raytha.Application.ContentTypes.Commands.CreateContentType.Validator
+    name: CreateContentType.Validator
+  - uid: Raytha.Application.ContentTypes.Commands.CreateContentTypeField
+    name: CreateContentTypeField
+  - uid: Raytha.Application.ContentTypes.Commands.CreateContentTypeField.Command
+    name: CreateContentTypeField.Command
+  - uid: Raytha.Application.ContentTypes.Commands.CreateContentTypeField.Handler
+    name: CreateContentTypeField.Handler
+  - uid: Raytha.Application.ContentTypes.Commands.CreateContentTypeField.Validator
+    name: CreateContentTypeField.Validator
+  - uid: Raytha.Application.ContentTypes.Commands.DeleteContentTypeField
+    name: DeleteContentTypeField
+  - uid: Raytha.Application.ContentTypes.Commands.DeleteContentTypeField.Command
+    name: DeleteContentTypeField.Command
+  - uid: Raytha.Application.ContentTypes.Commands.DeleteContentTypeField.Handler
+    name: DeleteContentTypeField.Handler
+  - uid: Raytha.Application.ContentTypes.Commands.DeleteContentTypeField.Validator
+    name: DeleteContentTypeField.Validator
+  - uid: Raytha.Application.ContentTypes.Commands.EditContentType
+    name: EditContentType
+  - uid: Raytha.Application.ContentTypes.Commands.EditContentType.Command
+    name: EditContentType.Command
+  - uid: Raytha.Application.ContentTypes.Commands.EditContentType.Handler
+    name: EditContentType.Handler
+  - uid: Raytha.Application.ContentTypes.Commands.EditContentType.Validator
+    name: EditContentType.Validator
+  - uid: Raytha.Application.ContentTypes.Commands.EditContentTypeField
+    name: EditContentTypeField
+  - uid: Raytha.Application.ContentTypes.Commands.EditContentTypeField.Command
+    name: EditContentTypeField.Command
+  - uid: Raytha.Application.ContentTypes.Commands.EditContentTypeField.Handler
+    name: EditContentTypeField.Handler
+  - uid: Raytha.Application.ContentTypes.Commands.EditContentTypeField.Validator
+    name: EditContentTypeField.Validator
+  - uid: Raytha.Application.ContentTypes.Commands.ReorderContentTypeField
+    name: ReorderContentTypeField
+  - uid: Raytha.Application.ContentTypes.Commands.ReorderContentTypeField.Command
+    name: ReorderContentTypeField.Command
+  - uid: Raytha.Application.ContentTypes.Commands.ReorderContentTypeField.Handler
+    name: ReorderContentTypeField.Handler
+  - uid: Raytha.Application.ContentTypes.Commands.ReorderContentTypeField.Validator
+    name: ReorderContentTypeField.Validator
+- uid: Raytha.Application.ContentTypes.Queries
+  name: Raytha.Application.ContentTypes.Queries
+  items:
+  - uid: Raytha.Application.ContentTypes.Queries.GetContentTypeByDeveloperName
+    name: GetContentTypeByDeveloperName
+  - uid: Raytha.Application.ContentTypes.Queries.GetContentTypeByDeveloperName.Handler
+    name: GetContentTypeByDeveloperName.Handler
+  - uid: Raytha.Application.ContentTypes.Queries.GetContentTypeByDeveloperName.Query
+    name: GetContentTypeByDeveloperName.Query
+  - uid: Raytha.Application.ContentTypes.Queries.GetContentTypeById
+    name: GetContentTypeById
+  - uid: Raytha.Application.ContentTypes.Queries.GetContentTypeById.Handler
+    name: GetContentTypeById.Handler
+  - uid: Raytha.Application.ContentTypes.Queries.GetContentTypeById.Query
+    name: GetContentTypeById.Query
+  - uid: Raytha.Application.ContentTypes.Queries.GetContentTypeFieldById
+    name: GetContentTypeFieldById
+  - uid: Raytha.Application.ContentTypes.Queries.GetContentTypeFieldById.Handler
+    name: GetContentTypeFieldById.Handler
+  - uid: Raytha.Application.ContentTypes.Queries.GetContentTypeFieldById.Query
+    name: GetContentTypeFieldById.Query
+  - uid: Raytha.Application.ContentTypes.Queries.GetContentTypeFields
+    name: GetContentTypeFields
+  - uid: Raytha.Application.ContentTypes.Queries.GetContentTypeFields.Handler
+    name: GetContentTypeFields.Handler
+  - uid: Raytha.Application.ContentTypes.Queries.GetContentTypeFields.Query
+    name: GetContentTypeFields.Query
+  - uid: Raytha.Application.ContentTypes.Queries.GetContentTypes
+    name: GetContentTypes
+  - uid: Raytha.Application.ContentTypes.Queries.GetContentTypes.Handler
+    name: GetContentTypes.Handler
+  - uid: Raytha.Application.ContentTypes.Queries.GetContentTypes.Query
+    name: GetContentTypes.Query
+  - uid: Raytha.Application.ContentTypes.Queries.GetContentTypesAsListItems
+    name: GetContentTypesAsListItems
+  - uid: Raytha.Application.ContentTypes.Queries.GetContentTypesAsListItems.Handler
+    name: GetContentTypesAsListItems.Handler
+  - uid: Raytha.Application.ContentTypes.Queries.GetContentTypesAsListItems.Query
+    name: GetContentTypesAsListItems.Query
+- uid: Raytha.Application.Dashboard
+  name: Raytha.Application.Dashboard
+  items:
+  - uid: Raytha.Application.Dashboard.DashboardDto
+    name: DashboardDto
+- uid: Raytha.Application.Dashboard.Queries
+  name: Raytha.Application.Dashboard.Queries
+  items:
+  - uid: Raytha.Application.Dashboard.Queries.GetDashboardMetrics
+    name: GetDashboardMetrics
+  - uid: Raytha.Application.Dashboard.Queries.GetDashboardMetrics.CSpaceUsed
+    name: GetDashboardMetrics.CSpaceUsed
+  - uid: Raytha.Application.Dashboard.Queries.GetDashboardMetrics.Handler
+    name: GetDashboardMetrics.Handler
+  - uid: Raytha.Application.Dashboard.Queries.GetDashboardMetrics.Query
+    name: GetDashboardMetrics.Query
+- uid: Raytha.Application.Login
+  name: Raytha.Application.Login
+  items:
+  - uid: Raytha.Application.Login.CreateUserSubmit_RenderModel
+    name: CreateUserSubmit_RenderModel
+  - uid: Raytha.Application.Login.ForgotPasswordCompleteSubmit_RenderModel
+    name: ForgotPasswordCompleteSubmit_RenderModel
+  - uid: Raytha.Application.Login.ForgotPasswordSubmit_RenderModel
+    name: ForgotPasswordSubmit_RenderModel
+  - uid: Raytha.Application.Login.LoginDto
+    name: LoginDto
+  - uid: Raytha.Application.Login.LoginSubmit_RenderModel
+    name: LoginSubmit_RenderModel
+  - uid: Raytha.Application.Login.SendBeginForgotPassword_RenderModel
+    name: SendBeginForgotPassword_RenderModel
+  - uid: Raytha.Application.Login.SendBeginLoginWithMagicLink_RenderModel
+    name: SendBeginLoginWithMagicLink_RenderModel
+  - uid: Raytha.Application.Login.SendCompletedForgotPassword_RenderModel
+    name: SendCompletedForgotPassword_RenderModel
+  - uid: Raytha.Application.Login.SsoPayload
+    name: SsoPayload
+- uid: Raytha.Application.Login.Commands
+  name: Raytha.Application.Login.Commands
+  items:
+  - uid: Raytha.Application.Login.Commands.BeginForgotPassword
+    name: BeginForgotPassword
+  - uid: Raytha.Application.Login.Commands.BeginForgotPassword.Command
+    name: BeginForgotPassword.Command
+  - uid: Raytha.Application.Login.Commands.BeginForgotPassword.Handler
+    name: BeginForgotPassword.Handler
+  - uid: Raytha.Application.Login.Commands.BeginForgotPassword.Validator
+    name: BeginForgotPassword.Validator
+  - uid: Raytha.Application.Login.Commands.BeginLoginWithMagicLink
+    name: BeginLoginWithMagicLink
+  - uid: Raytha.Application.Login.Commands.BeginLoginWithMagicLink.Command
+    name: BeginLoginWithMagicLink.Command
+  - uid: Raytha.Application.Login.Commands.BeginLoginWithMagicLink.Handler
+    name: BeginLoginWithMagicLink.Handler
+  - uid: Raytha.Application.Login.Commands.BeginLoginWithMagicLink.Validator
+    name: BeginLoginWithMagicLink.Validator
+  - uid: Raytha.Application.Login.Commands.ChangePassword
+    name: ChangePassword
+  - uid: Raytha.Application.Login.Commands.ChangePassword.Command
+    name: ChangePassword.Command
+  - uid: Raytha.Application.Login.Commands.ChangePassword.Handler
+    name: ChangePassword.Handler
+  - uid: Raytha.Application.Login.Commands.ChangePassword.Validator
+    name: ChangePassword.Validator
+  - uid: Raytha.Application.Login.Commands.ChangeProfile
+    name: ChangeProfile
+  - uid: Raytha.Application.Login.Commands.ChangeProfile.Command
+    name: ChangeProfile.Command
+  - uid: Raytha.Application.Login.Commands.ChangeProfile.Handler
+    name: ChangeProfile.Handler
+  - uid: Raytha.Application.Login.Commands.ChangeProfile.Validator
+    name: ChangeProfile.Validator
+  - uid: Raytha.Application.Login.Commands.CompleteForgotPassword
+    name: CompleteForgotPassword
+  - uid: Raytha.Application.Login.Commands.CompleteForgotPassword.Command
+    name: CompleteForgotPassword.Command
+  - uid: Raytha.Application.Login.Commands.CompleteForgotPassword.Handler
+    name: CompleteForgotPassword.Handler
+  - uid: Raytha.Application.Login.Commands.CompleteForgotPassword.Validator
+    name: CompleteForgotPassword.Validator
+  - uid: Raytha.Application.Login.Commands.CompleteLoginWithMagicLink
+    name: CompleteLoginWithMagicLink
+  - uid: Raytha.Application.Login.Commands.CompleteLoginWithMagicLink.Command
+    name: CompleteLoginWithMagicLink.Command
+  - uid: Raytha.Application.Login.Commands.CompleteLoginWithMagicLink.Handler
+    name: CompleteLoginWithMagicLink.Handler
+  - uid: Raytha.Application.Login.Commands.CompleteLoginWithMagicLink.Validator
+    name: CompleteLoginWithMagicLink.Validator
+  - uid: Raytha.Application.Login.Commands.CreateUser
+    name: CreateUser
+  - uid: Raytha.Application.Login.Commands.CreateUser.Command
+    name: CreateUser.Command
+  - uid: Raytha.Application.Login.Commands.CreateUser.Handler
+    name: CreateUser.Handler
+  - uid: Raytha.Application.Login.Commands.CreateUser.Validator
+    name: CreateUser.Validator
+  - uid: Raytha.Application.Login.Commands.LoginWithApiKey
+    name: LoginWithApiKey
+  - uid: Raytha.Application.Login.Commands.LoginWithApiKey.Command
+    name: LoginWithApiKey.Command
+  - uid: Raytha.Application.Login.Commands.LoginWithApiKey.Handler
+    name: LoginWithApiKey.Handler
+  - uid: Raytha.Application.Login.Commands.LoginWithEmailAndPassword
+    name: LoginWithEmailAndPassword
+  - uid: Raytha.Application.Login.Commands.LoginWithEmailAndPassword.Command
+    name: LoginWithEmailAndPassword.Command
+  - uid: Raytha.Application.Login.Commands.LoginWithEmailAndPassword.Handler
+    name: LoginWithEmailAndPassword.Handler
+  - uid: Raytha.Application.Login.Commands.LoginWithEmailAndPassword.Validator
+    name: LoginWithEmailAndPassword.Validator
+  - uid: Raytha.Application.Login.Commands.LoginWithJwt
+    name: LoginWithJwt
+  - uid: Raytha.Application.Login.Commands.LoginWithJwt.Command
+    name: LoginWithJwt.Command
+  - uid: Raytha.Application.Login.Commands.LoginWithJwt.Handler
+    name: LoginWithJwt.Handler
+  - uid: Raytha.Application.Login.Commands.LoginWithJwt.Validator
+    name: LoginWithJwt.Validator
+  - uid: Raytha.Application.Login.Commands.LoginWithSaml
+    name: LoginWithSaml
+  - uid: Raytha.Application.Login.Commands.LoginWithSaml.Certificate
+    name: LoginWithSaml.Certificate
+  - uid: Raytha.Application.Login.Commands.LoginWithSaml.Command
+    name: LoginWithSaml.Command
+  - uid: Raytha.Application.Login.Commands.LoginWithSaml.Handler
+    name: LoginWithSaml.Handler
+  - uid: Raytha.Application.Login.Commands.LoginWithSaml.SAMLResponse
+    name: LoginWithSaml.SAMLResponse
+  - uid: Raytha.Application.Login.Commands.LoginWithSaml.Validator
+    name: LoginWithSaml.Validator
+- uid: Raytha.Application.Login.EventHandlers
+  name: Raytha.Application.Login.EventHandlers
+  items:
+  - uid: Raytha.Application.Login.EventHandlers.BeginForgotPasswordEventHandler
+    name: BeginForgotPasswordEventHandler
+  - uid: Raytha.Application.Login.EventHandlers.BeginLoginWithMagicLinkEventHandler
+    name: BeginLoginWithMagicLinkEventHandler
+  - uid: Raytha.Application.Login.EventHandlers.CompletedForgotPasswordEventHandler
+    name: CompletedForgotPasswordEventHandler
+- uid: Raytha.Application.Login.Queries
+  name: Raytha.Application.Login.Queries
+  items:
+  - uid: Raytha.Application.Login.Queries.GetForgotPasswordTokenValidity
+    name: GetForgotPasswordTokenValidity
+  - uid: Raytha.Application.Login.Queries.GetForgotPasswordTokenValidity.Handler
+    name: GetForgotPasswordTokenValidity.Handler
+  - uid: Raytha.Application.Login.Queries.GetForgotPasswordTokenValidity.Query
+    name: GetForgotPasswordTokenValidity.Query
+  - uid: Raytha.Application.Login.Queries.GetUserForAuthenticationById
+    name: GetUserForAuthenticationById
+  - uid: Raytha.Application.Login.Queries.GetUserForAuthenticationById.Handler
+    name: GetUserForAuthenticationById.Handler
+  - uid: Raytha.Application.Login.Queries.GetUserForAuthenticationById.Query
+    name: GetUserForAuthenticationById.Query
+- uid: Raytha.Application.MediaItems
+  name: Raytha.Application.MediaItems
+  items:
+  - uid: Raytha.Application.MediaItems.MediaItemDto
+    name: MediaItemDto
+- uid: Raytha.Application.MediaItems.Commands
+  name: Raytha.Application.MediaItems.Commands
+  items:
+  - uid: Raytha.Application.MediaItems.Commands.CreateMediaItem
+    name: CreateMediaItem
+  - uid: Raytha.Application.MediaItems.Commands.CreateMediaItem.Command
+    name: CreateMediaItem.Command
+  - uid: Raytha.Application.MediaItems.Commands.CreateMediaItem.Handler
+    name: CreateMediaItem.Handler
+  - uid: Raytha.Application.MediaItems.Commands.CreateMediaItem.Validator
+    name: CreateMediaItem.Validator
+- uid: Raytha.Application.MediaItems.Queries
+  name: Raytha.Application.MediaItems.Queries
+  items:
+  - uid: Raytha.Application.MediaItems.Queries.GetMediaItemById
+    name: GetMediaItemById
+  - uid: Raytha.Application.MediaItems.Queries.GetMediaItemById.Handler
+    name: GetMediaItemById.Handler
+  - uid: Raytha.Application.MediaItems.Queries.GetMediaItemById.Query
+    name: GetMediaItemById.Query
+  - uid: Raytha.Application.MediaItems.Queries.GetMediaItemByObjectKey
+    name: GetMediaItemByObjectKey
+  - uid: Raytha.Application.MediaItems.Queries.GetMediaItemByObjectKey.Handler
+    name: GetMediaItemByObjectKey.Handler
+  - uid: Raytha.Application.MediaItems.Queries.GetMediaItemByObjectKey.Query
+    name: GetMediaItemByObjectKey.Query
+  - uid: Raytha.Application.MediaItems.Queries.GetMediaItems
+    name: GetMediaItems
+  - uid: Raytha.Application.MediaItems.Queries.GetMediaItems.Handler
+    name: GetMediaItems.Handler
+  - uid: Raytha.Application.MediaItems.Queries.GetMediaItems.Query
+    name: GetMediaItems.Query
+- uid: Raytha.Application.OrganizationSettings
+  name: Raytha.Application.OrganizationSettings
+  items:
+  - uid: Raytha.Application.OrganizationSettings.OrganizationSettingsDto
+    name: OrganizationSettingsDto
+- uid: Raytha.Application.OrganizationSettings.Commands
+  name: Raytha.Application.OrganizationSettings.Commands
+  items:
+  - uid: Raytha.Application.OrganizationSettings.Commands.EditConfiguration
+    name: EditConfiguration
+  - uid: Raytha.Application.OrganizationSettings.Commands.EditConfiguration.Command
+    name: EditConfiguration.Command
+  - uid: Raytha.Application.OrganizationSettings.Commands.EditConfiguration.Handler
+    name: EditConfiguration.Handler
+  - uid: Raytha.Application.OrganizationSettings.Commands.EditConfiguration.Validator
+    name: EditConfiguration.Validator
+  - uid: Raytha.Application.OrganizationSettings.Commands.EditSmtp
+    name: EditSmtp
+  - uid: Raytha.Application.OrganizationSettings.Commands.EditSmtp.Command
+    name: EditSmtp.Command
+  - uid: Raytha.Application.OrganizationSettings.Commands.EditSmtp.Handler
+    name: EditSmtp.Handler
+  - uid: Raytha.Application.OrganizationSettings.Commands.EditSmtp.Validator
+    name: EditSmtp.Validator
+  - uid: Raytha.Application.OrganizationSettings.Commands.InitialSetup
+    name: InitialSetup
+  - uid: Raytha.Application.OrganizationSettings.Commands.InitialSetup.Command
+    name: InitialSetup.Command
+  - uid: Raytha.Application.OrganizationSettings.Commands.InitialSetup.Handler
+    name: InitialSetup.Handler
+  - uid: Raytha.Application.OrganizationSettings.Commands.InitialSetup.Validator
+    name: InitialSetup.Validator
+- uid: Raytha.Application.OrganizationSettings.Queries
+  name: Raytha.Application.OrganizationSettings.Queries
+  items:
+  - uid: Raytha.Application.OrganizationSettings.Queries.GetOrganizationSettings
+    name: GetOrganizationSettings
+  - uid: Raytha.Application.OrganizationSettings.Queries.GetOrganizationSettings.Handler
+    name: GetOrganizationSettings.Handler
+  - uid: Raytha.Application.OrganizationSettings.Queries.GetOrganizationSettings.Query
+    name: GetOrganizationSettings.Query
+- uid: Raytha.Application.Roles
+  name: Raytha.Application.Roles
+  items:
+  - uid: Raytha.Application.Roles.RoleDto
+    name: RoleDto
+- uid: Raytha.Application.Roles.Commands
+  name: Raytha.Application.Roles.Commands
+  items:
+  - uid: Raytha.Application.Roles.Commands.CreateRole
+    name: CreateRole
+  - uid: Raytha.Application.Roles.Commands.CreateRole.Command
+    name: CreateRole.Command
+  - uid: Raytha.Application.Roles.Commands.CreateRole.Handler
+    name: CreateRole.Handler
+  - uid: Raytha.Application.Roles.Commands.CreateRole.Validator
+    name: CreateRole.Validator
+  - uid: Raytha.Application.Roles.Commands.DeleteRole
+    name: DeleteRole
+  - uid: Raytha.Application.Roles.Commands.DeleteRole.Command
+    name: DeleteRole.Command
+  - uid: Raytha.Application.Roles.Commands.DeleteRole.Handler
+    name: DeleteRole.Handler
+  - uid: Raytha.Application.Roles.Commands.DeleteRole.Validator
+    name: DeleteRole.Validator
+  - uid: Raytha.Application.Roles.Commands.EditRole
+    name: EditRole
+  - uid: Raytha.Application.Roles.Commands.EditRole.Command
+    name: EditRole.Command
+  - uid: Raytha.Application.Roles.Commands.EditRole.Handler
+    name: EditRole.Handler
+  - uid: Raytha.Application.Roles.Commands.EditRole.Validator
+    name: EditRole.Validator
+- uid: Raytha.Application.Roles.Queries
+  name: Raytha.Application.Roles.Queries
+  items:
+  - uid: Raytha.Application.Roles.Queries.GetRoleById
+    name: GetRoleById
+  - uid: Raytha.Application.Roles.Queries.GetRoleById.Handler
+    name: GetRoleById.Handler
+  - uid: Raytha.Application.Roles.Queries.GetRoleById.Query
+    name: GetRoleById.Query
+  - uid: Raytha.Application.Roles.Queries.GetRoles
+    name: GetRoles
+  - uid: Raytha.Application.Roles.Queries.GetRoles.Handler
+    name: GetRoles.Handler
+  - uid: Raytha.Application.Roles.Queries.GetRoles.Query
+    name: GetRoles.Query
+- uid: Raytha.Application.Routes
+  name: Raytha.Application.Routes
+  items:
+  - uid: Raytha.Application.Routes.RouteDto
+    name: RouteDto
+- uid: Raytha.Application.Routes.Queries
+  name: Raytha.Application.Routes.Queries
+  items:
+  - uid: Raytha.Application.Routes.Queries.GetRouteByPath
+    name: GetRouteByPath
+  - uid: Raytha.Application.Routes.Queries.GetRouteByPath.Handler
+    name: GetRouteByPath.Handler
+  - uid: Raytha.Application.Routes.Queries.GetRouteByPath.Query
+    name: GetRouteByPath.Query
+- uid: Raytha.Application.Templates.Email
+  name: Raytha.Application.Templates.Email
+  items:
+  - uid: Raytha.Application.Templates.Email.EmailTemplateDto
+    name: EmailTemplateDto
+  - uid: Raytha.Application.Templates.Email.EmailTemplateRevisionDto
+    name: EmailTemplateRevisionDto
+- uid: Raytha.Application.Templates.Email.Commands
+  name: Raytha.Application.Templates.Email.Commands
+  items:
+  - uid: Raytha.Application.Templates.Email.Commands.EditEmailTemplate
+    name: EditEmailTemplate
+  - uid: Raytha.Application.Templates.Email.Commands.EditEmailTemplate.Command
+    name: EditEmailTemplate.Command
+  - uid: Raytha.Application.Templates.Email.Commands.EditEmailTemplate.Handler
+    name: EditEmailTemplate.Handler
+  - uid: Raytha.Application.Templates.Email.Commands.EditEmailTemplate.Validator
+    name: EditEmailTemplate.Validator
+  - uid: Raytha.Application.Templates.Email.Commands.RevertEmailTemplate
+    name: RevertEmailTemplate
+  - uid: Raytha.Application.Templates.Email.Commands.RevertEmailTemplate.Command
+    name: RevertEmailTemplate.Command
+  - uid: Raytha.Application.Templates.Email.Commands.RevertEmailTemplate.Handler
+    name: RevertEmailTemplate.Handler
+- uid: Raytha.Application.Templates.Email.Queries
+  name: Raytha.Application.Templates.Email.Queries
+  items:
+  - uid: Raytha.Application.Templates.Email.Queries.GetEmailTemplateById
+    name: GetEmailTemplateById
+  - uid: Raytha.Application.Templates.Email.Queries.GetEmailTemplateById.Handler
+    name: GetEmailTemplateById.Handler
+  - uid: Raytha.Application.Templates.Email.Queries.GetEmailTemplateById.Query
+    name: GetEmailTemplateById.Query
+  - uid: Raytha.Application.Templates.Email.Queries.GetEmailTemplateByName
+    name: GetEmailTemplateByName
+  - uid: Raytha.Application.Templates.Email.Queries.GetEmailTemplateByName.Handler
+    name: GetEmailTemplateByName.Handler
+  - uid: Raytha.Application.Templates.Email.Queries.GetEmailTemplateByName.Query
+    name: GetEmailTemplateByName.Query
+  - uid: Raytha.Application.Templates.Email.Queries.GetEmailTemplateRevisionsByTemplateId
+    name: GetEmailTemplateRevisionsByTemplateId
+  - uid: Raytha.Application.Templates.Email.Queries.GetEmailTemplateRevisionsByTemplateId.Handler
+    name: GetEmailTemplateRevisionsByTemplateId.Handler
+  - uid: Raytha.Application.Templates.Email.Queries.GetEmailTemplateRevisionsByTemplateId.Query
+    name: GetEmailTemplateRevisionsByTemplateId.Query
+  - uid: Raytha.Application.Templates.Email.Queries.GetEmailTemplates
+    name: GetEmailTemplates
+  - uid: Raytha.Application.Templates.Email.Queries.GetEmailTemplates.Handler
+    name: GetEmailTemplates.Handler
+  - uid: Raytha.Application.Templates.Email.Queries.GetEmailTemplates.Query
+    name: GetEmailTemplates.Query
+- uid: Raytha.Application.Templates.Web
+  name: Raytha.Application.Templates.Web
+  items:
+  - uid: Raytha.Application.Templates.Web.WebTemplateDto
+    name: WebTemplateDto
+  - uid: Raytha.Application.Templates.Web.WebTemplateExtensions
+    name: WebTemplateExtensions
+  - uid: Raytha.Application.Templates.Web.WebTemplateListItemDto
+    name: WebTemplateListItemDto
+  - uid: Raytha.Application.Templates.Web.WebTemplateRevisionDto
+    name: WebTemplateRevisionDto
+- uid: Raytha.Application.Templates.Web.Commands
+  name: Raytha.Application.Templates.Web.Commands
+  items:
+  - uid: Raytha.Application.Templates.Web.Commands.CreateWebTemplate
+    name: CreateWebTemplate
+  - uid: Raytha.Application.Templates.Web.Commands.CreateWebTemplate.Command
+    name: CreateWebTemplate.Command
+  - uid: Raytha.Application.Templates.Web.Commands.CreateWebTemplate.Handler
+    name: CreateWebTemplate.Handler
+  - uid: Raytha.Application.Templates.Web.Commands.CreateWebTemplate.Validator
+    name: CreateWebTemplate.Validator
+  - uid: Raytha.Application.Templates.Web.Commands.DeleteWebTemplate
+    name: DeleteWebTemplate
+  - uid: Raytha.Application.Templates.Web.Commands.DeleteWebTemplate.Command
+    name: DeleteWebTemplate.Command
+  - uid: Raytha.Application.Templates.Web.Commands.DeleteWebTemplate.Handler
+    name: DeleteWebTemplate.Handler
+  - uid: Raytha.Application.Templates.Web.Commands.DeleteWebTemplate.Validator
+    name: DeleteWebTemplate.Validator
+  - uid: Raytha.Application.Templates.Web.Commands.EditWebTemplate
+    name: EditWebTemplate
+  - uid: Raytha.Application.Templates.Web.Commands.EditWebTemplate.Command
+    name: EditWebTemplate.Command
+  - uid: Raytha.Application.Templates.Web.Commands.EditWebTemplate.Handler
+    name: EditWebTemplate.Handler
+  - uid: Raytha.Application.Templates.Web.Commands.EditWebTemplate.Validator
+    name: EditWebTemplate.Validator
+  - uid: Raytha.Application.Templates.Web.Commands.RevertWebTemplate
+    name: RevertWebTemplate
+  - uid: Raytha.Application.Templates.Web.Commands.RevertWebTemplate.Command
+    name: RevertWebTemplate.Command
+  - uid: Raytha.Application.Templates.Web.Commands.RevertWebTemplate.Handler
+    name: RevertWebTemplate.Handler
+- uid: Raytha.Application.Templates.Web.Queries
+  name: Raytha.Application.Templates.Web.Queries
+  items:
+  - uid: Raytha.Application.Templates.Web.Queries.GetWebTemplateById
+    name: GetWebTemplateById
+  - uid: Raytha.Application.Templates.Web.Queries.GetWebTemplateById.Handler
+    name: GetWebTemplateById.Handler
+  - uid: Raytha.Application.Templates.Web.Queries.GetWebTemplateById.Query
+    name: GetWebTemplateById.Query
+  - uid: Raytha.Application.Templates.Web.Queries.GetWebTemplateByName
+    name: GetWebTemplateByName
+  - uid: Raytha.Application.Templates.Web.Queries.GetWebTemplateByName.Handler
+    name: GetWebTemplateByName.Handler
+  - uid: Raytha.Application.Templates.Web.Queries.GetWebTemplateByName.Query
+    name: GetWebTemplateByName.Query
+  - uid: Raytha.Application.Templates.Web.Queries.GetWebTemplateRevisionsByTemplateId
+    name: GetWebTemplateRevisionsByTemplateId
+  - uid: Raytha.Application.Templates.Web.Queries.GetWebTemplateRevisionsByTemplateId.Handler
+    name: GetWebTemplateRevisionsByTemplateId.Handler
+  - uid: Raytha.Application.Templates.Web.Queries.GetWebTemplateRevisionsByTemplateId.Query
+    name: GetWebTemplateRevisionsByTemplateId.Query
+  - uid: Raytha.Application.Templates.Web.Queries.GetWebTemplates
+    name: GetWebTemplates
+  - uid: Raytha.Application.Templates.Web.Queries.GetWebTemplates.Handler
+    name: GetWebTemplates.Handler
+  - uid: Raytha.Application.Templates.Web.Queries.GetWebTemplates.Query
+    name: GetWebTemplates.Query
+  - uid: Raytha.Application.Templates.Web.Queries.GetWebTemplatesAsListItems
+    name: GetWebTemplatesAsListItems
+  - uid: Raytha.Application.Templates.Web.Queries.GetWebTemplatesAsListItems.Handler
+    name: GetWebTemplatesAsListItems.Handler
+  - uid: Raytha.Application.Templates.Web.Queries.GetWebTemplatesAsListItems.Query
+    name: GetWebTemplatesAsListItems.Query
+- uid: Raytha.Application.UserGroups
+  name: Raytha.Application.UserGroups
+  items:
+  - uid: Raytha.Application.UserGroups.UserGroupDto
+    name: UserGroupDto
+- uid: Raytha.Application.UserGroups.Commands
+  name: Raytha.Application.UserGroups.Commands
+  items:
+  - uid: Raytha.Application.UserGroups.Commands.CreateUserGroup
+    name: CreateUserGroup
+  - uid: Raytha.Application.UserGroups.Commands.CreateUserGroup.Command
+    name: CreateUserGroup.Command
+  - uid: Raytha.Application.UserGroups.Commands.CreateUserGroup.Handler
+    name: CreateUserGroup.Handler
+  - uid: Raytha.Application.UserGroups.Commands.CreateUserGroup.Validator
+    name: CreateUserGroup.Validator
+  - uid: Raytha.Application.UserGroups.Commands.DeleteUserGroup
+    name: DeleteUserGroup
+  - uid: Raytha.Application.UserGroups.Commands.DeleteUserGroup.Command
+    name: DeleteUserGroup.Command
+  - uid: Raytha.Application.UserGroups.Commands.DeleteUserGroup.Handler
+    name: DeleteUserGroup.Handler
+  - uid: Raytha.Application.UserGroups.Commands.DeleteUserGroup.Validator
+    name: DeleteUserGroup.Validator
+  - uid: Raytha.Application.UserGroups.Commands.EditUserGroup
+    name: EditUserGroup
+  - uid: Raytha.Application.UserGroups.Commands.EditUserGroup.Command
+    name: EditUserGroup.Command
+  - uid: Raytha.Application.UserGroups.Commands.EditUserGroup.Handler
+    name: EditUserGroup.Handler
+  - uid: Raytha.Application.UserGroups.Commands.EditUserGroup.Validator
+    name: EditUserGroup.Validator
+- uid: Raytha.Application.UserGroups.Queries
+  name: Raytha.Application.UserGroups.Queries
+  items:
+  - uid: Raytha.Application.UserGroups.Queries.GetUserGroupById
+    name: GetUserGroupById
+  - uid: Raytha.Application.UserGroups.Queries.GetUserGroupById.Handler
+    name: GetUserGroupById.Handler
+  - uid: Raytha.Application.UserGroups.Queries.GetUserGroupById.Query
+    name: GetUserGroupById.Query
+  - uid: Raytha.Application.UserGroups.Queries.GetUserGroups
+    name: GetUserGroups
+  - uid: Raytha.Application.UserGroups.Queries.GetUserGroups.Handler
+    name: GetUserGroups.Handler
+  - uid: Raytha.Application.UserGroups.Queries.GetUserGroups.Query
+    name: GetUserGroups.Query
+- uid: Raytha.Application.Users
+  name: Raytha.Application.Users
+  items:
+  - uid: Raytha.Application.Users.ChangePasswordSubmit_RenderModel
+    name: ChangePasswordSubmit_RenderModel
+  - uid: Raytha.Application.Users.ChangeProfileSubmit_RenderModel
+    name: ChangeProfileSubmit_RenderModel
+  - uid: Raytha.Application.Users.SendUserPasswordChanged_RenderModel
+    name: SendUserPasswordChanged_RenderModel
+  - uid: Raytha.Application.Users.SendUserPasswordReset_RenderModel
+    name: SendUserPasswordReset_RenderModel
+  - uid: Raytha.Application.Users.SendUserWelcomeEmail_RenderModel
+    name: SendUserWelcomeEmail_RenderModel
+  - uid: Raytha.Application.Users.UserDto
+    name: UserDto
+- uid: Raytha.Application.Users.Commands
+  name: Raytha.Application.Users.Commands
+  items:
+  - uid: Raytha.Application.Users.Commands.CreateUser
+    name: CreateUser
+  - uid: Raytha.Application.Users.Commands.CreateUser.Command
+    name: CreateUser.Command
+  - uid: Raytha.Application.Users.Commands.CreateUser.Handler
+    name: CreateUser.Handler
+  - uid: Raytha.Application.Users.Commands.CreateUser.Validator
+    name: CreateUser.Validator
+  - uid: Raytha.Application.Users.Commands.DeleteUser
+    name: DeleteUser
+  - uid: Raytha.Application.Users.Commands.DeleteUser.Command
+    name: DeleteUser.Command
+  - uid: Raytha.Application.Users.Commands.DeleteUser.Handler
+    name: DeleteUser.Handler
+  - uid: Raytha.Application.Users.Commands.DeleteUser.Validator
+    name: DeleteUser.Validator
+  - uid: Raytha.Application.Users.Commands.EditUser
+    name: EditUser
+  - uid: Raytha.Application.Users.Commands.EditUser.Command
+    name: EditUser.Command
+  - uid: Raytha.Application.Users.Commands.EditUser.Handler
+    name: EditUser.Handler
+  - uid: Raytha.Application.Users.Commands.EditUser.Validator
+    name: EditUser.Validator
+  - uid: Raytha.Application.Users.Commands.ResetPassword
+    name: ResetPassword
+  - uid: Raytha.Application.Users.Commands.ResetPassword.Command
+    name: ResetPassword.Command
+  - uid: Raytha.Application.Users.Commands.ResetPassword.Handler
+    name: ResetPassword.Handler
+  - uid: Raytha.Application.Users.Commands.ResetPassword.Validator
+    name: ResetPassword.Validator
+  - uid: Raytha.Application.Users.Commands.SetIsActive
+    name: SetIsActive
+  - uid: Raytha.Application.Users.Commands.SetIsActive.Command
+    name: SetIsActive.Command
+  - uid: Raytha.Application.Users.Commands.SetIsActive.Handler
+    name: SetIsActive.Handler
+  - uid: Raytha.Application.Users.Commands.SetIsActive.Validator
+    name: SetIsActive.Validator
+- uid: Raytha.Application.Users.EventHandlers
+  name: Raytha.Application.Users.EventHandlers
+  items:
+  - uid: Raytha.Application.Users.EventHandlers.UserCreatedEventHandler
+    name: UserCreatedEventHandler
+  - uid: Raytha.Application.Users.EventHandlers.UserPasswordResetEventHandler
+    name: UserPasswordResetEventHandler
+- uid: Raytha.Application.Users.Queries
+  name: Raytha.Application.Users.Queries
+  items:
+  - uid: Raytha.Application.Users.Queries.GetUserById
+    name: GetUserById
+  - uid: Raytha.Application.Users.Queries.GetUserById.Handler
+    name: GetUserById.Handler
+  - uid: Raytha.Application.Users.Queries.GetUserById.Query
+    name: GetUserById.Query
+  - uid: Raytha.Application.Users.Queries.GetUsers
+    name: GetUsers
+  - uid: Raytha.Application.Users.Queries.GetUsers.Handler
+    name: GetUsers.Handler
+  - uid: Raytha.Application.Users.Queries.GetUsers.Query
+    name: GetUsers.Query
+- uid: Raytha.Application.Views
+  name: Raytha.Application.Views
+  items:
+  - uid: Raytha.Application.Views.FilterConditionInputDto
+    name: FilterConditionInputDto
+  - uid: Raytha.Application.Views.ViewDto
+    name: ViewDto
+- uid: Raytha.Application.Views.Commands
+  name: Raytha.Application.Views.Commands
+  items:
+  - uid: Raytha.Application.Views.Commands.CreateView
+    name: CreateView
+  - uid: Raytha.Application.Views.Commands.CreateView.Command
+    name: CreateView.Command
+  - uid: Raytha.Application.Views.Commands.CreateView.Handler
+    name: CreateView.Handler
+  - uid: Raytha.Application.Views.Commands.CreateView.Validator
+    name: CreateView.Validator
+  - uid: Raytha.Application.Views.Commands.DeleteView
+    name: DeleteView
+  - uid: Raytha.Application.Views.Commands.DeleteView.Command
+    name: DeleteView.Command
+  - uid: Raytha.Application.Views.Commands.DeleteView.Handler
+    name: DeleteView.Handler
+  - uid: Raytha.Application.Views.Commands.DeleteView.Validator
+    name: DeleteView.Validator
+  - uid: Raytha.Application.Views.Commands.EditColumn
+    name: EditColumn
+  - uid: Raytha.Application.Views.Commands.EditColumn.Command
+    name: EditColumn.Command
+  - uid: Raytha.Application.Views.Commands.EditColumn.Handler
+    name: EditColumn.Handler
+  - uid: Raytha.Application.Views.Commands.EditColumn.Validator
+    name: EditColumn.Validator
+  - uid: Raytha.Application.Views.Commands.EditFilter
+    name: EditFilter
+  - uid: Raytha.Application.Views.Commands.EditFilter.Command
+    name: EditFilter.Command
+  - uid: Raytha.Application.Views.Commands.EditFilter.Handler
+    name: EditFilter.Handler
+  - uid: Raytha.Application.Views.Commands.EditFilter.Validator
+    name: EditFilter.Validator
+  - uid: Raytha.Application.Views.Commands.EditPublicSettings
+    name: EditPublicSettings
+  - uid: Raytha.Application.Views.Commands.EditPublicSettings.Command
+    name: EditPublicSettings.Command
+  - uid: Raytha.Application.Views.Commands.EditPublicSettings.Handler
+    name: EditPublicSettings.Handler
+  - uid: Raytha.Application.Views.Commands.EditPublicSettings.Validator
+    name: EditPublicSettings.Validator
+  - uid: Raytha.Application.Views.Commands.EditSort
+    name: EditSort
+  - uid: Raytha.Application.Views.Commands.EditSort.Command
+    name: EditSort.Command
+  - uid: Raytha.Application.Views.Commands.EditSort.Handler
+    name: EditSort.Handler
+  - uid: Raytha.Application.Views.Commands.EditSort.Validator
+    name: EditSort.Validator
+  - uid: Raytha.Application.Views.Commands.EditView
+    name: EditView
+  - uid: Raytha.Application.Views.Commands.EditView.Command
+    name: EditView.Command
+  - uid: Raytha.Application.Views.Commands.EditView.Handler
+    name: EditView.Handler
+  - uid: Raytha.Application.Views.Commands.EditView.Validator
+    name: EditView.Validator
+  - uid: Raytha.Application.Views.Commands.ReorderColumn
+    name: ReorderColumn
+  - uid: Raytha.Application.Views.Commands.ReorderColumn.Command
+    name: ReorderColumn.Command
+  - uid: Raytha.Application.Views.Commands.ReorderColumn.Handler
+    name: ReorderColumn.Handler
+  - uid: Raytha.Application.Views.Commands.ReorderColumn.Validator
+    name: ReorderColumn.Validator
+  - uid: Raytha.Application.Views.Commands.ReorderSort
+    name: ReorderSort
+  - uid: Raytha.Application.Views.Commands.ReorderSort.Command
+    name: ReorderSort.Command
+  - uid: Raytha.Application.Views.Commands.ReorderSort.Handler
+    name: ReorderSort.Handler
+  - uid: Raytha.Application.Views.Commands.ReorderSort.Validator
+    name: ReorderSort.Validator
+  - uid: Raytha.Application.Views.Commands.SetAsHomePage
+    name: SetAsHomePage
+  - uid: Raytha.Application.Views.Commands.SetAsHomePage.Command
+    name: SetAsHomePage.Command
+  - uid: Raytha.Application.Views.Commands.SetAsHomePage.Handler
+    name: SetAsHomePage.Handler
+  - uid: Raytha.Application.Views.Commands.ToggleViewAsFavoriteForAdmin
+    name: ToggleViewAsFavoriteForAdmin
+  - uid: Raytha.Application.Views.Commands.ToggleViewAsFavoriteForAdmin.Command
+    name: ToggleViewAsFavoriteForAdmin.Command
+  - uid: Raytha.Application.Views.Commands.ToggleViewAsFavoriteForAdmin.Handler
+    name: ToggleViewAsFavoriteForAdmin.Handler
+- uid: Raytha.Application.Views.Queries
+  name: Raytha.Application.Views.Queries
+  items:
+  - uid: Raytha.Application.Views.Queries.GetFavoriteViewsForAdmin
+    name: GetFavoriteViewsForAdmin
+  - uid: Raytha.Application.Views.Queries.GetFavoriteViewsForAdmin.Handler
+    name: GetFavoriteViewsForAdmin.Handler
+  - uid: Raytha.Application.Views.Queries.GetFavoriteViewsForAdmin.Query
+    name: GetFavoriteViewsForAdmin.Query
+  - uid: Raytha.Application.Views.Queries.GetViewById
+    name: GetViewById
+  - uid: Raytha.Application.Views.Queries.GetViewById.Handler
+    name: GetViewById.Handler
+  - uid: Raytha.Application.Views.Queries.GetViewById.Query
+    name: GetViewById.Query
+  - uid: Raytha.Application.Views.Queries.GetViews
+    name: GetViews
+  - uid: Raytha.Application.Views.Queries.GetViews.Handler
+    name: GetViews.Handler
+  - uid: Raytha.Application.Views.Queries.GetViews.Query
+    name: GetViews.Query
