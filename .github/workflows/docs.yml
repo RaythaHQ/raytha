@@ -3,7 +3,7 @@ jobs:
     runs-on: ubuntu-latest
     environment: github-pages
     steps:
-    - name: Chekout
+    - name: Checkout
       uses: actions/checkout@v3
     - name: Dotnet Setup
       uses: actions/setup-dotnet@v3
@@ -14,7 +14,7 @@ jobs:
     - run: docfx docfx_project/docfx.json
 
     - name: Deploy
-    uses: peaceiris/actions-gh-pages@v3
-    with:
-        github_token: ${{ secrets.DOCS_TOKEN }}
-        publish_dir: docs/_site
+      uses: peaceiris/actions-gh-pages@v3
+      with:
+          github_token: ${{ secrets.DOCS_TOKEN }}
+          publish_dir: docs/_site
