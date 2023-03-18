@@ -4,6 +4,7 @@ using Fluid.Values;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Utils;
 using System;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace Raytha.Web.Services;
@@ -29,6 +30,7 @@ public class RenderEngine : IRenderEngine
             options.TimeZone = DateTimeExtensions.GetTimeZoneInfo(_currentOrganization.TimeZone);
             options.Filters.AddFilter("raytha_attachment_url", RaythaAttachmentUrl);
             options.Filters.AddFilter("organization_time", LocalDateFilter);
+            options.Filters.AddFilter("json", JsonFilter);
 
             var context = new TemplateContext(entity, options);
             string renderedHtml = template.Render(context);
@@ -49,6 +51,11 @@ public class RenderEngine : IRenderEngine
     {
         var value = TimeZoneConverter(input, context);
         return ReferenceEquals(value, NilValue.Instance) ? value : MiscFilters.Date(value, arguments, context);
+    }
+    
+    public static ValueTask<FluidValue> JsonFilter(FluidValue input, FilterArguments arguments, TemplateContext context)
+    {
+        return new StringValue(JsonSerializer.Serialize(input.ToObjectValue()));
     }
 
     private static FluidValue TimeZoneConverter(FluidValue input, TemplateContext context)
