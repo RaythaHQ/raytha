@@ -4,6 +4,9 @@ using Fluid.Values;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Utils;
 using System;
+using System.Collections.Generic;
+using System.Dynamic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace Raytha.Web.Services;
@@ -29,7 +32,7 @@ public class RenderEngine : IRenderEngine
             options.TimeZone = DateTimeExtensions.GetTimeZoneInfo(_currentOrganization.TimeZone);
             options.Filters.AddFilter("raytha_attachment_url", RaythaAttachmentUrl);
             options.Filters.AddFilter("organization_time", LocalDateFilter);
-
+            options.Filters.AddFilter("groupby", GroupBy);
             var context = new TemplateContext(entity, options);
             string renderedHtml = template.Render(context);
             return renderedHtml;
@@ -45,13 +48,42 @@ public class RenderEngine : IRenderEngine
         return new StringValue(_relativeUrlBuilder.MediaRedirectToFileUrl(input.ToStringValue()));
     }
 
-    public static ValueTask<FluidValue> LocalDateFilter(FluidValue input, FilterArguments arguments, TemplateContext context)
+    public ValueTask<FluidValue> GroupBy(FluidValue input, FilterArguments property, TemplateContext context)
+    {
+        var groupByProperty = property.At(0).ToStringValue();
+        var groups = input.Enumerate(context).GroupBy(p => ApplyGroupBy(p, groupByProperty, context));
+        var result = new List<FluidValue>();
+        foreach (var group in groups)
+        {
+            result.Add(new ObjectValue(new 
+            {
+                key = group.Key,
+                items = group.ToList()
+            }));
+        }
+        return new ArrayValue(result);
+    }
+
+    private string ApplyGroupBy(FluidValue p, string groupByProperty, TemplateContext context)
+    {
+        if (groupByProperty.StartsWith("PublishedContent") && groupByProperty.Contains("."))
+        {
+            var developerName = groupByProperty.Split(".").ElementAt(1);
+            return p.GetValueAsync("PublishedContent", context).Result.GetValueAsync(developerName, context).Result.ToStringValue();
+        }
+        else
+        {
+            return p.GetValueAsync(groupByProperty, context).Result.ToStringValue();
+        }
+    }
+
+    public ValueTask<FluidValue> LocalDateFilter(FluidValue input, FilterArguments arguments, TemplateContext context)
     {
         var value = TimeZoneConverter(input, context);
         return ReferenceEquals(value, NilValue.Instance) ? value : MiscFilters.Date(value, arguments, context);
     }
 
-    private static FluidValue TimeZoneConverter(FluidValue input, TemplateContext context)
+    private FluidValue TimeZoneConverter(FluidValue input, TemplateContext context)
     {
         if (!input.TryGetDateTimeInput(context, out var value))
         {
