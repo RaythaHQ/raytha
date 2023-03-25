@@ -27,6 +27,7 @@ public class GetFavoriteViewsForAdmin
         protected override IQueryResponseDto<ListResultDto<ViewDto>> Handle(Query request)
         {
             var query = _db.Views
+                .Include(p => p.Route)
                 .Include(p => p.ContentType)
                 .Include(p => p.LastModifierUser)
                 .Include(p => p.UserFavorites)
