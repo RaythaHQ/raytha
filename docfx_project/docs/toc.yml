@@ -1,0 +1,8 @@
+- name: Quick start
+  href: installation.md
+
+- name: Advanced options
+  href: advancedoptions.md
+
+- name: Deployment
+  href: deployment.md
