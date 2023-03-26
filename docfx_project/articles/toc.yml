@@ -1,0 +1,25 @@
+- name: Quick start
+  href: installation.md
+
+- name: Advanced options
+  items:
+    - name: File storage
+      href: filestorage.md
+
+    - name: Sending emails
+      href: smtp.md
+
+- name: Deployment
+  href: deployment.md
+
+- name: Templates
+  href: templates.md
+
+- name: Build an SSO
+  items:
+    - name: Json Web Token
+      href: jwt.md
+
+    - name: SAML
+      href: saml.md
+

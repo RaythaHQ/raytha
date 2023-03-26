@@ -1,5 +1,6 @@
-- name: Articles
+- name: Docs
   href: articles/
+  homepage: articles/installation.md
 - name: Application Layer Reference
   href: apitoc/
   homepage: apitoc/index.md

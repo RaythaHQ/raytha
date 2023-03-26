@@ -19,7 +19,7 @@ With Raytha, you'll be able to quickly and easily kickstart the development of y
 ## Developer Docs
 This site contains documentation for .NET developers. If you are an administrator looking to learn how to use the platform as a user, please view the [User Guides](https://raytha.com/user-guide).
 
-If you are a developer, [start getting up and running quickly](/docs/installation)
+If you are a developer, [start getting up and running quickly](/articles/installation)
 
 ## What does Raytha excel at?
 Raytha CMS is an ideal platform when you need to build a .NET web application with CleanArchitecture principles that also require login/authentication/RBAC. The platform comes with built-in features like audit logs, content management, and a UI pattern, allowing developers to focus on writing code rather than building common features from scratch.
@@ -43,6 +43,10 @@ While Raytha CMS is a great platform for many use cases, it may not be the best 
 ## Community support
 
 For general help using Raytha, please refer to official documentation on [raytha.com](https://raytha.com), the [Raytha Youtube channel](https://www.youtube.com/channel/UCuQtF2WwODs2DfZ4pV-2SfA), or post your questions and feedback in [Github Discussions](https://github.com/RaythaHQ/raytha/discussions). Keep up to date on Raytha news by following @raythahq on [Twitter](https://twitter.com/raythahq) and [Instagram](https://instagram.com/raythahq).
+
+## Paid support
+
+You may reach out to the Raytha team if you are interested in learning about paid support or consulting services at hello@raytha.com. We look forward to hearing from you.
 
 ## Contributing to Raytha
 

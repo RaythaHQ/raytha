@@ -5,7 +5,7 @@ A priority of Raytha is to keep the technology footprint small for getting up an
 * .NET 6+
 * npm for compiling javascript
 * SQL Server Express
-* SMTP
+* [SMTP](/articles/smtp.md)
 * Visual Studio 2022 or VS Code. All tutorials will assume Visual Studio.
 
 The steps to run Raytha locally are that of any typical .NET application.
