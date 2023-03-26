@@ -9,3 +9,8 @@
 .subnav {
     display:none;
 }
+
+img.inline-img {
+    margin-top: 16px;
+    margin-bottom: 16px;
+}
