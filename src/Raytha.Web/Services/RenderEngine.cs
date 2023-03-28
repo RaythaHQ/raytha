@@ -7,7 +7,6 @@ using Raytha.Application.Common.Utils;
 using Raytha.Application.ContentItems.Queries;
 using System;
 using System.Collections.Generic;
-using System.Dynamic;
 using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -87,16 +86,18 @@ public class RenderEngine : IRenderEngine
     {
         return new FunctionValue(async (args, context) => 
         {
-            var viewId = args.At(0).ToStringValue();
-            var contentType = args.At(1).ToStringValue();
-            var filter = args.At(2).ToStringValue();
-            var orderBy = args.At(3).ToStringValue();
+            var contentType = args["ContentType"].ToStringValue();
+            var filter = args["Filter"].ToStringValue();
+            var orderBy = args["OrderBy"].ToStringValue();
+            var pageNumber = args["PageNumber"].ToNumberValue();
+            var pageSize = args["PageSize"].ToNumberValue();
             var result = await _mediator.Send(new GetContentItems.Query 
             { 
-                ViewId = viewId,
                 ContentType = contentType,
                 Filter = filter,
-                OrderBy = orderBy
+                OrderBy = orderBy,
+                PageNumber = (int)pageNumber,
+                PageSize = (int)pageSize
             });
             return new ObjectValue(result.Result);
         });
