@@ -1,11 +1,12 @@
 ﻿using Fluid;
 using Fluid.Filters;
 using Fluid.Values;
+using MediatR;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Utils;
+using Raytha.Application.ContentItems.Queries;
 using System;
 using System.Collections.Generic;
-using System.Dynamic;
 using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -17,11 +18,13 @@ public class RenderEngine : IRenderEngine
     private static readonly FluidParser _parser = new FluidParser(new FluidParserOptions { AllowFunctions = true });
     private readonly IRelativeUrlBuilder _relativeUrlBuilder;
     private readonly ICurrentOrganization _currentOrganization;
+    private readonly IMediator _mediator;
 
-    public RenderEngine(IRelativeUrlBuilder relativeUrlBuilder, ICurrentOrganization currentOrganization)
+    public RenderEngine(IMediator mediator, IRelativeUrlBuilder relativeUrlBuilder, ICurrentOrganization currentOrganization)
     {
         _relativeUrlBuilder = relativeUrlBuilder;
         _currentOrganization = currentOrganization;
+        _mediator = mediator;
     }
 
     public string RenderAsHtml(string source, object entity)
@@ -37,6 +40,8 @@ public class RenderEngine : IRenderEngine
             options.Filters.AddFilter("json", JsonFilter);
 
             var context = new TemplateContext(entity, options);
+            context.SetValue("get_content_item_by_id", GetContentItemById());
+            context.SetValue("get_content_items", GetContentItems());
             string renderedHtml = template.Render(context);
             return renderedHtml;
         }
@@ -65,6 +70,37 @@ public class RenderEngine : IRenderEngine
             }));
         }
         return new ArrayValue(result);
+    }
+
+    public FunctionValue GetContentItemById()
+    {
+        return new FunctionValue(async (args, context) => 
+        {
+            var contentItemId = args.At(0).ToStringValue();
+            var result = await _mediator.Send(new GetContentItemById.Query { Id = contentItemId });
+            return new ObjectValue(result.Result);
+        });
+    }
+
+    public FunctionValue GetContentItems()
+    {
+        return new FunctionValue(async (args, context) => 
+        {
+            var contentType = args["ContentType"].ToStringValue();
+            var filter = args["Filter"].ToStringValue();
+            var orderBy = args["OrderBy"].ToStringValue();
+            var pageNumber = args["PageNumber"].ToNumberValue();
+            var pageSize = args["PageSize"].ToNumberValue();
+            var result = await _mediator.Send(new GetContentItems.Query 
+            { 
+                ContentType = contentType,
+                Filter = filter,
+                OrderBy = orderBy,
+                PageNumber = (int)pageNumber,
+                PageSize = (int)pageSize
+            });
+            return new ObjectValue(result.Result);
+        });
     }
 
     private string ApplyGroupBy(FluidValue p, string groupByProperty, TemplateContext context)

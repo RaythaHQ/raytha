@@ -1,0 +1,36 @@
+- name: Introduction
+  href: ../index.md
+
+- name: Quick start
+  href: installation.md
+
+- name: Advanced options
+  items:
+    - name: File storage
+      href: filestorage.md
+
+    - name: Sending emails
+      href: smtp.md
+
+- name: Deployment
+  href: deployment.md
+
+- name: Templates
+  items:
+    - name: Intro
+      href: templates_intro.md
+
+    - name: Detail vs list views
+      href: templates_detail_vs_list.md
+
+    - name: Functions and filters
+      href: templates_custom_funcs.md
+
+- name: Build an SSO
+  items:
+    - name: Json Web Token
+      href: jwt.md
+
+    - name: SAML
+      href: saml.md
+
