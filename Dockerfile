@@ -11,6 +11,7 @@ COPY ["src/Raytha.Domain/Raytha.Domain.csproj", "src/Raytha.Domain/"]
 COPY ["src/Raytha.Application/Raytha.Application.csproj", "src/Raytha.Application/"]
 COPY ["src/Raytha.Infrastructure/Raytha.Infrastructure.csproj", "src/Raytha.Infrastructure/"]
 COPY ["src/Raytha.Web/Raytha.Web.csproj", "src/Raytha.Web/"]
+COPY ["tests/Raytha.Domain.UnitTests/Raytha.Domain.UnitTests.csproj", "tests/Raytha.Domain.UnitTests/"]
 COPY ["Raytha.sln", ""]
 
 ARG DOTNET_RESTORE_CLI_ARGS=
