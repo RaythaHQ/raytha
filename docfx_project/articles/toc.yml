@@ -1,3 +1,6 @@
+- name: Introduction
+  href: ../index.md
+
 - name: Quick start
   href: installation.md
 
@@ -13,7 +16,15 @@
   href: deployment.md
 
 - name: Templates
-  href: templates.md
+  items:
+    - name: Intro
+      href: templates_intro.md
+
+    - name: Detail vs list views
+      href: templates_detail_vs_list.md
+
+    - name: Functions and filters
+      href: templates_custom_funcs.md
 
 - name: Build an SSO
   items:
