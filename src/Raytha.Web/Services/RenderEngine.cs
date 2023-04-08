@@ -20,12 +20,18 @@ public class RenderEngine : IRenderEngine
     private readonly IRelativeUrlBuilder _relativeUrlBuilder;
     private readonly ICurrentOrganization _currentOrganization;
     private readonly IMediator _mediator;
+    private readonly IFileStorageProvider _fileStorageProvider;
 
-    public RenderEngine(IMediator mediator, IRelativeUrlBuilder relativeUrlBuilder, ICurrentOrganization currentOrganization)
+    public RenderEngine(
+        IMediator mediator, 
+        IRelativeUrlBuilder relativeUrlBuilder, 
+        ICurrentOrganization currentOrganization, 
+        IFileStorageProvider fileStorageProvider)
     {
         _relativeUrlBuilder = relativeUrlBuilder;
         _currentOrganization = currentOrganization;
         _mediator = mediator;
+        _fileStorageProvider = fileStorageProvider;
     }
 
     public string RenderAsHtml(string source, object entity)
@@ -35,7 +41,9 @@ public class RenderEngine : IRenderEngine
             var options = new TemplateOptions();
             options.MemberAccessStrategy = new UnsafeMemberAccessStrategy();
             options.TimeZone = DateTimeExtensions.GetTimeZoneInfo(_currentOrganization.TimeZone);
-            options.Filters.AddFilter("raytha_attachment_url", RaythaAttachmentUrl);
+            options.Filters.AddFilter("raytha_attachment_url", AttachmentRedirectUrl); //deprecated
+            options.Filters.AddFilter("attachment_redirect_url", AttachmentRedirectUrl);
+            options.Filters.AddFilter("attachment_public_url", AttachmentPublicUrl);
             options.Filters.AddFilter("organization_time", LocalDateFilter);
             options.Filters.AddFilter("groupby", GroupBy);
             options.Filters.AddFilter("json", JsonFilter);
@@ -53,9 +61,14 @@ public class RenderEngine : IRenderEngine
         }
     }
 
-    public ValueTask<FluidValue> RaythaAttachmentUrl(FluidValue input, FilterArguments arguments, TemplateContext context)
+    public ValueTask<FluidValue> AttachmentRedirectUrl(FluidValue input, FilterArguments arguments, TemplateContext context)
     {
         return new StringValue(_relativeUrlBuilder.MediaRedirectToFileUrl(input.ToStringValue()));
+    }
+
+    public ValueTask<FluidValue> AttachmentPublicUrl(FluidValue input, FilterArguments arguments, TemplateContext context)
+    {
+        return new StringValue(_fileStorageProvider.GetDownloadUrlAsync(input.ToStringValue()).Result);
     }
 
     public ValueTask<FluidValue> GroupBy(FluidValue input, FilterArguments property, TemplateContext context)

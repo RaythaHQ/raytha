@@ -8,7 +8,7 @@ public interface IFileStorageProvider
 
     Task<string> GetDownloadUrlAsync(string key, DateTime expiresAt, bool inline = true);
 
-    Task<string> GetDownloadUrlAsync(string key, string fileName, string contentType, DateTime expiresAt, bool inline = true);
+    Task<string> GetDownloadUrlAsync(string key);
 
     Task DeleteAsync(string key);
 
