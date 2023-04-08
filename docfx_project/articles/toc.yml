@@ -26,6 +26,9 @@
     - name: Functions and filters
       href: templates_custom_funcs.md
 
+    - name: OData in Templates
+      href: templates_odata.md
+
 - name: Build an SSO
   items:
     - name: Json Web Token

@@ -8,9 +8,9 @@ Note that every time you call one of these functions, you are making a call to t
 
 ### get_content_item_by_id(contentItemId)
 
-You can use this function to make a call to the database to get the details for a single content item by its id.
+Retrieve details for a single content item by its id.
 
-Usage:
+Example usage:
 
 ```
 {% assign other_related_item = get_content_item_by_id(Target.PublishedContent.related_item.PublishedContent.another_related_item)}
@@ -18,35 +18,78 @@ Usage:
 {{ other_related_item.PrimaryField }}
 ```
 
-### get_content_items(ContentType: developer_name, Filter: odata, OrderBy: odata, PageNumber: int, PageSize: int)
+### get_content_items(ContentType='developer_name', Filter='odata', OrderBy='odata', PageNumber=1, PageSize=25)
 
-This function will acquire the items for the given `ContentType` (required). The other parameters are optional.
+Retrieve the items for the given `ContentType` (required). The other parameters are optional. You can filter, sort, and paginate on these items by following the OData syntax as described [in OData with Templates](/articles/templates_odata.html).
+
+Example usage:
 
 ```
-{% assign over_five_yrs = get_content_items(ContentType: "posts", Filter: "age > 5", OrderBy: "PrimaryField asc", PageNumber: 1, PageSize: 10)}
+{% assign filter = "contains(user_guide,'" | append: Target.PrimaryField | append: "')" %}
+{% assign items = get_content_items(ContentType='posts', Filter=filter, OrderBy="order_to_appear_in_user_guide asc", PageSize=25) %}
 
-{% for item in over_five_yrs.Items %}
-    {{ item.PrimaryField }}
+{% if items.TotalCount > 0 %}
+<div id="articles">
+    <h2>Table of Contents</h2>   
+    <ol>
+    {% for item in items.Items %}
+        <li><a href="{{ PathBase }}/{{ item.RoutePath }}" target="_blank">{{ item.PrimaryField }}</a></li>
+    {% endfor %}
+    </ol>
+</div>
+{% endif %}
+```
+
+### get_content_type_by_developer_name(contentTypeDeveloperName)
+
+Retrieve details and field definitions of a content type by passing in the content type developer name.
+
+Example usage:
+
+```
+{% assign contentType = get_content_type_by_developer_name('posts') %}
+{% assign categoriesField = contentType.ContentTypeFields | where: "DeveloperName", "categories" | first %}
+{% for choice in categoriesField.Choices %}
+	<a href="{{ PathBase }}/{{ category.DeveloperName }}">{{ choice.Label }}</a>
 {% endfor %}
 ```
 
 ## Filters
 
-### raytha_attachment_url
+### attachment_redirect_url
 
-This filter will take the value and output the rendered url that redirects to the attachment's URL.
+Output a url that is relative to the current website such as yourdomain.com/raytha/media-items/objectkey/{key}.
 
-Usage:
+Example usage:
 
 ```
-{{ Target.PublishedContent.attachment.Value | raytha_attachment_url }}
+{{ Target.PublishedContent.attachment.Value | attachment_redirect_url }}
 ```
+
+> Note: This rendered url does a 302 redirect to the file on the file storage provider and generates a pre-signed or SaS url in the process. This allows your storage bucket to remain completely private. However, if you have a lot of attachment urls on your page, you are increasing the number of requests your website must serve to redirect to these files.
+
+### attachment_public_url
+
+Output the url directly to the file on your file storage provider.
+
+Example usage:
+
+```
+{{ Target.PublishedContent.attachment.Value | attachment_public_url }}
+```
+
+> Note: These urls will be the direct file on your file storage provider, but does not generate a presigned URL request or SaS url. Therefore, to use this filter, your storage bucket must be set to allow anonymous read-access on blobs.
+
+### raytha_attachment_url (deprecated)
+
+Renamed to `attachment_redirect_url`. To be removed in v1.0.6
+
 
 ### organization_time
 
-This filter will take the value and convert it to the timezone that is set in the system's organization settings. This is useful when using variables `CreationTime` and `LastModificationTime`.
+Take the value and convert it to the timezone that is set in the system's organization settings. This is useful when using variables `CreationTime` and `LastModificationTime`.
 
-Usage:
+Example usage:
 
 ```
 {{{ item.CreationTime | organization_time | date: '%c' }}
@@ -56,9 +99,9 @@ Usage:
 
 ### groupby: "PublishedContent.developer_name"
 
-This will perform a groupby operation on an array of items, most commonly used with `Target.Items` and key on the PublishedContent.developer_name attribute. The output will be a dictionary of `key` and `items` as demonstrated below.
+Perform a groupby operation on an array of items, most commonly used with `Target.Items` and key on the PublishedContent.developer_name attribute. The output will be a dictionary of `key` and `items` as demonstrated below.
 
-Usage:
+Example usage:
 
 ```
 {% assign grouped_items = Target.Items | groupby: "PublishedContent.developer_name" %}
@@ -72,9 +115,9 @@ Usage:
 
 ### json
 
-If you want to "stringify" any of the objects that come out of the rendering engine, you can apply the `json` filter. This might be useful during development if you are looking to see what the attributes are on the objects so that you can pull them out.
+"Stringify" any of the objects that come out of the rendering engine. This might be useful during development if you are looking to see what the attributes are on the objects so that you can pull them out.
 
-Usage:
+Example usage:
 
 ```
 {{ Target | json }}
