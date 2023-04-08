@@ -5,6 +5,7 @@ using MediatR;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Utils;
 using Raytha.Application.ContentItems.Queries;
+using Raytha.Application.ContentTypes.Queries;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -42,6 +43,7 @@ public class RenderEngine : IRenderEngine
             var context = new TemplateContext(entity, options);
             context.SetValue("get_content_item_by_id", GetContentItemById());
             context.SetValue("get_content_items", GetContentItems());
+            context.SetValue("get_content_type_by_developer_name", GetContentTypeByDeveloperName());
             string renderedHtml = template.Render(context);
             return renderedHtml;
         }
@@ -99,6 +101,16 @@ public class RenderEngine : IRenderEngine
                 PageNumber = (int)pageNumber,
                 PageSize = (int)pageSize
             });
+            return new ObjectValue(result.Result);
+        });
+    }
+
+    public FunctionValue GetContentTypeByDeveloperName()
+    {
+        return new FunctionValue(async (args, context) =>
+        {
+            var developerName = args.At(0).ToStringValue();
+            var result = await _mediator.Send(new GetContentTypeByDeveloperName.Query { DeveloperName = developerName });
             return new ObjectValue(result.Result);
         });
     }
