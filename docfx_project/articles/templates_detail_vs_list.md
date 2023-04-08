@@ -105,9 +105,7 @@ It is also common to have pagination on a list view. You can see an example belo
 
 ### Using OData for filtering and searching
 
-One of the powerful aspects of Raytha's templating system is that it makes use of OData so that you can output any subset of the content type you are looking to pull.
-
-[docs coming soon]
+One of the powerful aspects of Raytha's templating system is that it makes use of OData so that you can output any subset of the content type you are looking to pull. You can filter, sort, and paginate on these items by following the OData syntax as described [in OData with Templates](/articles/templates_odata.html).
 
 ## Detail views
 

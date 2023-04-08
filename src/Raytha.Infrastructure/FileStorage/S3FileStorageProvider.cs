@@ -55,19 +55,10 @@ public class S3FileStorageProvider : IFileStorageProvider
         return _client.GetPreSignedURL(request1);
     }
 
-    public async Task<string> GetDownloadUrlAsync(string key, string fileName, string contentType, DateTime expiresAt, bool inline = true)
+    public async Task<string> GetDownloadUrlAsync(string key)
     {
-        GetPreSignedUrlRequest request = new GetPreSignedUrlRequest
-        {
-            BucketName = _bucket,
-            Key = key,
-            Expires = expiresAt,
-            Protocol = Protocol.HTTPS,
-            Verb = HttpVerb.GET
-        };
-        request.ResponseHeaderOverrides.ContentType = contentType;
-        request.ResponseHeaderOverrides.ContentDisposition = inline ? $"inline; filename={key}" : $"attachment; filename={key}";
-        return _client.GetPreSignedURL(request);
+        string url = $"https://{_bucket}.s3.amazonaws.com/{key}";
+        return url;
     }
 
     public async Task<string> GetUploadUrlAsync(string key, string fileName, string contentType, DateTime expiresAt, bool inline = true)

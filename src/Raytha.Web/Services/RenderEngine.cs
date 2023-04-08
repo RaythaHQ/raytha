@@ -5,6 +5,7 @@ using MediatR;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Utils;
 using Raytha.Application.ContentItems.Queries;
+using Raytha.Application.ContentTypes.Queries;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -19,12 +20,18 @@ public class RenderEngine : IRenderEngine
     private readonly IRelativeUrlBuilder _relativeUrlBuilder;
     private readonly ICurrentOrganization _currentOrganization;
     private readonly IMediator _mediator;
+    private readonly IFileStorageProvider _fileStorageProvider;
 
-    public RenderEngine(IMediator mediator, IRelativeUrlBuilder relativeUrlBuilder, ICurrentOrganization currentOrganization)
+    public RenderEngine(
+        IMediator mediator, 
+        IRelativeUrlBuilder relativeUrlBuilder, 
+        ICurrentOrganization currentOrganization, 
+        IFileStorageProvider fileStorageProvider)
     {
         _relativeUrlBuilder = relativeUrlBuilder;
         _currentOrganization = currentOrganization;
         _mediator = mediator;
+        _fileStorageProvider = fileStorageProvider;
     }
 
     public string RenderAsHtml(string source, object entity)
@@ -34,7 +41,9 @@ public class RenderEngine : IRenderEngine
             var options = new TemplateOptions();
             options.MemberAccessStrategy = new UnsafeMemberAccessStrategy();
             options.TimeZone = DateTimeExtensions.GetTimeZoneInfo(_currentOrganization.TimeZone);
-            options.Filters.AddFilter("raytha_attachment_url", RaythaAttachmentUrl);
+            options.Filters.AddFilter("raytha_attachment_url", AttachmentRedirectUrl); //deprecated
+            options.Filters.AddFilter("attachment_redirect_url", AttachmentRedirectUrl);
+            options.Filters.AddFilter("attachment_public_url", AttachmentPublicUrl);
             options.Filters.AddFilter("organization_time", LocalDateFilter);
             options.Filters.AddFilter("groupby", GroupBy);
             options.Filters.AddFilter("json", JsonFilter);
@@ -42,6 +51,7 @@ public class RenderEngine : IRenderEngine
             var context = new TemplateContext(entity, options);
             context.SetValue("get_content_item_by_id", GetContentItemById());
             context.SetValue("get_content_items", GetContentItems());
+            context.SetValue("get_content_type_by_developer_name", GetContentTypeByDeveloperName());
             string renderedHtml = template.Render(context);
             return renderedHtml;
         }
@@ -51,9 +61,14 @@ public class RenderEngine : IRenderEngine
         }
     }
 
-    public ValueTask<FluidValue> RaythaAttachmentUrl(FluidValue input, FilterArguments arguments, TemplateContext context)
+    public ValueTask<FluidValue> AttachmentRedirectUrl(FluidValue input, FilterArguments arguments, TemplateContext context)
     {
         return new StringValue(_relativeUrlBuilder.MediaRedirectToFileUrl(input.ToStringValue()));
+    }
+
+    public ValueTask<FluidValue> AttachmentPublicUrl(FluidValue input, FilterArguments arguments, TemplateContext context)
+    {
+        return new StringValue(_fileStorageProvider.GetDownloadUrlAsync(input.ToStringValue()).Result);
     }
 
     public ValueTask<FluidValue> GroupBy(FluidValue input, FilterArguments property, TemplateContext context)
@@ -99,6 +114,16 @@ public class RenderEngine : IRenderEngine
                 PageNumber = (int)pageNumber,
                 PageSize = (int)pageSize
             });
+            return new ObjectValue(result.Result);
+        });
+    }
+
+    public FunctionValue GetContentTypeByDeveloperName()
+    {
+        return new FunctionValue(async (args, context) =>
+        {
+            var developerName = args.At(0).ToStringValue();
+            var result = await _mediator.Send(new GetContentTypeByDeveloperName.Query { DeveloperName = developerName });
             return new ObjectValue(result.Result);
         });
     }

@@ -25,7 +25,7 @@ public class LocalFileStorageProvider : IFileStorageProvider
         return _relativeUrlBuilder.MediaFileLocalStorageUrl(key);
     }
 
-    public async Task<string> GetDownloadUrlAsync(string key, string fileName, string contentType, DateTime expiresAt, bool inline = true)
+    public async Task<string> GetDownloadUrlAsync(string key)
     {
         return _relativeUrlBuilder.MediaFileLocalStorageUrl(key);
     }

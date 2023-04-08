@@ -43,26 +43,20 @@ public class AzureBlobFileStorageProvider : IFileStorageProvider
             Protocol = SasProtocol.HttpsAndHttp
         };
 
+
         downloadUrl = blobClient.GenerateSasUri(sasPermissions).AbsoluteUri;
+
         downloadUrl = UseCustomDomain(downloadUrl);
         return downloadUrl;
     }
 
-    public async Task<string> GetDownloadUrlAsync(string key, string fileName, string contentType, DateTime expiresAt, bool inline = true)
+    public async Task<string> GetDownloadUrlAsync(string key)
     {
         BlobClient blobClient = _client.GetBlobClient(key);
         
-        string downloadUrl;
-
-        BlobSasBuilder sasPermissions = new BlobSasBuilder(BlobSasPermissions.Read, expiresAt)
-        {
-            ContentDisposition = inline ? $"inline" : $"attachment; filename={key}",
-            ContentType = contentType,
-            Protocol = SasProtocol.HttpsAndHttp
-        };
-        
-        downloadUrl = blobClient.GenerateSasUri(sasPermissions).AbsoluteUri;
+        string downloadUrl = blobClient.Uri.AbsoluteUri;
         downloadUrl = UseCustomDomain(downloadUrl);
+
         return downloadUrl;
     }
 
@@ -92,6 +86,7 @@ public class AzureBlobFileStorageProvider : IFileStorageProvider
             ContentType = contentType,
             Protocol = SasProtocol.HttpsAndHttp
         };
+
         downloadUrl = blobClient.GenerateSasUri(sasPermissions).AbsoluteUri;
 
         using (var ms = new MemoryStream())
