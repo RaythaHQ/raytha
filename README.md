@@ -25,15 +25,15 @@ Raytha is a versatile and lightweight general purpose content management system.
 
 ## Why Raytha?
 
-### Content managers love it
+### Content Managers Love It
 
-📝 Content administrators love Raytha not only for its minimal learning curve, simplicity, and self-evident UI, but also for its ease of granting different permission levels and roles to various admins, as well as its ability to revert back to previous versions of articles effortlessly. Raytha's audit logs functionality is also highly valued by content administrators, allowing them to keep track of all changes made to the content, and ensuring greater transparency and accountability across the organization.
+📝 Content managers love Raytha not only for its minimal learning curve, simplicity, and self-evident UI, but also for its ease of granting different permission levels and roles to various admins, as well as its ability to revert back to previous versions of articles effortlessly. Raytha's audit logs functionality is also highly valued by content administrators, allowing them to keep track of all changes made to the content, and ensuring greater transparency and accountability across the organization.
 
-### Rapid prototyping
+### Rapid Prototyping
 
 👨‍💻 Know HTML? Raytha makes it easy for project managers and tech-savvy individuals to create custom websites in a snap. You can go the distance with just a basic understanding of HTML. From blogs and corporate sites to photo and video galleries, event websites, job boards, and beyond, Raytha can help you rapidly prototype a new concept.
 
-### Boilerplate for Developers
+### Starter Kit for Developers
 
 🚀 If you're a .NET developer looking to jumpstart your web application development, Raytha's boilerplate template can save you valuable time. Raytha offers a host of features including user management, role-based access control (RBAC), single sign-on, and audit logs functionality, as well as interfaces for file storage with Azure Blob and S3-compatible providers. Its architecture is built on the well-known [CleanArchitecture](https://github.com/jasontaylordev/CleanArchitecture) template, which means that any .NET developer can easily familiarize themselves with the backend functionality. With Raytha, you can hit the ground running and get your web application up and running in no time.
 
