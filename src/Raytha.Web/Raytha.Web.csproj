@@ -51,6 +51,7 @@
     <UptoDateCheckInput Remove="wwwroot\raytha_admin\js\src\controllers\contentitems\wysiwyg_controller.js" />
     <UptoDateCheckInput Remove="wwwroot\raytha_admin\js\src\controllers\roles\autodisable_controller.js" />
     <UptoDateCheckInput Remove="wwwroot\raytha_admin\js\src\controllers\templates\codehighlighting_controller.js" />
+    <UptoDateCheckInput Remove="wwwroot\raytha_admin\js\src\controllers\templates\uploadasset_controller.js" />
     <UptoDateCheckInput Include="$(JsApplicationRoot)package.json" />
     <UpToDateCheckBuilt Include="$(JsApplicationBundleFile)" />
   </ItemGroup>

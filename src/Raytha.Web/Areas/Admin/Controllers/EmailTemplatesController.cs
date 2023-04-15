@@ -61,7 +61,11 @@ public class EmailTemplatesController : BaseController
             DeveloperName = response.Result.DeveloperName,
             Cc = response.Result.Cc,
             Bcc = response.Result.Bcc,
-            TemplateVariables = templateVariableDictionary
+            TemplateVariables = templateVariableDictionary,
+            AllowedMimeTypes = FileStorageProviderSettings.AllowedMimeTypes,
+            MaxFileSize = FileStorageProviderSettings.MaxFileSize,
+            UseDirectUploadToCloud = FileStorageProviderSettings.UseDirectUploadToCloud,
+            PathBase = CurrentOrganization.PathBase
         };
 
         return View("~/Areas/Admin/Views/Templates/Email/Edit.cshtml", model);
@@ -91,7 +95,10 @@ public class EmailTemplatesController : BaseController
         {
             var templateVariableDictionary = GetInsertVariablesViewModel(model.DeveloperName);
             model.TemplateVariables = templateVariableDictionary;
-
+            model.AllowedMimeTypes = FileStorageProviderSettings.AllowedMimeTypes;
+            model.MaxFileSize = FileStorageProviderSettings.MaxFileSize;
+            model.UseDirectUploadToCloud = FileStorageProviderSettings.UseDirectUploadToCloud;
+            model.PathBase = CurrentOrganization.PathBase;
             SetErrorMessage("There was an error attempting to update this template. See the error below.", response.GetErrors());
             return View("~/Areas/Admin/Views/Templates/Email/Edit.cshtml", model);
         }
