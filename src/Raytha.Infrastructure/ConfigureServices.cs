@@ -30,6 +30,7 @@ public static class ConfigureServices
 
         services.AddScoped<IEmailer, Emailer>();
         services.AddTransient<IRaythaDbJsonQueryEngine, RaythaDbJsonQueryEngine>();
+        services.AddTransient<IRaythaRawDbInfo, RaythaRawDbInfo>();
 
         //file storage provider
         var fileStorageProvider = configuration[FileStorageUtility.CONFIG_NAME].IfNullOrEmpty(FileStorageUtility.LOCAL).ToLower();

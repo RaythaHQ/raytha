@@ -16,6 +16,7 @@ public static class FileStorageUtility
     public const string S3_SERVICE_URL_CONFIG_NAME = $"{FILE_STORAGE_PREFIX}_S3_SERVICE_URL";
     public const string S3_BUCKET_CONFIG_NAME = $"{FILE_STORAGE_PREFIX}_S3_BUCKET";
     public const string DIRECT_UPLOAD_TO_CLOUD_CONFIG_NAME = $"{FILE_STORAGE_PREFIX}_DIRECT_UPLOAD_TO_CLOUD";
+    public const string DATABASE_MAX_SIZE_CONFIG_NAME = $"DATABASE_MAX_SIZE";
 
     public const string LOCAL = "local";
     public const string AZUREBLOB = "azureblob";
@@ -24,6 +25,7 @@ public static class FileStorageUtility
     public const string DEFAULT_LOCAL_DIRECTORY = "user-uploads";
     public const long DEFAULT_MAX_FILE_SIZE = 2000000; //20 mb
     public const long DEFAULT_MAX_TOTAL_DISK_SPACE = 100000000; //1 gb 
+    public const long DEFAULT_MAX_TOTAL_DB_SIZE = 100000000; //1 gb 
     public const string DEFAULT_ALLOWED_MIMETYPES = "text/*,image/*,video/*,audio/*,application/pdf"; //1 gb 
     public const bool DEFAULT_DIRECT_UPLOAD_TO_CLOUD = true;
 

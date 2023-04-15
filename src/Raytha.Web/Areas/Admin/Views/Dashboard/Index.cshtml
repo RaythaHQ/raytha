@@ -55,35 +55,68 @@
             </div>
         </div>
     </div>
+    <div class="col-12 col-sm-6 col-xl-4 mb-4">
+        <div class="card border-0 shadow">
+            <div class="card-header border-bottom d-flex align-items-center justify-content-between">
+                <h2 class="fs-5 fw-bold mb-0">File storage</h2>
+            </div>
+            <div class="card-body">
+                <div class="d-flex align-items-center justify-content-between border-bottom pt-2 pb-2">
+                    <div>
+                        <div class="h6 mb-0 d-flex align-items-center">
+                            Storage provider
+                        </div>
+                    </div>
+                    <div><span class="d-flex align-items-center fw-bold">@Model.FileStorageProvider</span></div>
+                </div>
+                <div class="d-flex align-items-center justify-content-between border-bottom pt-2 pb-2">
+                    <div>
+                        <div class="h6 mb-0 d-flex align-items-center">
+                            Storage consumed
+                        </div>
+                    </div>
+                    <div><span class="d-flex align-items-center fw-bold">@Model.CurrentFileStorageSizeInGb gb</span></div>
+                </div>
+                <div class="d-flex align-items-center justify-content-between border-bottom pt-2 pb-2">
+                    <div>
+                        <div class="h6 mb-0 d-flex align-items-center">
+                            Storage allotted
+                        </div>
+                    </div>
+                    <div><span class="d-flex align-items-center fw-bold">@Model.MaxTotalDiskSpaceInGb gb</span></div>
+                </div>
+                <div class="d-flex align-items-center justify-content-between border-bottom pt-2 pb-2">
+                    <div>
+                        <div class="h6 mb-0 d-flex align-items-center">
+                            Percent used
+                        </div>
+                    </div>
+                    <div><span class="d-flex align-items-center fw-bold">@Model.FileStoragePercentUsed %</span></div>
+                </div>
+            </div>
+        </div>
+    </div>
         <div class="col-12 col-sm-6 col-xl-4 mb-4">
             <div class="card border-0 shadow">
                 <div class="card-header border-bottom d-flex align-items-center justify-content-between">
-                    <h2 class="fs-5 fw-bold mb-0">File storage</h2>
+                    <h2 class="fs-5 fw-bold mb-0">Database size</h2>
                 </div>
                 <div class="card-body">
                     <div class="d-flex align-items-center justify-content-between border-bottom pt-2 pb-2">
                         <div>
                             <div class="h6 mb-0 d-flex align-items-center">
-                                Storage provider
+                                Db size consumed
                             </div>
                         </div>
-                        <div><span class="d-flex align-items-center fw-bold">@Model.FileStorageProvider</span></div>
+                        <div><span class="d-flex align-items-center fw-bold">@Model.CurrentDbSizeInMb mb</span></div>
                     </div>
                     <div class="d-flex align-items-center justify-content-between border-bottom pt-2 pb-2">
                         <div>
                             <div class="h6 mb-0 d-flex align-items-center">
-                                Storage consumed
+                                Db size allotted
                             </div>
                         </div>
-                        <div><span class="d-flex align-items-center fw-bold">@Model.CurrentFileStorageSizeInGb gb</span></div>
-                    </div>
-                    <div class="d-flex align-items-center justify-content-between border-bottom pt-2 pb-2">
-                        <div>
-                            <div class="h6 mb-0 d-flex align-items-center">
-                                Storage allotted
-                            </div>
-                        </div>
-                        <div><span class="d-flex align-items-center fw-bold">@Model.MaxTotalDiskSpaceInGb gb</span></div>
+                        <div><span class="d-flex align-items-center fw-bold">@Model.MaxTotalDbSizeInMb mb</span></div>
                     </div>
                     <div class="d-flex align-items-center justify-content-between border-bottom pt-2 pb-2">
                         <div>
@@ -91,7 +124,7 @@
                                 Percent used
                             </div>
                         </div>
-                        <div><span class="d-flex align-items-center fw-bold">@Model.FileStoragePercentUsed %</span></div>
+                        <div><span class="d-flex align-items-center fw-bold">@Model.DbPercentUsed %</span></div>
                     </div>
                 </div>
             </div>

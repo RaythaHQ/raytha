@@ -26,6 +26,18 @@ public class FileStorageProviderSettings : IFileStorageProviderSettings
         }
     }
 
+    public long MaxTotalDbSize
+    {
+        get
+        {
+            if (string.IsNullOrEmpty(_configuration[FileStorageUtility.MAX_TOTAL_DISK_SPACE_CONFIG_NAME]))
+            {
+                return FileStorageUtility.DEFAULT_MAX_TOTAL_DISK_SPACE;
+            }
+            return Convert.ToInt64(_configuration[FileStorageUtility.MAX_TOTAL_DISK_SPACE_CONFIG_NAME]);
+        }
+    }
+
     public long MaxFileSize
     {
         get
