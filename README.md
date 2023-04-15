@@ -6,9 +6,15 @@
 
 Raytha is a versatile and lightweight general purpose content management system. Create any type of website by easily configuring custom content types and HTML templates that can be directly edited within the platform.
 
+<details>
+  <summary>See it in action (2 min 📹)</summary>
+  
+[![Quick silent demo](https://user-images.githubusercontent.com/777005/232171420-35104db8-4c19-46b5-bbe0-87e4b19316fe.mp4)](https://user-images.githubusercontent.com/777005/232171420-35104db8-4c19-46b5-bbe0-87e4b19316fe.mp4)
+</details>
+
 <strong>🌐 [Raytha.com](https://raytha.com) 📹 [Intro Video](https://www.youtube.com/watch?v=k6VrvqH8PBY) 📖 [User Guide](https://raytha.com/user-guide) 👨‍💻 [Developer Docs](https://docs.raytha.com)</strong>
 
-[![Quick silent demo](https://user-images.githubusercontent.com/777005/232171420-35104db8-4c19-46b5-bbe0-87e4b19316fe.mp4)](https://user-images.githubusercontent.com/777005/232171420-35104db8-4c19-46b5-bbe0-87e4b19316fe.mp4)
+![image](https://user-images.githubusercontent.com/777005/232172756-4c1ffd34-ea4f-4dbd-bffc-8a7a22ef9e75.png)
 
 ## Feature Highlights
 
