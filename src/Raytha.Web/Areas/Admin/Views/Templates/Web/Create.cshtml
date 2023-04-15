@@ -80,6 +80,30 @@
                             <div class="@Model.HasError("Content")" id="editorContainer" style="height:500px;" data-templates--codehighlighting-target="editor"></div>
                             <input type="hidden" asp-for="Content" data-templates--codehighlighting-target="textarea" />
                             <div class="invalid-feedback">@Model.ErrorMessageFor("Content")</div>
+                            <div id="uploadAssets"
+                                 data-controller="templates--uploadasset"
+                                 data-templates--uploadasset-fieldid-value="uploadAssets"
+                                 data-templates--uploadasset-mimetypes-value="@Model.AllowedMimeTypes"
+                                 data-templates--uploadasset-usedirectuploadtocloud-value="@Model.UseDirectUploadToCloud"
+                                 data-templates--uploadasset-maxfilesize-value="@Model.MaxFileSize" ,
+                                 data-templates--uploadasset-pathbase-value="@Model.PathBase">
+
+                                <div id="uploadAssets-uppy" data-templates--uploadasset-target="uppyContainer"></div>
+                                <div>
+                                    <div class="toast align-items-center text-white bg-success border-0" role="alert" aria-live="assertive"
+                                         aria-atomic="true" data-templates--uploadasset-target="toast">
+                                        <div class="d-flex">
+                                            <div class="toast-body">
+                                                Successfully copied to the clipboard!
+                                            </div>
+                                            <button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                                        </div>
+                                    </div>
+                                    <ul id="uploadAssets-uppy-copyurls" class="list-group" data-templates--uploadasset-target="uppyCopyUrls">
+
+                                    </ul>
+                                </div>
+                             </div>
                         </div>
                     </div>
                     <button type="submit" class="btn btn-success mt-4">Publish changes</button>

@@ -80,7 +80,11 @@ public class WebTemplatesController : BaseController
         {
             ParentTemplates = baseLayoutsDictionary,
             TemplateAccessToModelDefinitions = templateAccessList.ToArray(),
-            TemplateVariables = templateVariableDictionary
+            TemplateVariables = templateVariableDictionary,
+            AllowedMimeTypes = FileStorageProviderSettings.AllowedMimeTypes,
+            MaxFileSize = FileStorageProviderSettings.MaxFileSize,
+            UseDirectUploadToCloud = FileStorageProviderSettings.UseDirectUploadToCloud,
+            PathBase = CurrentOrganization.PathBase
         };
 
         return View("~/Areas/Admin/Views/Templates/Web/Create.cshtml", viewModel);
@@ -121,6 +125,10 @@ public class WebTemplatesController : BaseController
             var contentTypes = await Mediator.Send(new GetContentTypes.Query { PageSize = int.MaxValue });
             var templateVariableDictionary = GetInsertVariablesViewModel(model.DeveloperName, false, contentTypes.Result.Items);
             model.TemplateVariables = templateVariableDictionary;
+            model.AllowedMimeTypes = FileStorageProviderSettings.AllowedMimeTypes;
+            model.MaxFileSize = FileStorageProviderSettings.MaxFileSize;
+            model.UseDirectUploadToCloud = FileStorageProviderSettings.UseDirectUploadToCloud;
+            model.PathBase = CurrentOrganization.PathBase;
 
             SetErrorMessage("There was an error attempting to update this template. See the error below.", response.GetErrors());
             return View("~/Areas/Admin/Views/Templates/Web/Create.cshtml", model);
@@ -168,7 +176,11 @@ public class WebTemplatesController : BaseController
             IsBuiltInTemplate = response.Result.IsBuiltInTemplate,
             TemplateAccessToModelDefinitions = templateAccessChoiceItems.ToArray(),
             TemplateVariables = templateVariableDictionary,
-            AllowAccessForNewContentTypes = response.Result.AllowAccessForNewContentTypes
+            AllowAccessForNewContentTypes = response.Result.AllowAccessForNewContentTypes,
+            AllowedMimeTypes = FileStorageProviderSettings.AllowedMimeTypes,
+            MaxFileSize = FileStorageProviderSettings.MaxFileSize,
+            UseDirectUploadToCloud = FileStorageProviderSettings.UseDirectUploadToCloud,
+            PathBase = CurrentOrganization.PathBase
         };
 
         if (WebTemplateExtensions.HasRenderBodyTag(response.Result.Content) && !response.Result.IsBaseLayout)
@@ -218,7 +230,10 @@ public class WebTemplatesController : BaseController
             var contentTypes = await Mediator.Send(new GetContentTypes.Query { PageSize = int.MaxValue });
             var templateVariableDictionary = GetInsertVariablesViewModel(templateResponse.Result.DeveloperName, templateResponse.Result.IsBuiltInTemplate, contentTypes.Result.Items);
             model.TemplateVariables = templateVariableDictionary;
-
+            model.AllowedMimeTypes = FileStorageProviderSettings.AllowedMimeTypes;
+            model.MaxFileSize = FileStorageProviderSettings.MaxFileSize;
+            model.UseDirectUploadToCloud = FileStorageProviderSettings.UseDirectUploadToCloud;
+            model.PathBase = CurrentOrganization.PathBase;
             SetErrorMessage("There was an error attempting to update this template. See the error below.", response.GetErrors());
             return View("~/Areas/Admin/Views/Templates/Web/Edit.cshtml", model);
         }
