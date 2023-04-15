@@ -41,7 +41,6 @@ public class RenderEngine : IRenderEngine
             var options = new TemplateOptions();
             options.MemberAccessStrategy = new UnsafeMemberAccessStrategy();
             options.TimeZone = DateTimeExtensions.GetTimeZoneInfo(_currentOrganization.TimeZone);
-            options.Filters.AddFilter("raytha_attachment_url", AttachmentRedirectUrl); //deprecated
             options.Filters.AddFilter("attachment_redirect_url", AttachmentRedirectUrl);
             options.Filters.AddFilter("attachment_public_url", AttachmentPublicUrl);
             options.Filters.AddFilter("organization_time", LocalDateFilter);

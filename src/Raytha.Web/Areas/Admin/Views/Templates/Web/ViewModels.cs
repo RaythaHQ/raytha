@@ -58,6 +58,10 @@ public class WebTemplatesCreate_ViewModel : FormSubmit_ViewModel
     public bool AllowAccessForNewContentTypes { get; set; } = true;
 
     //helpers
+    public long MaxFileSize { get; set; }
+    public string AllowedMimeTypes { get; set; }
+    public bool UseDirectUploadToCloud { get; set; }
+    public string PathBase { get; set; }
     public Dictionary<string, string> ParentTemplates { get; set; }
     public Dictionary<string, IEnumerable<InsertVariableListItem_ViewModel>> TemplateVariables { get; set; }
 }
@@ -88,6 +92,10 @@ public class WebTemplatesEdit_ViewModel : FormSubmit_ViewModel
     public bool AllowAccessForNewContentTypes { get; set; }
 
     //helpers
+    public long MaxFileSize { get; set; }
+    public string AllowedMimeTypes { get; set; }
+    public bool UseDirectUploadToCloud { get; set; }
+    public string PathBase { get; set; }
     public Dictionary<string, string> ParentTemplates { get; set; }
     public bool IsBuiltInTemplate { get; set; }
     public Dictionary<string, IEnumerable<InsertVariableListItem_ViewModel>> TemplateVariables { get; set; }

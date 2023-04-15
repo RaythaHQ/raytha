@@ -42,6 +42,10 @@ public class EmailTemplatesEdit_ViewModel : FormSubmit_ViewModel
     public string Bcc { get; set; }
 
     //helpers
+    public long MaxFileSize { get; set; }
+    public string AllowedMimeTypes { get; set; }
+    public bool UseDirectUploadToCloud { get; set; }
+    public string PathBase { get; set; }
     public Dictionary<string, IEnumerable<InsertVariableListItem_ViewModel>> TemplateVariables { get; set; }
 }
 

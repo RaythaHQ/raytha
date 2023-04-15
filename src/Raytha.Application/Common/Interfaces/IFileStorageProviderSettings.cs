@@ -5,6 +5,7 @@ public interface IFileStorageProviderSettings
     string FileStorageProvider { get; }
 
     long MaxTotalDiskSpace { get; }
+    long MaxTotalDbSize { get; }
     long MaxFileSize { get; }
     string AllowedMimeTypes { get; }
     string LocalDirectory { get; }
