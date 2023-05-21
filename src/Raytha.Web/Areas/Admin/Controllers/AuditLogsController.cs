@@ -131,6 +131,7 @@ public class AuditLogsController : BaseController
             new EditAuthenticationScheme.Command().GetLogName(),
 
             //ContentItems
+            new BeginExportContentItemsToCsv.Command().GetLogName(),
             new CreateContentItem.Command().GetLogName(),
             new DeleteAlreadyDeletedContentItem.Command().GetLogName(),
             new DeleteContentItem.Command().GetLogName(),

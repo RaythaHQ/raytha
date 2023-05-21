@@ -1,0 +1,43 @@
+@model ContentItemsExportToCsv_ViewModel
+@{
+    ViewData["Title"] = $"{Model.CurrentView.ContentTypeLabelPlural} > Export to CSV";
+}
+
+@(await Html.PartialAsync("_PageHeader", new PageHeader_ViewModel
+{
+    Title = ViewData["Title"].ToString(),
+    Description = Model.CurrentView.ContentTypeDescription
+}))
+
+<div class="row mb-4">
+    <div class="col-xxl-7 col-xl-8 col-lg-9 col-md-12">
+        <div class="card border-0 shadow mb-4">
+            <div class="card-body">
+                @(await Html.PartialAsync("_BackToList", new ContentItemsBackToList_ViewModel
+                {
+                    ContentTypeDeveloperName = Model.CurrentView.ContentTypeDeveloperName,
+                    IsEditing = false
+                }))
+                <form asp-route="contentitemscreate" method="post" class="py-4">
+                    <div class="col-lg-12 mt-2">
+                        <div class="mb-3">
+                            <label class="form-label raytha-required" asp-for="@Model.ViewColumnsOnly"></label>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" asp-for="@Model.ViewColumnsOnly" value="true">
+                                <label class="form-check-label" asp-for="@Model.ViewColumnsOnly">Export only the columns from this view</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" asp-for="@Model.ViewColumnsOnly" value="false">
+                                <label class="form-check-label" asp-for="@Model.ViewColumnsOnly">Export all columns from this content type</label>
+                            </div>
+                        </div>
+                    </div>           
+                    <hr/>    
+                    <div class="col-lg-12">
+                        <button type="submit" class="btn btn-success">Begin export</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

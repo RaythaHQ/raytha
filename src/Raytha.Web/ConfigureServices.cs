@@ -64,6 +64,8 @@ public static class ConfigureServices
 
             options.AddPolicy(RaythaApiAuthorizationHandler.POLICY_PREFIX + RaythaClaimTypes.IsAdmin,
                 policy => policy.Requirements.Add(new ApiIsAdminRequirement()));
+            options.AddPolicy(RaythaApiAuthorizationHandler.POLICY_PREFIX + BuiltInSystemPermission.MANAGE_SYSTEM_SETTINGS_PERMISSION,
+                policy => policy.Requirements.Add(new ApiManageSystemSettingsRequirement()));
             options.AddPolicy(RaythaApiAuthorizationHandler.POLICY_PREFIX + BuiltInSystemPermission.MANAGE_USERS_PERMISSION,
                 policy => policy.Requirements.Add(new ApiManageUsersRequirement()));
             options.AddPolicy(RaythaApiAuthorizationHandler.POLICY_PREFIX + BuiltInSystemPermission.MANAGE_TEMPLATES_PERMISSION,

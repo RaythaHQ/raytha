@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.Extensions.Configuration;
 using Raytha.Application.Common.Security;
+using Raytha.Application.ContentItems.Commands;
 using Raytha.Application.Dashboard.Queries;
 using Raytha.Domain.Entities;
 using Raytha.Web.Areas.Admin.Views.Dashboard;

@@ -25,6 +25,10 @@ public class ApiManageUsersRequirement : IHasApiKeyRequirement
 {
 }
 
+public class ApiManageSystemSettingsRequirement : IHasApiKeyRequirement
+{
+}
+
 public class ApiManageTemplatesRequirement : IHasApiKeyRequirement
 {
 }
@@ -109,6 +113,13 @@ public class RaythaApiAuthorizationHandler : IAuthorizationHandler
             if (requirement is ApiManageContentTypesRequirement)
             {
                 if (systemPermissions.Contains(BuiltInSystemPermission.MANAGE_CONTENT_TYPES_PERMISSION))
+                {
+                    context.Succeed(requirement);
+                }
+            }
+            else if (requirement is ApiManageSystemSettingsRequirement)
+            {
+                if (systemPermissions.Contains(BuiltInSystemPermission.MANAGE_SYSTEM_SETTINGS_PERMISSION))
                 {
                     context.Succeed(requirement);
                 }
