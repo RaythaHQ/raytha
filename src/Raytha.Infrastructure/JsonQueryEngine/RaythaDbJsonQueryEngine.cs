@@ -1,5 +1,6 @@
 ﻿using CSharpVitamins;
 using Dapper;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Utils;
@@ -97,7 +98,7 @@ public class RaythaDbJsonQueryEngine : IRaythaDbJsonQueryEngine
         return contentItem;
     }
 
-    public IEnumerable<ContentItem> QueryContentItems(Guid contentTypeId, string[] searchOnColumns, string search, string[] filters, int pageSize, int pageNumber, string orderBy)
+    public IEnumerable<ContentItem> QueryContentItems(Guid contentTypeId, string[] searchOnColumns, string search, string[] filters, int pageSize, int pageNumber, string orderBy, IDbTransaction transaction = null)
     {
         var contentType = _entityFramework.ContentTypes
             .Include(p => p.ContentTypeFields)
@@ -155,7 +156,7 @@ public class RaythaDbJsonQueryEngine : IRaythaDbJsonQueryEngine
 
         var selector = sqlBuilder.AddTemplate($"SELECT /**select**/ {fromClause} /**where**/ /**orderby**/ OFFSET {skip} ROWS FETCH NEXT {pageSize} ROWS ONLY");
 
-        var resultFromQuery = (IEnumerable<IDictionary<string, object>>)_db.Query(selector.RawSql, new { search = $"%{search}%", exactsearch = $"{search}" });
+        var resultFromQuery = (IEnumerable<IDictionary<string, object>>)_db.Query(selector.RawSql, new { search = $"%{search}%", exactsearch = $"{search}" }, transaction: transaction);
 
         var items = new List<ContentItem>();
         if (resultFromQuery == null)
@@ -209,7 +210,30 @@ public class RaythaDbJsonQueryEngine : IRaythaDbJsonQueryEngine
         return items;
     }
 
-    public int CountContentItems(Guid contentTypeId, string[] searchOnColumns, string search, string[] filters)
+    public IEnumerable<ContentItem> QueryAllContentItemsAsTransaction(Guid contentTypeId, string[] searchOnColumns, string search, string[] filters, string orderBy)
+    {
+        if (_db.State == ConnectionState.Closed)
+        {
+            _db.Open();
+        }
+        using (IDbTransaction transaction = _db.BeginTransaction(IsolationLevel.Snapshot))
+        {
+            int count = CountContentItems(contentTypeId, searchOnColumns, search, filters, transaction: transaction);
+
+            int totalPages = (int)Math.Ceiling((double)count / View.DEFAULT_MAX_ITEMS_PER_PAGE);
+            for (int pageIndex = 1; pageIndex <= totalPages; pageIndex++)
+            {
+                foreach (var item in QueryContentItems(contentTypeId, searchOnColumns, search, filters, View.DEFAULT_MAX_ITEMS_PER_PAGE, pageIndex, orderBy, transaction: transaction))
+                {
+                    yield return item;
+                }
+            }
+
+            transaction.Commit();
+        }
+    }
+
+    public int CountContentItems(Guid contentTypeId, string[] searchOnColumns, string search, string[] filters, IDbTransaction transaction = null)
     {
         var contentType = _entityFramework.ContentTypes
             .Include(p => p.ContentTypeFields)
@@ -255,7 +279,7 @@ public class RaythaDbJsonQueryEngine : IRaythaDbJsonQueryEngine
 
         var selector = sqlBuilder.AddTemplate($"SELECT COUNT(*) as Count {fromClause} /**where**/");
 
-        var numResults = _db.Query(selector.RawSql, new { search = $"%{search}%", exactsearch = $"{search}" }).First().Count;
+        var numResults = _db.Query(selector.RawSql, new { search = $"%{search}%", exactsearch = $"{search}" }, transaction: transaction).First().Count;
         return numResults;
     }
 
@@ -430,7 +454,7 @@ public class RaythaDbJsonQueryEngine : IRaythaDbJsonQueryEngine
             try
             {
                 var column = orderByElement.Split(" ")[0];
-                var direction = SortOrder.From(orderByElement.Split(" ")[1]);
+                var direction = Raytha.Domain.ValueObjects.SortOrder.From(orderByElement.Split(" ")[1]);
 
                 var columnAsContentTypeField = contentType.ContentTypeFields.FirstOrDefault(p => p.DeveloperName == column);
                 if (columnAsContentTypeField != null)

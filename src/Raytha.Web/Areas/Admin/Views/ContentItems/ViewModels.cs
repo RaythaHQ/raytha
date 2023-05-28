@@ -145,6 +145,21 @@ public class ContentItemsSettings_ViewModel : FormSubmit_ViewModel, IMustHaveCur
     public CurrentViewForList_ViewModel CurrentView { get; set; }
 }
 
+public class ContentItemsExportToCsv_ViewModel : FormSubmit_ViewModel, IMustHaveCurrentViewForList
+{
+    [Display(Name = "Which data columns should be in this CSV export?")]
+    public bool ViewColumnsOnly { get; set; } = true;
+
+    //helpers
+    public CurrentViewForList_ViewModel CurrentView { get; set; }
+}
+
+public class ContentItemsBackgroundTaskStatus_ViewModel : IMustHaveCurrentViewForList
+{
+    public string PathBase { get; set; }
+    public CurrentViewForList_ViewModel CurrentView { get; set; }
+}
+
 public class ContentItemsBackToList_ViewModel
 {
     public string ContentTypeDeveloperName { get; set; }

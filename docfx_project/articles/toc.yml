@@ -29,6 +29,9 @@
     - name: OData in Templates
       href: templates_odata.md
 
+- name: Background tasks
+  href: background_tasks.md
+
 - name: Build an SSO
   items:
     - name: Json Web Token

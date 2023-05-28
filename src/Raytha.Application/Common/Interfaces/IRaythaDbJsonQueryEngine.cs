@@ -1,4 +1,5 @@
 ﻿using Raytha.Domain.Entities;
+using System.Data;
 
 namespace Raytha.Application.Common.Interfaces;
 
@@ -11,9 +12,14 @@ public interface IRaythaDbJsonQueryEngine
                                                string[] filters,
                                                int pageSize,
                                                int pageNumber,
-                                               string orderBy);
+                                               string orderBy,
+                                               IDbTransaction transaction = null);
+
+    IEnumerable<ContentItem> QueryAllContentItemsAsTransaction(Guid contentTypeId, string[] searchOnColumns, string search, string[] filters, string orderBy);
+
     int CountContentItems(Guid contentTypeId,
                           string[] searchOnColumns,
                           string search,
-                          string[] filters);
+                          string[] filters,
+                          IDbTransaction transaction = null);
 }

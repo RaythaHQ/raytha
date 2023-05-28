@@ -46,6 +46,7 @@
 
   <ItemGroup>
     <UptoDateCheckInput Include="$(JsApplicationRoot)src\**\*" />
+    <UptoDateCheckInput Remove="wwwroot\raytha_admin\js\src\controllers\backgroundtasks\status_controller.js" />
     <UptoDateCheckInput Remove="wwwroot\raytha_admin\js\src\controllers\contentitems\attachment_controller.js" />
     <UptoDateCheckInput Remove="wwwroot\raytha_admin\js\src\controllers\contentitems\longtext_controller.js" />
     <UptoDateCheckInput Remove="wwwroot\raytha_admin\js\src\controllers\contentitems\wysiwyg_controller.js" />
@@ -54,6 +55,13 @@
     <UptoDateCheckInput Remove="wwwroot\raytha_admin\js\src\controllers\templates\uploadasset_controller.js" />
     <UptoDateCheckInput Include="$(JsApplicationRoot)package.json" />
     <UpToDateCheckBuilt Include="$(JsApplicationBundleFile)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Update="Areas\Admin\Views\ContentItems\BeginExportToCsv.cshtml">
+      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
   </ItemGroup>
 
   <Target Name="EnsureNodeJsIsInstalled">

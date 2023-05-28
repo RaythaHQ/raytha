@@ -51,12 +51,20 @@
         name: GetAuthenticationSchemeByName
       - uid: Raytha.Application.AuthenticationSchemes.Queries.GetAuthenticationSchemes.Query
         name: GetAuthenticationSchemes
+- name: Background Tasks
+  items: 
+    - name: Queries
+      items:
+      - uid: Raytha.Application.BackgroundTasks.Queries.GetBackgroundTaskById.Query
+        name: GetBackgroundTaskById
 - name: Content Items
   items:
   - name: Commands
     items:
     - uid: Raytha.Application.ContentItems.Commands.CreateContentItem.Command
       name: CreateContentItem
+    - uid: Raytha.Application.ContentItems.Commands.BeginExportContentItemsToCsv.Command
+      name: BeginExportContentItemsToCsv
     - uid: Raytha.Application.ContentItems.Commands.DeleteAlreadyDeletedContentItem.Command
       name: DeleteAlreadyDeletedContentItem
     - uid: Raytha.Application.ContentItems.Commands.DeleteContentItem.Command

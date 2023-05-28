@@ -1,5 +1,6 @@
 ﻿using Dapper;
 using Raytha.Application.Common.Interfaces;
+using Raytha.Domain.Entities;
 using System.Data;
 
 namespace Raytha.Infrastructure.Persistence;

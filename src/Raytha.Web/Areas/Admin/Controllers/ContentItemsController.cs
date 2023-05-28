@@ -7,19 +7,18 @@ using CSharpVitamins;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.DependencyInjection;
+using Raytha.Application.BackgroundTasks.Queries;
 using Raytha.Application.Common.Utils;
 using Raytha.Application.ContentItems;
 using Raytha.Application.ContentItems.Commands;
 using Raytha.Application.ContentItems.Queries;
-using Raytha.Application.ContentTypes;
 using Raytha.Application.ContentTypes.Queries;
 using Raytha.Application.Templates.Web.Queries;
 using Raytha.Application.Views;
-using Raytha.Domain.Common;
 using Raytha.Domain.Entities;
 using Raytha.Domain.ValueObjects;
 using Raytha.Domain.ValueObjects.FieldTypes;
-using Raytha.Domain.ValueObjects.FieldValues;
 using Raytha.Web.Areas.Admin.Views.ContentItems;
 using Raytha.Web.Filters;
 using Raytha.Web.Utils;
@@ -29,6 +28,9 @@ namespace Raytha.Web.Areas.Admin.Controllers;
 [Area("Admin")]
 public class ContentItemsController : BaseController
 {
+    private FieldValueConverter _fieldValueConverter;
+    protected FieldValueConverter FieldValueConverter => _fieldValueConverter ??= HttpContext.RequestServices.GetRequiredService<FieldValueConverter>();
+
     [Authorize(Policy = BuiltInContentTypePermission.CONTENT_TYPE_READ_PERMISSION)]
     [ServiceFilter(typeof(GetOrSetRecentlyAccessedViewFilterAttribute))]
     [ServiceFilter(typeof(SetPaginationInformationFilterAttribute))]
@@ -55,7 +57,7 @@ public class ContentItemsController : BaseController
         {
             Id = p.Id,
             IsHomePage = CurrentOrganization.HomePageId == p.Id,
-            FieldValues = MapToListItemValues(p)
+            FieldValues = FieldValueConverter.MapToListItemValues(p)
         });
 
         var viewModel = new ContentItemsPagination_ViewModel(items, response.Result.TotalCount);
@@ -195,13 +197,13 @@ public class ContentItemsController : BaseController
                     Label = b.Label,
                     DeveloperName = b.DeveloperName,
                     Disabled = b.Disabled,
-                    Value = MapValueForChoiceField(p.FieldType, response.Result.DraftContent, p, b),
+                    Value = FieldValueConverter.MapValueForChoiceField(p.FieldType, response.Result.DraftContent, p, b),
                 }).ToArray(),
                 FieldType = p.FieldType,
                 IsRequired = p.IsRequired,
                 Description = p.Description,
-                Value = MapValueForField(p.FieldType, response.Result.DraftContent, p),
-                RelatedContentItemPrimaryField = MapRelatedContentItemValueForField(p.FieldType, response.Result.DraftContent, p),
+                Value = FieldValueConverter.MapValueForField(p.FieldType, response.Result.DraftContent, p),
+                RelatedContentItemPrimaryField = FieldValueConverter.MapRelatedContentItemValueForField(p.FieldType, response.Result.DraftContent, p),
                 RelatedContentTypeId = p.RelatedContentTypeId
             }
             ).ToArray()
@@ -471,51 +473,51 @@ public class ContentItemsController : BaseController
         }
     }
 
-    private Dictionary<string, string> MapToListItemValues(ContentItemDto item)
+    [Authorize(Policy = BuiltInContentTypePermission.CONTENT_TYPE_READ_PERMISSION)]
+    [ServiceFilter(typeof(GetOrSetRecentlyAccessedViewFilterAttribute))]
+    [Route($"{RAYTHA_ROUTE_PREFIX}/{{{RouteConstants.CONTENT_TYPE_DEVELOPER_NAME}}}/views/{{viewId}}/export-to-csv", Name = "contentitemsexporttocsv")]
+    public async Task<IActionResult> BeginExportToCsv()
     {
-        var viewModel = new Dictionary<string, string>
+        return View(new ContentItemsExportToCsv_ViewModel());
+    }
+
+    [Authorize(Policy = BuiltInContentTypePermission.CONTENT_TYPE_READ_PERMISSION)]
+    [ServiceFilter(typeof(GetOrSetRecentlyAccessedViewFilterAttribute))]
+    [Route($"{RAYTHA_ROUTE_PREFIX}/{{{RouteConstants.CONTENT_TYPE_DEVELOPER_NAME}}}/views/{{viewId}}/export-to-csv", Name = "contentitemsexporttocsv")]
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> BeginExportToCsv(ContentItemsExportToCsv_ViewModel model)
+    {
+        var input = new BeginExportContentItemsToCsv.Command
         {
-            //Built in
-            { BuiltInContentTypeField.Id, item.Id },
-            { "CreatorUser", item.CreatorUser != null ? item.CreatorUser.FullName : "N/A" },
-            { "LastModifierUser", item.LastModifierUser != null ? item.LastModifierUser.FullName : "N/A" },
-            { BuiltInContentTypeField.CreationTime, CurrentOrganization.TimeZoneConverter.UtcToTimeZoneAsDateTimeFormat(item.CreationTime) },
-            { BuiltInContentTypeField.LastModificationTime, CurrentOrganization.TimeZoneConverter.UtcToTimeZoneAsDateTimeFormat(item.LastModificationTime) },
-            { BuiltInContentTypeField.IsPublished, item.IsPublished.YesOrNo() },
-            { BuiltInContentTypeField.IsDraft, item.IsDraft.YesOrNo() },
-            { BuiltInContentTypeField.PrimaryField, item.PrimaryField },
-            { "Template", item.WebTemplate.Label }
+            ViewId = CurrentView.Id,
+            ExportOnlyColumnsFromView = model.ViewColumnsOnly
         };
+        var response = await Mediator.Send(input);
 
-        //Content type fields
-        foreach (var field in item.PublishedContent as Dictionary<string, dynamic>)
+        if (response.Success)
         {
-            if (field.Value is DateTimeFieldValue dateTimeFieldValue)
-            {
-                viewModel.Add(field.Key, CurrentOrganization.TimeZoneConverter.ToDateFormat(dateTimeFieldValue.Value));
-            }
-            else if (field.Value is GuidFieldValue guidFieldValue)
-            {
-                if (guidFieldValue.HasValue)
-                    viewModel.Add(field.Key, (ShortGuid)guidFieldValue.Value);
-                else
-                    viewModel.Add(field.Key, string.Empty);
-            }
-            else if (field.Value is StringFieldValue)
-            {
-                viewModel.Add(field.Key, ((string)field.Value).StripHtml().Truncate(40));
-            }
-            else if (field.Value is IBaseEntity)
-            {
-                viewModel.Add(field.Key, field.Value.PrimaryField);
-            }
-            else
-            {
-                viewModel.Add(field.Key, field.Value.ToString());
-            }
+            SetSuccessMessage($"Export in progress.");
+            return RedirectToAction("BackgroundTaskStatus", new { contentTypeDeveloperName = CurrentView.ContentType.DeveloperName, id = response.Result });
         }
+        else
+        {
+            SetErrorMessage("There was an error attempting to begin this export. See the error below.", response.GetErrors());
+            return View(model);
+        }
+    }
 
-        return viewModel;
+    [Authorize(Policy = BuiltInContentTypePermission.CONTENT_TYPE_READ_PERMISSION)]
+    [ServiceFilter(typeof(GetOrSetRecentlyAccessedViewFilterAttribute))]
+    [Route($"{RAYTHA_ROUTE_PREFIX}/{{{RouteConstants.CONTENT_TYPE_DEVELOPER_NAME}}}/background-task/status/{{id}}", Name = "contentitemsbackgroundtaskstatus")]
+    public async Task<IActionResult> BackgroundTaskStatus(string id, bool json = false)
+    {
+        var response = await Mediator.Send(new GetBackgroundTaskById.Query { Id = id });
+
+        return json ? Ok(response.Result) : View(new ContentItemsBackgroundTaskStatus_ViewModel
+        {
+            PathBase = CurrentOrganization.PathBase
+        });
     }
 
     private dynamic MapFromFieldValueModel(FieldValue_ViewModel[] fieldValues)
@@ -543,72 +545,6 @@ public class ContentItemsController : BaseController
         }
 
         return mappedFieldValues;
-    }
-
-    private string MapValueForChoiceField(BaseFieldType fieldType, dynamic content, ContentTypeFieldDto contentTypeField, ContentTypeFieldChoice contentTypeFieldChoice)
-    {
-        string value = "false";
-        if (fieldType.DeveloperName == BaseFieldType.MultipleSelect)
-        {
-            if (content.ContainsKey(contentTypeField.DeveloperName) && content[contentTypeField.DeveloperName].HasValue)
-            {
-                var asArray = content[contentTypeField.DeveloperName].Value as IList<string>;
-                bool tempValue = asArray.Contains(contentTypeFieldChoice.DeveloperName);
-                value = tempValue.ToString();
-            }
-        }
-        else
-        {
-            value = contentTypeFieldChoice.DeveloperName;
-        }
-        return value;
-    }
-
-    private string MapValueForField(BaseFieldType fieldType, dynamic content, ContentTypeFieldDto contentTypeField)
-    {
-        string value = string.Empty;
-        if (fieldType.DeveloperName == BaseFieldType.OneToOneRelationship)
-        {
-            ShortGuid shortGuid = ShortGuid.Empty;
-            if (content.ContainsKey(contentTypeField.DeveloperName) && content[contentTypeField.DeveloperName] != null)
-            {
-                var successfullyParsed = ShortGuid.TryParse(content[contentTypeField.DeveloperName].ToString(), out shortGuid) || (content[contentTypeField.DeveloperName] is ContentItemDto && ShortGuid.TryParse(content[contentTypeField.DeveloperName].Id.ToString(), out shortGuid));
-                if (successfullyParsed)
-                {
-                    value = shortGuid;
-                }
-            }
-        }
-        else if (fieldType.DeveloperName == BaseFieldType.Checkbox)
-        {
-            if (content.ContainsKey(contentTypeField.DeveloperName))
-            {
-                bool tempValue = content[contentTypeField.DeveloperName].HasValue && content[contentTypeField.DeveloperName].Value;
-                value = tempValue.ToString();
-            }
-            else
-            {
-                value = "false";
-            }
-        }
-        else if (content.ContainsKey(contentTypeField.DeveloperName))
-        {
-            value = content[contentTypeField.DeveloperName].ToString();
-        }
-        return value;
-    }
-
-    private string MapRelatedContentItemValueForField(BaseFieldType fieldType, dynamic content, ContentTypeFieldDto contentTypeField)
-    {
-        string value = string.Empty;
-        if (fieldType.DeveloperName == BaseFieldType.OneToOneRelationship)
-        {
-            if (content.ContainsKey(contentTypeField.DeveloperName) && content[contentTypeField.DeveloperName] is ContentItemDto && content[contentTypeField.DeveloperName] != null)
-            {
-                value = content[contentTypeField.DeveloperName].PrimaryField;
-            }
-        }
-        return value;
     }
 
     protected ViewDto CurrentView

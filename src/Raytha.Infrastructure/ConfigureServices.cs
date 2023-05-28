@@ -9,6 +9,9 @@ using System.Data;
 using Raytha.Infrastructure.JsonQueryEngine;
 using Raytha.Infrastructure.FileStorage;
 using Raytha.Application.Common.Utils;
+using Raytha.Infrastructure.BackgroundTasks;
+using Microsoft.Extensions.Hosting;
+using Raytha.Application.ContentItems;
 
 namespace Microsoft.Extensions.DependencyInjection;
 
@@ -30,6 +33,7 @@ public static class ConfigureServices
 
         services.AddScoped<IEmailer, Emailer>();
         services.AddTransient<IRaythaDbJsonQueryEngine, RaythaDbJsonQueryEngine>();
+        services.AddTransient<IBackgroundTaskDb, BackgroundTaskDb>();
         services.AddTransient<IRaythaRawDbInfo, RaythaRawDbInfo>();
 
         //file storage provider
@@ -50,6 +54,12 @@ public static class ConfigureServices
         {
             throw new NotImplementedException($"Unsupported file storage provider: {fileStorageProvider}");
         }
+
+        for (int i = 0; i < Convert.ToInt32(configuration["NUM_BACKGROUND_WORKERS"] ?? "4"); i++)
+        {
+            services.AddSingleton<IHostedService, QueuedHostedService>();
+        }
+        services.AddScoped<IBackgroundTaskQueue, BackgroundTaskQueue>();
 
         return services;
     }
