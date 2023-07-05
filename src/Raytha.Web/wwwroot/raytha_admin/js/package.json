@@ -18,8 +18,8 @@
     "file-loader": "^6.2.0",
     "style-loader": "^3.3.1",
     "vanillajs-datepicker": "^1.2.0",
-    "webpack": "^5.76.3",
-    "webpack-cli": "^5.0.1"
+    "webpack": "^5.88.1",
+    "webpack-cli": "^5.1.4"
   },
   "dependencies": {
     "@hotwired/turbo": "^7.2.4",
@@ -33,7 +33,7 @@
     "@uppy/xhr-upload": "^3.0.4",
     "bootstrap": "^5.2.3",
     "lodash.debounce": "^4.0.8",
-    "monaco-editor": "^0.35.0",
+    "monaco-editor": "^0.39.0",
     "monaco-editor-webpack-plugin": "^7.0.1",
     "notyf": "^3.10.0",
     "simplebar": "^5.3.9",
