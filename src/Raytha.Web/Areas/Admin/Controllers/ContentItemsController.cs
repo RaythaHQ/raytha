@@ -527,20 +527,19 @@ public class ContentItemsController : BaseController
         foreach (var fieldValue in fieldValues)
         {
             var contentTypeField = CurrentView.ContentType.ContentTypeFields.First(p => p.DeveloperName == fieldValue.DeveloperName.ToDeveloperName());
-
-            if (contentTypeField.FieldType.DeveloperName == BaseFieldType.MultipleSelect)
+            if (contentTypeField.FieldType.DeveloperName == BaseFieldType.OneToOneRelationship)
+            {
+                Guid guid = (ShortGuid)fieldValue.Value;
+                mappedFieldValues.Add(fieldValue.DeveloperName.ToDeveloperName(), guid);
+            }
+            else if (contentTypeField.FieldType.DeveloperName == BaseFieldType.MultipleSelect)
             {
                 var selectedChoices = fieldValue.AvailableChoices.Where(p => p.Value == "true").Select(p => p.DeveloperName).ToArray();
                 mappedFieldValues.Add(fieldValue.DeveloperName, contentTypeField.FieldType.FieldValueFrom(selectedChoices).Value);
             }
-            else if (contentTypeField.FieldType.DeveloperName == BaseFieldType.OneToOneRelationship)
-            {
-                Guid guid = (ShortGuid)fieldValue.Value;
-                mappedFieldValues.Add(fieldValue.DeveloperName.ToDeveloperName(), contentTypeField.FieldType.FieldValueFrom(guid).Value);
-            }
             else
             {
-                mappedFieldValues.Add(fieldValue.DeveloperName.ToDeveloperName(), contentTypeField.FieldType.FieldValueFrom(fieldValue.Value).Value);
+                mappedFieldValues.Add(fieldValue.DeveloperName, fieldValue.Value);
             }
         }
 
