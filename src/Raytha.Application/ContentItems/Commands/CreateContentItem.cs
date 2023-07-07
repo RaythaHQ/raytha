@@ -74,7 +74,7 @@ public class CreateContentItem
                         try
                         {
                             var fieldValue = fieldDefinition.FieldType.FieldValueFrom(field.Value);
-                            if (fieldDefinition.IsRequired && !fieldValue.HasValue)
+                            if (!request.SaveAsDraft && fieldDefinition.IsRequired && !fieldValue.HasValue)
                             {
                                 context.AddFailure(fieldDefinition.DeveloperName, $"'{fieldDefinition.Label}' field is required.");
                             }
