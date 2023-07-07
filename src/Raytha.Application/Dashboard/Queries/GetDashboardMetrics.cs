@@ -26,7 +26,10 @@ public class GetDashboardMetrics
             int totalUsers = _db.Users.Count();
             long totalFileStorageSize = _db.MediaItems.Sum(p => p.Length);
             var dbSize = _rawSqlDb.GetDatabaseSize();
-            decimal dbSizeInMb = Convert.ToDecimal(dbSize.database_size.Split(" ").First());
+
+            decimal numericValueOfReserved = Convert.ToDecimal(dbSize.reserved.Split(" ").First());
+            string units = dbSize.reserved.Split(" ").Last();
+            decimal dbSizeInMb = ComputeToMb(numericValueOfReserved, units);
             return new QueryResponseDto<DashboardDto>(
                 new DashboardDto
                 {
@@ -35,6 +38,19 @@ public class GetDashboardMetrics
                     FileStorageSize = totalFileStorageSize,
                     DbSize = dbSizeInMb
                 });
+        }
+
+        private decimal ComputeToMb(decimal rawValue, string units)
+        {
+            switch(units)
+            {
+                case "KB":
+                    return rawValue / 1000;
+                case "GB":
+                    return rawValue * 1000;
+                default:
+                    return rawValue;
+            }
         }
     }
 }
