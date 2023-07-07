@@ -1,5 +1,6 @@
 import { Controller } from "stimulus"
-import * as monaco from 'monaco-editor'
+//import * as monaco from 'monaco-editor'
+import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
 
 export default class extends Controller {
     static targets = ["editor", "textarea"]

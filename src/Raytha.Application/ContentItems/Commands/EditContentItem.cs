@@ -48,13 +48,17 @@ public class EditContentItem
                     }
                     else
                     {
-                        if (fieldDefinition.IsRequired)
+                        try
                         {
                             var fieldValue = fieldDefinition.FieldType.FieldValueFrom(field.Value);
-                            if (!fieldValue.HasValue)
+                            if (!request.SaveAsDraft && fieldDefinition.IsRequired && !fieldValue.HasValue)
                             {
                                 context.AddFailure(fieldDefinition.DeveloperName, $"'{fieldDefinition.Label}' field is required.");
                             }
+                        }
+                        catch (Exception ex)
+                        {
+                            context.AddFailure(fieldDefinition.DeveloperName, $"'{fieldDefinition.Label}' is an invalid format.");
                         }
                     }
                 }

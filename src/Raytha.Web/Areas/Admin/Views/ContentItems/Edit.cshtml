@@ -147,7 +147,7 @@
                                     <div class="col-lg-3 col-md-4 col-sm-12 mt-4" id="raytha_field-@Model.FieldValues[i].DeveloperName">
                                         <div class="mb-3">
                                             <label class="form-label @Model.FieldValues[i].AsteriskCssIfRequired" asp-for="@Model.FieldValues[i].Label">@Model.FieldValues[i].Label</label>
-                                            <input type="number" class="form-control @Model.HasError(Model.FieldValues[i].DeveloperName)" asp-for="@Model.FieldValues[i].Value">
+                                            <input type="text" pattern="[0-9]+([\.,][0-9]+)?" class="form-control @Model.HasError(Model.FieldValues[i].DeveloperName)" asp-for="@Model.FieldValues[i].Value">
                                             <div class="invalid-feedback">@Model.ErrorMessageFor(Model.FieldValues[i].DeveloperName)</div>
                                             @if (!string.IsNullOrEmpty(Model.FieldValues[i].Description))
                                             {

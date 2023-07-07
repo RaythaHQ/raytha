@@ -39,7 +39,9 @@ module.exports = (env, argv) =>
                 }
             ],
         },
-        plugins: [new MonacoWebpackPlugin()]
+        plugins: [new MonacoWebpackPlugin({
+            languages: ['javascript', 'html', 'css']
+        })]
     };
 
     if (isDevBuild);

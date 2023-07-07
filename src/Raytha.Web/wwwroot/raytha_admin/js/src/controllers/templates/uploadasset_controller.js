@@ -43,7 +43,13 @@ export default class extends Controller {
                 endpoint: `${this.pathbaseValue}/raytha/media-items/upload`
             })
             this.uppy.on('upload-success', (file, response) => {
-                this.addCopyUrlItem(file);
+                var item = {
+                    name: response.body.fields.fileName,
+                    meta: {
+                        objectKey: response.body.fields.objectKey
+                    }
+                };
+                this.addCopyUrlItem(item);
             })
         } else {
             this.uppy.use(AwsS3, {
