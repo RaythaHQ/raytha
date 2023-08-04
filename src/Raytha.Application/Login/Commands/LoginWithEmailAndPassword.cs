@@ -37,7 +37,7 @@ public class LoginWithEmailAndPassword
                 }
 
                 var emailAddress = !string.IsNullOrWhiteSpace(request.EmailAddress) ? request.EmailAddress.ToLower().Trim() : null;
-                var entity = emailAddress!=null ? db.Users.FirstOrDefault(p => p.EmailAddress.ToLower() == emailAddress) : null;
+                var entity = emailAddress != null ? db.Users.FirstOrDefault(p => p.EmailAddress.ToLower() == emailAddress) : null;
 
                 if (entity == null)
                 {
