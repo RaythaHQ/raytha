@@ -3,7 +3,8 @@ name : 'Build and Run Tests'
 on:
   push:
     branches:
-      - 'excfix'
+      - 'main'
+      - 'dev'
 
 jobs:
   build_tests:
