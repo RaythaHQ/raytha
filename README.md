@@ -1,7 +1,6 @@
 # [Raytha](https://raytha.com)
 
-[![MIT License](https://img.shields.io/badge/License-MIT-green.svg)](https://choosealicense.com/licenses/mit/) [![Build and Run Tests](https://github.com/smd-11/raytha/actions/workflows/tests.yml/badge.svg?branch=excfix)](https://github.com/smd-11/raytha/actions/workflows/tests.yml)
-
+[![MIT License](https://img.shields.io/badge/License-MIT-green.svg)](https://choosealicense.com/licenses/mit/) 
 ![rsz_color_logo_with_background](https://user-images.githubusercontent.com/777005/210120197-61101dee-91c7-4628-8fb4-c0d701843704.png)
 
 Raytha is a versatile and lightweight general purpose content management system. Create any type of website by easily configuring custom content types and HTML templates that can be directly edited within the platform.
