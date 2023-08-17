@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -7,6 +8,7 @@ using CSharpVitamins;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.Extensions.DependencyInjection;
 using Raytha.Application.BackgroundTasks.Queries;
 using Raytha.Application.Common.Utils;
@@ -551,6 +553,55 @@ public class ContentItemsController : BaseController
         get
         {
             return HttpContext.Items["CurrentView"] as ViewDto;
+        }
+    }
+
+    [Authorize(Policy = BuiltInContentTypePermission.CONTENT_TYPE_EDIT_PERMISSION)]
+    [ServiceFilter(typeof(GetOrSetRecentlyAccessedViewFilterAttribute))]
+    [Route($"{RAYTHA_ROUTE_PREFIX}/{{{RouteConstants.CONTENT_TYPE_DEVELOPER_NAME}}}/views/{{viewId}}/import-from-csv", Name = "contentitemsimportfromcsv")]
+    public async Task<IActionResult> BeginImportFromCsv()
+    {
+        return View(new ContentItemsImportFromCsv_ViewModel());
+    }
+    [Authorize(Policy = BuiltInContentTypePermission.CONTENT_TYPE_EDIT_PERMISSION)]
+    [ServiceFilter(typeof(GetOrSetRecentlyAccessedViewFilterAttribute))]
+    [Route($"{RAYTHA_ROUTE_PREFIX}/{{{RouteConstants.CONTENT_TYPE_DEVELOPER_NAME}}}/views/{{viewId}}/import-from-csv", Name = "contentitemsimportfromcsv")]
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> BeginImportFromCsv(ContentItemsImportFromCsv_ViewModel model)
+    {
+       
+        IFormFile importFile = model.ImportFile;
+        byte[] fileBytes = null;
+        if (importFile != null)
+        {
+            using (var fileStream = importFile.OpenReadStream())
+            using (var ms = new MemoryStream())
+            {
+                fileStream.CopyTo(ms);
+                fileBytes = ms.ToArray();
+            }
+        }
+
+        var input = new BeginImportContentItemsFromCsv.Command
+        {
+            ImportMethod = model.ImportMethod,
+            CsvAsBytes = fileBytes,
+            ImportAsDraft = model.ImportAsDraft,
+            ViewId = CurrentView.Id.Guid
+        };
+
+        var response = await Mediator.Send(input);
+
+        if (response.Success)
+        {
+            SetSuccessMessage($"Import in progress.");
+            return RedirectToAction("BackgroundTaskStatus", new { contentTypeDeveloperName = CurrentView.ContentType.DeveloperName, id = response.Result });
+        }
+        else
+        {
+            SetErrorMessage("There was an error attempting while importing. See the error below.", response.GetErrors());
+            return View(model);
         }
     }
 }
