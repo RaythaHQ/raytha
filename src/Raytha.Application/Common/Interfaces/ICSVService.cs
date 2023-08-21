@@ -5,10 +5,12 @@ using System.Text;
 using System.Threading.Tasks;
 using CsvHelper;
 using System.Collections;
+using System.Xml;
+
 namespace Raytha.Application.Common.Interfaces
 {
     public interface ICSVService
     {
-        public IEnumerable<T> ReadCSV<T>(Stream file);
+        public List<Dictionary<string,object>> ReadCSV<T>(Stream file);
     }
 }

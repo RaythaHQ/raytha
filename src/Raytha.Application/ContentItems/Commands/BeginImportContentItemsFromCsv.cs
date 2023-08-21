@@ -29,7 +29,6 @@ namespace Raytha.Application.ContentItems.Commands
 {
     public class BeginImportContentItemsFromCsv
     {
-
         public record Command : LoggableRequest<CommandResponseDto<ShortGuid>>
         {
             public ShortGuid ViewId { get; init; }
@@ -113,10 +112,9 @@ namespace Raytha.Application.ContentItems.Commands
             }
             public async Task Execute(Guid jobId, JsonElement args, CancellationToken cancellationToken)
             {
-                List<CSVContentItem> records;
+                List<Dictionary<string, object>> records = new List<Dictionary<string, object>>();       
+                List<Dictionary<string, object>> totalItems = new List<Dictionary<string, object>>();
                 int itemCount = 0;
-                List<CSVContentItem> totalItems;
-
 
                 Guid viewId = args.GetProperty("ViewId").GetProperty("Guid").GetGuid();
                 string importMethod = args.GetProperty("ImportMethod").GetString();
@@ -139,16 +137,29 @@ namespace Raytha.Application.ContentItems.Commands
                 await _entityFrameworkDb.SaveChangesAsync(cancellationToken);
 
                 Stream stream = new MemoryStream(csvAsBytes);
-                records = _csvService.ReadCSV<CSVContentItem>(stream).ToList();
+                records = _csvService.ReadCSV<Dictionary<string, object>>(stream);
 
                 if (importMethod == "add new records only")
                 {
-                    totalItems = records.Where(s => s.id == string.Empty).ToList();
+                    foreach (var record in records)
+                    {
+                        if (record.TryGetValue("id", out var idValue) && string.IsNullOrEmpty(idValue?.ToString()))
+                        {
+                            totalItems.Add(record);
+                        }
+                    }
+
                     itemCount = totalItems.Count;
                 }
                 else if (importMethod == "update existing records only")
                 {
-                    totalItems = records.Where(s => s.id != string.Empty).ToList();
+                    foreach (var record in records)
+                    {
+                        if (record.TryGetValue("id", out var idValue) && !string.IsNullOrEmpty(idValue?.ToString()))
+                        {
+                            totalItems.Add(record);
+                        }
+                    }
                     itemCount = totalItems.Count;
                 }
                 else
@@ -167,23 +178,35 @@ namespace Raytha.Application.ContentItems.Commands
                     var newEntityId = Guid.NewGuid();
                     ContentItem entity = null;
 
-                    var template = _entityFrameworkDb.WebTemplates.FirstOrDefault(s => s.DeveloperName == item.templateDeveloperName);
+                    var template = _entityFrameworkDb.WebTemplates.FirstOrDefault(s => s.DeveloperName == item["templateDeveloperName"]);
 
-                    if (!string.IsNullOrWhiteSpace(item.id))
+                    if (!string.IsNullOrEmpty(item["id"].ToString()))
                     {
-                        entity = _entityFrameworkDb.ContentItems.First(s => s.Id.ToString() == item.id);
+                        entity = _entityFrameworkDb.ContentItems.First(s => s.Id.ToString() == item["id"].ToString());
                     }
 
                     var fieldValues = new Dictionary<string, dynamic>();
-                    fieldValues.Add("title", item.title);
-                    fieldValues.Add("content", "<div>" + item.content + "</div>");
+                    var fields = item.Keys.Where(s => s != "id" && s!= "templateDeveloperName").ToList();
+                    foreach (var field in fields)
+                    {
+                        var contentTypeField = view.ContentType.ContentTypeFields.First(p => p.DeveloperName == field.ToDeveloperName());
+                        if (contentTypeField.FieldType.DeveloperName == BaseFieldType.OneToOneRelationship)
+                        {
+
+                            Guid guid = (ShortGuid)item[field];
+                            fieldValues.Add(field.ToDeveloperName(), guid);
+                        }
+                        else
+                        {
+                            fieldValues.Add(field.ToDeveloperName(), item[field]);
+                        }
+                    }
 
                     var contentTypeDefinition = _entityFrameworkDb.ContentTypes
              .Include(p => p.ContentTypeFields)
              .First(p => p.DeveloperName == view.DeveloperName.ToDeveloperName());
 
-
-                    if (string.IsNullOrWhiteSpace(item.id))
+                    if (string.IsNullOrWhiteSpace(item["id"].ToString()))
                     {
                         var path = GetRoutePath(fieldValues, newEntityId, contentTypeDefinition.Id);
 
@@ -213,7 +236,7 @@ namespace Raytha.Application.ContentItems.Commands
                         entity.ContentTypeId = contentTypeDefinition.Id;
 
                     }
-                    if (string.IsNullOrWhiteSpace(item.id))
+                    if (string.IsNullOrWhiteSpace(item["id"].ToString()))
                     {
                         _entityFrameworkDb.ContentItems.Add(entity);
                     }
@@ -223,8 +246,8 @@ namespace Raytha.Application.ContentItems.Commands
                     }
 
                     await _entityFrameworkDb.SaveChangesAsync(cancellationToken);
-
                 }
+
                 job.TaskStep = 3;
                 job.StatusInfo = $"Finished Importing.";
                 job.PercentComplete = 100;
@@ -260,7 +283,7 @@ namespace Raytha.Application.ContentItems.Commands
 
                 return path;
             }
-
+           
         }
     }
 }
