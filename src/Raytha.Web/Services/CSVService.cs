@@ -16,7 +16,7 @@ namespace Raytha.Web.Services
             var records = new List<Dictionary<string, object>>();
 
             using (var reader = new StreamReader(stream))
-            using (var csv = new CsvReader(reader, new CsvHelper.Configuration.CsvConfiguration(CultureInfo.InvariantCulture)))
+            using (var csv = new CsvReader(reader, new CsvHelper.Configuration.CsvConfiguration(CultureInfo.InvariantCulture) { BadDataFound = null}))
             {
                 csv.Read(); 
 

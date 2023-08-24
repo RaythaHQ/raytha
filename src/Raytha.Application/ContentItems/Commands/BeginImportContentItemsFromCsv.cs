@@ -112,7 +112,7 @@ namespace Raytha.Application.ContentItems.Commands
             }
             public async Task Execute(Guid jobId, JsonElement args, CancellationToken cancellationToken)
             {
-                List<Dictionary<string, object>> records = new List<Dictionary<string, object>>();       
+                List<Dictionary<string, object>> records = new List<Dictionary<string, object>>();
                 List<Dictionary<string, object>> totalItems = new List<Dictionary<string, object>>();
                 int itemCount = 0;
 
@@ -186,15 +186,20 @@ namespace Raytha.Application.ContentItems.Commands
                     }
 
                     var fieldValues = new Dictionary<string, dynamic>();
-                    var fields = item.Keys.Where(s => s != "id" && s!= "templateDeveloperName").ToList();
+                    var fields = item.Keys.Where(s => s != "id" && s != "templateDeveloperName").ToList();
                     foreach (var field in fields)
                     {
                         var contentTypeField = view.ContentType.ContentTypeFields.First(p => p.DeveloperName == field.ToDeveloperName());
                         if (contentTypeField.FieldType.DeveloperName == BaseFieldType.OneToOneRelationship)
                         {
-
-                            Guid guid = (ShortGuid)item[field];
+                            ShortGuid value = null;
+                            ShortGuid.TryParse(item[field].ToString(), out value);
+                            Guid guid = value;
                             fieldValues.Add(field.ToDeveloperName(), guid);
+                        }
+                        else if (contentTypeField.FieldType.DeveloperName == BaseFieldType.MultipleSelect)
+                        {
+                            fieldValues.Add(field.ToDeveloperName(), item[field].ToString().Split(';').ToArray());
                         }
                         else
                         {
@@ -283,7 +288,7 @@ namespace Raytha.Application.ContentItems.Commands
 
                 return path;
             }
-           
+
         }
     }
 }
