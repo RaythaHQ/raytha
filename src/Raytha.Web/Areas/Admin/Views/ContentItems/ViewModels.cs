@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using CSharpVitamins;
+using Microsoft.AspNetCore.Http;
 using Raytha.Web.Areas.Admin.Views.Shared;
 using Raytha.Web.Areas.Admin.Views.Shared.ViewModels;
 
@@ -151,6 +152,15 @@ public class ContentItemsExportToCsv_ViewModel : FormSubmit_ViewModel, IMustHave
     public bool ViewColumnsOnly { get; set; } = true;
 
     //helpers
+    public CurrentViewForList_ViewModel CurrentView { get; set; }
+}
+public class ContentItemsImportFromCsv_ViewModel : FormSubmit_ViewModel, IMustHaveCurrentViewForList
+{
+    public bool ImportAsDraft { get; set; }
+    public IFormFile ImportFile { get; set; }
+
+    [Display(Name ="Which content items to import?")]
+    public string ImportMethod { get; set; }
     public CurrentViewForList_ViewModel CurrentView { get; set; }
 }
 
