@@ -18,6 +18,7 @@ public static class ConfigureServices
         services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehaviour<,>));
         services.AddTransient(typeof(IPipelineBehavior<,>), typeof(AuditBehavior<,>));
         services.AddScoped<BeginExportContentItemsToCsv.BackgroundTask>();
+        services.AddScoped<BeginImportContentItemsFromCsv.BackgroundTask>();
         services.AddScoped<FieldValueConverter>();
         return services;
     }
