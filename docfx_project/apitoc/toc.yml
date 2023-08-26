@@ -65,6 +65,8 @@
       name: CreateContentItem
     - uid: Raytha.Application.ContentItems.Commands.BeginExportContentItemsToCsv.Command
       name: BeginExportContentItemsToCsv
+    - uid: Raytha.Application.ContentItems.Commands.BeginImportContentItemsFromCsv.Command
+      name: BeginImportContentItemsFromCsv
     - uid: Raytha.Application.ContentItems.Commands.DeleteAlreadyDeletedContentItem.Command
       name: DeleteAlreadyDeletedContentItem
     - uid: Raytha.Application.ContentItems.Commands.DeleteContentItem.Command

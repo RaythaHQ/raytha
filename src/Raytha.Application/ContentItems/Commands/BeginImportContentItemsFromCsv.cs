@@ -14,6 +14,9 @@ namespace Raytha.Application.ContentItems.Commands
 {
     public class BeginImportContentItemsFromCsv
     {
+        public const string UPDATE_EXISTING_RECORDS_ONLY = "update_existing_records_only";
+        public const string UPSERT_ALL_RECORDS = "upsert_all_records";
+        public const string ADD_NEW_RECORDS_ONLY = "add_new_records_only";
         public record Command : LoggableRequest<CommandResponseDto<ShortGuid>>
         {
             public ShortGuid ContentTypeId { get; init; }
@@ -42,6 +45,15 @@ namespace Raytha.Application.ContentItems.Commands
                         context.AddFailure("ImportMethod", "Import method is required.");
                         return;
                     }
+
+                    if (request.ImportMethod != UPDATE_EXISTING_RECORDS_ONLY &&
+                        request.ImportMethod != ADD_NEW_RECORDS_ONLY &&
+                        request.ImportMethod != UPSERT_ALL_RECORDS)
+                    {
+                        context.AddFailure("ImportMethod", "Import method not recognized.");
+                        return;
+                    }
+
                     if (request.CsvAsBytes == null || request.CsvAsBytes.Length == 0)
                     {
                         context.AddFailure("CsvAsBytes", "You must upload a CSV file.");
@@ -63,7 +75,7 @@ namespace Raytha.Application.ContentItems.Commands
                                 context.AddFailure(Constants.VALIDATION_SUMMARY, $"You must provide `{BuiltInContentTypeField.Template.DeveloperName}` column.");
                                 return;
                             }
-                            if (request.ImportMethod == "update existing records only" && !csvFile.All(p => p.ContainsKey(BuiltInContentTypeField.Id.DeveloperName)))
+                            if (request.ImportMethod == UPDATE_EXISTING_RECORDS_ONLY && !csvFile.All(p => p.ContainsKey(BuiltInContentTypeField.Id.DeveloperName)))
                             {
                                 context.AddFailure(Constants.VALIDATION_SUMMARY, $"You must provide `{BuiltInContentTypeField.Id.DeveloperName}` column for updating records.");
                                 return;
@@ -177,7 +189,7 @@ namespace Raytha.Application.ContentItems.Commands
                             var fieldValues = GetFieldValuesFromRecord(contentType.ContentTypeFields, item);
                             if (entity != null)
                             {
-                                if (importMethod == "add new records only")
+                                if (importMethod == ADD_NEW_RECORDS_ONLY)
                                 {
                                     rowNumber++;
                                     continue;
@@ -193,7 +205,7 @@ namespace Raytha.Application.ContentItems.Commands
                                     _db.ContentItems.Update(entity);
                                 }
                             }
-                            else if (importMethod == "update existing records only")
+                            else if (importMethod == UPDATE_EXISTING_RECORDS_ONLY)
                             {
                                 rowNumber++;
                                 continue;

@@ -132,6 +132,7 @@ public class AuditLogsController : BaseController
 
             //ContentItems
             new BeginExportContentItemsToCsv.Command().GetLogName(),
+            new BeginImportContentItemsFromCsv.Command().GetLogName(),
             new CreateContentItem.Command().GetLogName(),
             new DeleteAlreadyDeletedContentItem.Command().GetLogName(),
             new DeleteContentItem.Command().GetLogName(),
