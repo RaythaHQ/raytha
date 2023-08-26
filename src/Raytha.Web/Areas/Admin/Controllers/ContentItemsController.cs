@@ -588,7 +588,7 @@ public class ContentItemsController : BaseController
             ImportMethod = model.ImportMethod,
             CsvAsBytes = fileBytes,
             ImportAsDraft = model.ImportAsDraft,
-            ViewId = CurrentView.Id.Guid
+            ContentTypeId = CurrentView.ContentTypeId
         };
 
         var response = await Mediator.Send(input);
