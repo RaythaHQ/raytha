@@ -70,7 +70,7 @@ namespace Raytha.Application.ContentItems.Commands
                                 context.AddFailure(Constants.VALIDATION_SUMMARY, "Your CSV file is missing data.");
                                 return;
                             }
-                            if (!csvFile.All(p => p.ContainsKey(BuiltInContentTypeField.Template.DeveloperName))) 
+                            if (!csvFile.All(p => p.ContainsKey(BuiltInContentTypeField.Template.DeveloperName)))
                             {
                                 context.AddFailure(Constants.VALIDATION_SUMMARY, $"You must provide `{BuiltInContentTypeField.Template.DeveloperName}` column.");
                                 return;
@@ -80,8 +80,8 @@ namespace Raytha.Application.ContentItems.Commands
                                 context.AddFailure(Constants.VALIDATION_SUMMARY, $"You must provide `{BuiltInContentTypeField.Id.DeveloperName}` column for updating records.");
                                 return;
                             }
-                        } 
-                        catch (Exception ex) 
+                        }
+                        catch (Exception ex)
                         {
                             context.AddFailure(Constants.VALIDATION_SUMMARY, $"There was an error processing your CSV file: {ex.Message}");
                             return;
@@ -124,13 +124,18 @@ namespace Raytha.Application.ContentItems.Commands
         {
             private readonly IRaythaDbContext _db;
             private readonly ICSVService _csvService;
-
+            private readonly IFileStorageProvider _fileStorageProvider;
+            private readonly ICurrentOrganization _currentOrganization;
             public BackgroundTask(
                 IRaythaDbContext db,
-                ICSVService csvService)
+                ICSVService csvService,
+                IFileStorageProvider fileStorageProvider,
+                ICurrentOrganization currentOrganization)
             {
                 _db = db;
                 _csvService = csvService;
+                _fileStorageProvider = fileStorageProvider;
+                _currentOrganization = currentOrganization;
             }
             public async Task Execute(Guid jobId, JsonElement args, CancellationToken cancellationToken)
             {
@@ -139,21 +144,22 @@ namespace Raytha.Application.ContentItems.Commands
                 bool importAsDraft = args.GetProperty("ImportAsDraft").GetBoolean();
                 byte[] csvAsBytes = args.GetProperty("CsvAsBytes").GetBytesFromBase64();
 
+                int taskStep = 0; 
                 Stream stream = new MemoryStream(csvAsBytes);
-                var records = _csvService.ReadCSV<Dictionary<string, dynamic>>(stream);
 
+                var records = _csvService.ReadCSV<Dictionary<string, dynamic>>(stream);
                 ContentType contentType = _db.ContentTypes
-                    .Include(p => p.ContentTypeFields)
-                    .First(p => p.Id == contentTypeId);
+                                     .Include(p => p.ContentTypeFields)
+                                     .First(p => p.Id == contentTypeId);
 
                 var job = _db.BackgroundTasks.FirstOrDefault(p => p.Id == jobId);
-                job.TaskStep = 1;
+                job.TaskStep = taskStep++;
                 job.StatusInfo = $"Pulling records from file...";
                 job.PercentComplete = 10;
                 _db.BackgroundTasks.Update(job);
                 await _db.SaveChangesAsync(cancellationToken);
 
-                job.TaskStep = 2;
+                job.TaskStep = taskStep++;
                 job.StatusInfo = $"Number of records to process: {records.Count}";
                 job.PercentComplete = 30;
                 _db.BackgroundTasks.Update(job);
@@ -170,7 +176,12 @@ namespace Raytha.Application.ContentItems.Commands
                         rowNumber++;
                         continue;
                     }
-
+                    bool validationSuccessful = ValidateContentItem(rowNumber, contentType, item, errorList, importAsDraft);
+                    if (!validationSuccessful)
+                    {
+                        rowNumber++;
+                        continue;
+                    }
                     try
                     {
                         ShortGuid entityId;
@@ -186,11 +197,12 @@ namespace Raytha.Application.ContentItems.Commands
                             }
 
                             var entity = _db.ContentItems.FirstOrDefault(p => p.Id == entityId.Guid);
-                            var fieldValues = GetFieldValuesFromRecord(contentType.ContentTypeFields, item);
+                            var fieldValues = GetFieldValuesFromRecord(contentType.ContentTypeFields, item, cancellationToken);
                             if (entity != null)
                             {
                                 if (importMethod == ADD_NEW_RECORDS_ONLY)
                                 {
+                                    errorList.Add($"Row Number: {rowNumber}", $"Skipped importing.Please select {UPDATE_EXISTING_RECORDS_ONLY.Replace('_', ' ')} or {UPSERT_ALL_RECORDS.Replace('_', ' ')}.");
                                     rowNumber++;
                                     continue;
                                 }
@@ -207,6 +219,7 @@ namespace Raytha.Application.ContentItems.Commands
                             }
                             else if (importMethod == UPDATE_EXISTING_RECORDS_ONLY)
                             {
+                                errorList.Add($"Row Number: {rowNumber}", $"{entityId} was not found for {contentType.LabelSingular}");
                                 rowNumber++;
                                 continue;
                             }
@@ -235,7 +248,7 @@ namespace Raytha.Application.ContentItems.Commands
                         else
                         {
                             ShortGuid newEntityId = ShortGuid.NewGuid();
-                            var fieldValues = GetFieldValuesFromRecord(contentType.ContentTypeFields, item);
+                            var fieldValues = await GetFieldValuesFromRecord(contentType.ContentTypeFields, item, cancellationToken);
                             var path = GetRoutePath(fieldValues, newEntityId, contentType);
 
                             var entity = new ContentItem
@@ -266,8 +279,39 @@ namespace Raytha.Application.ContentItems.Commands
                     rowNumber++;
                     await _db.SaveChangesAsync(cancellationToken);
                 }
+                if (errorList != null && errorList.Count > 0)
+                {
+                    job.TaskStep = taskStep++;
+                    job.StatusInfo = $"Generating CSV of failed imports...";
+                    job.PercentComplete = 80;
+                    _db.BackgroundTasks.Update(job);
+                    await _db.SaveChangesAsync(cancellationToken);
 
-                job.TaskStep = 3;
+                    var myExport = new Csv.CsvExport();
+                    foreach (var error in errorList)
+                    {
+                        myExport.AddRow();
+                        myExport[error.Key] = error.Value;
+                    }
+                    var csvExportAsBytes = myExport.ExportToBytes();
+                    string fileName = $"{_currentOrganization.TimeZoneConverter.UtcToTimeZoneAsDateTimeFormat(DateTime.UtcNow)}-{contentType.DeveloperName}.csv";
+                    var id = Guid.NewGuid();
+                    var objectKey = FileStorageUtility.CreateObjectKeyFromIdAndFileName(id.ToString(), fileName);
+                    var mediaItem = new MediaItem
+                    {
+                        Id = id,
+                        ObjectKey = objectKey,
+                        ContentType = "text/csv",
+                        FileName = fileName,
+                        FileStorageProvider = _fileStorageProvider.GetName(),
+                        Length = csvExportAsBytes.Length
+                    };
+                    _db.MediaItems.Add(mediaItem);
+
+                    await _fileStorageProvider.SaveAndGetDownloadUrlAsync(csvExportAsBytes, objectKey, fileName, "text/csv", DateTime.UtcNow.AddYears(999));
+                }
+
+                job.TaskStep = taskStep++;
                 job.StatusInfo = $"Finished importing.";
                 job.PercentComplete = 100;
                 _db.BackgroundTasks.Update(job);
@@ -299,7 +343,7 @@ namespace Raytha.Application.ContentItems.Commands
                 return path;
             }
 
-            private Dictionary<string, dynamic> GetFieldValuesFromRecord(IEnumerable<ContentTypeField> contentTypeFields, Dictionary<string, object> record)
+            private async Task<Dictionary<string, dynamic>> GetFieldValuesFromRecord(IEnumerable<ContentTypeField> contentTypeFields, Dictionary<string, object> record, CancellationToken cancellationToken)
             {
                 var fieldValues = new Dictionary<string, dynamic>();
                 var fields = record.Keys.Where(s => s != BuiltInContentTypeField.Id.DeveloperName && s != BuiltInContentTypeField.Template.DeveloperName).ToList();
@@ -320,12 +364,108 @@ namespace Raytha.Application.ContentItems.Commands
                     {
                         fieldValues.Add(field.ToDeveloperName(), record[field].ToString().Split(';').ToArray());
                     }
+                    else if (contentTypeField.FieldType.DeveloperName == BaseFieldType.Attachment)
+                    {
+                        string objectKey = await DownloadAndSaveFile(record[field].ToString(), contentTypeField.ContentType.DeveloperName, cancellationToken);
+                        fieldValues.Add(field.ToDeveloperName(), objectKey);
+                    }
                     else
                     {
                         fieldValues.Add(field.ToDeveloperName(), record[field]);
                     }
                 }
                 return fieldValues;
+            }
+            private bool ValidateContentItem(int rowNumber, ContentType contentType, Dictionary<string, dynamic> contentItem, Dictionary<string, string> errorList, bool importAsDraft)
+            {
+                var fields = contentItem.Keys.Where(s => s != BuiltInContentTypeField.Id.DeveloperName && s != BuiltInContentTypeField.Template.DeveloperName).ToList();
+
+                foreach (var contentItemField in fields)
+                {
+                    var fieldDefinition = contentType.ContentTypeFields.FirstOrDefault(p => p.DeveloperName == contentItemField);
+                    if (fieldDefinition == null)
+                    {
+                        errorList.Add($"Row Number: {rowNumber}", $"{contentItemField} is not a recognized field for {contentType.LabelSingular}.");
+                        return false;
+                    }
+                    else
+                    {
+                        try
+                        {
+                            dynamic fieldValue;
+                            if (fieldDefinition.FieldType.Label == BaseFieldType.MultipleSelect.Label)
+                            {
+                                fieldValue = fieldDefinition.FieldType.FieldValueFrom((contentItem[contentItemField] as string).Split(";"));
+                            }
+                            else if (fieldDefinition.FieldType.Label == BaseFieldType.Attachment)
+                            {
+                                bool isValidUrl = StringExtensions.IsValidUriFormat(contentItem[contentItemField]);
+                                if (isValidUrl)
+                                {
+                                    fieldValue = fieldDefinition.FieldType.FieldValueFrom(contentItem[contentItemField]);
+                                }
+                                else
+                                {
+                                    errorList.Add($"Row Number: {rowNumber}", $"{fieldDefinition.Label} is invlaid.");
+                                    return false;
+                                }
+                            }
+                            else
+                            {
+                                fieldValue = fieldDefinition.FieldType.FieldValueFrom(contentItem[contentItemField]);
+                            }
+                            if (!importAsDraft && fieldDefinition.IsRequired && !fieldValue.HasValue)
+                            {
+                                errorList.Add($"Row Number: {rowNumber}", $"{fieldDefinition.Label} is a required field.");
+                                return false;
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            errorList.Add($"Row Number: {rowNumber}", $"'{fieldDefinition.Label}' is an invalid format. {ex.Message}");
+                            return false;
+                        }
+                    }
+                }
+                return true;
+            }
+
+            private async Task<string> DownloadAndSaveFile(string fileUrl, string contentTypeDeveloperName, CancellationToken cancellationToken)
+            {
+                try
+                {
+                    var fileInfo = await FileHelper.DownloadFile(fileUrl);
+                    if (fileInfo != null)
+                    {
+                        var fileBytes = fileInfo.FileMemoryStream.ToArray();
+
+                        string fileName = $"{_currentOrganization.TimeZoneConverter.UtcToTimeZoneAsDateTimeFormat(DateTime.UtcNow)}-{contentTypeDeveloperName}{fileInfo.FileExt}";
+                        var id = ShortGuid.NewGuid();
+                        var objectKey = FileStorageUtility.CreateObjectKeyFromIdAndFileName(id.ToString(), fileName);
+
+                        await _fileStorageProvider.SaveAndGetDownloadUrlAsync(fileBytes, objectKey, fileName, fileInfo.ContentType, DateTime.UtcNow.AddYears(999));
+
+                        var mediaItem = new MediaItem
+                        {
+                            Id = id,
+                            ObjectKey = objectKey,
+                            ContentType = fileInfo.ContentType,
+                            FileName = fileName,
+                            FileStorageProvider = _fileStorageProvider.GetName(),
+                            Length = fileBytes.Length
+                        };
+                        _db.MediaItems.Add(mediaItem);
+                        await _db.SaveChangesAsync(cancellationToken);
+
+                        return objectKey;
+                    }
+                    return string.Empty;
+                }
+                catch (Exception ex)
+                {
+                    return string.Empty;
+                }
+
             }
         }
     }

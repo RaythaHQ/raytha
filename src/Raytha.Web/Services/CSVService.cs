@@ -3,7 +3,7 @@ using Raytha.Application;
 using System.Collections;
 using System.IO;
 using Raytha.Application.Common.Interfaces;
-using CsvHelper;
+using CsvReader;
 using System.Globalization;
 using System.Collections.Generic;
 
@@ -11,30 +11,28 @@ namespace Raytha.Web.Services
 {
     public class CSVService : ICSVService
     {
-        public List<Dictionary<string,object>> ReadCSV<T>(Stream stream)
+        public List<Dictionary<string, object>> ReadCSV<T>(Stream stream)
         {
             var records = new List<Dictionary<string, object>>();
 
-            using (var reader = new StreamReader(stream))
-            using (var csv = new CsvReader(reader, new CsvHelper.Configuration.CsvConfiguration(CultureInfo.InvariantCulture) { BadDataFound = null}))
+            using (CsvReader.CsvReader csvReader = new CsvReader.CsvReader(new StreamReader(stream), true))
             {
-                csv.Read(); 
+                string[] headers = csvReader.GetFieldHeaders(); // Get column headers
 
-                string[] headers = csv.Parser.Record;
-                while (csv.Read())
+                while (csvReader.ReadNextRecord())
                 {
-                    var record = new Dictionary<string, object>();
+                    Dictionary<string, object> record = new Dictionary<string, object>();
 
-                    for (int i = 0; i < headers.Length; i++)
+                    for (int columnIndex = 0; columnIndex < csvReader.FieldCount; columnIndex++)
                     {
-                        var value = csv.GetField(i);
-                        record[headers[i]] = value;
+                        string columnName = headers[columnIndex];
+                        object columnValue = csvReader[columnIndex];
+                        record[columnName] = columnValue;
                     }
 
                     records.Add(record);
                 }
             }
-
             return records;
         }
     }
