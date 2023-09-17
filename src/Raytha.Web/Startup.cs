@@ -47,6 +47,8 @@ public class Startup
             ForwardedHeaders.XForwardedProto
         });
 
+        app.UseHttpsRedirection();
+
         app.UseStaticFiles();
 
         var fileStorageProvider = Configuration[FileStorageUtility.CONFIG_NAME].IfNullOrEmpty(FileStorageUtility.LOCAL).ToLower();
