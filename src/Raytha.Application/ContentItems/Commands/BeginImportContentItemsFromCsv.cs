@@ -6,6 +6,7 @@ using Raytha.Application.Common.Exceptions;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Models;
 using Raytha.Application.Common.Utils;
+using Raytha.Application.MediaItems;
 using Raytha.Domain.Entities;
 using Raytha.Domain.ValueObjects.FieldTypes;
 using System.Text.Json;
@@ -279,13 +280,14 @@ namespace Raytha.Application.ContentItems.Commands
                     rowNumber++;
                     await _db.SaveChangesAsync(cancellationToken);
                 }
-                if (errorList != null && errorList.Count > 0)
+                if (errorList.Any())
                 {
                     job.TaskStep = taskStep++;
                     job.StatusInfo = $"Generating CSV of failed imports...";
                     job.PercentComplete = 80;
                     _db.BackgroundTasks.Update(job);
                     await _db.SaveChangesAsync(cancellationToken);
+                    Thread.Sleep(1500);
 
                     var myExport = new Csv.CsvExport();
                     foreach (var error in errorList)
@@ -307,16 +309,20 @@ namespace Raytha.Application.ContentItems.Commands
                         Length = csvExportAsBytes.Length
                     };
                     _db.MediaItems.Add(mediaItem);
-
                     await _fileStorageProvider.SaveAndGetDownloadUrlAsync(csvExportAsBytes, objectKey, fileName, "text/csv", DateTime.UtcNow.AddYears(999));
+                    job.TaskStep = taskStep++;
+                    job.StatusInfo = JsonSerializer.Serialize(MediaItemDto.GetProjection(mediaItem));
+                    _db.BackgroundTasks.Update(job);
+                    await _db.SaveChangesAsync(cancellationToken);
                 }
-
-                job.TaskStep = taskStep++;
-                job.StatusInfo = $"Finished importing.";
-                job.PercentComplete = 100;
-                _db.BackgroundTasks.Update(job);
-                await _db.SaveChangesAsync(cancellationToken);
-
+                else
+                {
+                    job.TaskStep = taskStep++;
+                    job.StatusInfo = $"Finished importing.";
+                    job.PercentComplete = 100;
+                    _db.BackgroundTasks.Update(job);
+                    await _db.SaveChangesAsync(cancellationToken);
+                }
             }
 
             private string GetRoutePath(dynamic content, ShortGuid entityId, ContentType contentType)
@@ -465,7 +471,6 @@ namespace Raytha.Application.ContentItems.Commands
                 {
                     return string.Empty;
                 }
-
             }
         }
     }
