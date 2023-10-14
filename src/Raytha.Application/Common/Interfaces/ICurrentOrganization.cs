@@ -20,6 +20,7 @@ public interface ICurrentOrganization
     string HomePageType { get; }
 
     string PathBase { get; }
+    string RedirectWebsite { get; }
 
     OrganizationTimeZoneConverter TimeZoneConverter { get; }
     IEnumerable<AuthenticationSchemeDto> AuthenticationSchemes { get; }

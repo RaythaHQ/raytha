@@ -90,9 +90,15 @@ public class BaseController : Controller
     public override void OnActionExecuting(ActionExecutingContext context)
     {
         base.OnActionExecuting(context);
+        if (CurrentOrganization.RedirectWebsite.IsValidUriFormat())
+        {
+            context.Result = new RedirectResult(CurrentOrganization.RedirectWebsite);
+            return;
+        }
         if (!CurrentOrganization.InitialSetupComplete)
         {
             context.Result = new RedirectToActionResult("Index", "Setup", null);
+            return;
         }
     }
 
