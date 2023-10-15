@@ -17,26 +17,31 @@ public class RelativeUrlBuilder : IRelativeUrlBuilder
         _currentOrganization = currentOrganization;
     }
 
-    public string AdminLoginUrl() => _generator.GetUriByPage(_httpContextAccessor.HttpContext,
-                values: new { area = "Admin", controller = "Login", action = "LoginWithEmailAndPassword" });
+    public string AdminLoginUrl() => ResolveUrlIfHttpContextAccessExists("LoginWithEmailAndPassword", "Login", new { area = "Admin", controller = "Login", action = "LoginWithEmailAndPassword" });
 
-    public string AdminLoginWithMagicLinkCompleteUrl(string token, string returnUrl = "") => _generator.GetUriByPage(_httpContextAccessor.HttpContext,
-                values: new { area = "Admin", controller = "Login", action = "LoginWithMagicLinkComplete", token, returnUrl });
+    public string AdminLoginWithMagicLinkCompleteUrl(string token, string returnUrl = "") => ResolveUrlIfHttpContextAccessExists("LoginWithMagicLinkComplete", "Login", new { area = "Admin", controller = "Login", action = "LoginWithMagicLinkComplete", token, returnUrl });
 
-    public string AdminForgotPasswordCompleteUrl(string token) => _generator.GetUriByPage(_httpContextAccessor.HttpContext, 
-                values: new { area = "Admin", controller = "Login", action = "ForgotPasswordComplete", token });
+    public string AdminForgotPasswordCompleteUrl(string token) => ResolveUrlIfHttpContextAccessExists("ForgotPasswordComplete", "Login", new { area = "Admin", controller = "Login", action = "ForgotPasswordComplete", token });
 
-    public string MediaRedirectToFileUrl(string objectKey) => _generator.GetUriByPage(_httpContextAccessor.HttpContext,
-                values: new { area = "Admin", controller = "MediaItems", action = "RedirectToFileUrlByObjectKey", objectKey });
+    public string MediaRedirectToFileUrl(string objectKey) => ResolveUrlIfHttpContextAccessExists("RedirectToFileUrlByObjectKey", "MediaItems", new { area = "Admin", controller = "MediaItems", action = "RedirectToFileUrlByObjectKey", objectKey });
 
-    public string MediaFileLocalStorageUrl(string objectKey) => $"{_httpContextAccessor.HttpContext.Request.Scheme}://{_httpContextAccessor.HttpContext.Request.Host}{_currentOrganization.PathBase}/_static-files/{objectKey}";
+    public string MediaFileLocalStorageUrl(string objectKey) => _httpContextAccessor.HttpContext == null ? $"{_currentOrganization.PathBase}/_static-files/{objectKey}" : $"{_httpContextAccessor.HttpContext.Request.Scheme}://{_httpContextAccessor.HttpContext.Request.Host}{_currentOrganization.PathBase}/_static-files/{objectKey}";
 
-    public string UserLoginUrl() => _generator.GetUriByPage(_httpContextAccessor.HttpContext,
-                values: new { area = "Public", controller = "Login", action = "LoginWithEmailAndPassword" });
+    public string UserLoginUrl() => ResolveUrlIfHttpContextAccessExists("LoginWithEmailAndPassword", "Login", new { area = "Public", controller = "Login", action = "LoginWithEmailAndPassword" });
 
-    public string UserLoginWithMagicLinkCompleteUrl(string token, string returnUrl = "") => _generator.GetUriByPage(_httpContextAccessor.HttpContext,
-                values: new { area = "Public", controller = "Login", action = "LoginWithMagicLinkComplete", token, returnUrl });
+    public string UserLoginWithMagicLinkCompleteUrl(string token, string returnUrl = "") => ResolveUrlIfHttpContextAccessExists("LoginWithMagicLinkComplete", "Login", new { area = "Public", controller = "Login", action = "LoginWithMagicLinkComplete", token, returnUrl });
 
-    public string UserForgotPasswordCompleteUrl(string token) => _generator.GetUriByPage(_httpContextAccessor.HttpContext,
-                values: new { area = "Public", controller = "Login", action = "ForgotPasswordComplete", token });
+    public string UserForgotPasswordCompleteUrl(string token) => ResolveUrlIfHttpContextAccessExists("ForgotPasswordComplete", "Login", new { area = "Public", controller = "Login", action = "ForgotPasswordComplete", token });
+
+    private string ResolveUrlIfHttpContextAccessExists(string action, string controller, object values)
+    {
+        if (_httpContextAccessor.HttpContext == null)
+        {
+            return _generator.GetPathByAction(action, controller, values: values);
+        }
+        else
+        {
+            return _generator.GetUriByPage(_httpContextAccessor.HttpContext, values: values);
+        }
+    }
 }

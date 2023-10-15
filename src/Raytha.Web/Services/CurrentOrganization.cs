@@ -97,4 +97,5 @@ public class CurrentOrganization : ICurrentOrganization
     public OrganizationTimeZoneConverter TimeZoneConverter => OrganizationTimeZoneConverter.From(TimeZone, DateFormat);
 
     public string PathBase => Configuration["PATHBASE"] ?? string.Empty;
+    public string RedirectWebsite => Configuration["REDIRECT_WEBSITE"] ?? string.Empty;
 }

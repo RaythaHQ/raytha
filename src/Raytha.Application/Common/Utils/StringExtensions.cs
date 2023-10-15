@@ -21,7 +21,7 @@ public static class StringExtensions
         return !string.IsNullOrEmpty(source.ToDeveloperName()) && !IsProtectedRoutePath(source.ToDeveloperName());
     }
 
-    public static bool IsValidUriFormat(string link)
+    public static bool IsValidUriFormat(this string link)
     {
         if (string.IsNullOrWhiteSpace(link))
         {

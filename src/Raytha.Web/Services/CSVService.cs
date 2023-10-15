@@ -1,41 +1,34 @@
-﻿using Raytha.Web.Areas.Admin.Views.ContentItems;
-using Raytha.Application;
-using System.Collections;
-using System.IO;
+﻿using System.IO;
 using Raytha.Application.Common.Interfaces;
-using CsvHelper;
-using System.Globalization;
 using System.Collections.Generic;
 
-namespace Raytha.Web.Services
+namespace Raytha.Web.Services;
+
+public class CsvService : ICsvService
 {
-    public class CSVService : ICSVService
+    public IEnumerable<Dictionary<string, object>> ReadCsv<T>(Stream stream)
     {
-        public List<Dictionary<string,object>> ReadCSV<T>(Stream stream)
+        var records = new List<Dictionary<string, object>>();
+
+        using (CsvReader.CsvReader csvReader = new CsvReader.CsvReader(new StreamReader(stream), true))
         {
-            var records = new List<Dictionary<string, object>>();
+            string[] headers = csvReader.GetFieldHeaders(); // Get column headers
 
-            using (var reader = new StreamReader(stream))
-            using (var csv = new CsvReader(reader, new CsvHelper.Configuration.CsvConfiguration(CultureInfo.InvariantCulture) { BadDataFound = null}))
+            while (csvReader.ReadNextRecord())
             {
-                csv.Read(); 
+                Dictionary<string, object> record = new Dictionary<string, object>();
 
-                string[] headers = csv.Parser.Record;
-                while (csv.Read())
+                for (int columnIndex = 0; columnIndex < csvReader.FieldCount; columnIndex++)
                 {
-                    var record = new Dictionary<string, object>();
-
-                    for (int i = 0; i < headers.Length; i++)
-                    {
-                        var value = csv.GetField(i);
-                        record[headers[i]] = value;
-                    }
-
-                    records.Add(record);
+                    string columnName = headers[columnIndex];
+                    object columnValue = csvReader[columnIndex];
+                    record[columnName] = columnValue;
                 }
-            }
 
-            return records;
+                records.Add(record);
+            }
         }
+        return records;
     }
 }
+

@@ -62,7 +62,7 @@ public class CreateContentItem
                     return;
                 }
 
-                foreach (var field in request.Content as IDictionary<string, dynamic>)
+                foreach (var field in request.Content)
                 {
                     var fieldDefinition = contentTypeDefinition.ContentTypeFields.FirstOrDefault(p => p.DeveloperName == field.Key);
                     if (fieldDefinition == null)

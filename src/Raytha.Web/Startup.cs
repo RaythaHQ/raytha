@@ -1,11 +1,13 @@
 ﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.HttpLogging;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using Raytha.Application;
 using Raytha.Application.Common.Utils;
 using Raytha.Web.Middlewares;
@@ -24,6 +26,10 @@ public class Startup
 
     public void ConfigureServices(IServiceCollection services)
     {
+        services.Configure<ForwardedHeadersOptions>(options =>
+        {
+            options.ForwardedHeaders = ForwardedHeaders.XForwardedHost | ForwardedHeaders.XForwardedProto;
+        });
         services.AddApplicationServices();
         services.AddInfrastructureServices(Configuration);
         services.AddWebUIServices();
@@ -33,19 +39,13 @@ public class Startup
     {
         string pathBase = Configuration["PATHBASE"] ?? string.Empty;
         app.UsePathBase(new PathString(pathBase));
-
+        app.UseForwardedHeaders();
         app.UseExceptionHandler(ExceptionsMiddleware.ErrorHandler(pathBase));
 
         if (!env.IsDevelopment())
         {
             app.UseHsts();
         }
-
-        app.UseForwardedHeaders(new ForwardedHeadersOptions
-        {
-            ForwardedHeaders = ForwardedHeaders.XForwardedFor |
-            ForwardedHeaders.XForwardedProto
-        });
 
         app.UseStaticFiles();
 

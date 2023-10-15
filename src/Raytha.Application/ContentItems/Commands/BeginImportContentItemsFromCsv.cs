@@ -2,331 +2,453 @@
 using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using Raytha.Application.Common.Exceptions;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Models;
 using Raytha.Application.Common.Utils;
+using Raytha.Application.MediaItems;
 using Raytha.Domain.Entities;
 using Raytha.Domain.ValueObjects.FieldTypes;
+using Raytha.Domain.ValueObjects.FieldValues;
 using System.Text.Json;
 
-namespace Raytha.Application.ContentItems.Commands
+namespace Raytha.Application.ContentItems.Commands;
+
+public class BeginImportContentItemsFromCsv
 {
-    public class BeginImportContentItemsFromCsv
+    public record Command : LoggableRequest<CommandResponseDto<ShortGuid>>
     {
-        public const string UPDATE_EXISTING_RECORDS_ONLY = "update_existing_records_only";
-        public const string UPSERT_ALL_RECORDS = "upsert_all_records";
-        public const string ADD_NEW_RECORDS_ONLY = "add_new_records_only";
-        public record Command : LoggableRequest<CommandResponseDto<ShortGuid>>
+        public ShortGuid ContentTypeId { get; init; }
+        public string ImportMethod { get; init; }
+        public bool ImportAsDraft { get; init; }
+        public byte[] CsvAsBytes { get; init; }
+    }
+
+    public class Validator : AbstractValidator<Command>
+    {
+        public Validator(IRaythaDbContext db, ICsvService csvService)
         {
-            public ShortGuid ContentTypeId { get; init; }
-            public string ImportMethod { get; init; }
-            public bool ImportAsDraft { get; init; }
-            public byte[] CsvAsBytes { get; init; }
-        }
-
-        public class Validator : AbstractValidator<Command>
-        {
-            public Validator(IRaythaDbContext db, ICSVService csvService)
+            RuleFor(x => x).Custom((request, context) =>
             {
-                RuleFor(x => x).Custom((request, context) =>
-                {
-                    var contentType = db.ContentTypes
-                        .Include(p => p.ContentTypeFields)
-                        .FirstOrDefault(p => p.Id == request.ContentTypeId.Guid);
-
-                    if (contentType == null)
-                    {
-                        throw new NotFoundException("Content Type", request.ContentTypeId);
-                    }
-
-                    if (string.IsNullOrEmpty(request.ImportMethod))
-                    {
-                        context.AddFailure("ImportMethod", "Import method is required.");
-                        return;
-                    }
-
-                    if (request.ImportMethod != UPDATE_EXISTING_RECORDS_ONLY &&
-                        request.ImportMethod != ADD_NEW_RECORDS_ONLY &&
-                        request.ImportMethod != UPSERT_ALL_RECORDS)
-                    {
-                        context.AddFailure("ImportMethod", "Import method not recognized.");
-                        return;
-                    }
-
-                    if (request.CsvAsBytes == null || request.CsvAsBytes.Length == 0)
-                    {
-                        context.AddFailure("CsvAsBytes", "You must upload a CSV file.");
-                        return;
-                    }
-                    else
-                    {
-                        try
-                        {
-                            Stream stream = new MemoryStream(request.CsvAsBytes);
-                            var csvFile = csvService.ReadCSV<Dictionary<string, dynamic>>(stream);
-                            if (!csvFile.Any())
-                            {
-                                context.AddFailure(Constants.VALIDATION_SUMMARY, "Your CSV file is missing data.");
-                                return;
-                            }
-                            if (!csvFile.All(p => p.ContainsKey(BuiltInContentTypeField.Template.DeveloperName))) 
-                            {
-                                context.AddFailure(Constants.VALIDATION_SUMMARY, $"You must provide `{BuiltInContentTypeField.Template.DeveloperName}` column.");
-                                return;
-                            }
-                            if (request.ImportMethod == UPDATE_EXISTING_RECORDS_ONLY && !csvFile.All(p => p.ContainsKey(BuiltInContentTypeField.Id.DeveloperName)))
-                            {
-                                context.AddFailure(Constants.VALIDATION_SUMMARY, $"You must provide `{BuiltInContentTypeField.Id.DeveloperName}` column for updating records.");
-                                return;
-                            }
-                        } 
-                        catch (Exception ex) 
-                        {
-                            context.AddFailure(Constants.VALIDATION_SUMMARY, $"There was an error processing your CSV file: {ex.Message}");
-                            return;
-                        }
-                    }
-                });
-            }
-        }
-
-        public class Handler : IRequestHandler<Command, CommandResponseDto<ShortGuid>>
-        {
-            private readonly IBackgroundTaskQueue _taskQueue;
-            private readonly IRaythaDbContext _db;
-            private readonly IContentTypeInRoutePath _contentTypeInRoutePath;
-            public Handler(
-                IBackgroundTaskQueue taskQueue,
-                IRaythaDbContext db,
-                IContentTypeInRoutePath contentTypeInRoutePath
-                )
-            {
-                _taskQueue = taskQueue;
-                _db = db;
-                _contentTypeInRoutePath = contentTypeInRoutePath;
-            }
-            public async Task<CommandResponseDto<ShortGuid>> Handle(Command request, CancellationToken cancellationToken)
-            {
-                var contentType = _db.ContentTypes
+                var contentType = db.ContentTypes
                     .Include(p => p.ContentTypeFields)
-                    .First(p => p.Id == request.ContentTypeId.Guid);
+                    .FirstOrDefault(p => p.Id == request.ContentTypeId.Guid);
 
-                _contentTypeInRoutePath.ValidateContentTypeInRoutePathMatchesValue(contentType.DeveloperName);
-
-                var backgroundJobId = await _taskQueue.EnqueueAsync<BackgroundTask>(request, cancellationToken);
-
-                return new CommandResponseDto<ShortGuid>(backgroundJobId);
-            }
-        }
-
-        public class BackgroundTask : IExecuteBackgroundTask
-        {
-            private readonly IRaythaDbContext _db;
-            private readonly ICSVService _csvService;
-
-            public BackgroundTask(
-                IRaythaDbContext db,
-                ICSVService csvService)
-            {
-                _db = db;
-                _csvService = csvService;
-            }
-            public async Task Execute(Guid jobId, JsonElement args, CancellationToken cancellationToken)
-            {
-                Guid contentTypeId = args.GetProperty("ContentTypeId").GetProperty("Guid").GetGuid();
-                string importMethod = args.GetProperty("ImportMethod").GetString();
-                bool importAsDraft = args.GetProperty("ImportAsDraft").GetBoolean();
-                byte[] csvAsBytes = args.GetProperty("CsvAsBytes").GetBytesFromBase64();
-
-                Stream stream = new MemoryStream(csvAsBytes);
-                var records = _csvService.ReadCSV<Dictionary<string, dynamic>>(stream);
-
-                ContentType contentType = _db.ContentTypes
-                    .Include(p => p.ContentTypeFields)
-                    .First(p => p.Id == contentTypeId);
-
-                var job = _db.BackgroundTasks.FirstOrDefault(p => p.Id == jobId);
-                job.TaskStep = 1;
-                job.StatusInfo = $"Pulling records from file...";
-                job.PercentComplete = 10;
-                _db.BackgroundTasks.Update(job);
-                await _db.SaveChangesAsync(cancellationToken);
-
-                job.TaskStep = 2;
-                job.StatusInfo = $"Number of records to process: {records.Count}";
-                job.PercentComplete = 30;
-                _db.BackgroundTasks.Update(job);
-                await _db.SaveChangesAsync(cancellationToken);
-
-                Dictionary<string, string> errorList = new Dictionary<string, string>();
-                int rowNumber = 1;
-                foreach (var item in records)
+                if (contentType == null)
                 {
-                    var template = _db.WebTemplates.FirstOrDefault(s => s.DeveloperName == item[BuiltInContentTypeField.Template.DeveloperName] as string);
-                    if (template == null)
-                    {
-                        errorList.Add($"Row number: {rowNumber}", $"Template developer name is was not found: {item[BuiltInContentTypeField.Template.DeveloperName] as string}");
-                        rowNumber++;
-                        continue;
-                    }
+                    throw new NotFoundException("Content Type", request.ContentTypeId);
+                }
 
+                if (request.ImportMethod.IsNullOrEmpty())
+                {
+                    context.AddFailure("ImportMethod", "Import method is required.");
+                    return;
+                }
+
+                ImportMethod importMethod;
+                try
+                {
+                    importMethod = ImportMethod.From(request.ImportMethod);
+                }
+                catch (NotFoundException)
+                {
+                    context.AddFailure("ImportMethod", $"Unknown import method: {request.ImportMethod}");
+                    return;
+                }
+
+
+                if (request.CsvAsBytes == null || request.CsvAsBytes.Length == 0)
+                {
+                    context.AddFailure("CsvAsBytes", "You must upload a CSV file.");
+                    return;
+                }
+                else
+                {
                     try
                     {
-                        ShortGuid entityId;
-
-                        bool hasId = item.ContainsKey(BuiltInContentTypeField.Id.DeveloperName) ? !string.IsNullOrEmpty(item[BuiltInContentTypeField.Id.DeveloperName]?.ToString()) : false;
-                        if (hasId)
+                        Stream stream = new MemoryStream(request.CsvAsBytes);
+                        var csvFile = csvService.ReadCsv<Dictionary<string, dynamic>>(stream);
+                        if (!csvFile.Any())
                         {
-                            if (!ShortGuid.TryParse(item[BuiltInContentTypeField.Id.DeveloperName]?.ToString(), out entityId))
-                            {
-                                errorList.Add($"Row number: {rowNumber}", $"{item[BuiltInContentTypeField.Id.DeveloperName]?.ToString()} is not a valid Raytha Id value");
-                                rowNumber++;
-                                continue;
-                            }
-
-                            var entity = _db.ContentItems.FirstOrDefault(p => p.Id == entityId.Guid);
-                            var fieldValues = GetFieldValuesFromRecord(contentType.ContentTypeFields, item);
-                            if (entity != null)
-                            {
-                                if (importMethod == ADD_NEW_RECORDS_ONLY)
-                                {
-                                    rowNumber++;
-                                    continue;
-                                }
-                                else
-                                {
-                                    entity.IsDraft = importAsDraft;
-                                    entity.IsPublished = importAsDraft == false;
-                                    entity.DraftContent = fieldValues;
-                                    entity.PublishedContent = fieldValues;
-                                    entity.WebTemplateId = template.Id;
-                                    entity.ContentTypeId = contentType.Id;
-                                    _db.ContentItems.Update(entity);
-                                }
-                            }
-                            else if (importMethod == UPDATE_EXISTING_RECORDS_ONLY)
-                            {
-                                rowNumber++;
-                                continue;
-                            }
-                            else
-                            {
-                                var path = GetRoutePath(fieldValues, entityId, contentType);
-
-                                entity = new ContentItem
-                                {
-                                    Id = entityId.Guid,
-                                    IsDraft = importAsDraft,
-                                    IsPublished = importAsDraft == false,
-                                    DraftContent = fieldValues,
-                                    PublishedContent = fieldValues,
-                                    WebTemplateId = template.Id,
-                                    ContentTypeId = contentType.Id,
-                                    Route = new Route
-                                    {
-                                        Path = path,
-                                        ContentItemId = entityId.Guid
-                                    }
-                                };
-                                _db.ContentItems.Add(entity);
-                            }
+                            context.AddFailure(Constants.VALIDATION_SUMMARY, "Your CSV file is missing data.");
+                            return;
                         }
-                        else
+                        if (!csvFile.All(p => p.ContainsKey(BuiltInContentTypeField.Template.DeveloperName)))
                         {
-                            ShortGuid newEntityId = ShortGuid.NewGuid();
-                            var fieldValues = GetFieldValuesFromRecord(contentType.ContentTypeFields, item);
-                            var path = GetRoutePath(fieldValues, newEntityId, contentType);
-
-                            var entity = new ContentItem
-                            {
-                                Id = newEntityId.Guid,
-                                IsDraft = importAsDraft,
-                                IsPublished = importAsDraft == false,
-                                DraftContent = fieldValues,
-                                PublishedContent = fieldValues,
-                                WebTemplateId = template.Id,
-                                ContentTypeId = contentType.Id,
-                                Route = new Route
-                                {
-                                    Path = path,
-                                    ContentItemId = newEntityId.Guid
-                                }
-                            };
-                            _db.ContentItems.Add(entity);
+                            context.AddFailure(Constants.VALIDATION_SUMMARY, $"You must provide `{BuiltInContentTypeField.Template.DeveloperName}` column.");
+                            return;
+                        }
+                        if (importMethod == ImportMethod.UpdateExistingRecordsOnly && !csvFile.All(p => p.ContainsKey(BuiltInContentTypeField.Id.DeveloperName)))
+                        {
+                            context.AddFailure(Constants.VALIDATION_SUMMARY, $"You must provide `{BuiltInContentTypeField.Id.DeveloperName}` column for updating records.");
+                            return;
                         }
                     }
                     catch (Exception ex)
                     {
-                        errorList.Add($"Row number: {rowNumber}", ex.Message);
-                        rowNumber++;
-                        continue;
+                        context.AddFailure(Constants.VALIDATION_SUMMARY, $"There was an error processing your CSV file: {ex.Message}");
+                        return;
                     }
+                }
+            });
+        }
+    }
 
+    public class Handler : IRequestHandler<Command, CommandResponseDto<ShortGuid>>
+    {
+        private readonly IBackgroundTaskQueue _taskQueue;
+        private readonly IRaythaDbContext _db;
+        private readonly IContentTypeInRoutePath _contentTypeInRoutePath;
+        public Handler(
+            IBackgroundTaskQueue taskQueue,
+            IRaythaDbContext db,
+            IContentTypeInRoutePath contentTypeInRoutePath
+            )
+        {
+            _taskQueue = taskQueue;
+            _db = db;
+            _contentTypeInRoutePath = contentTypeInRoutePath;
+        }
+        public async Task<CommandResponseDto<ShortGuid>> Handle(Command request, CancellationToken cancellationToken)
+        {
+            var contentType = _db.ContentTypes
+                .Include(p => p.ContentTypeFields)
+                .First(p => p.Id == request.ContentTypeId.Guid);
+
+            _contentTypeInRoutePath.ValidateContentTypeInRoutePathMatchesValue(contentType.DeveloperName);
+
+            var backgroundJobId = await _taskQueue.EnqueueAsync<BackgroundTask>(request, cancellationToken);
+
+            return new CommandResponseDto<ShortGuid>(backgroundJobId);
+        }
+    }
+
+    public class BackgroundTask : IExecuteBackgroundTask
+    {
+        private readonly IRaythaDbContext _db;
+        private readonly ICsvService _csvService;
+        private readonly IFileStorageProvider _fileStorageProvider;
+        private readonly ICurrentOrganization _currentOrganization;
+        private readonly IFileStorageProviderSettings _fileStorageProviderSettings;
+
+        private static HttpClient httpClient = new HttpClient();
+
+        public BackgroundTask(
+            IRaythaDbContext db,
+            ICsvService csvService,
+            IFileStorageProvider fileStorageProvider,
+            IFileStorageProviderSettings fileStorageProviderSettings,
+            ICurrentOrganization currentOrganization)
+        {
+            _db = db;
+            _csvService = csvService;
+            _fileStorageProvider = fileStorageProvider;
+            _currentOrganization = currentOrganization;
+            _fileStorageProviderSettings = fileStorageProviderSettings;
+        }
+        public async Task Execute(Guid jobId, JsonElement args, CancellationToken cancellationToken)
+        {
+            Guid contentTypeId = args.GetProperty("ContentTypeId").GetProperty("Guid").GetGuid();
+            ImportMethod importMethod = ImportMethod.From(args.GetProperty("ImportMethod").GetString());
+            bool importAsDraft = args.GetProperty("ImportAsDraft").GetBoolean();
+            Stream csvAsStream = new MemoryStream(args.GetProperty("CsvAsBytes").GetBytesFromBase64());
+
+            ContentType contentType = _db.ContentTypes
+                                    .Include(p => p.ContentTypeFields)
+                                    .First(p => p.Id == contentTypeId);
+
+            var records = _csvService.ReadCsv<Dictionary<string, dynamic>>(csvAsStream);
+
+            int taskStep = 0; 
+            var job = _db.BackgroundTasks.First(p => p.Id == jobId);
+            job.TaskStep = taskStep++;
+            job.StatusInfo = $"Pulled {records.Count()} from the CSV file. Beginning import.";
+            job.PercentComplete = 10;
+            _db.BackgroundTasks.Update(job);
+            await _db.SaveChangesAsync(cancellationToken);
+
+            Dictionary<int, string> errorList = new Dictionary<int, string>();
+            int rowNumber = 1;
+            int successfullyImported = 0;
+            await foreach (var item in PrepareRecordsForImport(contentType, records, importAsDraft, cancellationToken))
+            {
+                if (!item.Success)
+                {
+                    errorList.Add(rowNumber, item.Error);
                     rowNumber++;
-                    await _db.SaveChangesAsync(cancellationToken);
+                    continue;
                 }
 
-                job.TaskStep = 3;
+                var currentRecord = _db.ContentItems.FirstOrDefault(p => p.Id == item.Result.Id);
+                if (currentRecord == null && importMethod == ImportMethod.UpdateExistingRecordsOnly)
+                {
+                    rowNumber++;
+                    continue;
+                }
+
+                if (currentRecord != null && importMethod == ImportMethod.AddNewRecordsOnly)
+                {
+                    rowNumber++;
+                    continue;
+                }
+
+                if (currentRecord != null)
+                {
+                    currentRecord.DraftContent = item.Result.DraftContent;
+                    if (!importAsDraft)
+                        currentRecord.PublishedContent = item.Result.PublishedContent;
+                    currentRecord.WebTemplateId = item.Result.WebTemplateId;
+                    currentRecord.IsDraft = item.Result.IsDraft;
+                    currentRecord.IsPublished = item.Result.IsPublished;
+                    _db.ContentItems.Update(currentRecord);
+                }
+                else
+                {
+                    _db.ContentItems.Add(item.Result);
+                }
+
+                if (rowNumber % 10 == 0)
+                {
+                    job.TaskStep = taskStep;
+                    job.StatusInfo = $"Processed {rowNumber} records of {records.Count()}";
+                    int percentComplete = (int)((double)rowNumber / records.Count() * 100);
+                    job.PercentComplete =  percentComplete > 10 ? percentComplete : 10;
+                    _db.BackgroundTasks.Update(job);
+                }
+
+                try
+                {
+                    await _db.SaveChangesAsync(cancellationToken);
+                    successfullyImported++;
+                }
+                catch (Exception ex)
+                {
+                    errorList.Add(rowNumber, ex.Message);
+                }
+
+                rowNumber++;
+            }
+            if (errorList.Any())
+            {
+                job.TaskStep = taskStep++;
+                job.StatusInfo = $"Generating CSV of failed imports...";
+                job.PercentComplete = 80;
+                _db.BackgroundTasks.Update(job);
+                await _db.SaveChangesAsync(cancellationToken);
+                Thread.Sleep(1500);
+
+                var myExport = new Csv.CsvExport();
+                foreach (var key in errorList.Keys)
+                {
+                    myExport.AddRow();
+                    myExport["Row Number"] = key.ToString();
+                    myExport["Error Message"] = errorList[key];
+                }
+                var csvExportAsBytes = myExport.ExportToBytes();
+                string fileName = $"{_currentOrganization.TimeZoneConverter.UtcToTimeZoneAsDateTimeFormat(DateTime.UtcNow)}-{contentType.DeveloperName}.csv";
+                var id = Guid.NewGuid();
+                var objectKey = FileStorageUtility.CreateObjectKeyFromIdAndFileName(id.ToString(), fileName);
+                var mediaItem = new MediaItem
+                {
+                    Id = id,
+                    ObjectKey = objectKey,
+                    ContentType = "text/csv",
+                    FileName = fileName,
+                    FileStorageProvider = _fileStorageProvider.GetName(),
+                    Length = csvExportAsBytes.Length
+                };
+                _db.MediaItems.Add(mediaItem);
+                await _fileStorageProvider.SaveAndGetDownloadUrlAsync(csvExportAsBytes, objectKey, fileName, "text/csv", DateTime.UtcNow.AddYears(999));
+                job.TaskStep = taskStep++;
+                job.StatusInfo = JsonSerializer.Serialize(MediaItemDto.GetProjection(mediaItem));
+                _db.BackgroundTasks.Update(job);
+                await _db.SaveChangesAsync(cancellationToken);
+            }
+            else
+            {
+                job.TaskStep = taskStep++;
                 job.StatusInfo = $"Finished importing.";
                 job.PercentComplete = 100;
                 _db.BackgroundTasks.Update(job);
                 await _db.SaveChangesAsync(cancellationToken);
-
             }
+        }
 
-            private string GetRoutePath(dynamic content, ShortGuid entityId, ContentType contentType)
+        private async IAsyncEnumerable<CommandResponseDto<ContentItem>> PrepareRecordsForImport(ContentType contentType, IEnumerable<Dictionary<string, dynamic>> records, bool importAsDraft, CancellationToken cancellationToken)
+        {
+            foreach (var record in records)
             {
-                var routePathTemplate = contentType.DefaultRouteTemplate;
-
-                string primaryFieldDeveloperName = contentType.ContentTypeFields.First(p => p.Id == contentType.PrimaryFieldId).DeveloperName;
-                var primaryField = ((IDictionary<string, dynamic>)content)[primaryFieldDeveloperName] as string;
-
-                string path = routePathTemplate.IfNullOrEmpty($"{BuiltInContentTypeField.PrimaryField.DeveloperName}")
-                                               .Replace($"{{{BuiltInContentTypeField.PrimaryField.DeveloperName}}}", primaryField.IfNullOrEmpty(entityId))
-                                               .Replace($"{{{BuiltInContentTypeField.Id.DeveloperName}}}", (ShortGuid)entityId)
-                                               .Replace("{ContentTypeDeveloperName}", contentType.DeveloperName)
-                                               .Replace("{CurrentYear}", DateTime.UtcNow.Year.ToString())
-                                               .Replace("{CurrentMonth}", DateTime.UtcNow.Month.ToString());
-
-                path = path.ToUrlSlug().Truncate(200, string.Empty);
-
-                if (_db.Routes.Any(p => p.Path == path))
+                var templateDeveloperName = record[BuiltInContentTypeField.Template.DeveloperName] as string;
+                var template = _db.WebTemplates.FirstOrDefault(s => s.DeveloperName == templateDeveloperName);
+                if (template == null)
                 {
-                    path = $"{entityId}-{path}".Truncate(200, string.Empty);
+                    yield return new CommandResponseDto<ContentItem>("Template", $"Template was not found with this developer name: {templateDeveloperName}");
+                    continue;
                 }
 
-                return path;
-            }
+                var content = new Dictionary<string, dynamic>();
 
-            private Dictionary<string, dynamic> GetFieldValuesFromRecord(IEnumerable<ContentTypeField> contentTypeFields, Dictionary<string, object> record)
-            {
-                var fieldValues = new Dictionary<string, dynamic>();
-                var fields = record.Keys.Where(s => s != BuiltInContentTypeField.Id.DeveloperName && s != BuiltInContentTypeField.Template.DeveloperName).ToList();
-                foreach (var field in fields)
+                foreach (var field in record)
                 {
-                    var contentTypeField = contentTypeFields.FirstOrDefault(p => p.DeveloperName == field.ToDeveloperName());
-                    if (contentTypeField == null)
+                    if (BuiltInContentTypeField.ReservedContentTypeFields.Any(p => p.DeveloperName == field.Key))
                         continue;
 
-                    if (contentTypeField.FieldType.DeveloperName == BaseFieldType.OneToOneRelationship)
+                    var fieldDefinition = contentType.ContentTypeFields.FirstOrDefault(p => p.DeveloperName == field.Key);
+                    if (fieldDefinition != null)
                     {
-                        ShortGuid value = null;
-                        ShortGuid.TryParse(record[field].ToString(), out value);
-                        Guid guid = value;
-                        fieldValues.Add(field.ToDeveloperName(), guid);
+                        string errorMessage = string.Empty;
+                        BaseFieldValue fieldValue = null;
+                        try
+                        {
+
+                            if (fieldDefinition.FieldType.DeveloperName == BaseFieldType.MultipleSelect.DeveloperName)
+                            {
+                                fieldValue = fieldDefinition.FieldType.FieldValueFrom(field.Value?.Split(";"));
+                            }
+                            else if (fieldDefinition.FieldType.DeveloperName == BaseFieldType.Attachment.DeveloperName)
+                            {
+                                try
+                                {
+                                    var mediaItem = await DownloadAndSaveFile(field.Value, cancellationToken);
+                                    fieldValue = fieldDefinition.FieldType.FieldValueFrom(mediaItem.ObjectKey);
+                                }
+                                catch (Exception ex)
+                                {
+                                    errorMessage = ex.Message;
+                                    fieldValue = fieldDefinition.FieldType.FieldValueFrom(string.Empty);
+                                }
+                            }
+                            else
+                            {
+                                fieldValue = fieldDefinition.FieldType.FieldValueFrom(field.Value);
+                            }
+
+                            if (!importAsDraft && fieldDefinition.IsRequired && !fieldValue.HasValue)
+                            {
+                                errorMessage = $"Value is empty for required field: {fieldDefinition.DeveloperName}";
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            errorMessage = $"'{fieldDefinition.DeveloperName}' is in an invalid format.";
+                        }
+                        if (!errorMessage.IsNullOrEmpty())
+                        {
+                            yield return new CommandResponseDto<ContentItem>("FieldError", errorMessage);
+                            continue;
+                        }
+                        else
+                        {
+                            content.Add(field.Key, fieldValue.Value);
+                        }
                     }
-                    else if (contentTypeField.FieldType.DeveloperName == BaseFieldType.MultipleSelect)
+                }
+
+                var contentItem = new ContentItem
+                {
+                    PublishedContent = content,
+                    DraftContent = content,
+                    IsPublished = importAsDraft == false,
+                    IsDraft = importAsDraft,
+                    WebTemplateId = template.Id,
+                    ContentTypeId = contentType.Id
+                };
+
+                if (record.ContainsKey(BuiltInContentTypeField.Id.DeveloperName))
+                {
+                    ShortGuid idAsShortGuid = record[BuiltInContentTypeField.Id.DeveloperName];
+                    if (idAsShortGuid == ShortGuid.Empty)
                     {
-                        fieldValues.Add(field.ToDeveloperName(), record[field].ToString().Split(';').ToArray());
+                        contentItem.Id = Guid.NewGuid();
                     }
                     else
                     {
-                        fieldValues.Add(field.ToDeveloperName(), record[field]);
+                        contentItem.Id = idAsShortGuid;
                     }
                 }
-                return fieldValues;
+                else
+                {
+                    contentItem.Id = Guid.NewGuid();
+                }
+
+                var path = GetRoutePath(content, contentItem.Id, contentType);
+                contentItem.Route = new Route
+                {
+                    Path = path,
+                    ContentItemId = contentItem.Id
+                };
+
+                yield return new CommandResponseDto<ContentItem>(contentItem);
             }
+        }
+
+        private string GetRoutePath(dynamic content, ShortGuid entityId, ContentType contentType)
+        {
+            var routePathTemplate = contentType.DefaultRouteTemplate;
+
+            string primaryFieldDeveloperName = contentType.ContentTypeFields.First(p => p.Id == contentType.PrimaryFieldId).DeveloperName;
+            var primaryField = ((IDictionary<string, dynamic>)content)[primaryFieldDeveloperName] as string;
+
+            string path = routePathTemplate.IfNullOrEmpty($"{BuiltInContentTypeField.PrimaryField.DeveloperName}")
+                                            .Replace($"{{{BuiltInContentTypeField.PrimaryField.DeveloperName}}}", primaryField.IfNullOrEmpty(entityId))
+                                            .Replace($"{{{BuiltInContentTypeField.Id.DeveloperName}}}", (ShortGuid)entityId)
+                                            .Replace("{ContentTypeDeveloperName}", contentType.DeveloperName)
+                                            .Replace("{CurrentYear}", DateTime.UtcNow.Year.ToString())
+                                            .Replace("{CurrentMonth}", DateTime.UtcNow.Month.ToString());
+
+            path = path.ToUrlSlug().Truncate(200, string.Empty);
+
+            if (_db.Routes.Any(p => p.Path == path))
+            {
+                path = $"{entityId}-{path}".Truncate(200, string.Empty);
+            }
+
+            return path;
+        }
+
+        private async Task<MediaItem> DownloadAndSaveFile(string fileUrl, CancellationToken cancellationToken)
+        {          
+            if (!fileUrl.IsValidUriFormat())
+                throw new Exception($"Invalid url format: {fileUrl}");
+
+            var response = await httpClient.GetAsync(fileUrl);
+
+            if (response == null)
+                throw new Exception($"Unable to retrieve file from {fileUrl}. Reason unknown.");
+
+            if (!response.IsSuccessStatusCode)
+                throw new Exception($"Unable to retrieve file from {fileUrl}: {response.StatusCode} - {response.ReasonPhrase}");
+            
+            string fileName = Path.GetFileName(fileUrl);
+            string contentType = response?.Content?.Headers?.ContentType?.ToString() ?? "Unknown";
+            var memoryStream = new MemoryStream();
+            await response.Content.CopyToAsync(memoryStream);
+
+            var fileBytes = memoryStream.ToArray();
+            if (fileBytes.Length <= 0)
+                throw new Exception($"File size is 0 bytes or corrupted.");
+
+            if (fileBytes.Length > _fileStorageProviderSettings.MaxFileSize)
+                throw new Exception($"File size of {fileUrl} is {fileBytes.Length}, which is greater than max file size of {_fileStorageProviderSettings.MaxFileSize}");
+
+            var id = ShortGuid.NewGuid();
+            var objectKey = FileStorageUtility.CreateObjectKeyFromIdAndFileName(id.ToString(), fileName);
+
+            await _fileStorageProvider.SaveAndGetDownloadUrlAsync(fileBytes, objectKey, fileName, contentType, DateTime.UtcNow.AddYears(999));
+
+            var mediaItem = new MediaItem
+            {
+                Id = id,
+                ObjectKey = objectKey,
+                ContentType = contentType,
+                FileName = fileName,
+                FileStorageProvider = _fileStorageProvider.GetName(),
+                Length = fileBytes.Length
+            };
+            _db.MediaItems.Add(mediaItem);
+            await _db.SaveChangesAsync(cancellationToken);
+            return mediaItem;
         }
     }
 }
