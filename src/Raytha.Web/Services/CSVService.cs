@@ -1,39 +1,34 @@
-﻿using Raytha.Web.Areas.Admin.Views.ContentItems;
-using Raytha.Application;
-using System.Collections;
-using System.IO;
+﻿using System.IO;
 using Raytha.Application.Common.Interfaces;
-using CsvReader;
-using System.Globalization;
 using System.Collections.Generic;
 
-namespace Raytha.Web.Services
+namespace Raytha.Web.Services;
+
+public class CsvService : ICsvService
 {
-    public class CSVService : ICSVService
+    public IEnumerable<Dictionary<string, object>> ReadCsv<T>(Stream stream)
     {
-        public List<Dictionary<string, object>> ReadCSV<T>(Stream stream)
+        var records = new List<Dictionary<string, object>>();
+
+        using (CsvReader.CsvReader csvReader = new CsvReader.CsvReader(new StreamReader(stream), true))
         {
-            var records = new List<Dictionary<string, object>>();
+            string[] headers = csvReader.GetFieldHeaders(); // Get column headers
 
-            using (CsvReader.CsvReader csvReader = new CsvReader.CsvReader(new StreamReader(stream), true))
+            while (csvReader.ReadNextRecord())
             {
-                string[] headers = csvReader.GetFieldHeaders(); // Get column headers
+                Dictionary<string, object> record = new Dictionary<string, object>();
 
-                while (csvReader.ReadNextRecord())
+                for (int columnIndex = 0; columnIndex < csvReader.FieldCount; columnIndex++)
                 {
-                    Dictionary<string, object> record = new Dictionary<string, object>();
-
-                    for (int columnIndex = 0; columnIndex < csvReader.FieldCount; columnIndex++)
-                    {
-                        string columnName = headers[columnIndex];
-                        object columnValue = csvReader[columnIndex];
-                        record[columnName] = columnValue;
-                    }
-
-                    records.Add(record);
+                    string columnName = headers[columnIndex];
+                    object columnValue = csvReader[columnIndex];
+                    record[columnName] = columnValue;
                 }
+
+                records.Add(record);
             }
-            return records;
         }
+        return records;
     }
 }
+

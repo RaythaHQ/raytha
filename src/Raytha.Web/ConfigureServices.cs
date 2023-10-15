@@ -110,7 +110,7 @@ public static class ConfigureServices
         services.AddScoped<IAuthorizationHandler, RaythaApiAuthorizationHandler>();
         services.AddSingleton<IAuthorizationMiddlewareResultHandler, ApiKeyAuthorizationMiddleware>();
 
-        services.AddScoped<ICSVService, CSVService>();
+        services.AddScoped<ICsvService, CsvService>();
 
         services.AddRouting();
         services.AddDataProtection().SetApplicationName("Raytha").PersistKeysToDbContext<RaythaDbContext>();

@@ -1,15 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Collections;
-using System.Xml;
+﻿namespace Raytha.Application.Common.Interfaces;
 
-namespace Raytha.Application.Common.Interfaces
+public interface ICsvService
 {
-    public interface ICSVService
-    {
-        public List<Dictionary<string,object>> ReadCSV<T>(Stream file);
-    }
+    public IEnumerable<Dictionary<string, object>> ReadCsv<T>(Stream file);
 }
