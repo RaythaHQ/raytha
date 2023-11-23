@@ -5,7 +5,6 @@ using Raytha.Application.UserGroups.Commands;
 using Raytha.Application.UserGroups.Queries;
 using Raytha.Domain.Entities;
 using Raytha.Domain.ValueObjects;
-using Raytha.Web.Areas.Admin.Views.Roles;
 using Raytha.Web.Areas.Admin.Views.Shared.ViewModels;
 using Raytha.Web.Areas.Admin.Views.UserGroups;
 using Raytha.Web.Filters;
@@ -90,7 +89,7 @@ public class UserGroupsController : BaseController
     [Route(RAYTHA_ROUTE_PREFIX + "/users/groups/edit/{id}", Name = "usergroupsedit")]
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Edit(EditRole_ViewModel model, string id)
+    public async Task<IActionResult> Edit(EditUserGroup_ViewModel model, string id)
     {
         var input = new EditUserGroup.Command
         {
