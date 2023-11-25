@@ -51,7 +51,7 @@
             <span class="navbar-toggler-icon"></span>
         </button>
         <div class="collapse navbar-collapse justify-content-end" id="navbarSupportedContent">
-            <form class="d-flex" asp-action="EmailTemplatesIndex" method="get">
+            <form class="d-flex" asp-route="EmailTemplatesIndex" method="get">
                 <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search" name="search" value="@Model.Search">
                 <button class="btn btn-outline-success" type="submit">Search</button>
             </form>
