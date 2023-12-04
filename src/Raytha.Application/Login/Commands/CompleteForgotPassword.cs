@@ -30,7 +30,7 @@ public class CompleteForgotPassword
             RuleFor(x => x.Id).NotEmpty();
             RuleFor(x => x).Custom((request, context) =>
             {
-                if (request.NewPassword.Length < PasswordUtility.PASSWORD_MIN_CHARACTER_LENGTH)
+                if (string.IsNullOrEmpty(request.NewPassword) || request.NewPassword.Length < PasswordUtility.PASSWORD_MIN_CHARACTER_LENGTH)
                 {
                     context.AddFailure("NewPassword", $"Password must be at least {PasswordUtility.PASSWORD_MIN_CHARACTER_LENGTH} characters.");
                     return;
