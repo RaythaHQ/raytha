@@ -1,6 +1,6 @@
-FROM mcr.microsoft.com/dotnet/aspnet:6.0 AS base
+FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS base
 
-FROM mcr.microsoft.com/dotnet/sdk:6.0 AS publish
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS publish
 WORKDIR /src
 
 RUN apt update
@@ -18,13 +18,9 @@ COPY ["src/Raytha.Web/Raytha.Web.csproj", "src/Raytha.Web/"]
 COPY ["tests/Raytha.Domain.UnitTests/Raytha.Domain.UnitTests.csproj", "tests/Raytha.Domain.UnitTests/"]
 COPY ["Raytha.sln", ""]
 
-ARG DOTNET_RESTORE_CLI_ARGS=
-RUN dotnet restore "Raytha.sln" $DOTNET_RESTORE_CLI_ARGS
-
 COPY . .
-RUN dotnet build "Raytha.sln" -c Release --no-restore
 
-RUN dotnet publish -c Release --no-build -o /app "src/Raytha.Web/Raytha.Web.csproj"
+RUN dotnet publish -c Release -o /app "src/Raytha.Web/Raytha.Web.csproj"
 
 FROM base AS final
 WORKDIR /app
