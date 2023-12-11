@@ -226,7 +226,6 @@ out
 
 # Nuxt.js build / generate output
 .nuxt
-dist
 
 # Gatsby files
 .cache/
@@ -276,3 +275,9 @@ user-uploads/
 
 # Azure publish file
 src/Raytha.Web/Properties/ServiceDependencies/*
+
+# Raytha javascript and theme files
+src/Raytha.Web/wwwroot/raytha_admin/**/*.map
+src/Raytha.Web/wwwroot/raytha_admin/**/*.ts
+src/Raytha.Web/wwwroot/raytha_admin/**/*.scss
+src/Raytha.Web/wwwroot/raytha_admin/**/*.txt
