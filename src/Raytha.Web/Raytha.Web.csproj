@@ -84,7 +84,7 @@
     </ItemGroup>
   </Target>
 
-  <Target Name="BuildJsAppDebug" BeforeTargets="BeforeBuild" DependsOnTargets="RestoreNpmPackages" Inputs="@(JsApplicationSourceFiles)" Outputs="$(JsApplicationBundleFile)" Condition="'$(Configuration)' == 'Debug'">
+  <Target Name="BuildJsAppDebug" BeforeTargets="BeforeBuild" DependsOnTargets="RestoreNpmPackages" Inputs="@(JsApplicationSourceFiles)" Outputs="$(JsApplicationBundleFile)" Condition="'$(Configuration)' == 'Debug' Or '$(Configuration)' == 'Release'">
     <Message Importance="high" Text="Building javascript application..." />
     <Exec WorkingDirectory="$(JsApplicationRoot)" Command="npm run build" />
   </Target>
