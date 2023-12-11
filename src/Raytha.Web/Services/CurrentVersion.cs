@@ -3,5 +3,5 @@ namespace Raytha.Web.Services;
 
 public class CurrentVersion : ICurrentVersion
 {
-    public string Version => "1.1.3";
+    public string Version => "1.1.4";
 }

@@ -25,6 +25,10 @@ public class Emailer : IEmailer
         int smtpPort;
         string smtpPassword;
         string smtpUsername;
+        string smtpFromName;
+        string smtpFromAddress;
+        string smtpReplyToName;
+        string smtpReplyToAddress;
         if (entity.SmtpOverrideSystem)
         {
             smtpHost = entity.SmtpHost;
@@ -40,6 +44,11 @@ public class Emailer : IEmailer
             smtpPassword = _configuration["SMTP_PASSWORD"];
         }
 
+        smtpFromAddress = _configuration["SMTP_FROM_ADDRESS"].IfNullOrEmpty(entity.SmtpDefaultFromAddress);
+        smtpFromName = _configuration["SMTP_FROM_NAME"].IfNullOrEmpty(entity.SmtpDefaultFromName);
+        smtpReplyToName = message.FromName.IfNullOrEmpty(entity.SmtpDefaultFromName);
+        smtpReplyToAddress = message.FromEmailAddress.IfNullOrEmpty(entity.SmtpDefaultFromAddress);
+
         using (var smtpClient = new SmtpClient(smtpHost)
         {
             Port = smtpPort,
@@ -48,8 +57,8 @@ public class Emailer : IEmailer
         })
         {
             var messageToSend = new MailMessage();
-            messageToSend.From = new MailAddress(message.FromEmailAddress.IfNullOrEmpty(entity.SmtpDefaultFromAddress),
-                                        message.FromName.IfNullOrEmpty(entity.SmtpDefaultFromName));
+            messageToSend.From = new MailAddress(smtpFromAddress, smtpFromName);
+            messageToSend.ReplyToList.Add(new MailAddress(smtpReplyToAddress, smtpReplyToName));
 
             foreach (var to in message.To)
             {

@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net6.0</TargetFramework>
+    <TargetFramework>net8.0</TargetFramework>
 	<RootNamespace>Raytha.Infrastructure</RootNamespace>
 	<AssemblyName>Raytha.Infrastructure</AssemblyName>
     <ImplicitUsings>enable</ImplicitUsings>
@@ -17,10 +17,10 @@
 	<PackageReference Include="AWSSDK.S3" Version="3.7.101.50" />
 	<PackageReference Include="Azure.Storage.Blobs" Version="12.14.1" />
 	<PackageReference Include="Dapper.SqlBuilder" Version="2.0.78" />
-	<PackageReference Include="Microsoft.AspNetCore.DataProtection.EntityFrameworkCore" Version="6.0.13" />
-	<PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="7.0.1" />
-	<PackageReference Include="Microsoft.OData.Core" Version="7.13.0" />
-	<PackageReference Include="Microsoft.AspNetCore.OData" Version="8.0.12" />
+	<PackageReference Include="Microsoft.AspNetCore.DataProtection.EntityFrameworkCore" Version="8.0.0" />
+	<PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.0" />
+	<PackageReference Include="Microsoft.OData.Core" Version="7.20.0" />
+	<PackageReference Include="Microsoft.AspNetCore.OData" Version="8.2.3" />
   </ItemGroup>
 
   <ItemGroup>

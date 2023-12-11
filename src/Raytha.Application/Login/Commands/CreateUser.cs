@@ -36,7 +36,7 @@ public class CreateUser
             RuleFor(x => x.EmailAddress).NotEmpty().EmailAddress();
             RuleFor(x => x).Custom((request, context) =>
             {
-                if (request.Password.Length < PasswordUtility.PASSWORD_MIN_CHARACTER_LENGTH)
+                if (string.IsNullOrEmpty(request.Password) || request.Password.Length < PasswordUtility.PASSWORD_MIN_CHARACTER_LENGTH)
                 {
                     context.AddFailure("Password", $"Password must be at least {PasswordUtility.PASSWORD_MIN_CHARACTER_LENGTH} characters.");
                     return;
