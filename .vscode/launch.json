@@ -10,7 +10,7 @@
             "request": "launch",
             "preLaunchTask": "build",
             // If you have changed target frameworks, make sure to update the program path.
-            "program": "${workspaceFolder}/src/Raytha.Web/bin/Debug/net6.0/Raytha.Web.dll",
+            "program": "${workspaceFolder}/src/Raytha.Web/bin/Debug/net8.0/Raytha.Web.dll",
             "args": ["--configuration", "Debug without JS"],
             "cwd": "${workspaceFolder}/src/Raytha.Web",
             "stopAtEntry": false,
