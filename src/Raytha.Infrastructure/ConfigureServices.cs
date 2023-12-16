@@ -24,7 +24,14 @@ public static class ConfigureServices
         //entity framework
         services.AddScoped<AuditableEntitySaveChangesInterceptor>();
         services.AddDbContext<RaythaDbContext>(options =>
-            options.UseSqlServer(dbConnectionString));
+        {
+            options.UseSqlServer(dbConnectionString, sqlServerOptions => 
+            {
+                sqlServerOptions.EnableRetryOnFailure(
+                    maxRetryCount: 5
+                );
+            });
+        });
 
         services.AddScoped<IRaythaDbContext>(provider => provider.GetRequiredService<RaythaDbContext>());
 
