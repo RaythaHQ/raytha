@@ -49,7 +49,7 @@ Raytha is a versatile and lightweight general purpose content management system.
 
 A priority of Raytha is to keep the technology footprint small for getting up and running as quickly as possible. However, you do need the minimum requirements listed below:
 
-* .NET 6+
+* .NET 8
 * npm for compiling javascript
 * SQL Server Express
 * SMTP
