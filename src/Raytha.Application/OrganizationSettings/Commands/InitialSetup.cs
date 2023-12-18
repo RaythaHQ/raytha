@@ -216,7 +216,7 @@ public class InitialSetup
                 DeveloperName = CONTENT_FIELD_DEVELOPER_NAME,
                 ContentTypeId = pageTypeGuid,
                 FieldOrder = 2,
-                FieldType = BaseFieldType.LongText
+                FieldType = BaseFieldType.Wysiwyg
             };
             _db.ContentTypeFields.Add(contentPageField);
 
@@ -238,7 +238,7 @@ public class InitialSetup
                 DeveloperName = CONTENT_FIELD_DEVELOPER_NAME,
                 ContentTypeId = postTypeGuid,
                 FieldOrder = 2,
-                FieldType = BaseFieldType.LongText
+                FieldType = BaseFieldType.Wysiwyg
             };
             _db.ContentTypeFields.Add(contentPostField);
         }

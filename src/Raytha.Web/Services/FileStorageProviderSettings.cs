@@ -30,11 +30,11 @@ public class FileStorageProviderSettings : IFileStorageProviderSettings
     {
         get
         {
-            if (string.IsNullOrEmpty(_configuration[FileStorageUtility.MAX_TOTAL_DISK_SPACE_CONFIG_NAME]))
+            if (string.IsNullOrEmpty(_configuration[FileStorageUtility.DATABASE_MAX_SIZE_CONFIG_NAME]))
             {
-                return FileStorageUtility.DEFAULT_MAX_TOTAL_DISK_SPACE;
+                return FileStorageUtility.DEFAULT_MAX_TOTAL_DB_SIZE;
             }
-            return Convert.ToInt64(_configuration[FileStorageUtility.MAX_TOTAL_DISK_SPACE_CONFIG_NAME]);
+            return Convert.ToInt64(_configuration[FileStorageUtility.DATABASE_MAX_SIZE_CONFIG_NAME]);
         }
     }
 

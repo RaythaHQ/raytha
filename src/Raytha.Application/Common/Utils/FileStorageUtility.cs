@@ -23,10 +23,10 @@ public static class FileStorageUtility
     public const string S3 = "s3";
 
     public const string DEFAULT_LOCAL_DIRECTORY = "user-uploads";
-    public const long DEFAULT_MAX_FILE_SIZE = 2000000; //20 mb
-    public const long DEFAULT_MAX_TOTAL_DISK_SPACE = 100000000; //1 gb 
-    public const long DEFAULT_MAX_TOTAL_DB_SIZE = 100000000; //1 gb 
-    public const string DEFAULT_ALLOWED_MIMETYPES = "text/*,image/*,video/*,audio/*,application/pdf"; //1 gb 
+    public const long DEFAULT_MAX_FILE_SIZE = 20000000; //20 mb
+    public const long DEFAULT_MAX_TOTAL_DISK_SPACE = 1000000000; //1 gb 
+    public const long DEFAULT_MAX_TOTAL_DB_SIZE = 1000000000; //1 gb 
+    public const string DEFAULT_ALLOWED_MIMETYPES = "text/*,image/*,video/*,audio/*,application/pdf";
     public const bool DEFAULT_DIRECT_UPLOAD_TO_CLOUD = true;
 
     public static string[] GetAllowedFileExtensionsFromConfig(string csvFileExt)

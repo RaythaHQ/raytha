@@ -96,7 +96,7 @@ public class CreateContentType
                 DeveloperName = "content",
                 ContentTypeId = newContentTypeId,
                 FieldOrder = 2,
-                FieldType = BaseFieldType.LongText
+                FieldType = BaseFieldType.Wysiwyg
             };
             _db.ContentTypeFields.Add(contentPageField);
 
