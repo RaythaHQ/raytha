@@ -1,10 +1,27 @@
-<section class="ud-wrapper ud-page">
-	<div class="container">
-		<div class="d-flex justify-content-center">
-			<div class="col-lg-8">
-				<h3>{{ Target.PrimaryField }}</h3>
-				{{ Target.PublishedContent.content.Text }}
-			</div>
+<div class="px-4 pt-5 mt-5 text-center border-bottom">
+	<h1 class="display-4 fw-bold text-body-emphasis">You did it!</h1>
+	<div class="col-lg-6 mx-auto">
+		<p class="lead mb-4">Welcome to the Raytha Content Management System! This blurb is hardcoded into the Home Page
+			Template as an example of what you can do. Head over to the Admin Panel > Templates, and edit the Home Page
+			Template to your liking!</p>
+		<div class="d-grid gap-2 d-sm-flex justify-content-sm-center mb-5">
+			<a href="{{ PathBase }}/raytha" class="btn btn-primary btn-lg px-4 me-sm-3">Admin Panel</a>
+			<a href="https://raytha.com/user-guide" class="btn btn-outline-secondary btn-lg px-4">User
+				Guide</a>
 		</div>
 	</div>
-</section>
+	<div class="overflow-hidden" style="max-height: 30vh;">
+		<div class="container px-5">
+			<img src="{{ PathBase}}raytha_default_2024/assets/images/raythadotcom_screenshot.webp" class="img-fluid border rounded-3 shadow-lg mb-4" alt="Example image" width="700" height="500" loading="lazy">
+		</div>
+	</div>
+</div>
+
+<div class="p-5 bg-body-tertiary">
+	<div class="container">
+		<h1 class="text-center text-body-emphasis">{{ Target.PrimaryField }}</h1>
+		<p class="col-lg-8 mx-auto lead">
+			{{ Target.PublishedContent.content.Text }}
+		</p>
+	</div>
+</div>

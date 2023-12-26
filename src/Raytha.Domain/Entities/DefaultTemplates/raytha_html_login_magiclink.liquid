@@ -1,59 +1,52 @@
-<div class="ud-login-logo">
-  <h3>Login</h3>
-</div>
+<h3>Login</h3>
 {% if Target.ValidationFailures["__ValidationSummary"] %}
   <div class="alert alert-danger">
     {{ Target.ValidationFailures["__ValidationSummary"] }}
   </div>
 {% endif %}
 <form
-  class="ud-login-form"
   action="{{ PathBase }}/account/login/magic-link"
   method="post">
-  <div class="ud-form-group">
+  <div class="mb-3">
     <label for="email" class="form-label">Email address</label>
     <input
       id="email"
       type="email"
-      name="EmailAddress">
+      name="EmailAddress"
+      class="form-control">
   </div>
-  <div class="ud-form-group">
-    <button type="submit" class="ud-main-btn w-100">Login</button>
+  <div>
+    <button type="submit" class="btn btn-primary w-100">Login</button>
   </div>
   <input
     name="__RequestVerificationToken"
     type="hidden"
     value="{{ Target.RequestVerificationToken }}" />
 </form>
+{% if Target.HasLoginByEmailAndPassword %}
+<p class="mt-2">
+  No account?
+  <a href="{{ PathBase }}/account/create">
+    Sign up
+  </a>
+</p>
+{% endif %}
 {% if Target.HasLoginByEmailAndPassword or Target.HasLoginBySingleSignOn %}
-  <div class="ud-socials-connect">
-    <p>or login with</p>
-    <ul>
+  <div class="pt-2">
+    <p class="lead">or login with</p>
+    <ul class="list-group list-group-flush">
       {% if Target.HasLoginByEmailAndPassword %}
-        <li>
-          <a href="{{ PathBase }}/account/login" class="btn btn-secondary">
-            {{ Target.EmailAndPassword.LoginButtonText }}
-          </a>
-        </li>
+        <a href="{{ PathBase }}/account/login" class="btn btn-secondary my-2">
+          {{ Target.EmailAndPassword.LoginButtonText }}
+        </a>
       {% endif %}
       {% if Target.HasLoginBySingleSignOn %}
         {% for sso in Target.SingleSignOns %}
-          <li>
-            <a href="{{ PathBase }}/account/login/sso/{{ sso.DeveloperName }}" class="btn btn-secondary">
-              {{ sso.LoginButtonText }}
-            </a>
-          </li>
+          <a href="{{ PathBase }}/account/login/sso/{{ sso.DeveloperName }}" class="btn btn-secondary my-2">
+            {{ sso.LoginButtonText }}
+          </a>
         {% endfor %}
       {% endif %}
     </ul>
   </div>
-{% endif %}
-
-{% if Target.HasLoginByEmailAndPassword %}
-  <p class="signup-option">
-    No account?
-    <a href="{{ PathBase }}/account/create">
-      Create account
-    </a>
-  </p>
 {% endif %}

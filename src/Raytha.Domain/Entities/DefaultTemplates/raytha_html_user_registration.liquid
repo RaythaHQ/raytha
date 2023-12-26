@@ -1,6 +1,10 @@
-<div class="ud-login-logo">
-  <h3>Create account</h3>
+<div class="mb-2">
+	<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-left" viewBox="0 0 16 16">
+		<path fill-rule="evenodd" d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8"/>
+	</svg>
+	<a href="/account/login">Back</a>
 </div>
+<h3>Create account</h3>
 {% if Target.ValidationFailures["__ValidationSummary"] %}
   <div class="alert alert-danger">
     {{ Target.ValidationFailures["__ValidationSummary"] }}
@@ -11,70 +15,70 @@
   </div>
 {% endif %}
 <form
-  class="ud-login-form"
   action="{{ PathBase }}/account/create"
   method="post">
-  <div class="ud-form-group">
+  <div class="mb-3">
     <label for="firstname" class="form-label">First name</label>
     <input
       id="firstname"
       type="text"
       name="FirstName"
       value="{{ Target.FirstName }}"
-      {% if Target.ValidationFailures["FirstName"] %}class="is-invalid"{% endif %}>
+      class="form-control {% if Target.ValidationFailures["FirstName"] %}is-invalid{% endif %}">
     {% if Target.ValidationFailures["FirstName"] %}
       <div class="invalid-feedback">{{ Target.ValidationFailures["FirstName"] }}</div>
     {% endif %}
 
   </div>
-  <div class="ud-form-group">
+  <div class="mb-3">
     <label for="lastname" class="form-label">Last name</label>
     <input
       id="lastname"
       type="text"
       name="LastName"
       value="{{ Target.LastName }}"
-      {% if Target.ValidationFailures["LastName"] %}class="is-invalid"{% endif %}>
+      class="form-control {% if Target.ValidationFailures["LastName"] %}is-invalid{% endif %}">
     {% if Target.ValidationFailures["LastName"] %}
       <div class="invalid-feedback">{{ Target.ValidationFailures["LastName"] }}</div>
     {% endif %}
   </div>
-  <div class="ud-form-group">
+  <div class="mb-3">
     <label for="email" class="form-label">Email address</label>
     <input
       id="email"
       type="email"
       name="EmailAddress"
-      value="{{ Target.EmailAddress }}">
+      value="{{ Target.EmailAddress }}"
+      class="form-control">
   </div>
-  <div class="ud-form-group">
+  <div class="mb-3">
     <label for="password" class="form-label">Password</label>
     <input
       id="password"
       type="password"
       name="Password"
-      {% if Target.ValidationFailures["Password"] %}class="is-invalid"{% endif %}>
+      class="form-control {% if Target.ValidationFailures["Password"] %}is-invalid{% endif %}">
     {% if Target.ValidationFailures["Password"] %}
       <div class="invalid-feedback">{{ Target.ValidationFailures["Password"] }}</div>
     {% else %}
       <div class="form-text">Password must be at least 8 characters.</div>
     {% endif %}
   </div>
-  <div class="ud-form-group">
+  <div class="mb-3">
     <label for="confirmpassword" class="form-label">Confirm password</label>
     <input
       id="confirmpassword"
       type="password"
       name="ConfirmPassword"
-      {% if Target.ValidationFailures["ConfirmPassword"] %}class="is-invalid"{% endif %}>
+      class="form-control {% if Target.ValidationFailures["ConfirmPassword"] %}is-invalid{% endif %}">
     {% if Target.ValidationFailures["ConfirmPassword"] %}
       <div class="invalid-feedback">{{ Target.ValidationFailures["ConfirmPassword"] }}</div>
     {% else %}
       <div class="form-text">Password must match the above.</div>
     {% endif %}
   </div>
-  <div class="ud-form-group">
-    <button type="submit" class="ud-main-btn w-100">Save changes</button>
+  <div>
+    <button type="submit" class="btn btn-primary w-100">Save changes</button>
   </div>
   <input
     name="__RequestVerificationToken"
