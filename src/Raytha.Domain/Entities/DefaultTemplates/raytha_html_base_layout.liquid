@@ -1,187 +1,91 @@
 <!DOCTYPE html>
 <html lang="en">
 
-  <head>
-    <meta charset="UTF-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>
-      {% if Target.PrimaryField %}
-        {{ Target.PrimaryField }} - {{ ContentType.LabelPlural }} | {{ CurrentOrganization.OrganizationName }}
-      {% elsif ContentType.LabelPlural %}
-        {{ ContentType.LabelPlural }} | {{ CurrentOrganization.OrganizationName }}
-      {% else %}
-        {{ CurrentOrganization.OrganizationName }}
-      {% endif %}
-    </title>
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>
+    {% if Target.PrimaryField %}
+    {{ Target.PrimaryField }} - {{ ContentType.LabelPlural }} | {{ CurrentOrganization.OrganizationName }}
+    {% elsif ContentType.LabelPlural %}
+    {{ ContentType.LabelPlural }} | {{ CurrentOrganization.OrganizationName }}
+    {% else %}
+    {{ CurrentOrganization.OrganizationName }}
+    {% endif %}
+  </title>
 
-    <link
-      rel="shortcut icon"
-      href="{{ PathBase }}/raytha_default_2023/assets/images/favicon.ico"
-      type="image/x-icon" />
+  <link rel="shortcut icon" href="{{ PathBase }}/raytha_default_2024/assets/images/favicon.ico" type="image/x-icon" />
+  <link rel="stylesheet" href="{{ PathBase }}/raytha_default_2024/assets/css/bootstrap.min.css">
+</head>
 
-    <link rel="stylesheet" href="{{ PathBase }}/raytha_default_2023/assets/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="{{ PathBase }}/raytha_default_2023/assets/css/animate.css" />
-    <link rel="stylesheet" href="{{ PathBase }}/raytha_default_2023/assets/css/lineicons.css" />
-    <link rel="stylesheet" href="{{ PathBase }}/raytha_default_2023/assets/css/ud-styles.css" />
-
-<style>
-.ud-header { background-color: rgb(255,255,255,1.0); }
-</style>
-  </head>
-
-  <body>
-
-    <header class="ud-header sticky">
-      <div class="container">
-        <div class="row">
-          <div class="col-lg-12">
-            <nav class="navbar navbar-expand-lg">
-              <a class="navbar-brand" href="{{ PathBase }}/">
-                {{ CurrentOrganization.OrganizationName }}
-              </a>
-              <button class="navbar-toggler">
-                <span class="toggler-icon"></span>
-                <span class="toggler-icon"></span>
-                <span class="toggler-icon"></span>
-              </button>
-              <div class="navbar-collapse">
-                <ul id="nav" class="navbar-nav mx-auto">
-                  <li class="nav-item">
-                    <a href="{{ PathBase }}/">Home</a>
+<body>
+  <header>
+    <nav
+      class="navbar navbar-expand-lg navbar-light d-flex flex-wrap align-items-center justify-content-center justify-content-md-between py-3 mb-4 border-bottom">
+      <div class="container-fluid">
+        <a class="navbar-brand text-black" href="{{ PathBase }}/">{{ CurrentOrganization.OrganizationName }}</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+          <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+            <li class="nav-item">
+              <a class="nav-link {% if Target.RoutePath == 'Home' %}active{% endif %}" href="{{ PathBase }}/">Home</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link  {% if Target.RoutePath == 'About' %}active{% endif %}" href="{{ PathBase }}/about">About</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link  {% if ContentType.DeveloperName == 'posts' %}active{% endif %}" href="{{ PathBase }}/posts">Posts</a>
+            </li>
+          </ul>
+          <div class="text-end">
+            {% if CurrentUser.IsAuthenticated %}
+            <ul class="navbar-nav me-auto">
+              <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown"
+                  aria-expanded="false">
+                  {{ CurrentUser.FullName }}
+                </a>
+                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
+                  <li><a class="dropdown-item" href="{{ PathBase }}/account/me">My profile</a></li>
+                  <li><a class="dropdown-item" href="{{ PathBase }}/account/me/change-password">Change password</a></li>
+                  <li>
+                    <hr class="dropdown-divider">
                   </li>
-                  <li class="nav-item">
-                    <a href="{{ PathBase }}/about">About</a>
-                  </li>
-                  <li class="nav-item">
-                    <a href="{{ PathBase }}/posts">Blog</a>
-                  </li>
-                  {% if CurrentUser.IsAuthenticated %}
-                    <li class="nav-item nav-item-has-children d-lg-none">
-                      <a href="javascript:void(0)">
-                        {{ CurrentUser.FullName }}
-                      </a>
-                      <ul class="ud-submenu">
-                        <li class="ud-submenu-item">
-                          <a href="{{ PathBase }}/account/me" class="ud-submenu-link">
-                            My profile
-                          </a>
-                        </li>
-                        {% if CurrentOrganization.EmailAndPasswordIsEnabledForUsers %}
-                          <li class="ud-submenu-item">
-                            <a href="{{ PathBase }}/account/me/change-password" class="ud-submenu-link">
-                              Change password
-                            </a>
-                          </li>
-                        {% endif %}
-                        {% if CurrentUser.IsAdmin %}
-                          <li class="ud-submenu-item">
-                            <a href="{{ PathBase }}/raytha" class="ud-submenu-link">
-                              Admin panel
-                            </a>
-                          </li>
-                        {% endif %}
-                        <li class="ud-submenu-item">
-                          <a href="{{ PathBase }}/account/logout" class="ud-submenu-link">
-                            Log out
-                          </a>
-                        </li>
-                      </ul>
-                    </li>
-                  {% else %}
-                    <li class="nav-item d-lg-none">
-                      <a href="{{ PathBase }}/account/login">Log in</a>
-                    </li>
-                    {% if CurrentOrganization.EmailAndPasswordIsEnabledForUsers %}
-                      <li class="nav-item d-lg-none">
-                        <a href="{{ PathBase }}/account/create">Create account</a>
-                      </li>
-                    {% endif %}
+                  <li><a class="dropdown-item" href="{{ PathBase }}/account/logout">Log out</a></li>
+                  {% if CurrentUser.IsAdmin %}
+                  <li><a href="{{ PathBase }}/raytha" class="dropdown-item">Admin panel</a></li>
                   {% endif %}
-                  </ul>
-                </div>
-                {% if CurrentUser.IsAuthenticated %}
-                  <div class="navbar-btn d-none d-lg-inline-block">
-                    <ul id="nav" class="navbar-nav mx-auto">
-                      <li class="nav-item nav-item-has-children">
-                        <a href="javascript:void(0)">
-                          {{ CurrentUser.FullName }}
-                        </a>
-                        <ul class="ud-submenu">
-                          <li class="ud-submenu-item">
-                            <a href="{{ PathBase }}/account/me" class="ud-submenu-link">
-                              My profile
-                            </a>
-                          </li>
-                          {% if CurrentOrganization.EmailAndPasswordIsEnabledForUsers %}
-                            <li class="ud-submenu-item">
-                              <a href="{{ PathBase }}/account/me/change-password" class="ud-submenu-link">
-                                Change password
-                              </a>
-                            </li>
-                          {% endif %}
-                          {% if CurrentUser.IsAdmin %}
-                            <li class="ud-submenu-item">
-                              <a href="{{ PathBase }}/raytha" class="ud-submenu-link">
-                                Admin panel
-                              </a>
-                            </li>
-                          {% endif %}
-                          <li class="ud-submenu-item">
-                            <a href="{{ PathBase }}/account/logout" class="ud-submenu-link">
-                              Log out
-                            </a>
-                          </li>
-                        </ul>
-                      </li>
-                    </ul>
-                  </div>
-                {% else %}
-                  <div class="navbar-btn d-none d-lg-inline-block">
-                    <a href="{{ PathBase }}/account/login" class="ud-main-btn ud-login-btn">
-                      Log in
-                    </a>
-                    {% if CurrentOrganization.EmailAndPasswordIsEnabledForUsers %}
-                      <a href="{{ PathBase }}/account/create" class="ud-main-btn ud-white-btn">
-                        Create account
-                      </a>
-                    {% endif %}
-                    </div>
-                  {% endif %}
-                </nav>
-              </div>
-            </div>
+                </ul>
+              </li>
+            </ul>
+            {% else %}
+            <a href="{{ PathBase }}/account/login" class="btn btn-outline-primary me-2">Login</a>
+            <a href="{{ PathBase }}/account/create" class="btn btn-primary">Sign-up</a>
+            {% endif %}
           </div>
-        </header>
+        </div>
+      </div>
+    </nav>
+  </header>
 
-        {% renderbody %}
+  <main style="min-height:75vh">
+    {% renderbody %}
+  </main>
 
-        <footer class="ud-footer">
-          <div class="ud-footer-bottom">
-            <div class="container">
-              <div class="row">
-                <div class="col-md-8">
-                  <ul class="ud-footer-bottom-left">
-                    <li>
-                      <a href="#">Privacy policy</a>
-                    </li>
-                    <li>
-                      <a href="#">Terms of service</a>
-                    </li>
-                  </ul>
-                </div>
-                <div class="col-md-4">
-                  <p class="ud-footer-bottom-right">
-                    Content Management System by
-                    <a href="https://raytha.com" rel="nofollow">Raytha</a>
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </footer>
+  <div class="container-fluid border-top">
+    <footer class="d-flex flex-wrap justify-content-center align-items-center py-4">
+      <p class="col-md-2 mb-0 text-body-secondary">© 2024 {{ CurrentOrganization.OrganizationName }}</p>
 
-        <script src="{{ PathBase }}/raytha_default_2023/assets/js/bootstrap.bundle.min.js"></script>
-        <script src="{{ PathBase }}/raytha_default_2023/assets/js/main.js"></script>
-  </body>
+      <ul class="nav col-md-2 justify-content-center">
+        <li class="nav-item"><a rel="nofollow" href="https://raytha.com"
+            class="nav-link px-2 text-body-secondary">Raytha CMS</a></li>
+      </ul>
+    </footer>
+  </div>
+  <script src="{{ PathBase }}/raytha_default_2024/assets/js/bootstrap.bundle.min.js"></script>
+</body>
+
 </html>

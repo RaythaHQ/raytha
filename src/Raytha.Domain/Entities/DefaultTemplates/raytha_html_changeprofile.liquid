@@ -1,6 +1,4 @@
-<div class="ud-login-logo">
-  <h3>Change profile</h3>
-</div>
+<h3>Change profile</h3>
 {% if Target.ValidationFailures["__ValidationSummary"] %}
   <div class="alert alert-danger">
     {{ Target.ValidationFailures["__ValidationSummary"] }}
@@ -11,45 +9,44 @@
   </div>
 {% endif %}
 <form
-  class="ud-login-form"
   action="{{ PathBase }}/account/me"
   method="post">
-  <div class="ud-form-group">
+  <div class="mb-3">
     <label for="firstname" class="form-label">First name</label>
     <input
       id="firstname"
       type="text"
       name="FirstName"
       value="{{ CurrentUser.FirstName }}"
-      {% if Target.ValidationFailures["FirstName"] %}class="is-invalid"{% endif %}>
+      class="form-control {% if Target.ValidationFailures["FirstName"] %}is-invalid{% endif %}">
     {% if Target.ValidationFailures["FirstName"] %}
       <div class="invalid-feedback">{{ Target.ValidationFailures["FirstName"] }}</div>
     {% endif %}
-
   </div>
-  <div class="ud-form-group">
+  <div class="mb-3">
     <label for="lastname" class="form-label">Last name</label>
     <input
       id="lastname"
       type="text"
       name="LastName"
       value="{{ CurrentUser.LastName }}"
-      {% if Target.ValidationFailures["LastName"] %}class="is-invalid"{% endif %}>
+      class="form-control {% if Target.ValidationFailures["LastName"] %}is-invalid{% endif %}">
     {% if Target.ValidationFailures["LastName"] %}
       <div class="invalid-feedback">{{ Target.ValidationFailures["LastName"] }}</div>
     {% endif %}
   </div>
-  <div class="ud-form-group">
+  <div class="mb-3">
     <label for="email" class="form-label">Email address</label>
     <input
       id="email"
       type="email"
       name="EmailAddress"
       value="{{ CurrentUser.EmailAddress }}"
+      class="form-control-plaintext"
       readonly="">
   </div>
-  <div class="ud-form-group">
-    <button type="submit" class="ud-main-btn w-100">Save changes</button>
+  <div class="mb-3">
+    <button type="submit" class="btn btn-primary w-100">Save changes</button>
   </div>
   <input
     name="__RequestVerificationToken"

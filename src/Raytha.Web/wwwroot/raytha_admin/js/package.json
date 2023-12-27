@@ -40,7 +40,7 @@
     "stimulus": "^3.2.1",
     "stimulus-sortable": "^4.1.0",
     "sweetalert2": "^11.4.8",
-    "tinymce": "^6.3.2",
+    "tinymce": "^6.8.2",
     "trix": "^2.0.4",
     "uuid": "^9.0.0"
   }
