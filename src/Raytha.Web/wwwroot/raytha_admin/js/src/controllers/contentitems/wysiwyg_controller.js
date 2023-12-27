@@ -30,6 +30,7 @@ import 'tinymce/plugins/fullscreen';
 import 'tinymce/plugins/searchreplace';
 import 'tinymce/plugins/visualblocks';
 import 'tinymce/plugins/visualchars';
+import 'tinymce/plugins/code';
 
 
 export default class extends Controller {
@@ -41,7 +42,7 @@ export default class extends Controller {
     connect() {
         tinymce.init({
             target: this.editorTarget,
-            plugins: 'advlist autolink lists link image charmap preview pagebreak nonbreaking table insertdatetime wordcount directionality fullscreen searchreplace visualblocks visualchars',
+            plugins: 'advlist autolink lists link image charmap preview pagebreak nonbreaking table insertdatetime wordcount directionality fullscreen searchreplace visualblocks visualchars code',
             toolbar: 'undo redo | styleselect | bold italic | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | link image | print preview media fullpage | forecolor backcolor emoticons | spellchecker | table | charmap | insertdatetime | pagebreak | nonbreaking | code',
             toolbar_mode: 'floating',
             tinycomments_mode: 'embedded',
