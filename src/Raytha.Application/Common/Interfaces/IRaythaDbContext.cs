@@ -29,6 +29,8 @@ public interface IRaythaDbContext
     public DbSet<MediaItem> MediaItems { get; }
     public DbSet<ApiKey> ApiKeys { get; }
     public DbSet<BackgroundTask> BackgroundTasks { get; }
+    public DbSet<RaythaFunction> RaythaFunctions { get; }
+    public DbSet<RaythaFunctionRevision> RaythaFunctionRevisions { get; }
     public DbContext DbContext { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken);

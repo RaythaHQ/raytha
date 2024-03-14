@@ -18,7 +18,7 @@ public class SmtpController : BaseController
     {
         var input = new GetOrganizationSettings.Query();
         var response = await Mediator.Send(input);
-        var isMissingSmtpEnvVars = Emailer.IsMissingSmtpEnvVars();
+        var isMissingSmtpEnvVars = EmailerConfiguration.IsMissingSmtpEnvVars();
         var viewModel = new Smtp_ViewModel
         {
             SmtpOverrideSystem = isMissingSmtpEnvVars ? true : response.Result.SmtpOverrideSystem,

@@ -17,7 +17,7 @@ namespace Raytha.Infrastructure.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "7.0.1")
+                .HasAnnotation("ProductVersion", "8.0.0")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
@@ -771,6 +771,91 @@ namespace Raytha.Infrastructure.Migrations
                     b.ToTable("OrganizationSettings");
                 });
 
+            modelBuilder.Entity("Raytha.Domain.Entities.RaythaFunction", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreationTime")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("CreatorUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("DeveloperName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("LastModificationTime")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("LastModifierUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("TriggerType")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatorUserId");
+
+                    b.HasIndex("DeveloperName")
+                        .IsUnique();
+
+                    b.HasIndex("LastModifierUserId");
+
+                    b.ToTable("RaythaFunctions");
+                });
+
+            modelBuilder.Entity("Raytha.Domain.Entities.RaythaFunctionRevision", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreationTime")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("CreatorUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("LastModificationTime")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("LastModifierUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("RaythaFunctionId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatorUserId");
+
+                    b.HasIndex("LastModifierUserId");
+
+                    b.HasIndex("RaythaFunctionId");
+
+                    b.ToTable("RaythaFunctionRevisions");
+                });
+
             modelBuilder.Entity("Raytha.Domain.Entities.Role", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1501,6 +1586,44 @@ namespace Raytha.Infrastructure.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("Raytha.Domain.Entities.RaythaFunction", b =>
+                {
+                    b.HasOne("Raytha.Domain.Entities.User", "CreatorUser")
+                        .WithMany()
+                        .HasForeignKey("CreatorUserId");
+
+                    b.HasOne("Raytha.Domain.Entities.User", "LastModifierUser")
+                        .WithMany()
+                        .HasForeignKey("LastModifierUserId");
+
+                    b.Navigation("CreatorUser");
+
+                    b.Navigation("LastModifierUser");
+                });
+
+            modelBuilder.Entity("Raytha.Domain.Entities.RaythaFunctionRevision", b =>
+                {
+                    b.HasOne("Raytha.Domain.Entities.User", "CreatorUser")
+                        .WithMany()
+                        .HasForeignKey("CreatorUserId");
+
+                    b.HasOne("Raytha.Domain.Entities.User", "LastModifierUser")
+                        .WithMany()
+                        .HasForeignKey("LastModifierUserId");
+
+                    b.HasOne("Raytha.Domain.Entities.RaythaFunction", "RaythaFunction")
+                        .WithMany("Revisions")
+                        .HasForeignKey("RaythaFunctionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("CreatorUser");
+
+                    b.Navigation("LastModifierUser");
+
+                    b.Navigation("RaythaFunction");
+                });
+
             modelBuilder.Entity("Raytha.Domain.Entities.Role", b =>
                 {
                     b.HasOne("Raytha.Domain.Entities.User", "CreatorUser")
@@ -1733,6 +1856,11 @@ namespace Raytha.Infrastructure.Migrations
                 });
 
             modelBuilder.Entity("Raytha.Domain.Entities.EmailTemplate", b =>
+                {
+                    b.Navigation("Revisions");
+                });
+
+            modelBuilder.Entity("Raytha.Domain.Entities.RaythaFunction", b =>
                 {
                     b.Navigation("Revisions");
                 });

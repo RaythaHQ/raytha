@@ -17,11 +17,11 @@ public class SetupController : Controller
 
     private ISender _mediator;
     private ICurrentOrganization _currentOrganization;
-    private IEmailer _emailer;
+    private IEmailerConfiguration _emailerConfiguration;
 
     protected ISender Mediator => _mediator ??= HttpContext.RequestServices.GetRequiredService<ISender>();
     protected ICurrentOrganization CurrentOrganization => _currentOrganization ??= HttpContext.RequestServices.GetRequiredService<ICurrentOrganization>();
-    protected IEmailer Emailer => _emailer ??= HttpContext.RequestServices.GetRequiredService<IEmailer>();
+    protected IEmailerConfiguration EmailerConfiguration => _emailerConfiguration ??= HttpContext.RequestServices.GetRequiredService<IEmailerConfiguration>();
 
     [Route(RAYTHA_ROUTE_PREFIX + "/setup", Name = "setupindex")]
     public IActionResult Index()
@@ -31,7 +31,7 @@ public class SetupController : Controller
 
         var viewModel = new Setup_ViewModel
         {
-            MissingSmtpEnvironmentVariables = Emailer.IsMissingSmtpEnvVars()
+            MissingSmtpEnvironmentVariables = EmailerConfiguration.IsMissingSmtpEnvVars()
         };
         return View(viewModel);
     }

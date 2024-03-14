@@ -11,7 +11,8 @@ using Raytha.Infrastructure.FileStorage;
 using Raytha.Application.Common.Utils;
 using Raytha.Infrastructure.BackgroundTasks;
 using Microsoft.Extensions.Hosting;
-using Raytha.Application.ContentItems;
+using Raytha.Infrastructure.Configurations;
+using Raytha.Infrastructure.RaythaFunctions;
 
 namespace Microsoft.Extensions.DependencyInjection;
 
@@ -37,6 +38,10 @@ public static class ConfigureServices
 
         //direct to db
         services.AddTransient<IDbConnection>((sp) => new SqlConnection(dbConnectionString));
+
+        services.AddSingleton<ICurrentOrganizationConfiguration, CurrentOrganizationConfiguration>();
+        services.AddSingleton<IRaythaFunctionConfiguration, RaythaFunctionConfiguration>();
+        services.AddScoped<IEmailerConfiguration, EmailerConfiguration>();
 
         services.AddScoped<IEmailer, Emailer>();
         services.AddTransient<IRaythaDbJsonQueryEngine, RaythaDbJsonQueryEngine>();
@@ -67,6 +72,10 @@ public static class ConfigureServices
             services.AddSingleton<IHostedService, QueuedHostedService>();
         }
         services.AddScoped<IBackgroundTaskQueue, BackgroundTaskQueue>();
+
+        services.AddTransient<IRaythaFunctionScriptEngine, RaythaFunctionScriptEngine>();
+        services.AddScoped<IRaythaFunctionApi, RaythaFunctionApi>();
+        services.AddSingleton<IRaythaFunctionSemaphore, RaythaFunctionSemaphore>();
 
         return services;
     }

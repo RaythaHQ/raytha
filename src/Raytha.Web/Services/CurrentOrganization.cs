@@ -1,6 +1,5 @@
 ﻿using CSharpVitamins;
 using MediatR;
-using Microsoft.Extensions.Configuration;
 using Raytha.Application.AuthenticationSchemes;
 using Raytha.Application.AuthenticationSchemes.Queries;
 using Raytha.Application.Common.Interfaces;
@@ -23,9 +22,9 @@ public class CurrentOrganization : ICurrentOrganization
     private IEnumerable<ContentTypeDto> _contentTypes;
 
     private readonly ISender Mediator;
-    private readonly IConfiguration Configuration;
+    private readonly ICurrentOrganizationConfiguration Configuration;
 
-    public CurrentOrganization(ISender mediator, IConfiguration configuration)
+    public CurrentOrganization(ISender mediator, ICurrentOrganizationConfiguration configuration)
     {
         Mediator = mediator;
         Configuration = configuration;
@@ -96,6 +95,6 @@ public class CurrentOrganization : ICurrentOrganization
 
     public OrganizationTimeZoneConverter TimeZoneConverter => OrganizationTimeZoneConverter.From(TimeZone, DateFormat);
 
-    public string PathBase => Configuration["PATHBASE"] ?? string.Empty;
-    public string RedirectWebsite => Configuration["REDIRECT_WEBSITE"] ?? string.Empty;
+    public string PathBase => Configuration.PathBase;
+    public string RedirectWebsite => Configuration.RedirectWebsite;
 }
