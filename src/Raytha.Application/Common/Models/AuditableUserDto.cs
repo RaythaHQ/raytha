@@ -18,12 +18,12 @@ public record AuditableUserDto : BaseEntityDto
             return $"{FirstName} {LastName}";
         }
     }
-    public static Expression<Func<User, AuditableUserDto>> GetProjection()
+    public static Expression<Func<User?, AuditableUserDto?>> GetProjection()
     {
         return entity => GetProjection(entity);
     }
 
-    public static AuditableUserDto GetProjection(User entity)
+    public static AuditableUserDto? GetProjection(User? entity)
     {
         if (entity == null)
             return null;
