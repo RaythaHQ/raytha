@@ -213,7 +213,7 @@ public class RaythaFunctionsController : BaseController
     }
 
     [AllowAnonymous]
-    [Route($"{RAYTHA_ROUTE_PREFIX}/functions/execute/{{{RouteConstants.FUNCTION_DEVELOPER_NAME}}}", Name = "functionexecute")]
+    [Route($"{RAYTHA_ROUTE_PREFIX}/functions/execute/{{{RouteConstants.FUNCTION_DEVELOPER_NAME}}}", Name = "functionsexecute")]
     public async Task<IActionResult> Execute(string functionDeveloperName)
     {
         var input = new ExecuteRaythaFunction.Command

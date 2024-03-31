@@ -74,7 +74,7 @@ public static class ConfigureServices
         services.AddScoped<IBackgroundTaskQueue, BackgroundTaskQueue>();
 
         services.AddTransient<IRaythaFunctionScriptEngine, RaythaFunctionScriptEngine>();
-        services.AddScoped<IRaythaFunctionApi, RaythaFunctionApi>();
+        services.AddScoped<IRaythaFunctionApi_V1, RaythaFunctionApi_V1>();
         services.AddSingleton<IRaythaFunctionSemaphore, RaythaFunctionSemaphore>();
 
         return services;

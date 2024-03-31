@@ -10,18 +10,18 @@ namespace Raytha.Infrastructure.RaythaFunctions;
 
 public class RaythaFunctionScriptEngine : IRaythaFunctionScriptEngine
 {
-    private readonly IRaythaFunctionApi _raythaFunctionApi;
+    private readonly IRaythaFunctionApi_V1 _raythaFunctionApiV1;
     private readonly IEmailer _emailer;
     private readonly ICurrentOrganization _currentOrganization;
     private readonly ICurrentUser _currentUser;
     private readonly V8ScriptEngine _engine;
 
-    public RaythaFunctionScriptEngine(IRaythaFunctionApi raythaFunctionApi,
+    public RaythaFunctionScriptEngine(IRaythaFunctionApi_V1 raythaFunctionApiV1,
         IEmailer emailer,
         ICurrentOrganization currentOrganization,
         ICurrentUser currentUser)
     {
-        _raythaFunctionApi = raythaFunctionApi;
+        _raythaFunctionApiV1 = raythaFunctionApiV1;
         _emailer = emailer;
         _currentOrganization = currentOrganization;
         _currentUser = currentUser;
@@ -30,7 +30,7 @@ public class RaythaFunctionScriptEngine : IRaythaFunctionScriptEngine
 
     public void Initialize(string code)
     {
-        _engine.AddHostObject("API", _raythaFunctionApi);
+        _engine.AddHostObject("API_V1", _raythaFunctionApiV1);
         _engine.AddHostObject("CurrentOrganization", _currentOrganization);
         _engine.AddHostObject("CurrentUser", _currentUser);
         _engine.AddHostObject("Emailer", _emailer);

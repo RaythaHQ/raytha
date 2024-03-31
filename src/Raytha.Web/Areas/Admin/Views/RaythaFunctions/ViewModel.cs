@@ -45,7 +45,7 @@ public class RaythaFunctionsCreate_ViewModel : FormSubmit_ViewModel
     [Display(Name = "Code")]
     public string Code { get; set; } = @"
     /** The following classes are available:
-     * API
+     * API_V1
      * CurrentOrganization
      * CurrentUser
      * Emailer
@@ -55,7 +55,7 @@ public class RaythaFunctionsCreate_ViewModel : FormSubmit_ViewModel
     /** 
      * Receives a get request at /raytha/functions/execute/{developerName}
      * @param {IQueryCollection} query Passed in from .NET's Request.Query
-     * @returns {object} of type JsonResult, HtmlResult, or RedirectResult
+     * @returns {object} of type JsonResult, HtmlResult, RedirectResult, or StatusCodeResult
      */
     function get(query) {
         return new JsonResult({ success: true });
@@ -68,7 +68,7 @@ public class RaythaFunctionsCreate_ViewModel : FormSubmit_ViewModel
      * Receives a post request at /raytha/functions/execute/{developerName}
      * @param {IFormCollection} payload Passed in from .NET's Request.Form
      * @param {IQueryCollection} query Passed in from .NET's Request.Query
-     * @returns {object} of type JsonResult, HtmlResult, or RedirectResult
+     * @returns {object} of type JsonResult, HtmlResult, RedirectResult, or StatusCodeResult
      */
     function post(payload, query) {
         return new JsonResult({ success: true });
