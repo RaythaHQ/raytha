@@ -245,7 +245,7 @@ public class RaythaFunctionApi_V1 : IRaythaFunctionApi_V1
 
     public ICommandResponseDto<ShortGuid> EditUser(string userId, string emailAddress, string firstName, string lastName, dynamic userGroups)
     {
-        var userGroupsAsEnum = new List<string>();
+        var userGroupsAsEnum = new List<ShortGuid>();
         for (var index = 0; index < (int)userGroups["length"]; index++)
         {
             userGroupsAsEnum.Add(userGroups[index]);

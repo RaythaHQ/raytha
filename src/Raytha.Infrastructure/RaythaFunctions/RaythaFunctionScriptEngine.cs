@@ -14,17 +14,20 @@ public class RaythaFunctionScriptEngine : IRaythaFunctionScriptEngine
     private readonly IEmailer _emailer;
     private readonly ICurrentOrganization _currentOrganization;
     private readonly ICurrentUser _currentUser;
+    private readonly IRaythaFunctionsHttpClient _httpClient;
     private readonly V8ScriptEngine _engine;
 
     public RaythaFunctionScriptEngine(IRaythaFunctionApi_V1 raythaFunctionApiV1,
         IEmailer emailer,
         ICurrentOrganization currentOrganization,
-        ICurrentUser currentUser)
+        ICurrentUser currentUser,
+        IRaythaFunctionsHttpClient httpClient)
     {
         _raythaFunctionApiV1 = raythaFunctionApiV1;
         _emailer = emailer;
         _currentOrganization = currentOrganization;
         _currentUser = currentUser;
+        _httpClient = httpClient;
         _engine = new V8ScriptEngine();
     }
 
@@ -34,7 +37,7 @@ public class RaythaFunctionScriptEngine : IRaythaFunctionScriptEngine
         _engine.AddHostObject("CurrentOrganization", _currentOrganization);
         _engine.AddHostObject("CurrentUser", _currentUser);
         _engine.AddHostObject("Emailer", _emailer);
-        _engine.AddHostObject("HttpClient", new HttpClient());
+        _engine.AddHostObject("HttpClient", _httpClient);
         _engine.AddHostObject("host", new HostFunctions());
         _engine.AddHostObject("clr", new HostTypeCollection("mscorlib", "System", "System.Core", "System.Linq", "System.Collections"));
         _engine.AddHostType(typeof(JavaScriptExtensions));
