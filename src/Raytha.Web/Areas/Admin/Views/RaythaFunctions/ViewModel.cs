@@ -40,7 +40,7 @@ public class RaythaFunctionsCreate_ViewModel : FormSubmit_ViewModel
     public string TriggerType { get; set; }
 
     [Display(Name = "Active")]
-    public bool IsActive { get; set; }
+    public bool IsActive { get; set; } = true;
 
     [Display(Name = "Code")]
     public string Code { get; set; } = @"
