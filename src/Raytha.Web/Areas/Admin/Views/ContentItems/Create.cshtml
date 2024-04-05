@@ -231,7 +231,7 @@
                             {
                                 <div class="col-lg-12 mt-4" id="raytha_field-@Model.FieldValues[i].DeveloperName"
                              data-controller="contentitems--wysiwyg"
-                             data-contentitems--attachment-pathbase-value="@Model.PathBase">
+                             data-contentitems--wysiwyg-pathbase-value="@Model.PathBase">
                                     <div class="mb-3">
                                         <label class="form-label @Model.FieldValues[i].AsteriskCssIfRequired" asp-for="@Model.FieldValues[i].Label">@Model.FieldValues[i].Label</label>
                                         <textarea data-contentitems--wysiwyg-target="editor" data-developername="@Model.FieldValues[i].DeveloperName" id="input-@Model.FieldValues[i].DeveloperName" asp-for="@Model.FieldValues[i].Value"></textarea>

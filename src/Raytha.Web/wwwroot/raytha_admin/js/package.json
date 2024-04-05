@@ -22,7 +22,7 @@
     "webpack-cli": "^5.1.4"
   },
   "dependencies": {
-    "@hotwired/turbo": "^7.2.4",
+    "@hotwired/turbo": "^8.0.4",
     "@popperjs/core": "^2.11.6",
     "@uppy/aws-s3": "^3.0.4",
     "@uppy/core": "^3.1.2",
@@ -40,7 +40,7 @@
     "stimulus": "^3.2.1",
     "stimulus-sortable": "^4.1.0",
     "sweetalert2": "^11.4.8",
-    "tinymce": "^6.8.2",
+    "tinymce": "^7.0.0",
     "trix": "^2.0.4",
     "uuid": "^9.0.0"
   }
