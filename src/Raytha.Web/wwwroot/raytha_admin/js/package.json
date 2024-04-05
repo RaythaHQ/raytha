@@ -24,6 +24,7 @@
   "dependencies": {
     "@hotwired/turbo": "^8.0.4",
     "@popperjs/core": "^2.11.8",
+    "@stimulus-components/sortable": "^5.0.1",
     "@uppy/aws-s3": "^3.6.2",
     "@uppy/core": "^3.10.0",
     "@uppy/dashboard": "^3.8.0",
@@ -37,8 +38,7 @@
     "monaco-editor-webpack-plugin": "^7.0.1",
     "notyf": "^3.10.0",
     "simplebar": "^6.2.5",
-    "stimulus": "^3.2.1",
-    "stimulus-sortable": "^4.1.0",
+    "stimulus": "^3.2.2",
     "sweetalert2": "^11.4.8",
     "tinymce": "^7.0.0",
     "trix": "^2.1.0",
