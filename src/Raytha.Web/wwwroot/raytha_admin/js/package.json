@@ -36,12 +36,12 @@
     "monaco-editor": "^0.39.0",
     "monaco-editor-webpack-plugin": "^7.0.1",
     "notyf": "^3.10.0",
-    "simplebar": "^5.3.9",
+    "simplebar": "^6.2.5",
     "stimulus": "^3.2.1",
     "stimulus-sortable": "^4.1.0",
     "sweetalert2": "^11.4.8",
     "tinymce": "^7.0.0",
-    "trix": "^2.0.4",
-    "uuid": "^9.0.0"
+    "trix": "^2.1.0",
+    "uuid": "^9.0.1"
   }
 }
