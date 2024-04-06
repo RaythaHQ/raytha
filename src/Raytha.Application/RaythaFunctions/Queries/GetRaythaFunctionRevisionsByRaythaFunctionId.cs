@@ -16,7 +16,7 @@ public class GetRaythaFunctionRevisionsByRaythaFunctionId
         public override string OrderBy { get; init; } = $"CreationTime {SortOrder.Descending}";
     }
 
-    public class Handler : RequestHandler<Query, IQueryResponseDto<ListResultDto<RaythaFunctionRevisionDto>>>
+    public class Handler : IRequestHandler<Query, IQueryResponseDto<ListResultDto<RaythaFunctionRevisionDto>>>
     {
         private readonly IRaythaDbContext _db;
 
@@ -25,13 +25,13 @@ public class GetRaythaFunctionRevisionsByRaythaFunctionId
             _db = db;
         }
 
-        protected override IQueryResponseDto<ListResultDto<RaythaFunctionRevisionDto>> Handle(Query request)
+        public async Task<IQueryResponseDto<ListResultDto<RaythaFunctionRevisionDto>>> Handle(Query request, CancellationToken cancellationToken)
         {
             var query = _db.RaythaFunctionRevisions
                 .Include(rfr => rfr.CreatorUser)
                 .Where(rfr => rfr.RaythaFunctionId == request.Id.Guid);
 
-            var total = query.Count();
+            var total = await query.CountAsync();
             var items = query.ApplyPaginationInput(request).Select(RaythaFunctionRevisionDto.GetProjection()).ToArray();
 
             return new QueryResponseDto<ListResultDto<RaythaFunctionRevisionDto>>(new ListResultDto<RaythaFunctionRevisionDto>(items, total));

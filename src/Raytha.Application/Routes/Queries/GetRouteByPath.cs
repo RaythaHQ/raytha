@@ -12,14 +12,15 @@ public class GetRouteByPath
         public string Path { get; init; } = string.Empty;
     }
 
-    public class Handler : RequestHandler<Query, IQueryResponseDto<RouteDto>>
+    public class Handler : IRequestHandler<Query, IQueryResponseDto<RouteDto>>
     {
         private readonly IRaythaDbContext _db;
         public Handler(IRaythaDbContext db)
         {
             _db = db;
         }
-        protected override IQueryResponseDto<RouteDto> Handle(Query request)
+
+        public async Task<IQueryResponseDto<RouteDto>> Handle(Query request, CancellationToken cancellationToken)
         {
             var path = string.IsNullOrEmpty(request.Path) ? string.Empty : request.Path.ToLower();
             var entity = _db.Routes

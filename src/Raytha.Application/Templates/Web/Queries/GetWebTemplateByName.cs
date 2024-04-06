@@ -16,14 +16,15 @@ public class GetWebTemplateByName
         public string DeveloperName { get; init; }
     }
 
-    public class Handler : RequestHandler<Query, IQueryResponseDto<WebTemplateDto>>
+    public class Handler : IRequestHandler<Query, IQueryResponseDto<WebTemplateDto>>
     {
         private readonly IRaythaDbContext _db;
         public Handler(IRaythaDbContext db)
         {
             _db = db;
         }
-        protected override IQueryResponseDto<WebTemplateDto> Handle(Query request)
+
+        public async Task<IQueryResponseDto<WebTemplateDto>> Handle(Query request, CancellationToken cancellationToken)
         {
             var entity = _db.WebTemplates
                 .Include(p => p.TemplateAccessToModelDefinitions)

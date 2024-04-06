@@ -12,7 +12,7 @@ public class GetContentTypeFieldById
     {
     }
 
-    public class Handler : RequestHandler<Query, IQueryResponseDto<ContentTypeFieldDto>>
+    public class Handler : IRequestHandler<Query, IQueryResponseDto<ContentTypeFieldDto>>
     {
         private readonly IRaythaDbContext _db;
         public Handler(IRaythaDbContext db)
@@ -20,7 +20,7 @@ public class GetContentTypeFieldById
             _db = db;
         }
 
-        protected override IQueryResponseDto<ContentTypeFieldDto> Handle(Query request)
+        public async Task<IQueryResponseDto<ContentTypeFieldDto>> Handle(Query request, CancellationToken cancellationToken)
         {
             var entity = _db.ContentTypeFields
                 .Include(p => p.ContentType)

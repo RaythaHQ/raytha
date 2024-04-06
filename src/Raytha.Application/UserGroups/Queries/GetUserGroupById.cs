@@ -11,14 +11,15 @@ public class GetUserGroupById
     {
     }
 
-    public class Handler : RequestHandler<Query, IQueryResponseDto<UserGroupDto>>
+    public class Handler : IRequestHandler<Query, IQueryResponseDto<UserGroupDto>>
     {
         private readonly IRaythaDbContext _db;
         public Handler(IRaythaDbContext db)
         {
             _db = db;
         }
-        protected override IQueryResponseDto<UserGroupDto> Handle(Query request)
+
+        public async Task<IQueryResponseDto<UserGroupDto>> Handle(Query request, CancellationToken cancellationToken)
         {
             var entity = _db.UserGroups
                 .FirstOrDefault(p => p.Id == request.Id.Guid);

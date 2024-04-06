@@ -14,14 +14,15 @@ public class GetContentTypes
         public override string OrderBy { get; init; } = $"LabelPlural {SortOrder.Ascending}";
     }
 
-    public class Handler : RequestHandler<Query, IQueryResponseDto<ListResultDto<ContentTypeDto>>>
+    public class Handler : IRequestHandler<Query, IQueryResponseDto<ListResultDto<ContentTypeDto>>>
     {
         private readonly IRaythaDbContext _db;
         public Handler(IRaythaDbContext db)
         {
             _db = db;
         }
-        protected override IQueryResponseDto<ListResultDto<ContentTypeDto>> Handle(Query request)
+
+        public async Task<IQueryResponseDto<ListResultDto<ContentTypeDto>>> Handle(Query request, CancellationToken cancellationToken)
         {
             var query = _db.ContentTypes
                 .Include(p => p.ContentTypeFields)
@@ -36,7 +37,7 @@ public class GetContentTypes
                         d.DeveloperName.Contains(searchQuery)));
             }
 
-            var total = query.Count();
+            var total = await query.CountAsync();
             var items = query.ApplyPaginationInput(request).Select(ContentTypeDto.GetProjection()).ToArray();
 
             return new QueryResponseDto<ListResultDto<ContentTypeDto>>(new ListResultDto<ContentTypeDto>(items, total));

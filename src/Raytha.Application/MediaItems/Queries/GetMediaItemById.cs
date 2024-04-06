@@ -12,14 +12,15 @@ public class GetMediaItemById
     {
     }
 
-    public class Handler : RequestHandler<Query, IQueryResponseDto<MediaItemDto>>
+    public class Handler : IRequestHandler<Query, IQueryResponseDto<MediaItemDto>>
     {
         private readonly IRaythaDbContext _db;
         public Handler(IRaythaDbContext db)
         {
             _db = db;
         }
-        protected override IQueryResponseDto<MediaItemDto> Handle(Query request)
+        
+        public async Task<IQueryResponseDto<MediaItemDto>> Handle(Query request, CancellationToken cancellationToken)
         {
             var entity = _db.MediaItems.FirstOrDefault(p => p.Id == request.Id.Guid);
 

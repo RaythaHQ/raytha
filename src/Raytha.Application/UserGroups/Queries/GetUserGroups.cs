@@ -1,4 +1,5 @@
 ﻿using MediatR;
+using Microsoft.EntityFrameworkCore;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Models;
 using Raytha.Application.Common.Utils;
@@ -13,14 +14,15 @@ public class GetUserGroups
         public override string OrderBy { get; init; } = $"Label {SortOrder.ASCENDING}";
     }
 
-    public class Handler : RequestHandler<Query, IQueryResponseDto<ListResultDto<UserGroupDto>>>
+    public class Handler : IRequestHandler<Query, IQueryResponseDto<ListResultDto<UserGroupDto>>>
     {
         private readonly IRaythaDbContext _db;
         public Handler(IRaythaDbContext db)
         {
             _db = db;
         }
-        protected override IQueryResponseDto<ListResultDto<UserGroupDto>> Handle(Query request)
+
+        public async Task<IQueryResponseDto<ListResultDto<UserGroupDto>>> Handle(Query request, CancellationToken cancellationToken)
         {
             var query = _db.UserGroups.AsQueryable();
 
@@ -32,7 +34,7 @@ public class GetUserGroups
                     d.DeveloperName.ToLower().Contains(searchQuery));
             }
 
-            var total = query.Count();
+            var total = await query.CountAsync();
             var items = query.ApplyPaginationInput(request).Select(UserGroupDto.GetProjection()).ToArray();
 
             return new QueryResponseDto<ListResultDto<UserGroupDto>>(new ListResultDto<UserGroupDto>(items, total));

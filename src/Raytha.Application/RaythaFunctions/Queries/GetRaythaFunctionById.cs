@@ -11,7 +11,7 @@ public class GetRaythaFunctionById
     {
     }
 
-    public class Handler : RequestHandler<Query, IQueryResponseDto<RaythaFunctionDto>>
+    public class Handler : IRequestHandler<Query, IQueryResponseDto<RaythaFunctionDto>>
     {
         private readonly IRaythaDbContext _db;
 
@@ -20,7 +20,7 @@ public class GetRaythaFunctionById
             _db = db;
         }
 
-        protected override IQueryResponseDto<RaythaFunctionDto> Handle(Query request)
+        public async Task<IQueryResponseDto<RaythaFunctionDto>> Handle(Query request, CancellationToken cancellationToken)
         {
             var entity = _db.RaythaFunctions.FirstOrDefault(rf => rf.Id == request.Id.Guid);
             if (entity == null)

@@ -12,14 +12,15 @@ public class GetContentTypeById
     {
     }
 
-    public class Handler : RequestHandler<Query, IQueryResponseDto<ContentTypeDto>>
+    public class Handler : IRequestHandler<Query, IQueryResponseDto<ContentTypeDto>>
     {
         private readonly IRaythaDbContext _db;
         public Handler(IRaythaDbContext db)
         {
             _db = db;
         }
-        protected override IQueryResponseDto<ContentTypeDto> Handle(Query request)
+
+        public async Task<IQueryResponseDto<ContentTypeDto>> Handle(Query request, CancellationToken cancellationToken)
         {
             var entity = _db.ContentTypes
                 .Include(p => p.ContentTypeFields.OrderBy(c => c.FieldOrder))

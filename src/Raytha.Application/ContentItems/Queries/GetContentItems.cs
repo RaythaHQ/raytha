@@ -20,7 +20,7 @@ public class GetContentItems
         public string? Filter { get; init; }
     }
 
-    public class Handler : RequestHandler<Query, IQueryResponseDto<ListResultDto<ContentItemDto>>>
+    public class Handler : IRequestHandler<Query, IQueryResponseDto<ListResultDto<ContentItemDto>>>
     {
         private readonly IRaythaDbJsonQueryEngine _db;
         private readonly IRaythaDbContext _entityFrameworkDb;
@@ -31,7 +31,8 @@ public class GetContentItems
             _entityFrameworkDb = entityFrameworkDb;
             _contentTypeInRoutePath = contentTypeInRoutePath;
         }
-        protected override IQueryResponseDto<ListResultDto<ContentItemDto>> Handle(Query request)
+
+        public async Task<IQueryResponseDto<ListResultDto<ContentItemDto>>> Handle(Query request, CancellationToken cancellationToken)
         {
             IEnumerable<ContentItemDto> items;
             int count = 0;

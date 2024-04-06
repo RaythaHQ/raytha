@@ -17,14 +17,15 @@ public class GetWebTemplates
         public ShortGuid? ContentTypeId { get; init; }
     }
 
-    public class Handler : RequestHandler<Query, IQueryResponseDto<ListResultDto<WebTemplateDto>>>
+    public class Handler : IRequestHandler<Query, IQueryResponseDto<ListResultDto<WebTemplateDto>>>
     {
         private readonly IRaythaDbContext _db;
         public Handler(IRaythaDbContext db)
         {
             _db = db;
         }
-        protected override IQueryResponseDto<ListResultDto<WebTemplateDto>> Handle(Query request)
+
+        public async Task<IQueryResponseDto<ListResultDto<WebTemplateDto>>> Handle(Query request, CancellationToken cancellationToken)
         {
             var query = _db.WebTemplates
                 .Include(p => p.TemplateAccessToModelDefinitions)
@@ -53,7 +54,7 @@ public class GetWebTemplates
             if (request.BaseLayoutsOnly)
                 query = query.Where(p => p.IsBaseLayout);
 
-            var total = query.Count();
+            var total = await query.CountAsync();
             var items = query.ApplyPaginationInput(request).Select(WebTemplateDto.GetProjection()).ToArray();
 
             return new QueryResponseDto<ListResultDto<WebTemplateDto>>(new ListResultDto<WebTemplateDto>(items, total));

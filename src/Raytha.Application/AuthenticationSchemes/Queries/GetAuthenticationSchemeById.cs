@@ -11,14 +11,14 @@ public class GetAuthenticationSchemeById
     {
     }
 
-    public class Handler : RequestHandler<Query, IQueryResponseDto<AuthenticationSchemeDto>>
+    public class Handler : IRequestHandler<Query, IQueryResponseDto<AuthenticationSchemeDto>>
     {
         private readonly IRaythaDbContext _db;
         public Handler(IRaythaDbContext db)
         {
             _db = db;
         }
-        protected override IQueryResponseDto<AuthenticationSchemeDto> Handle(Query request)
+        public async Task<IQueryResponseDto<AuthenticationSchemeDto>> Handle(Query request, CancellationToken cancellationToken)
         {
             var entity = _db.AuthenticationSchemes.FirstOrDefault(p => p.Id == request.Id.Guid);
 

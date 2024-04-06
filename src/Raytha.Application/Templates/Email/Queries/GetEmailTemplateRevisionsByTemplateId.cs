@@ -16,21 +16,22 @@ public class GetEmailTemplateRevisionsByTemplateId
         public override string OrderBy { get; init; } = $"CreationTime {SortOrder.Descending}";
     }
 
-    public class Handler : RequestHandler<Query, IQueryResponseDto<ListResultDto<EmailTemplateRevisionDto>>>
+    public class Handler : IRequestHandler<Query, IQueryResponseDto<ListResultDto<EmailTemplateRevisionDto>>>
     {
         private readonly IRaythaDbContext _db;
         public Handler(IRaythaDbContext db)
         {
             _db = db;
         }
-        protected override IQueryResponseDto<ListResultDto<EmailTemplateRevisionDto>> Handle(Query request)
+
+        public async Task<IQueryResponseDto<ListResultDto<EmailTemplateRevisionDto>>> Handle(Query request, CancellationToken cancellationToken)
         {
             var query = _db.EmailTemplateRevisions.AsQueryable()
                 .Include(p => p.EmailTemplate)
                 .Include(p => p.CreatorUser)
                 .Where(p => p.EmailTemplateId == request.Id.Guid);
 
-            var total = query.Count();
+            var total = await query.CountAsync();
             var items = query.ApplyPaginationInput(request).Select(EmailTemplateRevisionDto.GetProjection()).ToArray();
 
             return new QueryResponseDto<ListResultDto<EmailTemplateRevisionDto>>(new ListResultDto<EmailTemplateRevisionDto>(items, total));

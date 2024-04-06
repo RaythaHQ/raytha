@@ -12,14 +12,15 @@ public class GetAdminById
     {
     }
 
-    public class Handler : RequestHandler<Query, IQueryResponseDto<AdminDto>>
+    public class Handler : IRequestHandler<Query, IQueryResponseDto<AdminDto>>
     {
         private readonly IRaythaDbContext _db;
         public Handler(IRaythaDbContext db)
         {
             _db = db;
         }
-        protected override IQueryResponseDto<AdminDto> Handle(Query request)
+        
+        public async Task<IQueryResponseDto<AdminDto>> Handle(Query request, CancellationToken cancellationToken)
         {                   
             var entity = _db.Users
                 .Include(p => p.Roles)

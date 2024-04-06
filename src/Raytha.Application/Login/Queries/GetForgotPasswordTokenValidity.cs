@@ -13,14 +13,14 @@ public class GetForgotPasswordTokenValidity
     {
     }
 
-    public class Handler : RequestHandler<Query, IQueryResponseDto<bool>>
+    public class Handler : IRequestHandler<Query, IQueryResponseDto<bool>>
     {
         private readonly IRaythaDbContext _db;
         public Handler(IRaythaDbContext db)
         {
             _db = db;
         }
-        protected override IQueryResponseDto<bool> Handle(Query request)
+        public async Task<IQueryResponseDto<bool>> Handle(Query request, CancellationToken cancellationToken)
         {
             var authScheme = _db.AuthenticationSchemes.First(p =>
                     p.AuthenticationSchemeType == AuthenticationSchemeType.EmailAndPassword);

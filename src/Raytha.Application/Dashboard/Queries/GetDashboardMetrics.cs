@@ -1,4 +1,5 @@
 ﻿using MediatR;
+using Microsoft.EntityFrameworkCore;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Models;
 using System.Data;
@@ -11,7 +12,7 @@ public class GetDashboardMetrics
     {
     }
 
-    public class Handler : RequestHandler<Query, IQueryResponseDto<DashboardDto>>
+    public class Handler : IRequestHandler<Query, IQueryResponseDto<DashboardDto>>
     {
         private readonly IRaythaDbContext _db;
         public readonly IRaythaRawDbInfo _rawSqlDb;
@@ -20,11 +21,12 @@ public class GetDashboardMetrics
             _rawSqlDb = rawSqlDb;
             _db = db;
         }
-        protected override IQueryResponseDto<DashboardDto> Handle(Query request)
+
+        public async Task<IQueryResponseDto<DashboardDto>> Handle(Query request, CancellationToken cancellationToken)
         {
-            int totalContentItems = _db.ContentItems.Count();
-            int totalUsers = _db.Users.Count();
-            long totalFileStorageSize = _db.MediaItems.Sum(p => p.Length);
+            int totalContentItems = await _db.ContentItems.CountAsync();
+            int totalUsers = await _db.Users.CountAsync();
+            long totalFileStorageSize = await _db.MediaItems.SumAsync(p => p.Length);
             var dbSize = _rawSqlDb.GetDatabaseSize();
 
             decimal numericValueOfReserved = Convert.ToDecimal(dbSize.reserved.Split(" ").First());

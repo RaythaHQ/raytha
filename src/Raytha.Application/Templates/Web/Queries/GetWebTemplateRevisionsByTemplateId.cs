@@ -17,21 +17,22 @@ public class GetWebTemplateRevisionsByTemplateId
         public override string OrderBy { get; init; } = $"CreationTime {SortOrder.Descending}";
     }
 
-    public class Handler : RequestHandler<Query, IQueryResponseDto<ListResultDto<WebTemplateRevisionDto>>>
+    public class Handler : IRequestHandler<Query, IQueryResponseDto<ListResultDto<WebTemplateRevisionDto>>>
     {
         private readonly IRaythaDbContext _db;
         public Handler(IRaythaDbContext db)
         {
             _db = db;
         }
-        protected override IQueryResponseDto<ListResultDto<WebTemplateRevisionDto>> Handle(Query request)
+
+        public async Task<IQueryResponseDto<ListResultDto<WebTemplateRevisionDto>>> Handle(Query request, CancellationToken cancellationToken)
         {
             var query = _db.WebTemplateRevisions.AsQueryable()
                 .Include(p => p.WebTemplate)
                 .Include(p => p.CreatorUser)
                 .Where(p => p.WebTemplateId == request.Id.Guid);
 
-            var total = query.Count();
+            var total = await query.CountAsync();
             var items = query.ApplyPaginationInput(request).Select(WebTemplateRevisionDto.GetProjection()).ToArray();
 
             return new QueryResponseDto<ListResultDto<WebTemplateRevisionDto>>(new ListResultDto<WebTemplateRevisionDto>(items, total));

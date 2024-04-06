@@ -17,14 +17,15 @@ public class GetDeletedContentItems
         public override string OrderBy { get; init; } = $"Label {SortOrder.ASCENDING}";
     }
 
-    public class Handler : RequestHandler<Query, IQueryResponseDto<ListResultDto<DeletedContentItemDto>>>
+    public class Handler : IRequestHandler<Query, IQueryResponseDto<ListResultDto<DeletedContentItemDto>>>
     {
         private readonly IRaythaDbContext _db;
         public Handler(IRaythaDbContext db)
         {
             _db = db;
         }
-        protected override IQueryResponseDto<ListResultDto<DeletedContentItemDto>> Handle(Query request)
+
+        public async Task<IQueryResponseDto<ListResultDto<DeletedContentItemDto>>> Handle(Query request, CancellationToken cancellationToken)
         {
             var query = _db.DeletedContentItems
                 .Include(p => p.ContentType)
@@ -42,7 +43,7 @@ public class GetDeletedContentItems
                         d.CreatorUser.LastName.ToLower().Contains(searchQuery)));
             }
 
-            var total = query.Count();
+            var total = await query.CountAsync();
             var items = query.ApplyPaginationInput(request).Select(DeletedContentItemDto.GetProjection()).ToArray();
 
             return new QueryResponseDto<ListResultDto<DeletedContentItemDto>>(new ListResultDto<DeletedContentItemDto>(items, total));

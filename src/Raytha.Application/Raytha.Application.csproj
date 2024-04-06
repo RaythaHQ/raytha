@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
@@ -17,8 +17,6 @@
     <PackageReference Include="CSharpVitamins.ShortGuid" Version="2.0.0" />
     <PackageReference Include="CsvExport" Version="2.0.0" />
     <PackageReference Include="LumenWorksCsvReader2" Version="4.3.0" />
-    <PackageReference Include="MediatR" Version="11.1.0" />
-    <PackageReference Include="MediatR.Extensions.Microsoft.DependencyInjection" Version="11.1.0" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="8.0.0" />
     <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="11.4.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.0" />

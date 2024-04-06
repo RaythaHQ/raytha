@@ -12,7 +12,7 @@ public class GetRaythaFunctions
     {
     }
 
-    public class Handler : RequestHandler<Query, IQueryResponseDto<ListResultDto<RaythaFunctionDto>>>
+    public class Handler : IRequestHandler<Query, IQueryResponseDto<ListResultDto<RaythaFunctionDto>>>
     {
         private readonly IRaythaDbContext _db;
 
@@ -21,7 +21,7 @@ public class GetRaythaFunctions
             _db = db;
         }
 
-        protected override IQueryResponseDto<ListResultDto<RaythaFunctionDto>> Handle(Query request)
+        public async Task<IQueryResponseDto<ListResultDto<RaythaFunctionDto>>> Handle(Query request, CancellationToken cancellationToken)
         {
             var query = _db.RaythaFunctions
                 .Include(rf => rf.LastModifierUser)
@@ -35,7 +35,7 @@ public class GetRaythaFunctions
                     rf.DeveloperName.ToLower().Contains(searchQuery));
             }
 
-            var total = query.Count();
+            var total = await query.CountAsync();
             var items = query.ApplyPaginationInput(request).Select(RaythaFunctionDto.GetProjection()).ToArray();
 
             return new QueryResponseDto<ListResultDto<RaythaFunctionDto>>(new ListResultDto<RaythaFunctionDto>(items, total));

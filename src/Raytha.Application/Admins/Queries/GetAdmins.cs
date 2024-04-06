@@ -16,14 +16,15 @@ public class GetAdmins
         public override string OrderBy { get; init; } = $"LastLoggedInTime {SortOrder.DESCENDING}";
     }
 
-    public class Handler : RequestHandler<Query, IQueryResponseDto<ListResultDto<AdminDto>>>
+    public class Handler : IRequestHandler<Query, IQueryResponseDto<ListResultDto<AdminDto>>>
     {
         private readonly IRaythaDbContext _db;
         public Handler(IRaythaDbContext db)
         {
             _db = db;
         }
-        protected override IQueryResponseDto<ListResultDto<AdminDto>> Handle(Query request)
+
+        public async Task<IQueryResponseDto<ListResultDto<AdminDto>>> Handle(Query request, CancellationToken cancellationToken)
         {                   
             var query = _db.Users.AsQueryable()
                 .Include(p => p.Roles)
@@ -41,7 +42,7 @@ public class GetAdmins
                         d.Roles.Any(p => p.Label.Contains(searchQuery)));              
             }
 
-            var total = query.Count();
+            var total = await query.CountAsync();
             var items = query.ApplyPaginationInput(request).Select(AdminDto.GetProjection()).ToArray();
 
             return new QueryResponseDto<ListResultDto<AdminDto>>(new ListResultDto<AdminDto>(items, total));

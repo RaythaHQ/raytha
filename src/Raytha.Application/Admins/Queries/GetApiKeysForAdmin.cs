@@ -15,14 +15,15 @@ public class GetApiKeysForAdmin
         public override string OrderBy { get; init; } = $"CreationTime {SortOrder.ASCENDING}";
     }
 
-    public class Handler : RequestHandler<Query, IQueryResponseDto<ListResultDto<ApiKeyDto>>>
+    public class Handler : IRequestHandler<Query, IQueryResponseDto<ListResultDto<ApiKeyDto>>>
     {
         private readonly IRaythaDbContext _db;
         public Handler(IRaythaDbContext db)
         {
             _db = db;
         }
-        protected override IQueryResponseDto<ListResultDto<ApiKeyDto>> Handle(Query request)
+
+        public async Task<IQueryResponseDto<ListResultDto<ApiKeyDto>>> Handle(Query request, CancellationToken cancellationToken)
         {
             var query = _db.ApiKeys.Where(p => p.UserId == request.UserId.Guid).AsQueryable();
 

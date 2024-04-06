@@ -13,14 +13,15 @@ public class GetUserForAuthenticationById
     {
     }
 
-    public class Handler : RequestHandler<Query, IQueryResponseDto<LoginDto>>
+    public class Handler : IRequestHandler<Query, IQueryResponseDto<LoginDto>>
     {
         private readonly IRaythaDbContext _db;
         public Handler(IRaythaDbContext db)
         {
             _db = db;
         }
-        protected override IQueryResponseDto<LoginDto> Handle(Query request)
+        
+        public async Task<IQueryResponseDto<LoginDto>> Handle(Query request, CancellationToken cancellationToken)
         {
             var entity = _db.Users
                 .Include(p => p.Roles)

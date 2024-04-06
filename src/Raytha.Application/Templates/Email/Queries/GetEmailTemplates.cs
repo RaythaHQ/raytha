@@ -14,14 +14,15 @@ public class GetEmailTemplates
         public override string OrderBy { get; init; } = $"Subject {SortOrder.ASCENDING}";
     }
 
-    public class Handler : RequestHandler<Query, IQueryResponseDto<ListResultDto<EmailTemplateDto>>>
+    public class Handler : IRequestHandler<Query, IQueryResponseDto<ListResultDto<EmailTemplateDto>>>
     {
         private readonly IRaythaDbContext _db;
         public Handler(IRaythaDbContext db)
         {
             _db = db;
         }
-        protected override IQueryResponseDto<ListResultDto<EmailTemplateDto>> Handle(Query request)
+
+        public async Task<IQueryResponseDto<ListResultDto<EmailTemplateDto>>> Handle(Query request, CancellationToken cancellationToken)
         {
             var query = _db.EmailTemplates
                 .Include(p => p.LastModifierUser)
@@ -38,7 +39,7 @@ public class GetEmailTemplates
                         d.LastModifierUser.LastName.ToLower().Contains(searchQuery)));
             }
 
-            var total = query.Count();
+            var total = await query.CountAsync();
             var items = query.ApplyPaginationInput(request).Select(EmailTemplateDto.GetProjection()).ToArray();
 
             return new QueryResponseDto<ListResultDto<EmailTemplateDto>>(new ListResultDto<EmailTemplateDto>(items, total));

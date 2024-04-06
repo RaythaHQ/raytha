@@ -15,7 +15,7 @@ public class GetContentItemRevisionsByContentItemId
         public ShortGuid Id { get; init; }
     }
 
-    public class Handler : RequestHandler<Query, IQueryResponseDto<ListResultDto<ContentItemRevisionDto>>>
+    public class Handler : IRequestHandler<Query, IQueryResponseDto<ListResultDto<ContentItemRevisionDto>>>
     {
         private readonly IRaythaDbContext _db;
         private readonly IContentTypeInRoutePath _contentTypeInRoutePath;
@@ -24,7 +24,8 @@ public class GetContentItemRevisionsByContentItemId
             _db = db;
             _contentTypeInRoutePath = contentTypeInRoutePath;
         }
-        protected override IQueryResponseDto<ListResultDto<ContentItemRevisionDto>> Handle(Query request)
+
+        public async Task<IQueryResponseDto<ListResultDto<ContentItemRevisionDto>>> Handle(Query request, CancellationToken cancellationToken)
         {
             var entity = _db.ContentItems
                 .Include(p => p.ContentType)
@@ -40,7 +41,7 @@ public class GetContentItemRevisionsByContentItemId
                 .Include(p => p.CreatorUser)
                 .Where(p => p.ContentItemId == request.Id.Guid);
 
-            var total = query.Count();
+            var total = await query.CountAsync();
             var items = query.ApplyPaginationInput(request).Select(ContentItemRevisionDto.GetProjection()).ToArray();
 
             return new QueryResponseDto<ListResultDto<ContentItemRevisionDto>>(new ListResultDto<ContentItemRevisionDto>(items, total));

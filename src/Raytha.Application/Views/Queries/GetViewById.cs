@@ -13,14 +13,15 @@ public class GetViewById
     {
     }
 
-    public class Handler : RequestHandler<Query, IQueryResponseDto<ViewDto>>
+    public class Handler : IRequestHandler<Query, IQueryResponseDto<ViewDto>>
     {
         private readonly IRaythaDbContext _db;
         public Handler(IRaythaDbContext db)
         {
             _db = db;
         }
-        protected override IQueryResponseDto<ViewDto> Handle(Query request)
+
+        public async Task<IQueryResponseDto<ViewDto>> Handle(Query request, CancellationToken cancellationToken)
         {
             var entity = _db.Views
                 .Include(p => p.WebTemplate)
