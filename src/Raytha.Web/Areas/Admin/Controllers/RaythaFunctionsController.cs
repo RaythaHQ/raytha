@@ -16,6 +16,8 @@ using Raytha.Web.Utils;
 using Newtonsoft.Json;
 using Microsoft.AspNetCore.Http;
 using System.Text.Json;
+using System.IO;
+using System.Text;
 
 namespace Raytha.Web.Areas.Admin.Controllers;
 
@@ -217,12 +219,25 @@ public class RaythaFunctionsController : BaseController
     [Route($"{RAYTHA_ROUTE_PREFIX}/functions/execute/{{{RouteConstants.FUNCTION_DEVELOPER_NAME}}}", Name = "functionsexecute")]
     public async Task<IActionResult> Execute(string functionDeveloperName)
     {
+        string payloadJson = null;
+        if (HttpContext.Request.HasFormContentType)
+        {
+            payloadJson = System.Text.Json.JsonSerializer.Serialize(HttpContext.Request.Form);
+
+        }
+        else
+        {
+            using (var reader = new StreamReader(Request.Body, Encoding.UTF8))
+            {
+                payloadJson = await reader.ReadToEndAsync();
+            }
+        }
         var input = new ExecuteRaythaFunction.Command
         {
             DeveloperName = functionDeveloperName,
             RequestMethod = HttpContext.Request.Method,
             QueryJson = JsonConvert.SerializeObject(HttpContext.Request.Query),
-            PayloadJson = JsonConvert.SerializeObject(HttpContext.Request.HasFormContentType ? HttpContext.Request.Form : null),
+            PayloadJson = payloadJson 
         };
 
         var response = await Mediator.Send(input);
