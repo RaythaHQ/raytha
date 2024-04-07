@@ -15,6 +15,7 @@ using Raytha.Web.Filters;
 using Raytha.Web.Utils;
 using Newtonsoft.Json;
 using Microsoft.AspNetCore.Http;
+using System.Text.Json;
 
 namespace Raytha.Web.Areas.Admin.Controllers;
 
@@ -230,7 +231,11 @@ public class RaythaFunctionsController : BaseController
             dynamic result = response.Result;
             return result.contentType switch
             {
-                "application/json" => Json(result.body),
+                "application/json" => Json(result.body, new JsonSerializerOptions
+                {
+                    PropertyNamingPolicy = null,
+                    WriteIndented = true
+                }),
                 "text/html" => Content(result.body, result.contentType),
                 "redirectToUrl" => Redirect(result.body),
                 "statusCode" => StatusCode(result.statusCode, result.body),
