@@ -48,3 +48,24 @@ To provide valuable functionality to you while you write Raytha Functions, the f
 | HttpClient                         | Make an external API call |
 
 [Learn how to make use of these objects](/articles/embeddable_functions_builtinobjects.html).
+
+## Settings and Environment Variables
+
+By default, Raytha sets the following three settings in appsettings.json:
+
+| Env Var                            | Default Value |
+| ------------------------------     | ------|
+| RAYTHA_FUNCTIONS_MAX_ACTIVE        | 5     |
+| RAYTHA_FUNCTIONS_TIMEOUT           | 10000 |
+| RAYTHA_FUNCTIONS_QUEUE_TIMEOUT     | 10000 |
+
+You can override these by setting environment variables, or modifying appsettings.json, whichever your preference.
+
+If you set `RAYTHA_FUNCTIONS_MAX_ACTIVE` to 0, then you will disable Raytha Functions entirely and the menu option will not even appear in the administrator backend. This setting sets the maximum number of concurrent functions that can run at a time. For example, if you have this setting set to 5, and there are currently 5 functions running simultaneously, and a 6th call is started, the 6th will wait in a queue until a spot becomes available.
+
+`RAYTHA_FUNCTIONS_TIMEOUT` and `RAYTHA_FUNCTIONS_QUEUE_TIMEOUT` are specified in ms, so those default values are 10 seconds.
+
+`RAYTHA_FUNCTIONS_TIMEOUT` specifies the length of time the function has to execute the code. If it takes longer than that, then the function is terminated. `RAYTHA_FUNCTIONS_QUEUE_TIMEOUT` is the length of time a call will wait for a spot to open up if the max active functions is exceeded.
+
+These settings are to ensure safety with your application, helping prevent bad code, or a malicious actor from taking too many compute resources.
+
