@@ -40,7 +40,7 @@ module.exports = (env, argv) =>
             ],
         },
         plugins: [new MonacoWebpackPlugin({
-            languages: ['javascript', 'html', 'css']
+            languages: ['javascript', 'typescript', 'html', 'css']
         })]
     };
 

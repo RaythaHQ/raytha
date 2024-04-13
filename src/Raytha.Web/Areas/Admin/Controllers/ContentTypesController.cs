@@ -378,7 +378,7 @@ public class ContentTypesController : BaseController
         {
             Id = p.Id,
             PrimaryField = p.PrimaryField,
-            DeletedBy = p.CreatorUser.FullName,
+            DeletedBy = p.CreatorUser?.FullName ?? "N/A",
             DeletionTime = CurrentOrganization.TimeZoneConverter.UtcToTimeZoneAsDateTimeFormat(p.CreationTime),
             OriginalContentItemId = p.OriginalContentItemId
         });

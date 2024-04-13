@@ -1,4 +1,5 @@
 ﻿using MediatR;
+using Microsoft.EntityFrameworkCore;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Models;
 using Raytha.Application.Common.Utils;
@@ -13,14 +14,15 @@ public class GetContentTypesAsListItems
         public override string OrderBy { get; init; } = $"LabelPlural {SortOrder.Ascending}";
     }
 
-    public class Handler : RequestHandler<Query, IQueryResponseDto<ListResultDto<ContentTypeListItemDto>>>
+    public class Handler : IRequestHandler<Query, IQueryResponseDto<ListResultDto<ContentTypeListItemDto>>>
     {
         private readonly IRaythaDbContext _db;
         public Handler(IRaythaDbContext db)
         {
             _db = db;
         }
-        protected override IQueryResponseDto<ListResultDto<ContentTypeListItemDto>> Handle(Query request)
+
+        public async Task<IQueryResponseDto<ListResultDto<ContentTypeListItemDto>>> Handle(Query request, CancellationToken cancellationToken)
         {
             var query = _db.ContentTypes
                 .AsQueryable();
@@ -34,7 +36,7 @@ public class GetContentTypesAsListItems
                         d.DeveloperName.Contains(searchQuery)));
             }
 
-            var total = query.Count();
+            var total = await query.CountAsync();
             var items = query.ApplyPaginationInput(request).Select(ContentTypeListItemDto.GetProjection()).ToArray();
 
             return new QueryResponseDto<ListResultDto<ContentTypeListItemDto>>(new ListResultDto<ContentTypeListItemDto>(items, total));

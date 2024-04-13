@@ -1,6 +1,7 @@
 using System.Data;
 using FluentValidation;
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Models;
 using Raytha.Application.Common.Utils;
@@ -15,14 +16,15 @@ public class GetMediaItems
         public override string OrderBy { get; init; } = $"CreationTime {SortOrder.DESCENDING}";
     }
 
-    public class Handler : RequestHandler<Query, IQueryResponseDto<ListResultDto<MediaItemDto>>>
+    public class Handler : IRequestHandler<Query, IQueryResponseDto<ListResultDto<MediaItemDto>>>
     {
         private readonly IRaythaDbContext _db;
         public Handler(IRaythaDbContext db)
         {
             _db = db;
         }
-        protected override IQueryResponseDto<ListResultDto<MediaItemDto>> Handle(Query request)
+        
+        public async Task<IQueryResponseDto<ListResultDto<MediaItemDto>>> Handle(Query request, CancellationToken cancellationToken)
         {
             var query = _db.MediaItems.AsQueryable();
                            
@@ -32,7 +34,7 @@ public class GetMediaItems
                 query = query.Where(p => p.ObjectKey.ToLower().Contains(searchQuery));        
             }
 
-            var total = query.Count();
+            var total = await query.CountAsync();
             var items = query.ApplyPaginationInput(request).Select(MediaItemDto.GetProjection()).ToArray();
 
             return new QueryResponseDto<ListResultDto<MediaItemDto>>(new ListResultDto<MediaItemDto>(items, total));

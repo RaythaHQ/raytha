@@ -16,7 +16,7 @@ public class GetFavoriteViewsForAdmin
         public string ContentTypeDeveloperName { get; init; } = null!;
     }
 
-    public class Handler : RequestHandler<Query, IQueryResponseDto<ListResultDto<ViewDto>>>
+    public class Handler : IRequestHandler<Query, IQueryResponseDto<ListResultDto<ViewDto>>>
     {
         private readonly IRaythaDbContext _db;
         public Handler(IRaythaDbContext db)
@@ -24,7 +24,7 @@ public class GetFavoriteViewsForAdmin
             _db = db;
         }
 
-        protected override IQueryResponseDto<ListResultDto<ViewDto>> Handle(Query request)
+        public async Task<IQueryResponseDto<ListResultDto<ViewDto>>> Handle(Query request, CancellationToken cancellationToken)
         {
             var query = _db.Views
                 .Include(p => p.Route)
@@ -55,7 +55,7 @@ public class GetFavoriteViewsForAdmin
 
             query = query.Where(p => p.UserFavorites.Any(p => p.Id == request.UserId.Guid));
 
-            var total = query.Count();
+            var total = await query.CountAsync();
             var items = query.ApplyPaginationInput(request).Select(ViewDto.GetProjection()).ToArray();
 
             return new QueryResponseDto<ListResultDto<ViewDto>>(new ListResultDto<ViewDto>(items, total));

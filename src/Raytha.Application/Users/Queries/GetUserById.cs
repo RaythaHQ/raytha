@@ -12,14 +12,15 @@ public class GetUserById
     {
     }
 
-    public class Handler : RequestHandler<Query, IQueryResponseDto<UserDto>>
+    public class Handler : IRequestHandler<Query, IQueryResponseDto<UserDto>>
     {
         private readonly IRaythaDbContext _db;
         public Handler(IRaythaDbContext db)
         {
             _db = db;
         }
-        protected override IQueryResponseDto<UserDto> Handle(Query request)
+
+        public async Task<IQueryResponseDto<UserDto>> Handle(Query request, CancellationToken cancellationToken)
         {
             var entity = _db.Users
                 .Include(p => p.UserGroups)

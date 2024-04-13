@@ -14,14 +14,15 @@ public class GetUsers
         public override string OrderBy { get; init; } = $"LastLoggedInTime {SortOrder.DESCENDING}";
     }
 
-    public class Handler : RequestHandler<Query, IQueryResponseDto<ListResultDto<UserDto>>>
+    public class Handler : IRequestHandler<Query, IQueryResponseDto<ListResultDto<UserDto>>>
     {
         private readonly IRaythaDbContext _db;
         public Handler(IRaythaDbContext db)
         {
             _db = db;
         }
-        protected override IQueryResponseDto<ListResultDto<UserDto>> Handle(Query request)
+       
+        public async Task<IQueryResponseDto<ListResultDto<UserDto>>> Handle(Query request, CancellationToken cancellationToken)
         {
             var query = _db.Users
                 .Include(p => p.UserGroups)
@@ -38,7 +39,7 @@ public class GetUsers
                         d.EmailAddress.ToLower().Contains(searchQuery));
             }
 
-            var total = query.Count();
+            var total = await query.CountAsync();
             var items = query.ApplyPaginationInput(request).Select(UserDto.GetProjection()).ToArray();
 
             return new QueryResponseDto<ListResultDto<UserDto>>(new ListResultDto<UserDto>(items, total));

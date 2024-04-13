@@ -28,9 +28,9 @@ public class EditSmtp
 
     public class Validator : AbstractValidator<Command>
     {
-        public Validator(IEmailer emailer)
+        public Validator(IEmailerConfiguration emailerConfiguration)
         {
-            RuleFor(x => x.SmtpOverrideSystem).Equal(true).When(p => emailer.IsMissingSmtpEnvVars())
+            RuleFor(x => x.SmtpOverrideSystem).Equal(true).When(p => emailerConfiguration.IsMissingSmtpEnvVars())
                 .WithMessage("The server administrator did not set SMTP environment variables, so you must override the system defaults.");
             RuleFor(x => x.SmtpHost).NotEmpty().When(p => p.SmtpOverrideSystem);
             RuleFor(x => x.SmtpPort).NotNull().GreaterThan(0).LessThanOrEqualTo(65535).When(p => p.SmtpOverrideSystem);

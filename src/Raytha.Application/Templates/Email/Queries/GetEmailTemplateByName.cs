@@ -14,14 +14,15 @@ public class GetEmailTemplateByName
         public string DeveloperName { get; init; }
     }
 
-    public class Handler : RequestHandler<Query, IQueryResponseDto<EmailTemplateDto>>
+    public class Handler : IRequestHandler<Query, IQueryResponseDto<EmailTemplateDto>>
     {
         private readonly IRaythaDbContext _db;
         public Handler(IRaythaDbContext db)
         {
             _db = db;
         }
-        protected override IQueryResponseDto<EmailTemplateDto> Handle(Query request)
+
+        public async Task<IQueryResponseDto<EmailTemplateDto>> Handle(Query request, CancellationToken cancellationToken)
         {
             var entity = _db.EmailTemplates
                 .FirstOrDefault(p => p.DeveloperName == request.DeveloperName.ToDeveloperName());

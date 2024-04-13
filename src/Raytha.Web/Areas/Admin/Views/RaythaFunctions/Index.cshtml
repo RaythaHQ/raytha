@@ -1,0 +1,99 @@
+﻿@using Raytha.Web.Areas.Admin.Views.RaythaFunctions
+@model List_ViewModel<Raytha.Web.Areas.Admin.Views.RaythaFunctions.RaythaFunctionsListItem_ViewModel>
+@{
+    ViewData["Title"] = "Functions";
+}
+
+@section headstyles
+{
+    <style>
+        table thead th:last-child {
+            position: sticky;
+            right: 0;
+            z-index: 2;
+            background-color: white;
+        }
+
+        table tbody td:last-child {
+            position: sticky;
+            right: 0;
+            z-index: 2;
+            background-color: white;
+        }
+    </style>
+}
+
+@(await Html.PartialAsync("_PageHeader", new PageHeader_ViewModel
+{
+    Title = ViewData["Title"].ToString(),
+}))
+
+@(await Html.PartialAsync("_TableCreateAndSearchBar", new TableCreateAndSearchBar_ViewModel()
+{
+    Model = Model,
+    EntityName = "function",
+    CreateActionName = "functionscreate"
+}))
+
+<div class="raytha-data-card mb-4">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-centered table-nowrap mb-0 rounded">
+                <thead class="thead-light">
+                    <tr>
+                        @(await Html.PartialAsync("_TableColumnHeader", new TableColumnHeader_ViewModel()
+                    {
+                        Model = Model,
+                        PropertyName = "Name",
+                        IsFirst = true,
+                        DisplayName = ViewModelExtensions.GetDisplayName<RaythaFunctionsListItem_ViewModel>(p => p.Name)
+                    }))
+                        @(await Html.PartialAsync("_TableColumnHeader", new TableColumnHeader_ViewModel()
+                    {
+                        Model = Model,
+                        PropertyName = "DeveloperName",
+                        DisplayName = ViewModelExtensions.GetDisplayName<RaythaFunctionsListItem_ViewModel>(p => p.DeveloperName)
+                    }))
+                        @(await Html.PartialAsync("_TableColumnHeader", new TableColumnHeader_ViewModel()
+                    {
+                        Model = Model,
+                        PropertyName = "TriggerType",
+                        DisplayName = ViewModelExtensions.GetDisplayName<RaythaFunctionsListItem_ViewModel>(p => p.TriggerType)
+                    }))
+                        @(await Html.PartialAsync("_TableColumnHeader", new TableColumnHeader_ViewModel()
+                    {
+                        Model = Model,
+                        PropertyName = "LastModificationTime",
+                        DisplayName = ViewModelExtensions.GetDisplayName<RaythaFunctionsListItem_ViewModel>(p => p.LastModificationTime)
+                    }))
+                        <th class="border-0">
+                            Last modified by
+                        </th>
+                        @(await Html.PartialAsync("_TableColumnHeader", new TableColumnHeader_ViewModel()
+                    {
+                        Model = Model,
+                        PropertyName = "IsActive",
+                        DisplayName = ViewModelExtensions.GetDisplayName<RaythaFunctionsListItem_ViewModel>(p => p.IsActive)
+                    }))
+                        <th class="border-0 rounded-end">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model.Items)
+                    {
+                        <tr>
+                            <td>@item.Name</td>
+                            <td>@item.DeveloperName</td>
+                            <td>@item.TriggerType</td>
+                            <td>@item.LastModificationTime</td>
+                            <td>@item.LastModifierUser</td>
+                            <td>@item.IsActive</td>
+                            <td><a asp-route="functionsedit" asp-route-id="@item.Id">Edit</a></td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+            <partial name="_TablePagination" model="@Model" />
+        </div>
+    </div>
+</div>

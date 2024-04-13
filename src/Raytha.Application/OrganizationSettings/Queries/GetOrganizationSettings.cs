@@ -10,14 +10,15 @@ public class GetOrganizationSettings
     {
     }
 
-    public class Handler : RequestHandler<Query, IQueryResponseDto<OrganizationSettingsDto>>
+    public class Handler : IRequestHandler<Query, IQueryResponseDto<OrganizationSettingsDto>>
     {
         private readonly IRaythaDbContext _db;
         public Handler(IRaythaDbContext db)
         {
             _db = db;
         }
-        protected override IQueryResponseDto<OrganizationSettingsDto> Handle(Query request)
+
+        public async Task<IQueryResponseDto<OrganizationSettingsDto>> Handle(Query request, CancellationToken cancellationToken)
         {
             var settings = _db.OrganizationSettings.FirstOrDefault();
 

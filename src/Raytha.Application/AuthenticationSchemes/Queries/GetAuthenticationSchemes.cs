@@ -17,7 +17,7 @@ public class GetAuthenticationSchemes
         public override string OrderBy { get; init; } = $"Label {SortOrder.Ascending}";
     }
 
-    public class Handler : RequestHandler<Query, IQueryResponseDto<ListResultDto<AuthenticationSchemeDto>>>
+    public class Handler : IRequestHandler<Query, IQueryResponseDto<ListResultDto<AuthenticationSchemeDto>>>
     {
         private readonly IRaythaDbContext _db;
         public Handler(IRaythaDbContext db)
@@ -25,7 +25,7 @@ public class GetAuthenticationSchemes
             _db = db;
         }
 
-        protected override IQueryResponseDto<ListResultDto<AuthenticationSchemeDto>> Handle(Query request)
+        public async Task<IQueryResponseDto<ListResultDto<AuthenticationSchemeDto>>> Handle(Query request, CancellationToken cancellationToken)
         {
             var query = _db.AuthenticationSchemes
                 .Include(p => p.LastModifierUser)
@@ -46,7 +46,7 @@ public class GetAuthenticationSchemes
                         d.DeveloperName.ToLower().Contains(searchQuery));           
             }
 
-            var total = query.Count();
+            var total = await query.CountAsync();
             var items = query.ApplyPaginationInput(request).Select(AuthenticationSchemeDto.GetProjection()).ToArray();
 
             return new QueryResponseDto<ListResultDto<AuthenticationSchemeDto>>(new ListResultDto<AuthenticationSchemeDto>(items, total));

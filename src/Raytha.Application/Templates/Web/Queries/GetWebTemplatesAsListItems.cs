@@ -1,4 +1,5 @@
 ﻿using MediatR;
+using Microsoft.EntityFrameworkCore;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Models;
 using Raytha.Application.Common.Utils;
@@ -13,14 +14,15 @@ public class GetWebTemplatesAsListItems
         public override string OrderBy { get; init; } = $"Label {SortOrder.ASCENDING}";
     }
 
-    public class Handler : RequestHandler<Query, IQueryResponseDto<ListResultDto<WebTemplateListItemDto>>>
+    public class Handler : IRequestHandler<Query, IQueryResponseDto<ListResultDto<WebTemplateListItemDto>>>
     {
         private readonly IRaythaDbContext _db;
         public Handler(IRaythaDbContext db)
         {
             _db = db;
         }
-        protected override IQueryResponseDto<ListResultDto<WebTemplateListItemDto>> Handle(Query request)
+
+        public async Task<IQueryResponseDto<ListResultDto<WebTemplateListItemDto>>> Handle(Query request, CancellationToken cancellationToken)
         {
             var query = _db.WebTemplates.AsQueryable();
 
@@ -33,7 +35,7 @@ public class GetWebTemplatesAsListItems
                         d.DeveloperName.ToLower().Contains(searchQuery)));
             }
 
-            var total = query.Count();
+            var total = await query.CountAsync();
             var items = query.ApplyPaginationInput(request).Select(WebTemplateListItemDto.GetProjection()).ToArray();
 
             return new QueryResponseDto<ListResultDto<WebTemplateListItemDto>>(new ListResultDto<WebTemplateListItemDto>(items, total));

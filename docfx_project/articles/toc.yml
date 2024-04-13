@@ -29,6 +29,17 @@
     - name: OData in Templates
       href: templates_odata.md
 
+- name: Raytha Functions
+  items:
+    - name: Intro
+      href: embeddable_functions_intro.md
+
+    - name: Http Request Trigger
+      href: embeddable_functions_httprequest.md
+
+    - name: Built-in Objects
+      href: embeddable_functions_builtinobjects.md
+
 - name: Background tasks
   href: background_tasks.md
 

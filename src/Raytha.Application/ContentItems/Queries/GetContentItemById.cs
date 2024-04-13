@@ -11,7 +11,7 @@ public class GetContentItemById
     {
     }
 
-    public class Handler : RequestHandler<Query, IQueryResponseDto<ContentItemDto>>
+    public class Handler : IRequestHandler<Query, IQueryResponseDto<ContentItemDto>>
     {
         private readonly IRaythaDbJsonQueryEngine _db;
         private readonly IContentTypeInRoutePath _contentTypeInRoutePath;
@@ -20,10 +20,12 @@ public class GetContentItemById
             _db = db;
             _contentTypeInRoutePath = contentTypeInRoutePath;
         }
-        protected override IQueryResponseDto<ContentItemDto> Handle(Query request)
+        
+        public async Task<IQueryResponseDto<ContentItemDto>> Handle(Query request, CancellationToken cancellationToken)
         {
             var entity = _db
                 .FirstOrDefault(request.Id.Guid);
+
             if (entity == null)
                 throw new NotFoundException("Content item", request.Id);
 

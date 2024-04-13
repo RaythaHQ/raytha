@@ -20,7 +20,7 @@ public class ContentTypeInRoutePath : IContentTypeInRoutePath
     {
         //contentType will exist outside admin or the api
         var path = _httpContextAccessor.HttpContext.Request.Path.Value.ToLower();
-        if (!path.StartsWith("/raytha"))
+        if (!path.StartsWith("/raytha") || path.StartsWith("/raytha/functions/execute/"))
             return true;
 
         bool isMatch = ContentTypeDeveloperName == developerName;

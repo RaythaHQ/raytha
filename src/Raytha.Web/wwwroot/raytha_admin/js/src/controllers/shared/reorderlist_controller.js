@@ -1,4 +1,4 @@
-import Sortable from 'stimulus-sortable'
+import Sortable from '@stimulus-components/sortable'
 import { Notyf } from 'notyf';
 
 export default class extends Sortable {
