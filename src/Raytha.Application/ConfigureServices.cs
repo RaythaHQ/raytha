@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Raytha.Application.Common.Behaviors;
 using Raytha.Application.ContentItems;
 using Raytha.Application.ContentItems.Commands;
+using Raytha.Application.ContentItems.EventHandlers;
 using System.Reflection;
 
 namespace Raytha.Application;
@@ -22,6 +23,7 @@ public static class ConfigureServices
         });
         services.AddScoped<BeginExportContentItemsToCsv.BackgroundTask>();
         services.AddScoped<BeginImportContentItemsFromCsv.BackgroundTask>();
+        services.AddScoped<ContentItemCreatedEventHandler.BackgroundTask>();
         services.AddScoped<FieldValueConverter>();
         return services;
     }

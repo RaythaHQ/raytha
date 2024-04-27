@@ -64,12 +64,10 @@ public class ExecuteRaythaFunction
             {
                 try
                 {
-                    _raythaFunctionScriptEngine.Initialize(code);
-
                     return request.RequestMethod switch
                     {
-                        "GET" => new CommandResponseDto<object>(await _raythaFunctionScriptEngine.EvaluateGet(request.QueryJson, _raythaFunctionConfiguration.ExecuteTimeout, cancellationToken)),
-                        "POST" => new CommandResponseDto<object>(await _raythaFunctionScriptEngine.EvaluatePost(request.PayloadJson, request.QueryJson, _raythaFunctionConfiguration.ExecuteTimeout, cancellationToken)),
+                        "GET" => new CommandResponseDto<object>(await _raythaFunctionScriptEngine.EvaluateGet(code, request.QueryJson, _raythaFunctionConfiguration.ExecuteTimeout, cancellationToken)),
+                        "POST" => new CommandResponseDto<object>(await _raythaFunctionScriptEngine.EvaluatePost(code, request.PayloadJson, request.QueryJson, _raythaFunctionConfiguration.ExecuteTimeout, cancellationToken)),
                         _ => throw new NotImplementedException(),
                     };
                 }
