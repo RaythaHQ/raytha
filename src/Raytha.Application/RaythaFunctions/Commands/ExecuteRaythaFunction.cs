@@ -1,16 +1,16 @@
 ﻿using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Raytha.Application.Common.Exceptions;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Models;
 using Raytha.Application.Common.Utils;
-using Raytha.Application.Common.Exceptions;
 
 namespace Raytha.Application.RaythaFunctions.Commands;
 
 public class ExecuteRaythaFunction
 {
-    public record Command : LoggableRequest<CommandResponseDto<object>>
+    public record Command : IRequest<CommandResponseDto<object>>
     {
         public required string DeveloperName { get; init; }
         public required string RequestMethod { get; init; }
