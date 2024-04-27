@@ -63,19 +63,23 @@ git clone https://github.com/RaythaHQ/raytha.git
 ```
 2. Ensure your appsettings.config has a valid database connection string and SMTP credentials. If you do not have access to an SMTP server for local development, [check out Papercut-SMTP](https://github.com/ChangemakerStudios/Papercut-SMTP). Super convenient.
 
-3. Make sure Raytha.Web is set as the Default Project. Open the `Package Manager Console` and run Entity Framework database migrations:
+3. Make sure Raytha.Web is set as the Default Project. Compile and run. Raytha will apply the database migrations to your database on first run. 
+
+If you prefer to run migrations manually, you can set `APPLY_PENDING_MIGRATIONS` to `false` in appsettings.json or env variables and then open the `Package Manager Console` and run Entity Framework database migrations:
 
 ```
 dotnet ef database update --project .\src\Raytha.Infrastructure --startup-project .\src\Raytha.Web
 ```
 
-Alternatively you can create your database manually and then run the `FreshCreateOnLatestVersion.sql` script in the /db directory.
-
-4. Compile and run. If everything works, the first screen you see will be an Initial Setup screen. Complete the details and you are good to go.
+or run the `FreshCreateOnLatestVersion.sql` script in the /db directory.
 
 **Optional**
 
 By default, it will use local file system and use the directory specified in appsettings.config. You can adjust the appsettings.config if you have access to Azure Blob or an S3 compatible storage.
+
+**Docker**
+
+Raytha is available on [DockerHub with a quick start guide](https://hub.docker.com/r/raythahq/raytha).
 
 ## Community support
 
