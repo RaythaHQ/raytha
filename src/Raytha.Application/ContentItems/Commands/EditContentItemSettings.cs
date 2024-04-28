@@ -6,6 +6,7 @@ using Raytha.Application.Common.Exceptions;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Models;
 using Raytha.Application.Common.Utils;
+using Raytha.Domain.Events;
 
 namespace Raytha.Application.ContentItems.Commands;
 
@@ -94,6 +95,7 @@ public class EditContentItemSettings
 
             entity.WebTemplateId = request.TemplateId;
             entity.Route.Path = request.RoutePath.ToUrlSlug();
+            entity.AddDomainEvent(new ContentItemUpdatedEvent(entity));
             await _db.SaveChangesAsync(cancellationToken);
 
             return new CommandResponseDto<ShortGuid>(entity.Id);

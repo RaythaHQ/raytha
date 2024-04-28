@@ -53,8 +53,9 @@ public class RaythaFunctionsCreate_ViewModel : FormSubmit_ViewModel
     */
 
     /** 
+     * For Trigger Type: Http trigger
      * Receives a get request at /raytha/functions/execute/{developerName}
-     * @param {IQueryCollection} query Passed in from .NET's Request.Query
+     * @param {IQueryCollection} query passed in from .NET's Request.Query
      * @returns {object} of type JsonResult, HtmlResult, RedirectResult, or StatusCodeResult
      */
     function get(query) {
@@ -65,9 +66,10 @@ public class RaythaFunctionsCreate_ViewModel : FormSubmit_ViewModel
     }
 
     /** 
+     * For Trigger Type: Http trigger
      * Receives a post request at /raytha/functions/execute/{developerName}
-     * @param {IFormCollection} payload Passed in from .NET's Request.Form
-     * @param {IQueryCollection} query Passed in from .NET's Request.Query
+     * @param {IFormCollection} payload passed in from .NET's Request.Form
+     * @param {IQueryCollection} query passed in from .NET's Request.Query
      * @returns {object} of type JsonResult, HtmlResult, RedirectResult, or StatusCodeResult
      */
     function post(payload, query) {
@@ -75,6 +77,15 @@ public class RaythaFunctionsCreate_ViewModel : FormSubmit_ViewModel
         //example 1: return new HtmlResult(""<p>Hello World</p>"");
         //example 2: return new RedirectResult(""https://raytha.com"");
         //example 3: return new StatusCodeResult(404, ""Not Found"");
+    }
+    
+    /**
+     * For Trigger Type: Content item created, updated, deleted
+     * @param {ContentItemDto} payload passed in from system
+     * @returns {void}, no return type
+     */
+    function run(payload) {
+        //example: HttpClient.Post(""https://your-endpoint.com"", headers=null, body=payload);
     }";
 }
 

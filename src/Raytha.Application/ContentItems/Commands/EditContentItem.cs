@@ -8,6 +8,7 @@ using Raytha.Application.Common.Models;
 using Raytha.Application.Common.Utils;
 using Raytha.Domain.Entities;
 using Raytha.Domain.Events;
+using System.Text.Json;
 
 namespace Raytha.Application.ContentItems.Commands;
 
@@ -75,7 +76,12 @@ public class EditContentItem
         }
         public async Task<CommandResponseDto<ShortGuid>> Handle(Command request, CancellationToken cancellationToken)
         {
-            var entity = _db.ContentItems.First(p => p.Id == request.Id.Guid);
+            var entity = _db.ContentItems
+                .Include(p => p.CreatorUser)
+                .Include(p => p.LastModifierUser)
+                .Include(p => p.WebTemplate)
+                .Include(p => p.ContentType)
+                .Include(p => p.Route).First(p => p.Id == request.Id.Guid);
 
             if (request.SaveAsDraft)
             {
