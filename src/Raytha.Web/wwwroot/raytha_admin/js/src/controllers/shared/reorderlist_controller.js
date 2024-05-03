@@ -2,6 +2,10 @@ import Sortable from '@stimulus-components/sortable'
 import { Notyf } from 'notyf';
 
 export default class extends Sortable {
+  static values = {
+     reorderType: { type: String, default: 'Fields'}
+  }
+
   onUpdate({ item, newIndex }) {
     if (!item.dataset.sortableUpdateUrl) return
 
@@ -18,7 +22,7 @@ export default class extends Sortable {
     .then(res => {
         const notyf = new Notyf();
         if (res.success) {
-            notyf.success('Fields succesfully reordered');
+            notyf.success(this.reorderTypeValue + " successfully reordered");
         } else {
             notyf.error(res.error);
         }

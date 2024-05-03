@@ -11,6 +11,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
+using Raytha.Application.NavigationMenuItems;
+using Raytha.Application.NavigationMenuItems.Queries;
+using Raytha.Application.NavigationMenus;
+using Raytha.Application.NavigationMenus.Queries;
 
 namespace Raytha.Web.Services;
 
@@ -51,6 +55,8 @@ public class RenderEngine : IRenderEngine
             context.SetValue("get_content_item_by_id", GetContentItemById());
             context.SetValue("get_content_items", GetContentItems());
             context.SetValue("get_content_type_by_developer_name", GetContentTypeByDeveloperName());
+            context.SetValue("get_main_menu", GetMainMenu());
+            context.SetValue("get_menu", GetMenuByDeveloperName());
             string renderedHtml = template.Render(context);
             return renderedHtml;
         }
@@ -124,6 +130,45 @@ public class RenderEngine : IRenderEngine
             var developerName = args.At(0).ToStringValue();
             var result = await _mediator.Send(new GetContentTypeByDeveloperName.Query { DeveloperName = developerName });
             return new ObjectValue(result.Result);
+        });
+    }
+
+    public FunctionValue GetMainMenu()
+    {
+        return new FunctionValue(async (_, _) =>
+        {
+            var mainMenuResponse = await _mediator.Send(new GetMainMenu.Query());
+            var menuItemsResponse = await _mediator.Send(new GetNavigationMenuItemsByNavigationMenuId.Query
+            {
+                NavigationMenuId = mainMenuResponse.Result.Id,
+            });
+
+            var menuItems = menuItemsResponse.Result.BuildTree<NavigationMenuItem_RenderModel>(NavigationMenuItem_RenderModel.GetProjection);
+            var mainMenu = NavigationMenu_RenderModel.GetProjection(mainMenuResponse.Result, menuItems);
+
+            return new ObjectValue(mainMenu);
+        });
+    }
+
+    public FunctionValue GetMenuByDeveloperName()
+    {
+        return new FunctionValue(async (args, _) =>
+        {
+            var developerName = args.At(0).ToStringValue();
+            var menuResponse = await _mediator.Send(new GetNavigationMenuByDeveloperName.Query
+            {
+                DeveloperName = developerName
+            });
+
+            var menuItemsResponse = await _mediator.Send(new GetNavigationMenuItemsByNavigationMenuId.Query
+            {
+                NavigationMenuId = menuResponse.Result.Id,
+            });
+
+            var menuItems = menuItemsResponse.Result.BuildTree<NavigationMenuItem_RenderModel>(NavigationMenuItem_RenderModel.GetProjection);
+            var menu = NavigationMenu_RenderModel.GetProjection(menuResponse.Result, menuItems);
+
+            return new ObjectValue(menu);
         });
     }
 

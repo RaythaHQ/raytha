@@ -1,0 +1,112 @@
+﻿@using Raytha.Web.Areas.Admin.Views.NavigationMenus
+@using Raytha.Application.Common.Utils
+@model Raytha.Web.Areas.Admin.Views.NavigationMenus.NavigationMenuItems_ViewModel
+@{
+    ViewData["Title"] = "Menus > Menu items";
+    ViewData["ActiveSubMenu"] = "Menu items";
+}
+
+@(await Html.PartialAsync("_PageHeader", new PageHeader_ViewModel
+{
+    Title = ViewData["Title"].ToString(),
+}))
+
+<style>
+    .nestedMenuItem td:first-child {
+        padding-left: calc((var(--level) - 1) * 25px + 7px);
+    }
+</style>
+
+@{
+    async Task RenderNestedNavigationMenuItems(IEnumerable<NavigationMenuItemsListItem_ViewModel> nestedNavigationMenuItems, int dataLevel)
+    {
+        @foreach (var item in nestedNavigationMenuItems)
+        {
+            <tr class="nestedMenuItem" style="--level: @dataLevel">
+                <td>└─ @item.Label</td>
+                <td>@item.Url</td>
+                <td>@item.IsDisabled.YesOrNo()</td>
+                <td>@item.OpenInNewTab.YesOrNo()</td>
+                <td>@item.CssClassName</td>
+                <td>
+                    <a asp-route="menuitemsedit" asp-route-id="@item.Id" asp-route-navigationMenuId="@Model.NavigationMenuId">Edit</a>
+                </td>
+            </tr>
+
+            if (item.MenuItems.Any())
+            {
+                var newDataLevel = dataLevel + 1;
+                await RenderNestedNavigationMenuItems((item.MenuItems as IEnumerable<NavigationMenuItemsListItem_ViewModel>), newDataLevel);
+            }
+        }
+    }
+}
+
+<div class="row mb-4">
+    <div class="col-xxl-7 col-xl-8 col-lg-9 col-md-12">
+        <div class="nav-tabs"></div>
+        <nav class="navbar navbar-expand-lg navbar-light raytha-view-nav">
+            <div class="container-fluid mx-2">
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                    <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                        <li class="nav-item">
+                            <a class="btn btn-primary" aria-current="page" asp-route="menuitemscreate" asp-route-navigationMenuId=@Model.NavigationMenuId>
+                                <svg class="icon icon-xs me-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg> Create menu item
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="btn btn-secondary mx-4" aria-current="page" asp-route="menuitemsreorder" asp-route-navigationMenuId=@Model.NavigationMenuId>
+                                <svg class="icon icon-xs me-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16"></path></svg> Reorder menu items
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+
+        <div class="raytha-data-card mb-4">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table mb-0 rounded">
+                        <thead class="thead-light">
+                        <tr>
+                            <th class="border-0 rounded-start">Label</th>
+                            <th class="border-0">Url</th>
+                            <th class="border-0">Disabled</th>
+                            <th class="border-0">Open in new tab</th>
+                            <th class="border-0">Css class name</th>
+                            <th class="border-0 rounded-end">Action</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Model.Items)
+                            {
+                                <tr>
+                                    <td>@item.Label</td>
+                                    <td>@item.Url</td>
+                                    <td>@item.IsDisabled.YesOrNo()</td>
+                                    <td>@item.OpenInNewTab.YesOrNo()</td>
+                                    <td>@item.CssClassName</td>
+                                    <td>
+                                        <a asp-route="menuitemsedit" asp-route-id=@item.Id asp-route-navigationMenuId=@Model.NavigationMenuId>Edit</a>
+                                    </td>
+                                </tr>
+                                if (item.MenuItems.Any())
+                                {
+                                    await RenderNestedNavigationMenuItems((IEnumerable<NavigationMenuItemsListItem_ViewModel>)item.MenuItems, 1);
+                                }
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    @(await Html.PartialAsync("_ActionsMenu", new NavigationMenusActionsMenu_ViewModel
+{
+    NavigationMenuId = Model.NavigationMenuId,
+}))
+</div>

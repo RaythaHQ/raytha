@@ -18,6 +18,13 @@ public class EditRaythaFunction
         public required string TriggerType { get; init; }
         public bool IsActive { get; init; }
         public required string Code { get; init; }
+
+        public static Command Empty() => new()
+        {
+            Name = string.Empty,
+            TriggerType = string.Empty,
+            Code = string.Empty,
+        };
     }
 
     public class Validator : AbstractValidator<Command>
