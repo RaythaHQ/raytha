@@ -9,6 +9,7 @@ using Microsoft.VisualBasic.FileIO;
 using Raytha.Application.Common.Utils;
 using Raytha.Application.ContentTypes;
 using Raytha.Application.ContentTypes.Queries;
+using Raytha.Application.NavigationMenus.Queries;
 using Raytha.Application.Templates.Web;
 using Raytha.Application.Templates.Web.Commands;
 using Raytha.Application.Templates.Web.Queries;
@@ -336,9 +337,23 @@ public class WebTemplatesController : BaseController
             TemplateVariable = p.Value
         });
 
+        var navigationMenuVariables = InsertVariableTemplateFactory.NavigationMenu.TemplateInfo.GetTemplateVariables().Select(p => new InsertVariableListItem_ViewModel()
+        {
+            DeveloperName = p.Key,
+            TemplateVariable = p.Value,
+        });
+
+        var navigationMenuItemVariables = InsertVariableTemplateFactory.NavigationMenuItem.TemplateInfo.GetTemplateVariables().Select(p => new InsertVariableListItem_ViewModel()
+        {
+            DeveloperName = p.Key,
+            TemplateVariable = p.Value,
+        });
+
         templateVariableDictionary.Add(InsertVariableTemplateFactory.Request.VariableCategoryName, requestVariables);
         templateVariableDictionary.Add(InsertVariableTemplateFactory.CurrentOrganization.VariableCategoryName, currentOrgVariables);
         templateVariableDictionary.Add(InsertVariableTemplateFactory.CurrentUser.VariableCategoryName, currentUserVariables);
+        templateVariableDictionary.Add(InsertVariableTemplateFactory.NavigationMenu.VariableCategoryName, navigationMenuVariables);
+        templateVariableDictionary.Add(InsertVariableTemplateFactory.NavigationMenuItem.VariableCategoryName, navigationMenuItemVariables);
 
         if (ShowContentVariablesForTemplate(templateName) || !isBuiltInTemplate)
         {

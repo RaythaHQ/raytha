@@ -1,0 +1,22 @@
+﻿@model Raytha.Web.Areas.Admin.Views.NavigationMenus.NavigationMenuItemsBackToList_ViewModel
+
+@{
+    Layout = null;
+}
+
+<div class="d-flex justify-content-between">
+    @if (Model.IsMenuItems)
+    {
+        <a asp-route="menuitems" asp-route-navigationMenuId="@Model.NavigationMenuId">
+            <svg class="icon icon-sm" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16l-4-4m0 0l4-4m-4 4h18"></path></svg>
+            Back
+        </a>
+    }
+    else
+    {
+        <a asp-route="menusindex">
+            <svg class="icon icon-sm" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16l-4-4m0 0l4-4m-4 4h18"></path></svg>
+            Back
+        </a>
+    }
+</div>

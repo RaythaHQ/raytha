@@ -9,6 +9,8 @@ using Raytha.Domain.Entities;
 using Raytha.Domain.Exceptions;
 using System.Collections.Generic;
 using System.Linq;
+using Raytha.Application.NavigationMenuItems;
+using Raytha.Application.NavigationMenus;
 
 namespace Raytha.Web.Utils;
 
@@ -56,6 +58,8 @@ public class InsertVariableTemplateFactory
     public static InsertVariableTemplateFactory ContentType => new("ContentType", "ContentType", new ContentType_RenderModel());
     public static InsertVariableTemplateFactory ContentItem => new("ContentItem", "Target", new ContentItem_RenderModel());
     public static InsertVariableTemplateFactory ContentItemListResult => new("ContentItemListResult", "Target", new ContentItemListResult_RenderModel());
+    public static InsertVariableTemplateFactory NavigationMenu => new("Menu", "Menu", NavigationMenu_RenderModel.Empty());
+    public static InsertVariableTemplateFactory NavigationMenuItem => new("MenuItem", "MenuItem", NavigationMenuItem_RenderModel.Empty());
 
     public static InsertVariableTemplateFactory LoginWithEmailAndPasswordPage => new(BuiltInWebTemplate.LoginWithEmailAndPasswordPage, "Target", new LoginSubmit_RenderModel());
     public static InsertVariableTemplateFactory LoginWithMagicLinkPage => new(BuiltInWebTemplate.LoginWithMagicLinkPage, "Target", new LoginSubmit_RenderModel());

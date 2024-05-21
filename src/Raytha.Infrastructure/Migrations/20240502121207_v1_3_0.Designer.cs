@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Raytha.Infrastructure.Persistence;
 
@@ -11,9 +12,11 @@ using Raytha.Infrastructure.Persistence;
 namespace Raytha.Infrastructure.Migrations
 {
     [DbContext(typeof(RaythaDbContext))]
-    partial class RaythaDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240502121207_v1_3_0")]
+    partial class v1_3_0
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

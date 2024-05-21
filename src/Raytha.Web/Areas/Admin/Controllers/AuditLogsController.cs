@@ -14,7 +14,10 @@ using Raytha.Application.ContentItems.Commands;
 using Raytha.Application.ContentTypes.Commands;
 using Raytha.Application.Login.Commands;
 using Raytha.Application.MediaItems.Commands;
+using Raytha.Application.NavigationMenuItems.Commands;
+using Raytha.Application.NavigationMenus.Commands;
 using Raytha.Application.OrganizationSettings.Commands;
+using Raytha.Application.RaythaFunctions.Commands;
 using Raytha.Application.Roles.Commands;
 using Raytha.Application.Templates.Email.Commands;
 using Raytha.Application.Templates.Web.Commands;
@@ -184,6 +187,26 @@ public class AuditLogsController : BaseController
             new DeleteWebTemplate.Command().GetLogName(),
             new EditWebTemplate.Command().GetLogName(),
             new RevertWebTemplate.Command().GetLogName(),
+
+            //Menus
+            CreateNavigationMenu.Command.Empty().GetLogName(),
+            CreateNavigationMenuRevision.Command.Empty().GetLogName(),
+            EditNavigationMenu.Command.Empty().GetLogName(),
+            new DeleteNavigationMenu.Command().GetLogName(),
+            new RevertNavigationMenu.Command().GetLogName(),
+            new SetAsMainMenu.Command().GetLogName(),
+
+            //MenuItems
+            CreateNavigationMenuItem.Command.Empty().GetLogName(),
+            DeleteNavigationMenuItem.Command.Empty().GetLogName(),
+            EditNavigationMenuItem.Command.Empty().GetLogName(),
+            new ReorderNavigationMenuItems.Command().GetLogName(),
+
+            //Functions
+            CreateRaythaFunction.Command.Empty().GetLogName(),
+            EditRaythaFunction.Command.Empty().GetLogName(),
+            new DeleteRaythaFunction.Command().GetLogName(),
+            new RevertRaythaFunction.Command().GetLogName(),
 
             //UserGroups
             new CreateUserGroup.Command().GetLogName(),
