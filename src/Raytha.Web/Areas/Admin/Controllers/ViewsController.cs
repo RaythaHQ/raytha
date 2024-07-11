@@ -15,11 +15,10 @@ using System;
 using System.Text.Json;
 using System.Net;
 using Raytha.Domain.ValueObjects.FieldTypes;
-using Raytha.Application.Templates.Web.Queries;
 using Microsoft.AspNetCore.Authorization;
 using Raytha.Application.Common.Utils;
-using Azure;
 using Raytha.Web.Utils;
+using Raytha.Application.Themes.WebTemplates.Queries;
 
 namespace Raytha.Web.Areas.Admin.Controllers;
 
@@ -167,14 +166,26 @@ public class ViewsController : BaseController
     public async Task<IActionResult> PublicSettings()
     {
         var response = await Mediator.Send(new GetViewById.Query { Id = CurrentView.Id });
-        var webTemplates = await Mediator.Send(new GetWebTemplates.Query { ContentTypeId = CurrentView.ContentTypeId, PageSize = int.MaxValue });
+
+        var webTemplates = await Mediator.Send(new GetWebTemplates.Query
+        {
+            ThemeId = CurrentOrganization.ActiveThemeId,
+            ContentTypeId = CurrentView.ContentTypeId,
+            PageSize = int.MaxValue,
+        });
+
+        var webTemplateIdResponse = await Mediator.Send(new GetWebTemplateByViewId.Query
+        {
+            ViewId = CurrentView.Id,
+            ThemeId = CurrentOrganization.ActiveThemeId,
+        });
 
         var viewModel = new ViewsPublicSettings_ViewModel
         {
             Id = response.Result.Id,
             RoutePath = response.Result.RoutePath,
             IsPublished = response.Result.IsPublished,
-            TemplateId = response.Result.WebTemplateId,
+            TemplateId = webTemplateIdResponse.Result.Id,
             AvailableTemplates = webTemplates.Result?.Items.ToDictionary(p => p.Id.ToString(), p => p.Label),
             WebsiteUrl = CurrentOrganization.WebsiteUrl.TrimEnd('/') + CurrentOrganization.PathBase + "/",
             IgnoreClientFilterAndSortQueryParams = response.Result.IgnoreClientFilterAndSortQueryParams,
@@ -213,8 +224,15 @@ public class ViewsController : BaseController
         else
         {
             SetErrorMessage("There were validation errors with your form submission. Please correct the fields below.", response.GetErrors());
-            var webTemplates = await Mediator.Send(new GetWebTemplates.Query { ContentTypeId = CurrentView.ContentTypeId, PageSize = int.MaxValue });
-            model.AvailableTemplates = webTemplates.Result?.Items.ToDictionary(p => p.Id.ToString(), p => p.Label);
+
+            var webTemplatesResponse = await Mediator.Send(new GetWebTemplates.Query
+            {
+                ThemeId = CurrentOrganization.ActiveThemeId,
+                ContentTypeId = CurrentView.ContentTypeId,
+                PageSize = int.MaxValue
+            });
+
+            model.AvailableTemplates = webTemplatesResponse.Result?.Items.ToDictionary(p => p.Id.ToString(), p => p.Label);
             model.WebsiteUrl = CurrentOrganization.WebsiteUrl.TrimEnd('/') + CurrentOrganization.PathBase + "/";
             return View(model);
         }
@@ -338,8 +356,8 @@ public class ViewsController : BaseController
         var selectedColumns = columnListItems.Where(p => p.Selected).OrderBy(c => c.FieldOrder);
         var notSelectedColumns = columnListItems.Where(p => !p.Selected).OrderBy(c => c.DeveloperName);
 
-        var model = new ViewsColumns_ViewModel 
-        { 
+        var model = new ViewsColumns_ViewModel
+        {
             SelectedColumns = selectedColumns.ToArray(),
             NotSelectedColumns = notSelectedColumns.ToArray()
         };
@@ -516,16 +534,13 @@ public class ViewsController : BaseController
         }).ToList();
 
         var builtInListItems = BuiltInContentTypeField.ReservedContentTypeFields
-            .Where(p => p.DeveloperName != BuiltInContentTypeField.Template &&
-                        p.DeveloperName != BuiltInContentTypeField.CreatorUser &&
-                        p.DeveloperName != BuiltInContentTypeField.LastModifierUser)
-
+            .Where(p => p.DeveloperName != BuiltInContentTypeField.CreatorUser && p.DeveloperName != BuiltInContentTypeField.LastModifierUser)
             .Select(p => new ViewsFilterContentTypeField_ViewModel
-        {
-            Label = p.Label,
-            DeveloperName = p.DeveloperName,
-            FieldType = p.FieldType
-        }).ToList();
+            {
+                Label = p.Label,
+                DeveloperName = p.DeveloperName,
+                FieldType = p.FieldType
+            }).ToList();
 
         contentTypeFields.AddRange(builtInListItems);
 

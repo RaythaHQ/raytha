@@ -1,4 +1,3 @@
-using MediatR;
 using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -8,25 +7,24 @@ using Microsoft.Extensions.Primitives;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Models.RenderModels;
 using Raytha.Application.ContentTypes;
-using Raytha.Application.Templates.Web;
-using Raytha.Application.Templates.Web.Queries;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
+using Raytha.Application.Common.Utils;
+using Raytha.Application.Themes.WebTemplates;
 
 namespace Raytha.Web.Areas.Public.DbViewEngine;
 
 public class ContentItemActionViewResult : IActionResult
 {
-    private readonly string _view;
+    private readonly WebTemplateDto _webTemplate;
     private readonly object _target;
     private readonly ContentType_RenderModel _contentType;
     private readonly ViewDataDictionary _viewDictionary;
 
-
-    public ContentItemActionViewResult(string view, object target, ContentType_RenderModel contentType, ViewDataDictionary viewDictionary)
+    public ContentItemActionViewResult(WebTemplateDto webTemplate, object target, ContentType_RenderModel contentType, ViewDataDictionary viewDictionary)
     {
-        _view = view;
+        _webTemplate = webTemplate;
         _target = target;
         _contentType = contentType;
         _viewDictionary = viewDictionary;
@@ -40,15 +38,12 @@ public class ContentItemActionViewResult : IActionResult
         var renderer = httpContext.RequestServices.GetRequiredService<IRenderEngine>();
         var currentOrg = httpContext.RequestServices.GetRequiredService<ICurrentOrganization>();
         var currentUser = httpContext.RequestServices.GetRequiredService<ICurrentUser>();
-        var mediator = httpContext.RequestServices.GetRequiredService<IMediator>();
         var antiforgery = httpContext.RequestServices.GetRequiredService<IAntiforgery>();
 
         httpContext.Response.StatusCode = 200;
         httpContext.Response.ContentType = ContentType;
 
-        var template = await mediator.Send(new GetWebTemplateByName.Query { DeveloperName = _view });
-        var source = template.Result.Content;
-        var sourceWithParents = WebTemplateExtensions.ContentAssembledFromParents(source, template.Result.ParentTemplate);
+        var sourceWithParents = WebTemplateExtensions.ContentAssembledFromParents(_webTemplate.Content, _webTemplate.ParentTemplate);
 
         var renderModel = new Wrapper_RenderModel
         {

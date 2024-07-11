@@ -15,8 +15,8 @@
     {% endif %}
   </title>
 
-  <link rel="shortcut icon" href="{{ PathBase }}/raytha_default_2024/assets/images/favicon.ico" type="image/x-icon" />
-  <link rel="stylesheet" href="{{ PathBase }}/raytha_default_2024/assets/css/bootstrap.min.css">
+  <link rel="shortcut icon" href={{ "favicon.ico" | attachment_public_url }} type="image/x-icon" />
+  <link rel="stylesheet" href={{ "bootstrap.min.css" | attachment_public_url }}>
 </head>
 
 <body>
@@ -85,7 +85,7 @@
       </ul>
     </footer>
   </div>
-  <script src="{{ PathBase }}/raytha_default_2024/assets/js/bootstrap.bundle.min.js"></script>
+  <script src={{ "bootstrap.bundle.min.js" | attachment_public_url }}></script>
 </body>
 
 </html>

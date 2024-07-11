@@ -11,8 +11,6 @@ using Raytha.Application.MediaItems;
 using Raytha.Application.MediaItems.Queries;
 using Raytha.Application.Routes;
 using Raytha.Application.Routes.Queries;
-using Raytha.Application.Templates.Web;
-using Raytha.Application.Templates.Web.Queries;
 using Raytha.Application.UserGroups;
 using Raytha.Application.UserGroups.Commands;
 using Raytha.Application.UserGroups.Queries;
@@ -21,6 +19,8 @@ using Raytha.Application.Users.Queries;
 using Raytha.Application.Users;
 using Raytha.Application.Common.Utils;
 using Raytha.Application.RaythaFunctions.Commands;
+using Raytha.Application.Themes.WebTemplates;
+using Raytha.Application.Themes.WebTemplates.Queries;
 
 namespace Raytha.Infrastructure.RaythaFunctions;
 

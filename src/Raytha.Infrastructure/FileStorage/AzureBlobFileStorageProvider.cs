@@ -1,4 +1,5 @@
 ﻿using Azure.Storage.Blobs;
+using Azure.Storage.Blobs.Models;
 using Azure.Storage.Sas;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Utils;
@@ -93,7 +94,7 @@ public class AzureBlobFileStorageProvider : IFileStorageProvider
         {
             ms.Write(data, 0, data.Length);
             ms.Position = 0;
-            await blobClient.UploadAsync(ms);
+            await blobClient.UploadAsync(ms, new BlobHttpHeaders { ContentType = contentType, });
         }
 
         downloadUrl = UseCustomDomain(downloadUrl);

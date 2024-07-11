@@ -73,7 +73,7 @@ public class RenderEngine : IRenderEngine
 
     public ValueTask<FluidValue> AttachmentPublicUrl(FluidValue input, FilterArguments arguments, TemplateContext context)
     {
-        return new StringValue(_fileStorageProvider.GetDownloadUrlAsync(input.ToStringValue()).Result);
+        return new StringValue(_fileStorageProvider.GetDownloadUrlAsync(input.ToStringValue(), FileStorageUtility.GetDefaultExpiry()).Result);
     }
 
     public ValueTask<FluidValue> GroupBy(FluidValue input, FilterArguments property, TemplateContext context)

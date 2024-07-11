@@ -1,4 +1,6 @@
-﻿namespace Raytha.Application.Common.Utils;
+﻿using System.Net.Mime;
+
+namespace Raytha.Application.Common.Utils;
 
 public static class FileStorageUtility
 {
@@ -44,5 +46,31 @@ public static class FileStorageUtility
     public static DateTime GetDefaultExpiry()
     {
         return DateTime.UtcNow.AddDays(1);
+    }
+
+    public static string GetMimeType(string fileName)
+    {
+        var extension = Path.GetExtension(fileName).ToLowerInvariant();
+
+        return extension switch
+        {
+            ".txt" => MediaTypeNames.Text.Plain,
+            ".html" => MediaTypeNames.Text.Html,
+            ".xml" => MediaTypeNames.Text.Xml,
+            ".rtf" => MediaTypeNames.Text.RichText,
+            ".js" => MediaTypeNames.Text.JavaScript,
+            ".css" => MediaTypeNames.Text.Css,
+            ".png" => MediaTypeNames.Image.Png,
+            ".jpg" => MediaTypeNames.Image.Jpeg,
+            ".jpeg" => MediaTypeNames.Image.Jpeg,
+            ".gif" => MediaTypeNames.Image.Gif,
+            ".webp" => MediaTypeNames.Image.Webp,
+            ".ico" => MediaTypeNames.Image.Icon,
+            ".svg" => MediaTypeNames.Image.Svg,
+            ".pdf" => MediaTypeNames.Application.Pdf,
+            ".zip" => MediaTypeNames.Application.Zip,
+            ".json" => MediaTypeNames.Application.Json,
+            _ => MediaTypeNames.Application.Octet,
+        };
     }
 }

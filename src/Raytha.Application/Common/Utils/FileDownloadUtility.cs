@@ -6,11 +6,15 @@ public static class FileDownloadUtility
     {
         var client = new HttpClient();
         var response = await client.GetAsync(fileUrl);
-        string contentType = response.Content.Headers.ContentType.ToString();
+
+        if (!response.IsSuccessStatusCode)
+            throw new Exception($"Unable to retrieve file from {fileUrl}: {response.StatusCode} - {response.ReasonPhrase}");
+
+        string contentType = response.Content.Headers.ContentType.ToString() ?? "application/octet-stream";
         bool isValidMimeType = FileStorageUtility.GetAllowedFileExtensionsFromConfig(FileStorageUtility.DEFAULT_ALLOWED_MIMETYPES).Any(s => s.Contains(contentType.Split('/')[0]));
         if (isValidMimeType && response.Content.Headers.ContentLength <= FileStorageUtility.DEFAULT_MAX_FILE_SIZE)
         {
-            string fileExt = Path.GetExtension(response.Content.Headers.ContentDisposition.FileName.ToString().Replace("\"", ""));
+            string fileExt = Path.GetExtension(response.Content.Headers.ContentDisposition?.FileName?.Replace("\"", "")) ?? ".bin";
 
             var memoryStream = new MemoryStream();
             await response.Content.CopyToAsync(memoryStream);

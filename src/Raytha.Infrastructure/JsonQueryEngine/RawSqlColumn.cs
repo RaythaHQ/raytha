@@ -4,7 +4,6 @@ internal class RawSqlColumn
 {
     public const string UNIQUE_COLUMN_PREFIX = "raytha_cc";
     public const string SOURCE_ITEM_COLUMN_NAME = "source";
-    public const string TEMPLATE_COLUMN_NAME = "webtemplate";
     public const string ROUTE_COLUMN_NAME = "route";
     public const string SOURCE_CREATED_BY_COLUMN_NAME = "created_by_source";
     public const string SOURCE_MODIFIED_BY_COLUMN_NAME = "modified_by_source";
@@ -29,7 +28,6 @@ internal class RawSqlColumn
     public static RawSqlColumn LastModificationTime = new RawSqlColumn("LastModificationTime");
     public static RawSqlColumn IsPublished = new RawSqlColumn("IsPublished");
     public static RawSqlColumn IsDraft = new RawSqlColumn("IsDraft");
-    public static RawSqlColumn WebTemplateId = new RawSqlColumn("WebTemplateId");
     public static RawSqlColumn RouteId = new RawSqlColumn("RouteId");
     public static RawSqlColumn Path = new RawSqlColumn("Path");
     public static RawSqlColumn DraftContent = new RawSqlColumn("_DraftContent");
@@ -72,7 +70,6 @@ internal class RawSqlColumn
         yield return LastModificationTime;
         yield return IsPublished;
         yield return IsDraft;
-        yield return WebTemplateId;
         yield return DraftContent;
         yield return PublishedContent;
         yield return ContentTypeId;

@@ -99,7 +99,12 @@
     color: #495057 !important;
     text-decoration: none !important;
     background-color: #f8f9fa !important;
-    cursor: pointer!important;
+    cursor: pointer !important;
+}
+
+.raytha-border-top {
+    border-top: 0.0625rem solid #9CA3AF;
+    border-color: #e9ecef #e9ecef #dee2e6;
 }
 
 input[readonly] {
@@ -120,4 +125,35 @@ button:disabled {
 
 li.nav-item.disabled {
     cursor: not-allowed;
+}
+
+.input-group-append {
+    display: flex;
+    align-items: center;
+    margin-left: 0.5rem;
+}
+
+.input-group-append .btn {
+    border-radius: 0 0.25rem 0.25rem 0;
+    margin-left: -1px;
+}
+
+.input-group-append .input-group-text {
+    border-radius: 0 0.25rem 0.25rem 0;
+    margin-left: -1px;
+}
+
+.input-group .input-group-prepend,
+.input-group .input-group-append {
+    display: flex;
+}
+
+.input-group .form-control,
+.input-group .form-control-plaintext,
+.input-group .input-group-text,
+.input-group .input-group-prepend,
+.input-group .input-group-append,
+.input-group .custom-select,
+.input-group .custom-file {
+    margin-bottom: 0;
 }

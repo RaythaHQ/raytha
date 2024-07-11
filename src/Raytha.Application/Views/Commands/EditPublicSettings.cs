@@ -6,6 +6,7 @@ using Raytha.Application.Common.Exceptions;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Models;
 using Raytha.Application.Common.Utils;
+using Raytha.Domain.Entities;
 
 namespace Raytha.Application.Views.Commands;
 
@@ -49,14 +50,16 @@ public class EditPublicSettings
                 if (entity == null)
                     throw new NotFoundException("View", request.Id);
 
-                var template = db.WebTemplates
-                    .Include(p => p.TemplateAccessToModelDefinitions)
-                    .FirstOrDefault(p => p.Id == request.TemplateId.Guid);
+                var templateAccessToModelDefinitions = db.WebTemplates
+                    .Include(wt => wt.TemplateAccessToModelDefinitions)
+                    .Where(wt => wt.Id == request.TemplateId.Guid)
+                    .Select(wt => wt.TemplateAccessToModelDefinitions)
+                    .FirstOrDefault();
 
-                if (template == null)
-                    throw new NotFoundException("WebTemplate", request.TemplateId);
+                if (templateAccessToModelDefinitions == null)
+                    throw new NotFoundException("Template", request.TemplateId);
 
-                if (!template.TemplateAccessToModelDefinitions.Any(p => p.ContentTypeId == entity.ContentType.Id))
+                if (!templateAccessToModelDefinitions.Any(p => p.ContentTypeId == entity.ContentType.Id))
                 {
                     context.AddFailure(Constants.VALIDATION_SUMMARY, "This template does not have access to this model definition.");
                     return;
@@ -91,12 +94,21 @@ public class EditPublicSettings
                 .Include(p => p.Route)
                 .First(p => p.Id == request.Id.Guid);
 
-            entity.WebTemplateId = request.TemplateId;
             entity.Route.Path = request.RoutePath.ToUrlSlug();
             entity.IsPublished = request.IsPublished;
             entity.DefaultNumberOfItemsPerPage = request.DefaultNumberOfItemsPerPage;
             entity.MaxNumberOfItemsPerPage = request.MaxNumberOfItemsPerPage;
             entity.IgnoreClientFilterAndSortQueryParams = request.IgnoreClientFilterAndSortQueryParams;
+
+            var activeThemeId = await _db.OrganizationSettings
+                .Select(os => os.ActiveThemeId)
+                .FirstAsync(cancellationToken);
+
+            var webTemplateViewRelation = await _db.WebTemplateViewRelations
+                .FirstAsync(wtr => wtr.ViewId == entity.Id && wtr.WebTemplate!.ThemeId == activeThemeId, cancellationToken);
+
+            webTemplateViewRelation.WebTemplateId = request.TemplateId.Guid;
+            _db.WebTemplateViewRelations.Update(webTemplateViewRelation);
 
             await _db.SaveChangesAsync(cancellationToken);
             return new CommandResponseDto<ShortGuid>(entity.Id);

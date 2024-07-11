@@ -10,4 +10,5 @@ public interface IRelativeUrlBuilder
     string UserLoginUrl();
     string UserLoginWithMagicLinkCompleteUrl(string token, string returnUrl = "");
     string UserForgotPasswordCompleteUrl(string token);
+    string GetBaseUrl();
 }

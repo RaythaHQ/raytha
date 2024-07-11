@@ -12,8 +12,6 @@ public class View : BaseAuditableEntity
     public string? Description { get; set; }
     public Guid ContentTypeId { get; set; }
     public virtual ContentType? ContentType { get; set; }
-    public Guid WebTemplateId { get; set; }
-    public virtual WebTemplate WebTemplate { get; set; }
     public Guid RouteId { get; set; }
     public virtual Route Route { get; set; }
     public bool IsPublished { get; set; }

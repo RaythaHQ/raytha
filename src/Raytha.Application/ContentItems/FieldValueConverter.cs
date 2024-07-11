@@ -17,7 +17,7 @@ public class FieldValueConverter
         _currentOrganization = currentOrganization;
     }
 
-    public Dictionary<string, string> MapToListItemValues(ContentItemDto item)
+    public Dictionary<string, string> MapToListItemValues(ContentItemDto item, string templateLabel)
     {
         var viewModel = new Dictionary<string, string>
         {
@@ -30,7 +30,7 @@ public class FieldValueConverter
             { BuiltInContentTypeField.IsPublished, item.IsPublished.YesOrNo() },
             { BuiltInContentTypeField.IsDraft, item.IsDraft.YesOrNo() },
             { BuiltInContentTypeField.PrimaryField, item.PrimaryField },
-            { "Template", item.WebTemplate.Label }
+            { "Template", templateLabel },
         };
 
         //Content type fields

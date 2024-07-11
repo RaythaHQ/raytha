@@ -1,7 +1,5 @@
 ﻿using CSharpVitamins;
 using Raytha.Application.Common.Models;
-using Raytha.Application.ContentTypes;
-using Raytha.Application.Templates;
 using Raytha.Domain.Entities;
 using System.Linq.Expressions;
 

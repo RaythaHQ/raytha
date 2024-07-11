@@ -34,6 +34,10 @@ public interface IRaythaDbContext
     public DbSet<NavigationMenu> NavigationMenus { get; }
     public DbSet<NavigationMenuRevision> NavigationMenuRevisions { get; }
     public DbSet<NavigationMenuItem> NavigationMenuItems { get; }
+    public DbSet<Theme> Themes { get; }
+    public DbSet<ThemeAccessToMediaItem> ThemeAccessToMediaItems { get; }
+    public DbSet<WebTemplateViewRelation> WebTemplateViewRelations { get; }
+    public DbSet<WebTemplateContentItemRelation> WebTemplateContentItemRelations { get; }
     public DbContext DbContext { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken);

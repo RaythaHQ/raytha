@@ -7,6 +7,7 @@ using Raytha.Application.ContentItems;
 using Raytha.Application.ContentItems.Commands;
 using Raytha.Application.ContentItems.EventHandlers;
 using System.Reflection;
+using Raytha.Application.Themes.Commands;
 using static Raytha.Application.ContentItems.EventHandlers.ContentItemCreatedEventHandler;
 
 namespace Raytha.Application;
@@ -25,6 +26,9 @@ public static class ConfigureServices
         });
         services.AddScoped<BeginExportContentItemsToCsv.BackgroundTask>();
         services.AddScoped<BeginImportContentItemsFromCsv.BackgroundTask>();
+        services.AddScoped<BeginImportThemeFromUrl.BackgroundTask>();
+        services.AddScoped<BeginMatchWebTemplates.BackgroundTask>();
+        services.AddScoped<BeginDuplicateTheme.BackgroundTask>();
         services.AddTransient<RaythaFunctionAsBackgroundTask>();
         services.AddScoped<FieldValueConverter>();
         return services;
