@@ -16,7 +16,8 @@ using Raytha.Application.ContentItems;
 using Raytha.Application.ContentItems.Commands;
 using Raytha.Application.ContentItems.Queries;
 using Raytha.Application.ContentTypes.Queries;
-using Raytha.Application.Templates.Web.Queries;
+using Raytha.Application.Themes.Queries;
+using Raytha.Application.Themes.WebTemplates.Queries;
 using Raytha.Application.Views;
 using Raytha.Domain.Entities;
 using Raytha.Domain.ValueObjects;
@@ -55,11 +56,21 @@ public class ContentItemsController : BaseController
         };
         var response = await Mediator.Send(input);
 
-        var items = response.Result.Items.Select(p => new ContentItemsListItem_ViewModel
+        var webTemplateContentItemRelationsResponse = await Mediator.Send(new GetWebTemplateContentItemRelationsByContentTypeId.Query
         {
-            Id = p.Id,
-            IsHomePage = CurrentOrganization.HomePageId == p.Id,
-            FieldValues = FieldValueConverter.MapToListItemValues(p)
+            ThemeId = CurrentOrganization.ActiveThemeId,
+            ContentTypeId = CurrentView.ContentTypeId,
+        });
+
+        var items = response.Result.Items.Select(p =>
+        {
+            var templateLabel = webTemplateContentItemRelationsResponse.Result.Where(wtr => wtr.ContentItemId == p.Id).Select(wtr => wtr.WebTemplate.Label).First();
+            return new ContentItemsListItem_ViewModel
+            {
+                Id = p.Id,
+                IsHomePage = CurrentOrganization.HomePageId == p.Id,
+                FieldValues = FieldValueConverter.MapToListItemValues(p, templateLabel)
+            };
         });
 
         var viewModel = new ContentItemsPagination_ViewModel(items, response.Result.TotalCount);
@@ -73,8 +84,9 @@ public class ContentItemsController : BaseController
     {
         var webTemplates = await Mediator.Send(new GetWebTemplates.Query
         {
+            ThemeId = CurrentOrganization.ActiveThemeId,
             ContentTypeId = CurrentView.ContentTypeId,
-            PageSize = int.MaxValue
+            PageSize = int.MaxValue,
         });
 
         var fieldValues = CurrentView.ContentType.ContentTypeFields.Select(p => new FieldValue_ViewModel
@@ -134,6 +146,7 @@ public class ContentItemsController : BaseController
 
             var webTemplates = await Mediator.Send(new GetWebTemplates.Query
             {
+                ThemeId = CurrentOrganization.ActiveThemeId,
                 ContentTypeId = CurrentView.ContentTypeId,
                 PageSize = int.MaxValue
             });
@@ -425,14 +438,21 @@ public class ContentItemsController : BaseController
 
         var webTemplates = await Mediator.Send(new GetWebTemplates.Query
         {
+            ThemeId = CurrentOrganization.ActiveThemeId,
             ContentTypeId = CurrentView.ContentTypeId,
-            PageSize = int.MaxValue
+            PageSize = int.MaxValue,
+        });
+
+        var webTemplateResponse = await Mediator.Send(new GetWebTemplateByContentItemId.Query
+        {
+            ContentItemId = id,
+            ThemeId = CurrentOrganization.ActiveThemeId,
         });
 
         var viewModel = new ContentItemsSettings_ViewModel
         {
             Id = response.Result.Id,
-            TemplateId = response.Result.WebTemplate.Id,
+            TemplateId = webTemplateResponse.Result.Id,
             IsHomePage = CurrentOrganization.HomePageId == response.Result.Id,
             RoutePath = response.Result.RoutePath,
             WebsiteUrl = CurrentOrganization.WebsiteUrl.TrimEnd('/') + CurrentOrganization.PathBase + "/",
@@ -465,11 +485,14 @@ public class ContentItemsController : BaseController
         {
             SetErrorMessage("There was an error attempting to save this page. See the error below.", editResponse.GetErrors());
 
-            var response = await Mediator.Send(new GetContentItemById.Query { Id = id });
+            var webTemplatesResponse = await Mediator.Send(new GetWebTemplates.Query
+            {
+                ThemeId = CurrentOrganization.ActiveThemeId,
+                ContentTypeId = CurrentView.ContentTypeId,
+                PageSize = int.MaxValue,
+            });
 
-            var webTemplates = await Mediator.Send(new GetWebTemplates.Query { ContentTypeId = CurrentView.ContentTypeId, PageSize = int.MaxValue });
-
-            model.AvailableTemplates = webTemplates.Result?.Items.ToDictionary(p => p.Id.ToString(), p => p.Label);
+            model.AvailableTemplates = webTemplatesResponse.Result?.Items.ToDictionary(p => p.Id.ToString(), p => p.Label);
             model.WebsiteUrl = CurrentOrganization.WebsiteUrl.TrimEnd('/') + CurrentOrganization.PathBase + "/";
             return View(model);
         }

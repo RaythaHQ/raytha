@@ -51,6 +51,7 @@ public class DeleteView
 
             _db.Views.Remove(entity);
             _db.Routes.Remove(entity.Route);
+
             await _db.SaveChangesAsync(cancellationToken);
 
             return new CommandResponseDto<ShortGuid>(entity.Id);

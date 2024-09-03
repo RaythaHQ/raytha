@@ -50,11 +50,22 @@ public class CreateContentItem
                     throw new NotFoundException("Content Type", request.ContentTypeDeveloperName.ToDeveloperName());
 
                 var template = db.WebTemplates
-                    .Include(p => p.TemplateAccessToModelDefinitions)
-                    .FirstOrDefault(p => p.Id == request.TemplateId.Guid);
+                    .Where(wt => wt.Id == request.TemplateId.Guid)
+                    .Select(wt => new { wt.ThemeId, wt.TemplateAccessToModelDefinitions })
+                    .FirstOrDefault();
 
                 if (template == null)
                     throw new NotFoundException("WebTemplate", request.TemplateId);
+
+                var activeThemeId = db.OrganizationSettings
+                    .Select(os => os.ActiveThemeId)
+                    .First();
+
+                if (template.ThemeId != activeThemeId)
+                {
+                    context.AddFailure(Constants.VALIDATION_SUMMARY, "This template does not apply to the current active theme.");
+                    return;
+                }
 
                 if (!template.TemplateAccessToModelDefinitions.Any(p => p.ContentTypeId == contentTypeDefinition.Id))
                 {
@@ -111,7 +122,6 @@ public class CreateContentItem
                 IsPublished = request.SaveAsDraft == false,
                 DraftContent = request.Content,
                 PublishedContent = request.Content,
-                WebTemplateId = request.TemplateId,
                 ContentTypeId = contentTypeDefinition.Id,
                 Route = new Route
                 {
@@ -121,6 +131,16 @@ public class CreateContentItem
             };
 
             _db.ContentItems.Add(entity);
+
+            var webTemplateContentItemRelation = new WebTemplateContentItemRelation
+            {
+                Id = Guid.NewGuid(),
+                WebTemplateId = request.TemplateId.Guid,
+                ContentItemId = entity.Id,
+            };
+
+            await _db.WebTemplateContentItemRelations.AddAsync(webTemplateContentItemRelation, cancellationToken);
+
             entity.AddDomainEvent(new ContentItemCreatedEvent(entity));
 
             await _db.SaveChangesAsync(cancellationToken);

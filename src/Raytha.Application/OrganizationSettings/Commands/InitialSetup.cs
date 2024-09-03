@@ -9,6 +9,7 @@ using Raytha.Domain.ValueObjects;
 using Raytha.Domain.ValueObjects.FieldTypes;
 using System.Dynamic;
 using System.Text.Json.Serialization;
+using Microsoft.EntityFrameworkCore;
 
 namespace Raytha.Application.OrganizationSettings.Commands;
 
@@ -68,7 +69,7 @@ public class InitialSetup
         private const string PAGES_NAME_PLURAL = "Pages";
         private const string PAGES_NAME_SINGULAR = "Page";
         private const string PAGES_DEVELOPER_NAME = "pages";
-        
+
         private const string POSTS_NAME_PLURAL = "Posts";
         private const string POSTS_NAME_SINGULAR = "Post";
         private const string POSTS_DEVELOPER_NAME = "posts";
@@ -77,6 +78,8 @@ public class InitialSetup
         private const string TITLE_FIELD_DEVELOPER_NAME = "title";
         private const string CONTENT_FIELD_LABEL = "Content";
         private const string CONTENT_FIELD_DEVELOPER_NAME = "content";
+
+        private const string DEFAULT_THEME_DEVELOPER_NAME = "raytha_default_2024";
 
         Guid pageTypeGuid = Guid.NewGuid();
         Guid postTypeGuid = Guid.NewGuid();
@@ -89,18 +92,28 @@ public class InitialSetup
 
         private readonly IRaythaDbContext _db;
         private readonly IEmailerConfiguration _emailerConfiguration;
-        public Handler(IRaythaDbContext db, IEmailerConfiguration emailerConfiguration)
+        private readonly IFileStorageProvider _fileStorageProvider;
+
+        public Handler(IRaythaDbContext db, IEmailerConfiguration emailerConfiguration, IFileStorageProvider fileStorageProvider)
         {
             _db = db;
             _emailerConfiguration = emailerConfiguration;
+            _fileStorageProvider = fileStorageProvider;
         }
+
         public async Task<CommandResponseDto<ShortGuid>> Handle(Command request, CancellationToken cancellationToken)
         {
-            InsertOrganizationSettings(request);
+            var defaultThemeId = await _db.Themes
+                .Select(t => t.Id)
+                .FirstAsync(cancellationToken);
+
+            InsertOrganizationSettings(request, defaultThemeId);
             InsertDefaultContentTypes();
             InsertDefaultContentTypeFields();
             InsertDefaultRolesAndSuperAdmin(request);
-            InsertDefaultWebTemplates();
+
+            var mediaItemObjectKeys = await InsertDefaultThemeAssetsToFileStorage(cancellationToken, defaultThemeId);
+            InsertDefaultWebTemplates(mediaItemObjectKeys, defaultThemeId);
             InsertDefaultEmailTemplates();
             InsertDefaultAuthentications();
             await _db.SaveChangesAsync(cancellationToken);
@@ -115,7 +128,7 @@ public class InitialSetup
             return new CommandResponseDto<ShortGuid>(orgSettingsGuid);
         }
 
-        protected void InsertOrganizationSettings(Command request)
+        protected void InsertOrganizationSettings(Command request, Guid defaultThemeId)
         {
             var entity = new Domain.Entities.OrganizationSettings
             {
@@ -130,7 +143,8 @@ public class InitialSetup
                 DateFormat = DateTimeExtensions.DEFAULT_DATE_FORMAT,
                 WebsiteUrl = request.WebsiteUrl,
                 SmtpDefaultFromAddress = request.SmtpDefaultFromAddress,
-                SmtpDefaultFromName = request.SmtpDefaultFromName
+                SmtpDefaultFromName = request.SmtpDefaultFromName,
+                ActiveThemeId = defaultThemeId,
             };
             _db.OrganizationSettings.Add(entity);
         }
@@ -270,16 +284,77 @@ public class InitialSetup
             _db.ContentTypes.Add(postContentType);
         }
 
-        protected void InsertDefaultWebTemplates()
+        protected async Task<IReadOnlyCollection<MediaItem>> InsertDefaultThemeAssetsToFileStorage(CancellationToken cancellationToken, Guid defaultThemeId)
         {
+            var mediaItems = new List<MediaItem>();
+            var themeAccessToMediaItems = new List<ThemeAccessToMediaItem>();
+
+            var defaultThemeAssetsPath = Path.Combine("wwwroot", DEFAULT_THEME_DEVELOPER_NAME, "assets");
+            if (!Directory.Exists(defaultThemeAssetsPath))
+                throw new DirectoryNotFoundException($"Path '{defaultThemeAssetsPath}' does not exist.");
+
+            var themeFiles = Directory.GetFiles(defaultThemeAssetsPath, "*", SearchOption.AllDirectories);
+            foreach (var file in themeFiles)
+            {
+                var idForKey = ShortGuid.NewGuid();
+                var fileName = Path.GetFileName(file);
+                var data = await File.ReadAllBytesAsync(file, cancellationToken);
+                var objectKey = FileStorageUtility.CreateObjectKeyFromIdAndFileName(idForKey, fileName);
+                var contentType = FileStorageUtility.GetMimeType(fileName);
+
+                await _fileStorageProvider.SaveAndGetDownloadUrlAsync(data, objectKey, fileName, contentType, FileStorageUtility.GetDefaultExpiry());
+
+                var mediaItem = new MediaItem
+                {
+                    Id = idForKey.Guid,
+                    FileName = fileName,
+                    FileStorageProvider = _fileStorageProvider.GetName(),
+                    ObjectKey = objectKey,
+                    Length = data.Length,
+                    ContentType = contentType,
+                };
+
+                mediaItems.Add(mediaItem);
+
+                themeAccessToMediaItems.Add(new ThemeAccessToMediaItem
+                {
+                    Id = Guid.NewGuid(),
+                    ThemeId = defaultThemeId,
+                    MediaItemId = idForKey.Guid,
+                });
+            }
+
+            _db.MediaItems.AddRange(mediaItems);
+            _db.ThemeAccessToMediaItems.AddRange(themeAccessToMediaItems);
+
+            return mediaItems;
+        }
+
+        protected void InsertDefaultWebTemplates(IReadOnlyCollection<MediaItem> mediaItems, Guid defaultThemeId)
+        {
+            var baseLayoutFileNames = new[]
+            {
+                "favicon.ico",
+                "bootstrap.min.css",
+                "bootstrap.bundle.min.js",
+            };
+
             var list = new List<WebTemplate>();
             var defaultBaseLayout = BuiltInWebTemplate._Layout;
+            var updatedContent = defaultBaseLayout.DefaultContent;
+            foreach (var fileName in baseLayoutFileNames)
+            {
+                var mediaItem = mediaItems.First(mi => mi.FileName.Contains(fileName));
+                updatedContent = updatedContent.Replace(fileName, mediaItem.ObjectKey);
+            }
+
             var baseLayout = new WebTemplate
             {
                 Id = Guid.NewGuid(),
+                ThemeId = defaultThemeId,
                 IsBaseLayout = true,
                 IsBuiltInTemplate = true,
-                Content = defaultBaseLayout.DefaultContent,
+                Content = updatedContent,
                 Label = defaultBaseLayout.DefaultLabel,
                 DeveloperName = defaultBaseLayout.DeveloperName
             };
@@ -289,6 +364,7 @@ public class InitialSetup
             var baseLoginLayout = new WebTemplate
             {
                 Id = Guid.NewGuid(),
+                ThemeId = defaultThemeId,
                 IsBaseLayout = true,
                 IsBuiltInTemplate = true,
                 Content = defaultBaseLoginLayout.DefaultContent,
@@ -297,12 +373,17 @@ public class InitialSetup
                 ParentTemplateId = baseLayout.Id
             };
             list.Add(baseLoginLayout);
-            foreach (var templateToBuild in BuiltInWebTemplate.Templates.Where(p => 
-                            p.DeveloperName != BuiltInWebTemplate._Layout.DeveloperName && 
+
+            var homePageMediaItem = "raythadotcom_screenshot.webp";
+
+            foreach (var templateToBuild in BuiltInWebTemplate.Templates.Where(p =>
+                            p.DeveloperName != BuiltInWebTemplate._Layout.DeveloperName &&
                             p.DeveloperName != BuiltInWebTemplate._LoginLayout.DeveloperName))
             {
                 var template = new WebTemplate
                 {
+                    Id = Guid.NewGuid(),
+                    ThemeId = defaultThemeId,
                     ParentTemplateId = baseLayout.Id,
                     IsBaseLayout = false,
                     IsBuiltInTemplate = true,
@@ -311,20 +392,20 @@ public class InitialSetup
                     DeveloperName = templateToBuild.DeveloperName
                 };
 
-                var templateAccess = new List<WebTemplateAccessToModelDefinition>()
+                var templateAccess = new List<WebTemplateAccessToModelDefinition>
                 {
                     new WebTemplateAccessToModelDefinition { ContentTypeId = pageTypeGuid },
                     new WebTemplateAccessToModelDefinition { ContentTypeId = postTypeGuid }
                 };
 
-                var standardTemplatesForContentTypes = new List<string>()
+                var standardTemplatesForContentTypes = new List<string>
                 {
                     BuiltInWebTemplate.HomePage,
                     BuiltInWebTemplate.ContentItemDetailViewPage,
                     BuiltInWebTemplate.ContentItemListViewPage
                 };
 
-                var loginTemplates = new List<string>()
+                var loginTemplates = new List<string>
                 {
                     BuiltInWebTemplate.LoginWithEmailAndPasswordPage,
                     BuiltInWebTemplate.LoginWithMagicLinkPage,
@@ -344,6 +425,11 @@ public class InitialSetup
                     template.TemplateAccessToModelDefinitions = templateAccess;
                     template.IsBuiltInTemplate = false;
                     template.AllowAccessForNewContentTypes = true;
+
+                    if (templateToBuild.DeveloperName == BuiltInWebTemplate.HomePage.DeveloperName)
+                    {
+                        template.Content = template.Content.Replace(homePageMediaItem, mediaItems.First(mi => mi.FileName.Contains(homePageMediaItem)).ObjectKey);
+                    }
                 }
                 else if (loginTemplates.Contains(templateToBuild))
                 {
@@ -408,8 +494,6 @@ public class InitialSetup
 
         protected void InsertDefaultPages()
         {
-            var homePageTemplate = _db.WebTemplates.First(p => p.DeveloperName == BuiltInWebTemplate.HomePage);
-
             dynamic homePageContent = new ExpandoObject();
             homePageContent.title = "Home";
             var homePagePath = $"{((string)homePageContent.title).ToUrlSlug()}";
@@ -420,7 +504,6 @@ public class InitialSetup
                 Id = homePageGuid,
                 DraftContent = homePageContent,
                 PublishedContent = homePageContent,
-                WebTemplateId = homePageTemplate.Id,
                 IsPublished = true,
                 IsDraft = false,
                 ContentTypeId = pageTypeGuid,
@@ -433,7 +516,20 @@ public class InitialSetup
 
             _db.ContentItems.Add(homePage);
 
-            var aboutPageTemplate = _db.WebTemplates.First(p => p.DeveloperName == BuiltInWebTemplate.ContentItemDetailViewPage);
+            var homePageTemplateId = _db.WebTemplates
+                .Where(wt => wt.DeveloperName == BuiltInWebTemplate.HomePage.DeveloperName)
+                .Select(wt => wt.Id)
+                .First();
+
+            var homePageWebTemplateContentItemRelation = new WebTemplateContentItemRelation
+            {
+                Id = Guid.NewGuid(),
+                WebTemplateId = homePageTemplateId,
+                ContentItemId = homePageGuid,
+            };
+
+            _db.WebTemplateContentItemRelations.Add(homePageWebTemplateContentItemRelation);
+
             dynamic aboutPageContent = new ExpandoObject();
             aboutPageContent.title = "About";
             var aboutPagePath = $"{((string)aboutPageContent.title).ToUrlSlug()}";
@@ -462,7 +558,6 @@ public class InitialSetup
                 Id = anotherPageId,
                 DraftContent = aboutPageContent,
                 PublishedContent = aboutPageContent,
-                WebTemplateId = aboutPageTemplate.Id,
                 IsPublished = true,
                 IsDraft = false,
                 ContentTypeId = pageTypeGuid,
@@ -472,13 +567,26 @@ public class InitialSetup
                     Path = aboutPagePath
                 }
             };
+
             _db.ContentItems.Add(anotherPage);
+
+            var aboutPageTemplateId = _db.WebTemplates
+                .Where(wt => wt.DeveloperName == BuiltInWebTemplate.ContentItemDetailViewPage.DeveloperName)
+                .Select(wt => wt.Id)
+                .First();
+
+            var aboutPageWebTemplateContentItemRelation = new WebTemplateContentItemRelation
+            {
+                Id = Guid.NewGuid(),
+                WebTemplateId = aboutPageTemplateId,
+                ContentItemId = anotherPageId,
+            };
+
+            _db.WebTemplateContentItemRelations.Add(aboutPageWebTemplateContentItemRelation);
         }
 
         protected void InsertDefaultPosts()
         {
-            var postTemplate = _db.WebTemplates.First(p => p.DeveloperName == BuiltInWebTemplate.ContentItemDetailViewPage);
-
             dynamic postContent = new ExpandoObject();
             postContent.title = "Hello World!";
             var homePagePath = $"{((string)postContent.title).ToUrlSlug()}";
@@ -496,7 +604,6 @@ public class InitialSetup
                 Id = postId,
                 DraftContent = postContent,
                 PublishedContent = postContent,
-                WebTemplateId = postTemplate.Id,
                 IsPublished = true,
                 IsDraft = false,
                 ContentTypeId = postTypeGuid,
@@ -508,12 +615,24 @@ public class InitialSetup
             };
 
             _db.ContentItems.Add(post);
+
+            var postTemplateId = _db.WebTemplates
+                .Where(wt => wt.DeveloperName == BuiltInWebTemplate.ContentItemDetailViewPage.DeveloperName)
+                .Select(wt => wt.Id)
+                .First();
+
+            var webTemplateContentItemRelation = new WebTemplateContentItemRelation
+            {
+                Id = Guid.NewGuid(),
+                WebTemplateId = postTemplateId,
+                ContentItemId = postId,
+            };
+
+            _db.WebTemplateContentItemRelations.Add(webTemplateContentItemRelation);
         }
 
         protected void InsertDefaultViews()
         {
-            var listViewTemplate = _db.WebTemplates.First(p => p.DeveloperName == BuiltInWebTemplate.ContentItemListViewPage.DeveloperName).Id;
-
             var defaultPageViewId = Guid.NewGuid();
             var defaultPageView = new View
             {
@@ -521,8 +640,7 @@ public class InitialSetup
                 Label = $"All {PAGES_NAME_PLURAL.ToLower()}",
                 DeveloperName = PAGES_DEVELOPER_NAME,
                 ContentTypeId = pageTypeGuid,
-                Columns = new[] { BuiltInContentTypeField.PrimaryField.DeveloperName, BuiltInContentTypeField.CreationTime.DeveloperName, BuiltInContentTypeField.Template.DeveloperName },
-                WebTemplateId = listViewTemplate,
+                Columns = new[] { BuiltInContentTypeField.PrimaryField.DeveloperName, BuiltInContentTypeField.CreationTime.DeveloperName, BuiltInContentTypeField.Template },
                 Route = new Route
                 {
                     Path = PAGES_DEVELOPER_NAME,
@@ -533,6 +651,20 @@ public class InitialSetup
 
             _db.Views.Add(defaultPageView);
 
+            var listViewTemplateId = _db.WebTemplates
+                .Where(wt => wt.DeveloperName == BuiltInWebTemplate.ContentItemListViewPage.DeveloperName)
+                .Select(wt => wt.Id)
+                .First();
+
+            var pagesWebTemplateViewRelation = new WebTemplateViewRelation
+            {
+                Id = Guid.NewGuid(),
+                WebTemplateId = listViewTemplateId,
+                ViewId = defaultPageViewId,
+            };
+
+            _db.WebTemplateViewRelations.Add(pagesWebTemplateViewRelation);
+
             var defaultPostsViewId = Guid.NewGuid();
             var defaultPostsView = new View
             {
@@ -540,8 +672,7 @@ public class InitialSetup
                 Label = $"All {POSTS_NAME_PLURAL.ToLower()}",
                 DeveloperName = POSTS_DEVELOPER_NAME,
                 ContentTypeId = postTypeGuid,
-                Columns = new[] { BuiltInContentTypeField.PrimaryField.DeveloperName, BuiltInContentTypeField.CreationTime.DeveloperName, BuiltInContentTypeField.Template.DeveloperName },
-                WebTemplateId = listViewTemplate,
+                Columns = new[] { BuiltInContentTypeField.PrimaryField.DeveloperName, BuiltInContentTypeField.CreationTime.DeveloperName, BuiltInContentTypeField.Template },
                 Route = new Route
                 {
                     Path = POSTS_DEVELOPER_NAME,
@@ -550,6 +681,15 @@ public class InitialSetup
                 IsPublished = true
             };
             _db.Views.Add(defaultPostsView);
+
+            var postsWebTemplateViewRelation = new WebTemplateViewRelation
+            {
+                Id = Guid.NewGuid(),
+                WebTemplateId = listViewTemplateId,
+                ViewId = defaultPostsViewId,
+            };
+
+            _db.WebTemplateViewRelations.Add(postsWebTemplateViewRelation);
         }
 
         protected void SetPrimaryFieldsOnContentTypes()

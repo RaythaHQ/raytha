@@ -64,8 +64,8 @@ public class CreateAuthenticationScheme
             RuleFor(x => x.DeveloperName).Must(StringExtensions.IsValidDeveloperName).WithMessage("Invalid developer name.");
             RuleFor(x => x.DeveloperName).NotEmpty().Must((request, developerName) =>
             {
-                var anyAlreadyExistWithDeveloperName = db.AuthenticationSchemes.Any(p => p.DeveloperName == request.DeveloperName.ToDeveloperName());
-                return !anyAlreadyExistWithDeveloperName;
+                var isDeveloperNameAlreadyExist = db.AuthenticationSchemes.Any(p => p.DeveloperName == request.DeveloperName.ToDeveloperName());
+                return !isDeveloperNameAlreadyExist;
             }).WithMessage("An authentication scheme with that developer name already exists.");
         }
     }

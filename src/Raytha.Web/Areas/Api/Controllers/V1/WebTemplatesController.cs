@@ -1,11 +1,11 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Raytha.Application.Common.Models;
-using Raytha.Application.Templates.Web;
-using Raytha.Application.Templates.Web.Queries;
 using Raytha.Domain.Entities;
 using Raytha.Web.Authentication;
 using System.Threading.Tasks;
+using Raytha.Application.Themes.WebTemplates;
+using Raytha.Application.Themes.WebTemplates.Queries;
 
 namespace Raytha.Web.Areas.Api.Controllers.V1;
 

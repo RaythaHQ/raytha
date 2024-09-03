@@ -24,7 +24,6 @@ public class GetViewById
         public async Task<IQueryResponseDto<ViewDto>> Handle(Query request, CancellationToken cancellationToken)
         {
             var entity = _db.Views
-                .Include(p => p.WebTemplate)
                 .Include(p => p.Route)
                 .Include(p => p.ContentType)
                 .ThenInclude(p => p.ContentTypeFields)

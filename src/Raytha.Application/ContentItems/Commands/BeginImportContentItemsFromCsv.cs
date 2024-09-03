@@ -171,6 +171,24 @@ public class BeginImportContentItemsFromCsv
             Dictionary<int, string> errorList = new Dictionary<int, string>();
             int rowNumber = 1;
             int successfullyImported = 0;
+
+            var activeThemeId = await _db.OrganizationSettings
+                .Select(os => os.ActiveThemeId)
+                .FirstAsync(cancellationToken);
+
+            var contentItemIdsWebTemplateContentItemRelations = await _db.WebTemplateContentItemRelations
+                .Include(wtr => wtr.WebTemplate)
+                .Where(wtr => wtr.WebTemplate!.ThemeId == activeThemeId)
+                .ToDictionaryAsync(wtr => wtr.ContentItemId, wtr => wtr, cancellationToken);
+
+            var webTemplateDeveloperNamesIds = await _db.WebTemplates
+                .Where(wt => wt.ThemeId == activeThemeId)
+                .Select(wt => new { wt.Id, wt.DeveloperName })
+                .ToDictionaryAsync(wt => wt.DeveloperName!, wt => wt.Id, cancellationToken);
+
+            var contentItems = await _db.ContentItems
+                .ToArrayAsync(cancellationToken);
+
             await foreach (var item in PrepareRecordsForImport(contentType, records, importAsDraft, cancellationToken))
             {
                 if (!item.Success)
@@ -180,7 +198,7 @@ public class BeginImportContentItemsFromCsv
                     continue;
                 }
 
-                var currentRecord = _db.ContentItems.FirstOrDefault(p => p.Id == item.Result.Id);
+                var currentRecord = contentItems.FirstOrDefault(ci => ci.Id == item.Result.ContentItem.Id);
                 if (currentRecord == null && importMethod == ImportMethod.UpdateExistingRecordsOnly)
                 {
                     rowNumber++;
@@ -193,19 +211,41 @@ public class BeginImportContentItemsFromCsv
                     continue;
                 }
 
+                var webTemplateId = webTemplateDeveloperNamesIds.TryGetValue(item.Result.WebTemplateDeveloperName, out var webTemplateIdByDeveloperName)
+                    ? webTemplateIdByDeveloperName
+                    : webTemplateDeveloperNamesIds[BuiltInWebTemplate.ContentItemDetailViewPage.DeveloperName];
+
                 if (currentRecord != null)
                 {
-                    currentRecord.DraftContent = item.Result.DraftContent;
+                    currentRecord.DraftContent = item.Result.ContentItem.DraftContent;
                     if (!importAsDraft)
-                        currentRecord.PublishedContent = item.Result.PublishedContent;
-                    currentRecord.WebTemplateId = item.Result.WebTemplateId;
-                    currentRecord.IsDraft = item.Result.IsDraft;
-                    currentRecord.IsPublished = item.Result.IsPublished;
+                    {
+                        currentRecord.PublishedContent = item.Result.ContentItem.PublishedContent;
+                    }
+
+                    currentRecord.IsDraft = item.Result.ContentItem.IsDraft;
+                    currentRecord.IsPublished = item.Result.ContentItem.IsPublished;
+
                     _db.ContentItems.Update(currentRecord);
+
+                    var webTemplateContentItemRelation = contentItemIdsWebTemplateContentItemRelations[currentRecord.Id];
+
+                    webTemplateContentItemRelation.WebTemplateId = webTemplateId;
+
+                    _db.WebTemplateContentItemRelations.Update(webTemplateContentItemRelation);
                 }
                 else
                 {
-                    _db.ContentItems.Add(item.Result);
+                    _db.ContentItems.Add(item.Result.ContentItem);
+
+                    var webTemplateContentItemRelation = new WebTemplateContentItemRelation
+                    {
+                        Id = Guid.NewGuid(),
+                        ContentItemId = item.Result.ContentItem.Id,
+                        WebTemplateId = webTemplateId,
+                    };
+
+                    await _db.WebTemplateContentItemRelations.AddAsync(webTemplateContentItemRelation, cancellationToken);
                 }
 
                 if (rowNumber % 10 == 0)
@@ -213,7 +253,7 @@ public class BeginImportContentItemsFromCsv
                     job.TaskStep = taskStep;
                     job.StatusInfo = $"Processed {rowNumber} records of {records.Count()}";
                     int percentComplete = (int)((double)rowNumber / records.Count() * 100);
-                    job.PercentComplete =  percentComplete > 10 ? percentComplete : 10;
+                    job.PercentComplete = percentComplete > 10 ? percentComplete : 10;
                     _db.BackgroundTasks.Update(job);
                 }
 
@@ -236,7 +276,6 @@ public class BeginImportContentItemsFromCsv
                 job.PercentComplete = 80;
                 _db.BackgroundTasks.Update(job);
                 await _db.SaveChangesAsync(cancellationToken);
-                Thread.Sleep(1500);
 
                 var myExport = new Csv.CsvExport();
                 foreach (var key in errorList.Keys)
@@ -275,15 +314,24 @@ public class BeginImportContentItemsFromCsv
             }
         }
 
-        private async IAsyncEnumerable<CommandResponseDto<ContentItem>> PrepareRecordsForImport(ContentType contentType, IEnumerable<Dictionary<string, dynamic>> records, bool importAsDraft, CancellationToken cancellationToken)
+        private async IAsyncEnumerable<CommandResponseDto<ContentItemDataFromCsv>> PrepareRecordsForImport(ContentType contentType, IEnumerable<Dictionary<string, dynamic>> records, bool importAsDraft, CancellationToken cancellationToken)
         {
+            var activeThemeId = await _db.OrganizationSettings
+                .Select(os => os.ActiveThemeId)
+                .FirstAsync(cancellationToken);
+
+            var webTemplateDeveloperNames = await _db.WebTemplates
+                .Where(wt => wt.ThemeId == activeThemeId)
+                .Select(wt => wt.DeveloperName)
+                .ToArrayAsync(cancellationToken);
+
             foreach (var record in records)
             {
-                var templateDeveloperName = record[BuiltInContentTypeField.Template.DeveloperName] as string;
-                var template = _db.WebTemplates.FirstOrDefault(s => s.DeveloperName == templateDeveloperName);
-                if (template == null)
+                var templateDeveloperName = (record[BuiltInContentTypeField.Template.DeveloperName] as string)!.ToDeveloperName();
+
+                if (!webTemplateDeveloperNames.Contains(templateDeveloperName))
                 {
-                    yield return new CommandResponseDto<ContentItem>("Template", $"Template was not found with this developer name: {templateDeveloperName}");
+                    yield return new CommandResponseDto<ContentItemDataFromCsv>("Template", $"Template was not found with this developer name: {templateDeveloperName}");
                     continue;
                 }
 
@@ -335,7 +383,7 @@ public class BeginImportContentItemsFromCsv
                         }
                         if (!errorMessage.IsNullOrEmpty())
                         {
-                            yield return new CommandResponseDto<ContentItem>("FieldError", errorMessage);
+                            yield return new CommandResponseDto<ContentItemDataFromCsv>("FieldError", errorMessage);
                             continue;
                         }
                         else
@@ -351,7 +399,6 @@ public class BeginImportContentItemsFromCsv
                     DraftContent = content,
                     IsPublished = importAsDraft == false,
                     IsDraft = importAsDraft,
-                    WebTemplateId = template.Id,
                     ContentTypeId = contentType.Id
                 };
 
@@ -379,7 +426,11 @@ public class BeginImportContentItemsFromCsv
                     ContentItemId = contentItem.Id
                 };
 
-                yield return new CommandResponseDto<ContentItem>(contentItem);
+                yield return new CommandResponseDto<ContentItemDataFromCsv>(new ContentItemDataFromCsv
+                {
+                    ContentItem = contentItem,
+                    WebTemplateDeveloperName = templateDeveloperName,
+                });
             }
         }
 
@@ -449,6 +500,12 @@ public class BeginImportContentItemsFromCsv
             _db.MediaItems.Add(mediaItem);
             await _db.SaveChangesAsync(cancellationToken);
             return mediaItem;
+        }
+
+        private record ContentItemDataFromCsv
+        {
+            public required ContentItem ContentItem { get; init; }
+            public required string WebTemplateDeveloperName { get; init; }
         }
     }
 }

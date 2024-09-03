@@ -54,6 +54,10 @@ export default class extends Controller {
                     this.stopCheckingStatus();
                 } else if (task.status.developerName == 'complete') {
                     this.progressBarTarget.classList.add('bg-success');
+                    if (task.statusInfo) {
+                       var html = "<li class=\"list-group-item\">" + task.statusInfo + "</li>";
+                       this.statusInfoTarget.innerHTML += html;
+                    }
                     var html = "<li class=\"list-group-item\">Background task complete</li>";
                     this.statusInfoTarget.innerHTML += html;              
                     this.progressBarTarget.style = `width: 100%`;

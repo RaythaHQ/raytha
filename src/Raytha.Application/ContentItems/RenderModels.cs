@@ -6,6 +6,8 @@ using Raytha.Application.Views;
 using Raytha.Domain.Entities;
 using System.Linq.Expressions;
 using System.Text;
+using CSharpVitamins;
+using Raytha.Application.Themes;
 
 namespace Raytha.Application.ContentItems;
 
@@ -22,11 +24,12 @@ public record ContentItem_RenderModel : IInsertTemplateVariable
     public dynamic PublishedContent { get; init; }
     public string RoutePath { get; init; }
 
-    public static Expression<Func<ContentItemDto, ContentItem_RenderModel>> GetProjection()
+    public static Expression<Func<ContentItemDto, string, ContentItem_RenderModel>> GetProjection()
     {
-        return entity => GetProjection(entity);
+        return (entity, templateDeveloperName) => GetProjection(entity, templateDeveloperName);
     }
-    public static ContentItem_RenderModel GetProjection(ContentItemDto entity)
+
+    public static ContentItem_RenderModel GetProjection(ContentItemDto entity, string templateDeveloperName)
     {
         return new ContentItem_RenderModel
         {
@@ -35,7 +38,7 @@ public record ContentItem_RenderModel : IInsertTemplateVariable
             CreationTime = entity.CreationTime,
             LastModifierUser = AuditableUser_RenderModel.GetProjection(entity.LastModifierUser),
             LastModificationTime = entity.LastModificationTime,
-            Template = entity.WebTemplate?.DeveloperName,
+            Template = templateDeveloperName,
             ContentType = ContentType_RenderModel.GetProjection(entity.ContentType),
             PrimaryField = entity.PrimaryField,
             PublishedContent = entity.PublishedContent,
@@ -110,6 +113,7 @@ public record ContentItemListResult_RenderModel : IInsertTemplateVariable
 
     public static ContentItemListResult_RenderModel GetProjection(
         ListResultDto<ContentItemDto> entity,
+        IDictionary<ShortGuid, string> webTemplateDeveloperNamesByContentItemId,
         ViewDto view,
         string search = "",
         string filter = "",
@@ -117,10 +121,9 @@ public record ContentItemListResult_RenderModel : IInsertTemplateVariable
         int pageSize = 50,
         int pageNumber = 1)
     {
-        var convertedToList = entity.Items.Select(p => ContentItem_RenderModel.GetProjection(p)).ToList();
         return new ContentItemListResult_RenderModel
         {
-            Items = convertedToList,
+            Items = entity.Items.Select(ci => ContentItem_RenderModel.GetProjection(ci, webTemplateDeveloperNamesByContentItemId[ci.Id])).ToArray(),
             TotalCount = entity.TotalCount,
             Search = search,
             Filter = filter,

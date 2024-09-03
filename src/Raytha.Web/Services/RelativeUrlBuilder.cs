@@ -25,13 +25,14 @@ public class RelativeUrlBuilder : IRelativeUrlBuilder
 
     public string MediaRedirectToFileUrl(string objectKey) => ResolveUrlIfHttpContextAccessExists("RedirectToFileUrlByObjectKey", "MediaItems", new { area = "Admin", controller = "MediaItems", action = "RedirectToFileUrlByObjectKey", objectKey });
 
-    public string MediaFileLocalStorageUrl(string objectKey) => _httpContextAccessor.HttpContext == null ? $"{_currentOrganization.PathBase}/_static-files/{objectKey}" : $"{_httpContextAccessor.HttpContext.Request.Scheme}://{_httpContextAccessor.HttpContext.Request.Host}{_currentOrganization.PathBase}/_static-files/{objectKey}";
+    public string MediaFileLocalStorageUrl(string objectKey) => GetBaseUrl() + $"/_static-files/{objectKey}";
 
     public string UserLoginUrl() => ResolveUrlIfHttpContextAccessExists("LoginWithEmailAndPassword", "Login", new { area = "Public", controller = "Login", action = "LoginWithEmailAndPassword" });
 
     public string UserLoginWithMagicLinkCompleteUrl(string token, string returnUrl = "") => ResolveUrlIfHttpContextAccessExists("LoginWithMagicLinkComplete", "Login", new { area = "Public", controller = "Login", action = "LoginWithMagicLinkComplete", token, returnUrl });
 
     public string UserForgotPasswordCompleteUrl(string token) => ResolveUrlIfHttpContextAccessExists("ForgotPasswordComplete", "Login", new { area = "Public", controller = "Login", action = "ForgotPasswordComplete", token });
+    public string GetBaseUrl() => _httpContextAccessor.HttpContext == null ? $"{_currentOrganization.PathBase}" : $"{_httpContextAccessor.HttpContext.Request.Scheme}://{_httpContextAccessor.HttpContext.Request.Host}{_currentOrganization.PathBase}";
 
     private string ResolveUrlIfHttpContextAccessExists(string action, string controller, object values)
     {

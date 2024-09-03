@@ -1,4 +1,5 @@
-﻿using CSharpVitamins;
+﻿using System;
+using CSharpVitamins;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -11,6 +12,7 @@ using Raytha.Domain.Entities;
 using Raytha.Web.Areas.Admin.Views.MediaItems;
 using System.IO;
 using System.Threading.Tasks;
+using Raytha.Application.Themes.Queries;
 
 namespace Raytha.Web.Areas.Admin.Controllers;
 
@@ -23,7 +25,7 @@ public class MediaItemsController : BaseController
 
     [HttpPost]
     [Route($"{RAYTHA_ROUTE_PREFIX}/media-items/presign", Name = "mediaitemspresignuploadurl")]
-    public async Task<IActionResult> CloudUploadPresignRequest(string contentType, [FromBody] MediaItemPresignRequest_ViewModel body)
+    public async Task<IActionResult> CloudUploadPresignRequest([FromBody] MediaItemPresignRequest_ViewModel body, string contentType)
     {
         var idForKey = ShortGuid.NewGuid();
         var objectKey = FileStorageUtility.CreateObjectKeyFromIdAndFileName(idForKey, body.filename);
@@ -33,8 +35,8 @@ public class MediaItemsController : BaseController
     }
 
     [HttpPost]
-    [Route($"{RAYTHA_ROUTE_PREFIX}/media-items/create-after-upload", Name = "mediaitemscreate")]
-    public async Task<IActionResult> CloudUploadCreateAfterUpload(string contentType, [FromBody] MediaItemCreateAfterUpload_ViewModel body)
+    [Route($"{RAYTHA_ROUTE_PREFIX}/media-items/create-after-upload", Name = "mediaitemscreateafterupload")]
+    public async Task<IActionResult> CloudUploadCreateAfterUpload([FromBody] MediaItemCreateAfterUpload_ViewModel body, string contentType, string themeId)
     {
         var input = new CreateMediaItem.Command
         {
@@ -43,7 +45,8 @@ public class MediaItemsController : BaseController
             Length = body.length,
             ContentType = body.contentType,
             FileStorageProvider = FileStorageProvider.GetName(),
-            ObjectKey = body.objectKey
+            ObjectKey = body.objectKey,
+            ThemeId = themeId,
         };
 
         var response = await Mediator.Send(input);
@@ -60,7 +63,7 @@ public class MediaItemsController : BaseController
 
     [HttpPost]
     [Route($"{RAYTHA_ROUTE_PREFIX}/media-items/upload", Name = "mediaitemslocalstorageupload")]
-    public async Task<IActionResult> LocalStorageUpload(IFormFile file, string contentType)
+    public async Task<IActionResult> LocalStorageUpload(IFormFile file, string contentType, string themeId)
     {
         if (file.Length <= 0)
         {
@@ -73,7 +76,6 @@ public class MediaItemsController : BaseController
             var data = stream.ToArray();
 
             var idForKey = ShortGuid.NewGuid();
-
             var objectKey = FileStorageUtility.CreateObjectKeyFromIdAndFileName(idForKey, file.FileName);
             await FileStorageProvider.SaveAndGetDownloadUrlAsync(data, objectKey, file.FileName, file.ContentType, FileStorageUtility.GetDefaultExpiry());
 
@@ -84,7 +86,8 @@ public class MediaItemsController : BaseController
                 Length = data.Length,
                 ContentType = file.ContentType,
                 FileStorageProvider = FileStorageProvider.GetName(),
-                ObjectKey = objectKey
+                ObjectKey = objectKey,
+                ThemeId = themeId,
             };
 
             var response = await Mediator.Send(input);

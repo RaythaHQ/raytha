@@ -1,0 +1,73 @@
+﻿@using Raytha.Application.Common.Interfaces
+
+@inject ICurrentOrganization CurrentOrganization
+
+@model ThemesEdit_ViewModel
+@{
+    ViewData["Title"] = "Themes > Edit theme";
+    ViewData["ActiveSubMenu"] = "Edit";
+}
+@(await Html.PartialAsync("_PageHeader", new PageHeader_ViewModel
+{
+    Title = ViewData["Title"].ToString(),
+}))
+
+<div class="row mb-4">
+    <div class="col-xxl-7 col-xl-8 col-lg-9 col-md-12">
+        <div class="card border-0 shadow mb-4">
+            <div class="card-body">
+                @(await Html.PartialAsync("_BackToList", new ThemesBackToList_ViewModel
+                {
+                    IsWebTemplates = false,
+                    IsMediaItems = false,
+                }))
+                <form asp-route="themesedit" method="post" class="py-4">
+                    <input type="hidden" asp-for="Id">
+                    <div class="col-lg-12 col-md-12">
+                        <div class="mb-3">
+                            <label class="form-label raytha-required" asp-for="Title"></label>
+                            <input type="text" class="form-control @Model.HasError("Title")" asp-for="Title"
+                                   data-shared--developername-target="title"
+                                   data-action="keyup->shared--developername#setDeveloperName change->shared--developername#setDeveloperName">
+                            <div class="invalid-feedback">@Model.ErrorMessageFor("Title")</div>
+                        </div>
+                    </div>
+                    <div class="col-lg-12 col-md-12">
+                        <div class="mb-3">
+                            <label class="form-label" asp-for="DeveloperName"></label>
+                            <input type="text" class="form-control @Model.HasError("DeveloperName")"
+                                   asp-for="DeveloperName" readonly>
+                            <div class="invalid-feedback">@Model.ErrorMessageFor("DeveloperName")</div>
+                        </div>
+                    </div>
+                    <div class="col-lg-12 col-md-12">
+                        <div class="mb-3">
+                            <label class="form-label" asp-for="Description"></label>
+                            <input type="text" class="form-control @Model.HasError("Description")" asp-for="Description">
+                            <div class="invalid-feedback">@Model.ErrorMessageFor("Description")</div>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-success mt-4">Save</button>
+                </form>
+
+                <hr/>
+                @if (CurrentOrganization.ActiveThemeId != Model.Id)
+                {
+                        <form asp-route="themessetasactivetheme" method="post" class="py-4" asp-route-id="@Model.Id" data-turbo="false">
+                        <div class="col-lg-12">
+                            <button type="submit" class="btn btn-secondary mx-2">Set as active theme</button>
+                        </div>
+                    </form>
+                }
+                else
+                {
+                    <p>This theme is currently set as active.</p>
+                }
+            </div>
+        </div>
+    </div>
+    @(await Html.PartialAsync("~/Areas/Admin/Views/Themes/_ActionsMenu.cshtml", new ThemesActionsMenu_ViewModel
+    {
+        ThemeId = Model.Id,
+    }))
+</div>

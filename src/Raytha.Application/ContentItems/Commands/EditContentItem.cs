@@ -79,7 +79,6 @@ public class EditContentItem
             var entity = _db.ContentItems
                 .Include(p => p.CreatorUser)
                 .Include(p => p.LastModifierUser)
-                .Include(p => p.WebTemplate)
                 .Include(p => p.ContentType)
                 .Include(p => p.Route).First(p => p.Id == request.Id.Guid);
 

@@ -37,19 +37,19 @@ public class CreateContentTypeField
             RuleFor(x => x.DeveloperName).Must(p => NotReservedFieldName(p)).WithMessage($"Reserved word - cannot be used as a developer name");
             RuleFor(x => x).Custom((request, context) =>
             {
-                var anyAlreadyExistWithDeveloperName = db.ContentTypeFields
+                var contentTypeField = db.ContentTypeFields
                     .IgnoreQueryFilters()
-                    .FirstOrDefault(p =>
-                        p.ContentTypeId == request.ContentTypeId.Guid &&
-                        p.DeveloperName == request.DeveloperName.ToDeveloperName());
+                    .Where(ctf => ctf.ContentTypeId == request.ContentTypeId.Guid && ctf.DeveloperName == request.DeveloperName.ToDeveloperName())
+                    .Select(ctf => new { ctf.IsDeleted })
+                    .FirstOrDefault();
 
-                if (anyAlreadyExistWithDeveloperName != null && !anyAlreadyExistWithDeveloperName.IsDeleted)
+                if (contentTypeField != null && !contentTypeField.IsDeleted)
                 {
                     context.AddFailure("DeveloperName", "Another field with that developer name already exists.");
                     return;
                 }
                 
-                if (anyAlreadyExistWithDeveloperName != null && anyAlreadyExistWithDeveloperName.IsDeleted)
+                if (contentTypeField != null && contentTypeField.IsDeleted)
                 {
                     context.AddFailure("DeveloperName", "A previously deleted field has already used that developer name. You must choose another one.");
                     return;

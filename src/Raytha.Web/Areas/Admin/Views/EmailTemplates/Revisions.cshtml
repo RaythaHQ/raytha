@@ -1,0 +1,81 @@
+@using Raytha.Web.Areas.Admin.Views.EmailTemplates
+@model Raytha.Web.Areas.Admin.Views.EmailTemplates.EmailTemplatesRevisionsPagination_ViewModel
+@{
+    ViewData["Title"] = "Email templates > Revisions";
+    ViewData["ActiveSubMenu"] = "Revisions";
+}
+
+@(await Html.PartialAsync("_PageHeader", new PageHeader_ViewModel
+{
+    Title = ViewData["Title"].ToString(),
+}))
+
+<div class="row mb-4">
+    <div class="col-xxl-7 col-xl-8 col-lg-9 col-md-12">
+        <div class="raytha-data-card mb-4">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-centered table-nowrap mb-0 rounded">
+                        <thead class="thead-light">
+                            <tr>
+                                <th class="border-0 rounded-start">Action</th>
+                                @(await Html.PartialAsync("_TableColumnHeader", new TableColumnHeader_ViewModel()
+                                {
+                                    Model = Model,
+                                    PropertyName = "CreationTime",
+                                    DisplayName = ViewModelExtensions.GetDisplayName<EmailTemplatesRevisionsListItem_ViewModel>(p => p.CreationTime)
+                                }))
+                                <th class="border-0"></th>
+                                <th class="border-0">
+                                    Subject
+                                </th>
+                                <th class="border-0 rounded-start">
+                                    Created by
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Model.Items)
+                            {
+                                <tr>
+                                    <td class="align-middle" data-controller="shared--confirmaction" data-shared--confirmaction-title-value="Are you sure you want to revert to this template?">
+                                        <form method="post" asp-route="emailtemplatesrevisionsrevert" , asp-route-revisionId="@item.Id" asp-route-id="@Model.EmailTemplateId"
+                                          data-shared--confirmaction-target="form">
+                                            <button class="btn btn-sm btn-success"
+                                                data-action="click->shared--confirmaction#warning">
+                                                Revert
+                                            </button>
+                                        </form>
+                                    </td>
+                                    <td class="align-middle">@item.CreationTime</td>
+                                    <td class="align-middle"><button class="btn" data-bs-toggle="modal" data-bs-target="#modal-@item.Id"><svg class="icon icon-sm mx-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg></button></td>
+                                    <td class="align-middle">@item.Subject</td>
+                                    <td class="align-middle">@item.CreatorUser</td>
+                                </tr>
+                                <div class="modal fade" id="modal-@item.Id" tabindex="-1" aria-labelledby="modal-default" style="display: none;"
+                                    aria-hidden="true">
+                                    <div class="modal-dialog modal-dialog-centered" role="document">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h2 class="h6 modal-title">Content</h2><button type="button" class="btn-close"
+                                                data-bs-dismiss="modal" aria-label="Close"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <code>@item.Content</code>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </tbody>
+                    </table>
+                    <partial name="_TablePagination" model="@Model" />
+                </div>
+            </div>
+        </div>
+    </div>
+    @(await Html.PartialAsync("~/Areas/Admin/Views/EmailTemplates/_ActionsMenu.cshtml", new EmailTemplateActionsMenu_ViewModel
+    {
+        Id = Model.EmailTemplateId,
+    }))
+</div>

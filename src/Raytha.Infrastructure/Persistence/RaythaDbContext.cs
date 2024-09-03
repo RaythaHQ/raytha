@@ -55,6 +55,13 @@ public class RaythaDbContext : DbContext, IRaythaDbContext, IDataProtectionKeyCo
     public DbSet<BackgroundTask> BackgroundTasks => Set<BackgroundTask>();
     public DbSet<RaythaFunction> RaythaFunctions => Set<RaythaFunction>();
     public DbSet<RaythaFunctionRevision> RaythaFunctionRevisions => Set<RaythaFunctionRevision>();
+    public DbSet<NavigationMenu> NavigationMenus => Set<NavigationMenu>();
+    public DbSet<NavigationMenuRevision> NavigationMenuRevisions => Set<NavigationMenuRevision>();
+    public DbSet<NavigationMenuItem> NavigationMenuItems => Set<NavigationMenuItem>();
+    public DbSet<Theme> Themes => Set<Theme>();
+    public DbSet<ThemeAccessToMediaItem> ThemeAccessToMediaItems => Set<ThemeAccessToMediaItem>();
+    public DbSet<WebTemplateViewRelation> WebTemplateViewRelations => Set<WebTemplateViewRelation>();
+    public DbSet<WebTemplateContentItemRelation> WebTemplateContentItemRelations => Set<WebTemplateContentItemRelation>();
     public DbSet<DataProtectionKey> DataProtectionKeys { get; set; } = null!;
 
     public DbContext DbContext => DbContext;

@@ -15,7 +15,10 @@ public abstract record LoggableRequest<T> : IRequest<T>, ILoggableRequest
         return this.GetType()
             .FullName
             .Replace("Raytha.Application.", string.Empty)
-            .Replace("+Command", string.Empty);
+            .Replace("+Command", string.Empty)
+            .Replace("NavigationMenu", "Menu")
+            .Replace("NavigationMenuItem", "MenuItem")
+            .Replace("RaythaFunction", "Function");
     }
 }
 

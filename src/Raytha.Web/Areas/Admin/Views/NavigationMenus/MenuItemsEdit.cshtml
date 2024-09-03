@@ -1,0 +1,88 @@
+﻿@using Raytha.Web.Areas.Admin.Views.NavigationMenus
+@model NavigationMenuItemsEdit_ViewModel
+@{
+    ViewData["Title"] = "Menus > Menu items > Edit menu item";
+    ViewData["ActiveSubMenu"] = "Menu items";
+}
+
+@(await Html.PartialAsync("_PageHeader", new PageHeader_ViewModel
+{
+    Title = ViewData["Title"].ToString(),
+}))
+
+<div class="row mb-4" data-controller="shared--developername">
+    <div class="col-xxl-7 col-xl-8 col-lg-9 col-md-12">
+        <div class="card border-0 shadow mb-4">
+            <div class="card-body">
+                @(await Html.PartialAsync("_BackToList", new NavigationMenuItemsBackToList_ViewModel
+                {
+                    IsMenuItems = true,
+                    NavigationMenuId = Model.NavigationMenuId,
+                }))
+                <form asp-route="menuitemsedit" method="post" class="py-4">
+                    <div class="col-lg-12">
+                        <div class="mb-3">
+                            <label class="form-label" asp-for="ParentNavigationMenuItemId"></label>
+                            <select class="form-select @Model.HasError("ParentNavigationMenuItemId")" asp-for="ParentNavigationMenuItemId" asp-items="@(new SelectList(Model.NavigationMenuItems, "Id", "Label"))">
+                                <option value="">(root)</option>
+                            </select>
+                            <div class="invalid-feedback">@Model.ErrorMessageFor("ParentNavigationMenuItemId")</div>
+                        </div>
+                    </div>
+                    <div class="col-lg-12 col-md-12">
+                        <div class="mb-3">
+                            <label class="form-label raytha-required" asp-for="Label"></label>
+                            <input type="text" class="form-control @Model.HasError("Label")" asp-for="Label" required>
+                            <div class="invalid-feedback">@Model.ErrorMessageFor("Label")</div>
+                        </div>
+                    </div>
+                    <div class="col-lg-12 col-md-12">
+                        <div class="mb-3">
+                            <label class="form-label raytha-required" asp-for="Url"></label>
+                            <input type="text" class="form-control @Model.HasError("Url")" asp-for="Url" required>
+                            <div class="invalid-feedback">@Model.ErrorMessageFor("Url")</div>
+                        </div>
+                    </div>
+                    <div class="col-lg-12">
+                        <div class="mb-3">
+                            <div class="col-lg-12">
+                                <div class="form-check">
+                                    <input class="form-check-input @Model.HasError("IsDisabled")" type="checkbox" asp-for="IsDisabled">
+                                    <label class="form-check-label" asp-for="IsDisabled"></label>
+                                    <div class="invalid-feedback">@Model.ErrorMessageFor("IsDisabled")</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-12">
+                        <div class="mb-3">
+                            <div class="col-lg-12">
+                                <div class="form-check">
+                                    <input class="form-check-input @Model.HasError("OpenInNewTab")" type="checkbox" asp-for="OpenInNewTab">
+                                    <label class="form-check-label" asp-for="OpenInNewTab"></label>
+                                    <div class="invalid-feedback">@Model.ErrorMessageFor("OpenInNewTab")</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-12 col-md-12">
+                        <div class="mb-3">
+                            <label class="form-label" asp-for="CssClassName"></label>
+                            <input type="text" class="form-control @Model.HasError("CssClassName")" asp-for="CssClassName">
+                            <div class="invalid-feedback">@Model.ErrorMessageFor("CssClassName")</div>
+                        </div>
+                    </div>
+                    <input type="hidden" asp-for="@Model.Id">
+                    <input type="hidden" asp-for="@Model.NavigationMenuId">
+                    <button type="submit" class="btn btn-success mt-4">Save changes</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    @(await Html.PartialAsync("_ActionsMenu", new NavigationMenusActionsMenu_ViewModel
+    {
+        NavigationMenuId = Model.NavigationMenuId,
+        IsNavigationMenuItem = true,
+        NavigationMenuItemId = Model.Id,
+    }))
+</div>
