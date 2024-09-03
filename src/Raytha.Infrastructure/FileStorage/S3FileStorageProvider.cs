@@ -38,7 +38,18 @@ public class S3FileStorageProvider : IFileStorageProvider
 
     public async Task DeleteAsync(string key)
     {
-        throw new NotImplementedException();
+        var request = new DeleteObjectRequest
+        {
+            BucketName = _bucket,
+            Key = key,
+        };
+
+        var response = await _client.DeleteObjectAsync(request);
+
+        if (response.HttpStatusCode != HttpStatusCode.NoContent)
+        {
+            throw new Exception($"Failed to delete object with key '{key}'. Status code: {response.HttpStatusCode}");
+        }
     }
 
     public async Task<string> GetDownloadUrlAsync(string key, DateTime expiresAt, bool inline = true)

@@ -3,7 +3,7 @@ using Raytha.Application.ContentItems;
 using Raytha.Application.ContentTypes;
 using Raytha.Application.Routes;
 using Raytha.Application.MediaItems;
-using Raytha.Application.Templates.Web;
+using Raytha.Application.Themes.WebTemplates;
 using Raytha.Application.UserGroups;
 using Raytha.Application.Users;
 using CSharpVitamins;

@@ -1,4 +1,5 @@
-﻿using CSharpVitamins;
+﻿using System.Text.Json;
+using CSharpVitamins;
 using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
@@ -77,20 +78,27 @@ public class DeleteContentItem
                 .Include(p => p.Route)
                 .First(p => p.Id == request.Id.Guid);
 
+            var webTemplateIds = await _entityFrameworkDb.WebTemplateContentItemRelations
+                .Where(wtr => wtr.ContentItemId == request.Id.Guid)
+                .Select(wtr => wtr.WebTemplateId)
+                .ToArrayAsync(cancellationToken);
+
             var trashEntity = new DeletedContentItem
             {
                 _PublishedContent = entityToDelete._PublishedContent,
                 ContentTypeId = entityToDelete.ContentTypeId,
                 OriginalContentItemId = request.Id.Guid,
-                WebTemplateId = entityToDelete.WebTemplateId,
                 PrimaryField = primaryFieldValue,
-                RoutePath = entityToDelete.Route.Path
+                RoutePath = entityToDelete.Route.Path,
+                WebTemplateIdsJson = JsonSerializer.Serialize(webTemplateIds),
             };
+
             _entityFrameworkDb.DeletedContentItems.Add(trashEntity);
             _entityFrameworkDb.ContentItems.Remove(entityToDelete);
             _entityFrameworkDb.Routes.Remove(entityToDelete.Route);
 
             entityToDelete.AddDomainEvent(new ContentItemDeletedEvent(entityToDelete));
+
             await _entityFrameworkDb.SaveChangesAsync(cancellationToken);
             return new CommandResponseDto<ShortGuid>(request.Id);
         }

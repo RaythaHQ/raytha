@@ -1,14 +1,43 @@
 # Deploy Raytha to Production
 
-Deploying Raytha CMS to production is similar to deploying any other .NET 6+ web application. However, there are some important considerations to keep in mind before deploying:
+Deploying Raytha CMS to production is similar to deploying any other .NET 8+ web application. However, there are some important considerations to keep in mind before deploying:
 
 * Choose the deployment environment that best fits your needs, such as a bare metal VM, a PaaS solution like Azure App Service, or a containerized solution like Docker.
-* Decide on a file storage provider, such as Azure Blob Storage or an S3-compatible storage, that best suits your requirements.
+* Decide on a file storage provider, such as local storage, Azure Blob Storage, or an S3-compatible storage, that best suits your requirements.
 * Choose between self-hosting your SQL Server database or using a managed provider like Azure SQL.
 
 Our team has extensively tested Raytha on various deployment environments and storage providers. For instance, we have successfully deployed Raytha on Azure App Service's Windows environment as well as Web Apps for Containers. We have also tested Raytha's file storage in both `Local` mode and with Azure Blob Storage. While using Azure Blob Storage is recommended for production, Local mode is sufficient for testing and development purposes.
 
 Furthermore, we have deployed Raytha's database on Azure SQL and tested it in Azure Kubernetes Service. We found that this setup was not only effective but also easy to configure.
+
+## Minimum Docker Deployment
+
+**Dependencies**
+
+* SQL Server or Azure SQL
+* SMTP for email
+
+**Running Raytha**
+
+1. Pull the docker image
+```
+docker pull raythahq/raytha
+```
+2. Create your database and run the Create Database Script with [this SQL script](https://github.com/RaythaHQ/raytha/blob/main/db/FreshCreateOnLatestVersion.sql)
+
+3. Create an environment file that sets the SQL server connection string for setting:
+
+```
+ConnectionStrings__DefaultConnection
+```
+
+[View all available environment variables](https://github.com/RaythaHQ/raytha/blob/main/src/Raytha.Web/appsettings.json), including if you wish to use a storage provider such as Azure Blob or S3-compatible, and also receive emails for password retrieval and other functionality.
+
+4. Run with command.
+
+```
+ docker run -p 8080:8080 --env-file your-env-file
+```
 
 ## Installation Support
 

@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.HttpLogging;
 using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
@@ -10,7 +11,9 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Raytha.Application;
 using Raytha.Application.Common.Utils;
+using Raytha.Infrastructure.Persistence;
 using Raytha.Web.Middlewares;
+using System;
 using System.IO;
 
 namespace Raytha.Web;
@@ -82,5 +85,14 @@ public class Startup
         {
             endpoints.MapControllers();
         });
+
+        bool applyMigrationsOnStartup = Convert.ToBoolean(Configuration["APPLY_PENDING_MIGRATIONS"] ?? "false");
+        if (applyMigrationsOnStartup)
+        {
+            using (var scope = app.ApplicationServices.GetService<IServiceScopeFactory>().CreateScope())
+            {
+                scope.ServiceProvider.GetRequiredService<RaythaDbContext>().Database.Migrate();
+            }
+        }
     }
 }

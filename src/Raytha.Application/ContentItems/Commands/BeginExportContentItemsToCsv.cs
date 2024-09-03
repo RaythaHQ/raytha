@@ -116,13 +116,23 @@ public class BeginExportContentItemsToCsv
 
             var myExport = new CsvExport();
             int currentIndex = 0;
+            var activeThemeId = await _entityFrameworkDb.OrganizationSettings
+                .Select(os => os.ActiveThemeId)
+                .FirstAsync(cancellationToken);
+
+            var contentItemIdsTemplateLabels = await _entityFrameworkDb.WebTemplateContentItemRelations
+                .Where(wtr => wtr.WebTemplate!.ThemeId == activeThemeId)
+                .Select(wtr => new { wtr.ContentItemId, wtr.WebTemplate!.Label })
+                .ToDictionaryAsync(wtr => wtr.ContentItemId, wtr => wtr.Label, cancellationToken);
+
             foreach (var item in _db.QueryAllContentItemsAsTransaction(view.ContentTypeId,
                                                 new string[0],
                                                 string.Empty,
                                                 filters,
                                                 finalOrderBy))
             {
-                var contentItemAsDict = _fieldValueConverter.MapToListItemValues(ContentItemDto.GetProjection(item));
+                var webTemplateLabel = contentItemIdsTemplateLabels[item.Id];
+                var contentItemAsDict = _fieldValueConverter.MapToListItemValues(ContentItemDto.GetProjection(item), webTemplateLabel);
 
                 myExport.AddRow();
                 if (exportOnlyColumnsFromView)

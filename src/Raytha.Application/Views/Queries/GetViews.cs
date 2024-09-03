@@ -55,7 +55,7 @@ public class GetViews
             }
 
             var total = await query.CountAsync();
-            var items = query.ApplyPaginationInput(request).Select(ViewDto.GetProjection()).ToArray();
+            var items = query.ApplyPaginationInput(request).Select(v => ViewDto.GetProjection(v)).ToArray();
 
             return new QueryResponseDto<ListResultDto<ViewDto>>(new ListResultDto<ViewDto>(items, total));
         }

@@ -1,12 +1,7 @@
 ﻿using CSharpVitamins;
-using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Models;
-using Raytha.Application.Common.Utils;
 using Raytha.Application.ContentTypes;
-using Raytha.Application.Templates.Web;
-using Raytha.Domain.Common;
 using Raytha.Domain.Entities;
-using Raytha.Domain.ValueObjects.FieldValues;
 using System.Linq.Expressions;
 using System.Text.Json.Serialization;
 
@@ -20,11 +15,7 @@ public record ContentItemDto : BaseEntityDto
     public DateTime? LastModificationTime { get; init; }
     public bool IsPublished { get; init; }
     public bool IsDraft { get; init; }
-    public ShortGuid WebTemplateId { get; init; }
     public ShortGuid ContentTypeId { get; init; }
-
-    [JsonIgnore]
-    public WebTemplateDto WebTemplate { get; init; }
 
     [JsonIgnore]
     public ContentTypeDto? ContentType { get; init; }
@@ -40,6 +31,7 @@ public record ContentItemDto : BaseEntityDto
     {
         return entity => GetProjection(entity);
     }
+
     public static ContentItemDto GetProjection(ContentItem entity)
     {
         return new ContentItemDto
@@ -51,8 +43,6 @@ public record ContentItemDto : BaseEntityDto
             LastModificationTime = entity.LastModificationTime,
             IsDraft = entity.IsDraft,
             IsPublished = entity.IsPublished,
-            WebTemplateId = entity.WebTemplateId,
-            WebTemplate = WebTemplateDto.GetProjection(entity.WebTemplate),
             ContentTypeId = entity.ContentTypeId,
             ContentType = ContentTypeDto.GetProjection(entity.ContentType),
             PrimaryField = entity.PrimaryField,

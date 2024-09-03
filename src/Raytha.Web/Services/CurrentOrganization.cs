@@ -92,6 +92,7 @@ public class CurrentOrganization : ICurrentOrganization
     public ShortGuid? HomePageId => OrganizationSettings.HomePageId;
 
     public string HomePageType => OrganizationSettings.HomePageType;
+    public ShortGuid ActiveThemeId => OrganizationSettings.ActiveThemeId;
 
     public OrganizationTimeZoneConverter TimeZoneConverter => OrganizationTimeZoneConverter.From(TimeZone, DateFormat);
 

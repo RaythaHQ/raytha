@@ -1,0 +1,56 @@
+@model MediaItemList_ViewModel
+@{
+    ViewData["Title"] = "Themes > Media items";
+    ViewData["ActiveSubMenu"] = "Media items";
+}
+
+@(await Html.PartialAsync("_PageHeader", new PageHeader_ViewModel
+{
+    Title = ViewData["Title"].ToString(),
+}))
+
+<div class="row mb-4">
+    <div class="col-xxl-7 col-xl-8 col-lg-9 col-md-12">
+        <div class="raytha-data-card mb-4  raytha-border-top">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table mb-0 rounded">
+                        <thead class="thead-light">
+                            <tr>
+                                <th class="border-0 rounded-start">File name</th>
+                                <th class="border-0">Content type</th>
+                                <th class="border-0">File storage provider</th>
+                                <th class="border-0">Object key</th>
+                                <th class="border-0 rounded-end">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Model.Items)
+                            {
+                                <tr>
+                                    <td>@item.FileName</td>
+                                    <td>@item.ContentType</td>
+                                    <td>@item.FileStorageProvider</td>
+                                    <td>@item.ObjectKey</td>
+                                    <td>
+                                        <div data-controller="shared--confirmaction" data-shared--confirmaction-title-value="Are you sure you want to delete this media item? This action cannot be undone.">
+                                            <form method="post" asp-route="mediaitemsdelete" asp-route-themeId="@Model.ThemeId" asp-route-id="@item.Id" data-shared--confirmaction-target="form">
+                                                <button class="btn btn-link text-danger p-0 m-0 border-0 bg-transparent" data-action="click->shared--confirmaction#warning">
+                                                    Delete
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    @(await Html.PartialAsync("~/Areas/Admin/Views/Themes/_ActionsMenu.cshtml", new ThemesActionsMenu_ViewModel
+    {
+        ThemeId = Model.ThemeId,
+    }))
+</div>

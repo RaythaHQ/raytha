@@ -20,7 +20,10 @@ public class RaythaFunctionTriggerType : ValueObject
         return type;
     }
 
-    public static RaythaFunctionTriggerType HttpRequest => new("Http Request", "http_request");
+    public static RaythaFunctionTriggerType HttpRequest => new("Http request", "http_request");
+    public static RaythaFunctionTriggerType ContentItemCreated => new("Content item created", "content_item_created");
+    public static RaythaFunctionTriggerType ContentItemUpdated => new("Content item updated", "content_item_updated");
+    public static RaythaFunctionTriggerType ContentItemDeleted => new("Content item deleted", "content_item_deleted");
 
     public string Label { get; }
     public string DeveloperName { get; }
@@ -40,6 +43,9 @@ public class RaythaFunctionTriggerType : ValueObject
         get
         {
             yield return HttpRequest;
+            yield return ContentItemCreated;
+            yield return ContentItemUpdated;
+            yield return ContentItemDeleted;
         }
     }
 

@@ -1,0 +1,92 @@
+@using Raytha.Web.Areas.Admin.Views.EmailTemplates
+@model List_ViewModel<Raytha.Web.Areas.Admin.Views.EmailTemplates.EmailTemplatesListItem_ViewModel>
+@{
+    ViewData["Title"] = "Email templates";
+}
+
+@section headstyles
+{
+    <style>
+        table thead th:last-child {
+          position: sticky;
+          right: 0;
+          z-index: 2;
+          background-color:white;
+        }
+
+        table tbody td:last-child {
+          position: sticky;
+          right: 0;
+          z-index: 2;
+          background-color:white;
+        }
+    </style>
+}
+
+@(await Html.PartialAsync("_PageHeader", new PageHeader_ViewModel
+{
+    Title = ViewData["Title"].ToString(),
+}))
+
+<nav class="navbar navbar-expand-lg navbar-light raytha-view-nav raytha-border-top">
+    <div class="container-fluid mx-2">
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse justify-content-end" id="navbarSupportedContent">
+            <form class="d-flex" asp-route="EmailTemplatesIndex" method="get">
+                <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search" name="search" value="@Model.Search">
+                <button class="btn btn-outline-success" type="submit">Search</button>
+            </form>
+        </div>
+    </div>
+</nav>
+
+<div class="raytha-data-card mb-4">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-centered table-nowrap mb-0 rounded">
+                <thead class="thead-light">
+                    <tr>
+                        @(await Html.PartialAsync("_TableColumnHeader", new TableColumnHeader_ViewModel()
+                        {
+                            Model = Model,
+                            PropertyName = "Subject",
+                            IsFirst = true,
+                            DisplayName = ViewModelExtensions.GetDisplayName<EmailTemplatesListItem_ViewModel>(p => p.Subject)
+                        }))
+                        @(await Html.PartialAsync("_TableColumnHeader", new TableColumnHeader_ViewModel()
+                        {
+                            Model = Model,
+                            PropertyName = "DeveloperName",
+                            DisplayName = ViewModelExtensions.GetDisplayName<EmailTemplatesListItem_ViewModel>(p => p.DeveloperName)
+                        }))
+                        @(await Html.PartialAsync("_TableColumnHeader", new TableColumnHeader_ViewModel()
+                        {
+                            Model = Model,
+                            PropertyName = "LastModificationTime",
+                            DisplayName = ViewModelExtensions.GetDisplayName<EmailTemplatesListItem_ViewModel>(p => p.LastModificationTime)
+                        }))
+                        <th class="border-0">
+                            Last modified by
+                        </th>
+                        <th class="border-0 rounded-end">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model.Items)
+                    {
+                        <tr>
+                            <td>@item.Subject</td>
+                            <td>@item.DeveloperName</td>
+                            <td>@item.LastModificationTime</td>
+                            <td>@item.LastModifierUser</td>
+                            <td><a asp-route="emailtemplatesedit" asp-route-id="@item.Id">Edit</a></td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+            <partial name="_TablePagination" model="@Model" />
+        </div>
+    </div>
+</div>

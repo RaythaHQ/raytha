@@ -15,7 +15,8 @@ export default class extends Controller {
         usedirectuploadtocloud: Boolean,
         mimetypes: String,
         maxfilesize: Number,
-        pathbase: String
+        pathbase: String,
+        themeid: String,
     }
 
     static targets = ['uppyContainer', 'uppyCopyUrls', 'toast']
@@ -40,7 +41,7 @@ export default class extends Controller {
 
         if (!this.usedirectuploadtocloudValue) {
             this.uppy.use(XHRUpload, {
-                endpoint: `${this.pathbaseValue}/raytha/media-items/upload`
+                endpoint: `${this.pathbaseValue}/raytha/media-items/upload?themeId=${this.themeidValue}`
             })
             this.uppy.on('upload-success', (file, response) => {
                 var item = {
@@ -54,7 +55,7 @@ export default class extends Controller {
         } else {
             this.uppy.use(AwsS3, {
                 getUploadParameters: file => {
-                    const URL = `${this.pathbaseValue}/raytha/media-items/presign`;
+                    const URL = `${this.pathbaseValue}/raytha/media-items/presign?themeId=${this.themeidValue}`;
                     return fetch(URL, {
                         method: 'POST',
                         headers: {
@@ -82,7 +83,7 @@ export default class extends Controller {
             })
             this.uppy.on('upload-success', (file, response) => {
                 console.log(response);
-                const CREATE_MEDIA_ENDPOINT = `${this.pathbaseValue}/raytha/media-items/create-after-upload`;
+                const CREATE_MEDIA_ENDPOINT = `${this.pathbaseValue}/raytha/media-items/create-after-upload?themeId=${this.themeidValue}`;
 
                 //make post call
                 fetch(CREATE_MEDIA_ENDPOINT, {
@@ -132,6 +133,10 @@ export default class extends Controller {
                 icon: "error"
             });
         })
+    }
+
+    disconnect() {
+       this.uppy.close();
     }
 
     addCopyUrlItem(file) {

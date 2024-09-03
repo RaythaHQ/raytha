@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 using CSharpVitamins;
 using Microsoft.AspNetCore.Mvc;
@@ -8,6 +9,8 @@ using Raytha.Application.ContentItems;
 using Raytha.Application.ContentItems.Queries;
 using Raytha.Application.ContentTypes;
 using Raytha.Application.Routes.Queries;
+using Raytha.Application.Themes.Queries;
+using Raytha.Application.Themes.WebTemplates.Queries;
 using Raytha.Application.Views.Queries;
 using Raytha.Domain.Entities;
 using Raytha.Web.Areas.Public.DbViewEngine;
@@ -30,7 +33,6 @@ public class MainController : BaseController
         {
             if (string.IsNullOrEmpty(route) || route == "/")
             {
-
                 if (CurrentOrganization.HomePageType == Route.CONTENT_ITEM_TYPE)
                 {
                     var input = new GetContentItemById.Query { Id = CurrentOrganization.HomePageId.Value };
@@ -39,9 +41,17 @@ public class MainController : BaseController
                     {
                         return new ErrorActionViewResult(BuiltInWebTemplate.Error404, 404, new GenericError_RenderModel(), ViewData);
                     }
-                    var model = ContentItem_RenderModel.GetProjection(response.Result);
+
+                    var webTemplateResponse = await Mediator.Send(new GetWebTemplateByContentItemId.Query
+                    {
+                        ContentItemId = CurrentOrganization.HomePageId.Value,
+                        ThemeId = CurrentOrganization.ActiveThemeId,
+                    });
+
+                    var model = ContentItem_RenderModel.GetProjection(response.Result, webTemplateResponse.Result.DeveloperName);
                     var contentType = ContentType_RenderModel.GetProjection(response.Result.ContentType);
-                    return new ContentItemActionViewResult(response.Result.WebTemplate.DeveloperName, model, contentType, ViewData);
+
+                    return new ContentItemActionViewResult(webTemplateResponse.Result, model, contentType, ViewData);
                 }
                 else if (CurrentOrganization.HomePageType == Route.VIEW_TYPE)
                 {
@@ -63,11 +73,25 @@ public class MainController : BaseController
                         Filter = filter
                     });
 
-                    var modelAsList = ContentItemListResult_RenderModel.GetProjection(contentItems.Result, view.Result, search, filter, orderBy, pageSize, pageNumber);
+                    var webTemplateContentItemRelationsResponse = await Mediator.Send(new GetWebTemplateContentItemRelationsByContentTypeId.Query
+                    {
+                        ThemeId = CurrentOrganization.ActiveThemeId,
+                        ContentTypeId = view.Result.ContentTypeId,
+                    });
+
+                    var webTemplateDeveloperNamesByContentItemId = webTemplateContentItemRelationsResponse.Result.ToDictionary(wtr => wtr.ContentItemId, wtr => wtr.WebTemplate.DeveloperName);
+                    
+                    var modelAsList = ContentItemListResult_RenderModel.GetProjection(contentItems.Result, webTemplateDeveloperNamesByContentItemId, view.Result, search, filter, orderBy, pageSize, pageNumber);
                     var contentType = ContentType_RenderModel.GetProjection(view.Result.ContentType);
 
+                    var webTemplateResponse = await Mediator.Send(new GetWebTemplateByViewId.Query
+                    {
+                        ThemeId = CurrentOrganization.ActiveThemeId,
+                        ViewId = view.Result.Id,
+                    });
+
                     return new ContentItemActionViewResult(
-                        view.Result.WebTemplate.DeveloperName,
+                        webTemplateResponse.Result,
                         modelAsList,
                         contentType,
                         ViewData);
@@ -86,9 +110,17 @@ public class MainController : BaseController
                     {
                         return new ErrorActionViewResult(BuiltInWebTemplate.Error404, 404, new GenericError_RenderModel(), ViewData);
                     }
-                    var model = ContentItem_RenderModel.GetProjection(contentItem.Result);
+
+                    var webTemplateResponse = await Mediator.Send(new GetWebTemplateByContentItemId.Query
+                    {
+                        ThemeId = CurrentOrganization.ActiveThemeId,
+                        ContentItemId = contentItem.Result.Id,
+                    });
+
+                    var model = ContentItem_RenderModel.GetProjection(contentItem.Result, webTemplateResponse.Result.DeveloperName);
                     var contentType = ContentType_RenderModel.GetProjection(contentItem.Result.ContentType);
-                    return new ContentItemActionViewResult(contentItem.Result.WebTemplate.DeveloperName, model, contentType, ViewData);
+
+                    return new ContentItemActionViewResult(webTemplateResponse.Result, model, contentType, ViewData);
                 }
                 else if (response.Result.PathType == Route.VIEW_TYPE)
                 {
@@ -110,11 +142,25 @@ public class MainController : BaseController
                         Filter = filter
                     });
 
-                    var modelAsList = ContentItemListResult_RenderModel.GetProjection(contentItems.Result, view.Result, search, filter, orderBy, pageSize, pageNumber);
+                    var webTemplateContentItemRelationsResponse = await Mediator.Send(new GetWebTemplateContentItemRelationsByContentTypeId.Query
+                    {
+                        ThemeId = CurrentOrganization.ActiveThemeId,
+                        ContentTypeId = view.Result.ContentTypeId,
+                    });
+
+                    var webTemplateDeveloperNamesByContentItemId = webTemplateContentItemRelationsResponse.Result.ToDictionary(wtr => wtr.ContentItemId, wtr => wtr.WebTemplate.DeveloperName);
+
+                    var modelAsList = ContentItemListResult_RenderModel.GetProjection(contentItems.Result, webTemplateDeveloperNamesByContentItemId, view.Result, search, filter, orderBy, pageSize, pageNumber);
                     var contentType = ContentType_RenderModel.GetProjection(view.Result.ContentType);
-                    
+
+                    var webTemplateResponse = await Mediator.Send(new GetWebTemplateByViewId.Query
+                    {
+                        ThemeId = CurrentOrganization.ActiveThemeId,
+                        ViewId = view.Result.Id,
+                    });
+
                     return new ContentItemActionViewResult(
-                        view.Result.WebTemplate.DeveloperName,
+                        webTemplateResponse.Result,
                         modelAsList,
                         contentType, 
                         ViewData);

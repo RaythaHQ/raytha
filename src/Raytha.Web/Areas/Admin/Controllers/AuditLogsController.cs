@@ -12,12 +12,16 @@ using Raytha.Application.AuthenticationSchemes.Commands;
 using Raytha.Application.Common.Utils;
 using Raytha.Application.ContentItems.Commands;
 using Raytha.Application.ContentTypes.Commands;
+using Raytha.Application.EmailTemplates.Commands;
 using Raytha.Application.Login.Commands;
 using Raytha.Application.MediaItems.Commands;
+using Raytha.Application.NavigationMenuItems.Commands;
+using Raytha.Application.NavigationMenus.Commands;
 using Raytha.Application.OrganizationSettings.Commands;
+using Raytha.Application.RaythaFunctions.Commands;
 using Raytha.Application.Roles.Commands;
-using Raytha.Application.Templates.Email.Commands;
-using Raytha.Application.Templates.Web.Commands;
+using Raytha.Application.Themes.Commands;
+using Raytha.Application.Themes.WebTemplates.Commands;
 using Raytha.Application.UserGroups.Commands;
 using Raytha.Application.Users.Commands;
 using Raytha.Application.Views.Commands;
@@ -165,7 +169,8 @@ public class AuditLogsController : BaseController
             new LoginWithSaml.Command().GetLogName(),
 
             //MediaItems
-            new CreateMediaItem.Command().GetLogName(),
+            CreateMediaItem.Command.Empty().GetLogName(),
+            new DeleteMediaItem.Command().GetLogName(),
 
             //OrganizationSettings
             new EditConfiguration.Command().GetLogName(),
@@ -177,13 +182,46 @@ public class AuditLogsController : BaseController
             new DeleteRole.Command().GetLogName(),
             new EditRole.Command().GetLogName(),
 
-            //Templates
+            //Email-Templates
             new EditEmailTemplate.Command().GetLogName(),
             new RevertEmailTemplate.Command().GetLogName(),
-            new CreateWebTemplate.Command().GetLogName(),
+
+            //Themes
+            BeginDuplicateTheme.Command.Empty().GetLogName(),
+            BeginImportThemeFromUrl.Command.Empty().GetLogName(),
+            BeginMatchWebTemplates.Command.Empty().GetLogName(),
+            CreateTheme.Command.Empty().GetLogName(),
+            new DeleteTheme.Command().GetLogName(),
+            EditTheme.Command.Empty().GetLogName(),
+            ExportTheme.Command.Empty().GetLogName(),
+            new SetAsActiveTheme.Command().GetLogName(),
+            ToggleThemeExportability.Command.Empty().GetLogName(),
+
+            //Web-Templates
+            CreateWebTemplate.Command.Empty().GetLogName(),
             new DeleteWebTemplate.Command().GetLogName(),
-            new EditWebTemplate.Command().GetLogName(),
+            EditWebTemplate.Command.Empty().GetLogName(),
             new RevertWebTemplate.Command().GetLogName(),
+
+            //Menus
+            CreateNavigationMenu.Command.Empty().GetLogName(),
+            CreateNavigationMenuRevision.Command.Empty().GetLogName(),
+            EditNavigationMenu.Command.Empty().GetLogName(),
+            new DeleteNavigationMenu.Command().GetLogName(),
+            new RevertNavigationMenu.Command().GetLogName(),
+            new SetAsMainMenu.Command().GetLogName(),
+
+            //MenuItems
+            CreateNavigationMenuItem.Command.Empty().GetLogName(),
+            DeleteNavigationMenuItem.Command.Empty().GetLogName(),
+            EditNavigationMenuItem.Command.Empty().GetLogName(),
+            new ReorderNavigationMenuItems.Command().GetLogName(),
+
+            //Functions
+            CreateRaythaFunction.Command.Empty().GetLogName(),
+            EditRaythaFunction.Command.Empty().GetLogName(),
+            new DeleteRaythaFunction.Command().GetLogName(),
+            new RevertRaythaFunction.Command().GetLogName(),
 
             //UserGroups
             new CreateUserGroup.Command().GetLogName(),

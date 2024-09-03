@@ -18,6 +18,7 @@ public interface ICurrentOrganization
     bool EmailAndPasswordIsEnabledForUsers { get; }
     ShortGuid? HomePageId { get; }
     string HomePageType { get; }
+    ShortGuid ActiveThemeId { get; }
 
     string PathBase { get; }
     string RedirectWebsite { get; }

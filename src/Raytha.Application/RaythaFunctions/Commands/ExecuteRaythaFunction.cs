@@ -1,16 +1,16 @@
 ﻿using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Raytha.Application.Common.Exceptions;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Models;
 using Raytha.Application.Common.Utils;
-using Raytha.Application.Common.Exceptions;
 
 namespace Raytha.Application.RaythaFunctions.Commands;
 
 public class ExecuteRaythaFunction
 {
-    public record Command : LoggableRequest<CommandResponseDto<object>>
+    public record Command : IRequest<CommandResponseDto<object>>
     {
         public required string DeveloperName { get; init; }
         public required string RequestMethod { get; init; }
@@ -64,12 +64,10 @@ public class ExecuteRaythaFunction
             {
                 try
                 {
-                    _raythaFunctionScriptEngine.Initialize(code);
-
                     return request.RequestMethod switch
                     {
-                        "GET" => new CommandResponseDto<object>(await _raythaFunctionScriptEngine.EvaluateGet(request.QueryJson, _raythaFunctionConfiguration.ExecuteTimeout, cancellationToken)),
-                        "POST" => new CommandResponseDto<object>(await _raythaFunctionScriptEngine.EvaluatePost(request.PayloadJson, request.QueryJson, _raythaFunctionConfiguration.ExecuteTimeout, cancellationToken)),
+                        "GET" => new CommandResponseDto<object>(await _raythaFunctionScriptEngine.EvaluateGet(code, request.QueryJson, _raythaFunctionConfiguration.ExecuteTimeout, cancellationToken)),
+                        "POST" => new CommandResponseDto<object>(await _raythaFunctionScriptEngine.EvaluatePost(code, request.PayloadJson, request.QueryJson, _raythaFunctionConfiguration.ExecuteTimeout, cancellationToken)),
                         _ => throw new NotImplementedException(),
                     };
                 }

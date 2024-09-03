@@ -6,6 +6,8 @@ using Raytha.Application.Common.Exceptions;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Models;
 using Raytha.Application.Common.Utils;
+using Raytha.Domain.Entities;
+using Raytha.Domain.Events;
 
 namespace Raytha.Application.ContentItems.Commands;
 
@@ -45,14 +47,22 @@ public class EditContentItemSettings
 
                 contentTypeInRoutePath.ValidateContentTypeInRoutePathMatchesValue(entity.ContentType.DeveloperName);
 
-                var template = db.WebTemplates
-                    .Include(p => p.TemplateAccessToModelDefinitions)
-                    .FirstOrDefault(p => p.Id == request.TemplateId.Guid);
+                var activeThemeId = db.OrganizationSettings
+                    .Select(os => os.ActiveThemeId)
+                    .First();
 
-                if (template == null)
-                    throw new NotFoundException("WebTemplate", request.TemplateId);
+                var templateAccessToModelDefinitions = db.WebTemplates
+                    .Include(wt => wt.TemplateAccessToModelDefinitions)
+                    .Where(wt => wt.ThemeId == activeThemeId && wt.Id == request.TemplateId.Guid)
+                    .Select(wt => wt.TemplateAccessToModelDefinitions)
+                    .FirstOrDefault();
 
-                if (!template.TemplateAccessToModelDefinitions.Any(p => p.ContentTypeId == entity.ContentType.Id))
+                if (templateAccessToModelDefinitions == null)
+                {
+                    throw new NotFoundException("Template", request.TemplateId);
+                }
+
+                if (!templateAccessToModelDefinitions.Any(p => p.ContentTypeId == entity.ContentType.Id))
                 {
                     context.AddFailure(Constants.VALIDATION_SUMMARY, "This template does not have access to this model definition.");
                     return;
@@ -92,8 +102,19 @@ public class EditContentItemSettings
                 .Include(p => p.Route)
                 .First(p => p.Id == request.Id.Guid);
 
-            entity.WebTemplateId = request.TemplateId;
             entity.Route.Path = request.RoutePath.ToUrlSlug();
+
+            var activeThemeId = await _db.OrganizationSettings
+                .Select(os => os.ActiveThemeId)
+                .FirstAsync(cancellationToken);
+
+            var webTemplateContentRelation = await _db.WebTemplateContentItemRelations
+                .FirstAsync(wtr => wtr.ContentItemId == entity.Id && wtr.WebTemplate!.ThemeId == activeThemeId, cancellationToken);
+
+            webTemplateContentRelation.WebTemplateId = request.TemplateId.Guid;
+            _db.WebTemplateContentItemRelations.Update(webTemplateContentRelation);
+
+            entity.AddDomainEvent(new ContentItemUpdatedEvent(entity));
             await _db.SaveChangesAsync(cancellationToken);
 
             return new CommandResponseDto<ShortGuid>(entity.Id);

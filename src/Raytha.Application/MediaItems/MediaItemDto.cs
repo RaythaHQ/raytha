@@ -16,11 +16,9 @@ public record MediaItemDto : BaseAuditableEntityDto
     {
         return entity => GetProjection(entity);
     }
+
     public static MediaItemDto GetProjection(MediaItem entity)
     {
-        if (entity == null)
-            return null;
-
         return new MediaItemDto
         {
             Id = entity.Id,

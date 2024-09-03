@@ -1,0 +1,65 @@
+﻿@model ThemesDuplicate_ViewModel
+@{
+    ViewData["Title"] = "Themes > Duplicate theme";
+}
+@(await Html.PartialAsync("_PageHeader", new PageHeader_ViewModel
+{
+    Title = ViewData["Title"].ToString(),
+}))
+
+<div class="row mb-4">
+    <div class="col-xxl-7 col-xl-8 col-lg-9 col-md-12">
+        <div class="card border-0 shadow mb-4">
+            <div class="card-body">
+                @(await Html.PartialAsync("_BackToList", new ThemesBackToList_ViewModel
+                {
+                    IsWebTemplates = false,
+                    IsMediaItems = false,
+                }))
+                <form asp-route="themesduplicate" method="post" class="py-4" data-controller="shared--developername themes--insertduplicate">
+                    <div class="col-lg-12 col-md-12">
+                        <div class="mb-3">
+                            <label class="form-label raytha-required" asp-for="ThemeId"></label>
+                            <select class="form-select @Model.HasError("ParentTemplateId")" asp-for="ThemeId" required data-action="change->themes--insertduplicate#change">
+                                <option value="">--SELECT--</option>
+                                @foreach (var theme in Model.Themes)
+                                {
+                                    <option value="@theme.Id" data-developerName="@theme.DeveloperName">@theme.Title</option>
+                                }
+                            </select>
+                            <div class="invalid-feedback">@Model.ErrorMessageFor("Title")</div>
+                        </div>
+                    </div>
+                    <div class="col-lg-12 col-md-12">
+                        <div class="mb-3">
+                            <label class="form-label raytha-required" asp-for="Title"></label>
+                            <input type="text" class="form-control @Model.HasError("Title")" asp-for="Title"
+                                   data-shared--developername-target="title"
+                                   data-themes--insertduplicate-target="title"
+                                   data-action="keyup->shared--developername#setDeveloperName change->shared--developername#setDeveloperName">
+                            <div class="invalid-feedback">@Model.ErrorMessageFor("Title")</div>
+                        </div>
+                    </div>
+                    <div class="col-lg-12 col-md-12">
+                        <div class="mb-3">
+                            <label class="form-label raytha-required" asp-for="DeveloperName"></label>
+                            <input type="text" class="form-control @Model.HasError("DeveloperName")" asp-for="DeveloperName" 
+                                   data-shared--developername-target="developername"
+                                   data-themes--insertduplicate-target="developername">
+                            <div class="invalid-feedback">@Model.ErrorMessageFor("DeveloperName")</div>
+                            <div class="form-text">You cannot change the developer name after it has been created.</div>
+                        </div>
+                    </div>
+                    <div class="col-lg-12 col-md-12">
+                        <div class="mb-3">
+                            <label class="form-label raytha-required" asp-for="Description"></label>
+                            <input type="text" class="form-control @Model.HasError("Description")" asp-for="Description">
+                            <div class="invalid-feedback">@Model.ErrorMessageFor("Description")</div>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-success mt-4">Save</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

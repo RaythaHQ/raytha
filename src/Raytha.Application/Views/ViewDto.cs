@@ -1,7 +1,6 @@
 ﻿using CSharpVitamins;
 using Raytha.Application.Common.Models;
 using Raytha.Application.ContentTypes;
-using Raytha.Application.Templates.Web;
 using Raytha.Domain.Entities;
 using System.Linq.Expressions;
 
@@ -24,8 +23,6 @@ namespace Raytha.Application.Views
         public ShortGuid? RouteId { get; init; }
         public string RoutePath { get; init; }
         public bool IsPublished { get; init; }
-        public ShortGuid WebTemplateId { get; init; }
-        public WebTemplateDto WebTemplate { get; init; }
 
         public static Expression<Func<View, ViewDto>> GetProjection()
         {
@@ -56,8 +53,6 @@ namespace Raytha.Application.Views
                 RouteId = entity.RouteId,
                 RoutePath = entity.Route.Path,
                 IsPublished = entity.IsPublished,
-                WebTemplate = WebTemplateDto.GetProjection(entity.WebTemplate),
-                WebTemplateId = entity.WebTemplateId,
                 IgnoreClientFilterAndSortQueryParams = entity.IgnoreClientFilterAndSortQueryParams,
                 DefaultNumberOfItemsPerPage = entity.DefaultNumberOfItemsPerPage,
                 MaxNumberOfItemsPerPage = entity.MaxNumberOfItemsPerPage

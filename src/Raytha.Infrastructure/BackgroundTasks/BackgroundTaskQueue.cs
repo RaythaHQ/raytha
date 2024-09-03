@@ -1,6 +1,7 @@
 ﻿using Raytha.Application.Common.Interfaces;
 using Raytha.Domain.Entities;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace Raytha.Infrastructure.BackgroundTasks;
 public class BackgroundTaskQueue : IBackgroundTaskQueue
@@ -22,7 +23,10 @@ public class BackgroundTaskQueue : IBackgroundTaskQueue
         {
             Id = jobId,
             Name = typeof(T).AssemblyQualifiedName,
-            Args = JsonSerializer.Serialize(args)
+            Args = JsonSerializer.Serialize(args, new JsonSerializerOptions
+            {
+                ReferenceHandler = ReferenceHandler.IgnoreCycles
+            })
         });
 
         await _db.SaveChangesAsync(cancellationToken);
