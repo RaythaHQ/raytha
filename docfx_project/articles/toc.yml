@@ -37,6 +37,9 @@
     - name: Http Request Trigger
       href: embeddable_functions_httprequest.md
 
+    - name: Webhook Trigger
+      href: embeddable_functions_webhooks.md
+
     - name: Built-in Objects
       href: embeddable_functions_builtinobjects.md
 
