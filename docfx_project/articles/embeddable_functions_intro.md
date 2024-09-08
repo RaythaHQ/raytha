@@ -8,7 +8,7 @@ Raytha Functions are a way to write custom code in the administrator portal of R
 * Accept form submissions and save response
 * Send an email out of the platform
 * Make an external HTTP call and return and/or save result
-* [Coming Soon] Webhooks trigger functionality
+* Webhooks trigger functionality
 * [Coming Soon] Timer trigger functionality
 
 In a way, it is effectively writing "code behind" directly into the platform.
@@ -32,8 +32,8 @@ Raytha Functions are triggered by some action. You select the trigger type when 
 Triggers come with boilerplate code that the ClearScript engine runs when necessary. Click the link below to learn how to write code for each trigger type.
 
 * [Http Request](/articles/embeddable_functions_httprequest.html)
+* [Webhooks](/articles/embeddable_functions_webhooks.html)
 * [Coming Soon] Timer
-* [Coming Soon] Webhook
 
 ## Built-in Objects
 

@@ -54,6 +54,45 @@ Example usage:
 {% endfor %}
 ```
 
+### get_main_menu() and get_menu('developerName')
+
+Retrieve the Navigation Menu that is set to the `default`.
+
+Example usage:
+
+```
+{% assign menu = get_main_menu() %}
+<ul class="navbar-nav me-auto mb-2 mb-lg-0">
+{% for menuItem in menu.MenuItems %}
+    {% assign menuLabelDownCase = menuItem.Label | downcase %}
+    <li class="nav-item">
+        <a class="{{ menuItem.CssClassName }} {% if Target.RoutePath == menuItem.Label or ContentType.DeveloperName == menuLabelDownCase %} active {% endif %}" href="{{ menuItem.Url }}">
+        {{ menuItem.Label }}
+        </a>
+    </li>
+{% endfor %}
+</ul>
+
+{% assign footerMenu = get_menu('footer') %}
+...
+
+```
+
+The function builds a tree out of the navigation menu so that you can reach child items as well. The model of a menu item object is the following:
+
+```
+string Id
+string Label
+string Url
+bool IsDisabled
+bool OpenInNewTab
+string? CssClassName
+int Ordinal
+bool IsFirstItem
+bool IsLastItem
+IEnumerable<NavigationMenuItem_RenderModel> MenuItems
+```
+
 ## Filters
 
 ### attachment_redirect_url
