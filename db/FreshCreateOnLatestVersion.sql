@@ -1065,7 +1065,12 @@ ALTER TABLE [WebTemplates] ADD CONSTRAINT [FK_WebTemplates_Themes_ThemeId] FOREI
 GO
 
 INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
-VALUES (N'20240502121207_v1_3_0', N'8.0.0');
+VALUES 
+('20221230221303_v0_9_0', 'FreshCreateOnLatestVersion'), 
+('20230211205159_v1_0_0', 'FreshCreateOnLatestVersion'),
+('20230521175706_v1_1_0', 'FreshCreateOnLatestVersion'), 
+('20240314124844_v1_2_0', 'FreshCreateOnLatestVersion'), 
+('20240502121207_v1_3_0', 'FreshCreateOnLatestVersion');
 GO
 
 COMMIT;

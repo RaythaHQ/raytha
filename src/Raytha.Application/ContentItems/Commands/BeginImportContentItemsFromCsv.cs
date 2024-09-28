@@ -40,7 +40,7 @@ public class BeginImportContentItemsFromCsv
                     throw new NotFoundException("Content Type", request.ContentTypeId);
                 }
 
-                if (request.ImportMethod.IsNullOrEmpty())
+                if (string.IsNullOrEmpty(request.ImportMethod))
                 {
                     context.AddFailure("ImportMethod", "Import method is required.");
                     return;
@@ -381,7 +381,7 @@ public class BeginImportContentItemsFromCsv
                         {
                             errorMessage = $"'{fieldDefinition.DeveloperName}' is in an invalid format.";
                         }
-                        if (!errorMessage.IsNullOrEmpty())
+                        if (!string.IsNullOrEmpty(errorMessage))
                         {
                             yield return new CommandResponseDto<ContentItemDataFromCsv>("FieldError", errorMessage);
                             continue;

@@ -1,5 +1,6 @@
 ﻿using Raytha.Application.Common.Interfaces;
 using Raytha.Domain.Entities;
+using Raytha.Domain.JsonConverters;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -25,7 +26,11 @@ public class BackgroundTaskQueue : IBackgroundTaskQueue
             Name = typeof(T).AssemblyQualifiedName,
             Args = JsonSerializer.Serialize(args, new JsonSerializerOptions
             {
-                ReferenceHandler = ReferenceHandler.IgnoreCycles
+                ReferenceHandler = ReferenceHandler.IgnoreCycles,
+                Converters =
+                {
+                    new ShortGuidConverter()
+                }
             })
         });
 
