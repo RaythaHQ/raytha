@@ -9,9 +9,9 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNet.WebApi.Core" Version="5.3.0" />
-    <PackageReference Include="Fluid.Core" Version="2.8.0" />
-    <PackageReference Include="Fluid.ViewEngine" Version="2.8.0" />
-    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.5.0" />
+    <PackageReference Include="Fluid.Core" Version="2.11.1" />
+    <PackageReference Include="Fluid.ViewEngine" Version="2.11.1" />
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.8.0" />
     <PackageReference Include="Swashbuckle.Core" Version="5.6.0" />
     <PackageReference Include="System.Text.RegularExpressions" Version="4.3.1" />
   </ItemGroup>
