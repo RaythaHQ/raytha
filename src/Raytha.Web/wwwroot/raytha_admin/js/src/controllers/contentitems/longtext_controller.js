@@ -71,6 +71,7 @@ export default class extends Controller {
                     })
                     .then(response => response.json())
                     .then(data => {
+                        this.uppy.setFileMeta(file.id, { id: data.fields.id, objectKey: data.fields.objectKey });
                         return {
                             method: 'PUT',
                             url: data.url,
