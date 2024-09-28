@@ -70,6 +70,7 @@ export default class extends Controller {
                     })
                     .then(response => response.json())
                     .then(data => {
+                        this.uppy.setFileMeta(file.id, { id: data.fields.id, objectKey: data.fields.objectKey });
                         return {
                             method: 'PUT',
                             url: data.url,
@@ -83,6 +84,7 @@ export default class extends Controller {
             })
             this.uppy.on('upload-success', (file, response) => {
                 console.log(response);
+                console.log(file);
                 const CREATE_MEDIA_ENDPOINT = `${this.pathbaseValue}/raytha/media-items/create-after-upload?themeId=${this.themeidValue}`;
 
                 //make post call
@@ -136,7 +138,7 @@ export default class extends Controller {
     }
 
     disconnect() {
-       this.uppy.close();
+       this.uppy.destroy();
     }
 
     addCopyUrlItem(file) {

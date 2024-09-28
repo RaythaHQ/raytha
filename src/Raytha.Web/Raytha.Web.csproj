@@ -18,7 +18,6 @@
 
   <ItemGroup>
     <Folder Include="wwwroot\raytha_admin\js\dist\" />
-    <Folder Include="wwwroot\raytha_admin\js\node_modules\" />
     <Folder Include="wwwroot\raytha_admin\lib\" />
   </ItemGroup>
 
