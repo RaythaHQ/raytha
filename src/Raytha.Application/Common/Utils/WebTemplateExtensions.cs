@@ -9,7 +9,7 @@ namespace Raytha.Application.Common.Utils;
 
 public static class WebTemplateExtensions
 {
-    public const string RENDERBODY_REGEX = @"{%\s*\b(renderbody)\s*%}";
+    public const string RENDERBODY_REGEX = @"{%\s*\b(?:renderbody)\s*%}";
 
     public static bool HasRenderBodyTag(string s)
     {
