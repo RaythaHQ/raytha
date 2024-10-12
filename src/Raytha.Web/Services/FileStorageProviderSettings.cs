@@ -18,11 +18,7 @@ public class FileStorageProviderSettings : IFileStorageProviderSettings
     {
         get
         {
-            if (string.IsNullOrEmpty(_configuration[FileStorageUtility.MAX_TOTAL_DISK_SPACE_CONFIG_NAME]))
-            {
-                return FileStorageUtility.DEFAULT_MAX_TOTAL_DISK_SPACE;
-            }
-            return Convert.ToInt64(_configuration[FileStorageUtility.MAX_TOTAL_DISK_SPACE_CONFIG_NAME]);
+            return GetLongValueForSetting(FileStorageUtility.MAX_TOTAL_DISK_SPACE_CONFIG_NAME, FileStorageUtility.DEFAULT_MAX_TOTAL_DISK_SPACE);
         }
     }
 
@@ -30,11 +26,7 @@ public class FileStorageProviderSettings : IFileStorageProviderSettings
     {
         get
         {
-            if (string.IsNullOrEmpty(_configuration[FileStorageUtility.DATABASE_MAX_SIZE_CONFIG_NAME]))
-            {
-                return FileStorageUtility.DEFAULT_MAX_TOTAL_DB_SIZE;
-            }
-            return Convert.ToInt64(_configuration[FileStorageUtility.DATABASE_MAX_SIZE_CONFIG_NAME]);
+            return GetLongValueForSetting(FileStorageUtility.DATABASE_MAX_SIZE_CONFIG_NAME, FileStorageUtility.DEFAULT_MAX_TOTAL_DB_SIZE);
         }
     }
 
@@ -42,11 +34,7 @@ public class FileStorageProviderSettings : IFileStorageProviderSettings
     {
         get
         {
-            if (string.IsNullOrEmpty(_configuration[FileStorageUtility.MAX_FILE_SIZE_CONFIG_NAME]))
-            {
-                return FileStorageUtility.DEFAULT_MAX_FILE_SIZE;
-            }
-            return Convert.ToInt64(_configuration[FileStorageUtility.MAX_FILE_SIZE_CONFIG_NAME]);
+            return GetLongValueForSetting(FileStorageUtility.MAX_FILE_SIZE_CONFIG_NAME, FileStorageUtility.DEFAULT_MAX_FILE_SIZE);
         }
     }
 
@@ -90,4 +78,20 @@ public class FileStorageProviderSettings : IFileStorageProviderSettings
     public bool UseS3 => FileStorageProvider == FileStorageUtility.S3;
 
     public bool UseAzureBlob => FileStorageProvider == FileStorageUtility.AZUREBLOB;
+
+    private long GetLongValueForSetting(string settingName, long defaultValue)
+    {
+        if (string.IsNullOrEmpty(_configuration[settingName]))
+        {
+            return defaultValue;
+        }
+
+        string configValue = _configuration[settingName];
+        if (decimal.TryParse(configValue, out decimal result))
+        {
+            return Convert.ToInt64(Math.Floor(result)); 
+        }
+
+        return defaultValue;
+    }
 }
