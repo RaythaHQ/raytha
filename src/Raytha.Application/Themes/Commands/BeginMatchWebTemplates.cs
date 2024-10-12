@@ -106,7 +106,7 @@ public class BeginMatchWebTemplates
 
         public async Task Execute(Guid jobId, JsonElement args, CancellationToken cancellationToken)
         {
-            var selectedThemeId = args.GetProperty("Id").GetProperty("Guid").GetGuid();
+            ShortGuid selectedThemeId = args.GetProperty("Id").GetString();
             var matchedWebTemplates = JsonSerializer.Deserialize<IDictionary<string, string>>(args.GetProperty("MatchedWebTemplateDeveloperNames").GetRawText())!;
 
             var job = _db.BackgroundTasks.First(p => p.Id == jobId);
@@ -131,17 +131,17 @@ public class BeginMatchWebTemplates
                 .ToArrayAsync(cancellationToken);
 
             var selectedThemeRelationContentItemIds = await _db.WebTemplateContentItemRelations
-                .Where(wtr => wtr.WebTemplate!.ThemeId == selectedThemeId)
+                .Where(wtr => wtr.WebTemplate!.ThemeId == selectedThemeId.Guid)
                 .Select(wtr => wtr.ContentItemId)
                 .ToArrayAsync(cancellationToken);
 
             var selectedThemeRelationViewIds = await _db.WebTemplateViewRelations
-                .Where(wtr => wtr.WebTemplate!.ThemeId == selectedThemeId)
+                .Where(wtr => wtr.WebTemplate!.ThemeId == selectedThemeId.Guid)
                 .Select(wtr => wtr.ViewId)
                 .ToArrayAsync(cancellationToken);
 
             var selectedThemeWebTemplateDeveloperNamesIds = await _db.WebTemplates
-                .Where(wt => wt.ThemeId == selectedThemeId)
+                .Where(wt => wt.ThemeId == selectedThemeId.Guid)
                 .Select(wt => new { wt.Id, wt.DeveloperName })
                 .ToDictionaryAsync(wt => wt.DeveloperName!, wt => wt.Id, cancellationToken);
 
