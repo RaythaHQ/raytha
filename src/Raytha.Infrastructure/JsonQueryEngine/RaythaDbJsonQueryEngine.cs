@@ -377,7 +377,7 @@ public class RaythaDbJsonQueryEngine : IRaythaDbJsonQueryEngine
                     {
                         sqlDateOutput = 103;
                     }
-                    searchClauses.Add($"CONVERT(varchar, CONVERT(datetime, JSON_VALUE({RawSqlColumn.UNIQUE_COLUMN_PREFIX}_{RawSqlColumn.SOURCE_ITEM_COLUMN_NAME}.{RawSqlColumn.PublishedContent.Name}, '$.{columnAsContentTypeFieldDeveloperName}')), {sqlDateOutput}) COLLATE Latin1_General_CI_AS LIKE @search");
+                    searchClauses.Add($"TRY_CONVERT(varchar, TRY_CONVERT(datetime, JSON_VALUE({RawSqlColumn.UNIQUE_COLUMN_PREFIX}_{RawSqlColumn.SOURCE_ITEM_COLUMN_NAME}.{RawSqlColumn.PublishedContent.Name}, '$.{columnAsContentTypeFieldDeveloperName}')), {sqlDateOutput}) COLLATE Latin1_General_CI_AS LIKE @search");
                 }
                 else
                 {
@@ -469,7 +469,16 @@ public class RaythaDbJsonQueryEngine : IRaythaDbJsonQueryEngine
                     }
                     else if (columnAsContentTypeField.FieldType.DeveloperName == BaseFieldType.Date)
                     {
-                        orderByClauses.Add($"CONVERT(datetime, JSON_VALUE({RawSqlColumn.UNIQUE_COLUMN_PREFIX}_{RawSqlColumn.SOURCE_ITEM_COLUMN_NAME}.{RawSqlColumn.PublishedContent.Name}, '$.{columnAsContentTypeFieldDeveloperName}')) {direction.DeveloperName}");
+                        int sqlDateOutput = 0;
+                        if (_currentOrganization.DateFormat == DateTimeExtensions.MM_dd_yyyy)
+                        {
+                            sqlDateOutput = 101;
+                        }
+                        else if (_currentOrganization.DateFormat == DateTimeExtensions.dd_MM_yyyy)
+                        {
+                            sqlDateOutput = 103;
+                        }
+                        orderByClauses.Add($"TRY_CONVERT(datetime, JSON_VALUE({RawSqlColumn.UNIQUE_COLUMN_PREFIX}_{RawSqlColumn.SOURCE_ITEM_COLUMN_NAME}.{RawSqlColumn.PublishedContent.Name}, '$.{columnAsContentTypeFieldDeveloperName}'), {sqlDateOutput}) {direction.DeveloperName}");
                     }
                     else if (columnAsContentTypeField.FieldType.DeveloperName != BaseFieldType.MultipleSelect)
                     {

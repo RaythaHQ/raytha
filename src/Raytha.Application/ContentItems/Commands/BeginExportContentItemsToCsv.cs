@@ -91,13 +91,13 @@ public class BeginExportContentItemsToCsv
         {
             IEnumerable<ContentItemDto> items;
 
-            Guid viewId = args.GetProperty("ViewId").GetProperty("Guid").GetGuid();
+            ShortGuid viewId = args.GetProperty("ViewId").GetString();
             bool exportOnlyColumnsFromView = args.GetProperty("ExportOnlyColumnsFromView").GetBoolean();
 
             View view = _entityFrameworkDb.Views
                 .Include(p => p.ContentType)
                 .ThenInclude(p => p.ContentTypeFields)
-                .FirstOrDefault(p => p.Id == viewId);
+                .FirstOrDefault(p => p.Id == viewId.Guid);
 
             if (view == null)
                 throw new NotFoundException("View", viewId);

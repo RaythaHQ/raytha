@@ -2,7 +2,6 @@
 using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
 using Raytha.Application.Common.Exceptions;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Models;
@@ -149,14 +148,14 @@ public class BeginImportContentItemsFromCsv
         }
         public async Task Execute(Guid jobId, JsonElement args, CancellationToken cancellationToken)
         {
-            Guid contentTypeId = args.GetProperty("ContentTypeId").GetProperty("Guid").GetGuid();
+            ShortGuid contentTypeId = args.GetProperty("ContentTypeId").GetString();
             ImportMethod importMethod = ImportMethod.From(args.GetProperty("ImportMethod").GetString());
             bool importAsDraft = args.GetProperty("ImportAsDraft").GetBoolean();
             Stream csvAsStream = new MemoryStream(args.GetProperty("CsvAsBytes").GetBytesFromBase64());
 
             ContentType contentType = _db.ContentTypes
                                     .Include(p => p.ContentTypeFields)
-                                    .First(p => p.Id == contentTypeId);
+                                    .First(p => p.Id == contentTypeId.Guid);
 
             var records = _csvService.ReadCsv<Dictionary<string, dynamic>>(csvAsStream);
 

@@ -81,7 +81,7 @@ public class BeginDuplicateTheme
 
         public async Task Execute(Guid jobId, JsonElement args, CancellationToken cancellationToken)
         {
-            var themeId = args.GetProperty("ThemeId").GetProperty("Guid").GetGuid()!;
+            ShortGuid themeId = args.GetProperty("ThemeId").GetString();
             var title = args.GetProperty("Title").GetString()!;
             var developerName = args.GetProperty("DeveloperName").GetString()!.ToDeveloperName();
             var description = args.GetProperty("Description").GetString()!;
@@ -106,14 +106,14 @@ public class BeginDuplicateTheme
             var themeAccessToMediaItems = new List<ThemeAccessToMediaItem>();
 
             var originalThemeMediaItems = await _db.ThemeAccessToMediaItems
-                .Where(tmi => tmi.ThemeId == themeId)
+                .Where(tmi => tmi.ThemeId == themeId.Guid)
                 .Select(tmi => tmi.MediaItem!)
                 .ToArrayAsync(cancellationToken);
 
             var originalThemeWebTemplates = await _db.WebTemplates
                 .Include(wt => wt.TemplateAccessToModelDefinitions)
                 .Include(wt => wt.ParentTemplate)
-                .Where(wt => wt.ThemeId == themeId)
+                .Where(wt => wt.ThemeId == themeId.Guid)
                 .ToArrayAsync(cancellationToken);
 
             job.TaskStep = 2;
@@ -179,13 +179,13 @@ public class BeginDuplicateTheme
             var webTemplateViewRelations = new List<WebTemplateViewRelation>();
 
             var webTemplateIdsContentItemIds = await _db.WebTemplateContentItemRelations
-                .Where(wtr => wtr.WebTemplate!.ThemeId == themeId)
+                .Where(wtr => wtr.WebTemplate!.ThemeId == themeId.Guid)
                 .Select(wtr => new { wtr.ContentItemId, wtr.WebTemplateId })
                 .GroupBy(wtr => wtr.WebTemplateId)
                 .ToDictionaryAsync(g => g.Key, g => g.Select(wtr => wtr.ContentItemId).ToArray(), cancellationToken);
 
             var webTemplateIdsViewIds = await _db.WebTemplateViewRelations
-                .Where(wtr => wtr.WebTemplate!.ThemeId == themeId)
+                .Where(wtr => wtr.WebTemplate!.ThemeId == themeId.Guid)
                 .Select(wtr => new { wtr.WebTemplateId, wtr.ViewId })
                 .GroupBy(wtr => wtr.WebTemplateId)
                 .ToDictionaryAsync(g => g.Key, g => g.Select(wtr => wtr.ViewId).ToArray(), cancellationToken);

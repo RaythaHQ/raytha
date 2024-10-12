@@ -73,6 +73,9 @@ public class RenderEngine : IRenderEngine
 
     public ValueTask<FluidValue> AttachmentPublicUrl(FluidValue input, FilterArguments arguments, TemplateContext context)
     {
+        if (string.IsNullOrEmpty(input.ToStringValue()))
+            return new StringValue(string.Empty);
+
         return new StringValue(_fileStorageProvider.GetDownloadUrlAsync(input.ToStringValue(), FileStorageUtility.GetDefaultExpiry()).Result);
     }
 
