@@ -47,42 +47,7 @@ public class RaythaDbJsonQueryEngine : IRaythaDbJsonQueryEngine
         if (resultFromQuery == null)
             return null;
 
-
-        List<ContentItem> relatedContentItems = new List<ContentItem>();
-        foreach (var item in oneToOneRelationshipFields)
-        {
-            int index = oneToOneRelationshipFields.IndexOf(item);
-            var relatedCreatorUser = ToStatic<User>(resultFromQuery.FilterAndTrimKeys($"{RawSqlColumn.RELATED_CREATED_BY_COLUMN_NAME}_{index}_"));
-            var relatedModifierUser = ToStatic<User>(resultFromQuery.FilterAndTrimKeys($"{RawSqlColumn.RELATED_MODIFIED_BY_COLUMN_NAME}_{index}_"));
-            var relatedRoute = ToStatic<Route>(resultFromQuery.FilterAndTrimKeys($"{RawSqlColumn.RELATED_ROUTE_COLUMN_NAME}_{index}_"));
-            var relatedItem = ToStatic<ContentItem>(resultFromQuery.FilterAndTrimKeys($"{RawSqlColumn.RELATED_ITEM_COLUMN_NAME}_{index}_"));
-            if (relatedItem != null && relatedItem.Id != Guid.Empty)
-            {
-                relatedItem.CreatorUser = relatedCreatorUser;
-                relatedItem.LastModifierUser = relatedModifierUser;
-                relatedItem.Route = relatedRoute;
-                relatedItem.PublishedContent = ConvertJsonContentToDynamic(relatedItem._PublishedContent, item.RelatedContentType);
-                relatedItem.DraftContent = ConvertJsonContentToDynamic(relatedItem._DraftContent, item.RelatedContentType);
-                string relatedPrimaryFieldDeveloperName = item.RelatedContentType.ContentTypeFields.First(p => p.Id == item.RelatedContentType.PrimaryFieldId).DeveloperName;
-                if (relatedItem.PublishedContent.ContainsKey(relatedPrimaryFieldDeveloperName))
-                    relatedItem.PrimaryField = relatedItem.PublishedContent[relatedPrimaryFieldDeveloperName];
-                relatedContentItems.Add(relatedItem);
-            }
-        }
-
-        var contentItem = ToStatic<ContentItem>(resultFromQuery.FilterAndTrimKeys($"{RawSqlColumn.SOURCE_ITEM_COLUMN_NAME}_"));
-        contentItem.PublishedContent = ConvertJsonContentToDynamic(contentItem._PublishedContent, entity.ContentType, relatedContentItems);
-        contentItem.DraftContent = ConvertJsonContentToDynamic(contentItem._DraftContent, entity.ContentType, relatedContentItems);
-        
-        string primaryFieldDeveloperName = entity.ContentType.ContentTypeFields.First(p => p.Id == entity.ContentType.PrimaryFieldId).DeveloperName;
-        if (contentItem.PublishedContent.ContainsKey(primaryFieldDeveloperName))
-            contentItem.PrimaryField = contentItem.PublishedContent[primaryFieldDeveloperName];
-
-        contentItem.CreatorUser = entity.CreatorUser;
-        contentItem.LastModifierUser = entity.LastModifierUser;
-        contentItem.ContentType = entity.ContentType;
-        contentItem.ContentTypeId = entity.ContentTypeId;
-        contentItem.Route = entity.Route;
+        var contentItem = MapQueryItemToContentItem(entity.ContentType, resultFromQuery, oneToOneRelationshipFields);
         return contentItem;
     }
 
@@ -140,45 +105,7 @@ public class RaythaDbJsonQueryEngine : IRaythaDbJsonQueryEngine
 
         foreach (var rawResultItem in resultFromQuery)
         {
-            List<ContentItem> relatedContentItems = new List<ContentItem>();
-            foreach (var item in oneToOneRelationshipFields)
-            {
-                int index = oneToOneRelationshipFields.IndexOf(item);
-                var relatedCreatorUser = ToStatic<User>(rawResultItem.FilterAndTrimKeys($"{RawSqlColumn.RELATED_CREATED_BY_COLUMN_NAME}_{index}_"));
-                var relatedModifierUser = ToStatic<User>(rawResultItem.FilterAndTrimKeys($"{RawSqlColumn.RELATED_MODIFIED_BY_COLUMN_NAME}_{index}_"));
-                var relatedRoute = ToStatic<Route>(rawResultItem.FilterAndTrimKeys($"{RawSqlColumn.RELATED_ROUTE_COLUMN_NAME}_{index}_"));
-                var relatedItem = ToStatic<ContentItem>(rawResultItem.FilterAndTrimKeys($"{RawSqlColumn.RELATED_ITEM_COLUMN_NAME}_{index}_"));
-                if (relatedItem != null && relatedItem.Id != Guid.Empty)
-                {
-                    relatedItem.CreatorUser = relatedCreatorUser;
-                    relatedItem.LastModifierUser = relatedModifierUser;
-                    relatedItem.Route = relatedRoute;
-                    relatedItem.PublishedContent = ConvertJsonContentToDynamic(relatedItem._PublishedContent, item.RelatedContentType);
-                    relatedItem.DraftContent = ConvertJsonContentToDynamic(relatedItem._DraftContent, item.RelatedContentType);
-
-                    string relatedPrimaryFieldDeveloperName = item.RelatedContentType.ContentTypeFields.First(p => p.Id == item.RelatedContentType.PrimaryFieldId).DeveloperName;
-                    if (relatedItem.PublishedContent.ContainsKey(relatedPrimaryFieldDeveloperName))
-                        relatedItem.PrimaryField = relatedItem.PublishedContent[relatedPrimaryFieldDeveloperName];
-                    relatedContentItems.Add(relatedItem);
-                }
-            }
-
-            var creatorUser = ToStatic<User>(rawResultItem.FilterAndTrimKeys($"{RawSqlColumn.SOURCE_CREATED_BY_COLUMN_NAME}_"));
-            var modifierUser = ToStatic<User>(rawResultItem.FilterAndTrimKeys($"{RawSqlColumn.SOURCE_MODIFIED_BY_COLUMN_NAME}_"));
-            var route = ToStatic<Route>(rawResultItem.FilterAndTrimKeys($"{RawSqlColumn.ROUTE_COLUMN_NAME}_"));
-            var contentItem = ToStatic<ContentItem>(rawResultItem.FilterAndTrimKeys($"{RawSqlColumn.SOURCE_ITEM_COLUMN_NAME}_"));
-            contentItem.PublishedContent = ConvertJsonContentToDynamic(contentItem._PublishedContent, contentType, relatedContentItems);
-            contentItem.DraftContent = ConvertJsonContentToDynamic(contentItem._DraftContent, contentType, relatedContentItems);
-
-            string primaryFieldDeveloperName = contentType.ContentTypeFields.First(p => p.Id == contentType.PrimaryFieldId).DeveloperName;
-            if (contentItem.PublishedContent.ContainsKey(primaryFieldDeveloperName))
-                contentItem.PrimaryField = contentItem.PublishedContent[primaryFieldDeveloperName];
-
-            contentItem.CreatorUser = creatorUser;
-            contentItem.LastModifierUser = modifierUser;
-            contentItem.ContentTypeId = contentTypeId;
-            contentItem.ContentType = contentType;
-            contentItem.Route = route;
+            var contentItem = MapQueryItemToContentItem(contentType, rawResultItem, oneToOneRelationshipFields);
             items.Add(contentItem);
         }
 
@@ -478,6 +405,51 @@ public class RaythaDbJsonQueryEngine : IRaythaDbJsonQueryEngine
         }
 
         return string.Join(",", orderByClauses);
+    }
+
+    private ContentItem MapQueryItemToContentItem(ContentType contentType, IDictionary<string, object> resultFromQuery, List<ContentTypeField> oneToOneRelationshipFields)
+    {
+        List<ContentItem> relatedContentItems = new List<ContentItem>();
+        foreach (var item in oneToOneRelationshipFields)
+        {
+            int index = oneToOneRelationshipFields.IndexOf(item);
+            var relatedCreatorUser = ToStatic<User>(resultFromQuery.FilterAndTrimKeys($"{RawSqlColumn.RELATED_CREATED_BY_COLUMN_NAME}_{index}_"));
+            var relatedModifierUser = ToStatic<User>(resultFromQuery.FilterAndTrimKeys($"{RawSqlColumn.RELATED_MODIFIED_BY_COLUMN_NAME}_{index}_"));
+            var relatedRoute = ToStatic<Route>(resultFromQuery.FilterAndTrimKeys($"{RawSqlColumn.RELATED_ROUTE_COLUMN_NAME}_{index}_"));
+            var relatedItem = ToStatic<ContentItem>(resultFromQuery.FilterAndTrimKeys($"{RawSqlColumn.RELATED_ITEM_COLUMN_NAME}_{index}_"));
+            if (relatedItem != null && relatedItem.Id != Guid.Empty)
+            {
+                relatedItem.CreatorUser = relatedCreatorUser;
+                relatedItem.LastModifierUser = relatedModifierUser;
+                relatedItem.Route = relatedRoute;
+                relatedItem.PublishedContent = ConvertJsonContentToDynamic(relatedItem._PublishedContent, item.RelatedContentType);
+                relatedItem.DraftContent = ConvertJsonContentToDynamic(relatedItem._DraftContent, item.RelatedContentType);
+                string relatedPrimaryFieldDeveloperName = item.RelatedContentType.ContentTypeFields.First(p => p.Id == item.RelatedContentType.PrimaryFieldId).DeveloperName;
+                if (relatedItem.PublishedContent.ContainsKey(relatedPrimaryFieldDeveloperName))
+                    relatedItem.PrimaryField = relatedItem.PublishedContent[relatedPrimaryFieldDeveloperName];
+                relatedContentItems.Add(relatedItem);
+            }
+        }
+
+        var contentItem = ToStatic<ContentItem>(resultFromQuery.FilterAndTrimKeys($"{RawSqlColumn.SOURCE_ITEM_COLUMN_NAME}_"));
+        var creatorUser = ToStatic<User>(resultFromQuery.FilterAndTrimKeys($"{RawSqlColumn.SOURCE_CREATED_BY_COLUMN_NAME}_"));
+        var modifierUser = ToStatic<User>(resultFromQuery.FilterAndTrimKeys($"{RawSqlColumn.SOURCE_MODIFIED_BY_COLUMN_NAME}_"));
+        var route = ToStatic<Route>(resultFromQuery.FilterAndTrimKeys($"{RawSqlColumn.ROUTE_COLUMN_NAME}_"));
+
+        contentItem.PublishedContent = ConvertJsonContentToDynamic(contentItem._PublishedContent, contentType, relatedContentItems);
+        contentItem.DraftContent = ConvertJsonContentToDynamic(contentItem._DraftContent, contentType, relatedContentItems);
+
+        string primaryFieldDeveloperName = contentType.ContentTypeFields.First(p => p.Id == contentType.PrimaryFieldId).DeveloperName;
+        if (contentItem.PublishedContent.ContainsKey(primaryFieldDeveloperName))
+            contentItem.PrimaryField = contentItem.PublishedContent[primaryFieldDeveloperName];
+
+        contentItem.CreatorUser = creatorUser;
+        contentItem.LastModifierUser = modifierUser;
+        contentItem.ContentType = contentType;
+        contentItem.ContentTypeId = contentType.Id;
+        contentItem.Route = route;
+
+        return contentItem;
     }
 
     private T ToStatic<T>(IEnumerable<KeyValuePair<string, object>> properties)
