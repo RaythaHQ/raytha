@@ -1,15 +1,12 @@
 ﻿using CSharpVitamins;
 using Dapper;
-using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Utils;
 using Raytha.Application.ContentItems;
 using Raytha.Domain.Entities;
-using Raytha.Domain.ValueObjects;
 using Raytha.Domain.ValueObjects.FieldTypes;
 using System.Data;
-using System.Text;
 using System.Text.Json;
 
 namespace Raytha.Infrastructure.JsonQueryEngine;
@@ -39,34 +36,26 @@ public class RaythaDbJsonQueryEngine : IRaythaDbJsonQueryEngine
             .ThenInclude(p => p.ContentTypeFields)
             .FirstOrDefault(p => p.Id == entityId);
 
-        if (entity == null)
-            return null;
-
         List<ContentTypeField> oneToOneRelationshipFields = entity.ContentType.ContentTypeFields.Where(p => p.FieldType.DeveloperName == BaseFieldType.OneToOneRelationship && p.RelatedContentTypeId.HasValue).ToList();
 
-        SqlBuilder sqlBuilder = new SqlBuilder();
+        var sqlBuilder = PrepareFrom(PrepareContentItemsDataSelect(new SqlQueryBuilder(), oneToOneRelationshipFields), oneToOneRelationshipFields);
+        sqlBuilder.AndWhere($"{RawSqlColumn.SOURCE_ITEM_COLUMN_NAME}.{RawSqlColumn.Id.Name} = '{entityId}'");
 
-        string selectStatement = CreateSqlSelectStatement(oneToOneRelationshipFields);
-        string fromStatement = CreateSqlFromStatement(oneToOneRelationshipFields);
-        string whereStatement = $"{RawSqlColumn.UNIQUE_COLUMN_PREFIX}_{RawSqlColumn.SOURCE_ITEM_COLUMN_NAME}.Id = '{entity.Id}'";
-
-        sqlBuilder.Select(selectStatement);
-        sqlBuilder.Where(whereStatement);
-
-        string sqlStatement = sqlBuilder.AddTemplate($"SELECT /**select**/ {fromStatement} /**where**/").RawSql;
+        var sqlStatement = sqlBuilder.Build();
 
         IDictionary<string, object> resultFromQuery = _db.QuerySingle(sqlStatement);
         if (resultFromQuery == null)
             return null;
 
+
         List<ContentItem> relatedContentItems = new List<ContentItem>();
         foreach (var item in oneToOneRelationshipFields)
         {
             int index = oneToOneRelationshipFields.IndexOf(item);
-            var relatedCreatorUser = ToStatic<User>(resultFromQuery, $"{RawSqlColumn.RELATED_CREATED_BY_COLUMN_NAME}_{index}");
-            var relatedModifierUser = ToStatic<User>(resultFromQuery, $"{RawSqlColumn.RELATED_MODIFIED_BY_COLUMN_NAME}_{index}");
-            var relatedRoute = ToStatic<Route>(resultFromQuery, $"{RawSqlColumn.RELATED_ROUTE_COLUMN_NAME}_{index}");
-            var relatedItem = ToStatic<ContentItem>(resultFromQuery, $"{RawSqlColumn.RELATED_ITEM_COLUMN_NAME}_{index}");
+            var relatedCreatorUser = ToStatic<User>(resultFromQuery.FilterAndTrimKeys($"{RawSqlColumn.RELATED_CREATED_BY_COLUMN_NAME}_{index}_"));
+            var relatedModifierUser = ToStatic<User>(resultFromQuery.FilterAndTrimKeys($"{RawSqlColumn.RELATED_MODIFIED_BY_COLUMN_NAME}_{index}_"));
+            var relatedRoute = ToStatic<Route>(resultFromQuery.FilterAndTrimKeys($"{RawSqlColumn.RELATED_ROUTE_COLUMN_NAME}_{index}_"));
+            var relatedItem = ToStatic<ContentItem>(resultFromQuery.FilterAndTrimKeys($"{RawSqlColumn.RELATED_ITEM_COLUMN_NAME}_{index}_"));
             if (relatedItem != null && relatedItem.Id != Guid.Empty)
             {
                 relatedItem.CreatorUser = relatedCreatorUser;
@@ -81,7 +70,7 @@ public class RaythaDbJsonQueryEngine : IRaythaDbJsonQueryEngine
             }
         }
 
-        var contentItem = ToStatic<ContentItem>(resultFromQuery, RawSqlColumn.SOURCE_ITEM_COLUMN_NAME);
+        var contentItem = ToStatic<ContentItem>(resultFromQuery.FilterAndTrimKeys($"{RawSqlColumn.SOURCE_ITEM_COLUMN_NAME}_"));
         contentItem.PublishedContent = ConvertJsonContentToDynamic(contentItem._PublishedContent, entity.ContentType, relatedContentItems);
         contentItem.DraftContent = ConvertJsonContentToDynamic(contentItem._DraftContent, entity.ContentType, relatedContentItems);
         
@@ -97,6 +86,7 @@ public class RaythaDbJsonQueryEngine : IRaythaDbJsonQueryEngine
         return contentItem;
     }
 
+
     public IEnumerable<ContentItem> QueryContentItems(Guid contentTypeId, string[] searchOnColumns, string search, string[] filters, int pageSize, int pageNumber, string orderBy, IDbTransaction transaction = null)
     {
         var contentType = _entityFramework.ContentTypes
@@ -108,26 +98,18 @@ public class RaythaDbJsonQueryEngine : IRaythaDbJsonQueryEngine
         List<ContentTypeField> oneToOneRelationshipFields = contentType.ContentTypeFields.Where(p => p.FieldType.DeveloperName == BaseFieldType.OneToOneRelationship && p.RelatedContentTypeId.HasValue).ToList();
         var primaryFieldName = contentType.ContentTypeFields.First(p => p.Id == contentType.PrimaryFieldId).DeveloperName;
 
-        SqlBuilder sqlBuilder = new SqlBuilder();
+        var sqlBuilder = PrepareFrom(PrepareContentItemsDataSelect(new SqlQueryBuilder(), oneToOneRelationshipFields), oneToOneRelationshipFields);
+        sqlBuilder.AndWhere($"{RawSqlColumn.SOURCE_ITEM_COLUMN_NAME}.{RawSqlColumn.ContentTypeId.Name} = '{contentTypeId}'");
 
-        string selectClause = CreateSqlSelectStatement(oneToOneRelationshipFields);
-        string fromClause = CreateSqlFromStatement(oneToOneRelationshipFields);
-
-        List<string> possibleWhereClauses = new List<string>
-        {
-            $"{RawSqlColumn.UNIQUE_COLUMN_PREFIX}_{RawSqlColumn.SOURCE_ITEM_COLUMN_NAME}.ContentTypeId = '{contentTypeId}'"
-        };
         if (searchOnColumns == null || !searchOnColumns.Any())
         {
             string whereStatement = CreateSqlSearchWhereStatement(contentType, search);
-            if (!string.IsNullOrWhiteSpace(whereStatement))
-                possibleWhereClauses.Add($"({whereStatement})");
+            sqlBuilder.AndWhere(whereStatement);
         }
         else
         {
             string whereStatement = CreateSqlSearchWhereStatement(contentType, search, searchOnColumns);
-            if (!string.IsNullOrWhiteSpace(whereStatement))
-                possibleWhereClauses.Add($"({whereStatement})");
+            sqlBuilder.AndWhere(whereStatement);
         }
 
         var oDataToSql = new ODataFilterToSql(contentType, primaryFieldName, oneToOneRelationshipFields);
@@ -135,14 +117,9 @@ public class RaythaDbJsonQueryEngine : IRaythaDbJsonQueryEngine
         {
             string whereStatement = oDataToSql.GenerateSql(filter);
             if (!string.IsNullOrWhiteSpace(whereStatement))
-                possibleWhereClauses.Add($"({whereStatement})");
+                sqlBuilder.AndWhere($"({whereStatement})");
         }
 
-        string whereClause = string.Join(" AND ", possibleWhereClauses);
-
-        sqlBuilder.Select(selectClause);
-        if (!string.IsNullOrWhiteSpace(whereClause))
-            sqlBuilder.Where(whereClause);
 
         if (!string.IsNullOrWhiteSpace(orderBy))
         {
@@ -153,9 +130,9 @@ public class RaythaDbJsonQueryEngine : IRaythaDbJsonQueryEngine
         pageNumber = pageNumber <= 1 ? 0 : pageNumber - 1;
         int skip = pageNumber * pageSize;
 
-        var selector = sqlBuilder.AddTemplate($"SELECT /**select**/ {fromClause} /**where**/ /**orderby**/ OFFSET {skip} ROWS FETCH NEXT {pageSize} ROWS ONLY");
+        var rawSql = $"{sqlBuilder.Build()} OFFSET {skip} ROWS FETCH NEXT {pageSize} ROWS ONLY";
 
-        var resultFromQuery = (IEnumerable<IDictionary<string, object>>)_db.Query(selector.RawSql, new { search = $"%{search}%", exactsearch = $"{search}" }, transaction: transaction);
+        var resultFromQuery = (IEnumerable<IDictionary<string, object>>)_db.Query(rawSql, new { search = $"%{search}%", exactsearch = $"{search}" }, transaction: transaction);
 
         var items = new List<ContentItem>();
         if (resultFromQuery == null)
@@ -167,10 +144,10 @@ public class RaythaDbJsonQueryEngine : IRaythaDbJsonQueryEngine
             foreach (var item in oneToOneRelationshipFields)
             {
                 int index = oneToOneRelationshipFields.IndexOf(item);
-                var relatedCreatorUser = ToStatic<User>(rawResultItem, $"{RawSqlColumn.RELATED_CREATED_BY_COLUMN_NAME}_{index}");
-                var relatedModifierUser = ToStatic<User>(rawResultItem, $"{RawSqlColumn.RELATED_MODIFIED_BY_COLUMN_NAME}_{index}");
-                var relatedRoute = ToStatic<Route>(rawResultItem, $"{RawSqlColumn.RELATED_ROUTE_COLUMN_NAME}_{index}");
-                var relatedItem = ToStatic<ContentItem>(rawResultItem, $"{RawSqlColumn.RELATED_ITEM_COLUMN_NAME}_{index}");
+                var relatedCreatorUser = ToStatic<User>(rawResultItem.FilterAndTrimKeys($"{RawSqlColumn.RELATED_CREATED_BY_COLUMN_NAME}_{index}_"));
+                var relatedModifierUser = ToStatic<User>(rawResultItem.FilterAndTrimKeys($"{RawSqlColumn.RELATED_MODIFIED_BY_COLUMN_NAME}_{index}_"));
+                var relatedRoute = ToStatic<Route>(rawResultItem.FilterAndTrimKeys($"{RawSqlColumn.RELATED_ROUTE_COLUMN_NAME}_{index}_"));
+                var relatedItem = ToStatic<ContentItem>(rawResultItem.FilterAndTrimKeys($"{RawSqlColumn.RELATED_ITEM_COLUMN_NAME}_{index}_"));
                 if (relatedItem != null && relatedItem.Id != Guid.Empty)
                 {
                     relatedItem.CreatorUser = relatedCreatorUser;
@@ -186,10 +163,10 @@ public class RaythaDbJsonQueryEngine : IRaythaDbJsonQueryEngine
                 }
             }
 
-            var creatorUser = ToStatic<User>(rawResultItem, RawSqlColumn.SOURCE_CREATED_BY_COLUMN_NAME);
-            var modifierUser = ToStatic<User>(rawResultItem, RawSqlColumn.SOURCE_MODIFIED_BY_COLUMN_NAME);
-            var route = ToStatic<Route>(rawResultItem, RawSqlColumn.ROUTE_COLUMN_NAME);
-            var contentItem = ToStatic<ContentItem>(rawResultItem, RawSqlColumn.SOURCE_ITEM_COLUMN_NAME);
+            var creatorUser = ToStatic<User>(rawResultItem.FilterAndTrimKeys($"{RawSqlColumn.SOURCE_CREATED_BY_COLUMN_NAME}_"));
+            var modifierUser = ToStatic<User>(rawResultItem.FilterAndTrimKeys($"{RawSqlColumn.SOURCE_MODIFIED_BY_COLUMN_NAME}_"));
+            var route = ToStatic<Route>(rawResultItem.FilterAndTrimKeys($"{RawSqlColumn.ROUTE_COLUMN_NAME}_"));
+            var contentItem = ToStatic<ContentItem>(rawResultItem.FilterAndTrimKeys($"{RawSqlColumn.SOURCE_ITEM_COLUMN_NAME}_"));
             contentItem.PublishedContent = ConvertJsonContentToDynamic(contentItem._PublishedContent, contentType, relatedContentItems);
             contentItem.DraftContent = ConvertJsonContentToDynamic(contentItem._DraftContent, contentType, relatedContentItems);
 
@@ -241,25 +218,20 @@ public class RaythaDbJsonQueryEngine : IRaythaDbJsonQueryEngine
         List<ContentTypeField> oneToOneRelationshipFields = contentType.ContentTypeFields.Where(p => p.FieldType.DeveloperName == BaseFieldType.OneToOneRelationship).ToList();
         var primaryFieldName = contentType.ContentTypeFields.First(p => p.Id == contentType.PrimaryFieldId).DeveloperName;
 
-        SqlBuilder sqlBuilder = new SqlBuilder();
+        var sqlBuilder = new SqlQueryBuilder();
+        sqlBuilder = PrepareFrom(sqlBuilder.Select("COUNT(*) as Count"), oneToOneRelationshipFields);
 
-        string fromClause = CreateSqlFromStatement(oneToOneRelationshipFields);
+        sqlBuilder.AndWhere($"{RawSqlColumn.SOURCE_ITEM_COLUMN_NAME}.{RawSqlColumn.ContentTypeId.Name} = '{contentTypeId}'");
 
-        List<string> possibleWhereClauses = new List<string>
-        {
-            $"{RawSqlColumn.UNIQUE_COLUMN_PREFIX}_{RawSqlColumn.SOURCE_ITEM_COLUMN_NAME}.ContentTypeId = '{contentTypeId}'"
-        };
         if (searchOnColumns == null || !searchOnColumns.Any())
         {
             string whereStatement = CreateSqlSearchWhereStatement(contentType, search);
-            if (!string.IsNullOrWhiteSpace(whereStatement))
-                possibleWhereClauses.Add($"({whereStatement})");
+            sqlBuilder.AndWhere(whereStatement);
         }
         else
         {
             string whereStatement = CreateSqlSearchWhereStatement(contentType, search, searchOnColumns);
-            if (!string.IsNullOrWhiteSpace(whereStatement))
-                possibleWhereClauses.Add($"({whereStatement})");
+            sqlBuilder.AndWhere(whereStatement);
         }
 
         var oDataToSql = new ODataFilterToSql(contentType, primaryFieldName, oneToOneRelationshipFields);
@@ -267,57 +239,48 @@ public class RaythaDbJsonQueryEngine : IRaythaDbJsonQueryEngine
         {
             string whereStatement = oDataToSql.GenerateSql(filter);
             if (!string.IsNullOrWhiteSpace(whereStatement))
-                possibleWhereClauses.Add($"({whereStatement})");
+                sqlBuilder.AndWhere($"({whereStatement})");
         }
 
-        string whereClause = string.Join(" AND ", possibleWhereClauses);
+        var rawSql = sqlBuilder.Build();
 
-        if (!string.IsNullOrWhiteSpace(whereClause))
-            sqlBuilder.Where(whereClause);
-
-        var selector = sqlBuilder.AddTemplate($"SELECT COUNT(*) as Count {fromClause} /**where**/");
-
-        var numResults = _db.Query(selector.RawSql, new { search = $"%{search}%", exactsearch = $"{search}" }, transaction: transaction).First().Count;
+        var numResults = _db.Query(rawSql, new { search = $"%{search}%", exactsearch = $"{search}" }, transaction: transaction).First().Count;
         return numResults;
     }
 
-    private string CreateSqlSelectStatement(List<ContentTypeField> oneToOneRelationshipFields)
+    private SqlQueryBuilder PrepareContentItemsDataSelect(SqlQueryBuilder sqlBuilder, List<ContentTypeField> oneToOneRelationshipFields)
     {
-        StringBuilder selectStatement = new StringBuilder();
-        selectStatement.Append($"{string.Join(",", RawSqlColumn.NameAsFullColumnLabelForEnumerable(RawSqlColumn.ContentItemColumns(), $"{RawSqlColumn.UNIQUE_COLUMN_PREFIX}_{RawSqlColumn.SOURCE_ITEM_COLUMN_NAME}"))}");
-        selectStatement.Append($", {string.Join(",", RawSqlColumn.NameAsFullColumnLabelForEnumerable(RawSqlColumn.RouteColumns(), $"{RawSqlColumn.UNIQUE_COLUMN_PREFIX}_{RawSqlColumn.ROUTE_COLUMN_NAME}"))}");
-        selectStatement.Append($", {string.Join(",", RawSqlColumn.NameAsFullColumnLabelForEnumerable(RawSqlColumn.UserColumns(), $"{RawSqlColumn.UNIQUE_COLUMN_PREFIX}_{RawSqlColumn.SOURCE_CREATED_BY_COLUMN_NAME}"))}");
-        selectStatement.Append($", {string.Join(",", RawSqlColumn.NameAsFullColumnLabelForEnumerable(RawSqlColumn.UserColumns(), $"{RawSqlColumn.UNIQUE_COLUMN_PREFIX}_{RawSqlColumn.SOURCE_MODIFIED_BY_COLUMN_NAME}"))}");
-
+        sqlBuilder.Select(RawSqlColumn.NameAsFullColumnLabelForEnumerable(RawSqlColumn.ContentItemColumns(), RawSqlColumn.SOURCE_ITEM_COLUMN_NAME).ToArray());
+        sqlBuilder.Select(RawSqlColumn.NameAsFullColumnLabelForEnumerable(RawSqlColumn.RouteColumns(), RawSqlColumn.ROUTE_COLUMN_NAME).ToArray());
+        sqlBuilder.Select(RawSqlColumn.NameAsFullColumnLabelForEnumerable(RawSqlColumn.UserColumns(), RawSqlColumn.SOURCE_CREATED_BY_COLUMN_NAME).ToArray());
+        sqlBuilder.Select(RawSqlColumn.NameAsFullColumnLabelForEnumerable(RawSqlColumn.UserColumns(), RawSqlColumn.SOURCE_MODIFIED_BY_COLUMN_NAME).ToArray());
         foreach (var item in oneToOneRelationshipFields)
         {
             int index = oneToOneRelationshipFields.IndexOf(item);
-            selectStatement.Append($", {string.Join(",", RawSqlColumn.NameAsFullColumnLabelForEnumerable(RawSqlColumn.ContentItemColumns(), $"{RawSqlColumn.UNIQUE_COLUMN_PREFIX}_{RawSqlColumn.RELATED_ITEM_COLUMN_NAME}_{index}"))}");
-            selectStatement.Append($", {string.Join(",", RawSqlColumn.NameAsFullColumnLabelForEnumerable(RawSqlColumn.RouteColumns(), $"{RawSqlColumn.UNIQUE_COLUMN_PREFIX}_{RawSqlColumn.RELATED_ROUTE_COLUMN_NAME}_{index}"))}");
-            selectStatement.Append($", {string.Join(",", RawSqlColumn.NameAsFullColumnLabelForEnumerable(RawSqlColumn.UserColumns(), $"{RawSqlColumn.UNIQUE_COLUMN_PREFIX}_{RawSqlColumn.RELATED_CREATED_BY_COLUMN_NAME}_{index}"))}");
-            selectStatement.Append($", {string.Join(",", RawSqlColumn.NameAsFullColumnLabelForEnumerable(RawSqlColumn.UserColumns(), $"{RawSqlColumn.UNIQUE_COLUMN_PREFIX}_{RawSqlColumn.RELATED_MODIFIED_BY_COLUMN_NAME}_{index}"))}");
+            sqlBuilder.Select(RawSqlColumn.NameAsFullColumnLabelForEnumerable(RawSqlColumn.ContentItemColumns(), $"{RawSqlColumn.RELATED_ITEM_COLUMN_NAME}_{index}").ToArray());
+            sqlBuilder.Select(RawSqlColumn.NameAsFullColumnLabelForEnumerable(RawSqlColumn.RouteColumns(), $"{RawSqlColumn.RELATED_ROUTE_COLUMN_NAME}_{index}").ToArray());
+            sqlBuilder.Select(RawSqlColumn.NameAsFullColumnLabelForEnumerable(RawSqlColumn.UserColumns(), $"{RawSqlColumn.RELATED_CREATED_BY_COLUMN_NAME}_{index}").ToArray());
+            sqlBuilder.Select(RawSqlColumn.NameAsFullColumnLabelForEnumerable(RawSqlColumn.UserColumns(), $"{RawSqlColumn.RELATED_MODIFIED_BY_COLUMN_NAME}_{index}").ToArray());
         }
-
-        return selectStatement.ToString();
+        return sqlBuilder;
     }
 
-    private string CreateSqlFromStatement(List<ContentTypeField> oneToOneRelationshipFields)
+    private SqlQueryBuilder PrepareFrom(SqlQueryBuilder sqlBuilder, List<ContentTypeField> oneToOneRelationshipFields)
     {
-        StringBuilder fromStatement = new StringBuilder($"FROM ContentItems AS {RawSqlColumn.UNIQUE_COLUMN_PREFIX}_{RawSqlColumn.SOURCE_ITEM_COLUMN_NAME}");
-
+        sqlBuilder.From($"{RawSqlColumn.CONTENT_ITEM_TABLE_NAME} AS {RawSqlColumn.SOURCE_ITEM_COLUMN_NAME}");
         foreach (var item in oneToOneRelationshipFields)
         {
             int index = oneToOneRelationshipFields.IndexOf(item);
-            fromStatement.Append($" LEFT JOIN ContentItems AS {RawSqlColumn.UNIQUE_COLUMN_PREFIX}_{RawSqlColumn.RELATED_ITEM_COLUMN_NAME}_{index} ON {RawSqlColumn.UNIQUE_COLUMN_PREFIX}_{RawSqlColumn.RELATED_ITEM_COLUMN_NAME}_{index}.Id = JSON_VALUE({RawSqlColumn.UNIQUE_COLUMN_PREFIX}_{RawSqlColumn.SOURCE_ITEM_COLUMN_NAME}._PublishedContent, '$.{item.DeveloperName.ToDeveloperName()}')");
-            fromStatement.Append($" LEFT JOIN Users AS {RawSqlColumn.UNIQUE_COLUMN_PREFIX}_{RawSqlColumn.RELATED_CREATED_BY_COLUMN_NAME}_{index} ON {RawSqlColumn.UNIQUE_COLUMN_PREFIX}_{RawSqlColumn.RELATED_ITEM_COLUMN_NAME}_{index}.CreatorUserId = {RawSqlColumn.UNIQUE_COLUMN_PREFIX}_{RawSqlColumn.RELATED_CREATED_BY_COLUMN_NAME}_{index}.Id");
-            fromStatement.Append($" LEFT JOIN Users AS {RawSqlColumn.UNIQUE_COLUMN_PREFIX}_{RawSqlColumn.RELATED_MODIFIED_BY_COLUMN_NAME}_{index} ON {RawSqlColumn.UNIQUE_COLUMN_PREFIX}_{RawSqlColumn.RELATED_ITEM_COLUMN_NAME}_{index}.LastModifierUserId = {RawSqlColumn.UNIQUE_COLUMN_PREFIX}_{RawSqlColumn.RELATED_MODIFIED_BY_COLUMN_NAME}_{index}.Id");
-            fromStatement.Append($" LEFT JOIN Routes AS {RawSqlColumn.UNIQUE_COLUMN_PREFIX}_{RawSqlColumn.RELATED_ROUTE_COLUMN_NAME}_{index} ON {RawSqlColumn.UNIQUE_COLUMN_PREFIX}_{RawSqlColumn.RELATED_ITEM_COLUMN_NAME}_{index}.RouteId = {RawSqlColumn.UNIQUE_COLUMN_PREFIX}_{RawSqlColumn.RELATED_ROUTE_COLUMN_NAME}_{index}.Id");
+            sqlBuilder.Join($"{RawSqlColumn.CONTENT_ITEM_TABLE_NAME} AS {RawSqlColumn.RELATED_ITEM_COLUMN_NAME}_{index}", $"{RawSqlColumn.RELATED_ITEM_COLUMN_NAME}_{index}.{RawSqlColumn.Id.Name} = JSON_VALUE({RawSqlColumn.SOURCE_ITEM_COLUMN_NAME}.{RawSqlColumn.PublishedContent.Name}, '$.{item.DeveloperName?.ToDeveloperName()}')", joinType: "LEFT");
+            sqlBuilder.Join($"{RawSqlColumn.USERS_TABLE_NAME} AS {RawSqlColumn.RELATED_CREATED_BY_COLUMN_NAME}_{index}", $"{RawSqlColumn.RELATED_ITEM_COLUMN_NAME}_{index}.{RawSqlColumn.CreatorUserId.Name} = {RawSqlColumn.RELATED_CREATED_BY_COLUMN_NAME}_{index}.{RawSqlColumn.Id.Name}", joinType: "LEFT");
+            sqlBuilder.Join($"{RawSqlColumn.USERS_TABLE_NAME} AS {RawSqlColumn.RELATED_MODIFIED_BY_COLUMN_NAME}_{index}", $"{RawSqlColumn.RELATED_ITEM_COLUMN_NAME}_{index}.{RawSqlColumn.LastModifierUserId.Name} = {RawSqlColumn.RELATED_MODIFIED_BY_COLUMN_NAME}_{index}.{RawSqlColumn.Id.Name}", joinType: "LEFT");
+            sqlBuilder.Join($"{RawSqlColumn.ROUTES_TABLE_NAME} AS {RawSqlColumn.RELATED_ROUTE_COLUMN_NAME}_{index}", $"{RawSqlColumn.RELATED_ITEM_COLUMN_NAME}_{index}.{RawSqlColumn.RouteId.Name} = {RawSqlColumn.RELATED_ROUTE_COLUMN_NAME}_{index}.{RawSqlColumn.Id.Name}", joinType: "LEFT");
         }
+        sqlBuilder.Join($"{RawSqlColumn.ROUTES_TABLE_NAME} AS {RawSqlColumn.ROUTE_COLUMN_NAME} ", $"{RawSqlColumn.SOURCE_ITEM_COLUMN_NAME}.{RawSqlColumn.RouteId.Name} = {RawSqlColumn.ROUTE_COLUMN_NAME}.{RawSqlColumn.Id.Name}", joinType: "LEFT");
+        sqlBuilder.Join($"{RawSqlColumn.USERS_TABLE_NAME} AS {RawSqlColumn.SOURCE_CREATED_BY_COLUMN_NAME}", $"{RawSqlColumn.SOURCE_ITEM_COLUMN_NAME}.{RawSqlColumn.CreatorUserId.Name} = {RawSqlColumn.SOURCE_CREATED_BY_COLUMN_NAME}.{RawSqlColumn.Id.Name}", joinType: "LEFT");
+        sqlBuilder.Join($"{RawSqlColumn.USERS_TABLE_NAME} AS {RawSqlColumn.SOURCE_MODIFIED_BY_COLUMN_NAME}", $"{RawSqlColumn.SOURCE_ITEM_COLUMN_NAME}.{RawSqlColumn.LastModifierUserId.Name} = {RawSqlColumn.SOURCE_MODIFIED_BY_COLUMN_NAME}.{RawSqlColumn.Id.Name}", joinType: "LEFT");
 
-        fromStatement.Append($" JOIN Routes AS {RawSqlColumn.UNIQUE_COLUMN_PREFIX}_{RawSqlColumn.ROUTE_COLUMN_NAME} ON {RawSqlColumn.UNIQUE_COLUMN_PREFIX}_{RawSqlColumn.SOURCE_ITEM_COLUMN_NAME}.RouteId = {RawSqlColumn.UNIQUE_COLUMN_PREFIX}_{RawSqlColumn.ROUTE_COLUMN_NAME}.Id");
-        fromStatement.Append($" LEFT JOIN Users AS {RawSqlColumn.UNIQUE_COLUMN_PREFIX}_{RawSqlColumn.SOURCE_CREATED_BY_COLUMN_NAME} ON {RawSqlColumn.UNIQUE_COLUMN_PREFIX}_{RawSqlColumn.SOURCE_ITEM_COLUMN_NAME}.CreatorUserId = {RawSqlColumn.UNIQUE_COLUMN_PREFIX}_{RawSqlColumn.SOURCE_CREATED_BY_COLUMN_NAME}.Id");
-        fromStatement.Append($" LEFT JOIN Users AS {RawSqlColumn.UNIQUE_COLUMN_PREFIX}_{RawSqlColumn.SOURCE_MODIFIED_BY_COLUMN_NAME} ON {RawSqlColumn.UNIQUE_COLUMN_PREFIX}_{RawSqlColumn.SOURCE_ITEM_COLUMN_NAME}.LastModifierUserId = {RawSqlColumn.UNIQUE_COLUMN_PREFIX}_{RawSqlColumn.SOURCE_MODIFIED_BY_COLUMN_NAME}.Id");
-        return fromStatement.ToString();
+        return sqlBuilder;
     }
 
     private string CreateSqlSearchWhereStatement(ContentType contentType, string search, string[] searchOnColumns)
@@ -342,7 +305,7 @@ public class RaythaDbJsonQueryEngine : IRaythaDbJsonQueryEngine
                     decimal numericValue;
                     if (decimal.TryParse(search, out numericValue))
                     {
-                        searchClauses.Add($"JSON_VALUE({RawSqlColumn.UNIQUE_COLUMN_PREFIX}_{RawSqlColumn.SOURCE_ITEM_COLUMN_NAME}.{RawSqlColumn.PublishedContent.Name}, '$.{columnAsContentTypeFieldDeveloperName}') = '{numericValue}'");
+                        searchClauses.Add($"JSON_VALUE({RawSqlColumn.SOURCE_ITEM_COLUMN_NAME}.{RawSqlColumn.PublishedContent.Name}, '$.{columnAsContentTypeFieldDeveloperName}') = '{numericValue}'");
                     }
                 }
                 else if (columnAsContentTypeField.FieldType.DeveloperName == BaseFieldType.OneToOneRelationship)
@@ -350,20 +313,20 @@ public class RaythaDbJsonQueryEngine : IRaythaDbJsonQueryEngine
                     var relatedObjectField = oneToOneRelationshipFields.First(p => p.DeveloperName == columnAsContentTypeField.DeveloperName);
                     int indexOfRelatedObject = oneToOneRelationshipFields.ToList().IndexOf(relatedObjectField);
                     string relatedObjPrimaryFieldName = relatedObjectField.ContentType.ContentTypeFields.First(p => p.Id == relatedObjectField.ContentType.PrimaryFieldId).DeveloperName.ToDeveloperName();
-                    searchClauses.Add($"JSON_VALUE({RawSqlColumn.UNIQUE_COLUMN_PREFIX}_{RawSqlColumn.RELATED_ITEM_COLUMN_NAME}_{indexOfRelatedObject}.{RawSqlColumn.PublishedContent.Name}, '$.{relatedObjPrimaryFieldName}') COLLATE Latin1_General_CI_AS LIKE @search");
+                    searchClauses.Add($"JSON_VALUE({RawSqlColumn.RELATED_ITEM_COLUMN_NAME}_{indexOfRelatedObject}.{RawSqlColumn.PublishedContent.Name}, '$.{relatedObjPrimaryFieldName}') COLLATE Latin1_General_CI_AS LIKE @search");
                 }
                 else if (columnAsContentTypeField.FieldType.DeveloperName == BaseFieldType.MultipleSelect)
                 {
                     if (columnAsContentTypeField.Choices.Any(p => p.DeveloperName == search))
                     {
-                        searchClauses.Add($"(ISJSON(JSON_QUERY({RawSqlColumn.UNIQUE_COLUMN_PREFIX}_{RawSqlColumn.SOURCE_ITEM_COLUMN_NAME}.{RawSqlColumn.PublishedContent.Name}, '$.{columnAsContentTypeFieldDeveloperName}'))) = 1 AND EXISTS (SELECT * FROM OPENJSON({RawSqlColumn.SOURCE_ITEM_COLUMN_NAME}.{RawSqlColumn.PublishedContent.Name}, '$.{columnAsContentTypeFieldDeveloperName}') as temp WHERE temp.value = @exactsearch)");
+                        searchClauses.Add($"(ISJSON(JSON_QUERY({RawSqlColumn.SOURCE_ITEM_COLUMN_NAME}.{RawSqlColumn.PublishedContent.Name}, '$.{columnAsContentTypeFieldDeveloperName}'))) = 1 AND EXISTS (SELECT * FROM OPENJSON({RawSqlColumn.SOURCE_ITEM_COLUMN_NAME}.{RawSqlColumn.PublishedContent.Name}, '$.{columnAsContentTypeFieldDeveloperName}') as temp WHERE temp.value = @exactsearch)");
                     }
                 }
                 else if (columnAsContentTypeField.FieldType.DeveloperName == BaseFieldType.Checkbox)
                 {
                     if (search == "true" || search == "false")
                     {
-                        searchClauses.Add($"JSON_VALUE({RawSqlColumn.UNIQUE_COLUMN_PREFIX}_{RawSqlColumn.SOURCE_ITEM_COLUMN_NAME}.{RawSqlColumn.PublishedContent.Name}, '$.{columnAsContentTypeFieldDeveloperName}') = @exactsearch");
+                        searchClauses.Add($"JSON_VALUE({RawSqlColumn.SOURCE_ITEM_COLUMN_NAME}.{RawSqlColumn.PublishedContent.Name}, '$.{columnAsContentTypeFieldDeveloperName}') = @exactsearch");
                     }
                 }
                 else if (columnAsContentTypeField.FieldType.DeveloperName == BaseFieldType.Date)
@@ -377,11 +340,11 @@ public class RaythaDbJsonQueryEngine : IRaythaDbJsonQueryEngine
                     {
                         sqlDateOutput = 103;
                     }
-                    searchClauses.Add($"TRY_CONVERT(varchar, TRY_CONVERT(datetime, JSON_VALUE({RawSqlColumn.UNIQUE_COLUMN_PREFIX}_{RawSqlColumn.SOURCE_ITEM_COLUMN_NAME}.{RawSqlColumn.PublishedContent.Name}, '$.{columnAsContentTypeFieldDeveloperName}')), {sqlDateOutput}) COLLATE Latin1_General_CI_AS LIKE @search");
+                    searchClauses.Add($"TRY_CONVERT(varchar, TRY_CONVERT(datetime, JSON_VALUE({RawSqlColumn.SOURCE_ITEM_COLUMN_NAME}.{RawSqlColumn.PublishedContent.Name}, '$.{columnAsContentTypeFieldDeveloperName}')), {sqlDateOutput}) COLLATE Latin1_General_CI_AS LIKE @search");
                 }
                 else
                 {
-                    searchClauses.Add($"JSON_VALUE({RawSqlColumn.UNIQUE_COLUMN_PREFIX}_{RawSqlColumn.SOURCE_ITEM_COLUMN_NAME}.{RawSqlColumn.PublishedContent.Name}, '$.{columnAsContentTypeFieldDeveloperName}') COLLATE Latin1_General_CI_AS LIKE @search");
+                    searchClauses.Add($"JSON_VALUE({RawSqlColumn.SOURCE_ITEM_COLUMN_NAME}.{RawSqlColumn.PublishedContent.Name}, '$.{columnAsContentTypeFieldDeveloperName}') COLLATE Latin1_General_CI_AS LIKE @search");
                 }
             }
             else
@@ -394,22 +357,22 @@ public class RaythaDbJsonQueryEngine : IRaythaDbJsonQueryEngine
                         ShortGuid shortGuid;
                         if (ShortGuid.TryParse(originalSearch, out shortGuid))
                         {
-                            searchClauses.Add($"{RawSqlColumn.UNIQUE_COLUMN_PREFIX}_{RawSqlColumn.SOURCE_ITEM_COLUMN_NAME}.{RawSqlColumn.Id.Name} = '{shortGuid.Guid}'");
+                            searchClauses.Add($"{RawSqlColumn.SOURCE_ITEM_COLUMN_NAME}.{RawSqlColumn.Id.Name} = '{shortGuid.Guid}'");
                         }
                     }
                     else if (reservedField.DeveloperName == BuiltInContentTypeField.CreatorUser.DeveloperName)
                     {
-                        searchClauses.Add($"{RawSqlColumn.UNIQUE_COLUMN_PREFIX}_{RawSqlColumn.SOURCE_CREATED_BY_COLUMN_NAME}.FirstName COLLATE Latin1_General_CI_AS LIKE @search");
-                        searchClauses.Add($"{RawSqlColumn.UNIQUE_COLUMN_PREFIX}_{RawSqlColumn.SOURCE_CREATED_BY_COLUMN_NAME}.LastName COLLATE Latin1_General_CI_AS LIKE @search");
+                        searchClauses.Add($"{RawSqlColumn.SOURCE_CREATED_BY_COLUMN_NAME}.FirstName COLLATE Latin1_General_CI_AS LIKE @search");
+                        searchClauses.Add($"{RawSqlColumn.SOURCE_CREATED_BY_COLUMN_NAME}.LastName COLLATE Latin1_General_CI_AS LIKE @search");
                     }
                     else if (reservedField.DeveloperName == BuiltInContentTypeField.LastModifierUser.DeveloperName)
                     {
-                        searchClauses.Add($"{RawSqlColumn.UNIQUE_COLUMN_PREFIX}_{RawSqlColumn.SOURCE_MODIFIED_BY_COLUMN_NAME}.FirstName COLLATE Latin1_General_CI_AS LIKE @search");
-                        searchClauses.Add($"{RawSqlColumn.UNIQUE_COLUMN_PREFIX}_{RawSqlColumn.SOURCE_MODIFIED_BY_COLUMN_NAME}.LastName COLLATE Latin1_General_CI_AS LIKE @search");
+                        searchClauses.Add($"{RawSqlColumn.SOURCE_MODIFIED_BY_COLUMN_NAME}.FirstName COLLATE Latin1_General_CI_AS LIKE @search");
+                        searchClauses.Add($"{RawSqlColumn.SOURCE_MODIFIED_BY_COLUMN_NAME}.LastName COLLATE Latin1_General_CI_AS LIKE @search");
                     }
                     else if (reservedField.DeveloperName == BuiltInContentTypeField.PrimaryField.DeveloperName)
                     {
-                        searchClauses.Add($"JSON_VALUE({RawSqlColumn.UNIQUE_COLUMN_PREFIX}_{RawSqlColumn.SOURCE_ITEM_COLUMN_NAME}.{RawSqlColumn.PublishedContent.Name}, '$.{primaryFieldName}') COLLATE Latin1_General_CI_AS LIKE @search");
+                        searchClauses.Add($"JSON_VALUE({RawSqlColumn.SOURCE_ITEM_COLUMN_NAME}.{RawSqlColumn.PublishedContent.Name}, '$.{primaryFieldName}') COLLATE Latin1_General_CI_AS LIKE @search");
                     }
                 }
             }
@@ -430,7 +393,7 @@ public class RaythaDbJsonQueryEngine : IRaythaDbJsonQueryEngine
             return string.Empty;
 
         var primaryFieldName = contentType.ContentTypeFields.First(p => p.Id == contentType.PrimaryFieldId).DeveloperName.ToDeveloperName();
-        return $"JSON_VALUE({RawSqlColumn.UNIQUE_COLUMN_PREFIX}_{RawSqlColumn.SOURCE_ITEM_COLUMN_NAME}.{RawSqlColumn.PublishedContent.Name}, '$.{primaryFieldName}') COLLATE Latin1_General_CI_AS LIKE @search";
+        return $"JSON_VALUE({RawSqlColumn.SOURCE_ITEM_COLUMN_NAME}.{RawSqlColumn.PublishedContent.Name}, '$.{primaryFieldName}') COLLATE Latin1_General_CI_AS LIKE @search";
     }
 
     private string CreateSqlOrderByStatement(ContentType contentType, string orderBy)
@@ -454,18 +417,18 @@ public class RaythaDbJsonQueryEngine : IRaythaDbJsonQueryEngine
                     string columnAsContentTypeFieldDeveloperName = columnAsContentTypeField.DeveloperName;
                     if (columnAsContentTypeField.FieldType.DeveloperName == BaseFieldType.Number)
                     {
-                        orderByClauses.Add($"CAST(JSON_VALUE({RawSqlColumn.UNIQUE_COLUMN_PREFIX}_{RawSqlColumn.SOURCE_ITEM_COLUMN_NAME}.{RawSqlColumn.PublishedContent.Name}, '$.{columnAsContentTypeFieldDeveloperName}') AS decimal) {direction.DeveloperName}");                      
+                        orderByClauses.Add($"CAST(JSON_VALUE({RawSqlColumn.SOURCE_ITEM_COLUMN_NAME}.{RawSqlColumn.PublishedContent.Name}, '$.{columnAsContentTypeFieldDeveloperName}') AS decimal) {direction.DeveloperName}");                      
                     }
                     else if (columnAsContentTypeField.FieldType.DeveloperName == BaseFieldType.OneToOneRelationship)
                     {
                         var relatedObjectField = oneToOneRelationshipFields.First(p => p.DeveloperName == columnAsContentTypeField.DeveloperName);
                         int indexOfRelatedObject = oneToOneRelationshipFields.ToList().IndexOf(relatedObjectField);
                         string relatedObjPrimaryFieldName = relatedObjectField.ContentType.ContentTypeFields.First(p => p.Id == relatedObjectField.ContentType.PrimaryFieldId).DeveloperName.ToDeveloperName();
-                        orderByClauses.Add($"JSON_VALUE({RawSqlColumn.UNIQUE_COLUMN_PREFIX}_{RawSqlColumn.RELATED_ITEM_COLUMN_NAME}_{indexOfRelatedObject}.{RawSqlColumn.PublishedContent.Name}, '$.{relatedObjPrimaryFieldName}') {direction.DeveloperName}");
+                        orderByClauses.Add($"JSON_VALUE({RawSqlColumn.RELATED_ITEM_COLUMN_NAME}_{indexOfRelatedObject}.{RawSqlColumn.PublishedContent.Name}, '$.{relatedObjPrimaryFieldName}') {direction.DeveloperName}");
                     }
                     else if (columnAsContentTypeField.FieldType.DeveloperName == BaseFieldType.Checkbox)
                     {
-                        orderByClauses.Add($"JSON_VALUE({RawSqlColumn.UNIQUE_COLUMN_PREFIX}_{RawSqlColumn.SOURCE_ITEM_COLUMN_NAME}.{RawSqlColumn.PublishedContent.Name}, '$.{columnAsContentTypeFieldDeveloperName}') {direction.DeveloperName}");                       
+                        orderByClauses.Add($"JSON_VALUE({RawSqlColumn.SOURCE_ITEM_COLUMN_NAME}.{RawSqlColumn.PublishedContent.Name}, '$.{columnAsContentTypeFieldDeveloperName}') {direction.DeveloperName}");                       
                     }
                     else if (columnAsContentTypeField.FieldType.DeveloperName == BaseFieldType.Date)
                     {
@@ -478,11 +441,11 @@ public class RaythaDbJsonQueryEngine : IRaythaDbJsonQueryEngine
                         {
                             sqlDateOutput = 103;
                         }
-                        orderByClauses.Add($"TRY_CONVERT(datetime, JSON_VALUE({RawSqlColumn.UNIQUE_COLUMN_PREFIX}_{RawSqlColumn.SOURCE_ITEM_COLUMN_NAME}.{RawSqlColumn.PublishedContent.Name}, '$.{columnAsContentTypeFieldDeveloperName}'), {sqlDateOutput}) {direction.DeveloperName}");
+                        orderByClauses.Add($"TRY_CONVERT(datetime, JSON_VALUE({RawSqlColumn.SOURCE_ITEM_COLUMN_NAME}.{RawSqlColumn.PublishedContent.Name}, '$.{columnAsContentTypeFieldDeveloperName}'), {sqlDateOutput}) {direction.DeveloperName}");
                     }
                     else if (columnAsContentTypeField.FieldType.DeveloperName != BaseFieldType.MultipleSelect)
                     {
-                        orderByClauses.Add($"JSON_VALUE({RawSqlColumn.UNIQUE_COLUMN_PREFIX}_{RawSqlColumn.SOURCE_ITEM_COLUMN_NAME}.{RawSqlColumn.PublishedContent.Name}, '$.{columnAsContentTypeFieldDeveloperName}') {direction.DeveloperName}");
+                        orderByClauses.Add($"JSON_VALUE({RawSqlColumn.SOURCE_ITEM_COLUMN_NAME}.{RawSqlColumn.PublishedContent.Name}, '$.{columnAsContentTypeFieldDeveloperName}') {direction.DeveloperName}");
                     }
                 }
                 else
@@ -492,19 +455,19 @@ public class RaythaDbJsonQueryEngine : IRaythaDbJsonQueryEngine
                     {
                         if (reservedField.DeveloperName == BuiltInContentTypeField.PrimaryField)
                         {
-                            orderByClauses.Add($"JSON_VALUE({RawSqlColumn.UNIQUE_COLUMN_PREFIX}_{RawSqlColumn.SOURCE_ITEM_COLUMN_NAME}.{RawSqlColumn.PublishedContent.Name}, '$.{primaryFieldName}') {direction.DeveloperName}");
+                            orderByClauses.Add($"JSON_VALUE({RawSqlColumn.SOURCE_ITEM_COLUMN_NAME}.{RawSqlColumn.PublishedContent.Name}, '$.{primaryFieldName}') {direction.DeveloperName}");
                         }
                         else if (reservedField.DeveloperName == BuiltInContentTypeField.CreatorUser)
                         {
-                            orderByClauses.Add($"{RawSqlColumn.UNIQUE_COLUMN_PREFIX}_{RawSqlColumn.SOURCE_CREATED_BY_COLUMN_NAME}.FirstName {direction.DeveloperName}");
+                            orderByClauses.Add($"{RawSqlColumn.SOURCE_CREATED_BY_COLUMN_NAME}.FirstName {direction.DeveloperName}");
                         }
                         else if (reservedField.DeveloperName == BuiltInContentTypeField.LastModifierUser)
                         {
-                            orderByClauses.Add($"{RawSqlColumn.UNIQUE_COLUMN_PREFIX}_{RawSqlColumn.SOURCE_MODIFIED_BY_COLUMN_NAME}.FirstName {direction.DeveloperName}");
+                            orderByClauses.Add($"{RawSqlColumn.SOURCE_MODIFIED_BY_COLUMN_NAME}.FirstName {direction.DeveloperName}");
                         }
                         else
                         {
-                            orderByClauses.Add($"{RawSqlColumn.UNIQUE_COLUMN_PREFIX}_{RawSqlColumn.SOURCE_ITEM_COLUMN_NAME}.{reservedField.DeveloperName} {direction.DeveloperName}");
+                            orderByClauses.Add($"{RawSqlColumn.SOURCE_ITEM_COLUMN_NAME}.{reservedField.DeveloperName} {direction.DeveloperName}");
                         }
                     }
                 }
@@ -517,25 +480,19 @@ public class RaythaDbJsonQueryEngine : IRaythaDbJsonQueryEngine
         return string.Join(",", orderByClauses);
     }
 
-    private T ToStatic<T>(IEnumerable<KeyValuePair<string, object>> properties, string columnPrefix)
+    private T ToStatic<T>(IEnumerable<KeyValuePair<string, object>> properties)
     {
-        if (properties == null)
+        if (properties == null || !properties.Any())
             return default(T);
 
         var entity = Activator.CreateInstance<T>();
 
-        bool hasProperities = false;
-        foreach (var entry in properties.Where(p => p.Key.StartsWith($"{RawSqlColumn.UNIQUE_COLUMN_PREFIX}_{columnPrefix}")))
+        foreach (var entry in properties)
         {
-            hasProperities = true;
-            var fixedKey = entry.Key.Replace($"{RawSqlColumn.UNIQUE_COLUMN_PREFIX}_{columnPrefix}_", string.Empty);
-            var propertyInfo = entity.GetType().GetProperty(fixedKey);
+            var propertyInfo = entity.GetType().GetProperty(entry.Key);
             if (propertyInfo != null)
                 propertyInfo.SetValue(entity, entry.Value, null);
         }
-
-        if (!hasProperities)
-            return default(T);
 
         return entity;
     }

@@ -29,6 +29,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="JsonQueryEngine\SqlServer\" />
     <Folder Include="Migrations\" />
   </ItemGroup>
 

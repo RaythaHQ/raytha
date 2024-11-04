@@ -111,7 +111,7 @@ internal class ODataFilterToSql
 
             if (BuiltInContentTypeField.ReservedContentTypeFields.Any(p => p.DeveloperName == realFieldName))
             {
-                string prefix = $"{RawSqlColumn.UNIQUE_COLUMN_PREFIX}_{RawSqlColumn.SOURCE_ITEM_COLUMN_NAME}.{realFieldName} COLLATE Latin1_General_CI_AS LIKE";
+                string prefix = $"{RawSqlColumn.SOURCE_ITEM_COLUMN_NAME}.{realFieldName} COLLATE Latin1_General_CI_AS LIKE";
                 switch (functionName)
                 {
                     case "startswith":
@@ -138,13 +138,13 @@ internal class ODataFilterToSql
                     switch (functionName)
                     {
                         case "startswith":
-                            whereClause.Append($" JSON_VALUE({RawSqlColumn.UNIQUE_COLUMN_PREFIX}_{RawSqlColumn.RELATED_ITEM_COLUMN_NAME}_{indexOfRelatedObject}.{RawSqlColumn.PublishedContent.Name}, '$.{relatedObjPrimaryFieldName}') COLLATE Latin1_General_CI_AS LIKE '{value.Value}%'");
+                            whereClause.Append($" JSON_VALUE({RawSqlColumn.RELATED_ITEM_COLUMN_NAME}_{indexOfRelatedObject}.{RawSqlColumn.PublishedContent.Name}, '$.{relatedObjPrimaryFieldName}') COLLATE Latin1_General_CI_AS LIKE '{value.Value}%'");
                             break;
                         case "endswith":
-                            whereClause.Append($" JSON_VALUE({RawSqlColumn.UNIQUE_COLUMN_PREFIX}_{RawSqlColumn.RELATED_ITEM_COLUMN_NAME}_{indexOfRelatedObject}.{RawSqlColumn.PublishedContent.Name}, '$.{relatedObjPrimaryFieldName}') COLLATE Latin1_General_CI_AS LIKE '%{value.Value}'");
+                            whereClause.Append($" JSON_VALUE({RawSqlColumn.RELATED_ITEM_COLUMN_NAME}_{indexOfRelatedObject}.{RawSqlColumn.PublishedContent.Name}, '$.{relatedObjPrimaryFieldName}') COLLATE Latin1_General_CI_AS LIKE '%{value.Value}'");
                             break;
                         case "contains":
-                            whereClause.Append($" JSON_VALUE({RawSqlColumn.UNIQUE_COLUMN_PREFIX}_{RawSqlColumn.RELATED_ITEM_COLUMN_NAME}_{indexOfRelatedObject}.{RawSqlColumn.PublishedContent.Name}, '$.{relatedObjPrimaryFieldName}') COLLATE Latin1_General_CI_AS LIKE '%{value.Value}%'");
+                            whereClause.Append($" JSON_VALUE({RawSqlColumn.RELATED_ITEM_COLUMN_NAME}_{indexOfRelatedObject}.{RawSqlColumn.PublishedContent.Name}, '$.{relatedObjPrimaryFieldName}') COLLATE Latin1_General_CI_AS LIKE '%{value.Value}%'");
                             break;
                         default:
                             throw new NotImplementedException($"{functionName} is not an implemented function call.");
@@ -158,11 +158,11 @@ internal class ODataFilterToSql
                         case "contains":
                             if (value.Value.ToString() == "[]")
                             {
-                                whereClause.Append($" ((JSON_QUERY({RawSqlColumn.UNIQUE_COLUMN_PREFIX}_{RawSqlColumn.SOURCE_ITEM_COLUMN_NAME}.{RawSqlColumn.PublishedContent.Name}, '$.{realFieldName}') IS NULL) OR NOT EXISTS (SELECT * FROM OPENJSON({RawSqlColumn.UNIQUE_COLUMN_PREFIX}_{RawSqlColumn.SOURCE_ITEM_COLUMN_NAME}.{RawSqlColumn.PublishedContent.Name}, '$.{realFieldName}')))");
+                                whereClause.Append($" ((JSON_QUERY({RawSqlColumn.SOURCE_ITEM_COLUMN_NAME}.{RawSqlColumn.PublishedContent.Name}, '$.{realFieldName}') IS NULL) OR NOT EXISTS (SELECT * FROM OPENJSON({RawSqlColumn.SOURCE_ITEM_COLUMN_NAME}.{RawSqlColumn.PublishedContent.Name}, '$.{realFieldName}')))");
                             }
                             else
                             {
-                                whereClause.Append($" ((ISJSON(JSON_QUERY({RawSqlColumn.UNIQUE_COLUMN_PREFIX}_{RawSqlColumn.SOURCE_ITEM_COLUMN_NAME}.{RawSqlColumn.PublishedContent.Name}, '$.{realFieldName}'))) = 1 AND EXISTS (SELECT * FROM OPENJSON({RawSqlColumn.UNIQUE_COLUMN_PREFIX}_{RawSqlColumn.SOURCE_ITEM_COLUMN_NAME}.{RawSqlColumn.PublishedContent.Name}, '$.{realFieldName}') as temp WHERE temp.value = '{value.Value}'))");
+                                whereClause.Append($" ((ISJSON(JSON_QUERY({RawSqlColumn.SOURCE_ITEM_COLUMN_NAME}.{RawSqlColumn.PublishedContent.Name}, '$.{realFieldName}'))) = 1 AND EXISTS (SELECT * FROM OPENJSON({RawSqlColumn.SOURCE_ITEM_COLUMN_NAME}.{RawSqlColumn.PublishedContent.Name}, '$.{realFieldName}') as temp WHERE temp.value = '{value.Value}'))");
                             }
                             break;
                         default:
@@ -174,13 +174,13 @@ internal class ODataFilterToSql
                     switch (functionName)
                     {
                         case "startswith":
-                            whereClause.Append($" JSON_VALUE({RawSqlColumn.UNIQUE_COLUMN_PREFIX}_{RawSqlColumn.SOURCE_ITEM_COLUMN_NAME}.{RawSqlColumn.PublishedContent.Name}, '$.{realFieldName}') COLLATE Latin1_General_CI_AS LIKE '{value.Value}%'");
+                            whereClause.Append($" JSON_VALUE({RawSqlColumn.SOURCE_ITEM_COLUMN_NAME}.{RawSqlColumn.PublishedContent.Name}, '$.{realFieldName}') COLLATE Latin1_General_CI_AS LIKE '{value.Value}%'");
                             break;
                         case "endswith":
-                            whereClause.Append($" JSON_VALUE({RawSqlColumn.UNIQUE_COLUMN_PREFIX}_{RawSqlColumn.SOURCE_ITEM_COLUMN_NAME}.{RawSqlColumn.PublishedContent.Name}, '$.{realFieldName}') COLLATE Latin1_General_CI_AS LIKE '%{value.Value}'");
+                            whereClause.Append($" JSON_VALUE({RawSqlColumn.SOURCE_ITEM_COLUMN_NAME}.{RawSqlColumn.PublishedContent.Name}, '$.{realFieldName}') COLLATE Latin1_General_CI_AS LIKE '%{value.Value}'");
                             break;
                         case "contains":
-                            whereClause.Append($" JSON_VALUE({RawSqlColumn.UNIQUE_COLUMN_PREFIX}_{RawSqlColumn.SOURCE_ITEM_COLUMN_NAME}.{RawSqlColumn.PublishedContent.Name}, '$.{realFieldName}') COLLATE Latin1_General_CI_AS LIKE '%{value.Value}%'");
+                            whereClause.Append($" JSON_VALUE({RawSqlColumn.SOURCE_ITEM_COLUMN_NAME}.{RawSqlColumn.PublishedContent.Name}, '$.{realFieldName}') COLLATE Latin1_General_CI_AS LIKE '%{value.Value}%'");
                             break;
                         default:
                             throw new NotImplementedException($"{functionName} is not an implemented function call.");
@@ -283,7 +283,7 @@ internal class ODataFilterToSql
         {
             if (BuiltInContentTypeField.ReservedContentTypeFields.Any(p => p.DeveloperName == realFieldName))
             {
-                whereClause.Append($" {RawSqlColumn.UNIQUE_COLUMN_PREFIX}_{RawSqlColumn.SOURCE_ITEM_COLUMN_NAME}.{realFieldName}");
+                whereClause.Append($" {RawSqlColumn.SOURCE_ITEM_COLUMN_NAME}.{realFieldName}");
             }
             else
             {
@@ -293,11 +293,11 @@ internal class ODataFilterToSql
                     var relatedObjectField = _relatedObjectFields.First(p => p.DeveloperName == chosenColumnAsCustomField.DeveloperName);
                     int indexOfRelatedObject = _relatedObjectFields.ToList().IndexOf(relatedObjectField);
                     string relatedObjPrimaryFieldName = relatedObjectField.ContentType.ContentTypeFields.First(p => p.Id == relatedObjectField.ContentType.PrimaryFieldId).DeveloperName;
-                    whereClause.Append($" JSON_VALUE({RawSqlColumn.UNIQUE_COLUMN_PREFIX}_{RawSqlColumn.RELATED_ITEM_COLUMN_NAME}_{indexOfRelatedObject}.{RawSqlColumn.PublishedContent.Name}, '$.{relatedObjPrimaryFieldName}')");
+                    whereClause.Append($" JSON_VALUE({RawSqlColumn.RELATED_ITEM_COLUMN_NAME}_{indexOfRelatedObject}.{RawSqlColumn.PublishedContent.Name}, '$.{relatedObjPrimaryFieldName}')");
                 }
                 else
                 {
-                    whereClause.Append($" JSON_VALUE({RawSqlColumn.UNIQUE_COLUMN_PREFIX}_{RawSqlColumn.SOURCE_ITEM_COLUMN_NAME}.{RawSqlColumn.PublishedContent.Name}, '$.{realFieldName}') ");
+                    whereClause.Append($" JSON_VALUE({RawSqlColumn.SOURCE_ITEM_COLUMN_NAME}.{RawSqlColumn.PublishedContent.Name}, '$.{realFieldName}') ");
                 }
             }
         }
