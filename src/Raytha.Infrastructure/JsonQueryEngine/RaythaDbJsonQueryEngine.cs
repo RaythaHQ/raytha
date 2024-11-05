@@ -159,13 +159,6 @@ public class RaythaDbJsonQueryEngine : IRaythaDbJsonQueryEngine
         //Attach the where clause if we are filtering by a search query
         sqlBuilder = PrepareSearch(sqlBuilder, search, searchOnColumns);
 
-        var oDataToSql = new ODataFilterToSql(ContentType, PrimaryFieldDeveloperName, OneToOneRelationshipFields);
-        foreach (var filter in filters.Where(p => !string.IsNullOrEmpty(p)))
-        {
-            string whereStatement = oDataToSql.GenerateSql(filter);
-            if (!string.IsNullOrWhiteSpace(whereStatement))
-                sqlBuilder.AndWhere($"({whereStatement})");
-        }
 
         var rawSql = sqlBuilder.Build();
 
@@ -205,6 +198,21 @@ public class RaythaDbJsonQueryEngine : IRaythaDbJsonQueryEngine
         sqlBuilder.Join($"{RawSqlColumn.USERS_TABLE_NAME} AS {RawSqlColumn.SOURCE_CREATED_BY_COLUMN_NAME}", $"{RawSqlColumn.SOURCE_ITEM_COLUMN_NAME}.{RawSqlColumn.CreatorUserId.Name} = {RawSqlColumn.SOURCE_CREATED_BY_COLUMN_NAME}.{RawSqlColumn.Id.Name}", joinType: "LEFT");
         sqlBuilder.Join($"{RawSqlColumn.USERS_TABLE_NAME} AS {RawSqlColumn.SOURCE_MODIFIED_BY_COLUMN_NAME}", $"{RawSqlColumn.SOURCE_ITEM_COLUMN_NAME}.{RawSqlColumn.LastModifierUserId.Name} = {RawSqlColumn.SOURCE_MODIFIED_BY_COLUMN_NAME}.{RawSqlColumn.Id.Name}", joinType: "LEFT");
 
+        return sqlBuilder;
+    }
+
+    private SqlQueryBuilder PrepareODataFilters(SqlQueryBuilder sqlBuilder, string[] filters)
+    {
+        if (filters == null || !filters.Any())
+            return sqlBuilder;
+
+        var oDataToSql = new ODataFilterToSql(ContentType, PrimaryFieldDeveloperName, OneToOneRelationshipFields);
+        foreach (var filter in filters.Where(p => !string.IsNullOrEmpty(p)))
+        {
+            string whereStatement = oDataToSql.GenerateSql(filter);
+            if (!string.IsNullOrWhiteSpace(whereStatement))
+                sqlBuilder.AndWhere($"({whereStatement})");
+        }
         return sqlBuilder;
     }
 
