@@ -79,21 +79,11 @@ public class RaythaDbJsonQueryEngine : IRaythaDbJsonQueryEngine
         //Attach where clauses to that filter by a search query
         sqlBuilder = PrepareSearch(sqlBuilder, search, searchOnColumns);
 
-        //Attach where clauses that filter by OData filter clause
-        var oDataToSql = new ODataFilterToSql(ContentType, PrimaryFieldDeveloperName, OneToOneRelationshipFields);
-        foreach (var filter in filters.Where(p => !string.IsNullOrEmpty(p)))
-        {
-            string whereStatement = oDataToSql.GenerateSql(filter);
-            if (!string.IsNullOrWhiteSpace(whereStatement))
-                sqlBuilder.AndWhere($"({whereStatement})");
-        }
+        //Attach where clauses for odata filters
+        sqlBuilder = PrepareODataFilters(sqlBuilder, filters);
 
         //Attach order by clauses
-        if (!string.IsNullOrWhiteSpace(orderBy))
-        {
-            string orderByClause = CreateSqlOrderByStatement(orderBy);
-            sqlBuilder.OrderBy(orderByClause);
-        }
+        sqlBuilder = PrepareOrderBy(sqlBuilder, orderBy);
 
         //Attach pagination
         pageNumber = pageNumber <= 1 ? 0 : pageNumber - 1;
@@ -159,6 +149,8 @@ public class RaythaDbJsonQueryEngine : IRaythaDbJsonQueryEngine
         //Attach the where clause if we are filtering by a search query
         sqlBuilder = PrepareSearch(sqlBuilder, search, searchOnColumns);
 
+        //Attach where clauses for odata filters
+        sqlBuilder = PrepareODataFilters(sqlBuilder, filters);
 
         var rawSql = sqlBuilder.Build();
 
@@ -221,6 +213,7 @@ public class RaythaDbJsonQueryEngine : IRaythaDbJsonQueryEngine
         if (string.IsNullOrWhiteSpace(search))
             return sqlBuilder;
 
+        //If no columns specified, just search on Primary Field only
         if (searchOnColumns == null || !searchOnColumns.Any())
             return sqlBuilder.AndWhere($"JSON_VALUE({RawSqlColumn.SOURCE_ITEM_COLUMN_NAME}.{RawSqlColumn.PublishedContent.Name}, '$.{PrimaryFieldDeveloperName}') COLLATE Latin1_General_CI_AS LIKE @search");
 
@@ -230,6 +223,7 @@ public class RaythaDbJsonQueryEngine : IRaythaDbJsonQueryEngine
         var oDataToSql = new ODataFilterToSql(ContentType, PrimaryFieldDeveloperName, OneToOneRelationshipFields);
         var searchFilters = new List<string>();
 
+        //For each column specified, generate the appropriate OData filter or Raw Sql search clause
         foreach (var column in searchOnColumns)
         {
             var columnAsContentTypeField = ContentType.ContentTypeFields.FirstOrDefault(p => p.DeveloperName == column);
@@ -277,6 +271,7 @@ public class RaythaDbJsonQueryEngine : IRaythaDbJsonQueryEngine
             }
         }
 
+        //Combine everything by OR operator
         string oDataSearchWhereFilterClause = string.Join(" OR ", searchFilters.Where(p => !string.IsNullOrWhiteSpace(p)));
         if (!string.IsNullOrEmpty(oDataSearchWhereFilterClause))
         {
@@ -286,53 +281,49 @@ public class RaythaDbJsonQueryEngine : IRaythaDbJsonQueryEngine
         return sqlBuilder;
     }
 
-    private string CreateSqlOrderByStatement(string orderBy)
+    private SqlQueryBuilder PrepareOrderBy(SqlQueryBuilder sqlBuilder, string orderBy)
     {
+        if (string.IsNullOrEmpty(orderBy))
+            return sqlBuilder;
+
         var orderBySplit = orderBy.Split(",");
         List<string> orderByClauses = new List<string>();
 
+        //orderBy comes in form like "PrimaryField asc, CreationTime desc"
+        //Need to assemble SQL on each one separately
         foreach (var orderByElement in orderBySplit)
         {
             try
             {
-                var column = orderByElement.Split(" ")[0];
-                var direction = Raytha.Domain.ValueObjects.SortOrder.From(orderByElement.Split(" ")[1]);
+                //orderByElement comes in form like 'PrimaryField asc'
+                //Need to split this up into column and direction
+                (var column, var direction) = orderByElement.SplitIntoColumnAndSortOrder();
 
                 var columnAsContentTypeField = ContentType.ContentTypeFields.FirstOrDefault(p => p.DeveloperName == column);
                 if (columnAsContentTypeField != null)
                 {
                     string columnAsContentTypeFieldDeveloperName = columnAsContentTypeField.DeveloperName;
-                    if (columnAsContentTypeField.FieldType.DeveloperName == BaseFieldType.Number)
-                    {
-                        orderByClauses.Add($"CAST(JSON_VALUE({RawSqlColumn.SOURCE_ITEM_COLUMN_NAME}.{RawSqlColumn.PublishedContent.Name}, '$.{columnAsContentTypeFieldDeveloperName}') AS decimal) {direction.DeveloperName}");                      
-                    }
-                    else if (columnAsContentTypeField.FieldType.DeveloperName == BaseFieldType.OneToOneRelationship)
+                    if (columnAsContentTypeField.FieldType.DeveloperName == BaseFieldType.OneToOneRelationship)
                     {
                         var relatedObjectField = OneToOneRelationshipFields.First(p => p.DeveloperName == columnAsContentTypeField.DeveloperName);
                         int indexOfRelatedObject = OneToOneRelationshipFields.ToList().IndexOf(relatedObjectField);
                         string relatedObjPrimaryFieldName = relatedObjectField.ContentType.ContentTypeFields.First(p => p.Id == relatedObjectField.ContentType.PrimaryFieldId).DeveloperName.ToDeveloperName();
-                        orderByClauses.Add($"JSON_VALUE({RawSqlColumn.RELATED_ITEM_COLUMN_NAME}_{indexOfRelatedObject}.{RawSqlColumn.PublishedContent.Name}, '$.{relatedObjPrimaryFieldName}') {direction.DeveloperName}");
-                    }
-                    else if (columnAsContentTypeField.FieldType.DeveloperName == BaseFieldType.Checkbox)
-                    {
-                        orderByClauses.Add($"JSON_VALUE({RawSqlColumn.SOURCE_ITEM_COLUMN_NAME}.{RawSqlColumn.PublishedContent.Name}, '$.{columnAsContentTypeFieldDeveloperName}') {direction.DeveloperName}");                       
+                        sqlBuilder.OrderBy(columnAsContentTypeField.FieldType.SqlServerOrderByExpression($"{RawSqlColumn.RELATED_ITEM_COLUMN_NAME}_{indexOfRelatedObject}", RawSqlColumn.PublishedContent.Name, relatedObjPrimaryFieldName, direction.DeveloperName));
                     }
                     else if (columnAsContentTypeField.FieldType.DeveloperName == BaseFieldType.Date)
                     {
-                        int sqlDateOutput = 0;
-                        if (_currentOrganization.DateFormat == DateTimeExtensions.MM_dd_yyyy)
+                        int sqlDateOutput = _currentOrganization.DateFormat switch
                         {
-                            sqlDateOutput = 101;
-                        }
-                        else if (_currentOrganization.DateFormat == DateTimeExtensions.dd_MM_yyyy)
-                        {
-                            sqlDateOutput = 103;
-                        }
-                        orderByClauses.Add($"TRY_CONVERT(datetime, JSON_VALUE({RawSqlColumn.SOURCE_ITEM_COLUMN_NAME}.{RawSqlColumn.PublishedContent.Name}, '$.{columnAsContentTypeFieldDeveloperName}'), {sqlDateOutput}) {direction.DeveloperName}");
+                            DateTimeExtensions.MM_dd_yyyy => 101,
+                            DateTimeExtensions.dd_MM_yyyy => 103,
+                            _ => 0
+                        };
+
+                        sqlBuilder.OrderBy(columnAsContentTypeField.FieldType.SqlServerOrderByExpression(RawSqlColumn.SOURCE_ITEM_COLUMN_NAME, RawSqlColumn.PublishedContent.Name, columnAsContentTypeField.DeveloperName, sqlDateOutput.ToString(), direction.DeveloperName));
                     }
-                    else if (columnAsContentTypeField.FieldType.DeveloperName != BaseFieldType.MultipleSelect)
+                    else 
                     {
-                        orderByClauses.Add($"JSON_VALUE({RawSqlColumn.SOURCE_ITEM_COLUMN_NAME}.{RawSqlColumn.PublishedContent.Name}, '$.{columnAsContentTypeFieldDeveloperName}') {direction.DeveloperName}");
+                        sqlBuilder.OrderBy(columnAsContentTypeField.FieldType.SqlServerOrderByExpression(RawSqlColumn.SOURCE_ITEM_COLUMN_NAME, RawSqlColumn.PublishedContent.Name, columnAsContentTypeField.DeveloperName, direction.DeveloperName));
                     }
                 }
                 else
@@ -342,19 +333,19 @@ public class RaythaDbJsonQueryEngine : IRaythaDbJsonQueryEngine
                     {
                         if (reservedField.DeveloperName == BuiltInContentTypeField.PrimaryField)
                         {
-                            orderByClauses.Add($"JSON_VALUE({RawSqlColumn.SOURCE_ITEM_COLUMN_NAME}.{RawSqlColumn.PublishedContent.Name}, '$.{PrimaryFieldDeveloperName}') {direction.DeveloperName}");
+                            sqlBuilder.OrderBy(reservedField.FieldType.SqlServerOrderByExpression(RawSqlColumn.SOURCE_ITEM_COLUMN_NAME, RawSqlColumn.PublishedContent.Name, PrimaryFieldDeveloperName, direction.DeveloperName));
                         }
                         else if (reservedField.DeveloperName == BuiltInContentTypeField.CreatorUser)
                         {
-                            orderByClauses.Add($"{RawSqlColumn.SOURCE_CREATED_BY_COLUMN_NAME}.FirstName {direction.DeveloperName}");
+                            sqlBuilder.OrderBy($"{RawSqlColumn.SOURCE_CREATED_BY_COLUMN_NAME}.{RawSqlColumn.FirstName.Name} {direction.DeveloperName}");
                         }
                         else if (reservedField.DeveloperName == BuiltInContentTypeField.LastModifierUser)
                         {
-                            orderByClauses.Add($"{RawSqlColumn.SOURCE_MODIFIED_BY_COLUMN_NAME}.FirstName {direction.DeveloperName}");
+                            sqlBuilder.OrderBy($"{RawSqlColumn.SOURCE_MODIFIED_BY_COLUMN_NAME}.{RawSqlColumn.FirstName.Name} {direction.DeveloperName}");
                         }
                         else
                         {
-                            orderByClauses.Add($"{RawSqlColumn.SOURCE_ITEM_COLUMN_NAME}.{reservedField.DeveloperName} {direction.DeveloperName}");
+                            sqlBuilder.OrderBy($"{RawSqlColumn.SOURCE_ITEM_COLUMN_NAME}.{reservedField.DeveloperName} {direction.DeveloperName}");
                         }
                     }
                 }
@@ -364,7 +355,7 @@ public class RaythaDbJsonQueryEngine : IRaythaDbJsonQueryEngine
             }
         }
 
-        return string.Join(",", orderByClauses);
+        return sqlBuilder;
     }
 
     private ContentItem MapQueryItemToContentItem(IDictionary<string, object> resultFromQuery)

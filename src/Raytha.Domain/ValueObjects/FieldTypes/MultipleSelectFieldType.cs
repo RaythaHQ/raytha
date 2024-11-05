@@ -20,4 +20,9 @@ public class MultipleSelectFieldType : BaseFieldType
     {
         return new ArrayFieldValue(value);
     }
+
+    public override string SqlServerOrderByExpression(params string[] args)
+    {
+        return $"ISNULL(JSON_VALUE({args[0]}.{args[1]}, '$.{args[2]}[0]'), '') {args[3]}";
+    }
 }

@@ -94,6 +94,8 @@ public abstract class BaseFieldType : ValueObject
 
     public abstract BaseFieldValue FieldValueFrom(dynamic value);
 
+    public abstract string SqlServerOrderByExpression(params string[] args);
+
     protected override IEnumerable<object> GetEqualityComponents()
     {
         yield return DeveloperName;
@@ -111,6 +113,11 @@ public abstract class EqualsOrNotEqualsFieldType : BaseFieldType
             yield return ConditionOperator.EQUALS;
             yield return ConditionOperator.NOT_EQUALS;
         }
+    }
+
+    public override string SqlServerOrderByExpression(params string[] args)
+    {
+        return $"JSON_VALUE({args[0]}.{args[1]}, '$.{args[2]}') {args[3]}";
     }
 }
 
@@ -134,6 +141,11 @@ public abstract class TextFieldType : BaseFieldType
             yield return ConditionOperator.IS_NOT_EMPTY;
         }
     }
+
+    public override string SqlServerOrderByExpression(params string[] args)
+    {
+        return $"JSON_VALUE({args[0]}.{args[1]}, '$.{args[2]}') {args[3]}";
+    }
 }
 
 public abstract class SingleSelectFieldType : BaseFieldType
@@ -149,6 +161,11 @@ public abstract class SingleSelectFieldType : BaseFieldType
             yield return ConditionOperator.IS_EMPTY;
             yield return ConditionOperator.IS_NOT_EMPTY;
         }
+    }
+
+    public override string SqlServerOrderByExpression(params string[] args)
+    {
+        return $"JSON_VALUE({args[0]}.{args[1]}, '$.{args[2]}') {args[3]}";
     }
 }
 
@@ -168,9 +185,12 @@ public abstract class NumericValueFieldType : BaseFieldType
             yield return ConditionOperator.LESS_THAN_OR_EQUAL;
             yield return ConditionOperator.IS_EMPTY;
             yield return ConditionOperator.IS_NOT_EMPTY;
-
         }
     }
+
+    public override string SqlServerOrderByExpression(params string[] args)
+    {
+        return $"CASE WHEN ISNUMERIC(JSON_VALUE({args[0]}.{args[1]}, '$.{args[2]}')) = 1 THEN CAST(JSON_VALUE({args[0]}.{args[1]}, '$.{args[2]}') AS decimal) ELSE NULL END {args[3]}, JSON_VALUE({args[0]}.{args[1]}, '$.{args[2]}') {args[3]}"; }
 }
 
 
