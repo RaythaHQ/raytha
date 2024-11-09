@@ -213,14 +213,15 @@ public class RaythaDbJsonQueryEngine : IRaythaDbJsonQueryEngine
         if (string.IsNullOrWhiteSpace(search))
             return sqlBuilder;
 
+        var oDataToSql = new ODataFilterToSql(ContentType, PrimaryFieldDeveloperName, OneToOneRelationshipFields);
+
         //If no columns specified, just search on Primary Field only
         if (searchOnColumns == null || !searchOnColumns.Any())
-            return sqlBuilder.AndWhere($"JSON_VALUE({RawSqlColumn.SOURCE_ITEM_COLUMN_NAME}.{RawSqlColumn.PublishedContent.Name}, '$.{PrimaryFieldDeveloperName}') COLLATE Latin1_General_CI_AS LIKE @search");
+            return sqlBuilder.AndWhere(oDataToSql.GenerateSql($"contains({BuiltInContentTypeField.PrimaryField.DeveloperName}, '{search}')"));
 
         string originalSearch = search;
         search = search.ToLower();
 
-        var oDataToSql = new ODataFilterToSql(ContentType, PrimaryFieldDeveloperName, OneToOneRelationshipFields);
         var searchFilters = new List<string>();
 
         //For each column specified, generate the appropriate OData filter or Raw Sql search clause

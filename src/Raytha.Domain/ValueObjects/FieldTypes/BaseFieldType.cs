@@ -94,11 +94,24 @@ public abstract class BaseFieldType : ValueObject
 
     public abstract BaseFieldValue FieldValueFrom(dynamic value);
 
-    public abstract string SqlServerOrderByExpression(params string[] args);
-
     protected override IEnumerable<object> GetEqualityComponents()
     {
         yield return DeveloperName;
+    }
+
+    public virtual string SqlServerOrderByExpression(params string[] args)
+    {
+        return $" COALESCE(JSON_VALUE({args[0]}.{args[1]}, '$.{args[2]}'), '') {args[3]} ";
+    }
+
+    public virtual string SqlServerSingleJsonValue(params string[] args)
+    {
+        return $" COALESCE(JSON_VALUE({args[0]}.{args[1]}, '$.{args[2]}'), '') ";
+    }
+
+    public virtual string SqlServerLikeJsonValue(params string[] args)
+    {
+        return $" COALESCE(JSON_VALUE({args[0]}.{args[1]}, '$.{args[2]}'), '') COLLATE Latin1_General_CI_AS LIKE '{args[3]}' ";
     }
 }
 
@@ -115,10 +128,6 @@ public abstract class EqualsOrNotEqualsFieldType : BaseFieldType
         }
     }
 
-    public override string SqlServerOrderByExpression(params string[] args)
-    {
-        return $"JSON_VALUE({args[0]}.{args[1]}, '$.{args[2]}') {args[3]}";
-    }
 }
 
 public abstract class TextFieldType : BaseFieldType
@@ -141,11 +150,6 @@ public abstract class TextFieldType : BaseFieldType
             yield return ConditionOperator.IS_NOT_EMPTY;
         }
     }
-
-    public override string SqlServerOrderByExpression(params string[] args)
-    {
-        return $"JSON_VALUE({args[0]}.{args[1]}, '$.{args[2]}') {args[3]}";
-    }
 }
 
 public abstract class SingleSelectFieldType : BaseFieldType
@@ -161,11 +165,6 @@ public abstract class SingleSelectFieldType : BaseFieldType
             yield return ConditionOperator.IS_EMPTY;
             yield return ConditionOperator.IS_NOT_EMPTY;
         }
-    }
-
-    public override string SqlServerOrderByExpression(params string[] args)
-    {
-        return $"JSON_VALUE({args[0]}.{args[1]}, '$.{args[2]}') {args[3]}";
     }
 }
 
@@ -190,7 +189,13 @@ public abstract class NumericValueFieldType : BaseFieldType
 
     public override string SqlServerOrderByExpression(params string[] args)
     {
-        return $"CASE WHEN ISNUMERIC(JSON_VALUE({args[0]}.{args[1]}, '$.{args[2]}')) = 1 THEN CAST(JSON_VALUE({args[0]}.{args[1]}, '$.{args[2]}') AS decimal) ELSE NULL END {args[3]}, JSON_VALUE({args[0]}.{args[1]}, '$.{args[2]}') {args[3]}"; }
+        return $" CASE WHEN ISNUMERIC(JSON_VALUE({args[0]}.{args[1]}, '$.{args[2]}')) = 1 THEN CAST(JSON_VALUE({args[0]}.{args[1]}, '$.{args[2]}') AS decimal) ELSE NULL END {args[3]}, JSON_VALUE({args[0]}.{args[1]}, '$.{args[2]}') {args[3]} "; 
+    }
+
+    public override string SqlServerSingleJsonValue(params string[] args)
+    {
+        return $" TRY_CONVERT(decimal(18, 2), JSON_VALUE({args[0]}.{args[1]}, '$.{args[2]}')) "; 
+    }
 }
 
 

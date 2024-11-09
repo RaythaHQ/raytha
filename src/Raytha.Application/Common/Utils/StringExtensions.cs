@@ -1,5 +1,4 @@
 ﻿using Raytha.Domain.ValueObjects;
-using System;
 using System.Globalization;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -170,5 +169,19 @@ public static class StringExtensions
         };
         var direction = SortOrder.From(directionString);
         return (column, direction);
+    }
+
+    public static string ApplySqlStringLikeOperator(this string input, string operation)
+    {
+        switch(operation.ToLower())
+        {
+            case "startswith":
+                return $"{input}%";
+            case "endswith":
+                return $"%{input}";
+            case "contains":
+                return $"%{input}%";
+        }
+        throw new NotImplementedException();
     }
 }

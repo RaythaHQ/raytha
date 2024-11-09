@@ -2,6 +2,7 @@
 using Microsoft.OData.Edm;
 using Microsoft.OData.ModelBuilder;
 using Microsoft.OData.UriParser;
+using Raytha.Application.Common.Utils;
 using Raytha.Domain.Entities;
 using Raytha.Domain.ValueObjects.FieldTypes;
 using System.ComponentModel.DataAnnotations;
@@ -112,20 +113,7 @@ internal class ODataFilterToSql
             if (BuiltInContentTypeField.ReservedContentTypeFields.Any(p => p.DeveloperName == realFieldName))
             {
                 string prefix = $"{RawSqlColumn.SOURCE_ITEM_COLUMN_NAME}.{realFieldName} COLLATE Latin1_General_CI_AS LIKE";
-                switch (functionName)
-                {
-                    case "startswith":
-                        whereClause.Append($"{prefix} '{value.Value}%'");
-                        break;
-                    case "endswith":
-                        whereClause.Append($"{prefix} '%{value.Value}'");
-                        break;
-                    case "contains":
-                        whereClause.Append($"{prefix} '%{value.Value}%'");
-                        break;
-                    default:
-                        throw new NotImplementedException($"{functionName} is not an implemented function call.");
-                }           
+                whereClause.Append($"{prefix} {value.Value.ToString().ApplySqlStringLikeOperator}");
             }
             else
             {
@@ -135,58 +123,19 @@ internal class ODataFilterToSql
                     var relatedObjectField = _relatedObjectFields.First(p => p.DeveloperName == chosenColumnAsCustomField.DeveloperName);
                     int indexOfRelatedObject = _relatedObjectFields.ToList().IndexOf(relatedObjectField);
                     string relatedObjPrimaryFieldName = relatedObjectField.ContentType.ContentTypeFields.First(p => p.Id == relatedObjectField.ContentType.PrimaryFieldId).DeveloperName;
-                    switch (functionName)
-                    {
-                        case "startswith":
-                            whereClause.Append($" JSON_VALUE({RawSqlColumn.RELATED_ITEM_COLUMN_NAME}_{indexOfRelatedObject}.{RawSqlColumn.PublishedContent.Name}, '$.{relatedObjPrimaryFieldName}') COLLATE Latin1_General_CI_AS LIKE '{value.Value}%'");
-                            break;
-                        case "endswith":
-                            whereClause.Append($" JSON_VALUE({RawSqlColumn.RELATED_ITEM_COLUMN_NAME}_{indexOfRelatedObject}.{RawSqlColumn.PublishedContent.Name}, '$.{relatedObjPrimaryFieldName}') COLLATE Latin1_General_CI_AS LIKE '%{value.Value}'");
-                            break;
-                        case "contains":
-                            whereClause.Append($" JSON_VALUE({RawSqlColumn.RELATED_ITEM_COLUMN_NAME}_{indexOfRelatedObject}.{RawSqlColumn.PublishedContent.Name}, '$.{relatedObjPrimaryFieldName}') COLLATE Latin1_General_CI_AS LIKE '%{value.Value}%'");
-                            break;
-                        default:
-                            throw new NotImplementedException($"{functionName} is not an implemented function call.");
-                    }
-
+                    whereClause.Append(chosenColumnAsCustomField.FieldType.SqlServerLikeJsonValue($"{RawSqlColumn.RELATED_ITEM_COLUMN_NAME}_{indexOfRelatedObject}", RawSqlColumn.PublishedContent.Name, relatedObjPrimaryFieldName, value.Value.ToString().ApplySqlStringLikeOperator(functionName)));
                 }
                 else if (chosenColumnAsCustomField.FieldType.DeveloperName == BaseFieldType.MultipleSelect)
                 {
-                    switch (functionName)
-                    {
-                        case "contains":
-                            if (value.Value.ToString() == "[]")
-                            {
-                                whereClause.Append($" ((JSON_QUERY({RawSqlColumn.SOURCE_ITEM_COLUMN_NAME}.{RawSqlColumn.PublishedContent.Name}, '$.{realFieldName}') IS NULL) OR NOT EXISTS (SELECT * FROM OPENJSON({RawSqlColumn.SOURCE_ITEM_COLUMN_NAME}.{RawSqlColumn.PublishedContent.Name}, '$.{realFieldName}')))");
-                            }
-                            else
-                            {
-                                whereClause.Append($" ((ISJSON(JSON_QUERY({RawSqlColumn.SOURCE_ITEM_COLUMN_NAME}.{RawSqlColumn.PublishedContent.Name}, '$.{realFieldName}'))) = 1 AND EXISTS (SELECT * FROM OPENJSON({RawSqlColumn.SOURCE_ITEM_COLUMN_NAME}.{RawSqlColumn.PublishedContent.Name}, '$.{realFieldName}') as temp WHERE temp.value = '{value.Value}'))");
-                            }
-                            break;
-                        default:
-                            throw new NotImplementedException($"{functionName} is not an implemented function call.");
-                    }
+                    if (functionName != "contains")
+                        throw new NotImplementedException($"{functionName} is not an implemented function call.");
+
+                    whereClause.Append(chosenColumnAsCustomField.FieldType.SqlServerLikeJsonValue(RawSqlColumn.SOURCE_ITEM_COLUMN_NAME, RawSqlColumn.PublishedContent.Name, realFieldName, value.Value.ToString()));
                 }
                 else
                 {
-                    switch (functionName)
-                    {
-                        case "startswith":
-                            whereClause.Append($" JSON_VALUE({RawSqlColumn.SOURCE_ITEM_COLUMN_NAME}.{RawSqlColumn.PublishedContent.Name}, '$.{realFieldName}') COLLATE Latin1_General_CI_AS LIKE '{value.Value}%'");
-                            break;
-                        case "endswith":
-                            whereClause.Append($" JSON_VALUE({RawSqlColumn.SOURCE_ITEM_COLUMN_NAME}.{RawSqlColumn.PublishedContent.Name}, '$.{realFieldName}') COLLATE Latin1_General_CI_AS LIKE '%{value.Value}'");
-                            break;
-                        case "contains":
-                            whereClause.Append($" JSON_VALUE({RawSqlColumn.SOURCE_ITEM_COLUMN_NAME}.{RawSqlColumn.PublishedContent.Name}, '$.{realFieldName}') COLLATE Latin1_General_CI_AS LIKE '%{value.Value}%'");
-                            break;
-                        default:
-                            throw new NotImplementedException($"{functionName} is not an implemented function call.");
-                    }
+                    whereClause.Append(chosenColumnAsCustomField.FieldType.SqlServerLikeJsonValue(RawSqlColumn.SOURCE_ITEM_COLUMN_NAME, RawSqlColumn.PublishedContent.Name, realFieldName, value.Value.ToString().ApplySqlStringLikeOperator(functionName)));
                 }
-
             }
 
             return null;
@@ -283,7 +232,7 @@ internal class ODataFilterToSql
         {
             if (BuiltInContentTypeField.ReservedContentTypeFields.Any(p => p.DeveloperName == realFieldName))
             {
-                whereClause.Append($" {RawSqlColumn.SOURCE_ITEM_COLUMN_NAME}.{realFieldName}");
+                whereClause.Append($" {RawSqlColumn.SOURCE_ITEM_COLUMN_NAME}.{realFieldName} ");
             }
             else
             {
@@ -293,11 +242,11 @@ internal class ODataFilterToSql
                     var relatedObjectField = _relatedObjectFields.First(p => p.DeveloperName == chosenColumnAsCustomField.DeveloperName);
                     int indexOfRelatedObject = _relatedObjectFields.ToList().IndexOf(relatedObjectField);
                     string relatedObjPrimaryFieldName = relatedObjectField.ContentType.ContentTypeFields.First(p => p.Id == relatedObjectField.ContentType.PrimaryFieldId).DeveloperName;
-                    whereClause.Append($" JSON_VALUE({RawSqlColumn.RELATED_ITEM_COLUMN_NAME}_{indexOfRelatedObject}.{RawSqlColumn.PublishedContent.Name}, '$.{relatedObjPrimaryFieldName}')");
+                    whereClause.Append(chosenColumnAsCustomField.FieldType.SqlServerSingleJsonValue($"{RawSqlColumn.RELATED_ITEM_COLUMN_NAME}_{indexOfRelatedObject}", RawSqlColumn.PublishedContent.Name, relatedObjPrimaryFieldName));
                 }
                 else
                 {
-                    whereClause.Append($" JSON_VALUE({RawSqlColumn.SOURCE_ITEM_COLUMN_NAME}.{RawSqlColumn.PublishedContent.Name}, '$.{realFieldName}') ");
+                    whereClause.Append(chosenColumnAsCustomField.FieldType.SqlServerSingleJsonValue(RawSqlColumn.SOURCE_ITEM_COLUMN_NAME, RawSqlColumn.PublishedContent.Name, realFieldName));
                 }
             }
         }
