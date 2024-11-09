@@ -6,13 +6,13 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Data.SqlClient;
 using System.Data;
-using Raytha.Infrastructure.JsonQueryEngine;
 using Raytha.Infrastructure.FileStorage;
 using Raytha.Application.Common.Utils;
 using Raytha.Infrastructure.BackgroundTasks;
 using Microsoft.Extensions.Hosting;
 using Raytha.Infrastructure.Configurations;
 using Raytha.Infrastructure.RaythaFunctions;
+using Raytha.Infrastructure.JsonQueryEngine.SqlServer;
 
 namespace Microsoft.Extensions.DependencyInjection;
 
@@ -44,7 +44,7 @@ public static class ConfigureServices
         services.AddScoped<IEmailerConfiguration, EmailerConfiguration>();
 
         services.AddScoped<IEmailer, Emailer>();
-        services.AddTransient<IRaythaDbJsonQueryEngine, RaythaDbJsonQueryEngine>();
+        services.AddTransient<IRaythaDbJsonQueryEngine, RaythaDbSqlServerJsonQueryEngine>();
         services.AddTransient<IBackgroundTaskDb, BackgroundTaskDb>();
         services.AddTransient<IRaythaRawDbInfo, RaythaRawDbInfo>();
 
