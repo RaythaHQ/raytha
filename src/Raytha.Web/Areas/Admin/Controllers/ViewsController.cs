@@ -418,7 +418,7 @@ public class ViewsController : BaseController
             DeveloperName = CurrentView.ContentType.DeveloperName
         });
 
-        var columnListItems = response.Result.Items.Where(c => c.FieldType.DeveloperName != BaseFieldType.MultipleSelect).Select(p => new ViewsSortListItem_ViewModel
+        var columnListItems = response.Result.Items.Select(p => new ViewsSortListItem_ViewModel
         {
             Label = p.Label,
             DeveloperName = p.DeveloperName,

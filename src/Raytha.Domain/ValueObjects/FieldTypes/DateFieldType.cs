@@ -25,4 +25,9 @@ public class DateFieldType : BaseFieldType
     {
         return new DateTimeFieldValue(value);
     }
+
+    public override string SqlServerOrderByExpression(params string[] args)
+    {
+        return $"TRY_CONVERT(datetime, JSON_VALUE({args[0]}.{args[1]}, '$.{args[2]}') {args[3]}) {args[4]}";
+    }
 }
