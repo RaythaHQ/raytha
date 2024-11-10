@@ -22,7 +22,7 @@ internal class RaythaDbSqlServerJsonQueryEngine : AbstractRaythaDbJsonQueryEngin
         _currentOrganization = currentOrganization;
     }
 
-    public ContentItem FirstOrDefault(Guid entityId)
+    public override ContentItem FirstOrDefault(Guid entityId)
     {
         //Check if it exists at all, and if so, get the ContentType
         var entity = _entityFramework.ContentItems
@@ -53,7 +53,7 @@ internal class RaythaDbSqlServerJsonQueryEngine : AbstractRaythaDbJsonQueryEngin
         return contentItem;
     }
 
-    public IEnumerable<ContentItem> QueryContentItems(Guid contentTypeId, string[] searchOnColumns, string search, string[] filters, int pageSize, int pageNumber, string orderBy, IDbTransaction transaction = null)
+    public override IEnumerable<ContentItem> QueryContentItems(Guid contentTypeId, string[] searchOnColumns, string search, string[] filters, int pageSize, int pageNumber, string orderBy, IDbTransaction transaction = null)
     {
         //get the content type being queried
         var contentType = _entityFramework.ContentTypes
@@ -100,7 +100,7 @@ internal class RaythaDbSqlServerJsonQueryEngine : AbstractRaythaDbJsonQueryEngin
         return items;
     }
 
-    public IEnumerable<ContentItem> QueryAllContentItemsAsTransaction(Guid contentTypeId, string[] searchOnColumns, string search, string[] filters, string orderBy)
+    public override IEnumerable<ContentItem> QueryAllContentItemsAsTransaction(Guid contentTypeId, string[] searchOnColumns, string search, string[] filters, string orderBy)
     {
         if (_db.State == ConnectionState.Closed)
         {
@@ -123,7 +123,7 @@ internal class RaythaDbSqlServerJsonQueryEngine : AbstractRaythaDbJsonQueryEngin
         }
     }
 
-    public int CountContentItems(Guid contentTypeId, string[] searchOnColumns, string search, string[] filters, IDbTransaction transaction = null)
+    public override int CountContentItems(Guid contentTypeId, string[] searchOnColumns, string search, string[] filters, IDbTransaction transaction = null)
     {
         //get the content type for what we are filtering by
         var contentType = _entityFramework.ContentTypes
@@ -167,7 +167,42 @@ internal class RaythaDbSqlServerJsonQueryEngine : AbstractRaythaDbJsonQueryEngin
         return sqlBuilder;
     }
 
-    private SqlQueryBuilder PrepareSearch(SqlQueryBuilder sqlBuilder, string search, string[] searchOnColumns = null)
+    protected override SqlQueryBuilder PrepareContentItemsDataSelect(SqlQueryBuilder sqlBuilder)
+    {
+        sqlBuilder.Select(RawSqlColumn.NameAsFullColumnLabelForEnumerable(RawSqlColumn.ContentItemColumns(), RawSqlColumn.SOURCE_ITEM_COLUMN_NAME).ToArray());
+        sqlBuilder.Select(RawSqlColumn.NameAsFullColumnLabelForEnumerable(RawSqlColumn.RouteColumns(), RawSqlColumn.ROUTE_COLUMN_NAME).ToArray());
+        sqlBuilder.Select(RawSqlColumn.NameAsFullColumnLabelForEnumerable(RawSqlColumn.UserColumns(), RawSqlColumn.SOURCE_CREATED_BY_COLUMN_NAME).ToArray());
+        sqlBuilder.Select(RawSqlColumn.NameAsFullColumnLabelForEnumerable(RawSqlColumn.UserColumns(), RawSqlColumn.SOURCE_MODIFIED_BY_COLUMN_NAME).ToArray());
+        foreach (var item in OneToOneRelationshipFields)
+        {
+            int index = OneToOneRelationshipFields.IndexOf(item);
+            sqlBuilder.Select(RawSqlColumn.NameAsFullColumnLabelForEnumerable(RawSqlColumn.ContentItemColumns(), $"{RawSqlColumn.RELATED_ITEM_COLUMN_NAME}_{index}").ToArray());
+            sqlBuilder.Select(RawSqlColumn.NameAsFullColumnLabelForEnumerable(RawSqlColumn.RouteColumns(), $"{RawSqlColumn.RELATED_ROUTE_COLUMN_NAME}_{index}").ToArray());
+            sqlBuilder.Select(RawSqlColumn.NameAsFullColumnLabelForEnumerable(RawSqlColumn.UserColumns(), $"{RawSqlColumn.RELATED_CREATED_BY_COLUMN_NAME}_{index}").ToArray());
+            sqlBuilder.Select(RawSqlColumn.NameAsFullColumnLabelForEnumerable(RawSqlColumn.UserColumns(), $"{RawSqlColumn.RELATED_MODIFIED_BY_COLUMN_NAME}_{index}").ToArray());
+        }
+        return sqlBuilder;
+    }
+
+    protected override SqlQueryBuilder PrepareFrom(SqlQueryBuilder sqlBuilder)
+    {
+        sqlBuilder.From($"{RawSqlColumn.CONTENT_ITEM_TABLE_NAME} AS {RawSqlColumn.SOURCE_ITEM_COLUMN_NAME}");
+        foreach (var item in OneToOneRelationshipFields)
+        {
+            int index = OneToOneRelationshipFields.IndexOf(item);
+            sqlBuilder.Join($"{RawSqlColumn.CONTENT_ITEM_TABLE_NAME} AS {RawSqlColumn.RELATED_ITEM_COLUMN_NAME}_{index}", $"{RawSqlColumn.RELATED_ITEM_COLUMN_NAME}_{index}.{RawSqlColumn.Id.Name} = JSON_VALUE({RawSqlColumn.SOURCE_ITEM_COLUMN_NAME}.{RawSqlColumn.PublishedContent.Name}, '$.{item.DeveloperName?.ToDeveloperName()}')", joinType: "LEFT");
+            sqlBuilder.Join($"{RawSqlColumn.USERS_TABLE_NAME} AS {RawSqlColumn.RELATED_CREATED_BY_COLUMN_NAME}_{index}", $"{RawSqlColumn.RELATED_ITEM_COLUMN_NAME}_{index}.{RawSqlColumn.CreatorUserId.Name} = {RawSqlColumn.RELATED_CREATED_BY_COLUMN_NAME}_{index}.{RawSqlColumn.Id.Name}", joinType: "LEFT");
+            sqlBuilder.Join($"{RawSqlColumn.USERS_TABLE_NAME} AS {RawSqlColumn.RELATED_MODIFIED_BY_COLUMN_NAME}_{index}", $"{RawSqlColumn.RELATED_ITEM_COLUMN_NAME}_{index}.{RawSqlColumn.LastModifierUserId.Name} = {RawSqlColumn.RELATED_MODIFIED_BY_COLUMN_NAME}_{index}.{RawSqlColumn.Id.Name}", joinType: "LEFT");
+            sqlBuilder.Join($"{RawSqlColumn.ROUTES_TABLE_NAME} AS {RawSqlColumn.RELATED_ROUTE_COLUMN_NAME}_{index}", $"{RawSqlColumn.RELATED_ITEM_COLUMN_NAME}_{index}.{RawSqlColumn.RouteId.Name} = {RawSqlColumn.RELATED_ROUTE_COLUMN_NAME}_{index}.{RawSqlColumn.Id.Name}", joinType: "LEFT");
+        }
+        sqlBuilder.Join($"{RawSqlColumn.ROUTES_TABLE_NAME} AS {RawSqlColumn.ROUTE_COLUMN_NAME} ", $"{RawSqlColumn.SOURCE_ITEM_COLUMN_NAME}.{RawSqlColumn.RouteId.Name} = {RawSqlColumn.ROUTE_COLUMN_NAME}.{RawSqlColumn.Id.Name}", joinType: "LEFT");
+        sqlBuilder.Join($"{RawSqlColumn.USERS_TABLE_NAME} AS {RawSqlColumn.SOURCE_CREATED_BY_COLUMN_NAME}", $"{RawSqlColumn.SOURCE_ITEM_COLUMN_NAME}.{RawSqlColumn.CreatorUserId.Name} = {RawSqlColumn.SOURCE_CREATED_BY_COLUMN_NAME}.{RawSqlColumn.Id.Name}", joinType: "LEFT");
+        sqlBuilder.Join($"{RawSqlColumn.USERS_TABLE_NAME} AS {RawSqlColumn.SOURCE_MODIFIED_BY_COLUMN_NAME}", $"{RawSqlColumn.SOURCE_ITEM_COLUMN_NAME}.{RawSqlColumn.LastModifierUserId.Name} = {RawSqlColumn.SOURCE_MODIFIED_BY_COLUMN_NAME}.{RawSqlColumn.Id.Name}", joinType: "LEFT");
+
+        return sqlBuilder;
+    }
+
+    protected override SqlQueryBuilder PrepareSearch(SqlQueryBuilder sqlBuilder, string search, string[] searchOnColumns = null)
     {
         if (string.IsNullOrWhiteSpace(search))
             return sqlBuilder;
@@ -241,7 +276,7 @@ internal class RaythaDbSqlServerJsonQueryEngine : AbstractRaythaDbJsonQueryEngin
         return sqlBuilder;
     }
 
-    private SqlQueryBuilder PrepareOrderBy(SqlQueryBuilder sqlBuilder, string orderBy)
+    protected override SqlQueryBuilder PrepareOrderBy(SqlQueryBuilder sqlBuilder, string orderBy)
     {
         if (string.IsNullOrEmpty(orderBy))
             return sqlBuilder;

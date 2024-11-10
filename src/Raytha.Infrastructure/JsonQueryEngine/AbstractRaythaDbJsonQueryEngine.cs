@@ -2,6 +2,7 @@
 using Raytha.Application.ContentItems;
 using Raytha.Domain.Entities;
 using Raytha.Domain.ValueObjects.FieldTypes;
+using System.Data;
 using System.Text.Json;
 
 namespace Raytha.Infrastructure.JsonQueryEngine;
@@ -12,40 +13,14 @@ internal abstract class AbstractRaythaDbJsonQueryEngine
     protected List<ContentTypeField> OneToOneRelationshipFields => ContentType.ContentTypeFields.Where(p => p.FieldType.DeveloperName == BaseFieldType.OneToOneRelationship && p.RelatedContentTypeId.HasValue).ToList();
     protected string PrimaryFieldDeveloperName => ContentType.ContentTypeFields.First(p => p.Id == ContentType.PrimaryFieldId).DeveloperName;
 
-    protected virtual SqlQueryBuilder PrepareContentItemsDataSelect(SqlQueryBuilder sqlBuilder)
-    {
-        sqlBuilder.Select(RawSqlColumn.NameAsFullColumnLabelForEnumerable(RawSqlColumn.ContentItemColumns(), RawSqlColumn.SOURCE_ITEM_COLUMN_NAME).ToArray());
-        sqlBuilder.Select(RawSqlColumn.NameAsFullColumnLabelForEnumerable(RawSqlColumn.RouteColumns(), RawSqlColumn.ROUTE_COLUMN_NAME).ToArray());
-        sqlBuilder.Select(RawSqlColumn.NameAsFullColumnLabelForEnumerable(RawSqlColumn.UserColumns(), RawSqlColumn.SOURCE_CREATED_BY_COLUMN_NAME).ToArray());
-        sqlBuilder.Select(RawSqlColumn.NameAsFullColumnLabelForEnumerable(RawSqlColumn.UserColumns(), RawSqlColumn.SOURCE_MODIFIED_BY_COLUMN_NAME).ToArray());
-        foreach (var item in OneToOneRelationshipFields)
-        {
-            int index = OneToOneRelationshipFields.IndexOf(item);
-            sqlBuilder.Select(RawSqlColumn.NameAsFullColumnLabelForEnumerable(RawSqlColumn.ContentItemColumns(), $"{RawSqlColumn.RELATED_ITEM_COLUMN_NAME}_{index}").ToArray());
-            sqlBuilder.Select(RawSqlColumn.NameAsFullColumnLabelForEnumerable(RawSqlColumn.RouteColumns(), $"{RawSqlColumn.RELATED_ROUTE_COLUMN_NAME}_{index}").ToArray());
-            sqlBuilder.Select(RawSqlColumn.NameAsFullColumnLabelForEnumerable(RawSqlColumn.UserColumns(), $"{RawSqlColumn.RELATED_CREATED_BY_COLUMN_NAME}_{index}").ToArray());
-            sqlBuilder.Select(RawSqlColumn.NameAsFullColumnLabelForEnumerable(RawSqlColumn.UserColumns(), $"{RawSqlColumn.RELATED_MODIFIED_BY_COLUMN_NAME}_{index}").ToArray());
-        }
-        return sqlBuilder;
-    }
-
-    protected virtual SqlQueryBuilder PrepareFrom(SqlQueryBuilder sqlBuilder)
-    {
-        sqlBuilder.From($"{RawSqlColumn.CONTENT_ITEM_TABLE_NAME} AS {RawSqlColumn.SOURCE_ITEM_COLUMN_NAME}");
-        foreach (var item in OneToOneRelationshipFields)
-        {
-            int index = OneToOneRelationshipFields.IndexOf(item);
-            sqlBuilder.Join($"{RawSqlColumn.CONTENT_ITEM_TABLE_NAME} AS {RawSqlColumn.RELATED_ITEM_COLUMN_NAME}_{index}", $"{RawSqlColumn.RELATED_ITEM_COLUMN_NAME}_{index}.{RawSqlColumn.Id.Name} = JSON_VALUE({RawSqlColumn.SOURCE_ITEM_COLUMN_NAME}.{RawSqlColumn.PublishedContent.Name}, '$.{item.DeveloperName?.ToDeveloperName()}')", joinType: "LEFT");
-            sqlBuilder.Join($"{RawSqlColumn.USERS_TABLE_NAME} AS {RawSqlColumn.RELATED_CREATED_BY_COLUMN_NAME}_{index}", $"{RawSqlColumn.RELATED_ITEM_COLUMN_NAME}_{index}.{RawSqlColumn.CreatorUserId.Name} = {RawSqlColumn.RELATED_CREATED_BY_COLUMN_NAME}_{index}.{RawSqlColumn.Id.Name}", joinType: "LEFT");
-            sqlBuilder.Join($"{RawSqlColumn.USERS_TABLE_NAME} AS {RawSqlColumn.RELATED_MODIFIED_BY_COLUMN_NAME}_{index}", $"{RawSqlColumn.RELATED_ITEM_COLUMN_NAME}_{index}.{RawSqlColumn.LastModifierUserId.Name} = {RawSqlColumn.RELATED_MODIFIED_BY_COLUMN_NAME}_{index}.{RawSqlColumn.Id.Name}", joinType: "LEFT");
-            sqlBuilder.Join($"{RawSqlColumn.ROUTES_TABLE_NAME} AS {RawSqlColumn.RELATED_ROUTE_COLUMN_NAME}_{index}", $"{RawSqlColumn.RELATED_ITEM_COLUMN_NAME}_{index}.{RawSqlColumn.RouteId.Name} = {RawSqlColumn.RELATED_ROUTE_COLUMN_NAME}_{index}.{RawSqlColumn.Id.Name}", joinType: "LEFT");
-        }
-        sqlBuilder.Join($"{RawSqlColumn.ROUTES_TABLE_NAME} AS {RawSqlColumn.ROUTE_COLUMN_NAME} ", $"{RawSqlColumn.SOURCE_ITEM_COLUMN_NAME}.{RawSqlColumn.RouteId.Name} = {RawSqlColumn.ROUTE_COLUMN_NAME}.{RawSqlColumn.Id.Name}", joinType: "LEFT");
-        sqlBuilder.Join($"{RawSqlColumn.USERS_TABLE_NAME} AS {RawSqlColumn.SOURCE_CREATED_BY_COLUMN_NAME}", $"{RawSqlColumn.SOURCE_ITEM_COLUMN_NAME}.{RawSqlColumn.CreatorUserId.Name} = {RawSqlColumn.SOURCE_CREATED_BY_COLUMN_NAME}.{RawSqlColumn.Id.Name}", joinType: "LEFT");
-        sqlBuilder.Join($"{RawSqlColumn.USERS_TABLE_NAME} AS {RawSqlColumn.SOURCE_MODIFIED_BY_COLUMN_NAME}", $"{RawSqlColumn.SOURCE_ITEM_COLUMN_NAME}.{RawSqlColumn.LastModifierUserId.Name} = {RawSqlColumn.SOURCE_MODIFIED_BY_COLUMN_NAME}.{RawSqlColumn.Id.Name}", joinType: "LEFT");
-
-        return sqlBuilder;
-    }
+    public abstract ContentItem FirstOrDefault(Guid entityId);
+    public abstract IEnumerable<ContentItem> QueryContentItems(Guid contentTypeId, string[] searchOnColumns, string search, string[] filters, int pageSize, int pageNumber, string orderBy, IDbTransaction transaction = null);
+    public abstract IEnumerable<ContentItem> QueryAllContentItemsAsTransaction(Guid contentTypeId, string[] searchOnColumns, string search, string[] filters, string orderBy);
+    public abstract int CountContentItems(Guid contentTypeId, string[] searchOnColumns, string search, string[] filters, IDbTransaction transaction = null);
+    protected abstract SqlQueryBuilder PrepareContentItemsDataSelect(SqlQueryBuilder sqlBuilder);
+    protected abstract SqlQueryBuilder PrepareFrom(SqlQueryBuilder sqlBuilder);
+    protected abstract SqlQueryBuilder PrepareSearch(SqlQueryBuilder sqlBuilder, string search, string[] searchOnColumns = null);
+    protected abstract SqlQueryBuilder PrepareOrderBy(SqlQueryBuilder sqlBuilder, string orderBy); 
 
     protected ContentItem MapQueryItemToContentItem(IDictionary<string, object> resultFromQuery)
     {

@@ -37,4 +37,22 @@ public class MultipleSelectFieldType : BaseFieldType
             return $" ((ISJSON(JSON_QUERY({args[0]}.{args[1]}, '$.{args[2]}'))) = 1 AND EXISTS (SELECT * FROM OPENJSON({args[0]}.{args[1]}, '$.{args[2]}') as temp WHERE temp.value = '{args[3]}'))";
         }
     }
+
+    public override string PostgresOrderByExpression(params string[] args)
+    {
+        return $"COALESCE({args[0]}.{args[1]}->{args[2]}->>0, '') {args[3]}";
+    }
+
+    public override string PostgresLikeJsonValue(params string[] args)
+    {
+        if (args[3] == "[]")
+        {
+            return $"(({args[0]}.\"{args[1]}\"->'{args[2]}') IS NULL OR NOT EXISTS ({args[0]}.\"{args[1]}\"->'{args[2]}'))";
+        }
+        else
+        {
+            return $"(({args[0]}.\"{args[1]}\"->'{args[2]}') IS NOT NULL AND {args[0]}.\"{args[1]}\"->'{args[2]}' = '{args[3]}')";
+        }
+    }
+
 }
