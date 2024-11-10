@@ -10,11 +10,6 @@ public class AuthenticationSchemeConfiguration : IEntityTypeConfiguration<Authen
     public void Configure(EntityTypeBuilder<AuthenticationScheme> builder)
     {
         builder
-            .HasIndex(b => b.DeveloperName)
-            .IsUnique()
-            .IncludeProperties(p => new { p.Id, p.Label });
-
-        builder
             .HasOne(b => b.CreatorUser)
             .WithMany()
             .HasForeignKey(b => b.CreatorUserId);
@@ -27,5 +22,7 @@ public class AuthenticationSchemeConfiguration : IEntityTypeConfiguration<Authen
         builder
             .Property(b => b.AuthenticationSchemeType)
             .HasConversion(v => v.DeveloperName, v => AuthenticationSchemeType.From(v));
+
+        builder.HasIndex(b => b.DeveloperName).IsUnique();
     }
 }

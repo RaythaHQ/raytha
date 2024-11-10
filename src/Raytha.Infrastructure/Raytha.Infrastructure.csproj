@@ -26,10 +26,8 @@
 	<PackageReference Include="Microsoft.Extensions.Http" Version="8.0.0" />
 	<PackageReference Include="Microsoft.OData.Core" Version="8.0.1" />
 	<PackageReference Include="Microsoft.AspNetCore.OData" Version="9.0.0" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Migrations\" />
+	<PackageReference Include="Npgsql" Version="8.0.5" />
+	<PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="8.0.10" />
   </ItemGroup>
 
 </Project>

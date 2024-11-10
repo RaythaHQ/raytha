@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace Raytha.Infrastructure.Migrations
+namespace Raytha.Migrations.SqlServer
 {
     /// <inheritdoc />
     public partial class v1_2_0 : Migration

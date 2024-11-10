@@ -9,7 +9,7 @@ using Raytha.Infrastructure.Persistence;
 
 #nullable disable
 
-namespace Raytha.Infrastructure.Migrations
+namespace Raytha.Migrations.SqlServer
 {
     [DbContext(typeof(RaythaDbContext))]
     [Migration("20240314124844_v1_2_0")]

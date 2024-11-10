@@ -5,6 +5,7 @@ using Raytha.Application.Common.Interfaces;
 using Raytha.Domain.Entities;
 using Raytha.Infrastructure.Persistence.Interceptors;
 using Microsoft.AspNetCore.DataProtection.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 
 namespace Raytha.Infrastructure.Persistence;
 
@@ -12,6 +13,7 @@ public class RaythaDbContext : DbContext, IRaythaDbContext, IDataProtectionKeyCo
 {
     private readonly IMediator _mediator;
     private readonly AuditableEntitySaveChangesInterceptor _auditableEntitySaveChangesInterceptor;
+    private readonly IConfiguration _configuration;
 
     public RaythaDbContext(
         DbContextOptions<RaythaDbContext> options)
@@ -21,10 +23,12 @@ public class RaythaDbContext : DbContext, IRaythaDbContext, IDataProtectionKeyCo
 
     public RaythaDbContext(
         DbContextOptions<RaythaDbContext> options,
+        IConfiguration configuration,
         IMediator mediator,
         AuditableEntitySaveChangesInterceptor auditableEntitySaveChangesInterceptor)
         : base(options)
     {
+        _configuration = configuration; 
         _mediator = mediator;
         _auditableEntitySaveChangesInterceptor = auditableEntitySaveChangesInterceptor;
     }
@@ -66,11 +70,19 @@ public class RaythaDbContext : DbContext, IRaythaDbContext, IDataProtectionKeyCo
 
     public DbContext DbContext => DbContext;
 
-
     protected override void OnModelCreating(ModelBuilder builder)
     {
         builder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());
-
+        builder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly(), p => p.GetInterfaces().All(c => c.Name != typeof(ISqlServerConfiguration).Name && c.Name != typeof(IPostgresConfiguration).Name));
+        var dbProvider = DbProviderHelper.GetDatabaseProviderTypeFromConnectionString(_configuration.GetConnectionString("DefaultConnection"));
+        if (dbProvider == DatabaseProviderType.Postgres)
+        {
+            builder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly(), p => p.GetInterfaces().Any(c => c.Name == typeof(IPostgresConfiguration).Name));
+        }
+        else
+        {
+            builder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly(), p => p.GetInterfaces().Any(c => c.Name == typeof(ISqlServerConfiguration).Name));
+        }
         base.OnModelCreating(builder);
     }
 
