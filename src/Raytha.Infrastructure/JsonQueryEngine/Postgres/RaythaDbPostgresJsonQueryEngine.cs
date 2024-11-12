@@ -191,19 +191,19 @@ internal class RaythaDbPostgresJsonQueryEngine : AbstractRaythaDbJsonQueryEngine
             int index = OneToOneRelationshipFields.IndexOf(item);
             foreach (var column in RawSqlColumn.ContentItemColumns())
             {
-                sqlBuilder.Select($"{RawSqlColumn.RELATED_ITEM_COLUMN_NAME}.\"{column.Name}\" as \"{RawSqlColumn.RELATED_ITEM_COLUMN_NAME}_{column.Name}\"");
+                sqlBuilder.Select($"{RawSqlColumn.RELATED_ITEM_COLUMN_NAME}_{index}.\"{column.Name}\" as \"{RawSqlColumn.RELATED_ITEM_COLUMN_NAME}_{index}_{column.Name}\"");
             }
             foreach (var column in RawSqlColumn.RouteColumns())
             {
-                sqlBuilder.Select($"{RawSqlColumn.RELATED_ROUTE_COLUMN_NAME}.\"{column.Name}\" as \"{RawSqlColumn.RELATED_ROUTE_COLUMN_NAME}_{column.Name}\"");
+                sqlBuilder.Select($"{RawSqlColumn.RELATED_ROUTE_COLUMN_NAME}_{index}.\"{column.Name}\" as \"{RawSqlColumn.RELATED_ROUTE_COLUMN_NAME}_{index}_{column.Name}\"");
             }
             foreach (var column in RawSqlColumn.UserColumns())
             {
-                sqlBuilder.Select($"{RawSqlColumn.RELATED_CREATED_BY_COLUMN_NAME}.\"{column.Name}\" as \"{RawSqlColumn.RELATED_CREATED_BY_COLUMN_NAME}_{column.Name}\"");
+                sqlBuilder.Select($"{RawSqlColumn.RELATED_CREATED_BY_COLUMN_NAME}_{index}.\"{column.Name}\" as \"{RawSqlColumn.RELATED_CREATED_BY_COLUMN_NAME}_{index}_{column.Name}\"");
             }
             foreach (var column in RawSqlColumn.UserColumns())
             {
-                sqlBuilder.Select($"{RawSqlColumn.RELATED_MODIFIED_BY_COLUMN_NAME}.\"{column.Name}\" as \"{RawSqlColumn.RELATED_MODIFIED_BY_COLUMN_NAME}_{column.Name}\"");
+                sqlBuilder.Select($"{RawSqlColumn.RELATED_MODIFIED_BY_COLUMN_NAME}_{index}.\"{column.Name}\" as \"{RawSqlColumn.RELATED_MODIFIED_BY_COLUMN_NAME}_{index}_{column.Name}\"");
             }
         }
 
@@ -218,7 +218,7 @@ internal class RaythaDbPostgresJsonQueryEngine : AbstractRaythaDbJsonQueryEngine
         {
             int index = OneToOneRelationshipFields.IndexOf(item);
             sqlBuilder.Join($"\"{RawSqlColumn.CONTENT_ITEM_TABLE_NAME}\" AS {RawSqlColumn.RELATED_ITEM_COLUMN_NAME}_{index}",
-                            $"{RawSqlColumn.RELATED_ITEM_COLUMN_NAME}_{index}.\"{RawSqlColumn.Id.Name}\" = JSON_VALUE(\"{RawSqlColumn.SOURCE_ITEM_COLUMN_NAME}\".\"{RawSqlColumn.PublishedContent.Name}\", '$.{item.DeveloperName?.ToDeveloperName()}')",
+                            $"({RawSqlColumn.RELATED_ITEM_COLUMN_NAME}_{index}.\"{RawSqlColumn.Id.Name}\" = ({RawSqlColumn.SOURCE_ITEM_COLUMN_NAME}.\"{RawSqlColumn.PublishedContent.Name}\"->>'{item.DeveloperName?.ToDeveloperName()}')::uuid)",
                             joinType: "LEFT");
             sqlBuilder.Join($"\"{RawSqlColumn.USERS_TABLE_NAME}\" AS {RawSqlColumn.RELATED_CREATED_BY_COLUMN_NAME}_{index}",
                             $"{RawSqlColumn.RELATED_ITEM_COLUMN_NAME}_{index}.\"{RawSqlColumn.CreatorUserId.Name}\" = {RawSqlColumn.RELATED_CREATED_BY_COLUMN_NAME}_{index}.\"{RawSqlColumn.Id.Name}\"",
