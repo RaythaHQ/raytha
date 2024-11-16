@@ -72,7 +72,6 @@ public class RaythaDbContext : DbContext, IRaythaDbContext, IDataProtectionKeyCo
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
-        builder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());
         builder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly(), p => p.GetInterfaces().All(c => c.Name != typeof(ISqlServerConfiguration).Name && c.Name != typeof(IPostgresConfiguration).Name));
         var dbProvider = DbProviderHelper.GetDatabaseProviderTypeFromConnectionString(_configuration.GetConnectionString("DefaultConnection"));
         if (dbProvider == DatabaseProviderType.Postgres)

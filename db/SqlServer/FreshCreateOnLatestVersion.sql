@@ -653,7 +653,7 @@ ALTER TABLE [AuthenticationSchemes] ADD CONSTRAINT [FK_AuthenticationSchemes_Use
 GO
 
 INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
-VALUES (N'20221230221303_v0_9_0', N'7.0.1');
+VALUES (N'20221230221303_v0_9_0', N'8.0.10');
 GO
 
 COMMIT;
@@ -704,7 +704,7 @@ CREATE INDEX [IX_ApiKeys_UserId] ON [ApiKeys] ([UserId]);
 GO
 
 INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
-VALUES (N'20230211205159_v1_0_0', N'7.0.1');
+VALUES (N'20230211205159_v1_0_0', N'8.0.10');
 GO
 
 COMMIT;
@@ -730,14 +730,20 @@ CREATE TABLE [BackgroundTasks] (
 );
 GO
 
-INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
-VALUES (N'20230521175706_v1_1_0', N'7.0.1');
-GO
-
 COMMIT;
 GO
 
 ALTER DATABASE CURRENT SET ALLOW_SNAPSHOT_ISOLATION ON;
+GO
+
+BEGIN TRANSACTION;
+GO
+
+INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
+VALUES (N'20230521175706_v1_1_0', N'8.0.10');
+GO
+
+COMMIT;
 GO
 
 BEGIN TRANSACTION;
@@ -794,7 +800,7 @@ CREATE INDEX [IX_RaythaFunctions_LastModifierUserId] ON [RaythaFunctions] ([Last
 GO
 
 INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
-VALUES (N'20240314124844_v1_2_0', N'8.0.0');
+VALUES (N'20240314124844_v1_2_0', N'8.0.10');
 GO
 
 COMMIT;
@@ -888,7 +894,7 @@ GO
 IF EXISTS (SELECT * FROM [sys].[identity_columns] WHERE [name] IN (N'Id', N'Label', N'DeveloperName', N'IsMainMenu', N'CreationTime') AND [object_id] = OBJECT_ID(N'[NavigationMenus]'))
     SET IDENTITY_INSERT [NavigationMenus] ON;
 INSERT INTO [NavigationMenus] ([Id], [Label], [DeveloperName], [IsMainMenu], [CreationTime])
-VALUES ('b49f9abf-8e2c-4c25-950c-0ced2f378a37', N'Main menu', N'mainmenu', CAST(1 AS bit), '2024-09-03T09:38:27.0216661Z');
+VALUES ('03ed3a83-d30d-4785-a882-eaac824b4cf5', N'Main menu', N'mainmenu', CAST(1 AS bit), '2024-11-16T19:33:33.8478785Z');
 IF EXISTS (SELECT * FROM [sys].[identity_columns] WHERE [name] IN (N'Id', N'Label', N'DeveloperName', N'IsMainMenu', N'CreationTime') AND [object_id] = OBJECT_ID(N'[NavigationMenus]'))
     SET IDENTITY_INSERT [NavigationMenus] OFF;
 GO
@@ -896,9 +902,9 @@ GO
 IF EXISTS (SELECT * FROM [sys].[identity_columns] WHERE [name] IN (N'Id', N'Label', N'Url', N'IsDisabled', N'OpenInNewTab', N'CssClassName', N'Ordinal', N'NavigationMenuId', N'CreationTime') AND [object_id] = OBJECT_ID(N'[NavigationMenuItems]'))
     SET IDENTITY_INSERT [NavigationMenuItems] ON;
 INSERT INTO [NavigationMenuItems] ([Id], [Label], [Url], [IsDisabled], [OpenInNewTab], [CssClassName], [Ordinal], [NavigationMenuId], [CreationTime])
-VALUES ('5982c677-5f8e-4134-8870-84227258f6e0', N'Home', N'/home', CAST(0 AS bit), CAST(0 AS bit), N'nav-link', 1, 'b49f9abf-8e2c-4c25-950c-0ced2f378a37', '2024-09-03T09:38:27.0222388Z'),
-('ed7dfb20-e443-4212-8c24-4365d0d5f1e3', N'About', N'/about', CAST(0 AS bit), CAST(0 AS bit), N'nav-link', 2, 'b49f9abf-8e2c-4c25-950c-0ced2f378a37', '2024-09-03T09:38:27.0222392Z'),
-('ac03cd99-5fb8-452d-9aa1-8047c040fcb2', N'Posts', N'/posts', CAST(0 AS bit), CAST(0 AS bit), N'nav-link', 3, 'b49f9abf-8e2c-4c25-950c-0ced2f378a37', '2024-09-03T09:38:27.0222398Z');
+VALUES ('b55bd326-8bc7-4210-af6e-9ed6cc85ca79', N'Home', N'/home', CAST(0 AS bit), CAST(0 AS bit), N'nav-link', 1, '03ed3a83-d30d-4785-a882-eaac824b4cf5', '2024-11-16T19:33:33.8484313Z'),
+('aa4627f0-c3b6-4631-b097-913648fdc44b', N'About', N'/about', CAST(0 AS bit), CAST(0 AS bit), N'nav-link', 2, '03ed3a83-d30d-4785-a882-eaac824b4cf5', '2024-11-16T19:33:33.8484332Z'),
+('b25bd839-95d6-45f4-b817-e14e3b64e048', N'Posts', N'/posts', CAST(0 AS bit), CAST(0 AS bit), N'nav-link', 3, '03ed3a83-d30d-4785-a882-eaac824b4cf5', '2024-11-16T19:33:33.8484335Z');
 IF EXISTS (SELECT * FROM [sys].[identity_columns] WHERE [name] IN (N'Id', N'Label', N'Url', N'IsDisabled', N'OpenInNewTab', N'CssClassName', N'Ordinal', N'NavigationMenuId', N'CreationTime') AND [object_id] = OBJECT_ID(N'[NavigationMenuItems]'))
     SET IDENTITY_INSERT [NavigationMenuItems] OFF;
 GO
@@ -943,15 +949,15 @@ GO
 IF EXISTS (SELECT * FROM [sys].[identity_columns] WHERE [name] IN (N'Id', N'Title', N'DeveloperName', N'IsExportable', N'Description', N'CreationTime') AND [object_id] = OBJECT_ID(N'[Themes]'))
     SET IDENTITY_INSERT [Themes] ON;
 INSERT INTO [Themes] ([Id], [Title], [DeveloperName], [IsExportable], [Description], [CreationTime])
-VALUES ('944ca79b-1ce5-47c4-8557-c8e6172df1dd', N'Raytha default theme', N'raytha_default_theme', CAST(0 AS bit), N'Raytha default theme', '2024-09-03T09:38:27.0238368Z');
+VALUES ('ee7046a6-4bba-40d6-a545-ebdb972167c6', N'Raytha default theme', N'raytha_default_theme', CAST(0 AS bit), N'Raytha default theme', '2024-11-16T19:33:33.8495914Z');
 IF EXISTS (SELECT * FROM [sys].[identity_columns] WHERE [name] IN (N'Id', N'Title', N'DeveloperName', N'IsExportable', N'Description', N'CreationTime') AND [object_id] = OBJECT_ID(N'[Themes]'))
     SET IDENTITY_INSERT [Themes] OFF;
 GO
 
-ALTER TABLE [WebTemplates] ADD [ThemeId] uniqueidentifier NOT NULL DEFAULT '944ca79b-1ce5-47c4-8557-c8e6172df1dd';
+ALTER TABLE [WebTemplates] ADD [ThemeId] uniqueidentifier NOT NULL DEFAULT 'ee7046a6-4bba-40d6-a545-ebdb972167c6';
 GO
 
-ALTER TABLE [OrganizationSettings] ADD [ActiveThemeId] uniqueidentifier NOT NULL DEFAULT '944ca79b-1ce5-47c4-8557-c8e6172df1dd';
+ALTER TABLE [OrganizationSettings] ADD [ActiveThemeId] uniqueidentifier NOT NULL DEFAULT 'ee7046a6-4bba-40d6-a545-ebdb972167c6';
 GO
 
 ALTER TABLE [ContentItems] DROP CONSTRAINT [FK_ContentItems_WebTemplates_WebTemplateId];
@@ -1065,12 +1071,83 @@ ALTER TABLE [WebTemplates] ADD CONSTRAINT [FK_WebTemplates_Themes_ThemeId] FOREI
 GO
 
 INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
+VALUES (N'20240502121207_v1_3_0', N'8.0.10');
+GO
+
+COMMIT;
+GO
+
+BEGIN TRANSACTION;
+GO
+
+DROP INDEX [IX_WebTemplates_DeveloperName_ThemeId] ON [WebTemplates];
+GO
+
+DROP INDEX [IX_Users_EmailAddress] ON [Users];
+GO
+
+DROP INDEX [IX_Users_SsoId_AuthenticationSchemeId] ON [Users];
+GO
+
+DROP INDEX [IX_UserGroups_DeveloperName] ON [UserGroups];
+GO
+
+DROP INDEX [IX_Routes_Path] ON [Routes];
+GO
+
+DROP INDEX [IX_Roles_DeveloperName] ON [Roles];
+GO
+
+DROP INDEX [IX_JwtLogins_Jti] ON [JwtLogins];
+GO
+
+DROP INDEX [IX_AuthenticationSchemes_DeveloperName] ON [AuthenticationSchemes];
+GO
+
+DECLARE @var3 sysname;
+SELECT @var3 = [d].[name]
+FROM [sys].[default_constraints] [d]
+INNER JOIN [sys].[columns] [c] ON [d].[parent_column_id] = [c].[column_id] AND [d].[parent_object_id] = [c].[object_id]
+WHERE ([d].[parent_object_id] = OBJECT_ID(N'[EmailTemplates]') AND [c].[name] = N'DeveloperName');
+IF @var3 IS NOT NULL EXEC(N'ALTER TABLE [EmailTemplates] DROP CONSTRAINT [' + @var3 + '];');
+ALTER TABLE [EmailTemplates] ALTER COLUMN [DeveloperName] nvarchar(450) NULL;
+GO
+
+CREATE UNIQUE INDEX [IX_WebTemplates_DeveloperName_ThemeId] ON [WebTemplates] ([DeveloperName], [ThemeId]) WHERE [DeveloperName] IS NOT NULL;
+GO
+
+CREATE UNIQUE INDEX [IX_Users_EmailAddress] ON [Users] ([EmailAddress]);
+GO
+
+CREATE UNIQUE INDEX [IX_Users_SsoId_AuthenticationSchemeId] ON [Users] ([SsoId], [AuthenticationSchemeId]) WHERE [SsoId] IS NOT NULL AND [AuthenticationSchemeId] IS NOT NULL;
+GO
+
+CREATE UNIQUE INDEX [IX_UserGroups_DeveloperName] ON [UserGroups] ([DeveloperName]);
+GO
+
+CREATE UNIQUE INDEX [IX_Routes_Path] ON [Routes] ([Path]);
+GO
+
+CREATE UNIQUE INDEX [IX_Roles_DeveloperName] ON [Roles] ([DeveloperName]);
+GO
+
+CREATE UNIQUE INDEX [IX_JwtLogins_Jti] ON [JwtLogins] ([Jti]) WHERE [Jti] IS NOT NULL;
+GO
+
+CREATE UNIQUE INDEX [IX_EmailTemplates_DeveloperName] ON [EmailTemplates] ([DeveloperName]) WHERE [DeveloperName] IS NOT NULL;
+GO
+
+CREATE UNIQUE INDEX [IX_AuthenticationSchemes_DeveloperName] ON [AuthenticationSchemes] ([DeveloperName]) WHERE [DeveloperName] IS NOT NULL;
+GO
+
+INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
 VALUES 
 ('20221230221303_v0_9_0', 'FreshCreateOnLatestVersion'), 
 ('20230211205159_v1_0_0', 'FreshCreateOnLatestVersion'),
 ('20230521175706_v1_1_0', 'FreshCreateOnLatestVersion'), 
 ('20240314124844_v1_2_0', 'FreshCreateOnLatestVersion'), 
-('20240502121207_v1_3_0', 'FreshCreateOnLatestVersion');
+('20240502121207_v1_3_0', 'FreshCreateOnLatestVersion'),
+('20241116192521_v1_4_0', 'FreshCreateOnLatestVersion');
 GO
 
 COMMIT;
