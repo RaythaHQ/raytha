@@ -1,19 +1,13 @@
 ﻿using Raytha.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using Raytha.Domain.ValueObjects;
 
 namespace Raytha.Infrastructure.Persistence.Configurations;
 
-public class EmailTemplateConfiguration : IEntityTypeConfiguration<WebTemplate>
+public class EmailTemplateConfiguration : IEntityTypeConfiguration<EmailTemplate>
 {
-    public void Configure(EntityTypeBuilder<WebTemplate> builder)
+    public void Configure(EntityTypeBuilder<EmailTemplate> builder)
     {
-        builder
-            .HasIndex(b => b.DeveloperName)
-            .IsUnique()
-            .IncludeProperties(p => new { p.Id, p.Label });
-
         builder
             .HasOne(b => b.CreatorUser)
             .WithMany()
@@ -23,5 +17,7 @@ public class EmailTemplateConfiguration : IEntityTypeConfiguration<WebTemplate>
             .HasOne(b => b.LastModifierUser)
             .WithMany()
             .HasForeignKey(b => b.LastModifierUserId);
+
+        builder.HasIndex(b => b.DeveloperName).IsUnique();
     }
 }

@@ -24,6 +24,8 @@
   <ItemGroup>
     <ProjectReference Include="..\Raytha.Application\Raytha.Application.csproj" />
     <ProjectReference Include="..\Raytha.Infrastructure\Raytha.Infrastructure.csproj" />
+    <ProjectReference Include="..\Raytha.Migrations.Postgres\Raytha.Migrations.Postgres.csproj" />
+    <ProjectReference Include="..\Raytha.Migrations.SqlServer\Raytha.Migrations.SqlServer.csproj" />
   </ItemGroup>
 
   <PropertyGroup>

@@ -4,11 +4,11 @@ using Raytha.Application.Common.Utils;
 using Raytha.Domain.Entities;
 using Raytha.Domain.ValueObjects.FieldTypes;
 
-namespace Raytha.Infrastructure.JsonQueryEngine.SqlServer;
+namespace Raytha.Infrastructure.JsonQueryEngine.Postgres;
 
-internal class ODataFilterToSqlServer : AbstractODataFilterToSql
+internal class ODataFilterToPostgres : AbstractODataFilterToSql
 {
-    public ODataFilterToSqlServer(ContentType contentType, string primaryFieldName, IEnumerable<ContentTypeField> relatedObjectFields, string dateTimeFormat)
+    public ODataFilterToPostgres(ContentType contentType, string primaryFieldName, IEnumerable<ContentTypeField> relatedObjectFields, string dateTimeFormat)
     {
         _contentType = contentType;
         _primaryFieldName = primaryFieldName;
@@ -61,7 +61,7 @@ internal class ODataFilterToSqlServer : AbstractODataFilterToSql
 
             if (BuiltInContentTypeField.ReservedContentTypeFields.Any(p => p.DeveloperName == realFieldName))
             {
-                string prefix = $"{RawSqlColumn.SOURCE_ITEM_COLUMN_NAME}.{realFieldName} COLLATE Latin1_General_CI_AS LIKE";
+                string prefix = $"{RawSqlColumn.SOURCE_ITEM_COLUMN_NAME}.\"{realFieldName}\" ILIKE";
                 whereClause.Append($"{prefix} {value.Value.ToString().ApplySqlStringLikeOperator}");
             }
             else
@@ -72,18 +72,18 @@ internal class ODataFilterToSqlServer : AbstractODataFilterToSql
                     var relatedObjectField = _relatedObjectFields.First(p => p.DeveloperName == chosenColumnAsCustomField.DeveloperName);
                     int indexOfRelatedObject = _relatedObjectFields.ToList().IndexOf(relatedObjectField);
                     string relatedObjPrimaryFieldName = relatedObjectField.ContentType.ContentTypeFields.First(p => p.Id == relatedObjectField.ContentType.PrimaryFieldId).DeveloperName;
-                    whereClause.Append(chosenColumnAsCustomField.FieldType.SqlServerLikeJsonValue($"{RawSqlColumn.RELATED_ITEM_COLUMN_NAME}_{indexOfRelatedObject}", RawSqlColumn.PublishedContent.Name, relatedObjPrimaryFieldName, value.Value.ToString().ApplySqlStringLikeOperator(functionName)));
+                    whereClause.Append(chosenColumnAsCustomField.FieldType.PostgresLikeJsonValue($"{RawSqlColumn.RELATED_ITEM_COLUMN_NAME}_{indexOfRelatedObject}", RawSqlColumn.PublishedContent.Name, relatedObjPrimaryFieldName, value.Value.ToString().ApplySqlStringLikeOperator(functionName)));
                 }
                 else if (chosenColumnAsCustomField.FieldType.DeveloperName == BaseFieldType.MultipleSelect)
                 {
                     if (functionName != "contains")
                         throw new NotImplementedException($"{functionName} is not an implemented function call.");
 
-                    whereClause.Append(chosenColumnAsCustomField.FieldType.SqlServerLikeJsonValue(RawSqlColumn.SOURCE_ITEM_COLUMN_NAME, RawSqlColumn.PublishedContent.Name, realFieldName, value.Value.ToString()));
+                    whereClause.Append(chosenColumnAsCustomField.FieldType.PostgresLikeJsonValue(RawSqlColumn.SOURCE_ITEM_COLUMN_NAME, RawSqlColumn.PublishedContent.Name, realFieldName, value.Value.ToString()));
                 }
                 else
                 {
-                    whereClause.Append(chosenColumnAsCustomField.FieldType.SqlServerLikeJsonValue(RawSqlColumn.SOURCE_ITEM_COLUMN_NAME, RawSqlColumn.PublishedContent.Name, realFieldName, value.Value.ToString().ApplySqlStringLikeOperator(functionName)));
+                    whereClause.Append(chosenColumnAsCustomField.FieldType.PostgresLikeJsonValue(RawSqlColumn.SOURCE_ITEM_COLUMN_NAME, RawSqlColumn.PublishedContent.Name, realFieldName, value.Value.ToString().ApplySqlStringLikeOperator(functionName)));
                 }
             }
 
@@ -94,7 +94,7 @@ internal class ODataFilterToSqlServer : AbstractODataFilterToSql
         {
             if (BuiltInContentTypeField.ReservedContentTypeFields.Any(p => p.DeveloperName == realFieldName))
             {
-                whereClause.Append($" {RawSqlColumn.SOURCE_ITEM_COLUMN_NAME}.{realFieldName} ");
+                whereClause.Append($" {RawSqlColumn.SOURCE_ITEM_COLUMN_NAME}.\"{realFieldName}\" ");
             }
             else
             {
@@ -104,18 +104,17 @@ internal class ODataFilterToSqlServer : AbstractODataFilterToSql
                     var relatedObjectField = _relatedObjectFields.First(p => p.DeveloperName == chosenColumnAsCustomField.DeveloperName);
                     int indexOfRelatedObject = _relatedObjectFields.ToList().IndexOf(relatedObjectField);
                     string relatedObjPrimaryFieldName = relatedObjectField.ContentType.ContentTypeFields.First(p => p.Id == relatedObjectField.ContentType.PrimaryFieldId).DeveloperName;
-                    whereClause.Append(chosenColumnAsCustomField.FieldType.SqlServerSingleJsonValue($"{RawSqlColumn.RELATED_ITEM_COLUMN_NAME}_{indexOfRelatedObject}", RawSqlColumn.PublishedContent.Name, relatedObjPrimaryFieldName));
+                    whereClause.Append(chosenColumnAsCustomField.FieldType.PostgresSingleJsonValue($"{RawSqlColumn.RELATED_ITEM_COLUMN_NAME}_{indexOfRelatedObject}", RawSqlColumn.PublishedContent.Name, relatedObjPrimaryFieldName));
                 }
                 else if (chosenColumnAsCustomField.FieldType.DeveloperName == BaseFieldType.Date)
                 {
-                    whereClause.Append(chosenColumnAsCustomField.FieldType.SqlServerSingleJsonValue(RawSqlColumn.SOURCE_ITEM_COLUMN_NAME, RawSqlColumn.PublishedContent.Name, realFieldName, _dateTimeFormat));
+                    whereClause.Append(chosenColumnAsCustomField.FieldType.PostgresSingleJsonValue(RawSqlColumn.SOURCE_ITEM_COLUMN_NAME, RawSqlColumn.PublishedContent.Name, realFieldName, _dateTimeFormat));
                 }
                 else
                 {
-                    whereClause.Append(chosenColumnAsCustomField.FieldType.SqlServerSingleJsonValue(RawSqlColumn.SOURCE_ITEM_COLUMN_NAME, RawSqlColumn.PublishedContent.Name, realFieldName));
+                    whereClause.Append(chosenColumnAsCustomField.FieldType.PostgresSingleJsonValue(RawSqlColumn.SOURCE_ITEM_COLUMN_NAME, RawSqlColumn.PublishedContent.Name, realFieldName));
                 }
             }
         }
-
     }
 }

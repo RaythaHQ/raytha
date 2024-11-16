@@ -19,9 +19,4 @@ public class CheckboxFieldType : BaseFieldType
     {
         return new BooleanFieldValue(value);
     }
-
-    public override string SqlServerOrderByExpression(params string[] args)
-    {
-        return $"JSON_VALUE({args[0]}.{args[1]}, '$.{args[2]}') {args[3]}";
-    }
 }

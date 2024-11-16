@@ -9,11 +9,6 @@ public class UserGroupConfiguration : IEntityTypeConfiguration<UserGroup>
     public void Configure(EntityTypeBuilder<UserGroup> builder)
     {
         builder
-            .HasIndex(b => b.DeveloperName)
-            .IsUnique()
-            .IncludeProperties(p => new { p.Id, p.Label });
-
-        builder
             .HasOne(b => b.CreatorUser)
             .WithMany()
             .HasForeignKey(b => b.CreatorUserId);
@@ -22,5 +17,7 @@ public class UserGroupConfiguration : IEntityTypeConfiguration<UserGroup>
             .HasOne(b => b.LastModifierUser)
             .WithMany()
             .HasForeignKey(b => b.LastModifierUserId);
+
+        builder.HasIndex(b => b.DeveloperName).IsUnique();
     }
 }

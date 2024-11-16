@@ -4,7 +4,7 @@ using Raytha.Domain.Entities;
 
 #nullable disable
 
-namespace Raytha.Infrastructure.Migrations
+namespace Raytha.Migrations.SqlServer
 {
     /// <inheritdoc />
     public partial class v1_3_0 : Migration

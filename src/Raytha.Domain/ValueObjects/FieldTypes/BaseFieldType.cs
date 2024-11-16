@@ -113,6 +113,21 @@ public abstract class BaseFieldType : ValueObject
     {
         return $" COALESCE(JSON_VALUE({args[0]}.{args[1]}, '$.{args[2]}'), '') COLLATE Latin1_General_CI_AS LIKE '{args[3]}' ";
     }
+
+    public virtual string PostgresOrderByExpression(params string[] args)
+    {
+        return $" COALESCE({args[0]}.\"{args[1]}\"->>'{args[2]}', '') {args[3]} ";
+    }
+
+    public virtual string PostgresSingleJsonValue(params string[] args)
+    {
+        return $" COALESCE({args[0]}.\"{args[1]}\"->>'{args[2]}', '')";
+    }
+
+    public virtual string PostgresLikeJsonValue(params string[] args)
+    {
+        return $" COALESCE({args[0]}.\"{args[1]}\"->>'{args[2]}', '') ILIKE '{args[3]}' ";
+    }
 }
 
 public abstract class EqualsOrNotEqualsFieldType : BaseFieldType
@@ -189,14 +204,21 @@ public abstract class NumericValueFieldType : BaseFieldType
 
     public override string SqlServerOrderByExpression(params string[] args)
     {
-        return $" CASE WHEN ISNUMERIC(JSON_VALUE({args[0]}.{args[1]}, '$.{args[2]}')) = 1 THEN CAST(JSON_VALUE({args[0]}.{args[1]}, '$.{args[2]}') AS decimal) ELSE NULL END {args[3]}, JSON_VALUE({args[0]}.{args[1]}, '$.{args[2]}') {args[3]} "; 
+        return $" CASE WHEN ISNUMERIC(JSON_VALUE({args[0]}.{args[1]}, '$.{args[2]}')) = 1 THEN CAST(JSON_VALUE({args[0]}.{args[1]}, '$.{args[2]}') AS decimal) ELSE NULL END {args[3]}, JSON_VALUE({args[0]}.{args[1]}, '$.{args[2]}') {args[3]} ";
     }
 
     public override string SqlServerSingleJsonValue(params string[] args)
     {
-        return $" TRY_CONVERT(decimal(18, 2), JSON_VALUE({args[0]}.{args[1]}, '$.{args[2]}')) "; 
+        return $" TRY_CONVERT(decimal(18, 2), JSON_VALUE({args[0]}.{args[1]}, '$.{args[2]}')) ";
+    }
+
+    public override string PostgresOrderByExpression(params string[] args)
+    {
+        return $" CASE WHEN ({args[0]}.\"{args[1]}\"->>'{args[2]}') ~ '^[0-9]+(\\.[0-9]+)?$' THEN ({args[0]}.\"{args[1]}\"->> '{args[2]}')::decimal ELSE NULL END {args[3]}, {args[0]}.\"{args[1]}\"->>'{args[2]}' {args[3]} "; 
+    }
+
+    public override string PostgresSingleJsonValue(params string[] args)
+    {
+        return $" CASE WHEN ({args[0]}.\"{args[1]}\"->>'{args[2]}') ~ '^[0-9]+(\\.[0-9]+)?$' THEN ({args[0]}.\"{args[1]}\"->> '{args[2]}')::decimal(18, 2) ELSE NULL END"; 
     }
 }
-
-
-
