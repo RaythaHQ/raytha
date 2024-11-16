@@ -33,7 +33,7 @@ public class DateFieldType : BaseFieldType
             "dd/MM/yyyy" => 103,
             _ => 0
         };
-        return $" TRY_CONVERT(datetime, JSON_VALUE({args[0]}.{args[1]}, '$.{args[2]}') {sqlDateOutput}) ";
+        return $" TRY_CONVERT(datetime, JSON_VALUE({args[0]}.{args[1]}, '$.{args[2]}'), {sqlDateOutput}) ";
     }
 
     public override string SqlServerOrderByExpression(params string[] args)
@@ -43,7 +43,7 @@ public class DateFieldType : BaseFieldType
             "dd/MM/yyyy" => 103,
             _ => 0
         };
-        return $" TRY_CONVERT(datetime, JSON_VALUE({args[0]}.{args[1]}, '$.{args[2]}') {sqlDateOutput}) {args[4]} ";
+        return $" TRY_CONVERT(datetime, JSON_VALUE({args[0]}.{args[1]}, '$.{args[2]}'), {sqlDateOutput}) {args[4]} ";
     }
 
     public override string PostgresSingleJsonValue(params string[] args)
