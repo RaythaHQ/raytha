@@ -8,11 +8,12 @@ namespace Raytha.Infrastructure.JsonQueryEngine.Postgres;
 
 internal class ODataFilterToPostgres : AbstractODataFilterToSql
 {
-    public ODataFilterToPostgres(ContentType contentType, string primaryFieldName, IEnumerable<ContentTypeField> relatedObjectFields)
+    public ODataFilterToPostgres(ContentType contentType, string primaryFieldName, IEnumerable<ContentTypeField> relatedObjectFields, string dateTimeFormat)
     {
         _contentType = contentType;
         _primaryFieldName = primaryFieldName;
         _relatedObjectFields = relatedObjectFields;
+        _dateTimeFormat = dateTimeFormat;
     }
 
     public override string GenerateSql(string filterExpression)
@@ -33,7 +34,7 @@ internal class ODataFilterToPostgres : AbstractODataFilterToSql
 
         FilterClause parsedODataFilterClause = parser.ParseFilter();
 
-        ODataFilterToSqlVisitor<object> visitor = new ODataFilterToSqlVisitor<object>(_contentType, _primaryFieldName, _relatedObjectFields);
+        ODataFilterToSqlVisitor<object> visitor = new ODataFilterToSqlVisitor<object>(_contentType, _primaryFieldName, _relatedObjectFields, _dateTimeFormat);
         parsedODataFilterClause.Expression.Accept(visitor);
 
         string whereClause = visitor.GetWhereClause();
@@ -42,11 +43,12 @@ internal class ODataFilterToPostgres : AbstractODataFilterToSql
 
     private class ODataFilterToSqlVisitor<TSource> : AbstractODataFilterToSqlVisitor<TSource> where TSource : class
     {
-        public ODataFilterToSqlVisitor(ContentType contentType, string primaryFieldName, IEnumerable<ContentTypeField> relatedObjectFields)
+        public ODataFilterToSqlVisitor(ContentType contentType, string primaryFieldName, IEnumerable<ContentTypeField> relatedObjectFields, string dateTimeFormat)
         {
             _contentType = contentType;
             _primaryFieldName = primaryFieldName;
             _relatedObjectFields = relatedObjectFields;
+            _dateTimeFormat = dateTimeFormat;
         }
 
         public override TSource Visit(SingleValueFunctionCallNode nodeIn)
@@ -104,12 +106,15 @@ internal class ODataFilterToPostgres : AbstractODataFilterToSql
                     string relatedObjPrimaryFieldName = relatedObjectField.ContentType.ContentTypeFields.First(p => p.Id == relatedObjectField.ContentType.PrimaryFieldId).DeveloperName;
                     whereClause.Append(chosenColumnAsCustomField.FieldType.PostgresSingleJsonValue($"{RawSqlColumn.RELATED_ITEM_COLUMN_NAME}_{indexOfRelatedObject}", RawSqlColumn.PublishedContent.Name, relatedObjPrimaryFieldName));
                 }
+                else if (chosenColumnAsCustomField.FieldType.DeveloperName == BaseFieldType.Date)
+                {
+                    whereClause.Append(chosenColumnAsCustomField.FieldType.PostgresSingleJsonValue(RawSqlColumn.SOURCE_ITEM_COLUMN_NAME, RawSqlColumn.PublishedContent.Name, realFieldName, _dateTimeFormat));
+                }
                 else
                 {
                     whereClause.Append(chosenColumnAsCustomField.FieldType.PostgresSingleJsonValue(RawSqlColumn.SOURCE_ITEM_COLUMN_NAME, RawSqlColumn.PublishedContent.Name, realFieldName));
                 }
             }
         }
-
     }
 }

@@ -14,6 +14,7 @@ internal abstract class AbstractODataFilterToSql
     protected ContentType _contentType;
     protected string _primaryFieldName;
     protected IEnumerable<ContentTypeField> _relatedObjectFields;
+    protected string _dateTimeFormat;
 
     protected string placeholderClassName = typeof(PlaceholderClass).Name;
 
@@ -38,6 +39,7 @@ internal abstract class AbstractODataFilterToSql
         protected StringBuilder whereClause = new StringBuilder();
         protected ContentType _contentType;
         protected string _primaryFieldName;
+        protected string _dateTimeFormat;
         protected IEnumerable<ContentTypeField> _relatedObjectFields;
 
         protected abstract void HandleSingleValueProperty(string realFieldName);

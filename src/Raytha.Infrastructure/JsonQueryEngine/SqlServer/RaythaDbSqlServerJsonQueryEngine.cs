@@ -157,7 +157,7 @@ internal class RaythaDbSqlServerJsonQueryEngine : AbstractRaythaDbJsonQueryEngin
         if (filters == null || !filters.Any())
             return sqlBuilder;
 
-        var oDataToSql = new ODataFilterToSqlServer(ContentType, PrimaryFieldDeveloperName, OneToOneRelationshipFields);
+        var oDataToSql = new ODataFilterToSqlServer(ContentType, PrimaryFieldDeveloperName, OneToOneRelationshipFields, _currentOrganization.DateFormat);
         foreach (var filter in filters.Where(p => !string.IsNullOrEmpty(p)))
         {
             string whereStatement = oDataToSql.GenerateSql(filter);
@@ -207,7 +207,7 @@ internal class RaythaDbSqlServerJsonQueryEngine : AbstractRaythaDbJsonQueryEngin
         if (string.IsNullOrWhiteSpace(search))
             return sqlBuilder;
 
-        var oDataToSql = new ODataFilterToSqlServer(ContentType, PrimaryFieldDeveloperName, OneToOneRelationshipFields);
+        var oDataToSql = new ODataFilterToSqlServer(ContentType, PrimaryFieldDeveloperName, OneToOneRelationshipFields, _currentOrganization.DateFormat);
 
         //If no columns specified, just search on Primary Field only
         if (searchOnColumns == null || !searchOnColumns.Any())
@@ -307,14 +307,8 @@ internal class RaythaDbSqlServerJsonQueryEngine : AbstractRaythaDbJsonQueryEngin
                     }
                     else if (columnAsContentTypeField.FieldType.DeveloperName == BaseFieldType.Date)
                     {
-                        int sqlDateOutput = _currentOrganization.DateFormat switch
-                        {
-                            DateTimeExtensions.MM_dd_yyyy => 101,
-                            DateTimeExtensions.dd_MM_yyyy => 103,
-                            _ => 0
-                        };
 
-                        sqlBuilder.OrderBy(columnAsContentTypeField.FieldType.SqlServerOrderByExpression(RawSqlColumn.SOURCE_ITEM_COLUMN_NAME, RawSqlColumn.PublishedContent.Name, columnAsContentTypeField.DeveloperName, sqlDateOutput.ToString(), direction.DeveloperName));
+                        sqlBuilder.OrderBy(columnAsContentTypeField.FieldType.SqlServerOrderByExpression(RawSqlColumn.SOURCE_ITEM_COLUMN_NAME, RawSqlColumn.PublishedContent.Name, columnAsContentTypeField.DeveloperName, _currentOrganization.DateFormat, direction.DeveloperName));
                     }
                     else 
                     {

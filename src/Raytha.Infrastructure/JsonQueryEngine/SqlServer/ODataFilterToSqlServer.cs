@@ -8,11 +8,12 @@ namespace Raytha.Infrastructure.JsonQueryEngine.SqlServer;
 
 internal class ODataFilterToSqlServer : AbstractODataFilterToSql
 {
-    public ODataFilterToSqlServer(ContentType contentType, string primaryFieldName, IEnumerable<ContentTypeField> relatedObjectFields)
+    public ODataFilterToSqlServer(ContentType contentType, string primaryFieldName, IEnumerable<ContentTypeField> relatedObjectFields, string dateTimeFormat)
     {
         _contentType = contentType;
         _primaryFieldName = primaryFieldName;
         _relatedObjectFields = relatedObjectFields;
+        _dateTimeFormat = dateTimeFormat;
     }
 
     public override string GenerateSql(string filterExpression)
@@ -33,7 +34,7 @@ internal class ODataFilterToSqlServer : AbstractODataFilterToSql
 
         FilterClause parsedODataFilterClause = parser.ParseFilter();
 
-        ODataFilterToSqlVisitor<object> visitor = new ODataFilterToSqlVisitor<object>(_contentType, _primaryFieldName, _relatedObjectFields);
+        ODataFilterToSqlVisitor<object> visitor = new ODataFilterToSqlVisitor<object>(_contentType, _primaryFieldName, _relatedObjectFields, _dateTimeFormat);
         parsedODataFilterClause.Expression.Accept(visitor);
 
         string whereClause = visitor.GetWhereClause();
@@ -42,11 +43,12 @@ internal class ODataFilterToSqlServer : AbstractODataFilterToSql
 
     private class ODataFilterToSqlVisitor<TSource> : AbstractODataFilterToSqlVisitor<TSource> where TSource : class
     {
-        public ODataFilterToSqlVisitor(ContentType contentType, string primaryFieldName, IEnumerable<ContentTypeField> relatedObjectFields)
+        public ODataFilterToSqlVisitor(ContentType contentType, string primaryFieldName, IEnumerable<ContentTypeField> relatedObjectFields, string dateTimeFormat)
         {
             _contentType = contentType;
             _primaryFieldName = primaryFieldName;
             _relatedObjectFields = relatedObjectFields;
+            _dateTimeFormat = dateTimeFormat;
         }
 
         public override TSource Visit(SingleValueFunctionCallNode nodeIn)
@@ -103,6 +105,10 @@ internal class ODataFilterToSqlServer : AbstractODataFilterToSql
                     int indexOfRelatedObject = _relatedObjectFields.ToList().IndexOf(relatedObjectField);
                     string relatedObjPrimaryFieldName = relatedObjectField.ContentType.ContentTypeFields.First(p => p.Id == relatedObjectField.ContentType.PrimaryFieldId).DeveloperName;
                     whereClause.Append(chosenColumnAsCustomField.FieldType.SqlServerSingleJsonValue($"{RawSqlColumn.RELATED_ITEM_COLUMN_NAME}_{indexOfRelatedObject}", RawSqlColumn.PublishedContent.Name, relatedObjPrimaryFieldName));
+                }
+                else if (chosenColumnAsCustomField.FieldType.DeveloperName == BaseFieldType.Date)
+                {
+                    whereClause.Append(chosenColumnAsCustomField.FieldType.SqlServerSingleJsonValue(RawSqlColumn.SOURCE_ITEM_COLUMN_NAME, RawSqlColumn.PublishedContent.Name, realFieldName, _dateTimeFormat));
                 }
                 else
                 {
