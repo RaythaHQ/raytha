@@ -4,7 +4,7 @@ Deploying Raytha CMS to production is similar to deploying any other .NET 8+ web
 
 * Choose the deployment environment that best fits your needs, such as a bare metal VM, a PaaS solution like Azure App Service, or a containerized solution like Docker.
 * Decide on a file storage provider, such as local storage, Azure Blob Storage, or an S3-compatible storage, that best suits your requirements.
-* Choose between self-hosting your SQL Server database or using a managed provider like Azure SQL.
+* Choose between self-hosting your Postgres (or SQL Server if you prefer) or using a managed cloud provider.
 
 Our team has extensively tested Raytha on various deployment environments and storage providers. For instance, we have successfully deployed Raytha on Azure App Service's Windows environment as well as Web Apps for Containers. We have also tested Raytha's file storage in both `Local` mode and with Azure Blob Storage. While using Azure Blob Storage is recommended for production, Local mode is sufficient for testing and development purposes.
 
@@ -12,32 +12,23 @@ Furthermore, we have deployed Raytha's database on Azure SQL and tested it in Az
 
 ## Minimum Docker Deployment
 
-**Dependencies**
+Raytha is available on [DockerHub](https://hub.docker.com/r/raythahq/raytha) and is designed to work out of the box with a single <strong>Docker container and Postgres</strong>, making it incredibly easy to deploy anywhere. With a docker-compose.yml file, you can get everything up and running in a minute.
 
-* SQL Server or Azure SQL
-* SMTP for email
+Simply download the docker-compose.yml file from the Raytha code repository.
 
-**Running Raytha**
+You can [download it here](https://github.com/raythahq/raytha/blob/main/docker-compose.yml) or copy it directly.
 
-1. Pull the docker image
-```
-docker pull raythahq/raytha
-```
-2. Create your database and run the Create Database Script with [this SQL script](https://github.com/RaythaHQ/raytha/blob/main/db/FreshCreateOnLatestVersion.sql)
-
-3. Create an environment file that sets the SQL server connection string for setting:
+Once you have the docker-compose.yml file, navigate to the directory where you saved it and run:
 
 ```
-ConnectionStrings__DefaultConnection
+docker-compose up
 ```
 
-[View all available environment variables](https://github.com/RaythaHQ/raytha/blob/main/src/Raytha.Web/appsettings.json), including if you wish to use a storage provider such as Azure Blob or S3-compatible, and also receive emails for password retrieval and other functionality.
+On the <strong>first run</strong>, Raytha will automatically apply the migration scripts and set up the database. After the migration completes, you’ll be presented with a <strong>setup screen</strong> to configure the CMS.
 
-4. Run with command.
+<strong>Advanced Settings</strong>
 
-```
- docker run -p 8080:8080 --env-file your-env-file
-```
+Raytha offers a plethora of environment variable settings that you can set to take advantage of additional functionality. If you want to set <strong>SMTP settings</strong> to ensure that Forgot Password and other similar emails are sent from Raytha, or use a <strong>cloud storage such as S3 or Azure Blob</strong>, then review the environment variables in the docker-compose.yml file.
 
 ## Installation Support
 
