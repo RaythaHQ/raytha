@@ -1,0 +1,27 @@
+services:
+  app:
+    image: raythahq/raytha:latest
+    ports:
+      - "5001:8080"  # Default port for .NET apps (mapped to container's port 80)
+    volumes:
+      - raytha_user_uploads:/app/user-uploads  # Mount for user-uploaded static file
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=Host=db;Port=5432;Username=postgres;Password=changeme;Database=raytha  # Docker connection string
+    depends_on:
+      - db
+
+  db:
+    image: postgres:17
+    ports:
+      - "5432:5432"  # Default port for PostgreSQL
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: changeme
+      POSTGRES_DB: raytha
+    volumes:
+      - raytha_pg_data:/var/lib/postgresql/data  # Persistent volume for database storage
+
+volumes:
+  raytha_pg_data:
+  raytha_user_uploads:
