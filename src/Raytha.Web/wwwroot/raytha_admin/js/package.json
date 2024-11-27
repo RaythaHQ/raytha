@@ -34,7 +34,6 @@
     "@uppy/progress-bar": "^4.0.0",
     "@uppy/xhr-upload": "^4.1.0",
     "bootstrap": "^5.3.3",
-    "js": "file:",
     "lodash.debounce": "^4.0.8",
     "monaco-editor": "^0.52.0",
     "monaco-editor-webpack-plugin": "^7.1.0",
