@@ -1,4 +1,3 @@
-const MonacoWebpackPlugin = require('monaco-editor-webpack-plugin');
 const path = require("path");
 
 module.exports = (env, argv) =>
@@ -39,9 +38,6 @@ module.exports = (env, argv) =>
                 }
             ],
         },
-        plugins: [new MonacoWebpackPlugin({
-            languages: ['javascript', 'typescript', 'html', 'css']
-        })]
     };
 
     if (isDevBuild);
