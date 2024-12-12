@@ -14,6 +14,7 @@ public class GetMediaItems
     public record Query : GetPagedEntitiesInputDto, IRequest<IQueryResponseDto<ListResultDto<MediaItemDto>>> 
     { 
         public override string OrderBy { get; init; } = $"CreationTime {SortOrder.DESCENDING}";
+        public string? ContentType { get; init; }
     }
 
     public class Handler : IRequestHandler<Query, IQueryResponseDto<ListResultDto<MediaItemDto>>>
@@ -34,7 +35,13 @@ public class GetMediaItems
                 query = query.Where(p => p.ObjectKey.ToLower().Contains(searchQuery));        
             }
 
-            var total = await query.CountAsync();
+            if (!string.IsNullOrEmpty(request.ContentType))
+            {
+                var contentType = request.ContentType.ToLower();
+                query = query.Where(mi => mi.ContentType.ToLower().Contains(contentType));
+            }
+
+            var total = await query.CountAsync(cancellationToken);
             var items = query.ApplyPaginationInput(request).Select(MediaItemDto.GetProjection()).ToArray();
 
             return new QueryResponseDto<ListResultDto<MediaItemDto>>(new ListResultDto<MediaItemDto>(items, total));

@@ -70,6 +70,8 @@ public class ContentItemsCreate_ViewModel : FormSubmit_ViewModel, IMustHaveCurre
     public string AllowedMimeTypes { get; set; }
     public bool UseDirectUploadToCloud { get; set; }
     public string PathBase { get; set; }
+    public string ImageMediaItemsJson { get; set; }
+    public string VideoMediaItemsJson { get; set; }
 
     //helpers
     public Dictionary<ShortGuid, string> AvailableTemplates { get; set; }
@@ -86,6 +88,8 @@ public class ContentItemsEdit_ViewModel : FormSubmit_ViewModel, IMustHaveCurrent
     public string AllowedMimeTypes { get; set; }
     public bool UseDirectUploadToCloud { get; set; }
     public string PathBase { get; set; }
+    public string ImageMediaItemsJson { get; set; }
+    public string VideoMediaItemsJson { get; set; }
 
     //helpers
     public string BackToListUrl { get; set; }

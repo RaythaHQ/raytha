@@ -1,0 +1,67 @@
+<div class="card position-absolute shadow-sm border w-auto" id="searchReplaceModal" style="right: 0.5rem;">
+    <div class="card-header py-1 px-2 bg-light border-bottom">
+        <div class="d-flex justify-content-between align-items-center">
+            <div class="d-flex gap-2 align-items-center">
+                <span class="small">Search and Replace</span>
+            </div>
+            <div class="d-flex gap-1">
+                <button type="button" class="btn btn-close btn-sm p-1"
+                        data-action="click->{{controllerIdentifier}}#toggleSearchAndReplaceDialog"></button>
+            </div>
+        </div>
+    </div>
+
+    <div class="card-body p-2">
+        <div class="d-flex flex-column gap-2">
+            <div class="input-group input-group-sm">
+                <span class="input-group-text bg-light border-end-0 px-2 icon-search">
+                </span>
+                <input type="text" id="searchText" class="form-control form-control-sm border-start-0 border-end-0"
+                       placeholder="Search" data-action="change->{{controllerIdentifier}}#setSearchTerm">
+                <div class="input-group-text" data-bs-toggle="tooltip" data-bs-placement="top" title="Match Case">
+                    <input class="form-check-input mt-0" type="checkbox" value="false"
+                           data-action="change->{{controllerIdentifier}}#setCaseSensitive">
+                </div>
+                <span class="input-group-text bg-white border-start-0 px-2">
+                    <span class="text-muted small" id="searchResultIndex">0</span>
+                    <span class="text-muted small">/</span>
+                    <span class="text-muted small" id="searchResultTotal">0</span>
+                </span>
+            </div>
+
+            <div class="input-group input-group-sm">
+                <span class="input-group-text bg-light border-end-0 px-2 icon-arrow-return-right"></span>
+                <input type="text" id="replaceText" class="form-control form-control-sm border-start-0"
+                       placeholder="Replace" data-action="change->{{controllerIdentifier}}#setReplaceTerm">
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center">
+                <div class="btn-group btn-group-sm">
+                    <button class="btn btn-outline-primary border-0 px-2 shadow-none btn-icon-only icon-chevron-up"
+                            type="button" data-bs-toggle="tooltip" data-bs-title="Previous Match" data-bs-placement="bottom"
+                            data-action="click->{{controllerIdentifier}}#executeCommand"
+                            data-{{controllerIdentifier}}-command-param="previousSearchResult">
+                    </button>
+                    <button class="btn btn-outline-primary border-0 px-2 shadow-none btn-icon-only icon-chevron-down"
+                            type="button" data-bs-toggle="tooltip" data-bs-title="Next Match" data-bs-placement="bottom"
+                            data-action="click->{{controllerIdentifier}}#executeCommand"
+                            data-{{controllerIdentifier}}-command-param="nextSearchResult">
+                    </button>
+                </div>
+
+                <div class="btn-group btn-group-sm">
+                    <button type="button" class="btn btn-outline-primary border-0 px-2 shadow-none" title="Replace"
+                            data-action="click->{{controllerIdentifier}}#executeCommand"
+                            data-{{controllerIdentifier}}-command-param="replace">
+                        Replace
+                    </button>
+                    <button type="button" class="btn btn-outline-primary border-0 px-2 shadow-none" title="Replace All"
+                            data-action="click->{{controllerIdentifier}}#executeCommand"
+                            data-{{controllerIdentifier}}-command-param="replaceAll">
+                        Replace All
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
