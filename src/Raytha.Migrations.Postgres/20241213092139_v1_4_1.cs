@@ -11,9 +11,9 @@ namespace Raytha.Migrations.Postgres
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.Sql(@"
-                UPDATE ContentTypeFields
-                SET FieldType = 'wysiwyg'
-                WHERE FieldType = 'long_text';
+                UPDATE ""ContentTypeFields""
+                SET ""FieldType"" = 'wysiwyg'
+                WHERE ""FieldType"" = 'long_text';
             ");
         }
 

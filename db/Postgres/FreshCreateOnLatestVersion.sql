@@ -780,7 +780,9 @@ INSERT INTO "Themes" ("Id", "Title", "DeveloperName", "IsExportable", "Descripti
 VALUES ('e567f9ce-089f-403f-a399-211ac60cf2d1', 'Raytha default theme', 'raytha_default_theme', FALSE, 'Raytha default theme', TIMESTAMPTZ '2024-11-16T19:40:17.782485Z');
 
 INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
-VALUES ('20241110181505_v1_4_0', '8.0.10');
+VALUES 
+('20241110181505_v1_4_0', 'FreshCreateOnLatestVersion'),
+('20241212094439_v1_4_1', 'FreshCreateOnLatestVersion');
 
 COMMIT;
 

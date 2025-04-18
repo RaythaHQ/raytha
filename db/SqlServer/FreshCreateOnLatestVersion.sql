@@ -1147,7 +1147,8 @@ VALUES
 ('20230521175706_v1_1_0', 'FreshCreateOnLatestVersion'), 
 ('20240314124844_v1_2_0', 'FreshCreateOnLatestVersion'), 
 ('20240502121207_v1_3_0', 'FreshCreateOnLatestVersion'),
-('20241116192521_v1_4_0', 'FreshCreateOnLatestVersion');
+('20241116192521_v1_4_0', 'FreshCreateOnLatestVersion'),
+('20241212094439_v1_4_1', 'FreshCreateOnLatestVersion');
 GO
 
 COMMIT;
