@@ -1,0 +1,115 @@
+﻿<div id="tableBubbleMenu" class="bubble-menu p-2">
+    <div class="d-flex flex-column">
+        <div class="dropdown dropend">
+            <div class="dropdown-item d-flex px-2 py-1" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                <div class="flex-grow-1">Add</div>
+                <div class="d-flex icon-dropend">
+                </div>
+            </div>
+            <div class="dropdown-menu" style="min-width: fit-content;">
+                <div class="d-flex flex-column">
+                    <div class="dropdown-item d-flex px-2 py-1" type="button"
+                         data-action="click->{{controllerIdentifier}}#executeCommand"
+                         data-{{controllerIdentifier}}-command-param="addRowBefore">
+                        Add row before
+                    </div>
+                    <div class="dropdown-item d-flex px-2 py-1" type="button"
+                         data-action="click->{{controllerIdentifier}}#executeCommand"
+                         data-{{controllerIdentifier}}-command-param="addRowAfter">
+                        <div class="flex-grow-1">
+                            Add row after
+                        </div>
+                    </div>
+                    <div class="dropdown-divider"></div>
+                    <div class="dropdown-item d-flex px-2 py-1" type="button"
+                         data-action="click->{{controllerIdentifier}}#executeCommand"
+                         data-{{controllerIdentifier}}-command-param="addColumnBefore">
+                        Add column before
+                    </div>
+                    <div class="dropdown-item d-flex px-2 py-1" type="button"
+                         data-action="click->{{controllerIdentifier}}#executeCommand"
+                         data-{{controllerIdentifier}}-command-param="addColumnAfter">
+                        Add column after
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="dropdown dropend">
+            <div class="dropdown-item d-flex px-2 py-1" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                <div class="flex-grow-1">Delete</div>
+                <div class="d-flex icon-dropend">
+                </div>
+            </div>
+            <div class="dropdown-menu" style="min-width: fit-content;">
+                <div class="d-flex flex-column">
+                    <div class="dropdown-item d-flex px-2 py-1" type="button"
+                         data-action="click->{{controllerIdentifier}}#executeCommand"
+                         data-{{controllerIdentifier}}-command-param="deleteRow">
+                        Delete row
+                    </div>
+                    <div class="dropdown-item d-flex px-2 py-1" type="button"
+                         data-action="click->{{controllerIdentifier}}#executeCommand"
+                         data-{{controllerIdentifier}}-command-param="deleteColumn">
+                        Delete column
+                    </div>
+                    <div class="dropdown-item d-flex px-2 py-1" type="button"
+                         data-action="click->{{controllerIdentifier}}#executeCommand"
+                         data-{{controllerIdentifier}}-command-param="deleteTable">
+                        <span class="text-danger">Delete table</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="dropdown dropend">
+            <div class="dropdown-item d-flex px-2 py-1" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                <div class="flex-grow-1">Merge or split</div>
+                <div class="d-flex icon-dropend">
+                </div>
+            </div>
+            <div class="dropdown-menu" style="min-width: fit-content;">
+                <div class="d-flex flex-column">
+                    <div class="dropdown-item d-flex px-2 py-1" type="button"
+                         data-action="click->{{controllerIdentifier}}#executeCommand"
+                         data-{{controllerIdentifier}}-command-param="mergeCells">
+                        Merge cells
+                    </div>
+                    <div class="dropdown-item d-flex px-2 py-1" type="button"
+                         data-action="click->{{controllerIdentifier}}#executeCommand"
+                         data-{{controllerIdentifier}}-command-param="splitCell">
+                        Split cell
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="dropdown dropend">
+            <div class="dropdown-item d-flex px-2 py-1" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                <div text class="flex-grow-1">Toggle header</div>
+                <div class="d-flex icon-dropend"></div>
+            </div>
+            <div class="dropdown-menu" style="min-width: fit-content;">
+                <div class="d-flex flex-column">
+                    <div class="dropdown-item d-flex px-2 py-1" type="button"
+                         data-action="click->{{controllerIdentifier}}#executeCommand"
+                         data-{{controllerIdentifier}}-command-param="toggleHeaderRow">
+                        Toggle header row
+                    </div>
+                    <div class="dropdown-item d-flex px-2 py-1" type="button"
+                         data-action="click->{{controllerIdentifier}}#executeCommand"
+                         data-{{controllerIdentifier}}-command-param="toggleHeaderColumn">
+                        Toggle header column
+                    </div>
+                    <div class="dropdown-item d-flex px-2 py-1" type="button"
+                         data-action="click->{{controllerIdentifier}}#executeCommand"
+                         data-{{controllerIdentifier}}-command-param="toggleHeaderCell">
+                        Toggle header cell
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="dropdown-item d-flex px-2 py-1" type="button"
+             data-action="click->{{controllerIdentifier}}#executeCommand"
+             data-{{controllerIdentifier}}-command-param="fixTable">
+            Fix table
+        </div>
+    </div>
+</div>

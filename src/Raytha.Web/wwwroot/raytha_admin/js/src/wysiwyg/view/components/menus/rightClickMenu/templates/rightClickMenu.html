@@ -1,0 +1,23 @@
+<div id="rightClickMenu" class="bubble-menu d-inline-flex p-2">
+    <div class="d-flex flex-column">
+        <button id="addLinkButton" type="button" class="btn btn-outline-primary rounded-0 shadow-none mb-1" data-bs-toggle="modal" data-bs-target="#insertLinkModal">
+            Add link
+        </button>
+        <button id="editLinkButton" type="button" class="btn btn-outline-primary rounded-0 shadow-none mb-1" data-bs-toggle="modal" data-bs-target="#insertLinkModal" hidden>
+            Edit link
+        </button>
+        <button id="unlinkButton" type="button" class="btn btn-outline-primary rounded-0 shadow-none mb-1"
+                data-action="click->{{controllerIdentifier}}#executeCommand"
+                data-{{controllerIdentifier}}-command-param="unlink"
+                hidden>
+            Unlink
+        </button>
+        <button id="openLinkButton" type="button" class="btn btn-outline-primary rounded-0 shadow-none mb-1" hidden>Open link</button>
+        <button id="imageButton" type="button" class="btn btn-outline-primary rounded-0 shadow-none mb-1" data-bs-toggle="modal" data-bs-target="#insertImageModal">
+            Edit image
+        </button>
+        <button id="videoButton" type="button" class="btn btn-outline-primary rounded-0 shadow-none mb-1" data-bs-toggle="modal" data-bs-target="#insertVideoModal">
+            Edit video
+        </button>
+    </div>
+</div>
