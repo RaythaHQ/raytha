@@ -12,6 +12,18 @@
                 "${workspaceFolder}/src/Raytha.Web/Raytha.Web.csproj"
             ],
             "problemMatcher": "$msCompile"
+        },
+        {
+            "label": "build:Debug",
+            "command": "dotnet",
+            "type": "process",
+            "args": [
+                "build",
+                "--configuration",
+                "Debug",
+                "${workspaceFolder}/src/Raytha.Web/Raytha.Web.csproj"
+            ],
+            "problemMatcher": "$msCompile"
         }
     ]
 }
