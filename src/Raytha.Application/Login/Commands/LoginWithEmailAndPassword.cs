@@ -24,7 +24,6 @@ public class LoginWithEmailAndPassword
         public Validator(IRaythaDbContext db) 
         {
             RuleFor(x => x.EmailAddress).NotEmpty().EmailAddress();
-            RuleFor(x => x.Password).NotEmpty();
             RuleFor(x => x).Custom((request, context) =>
             {
                 var authScheme = db.AuthenticationSchemes.First(p =>
@@ -33,6 +32,12 @@ public class LoginWithEmailAndPassword
                 if (!authScheme.IsEnabledForUsers && !authScheme.IsEnabledForAdmins)
                 {
                     context.AddFailure(Constants.VALIDATION_SUMMARY, "Authentication scheme is disabled.");
+                    return;
+                }
+
+                if (string.IsNullOrEmpty(request.Password))
+                {
+                    context.AddFailure(Constants.VALIDATION_SUMMARY, "Password is required.");
                     return;
                 }
 
