@@ -14,20 +14,23 @@
   </ItemGroup>
 
   <ItemGroup>
-	<PackageReference Include="AWSSDK.S3" Version="3.7.403.5" />
-	<PackageReference Include="Azure.Storage.Blobs" Version="12.22.1" />
-	<PackageReference Include="Dapper.SqlBuilder" Version="2.0.78" />
+	<PackageReference Include="AWSSDK.S3" Version="3.7.416.13" />
+	<PackageReference Include="Azure.Storage.Blobs" Version="12.24.0" />
+	<PackageReference Include="Dapper.SqlBuilder" Version="2.1.66" />
 	<PackageReference Include="Microsoft.AspNetCore.DataProtection.EntityFrameworkCore" Version="8.0.8" />
-	<PackageReference Include="Microsoft.ClearScript.V8" Version="7.4.5" />
-	<PackageReference Include="Microsoft.ClearScript.V8.Native.linux-x64" Version="7.4.5" />
-	<PackageReference Include="Microsoft.ClearScript.V8.Native.win-x64" Version="7.4.5" />
-	<PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.8" />
-	<PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.8" />
-	<PackageReference Include="Microsoft.Extensions.Http" Version="8.0.0" />
-	<PackageReference Include="Microsoft.OData.Core" Version="8.0.1" />
-	<PackageReference Include="Microsoft.AspNetCore.OData" Version="9.0.0" />
-	<PackageReference Include="Npgsql" Version="8.0.5" />
-	<PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="8.0.10" />
+	<PackageReference Include="Microsoft.ClearScript.V8" Version="7.5.0" />
+	<PackageReference Include="Microsoft.ClearScript.V8.Native.linux-x64" Version="7.5.0" />
+	<PackageReference Include="Microsoft.ClearScript.V8.Native.win-x64" Version="7.5.0" />
+	<PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="9.0.4" />
+	<PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.4">
+	  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+	  <PrivateAssets>all</PrivateAssets>
+	</PackageReference>
+	<PackageReference Include="Microsoft.Extensions.Http" Version="9.0.4" />
+	<PackageReference Include="Microsoft.OData.Core" Version="8.2.3" />
+	<PackageReference Include="Microsoft.AspNetCore.OData" Version="9.3.0" />
+	<PackageReference Include="Npgsql" Version="9.0.3" />
+	<PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.0.4" />
   </ItemGroup>
 
 </Project>
