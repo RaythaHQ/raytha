@@ -1,4 +1,4 @@
-﻿using System;
+﻿using Raytha.Domain.ValueObjects;
 using System.Globalization;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -154,5 +154,34 @@ public static class StringExtensions
         // Will this simple expression replace all tags???
         var tagsExpression = new Regex(@"</?.+?>");
         return tagsExpression.Replace(input, " ");
+    }
+
+    public static (string column, SortOrder sortOrder) SplitIntoColumnAndSortOrder(this string input)
+    {
+        if (string.IsNullOrEmpty(input))
+            return (null, null);
+        
+        var (column, directionString) = input.Split(' ', 2) switch
+        {
+            var arr when arr.Length == 2 => (arr[0], arr[1]),
+            var arr when arr.Length == 1 => (arr[0], string.Empty),
+            _ => (string.Empty, string.Empty)
+        };
+        var direction = SortOrder.From(directionString);
+        return (column, direction);
+    }
+
+    public static string ApplySqlStringLikeOperator(this string input, string operation)
+    {
+        switch(operation.ToLower())
+        {
+            case "startswith":
+                return $"{input}%";
+            case "endswith":
+                return $"%{input}";
+            case "contains":
+                return $"%{input}%";
+        }
+        throw new NotImplementedException();
     }
 }

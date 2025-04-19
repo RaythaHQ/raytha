@@ -8,9 +8,6 @@ public class JwtLoginConfiguration : IEntityTypeConfiguration<JwtLogin>
 {
     public void Configure(EntityTypeBuilder<JwtLogin> builder)
     {
-        builder
-            .HasIndex(b => b.Jti)
-            .IsUnique()
-            .IncludeProperties(p => new { p.Id });
+        builder.HasIndex(b => b.Jti).IsUnique();
     }
 }

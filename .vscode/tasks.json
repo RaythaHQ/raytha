@@ -2,38 +2,26 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "build",
+            "label": "build:DebugWithoutJS",
             "command": "dotnet",
             "type": "process",
             "args": [
                 "build",
-                "${workspaceFolder}/Raytha.sln",
-                "/property:GenerateFullPaths=true",
-                "/consoleloggerparameters:NoSummary"
+                "--configuration",
+                "Debug without JS",
+                "${workspaceFolder}/src/Raytha.Web/Raytha.Web.csproj"
             ],
             "problemMatcher": "$msCompile"
         },
         {
-            "label": "publish",
+            "label": "build:Debug",
             "command": "dotnet",
             "type": "process",
             "args": [
-                "publish",
-                "${workspaceFolder}/Raytha.sln",
-                "/property:GenerateFullPaths=true",
-                "/consoleloggerparameters:NoSummary"
-            ],
-            "problemMatcher": "$msCompile"
-        },
-        {
-            "label": "watch",
-            "command": "dotnet",
-            "type": "process",
-            "args": [
-                "watch",
-                "run",
-                "--project",
-                "${workspaceFolder}/Raytha.sln"
+                "build",
+                "--configuration",
+                "Debug",
+                "${workspaceFolder}/src/Raytha.Web/Raytha.Web.csproj"
             ],
             "problemMatcher": "$msCompile"
         }

@@ -1,0 +1,43 @@
+<div class="modal fade" id="wordCountModal" data-bs-backdrop="static" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form data-action="submit->{{controllerIdentifier}}#updateSourceCode">
+                <div class="modal-header">
+                    <h5 class="modal-title">Word count</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <table class="table table-sm w-auto align-middle table-borderless mx-auto">
+                        <thead>
+                            <tr>
+                                <td>Count</td>
+                                <td>Document</td>
+                                <td>Selection</td>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Words</td>
+                                <td id="documentWords">0</td>
+                                <td id="selectionWords">0</td>
+                            </tr>
+                            <tr>
+                                <td>Characters </td>
+                                <td id="documentCharacters">0</td>
+                                <td id="selectionCharacters">0</td>
+                            </tr>
+                            <tr>
+                                <td>Characters (no spaces)</td>
+                                <td id="documentCharactersWithoutSpaces">0</td>
+                                <td id="selectionCharactersWithoutSpaces">0</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

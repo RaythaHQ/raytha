@@ -53,7 +53,7 @@
                     <div class="col-lg-12">
                         <div class="mb-3">
                             <label class="form-label raytha-required" asp-for="Code"></label><br />
-                            <div class="@Model.HasError("Code")" id="editorContainer" style="height:500px;" data-raythafunctions--codehighlighting-target="editor"></div>
+                            <div class="@Model.HasError("Code")" id="editorContainer" style="height:600px;overflow: auto;" data-raythafunctions--codehighlighting-target="editor"></div>
                             <input type="hidden" asp-for="Code" data-raythafunctions--codehighlighting-target="textarea">
                             <div class="invalid-feedback">@Model.ErrorMessageFor("Code")</div>
                         </div>
@@ -64,3 +64,6 @@
         </div>
     </div>
 </div>
+<style>
+    .CodeMirror { height: 100%; }
+</style>

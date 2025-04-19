@@ -5,7 +5,6 @@ import * as Turbo from "@hotwired/turbo"
 import * as bootstrap from 'bootstrap'
 import Swal from 'sweetalert2'
 import 'simplebar';
-import Trix from "trix"
 
 const d = document;
 document.addEventListener("turbo:load", function () {
@@ -84,54 +83,6 @@ document.addEventListener("turbo:load", function () {
     })
 });
 
-
-//Modify Trix toolbar to add more buttons
-document.addEventListener("trix-before-initialize", () => {
-    Trix.config.attachments.preview.caption.name = false
-    Trix.config.attachments.preview.caption.size = false 
-
-    Trix.config.blockAttributes.heading1 = {
-        tagName: "h1",
-        terminal: true,
-        breakOnReturn: true,
-        group: false
-    }
-    Trix.config.blockAttributes.heading2 = {
-        tagName: "h2",
-        terminal: true,
-        breakOnReturn: true,
-        group: false
-    }
-
-    Trix.config.blockAttributes.heading3 = {
-        tagName: "h3",
-        terminal: true,
-        breakOnReturn: true,
-        group: false
-    }
-
-    Trix.config.blockAttributes.heading4 = {
-        tagName: "h4",
-        terminal: true,
-        breakOnReturn: true,
-        group: false
-    }
-
-    Trix.config.blockAttributes.heading5 = {
-        tagName: "h5",
-        terminal: true,
-        breakOnReturn: true,
-        group: false
-    }
-
-    Trix.config.blockAttributes.heading6 = {
-        tagName: "h6",
-        terminal: true,
-        breakOnReturn: true,
-        group: false
-    }
-})
-
 const application = Application.start()
-const context = require.context("./controllers/", true, /^\.\/.*\.js$/)
+const context = require.context("./controllers/", true, /^\.\/.*\.(js|ts)$/)
 application.load(definitionsFromContext(context))

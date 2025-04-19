@@ -6,13 +6,15 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Data.SqlClient;
 using System.Data;
-using Raytha.Infrastructure.JsonQueryEngine;
 using Raytha.Infrastructure.FileStorage;
 using Raytha.Application.Common.Utils;
 using Raytha.Infrastructure.BackgroundTasks;
 using Microsoft.Extensions.Hosting;
 using Raytha.Infrastructure.Configurations;
 using Raytha.Infrastructure.RaythaFunctions;
+using Raytha.Infrastructure.JsonQueryEngine.SqlServer;
+using Npgsql;
+using Raytha.Infrastructure.JsonQueryEngine.Postgres;
 
 namespace Microsoft.Extensions.DependencyInjection;
 
@@ -22,29 +24,44 @@ public static class ConfigureServices
     {
         var dbConnectionString = configuration.GetConnectionString("DefaultConnection");
 
-        //entity framework
+        var dbProviderType = DbProviderHelper.GetDatabaseProviderTypeFromConnectionString(dbConnectionString);
+
         services.AddScoped<AuditableEntitySaveChangesInterceptor>();
-        services.AddDbContext<RaythaDbContext>(options =>
+
+        if (dbProviderType == DatabaseProviderType.Postgres)
         {
-            options.UseSqlServer(dbConnectionString, sqlServerOptions => 
+            services.AddDbContext<RaythaDbContext>(options =>
             {
-                sqlServerOptions.EnableRetryOnFailure(
-                    maxRetryCount: 5
-                );
+                options.UseNpgsql(dbConnectionString, npgsqlOptions =>
+                {
+                    npgsqlOptions.EnableRetryOnFailure(maxRetryCount: 5);
+                    npgsqlOptions.MigrationsAssembly("Raytha.Migrations.Postgres");
+                });
             });
-        });
-
-        services.AddScoped<IRaythaDbContext>(provider => provider.GetRequiredService<RaythaDbContext>());
-
-        //direct to db
-        services.AddTransient<IDbConnection>((sp) => new SqlConnection(dbConnectionString));
+            services.AddTransient<IRaythaDbJsonQueryEngine, RaythaDbPostgresJsonQueryEngine>();
+            services.AddTransient<IDbConnection>(_ => new NpgsqlConnection(dbConnectionString));
+            services.AddScoped<IRaythaDbContext>(provider => provider.GetRequiredService<RaythaDbContext>());
+        }
+        else 
+        {
+            services.AddDbContext<RaythaDbContext>(options =>
+            {
+                options.UseSqlServer(dbConnectionString, sqlServerOptions =>
+                {
+                    sqlServerOptions.EnableRetryOnFailure(maxRetryCount: 5);
+                    sqlServerOptions.MigrationsAssembly("Raytha.Migrations.SqlServer");
+                });
+            });
+            services.AddTransient<IRaythaDbJsonQueryEngine, RaythaDbSqlServerJsonQueryEngine>();
+            services.AddTransient<IDbConnection>(_ => new SqlConnection(dbConnectionString));
+            services.AddScoped<IRaythaDbContext>(provider => provider.GetRequiredService<RaythaDbContext>());
+        }
 
         services.AddSingleton<ICurrentOrganizationConfiguration, CurrentOrganizationConfiguration>();
         services.AddSingleton<IRaythaFunctionConfiguration, RaythaFunctionConfiguration>();
         services.AddScoped<IEmailerConfiguration, EmailerConfiguration>();
 
         services.AddScoped<IEmailer, Emailer>();
-        services.AddTransient<IRaythaDbJsonQueryEngine, RaythaDbJsonQueryEngine>();
         services.AddTransient<IBackgroundTaskDb, BackgroundTaskDb>();
         services.AddTransient<IRaythaRawDbInfo, RaythaRawDbInfo>();
 
@@ -77,6 +94,7 @@ public static class ConfigureServices
         services.AddTransient<IRaythaFunctionScriptEngine, RaythaFunctionScriptEngine>();
         services.AddScoped<IRaythaFunctionApi_V1, RaythaFunctionApi_V1>();
         services.AddSingleton<IRaythaFunctionSemaphore, RaythaFunctionSemaphore>();
+
 
         return services;
     }

@@ -8,14 +8,15 @@ using CSharpVitamins;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.Extensions.DependencyInjection;
 using Raytha.Application.BackgroundTasks.Queries;
+using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Utils;
 using Raytha.Application.ContentItems;
 using Raytha.Application.ContentItems.Commands;
 using Raytha.Application.ContentItems.Queries;
 using Raytha.Application.ContentTypes.Queries;
+using Raytha.Application.MediaItems.Queries;
 using Raytha.Application.Themes.Queries;
 using Raytha.Application.Themes.WebTemplates.Queries;
 using Raytha.Application.Views;
@@ -32,7 +33,9 @@ namespace Raytha.Web.Areas.Admin.Controllers;
 public class ContentItemsController : BaseController
 {
     private FieldValueConverter _fieldValueConverter;
+    private IRelativeUrlBuilder _relativeUrlBuilder;
     protected FieldValueConverter FieldValueConverter => _fieldValueConverter ??= HttpContext.RequestServices.GetRequiredService<FieldValueConverter>();
+    protected IRelativeUrlBuilder RelativeUrlBuilder => _relativeUrlBuilder ??= HttpContext.RequestServices.GetRequiredService<IRelativeUrlBuilder>();
 
     [Authorize(Policy = BuiltInContentTypePermission.CONTENT_TYPE_READ_PERMISSION)]
     [ServiceFilter(typeof(GetOrSetRecentlyAccessedViewFilterAttribute))]
@@ -89,6 +92,16 @@ public class ContentItemsController : BaseController
             PageSize = int.MaxValue,
         });
 
+        var imageMediaItemsResponse = await Mediator.Send(new GetMediaItems.Query
+        {
+            ContentType = "image",
+        });
+
+        var videoMediaItemsResponse = await Mediator.Send(new GetMediaItems.Query
+        {
+            ContentType = "video"
+        });
+
         var fieldValues = CurrentView.ContentType.ContentTypeFields.Select(p => new FieldValue_ViewModel
         {
             Label = p.Label,
@@ -113,7 +126,17 @@ public class ContentItemsController : BaseController
             AllowedMimeTypes = FileStorageProviderSettings.AllowedMimeTypes,
             MaxFileSize = FileStorageProviderSettings.MaxFileSize,
             UseDirectUploadToCloud = FileStorageProviderSettings.UseDirectUploadToCloud,
-            PathBase = CurrentOrganization.PathBase
+            PathBase = CurrentOrganization.PathBase,
+            ImageMediaItemsJson = JsonSerializer.Serialize(imageMediaItemsResponse.Result.Items.Select(mi => new
+            {
+                fileName = mi.FileName,
+                url = RelativeUrlBuilder.MediaRedirectToFileUrl(mi.ObjectKey),
+            })),
+            VideoMediaItemsJson = JsonSerializer.Serialize(videoMediaItemsResponse.Result.Items.Select(mi => new
+            {
+                fileName = mi.FileName,
+                url = RelativeUrlBuilder.MediaRedirectToFileUrl(mi.ObjectKey),
+            })),
         };
         return View(viewModel);
     }
@@ -192,6 +215,15 @@ public class ContentItemsController : BaseController
     public async Task<IActionResult> Edit(string id, string backToListUrl = "")
     {
         var response = await Mediator.Send(new GetContentItemById.Query { Id = id });
+        var imageMediaItemsResponse = await Mediator.Send(new GetMediaItems.Query
+        {
+            ContentType = "image",
+        });
+
+        var videoMediaItemsResponse = await Mediator.Send(new GetMediaItems.Query
+        {
+            ContentType = "video"
+        });
 
         var viewModel = new ContentItemsEdit_ViewModel
         {
@@ -203,6 +235,16 @@ public class ContentItemsController : BaseController
             MaxFileSize = FileStorageProviderSettings.MaxFileSize,
             UseDirectUploadToCloud = FileStorageProviderSettings.UseDirectUploadToCloud,
             PathBase = CurrentOrganization.PathBase,
+            ImageMediaItemsJson = JsonSerializer.Serialize(imageMediaItemsResponse.Result.Items.Select(mi => new
+            {
+                fileName = mi.FileName,
+                url = RelativeUrlBuilder.MediaRedirectToFileUrl(mi.ObjectKey),
+            })),
+            VideoMediaItemsJson = JsonSerializer.Serialize(videoMediaItemsResponse.Result.Items.Select(mi => new
+            {
+                fileName = mi.FileName,
+                url = RelativeUrlBuilder.MediaRedirectToFileUrl(mi.ObjectKey),
+            })),
             FieldValues = CurrentView.ContentType.ContentTypeFields.Select(p => new FieldValue_ViewModel
             {
                 Label = p.Label,

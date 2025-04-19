@@ -1,0 +1,216 @@
+﻿.ProseMirror {
+    min-height: 300px;
+    max-height: 300px;
+    overflow-y: auto;
+    padding: 1rem;
+}
+
+    /* typography */
+    .ProseMirror p {
+        font-family: 'Helvetica';
+        color: #000000;
+        line-height: 1.4;
+        font-size: 16px;
+    }
+
+.tiptap p {
+    font-size: 16px;
+}
+
+.tiptap strong {
+    font-weight: bold;
+}
+
+.tiptap p {
+    margin: 0;
+}
+
+.tiptap blockquote {
+    border-left: 3px solid var(--bs-gray);
+    margin: 1.5rem 0;
+    padding-left: 1rem;
+}
+
+.tiptap pre {
+    background: var(--bs-gray);
+    border-radius: 0.5rem;
+    color: var(--bs-white);
+    font-family: 'JetBrainsMono', monospace;
+    margin: 1.5rem 0;
+    padding: 0.75rem 1rem;
+}
+
+.tiptap code {
+    background: none;
+    color: inherit;
+    font-size: 0.8rem;
+    padding: 0;
+}
+
+/* table */
+.tiptap .tableWrapper {
+    margin: 1.5rem 0;
+    display: block;
+    max-width: 100%;
+}
+
+.tiptap table {
+    border-collapse: collapse;
+    width: 100%;
+}
+
+    .tiptap table th,
+    .tiptap table td {
+        padding: 0.5rem;
+        border: 1px solid #000000;
+        position: relative;
+        min-height: 5rem;
+        min-width: 5rem;
+    }
+
+.tiptap .selectedCell {
+    position: relative;
+    background-color: rgba(0, 123, 255, 0.1);
+    border: 2px solid #007bff;
+}
+
+    .tiptap .selectedCell::after {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: rgba(0, 123, 255, 0.1);
+        pointer-events: none;
+        z-index: 1;
+    }
+
+.tiptap .column-resize-handle {
+    position: absolute;
+    background-color: #007bff;
+    cursor: col-resize;
+    bottom: -2px;
+    right: -2px;
+    top: 0;
+    width: 4px;
+    transition: opacity 0.3s ease;
+}
+
+.tiptap .resize-cursor {
+    cursor: col-resize;
+    cursor: ew-resize;
+}
+
+.tiptap td:hover .column-resize-handle,
+.tiptap th:hover .column-resize-handle {
+    opacity: 1;
+}
+
+.tiptap .column-resize-handle.active {
+    opacity: 1;
+    background-color: #0056b3;
+}
+
+.tiptap table td:hover,
+th:hover {
+    background-color: rgba(0, 123, 255, 0.05);
+}
+
+/* invisible characters */
+.invisible-character {
+    opacity: 0.5;
+    position: relative;
+    pointer-events: none;
+    color: black;
+    display: inline;
+}
+
+.invisible-space::before {
+    content: '·';
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
+.invisible-newline::before {
+    content: '↵';
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
+.invisible-paragraph::after {
+    content: '¶';
+    position: absolute;
+    right: -1ch;
+    top: 0;
+}
+
+/* video */
+.video-wrapper {
+    display: inline-block;
+    position: relative;
+    max-width: 100%;
+    vertical-align: middle;
+}
+
+    .video-wrapper video {
+        display: block;
+        max-width: 100%;
+        height: auto;
+        object-fit: contain;
+        cursor: pointer;
+        user-select: none;
+        pointer-events: none;
+    }
+
+    .video-wrapper.ProseMirror-selectednode {
+        outline: 2px solid #4a9eff;
+        outline-offset: 2px;
+    }
+
+/* div */
+.div-node-view {
+    border: 2px solid #646ECB;
+    border-radius: 0.5rem;
+    position: relative;
+    min-height: 2rem;
+}
+
+    .div-node-view label {
+        background-color: #646ECB;
+        border-radius: 0 0 0.5rem 0;
+        color: white;
+        font-size: 0.75rem;
+        font-weight: bold;
+        padding: 0.25rem 0.5rem;
+        position: absolute;
+        top: 0;
+        left: 0;
+        z-index: 10;
+    }
+
+    .div-node-view button {
+        position: absolute;
+        background-color: #646ECB;
+        border-radius: 0 0 0 0.5rem;
+        color: white;
+        font-size: 0.75rem;
+        font-weight: bold;
+        padding: 0.25rem 0.5rem;
+        top: 0;
+        right: 0;
+        z-index: 10;
+    }
+
+        .div-node-view button.div-settings-button:hover {
+            background-color: #646ECB !important;
+            color: white !important
+        }
+
+    .div-node-view .div-node-view-content {
+        margin-left: 2.1rem;
+        margin-right: 2.1rem;
+        z-index: 1;
+    }

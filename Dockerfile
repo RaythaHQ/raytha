@@ -18,6 +18,8 @@ RUN set -uex; \
 COPY ["src/Raytha.Domain/Raytha.Domain.csproj", "src/Raytha.Domain/"]
 COPY ["src/Raytha.Application/Raytha.Application.csproj", "src/Raytha.Application/"]
 COPY ["src/Raytha.Infrastructure/Raytha.Infrastructure.csproj", "src/Raytha.Infrastructure/"]
+COPY ["src/Raytha.Migrations.SqlServer/Raytha.Migrations.SqlServer.csproj", "src/Raytha.Migrations.SqlServer/"]
+COPY ["src/Raytha.Migrations.Postgres/Raytha.Migrations.Postgres.csproj", "src/Raytha.Migrations.Postgres/"]
 COPY ["src/Raytha.Web/Raytha.Web.csproj", "src/Raytha.Web/"]
 COPY ["tests/Raytha.Domain.UnitTests/Raytha.Domain.UnitTests.csproj", "tests/Raytha.Domain.UnitTests/"]
 COPY ["Raytha.sln", ""]

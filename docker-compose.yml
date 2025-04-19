@@ -1,0 +1,63 @@
+services:
+  app:
+    image: raytha
+    ports:
+      - "5001:8080"  # Default port for .NET apps
+    volumes:
+      - raytha_user_uploads:/app/user-uploads  # Mount for user-uploaded static file if not using cloud storage (see env variables below)
+    environment:
+      # Database connection string
+
+      - ConnectionStrings__DefaultConnection=Host=db;Port=5432;Username=postgres;Password=changeme;Database=raytha
+      
+      # Optional Settings below with their defaults if not explicitly set.
+
+      # - PATHBASE= # set a value if you want to run raytha at a path such as mydomain.com/mywebsite instead of just mydomain.com behind a reverse proxy
+      
+      # - SMTP_HOST=
+      # - SMTP_PORT=
+      # - SMTP_USERNAME=
+      # - SMTP_PASSWORD=
+      # - SMTP_FROM_NAME= # optional, if you want to always use this value regardless of what is specified in org settings.
+      # - SMTP_FROM_ADDRESS= # optional, if you want to always use this value regardless of what is specified in org settings.
+      
+      # - FILE_STORAGE_PROVIDER=Local # options: Local, AzureBlob, S3
+      # - FILE_STORAGE_MAX_FILE_SIZE=20000000 # Bytes, 20 mb
+      # - FILE_STORAGE_MAX_TOTAL_DISK_SPACE=1000000000 # Bytes, 1 gb
+      # - FILE_STORAGE_ALLOWED_MIMETYPES=text/*,image/*,video/*,audio/*,application/pdf # Comma separated mime types. Can use wildcard like image/*,video/*
+      # - FILE_STORAGE_USE_DIRECT_UPLOAD_TO_CLOUD=true # Recommended set to true if using S3 or AzureBlob, requires CORS config on the cloud buckets
+      # - FILE_STORAGE_LOCAL_DIRECTORY=user-uploads # Required if FILE_STORAGE_PROVIDER = Local
+      # - FILE_STORAGE_AZUREBLOB_CONNECTION_STRING= # Required if FILE_STORAGE_PROVIDER = AzureBlob
+      # - FILE_STORAGE_AZUREBLOB_CONTAINER= # Required if FILE_STORAGE_PROVIDER = AzureBlob
+      # - FILE_STORAGE_AZUREBLOB_CUSTOM_DOMAIN= # Required if FILE_STORAGE_PROVIDER = AzureBlob
+      # - FILE_STORAGE_S3_ACCESS_KEY= # Required if FILE_STORAGE_PROVIDER = S3
+      # - FILE_STORAGE_S3_SECRET_KEY= # Required if FILE_STORAGE_PROVIDER = S3
+      # - FILE_STORAGE_S3_SERVICE_URL= # Required if FILE_STORAGE_PROVIDER = S3
+      # - FILE_STORAGE_S3_BUCKET= # Required if FILE_STORAGE_PROVIDER = S3
+      
+      # - DATABASE_MAX_SIZE=1000000000 # Bytes, 1 gb
+      # - NUM_BACKGROUND_WORKERS=4
+      # - RAYTHA_FUNCTIONS_MAX_ACTIVE=5
+      # - RAYTHA_FUNCTIONS_TIMEOUT=10000 # milliseconds
+      # - RAYTHA_FUNCTIONS_QUEUE_TIMEOUT=10000 # milliseconds
+      
+      # - REDIRECT_WEBSITE= # Only set a url here to redirect the website visitor elsewhere (useful for maintenance or non-payment)
+      # - APPLY_PENDING_MIGRATIONS=true # Apply db migrations automatically on startup
+    
+    depends_on:
+      - db
+
+  db:
+    image: postgres:17
+    ports:
+      - "5432:5432"  # Default port for PostgreSQL
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: changeme
+      POSTGRES_DB: raytha
+    volumes:
+      - raytha_pg_data:/var/lib/postgresql/data  # Persistent volume for database storage
+
+volumes:
+  raytha_pg_data:
+  raytha_user_uploads:

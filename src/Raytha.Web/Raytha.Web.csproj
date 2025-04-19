@@ -9,21 +9,22 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNet.WebApi.Core" Version="5.3.0" />
-    <PackageReference Include="Fluid.Core" Version="2.11.1" />
-    <PackageReference Include="Fluid.ViewEngine" Version="2.11.1" />
-    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.8.0" />
+    <PackageReference Include="Fluid.Core" Version="2.22.0" />
+    <PackageReference Include="Fluid.ViewEngine" Version="2.22.0" />
+    <PackageReference Include="Microsoft.TypeScript.MSBuild" Version="5.8.1">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="8.1.1" />
     <PackageReference Include="Swashbuckle.Core" Version="5.6.0" />
     <PackageReference Include="System.Text.RegularExpressions" Version="4.3.1" />
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="wwwroot\raytha_admin\js\dist\" />
-    <Folder Include="wwwroot\raytha_admin\lib\" />
-  </ItemGroup>
-
-  <ItemGroup>
     <ProjectReference Include="..\Raytha.Application\Raytha.Application.csproj" />
     <ProjectReference Include="..\Raytha.Infrastructure\Raytha.Infrastructure.csproj" />
+    <ProjectReference Include="..\Raytha.Migrations.Postgres\Raytha.Migrations.Postgres.csproj" />
+    <ProjectReference Include="..\Raytha.Migrations.SqlServer\Raytha.Migrations.SqlServer.csproj" />
   </ItemGroup>
 
   <PropertyGroup>
@@ -34,26 +35,7 @@
 
   <ItemGroup>
     <UptoDateCheckInput Include="$(JsApplicationRoot)src\**\*" />
-    <UptoDateCheckInput Remove="wwwroot\raytha_admin\js\src\controllers\backgroundtasks\status_controller.js" />
-    <UptoDateCheckInput Remove="wwwroot\raytha_admin\js\src\controllers\contentitems\attachment_controller.js" />
-    <UptoDateCheckInput Remove="wwwroot\raytha_admin\js\src\controllers\contentitems\longtext_controller.js" />
-    <UptoDateCheckInput Remove="wwwroot\raytha_admin\js\src\controllers\contentitems\wysiwyg_controller.js" />
-    <UptoDateCheckInput Remove="wwwroot\raytha_admin\js\src\controllers\navigationmenuitems\items_controller.js" />
-    <UptoDateCheckInput Remove="wwwroot\raytha_admin\js\src\controllers\raythafunctions\codehighlighting_controller.js" />
-    <UptoDateCheckInput Remove="wwwroot\raytha_admin\js\src\controllers\roles\autodisable_controller.js" />
-    <UptoDateCheckInput Remove="wwwroot\raytha_admin\js\src\controllers\shared\copyclipboard_controller.js" />
-    <UptoDateCheckInput Remove="wwwroot\raytha_admin\js\src\controllers\templates\codehighlighting_controller.js" />
-    <UptoDateCheckInput Remove="wwwroot\raytha_admin\js\src\controllers\templates\uploadasset_controller.js" />
-    <UptoDateCheckInput Remove="wwwroot\raytha_admin\js\src\controllers\themes\insertduplicate_controller.js" />
     <UptoDateCheckInput Include="$(JsApplicationRoot)package.json" />
-    <UpToDateCheckBuilt Include="$(JsApplicationBundleFile)" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Content Update="Areas\Admin\Views\ContentItems\BeginExportToCsv.cshtml">
-      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
-      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
-    </Content>
   </ItemGroup>
 
   <Target Name="EnsureNodeJsIsInstalled">

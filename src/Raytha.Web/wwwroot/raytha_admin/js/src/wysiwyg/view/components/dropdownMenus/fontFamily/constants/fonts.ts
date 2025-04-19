@@ -1,0 +1,15 @@
+export const FONTS = [
+   'Andale Mono',
+   'Arial',
+   'Arial Black',
+   'Book Antiqua',
+   'Comic Sans MS',
+   'Courier New',
+   'Helvetica',
+   'Impact',
+   'Terminal',
+   'Tahoma',
+   'Times New Roman',
+   'Trebuchet MS',
+   'Verdana',
+];

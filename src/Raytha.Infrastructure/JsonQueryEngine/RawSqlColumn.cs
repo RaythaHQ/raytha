@@ -2,7 +2,9 @@
 
 internal class RawSqlColumn
 {
-    public const string UNIQUE_COLUMN_PREFIX = "raytha_cc";
+    public const string CONTENT_ITEM_TABLE_NAME = "ContentItems";
+    public const string USERS_TABLE_NAME = "Users";
+    public const string ROUTES_TABLE_NAME = "Routes";
     public const string SOURCE_ITEM_COLUMN_NAME = "source";
     public const string ROUTE_COLUMN_NAME = "route";
     public const string SOURCE_CREATED_BY_COLUMN_NAME = "created_by_source";

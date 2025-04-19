@@ -5,7 +5,6 @@
 
 @section headstyles
 {
-    <link href="~/raytha_admin/css/trix.css" rel="stylesheet" />
     <link href="~/raytha_admin/css/uppy.core.css" rel="stylesheet" />
     <link href="~/raytha_admin/css/uppy.plugins.css" rel="stylesheet" />
 }
@@ -207,18 +206,10 @@
                             }
                             else if (Model.FieldValues[i].FieldType =="long_text")
                             {
-                                <div class="col-lg-12 mt-4" id="raytha_field-@Model.FieldValues[i].DeveloperName" 
-                                data-controller="contentitems--longtext" 
-                                data-contentitems--longtext-mimetypes-value="@Model.AllowedMimeTypes"
-                                data-contentitems--longtext-usedirectuploadtocloud-value="@Model.UseDirectUploadToCloud"
-                                data-contentitems--longtext-maxfilesize-value="@Model.MaxFileSize"
-                                data-contentitems--longtext-pathbase-value="@Model.PathBase">
+                                <div class="col-lg-12 mt-4" id="raytha_field-@Model.FieldValues[i].DeveloperName">
                                     <div class="mb-3">
                                         <label class="form-label @Model.FieldValues[i].AsteriskCssIfRequired" asp-for="@Model.FieldValues[i].Label">@Model.FieldValues[i].Label</label>
-                                        <input class="@Model.HasError(Model.FieldValues[i].DeveloperName)" id="input-@Model.FieldValues[i].DeveloperName" value="@Model.FieldValues[i].Value" type="hidden" asp-for="@Model.FieldValues[i].Value">
-                                        <trix-toolbar id="trix-toolbar-@Model.FieldValues[i].DeveloperName" data-contentitems--longtext-target="toolbar">
-                                        </trix-toolbar>
-                                        <trix-editor toolbar="trix-toolbar-@Model.FieldValues[i].DeveloperName" class="trix-content" input="input-@Model.FieldValues[i].DeveloperName" data-contentitems--longtext-target="editor"  data-developername="@Model.FieldValues[i].DeveloperName"></trix-editor>
+                                        <textarea class="@Model.HasError(Model.FieldValues[i].DeveloperName) form-control" id="input-@Model.FieldValues[i].DeveloperName" value="@Model.FieldValues[i].Value" asp-for="@Model.FieldValues[i].Value"></textarea>
                                         <div class="invalid-feedback">@Model.ErrorMessageFor(Model.FieldValues[i].DeveloperName)</div>
                                         @if (!string.IsNullOrEmpty(Model.FieldValues[i].Description))
                                         {
@@ -229,12 +220,22 @@
                             }
                             else if (Model.FieldValues[i].FieldType == "wysiwyg")
                             {
-                                <div class="col-lg-12 mt-4" id="raytha_field-@Model.FieldValues[i].DeveloperName"
-                             data-controller="contentitems--wysiwyg"
-                             data-contentitems--wysiwyg-pathbase-value="@Model.PathBase">
+                                <div class="col-lg-12 mt-4" id="raytha_field-@Model.FieldValues[i].DeveloperName" data-controller="contentitems--wysiwyg"
+                                     data-contentitems--wysiwyg-pathbase-value="@Model.PathBase"
+                                     data-contentitems--wysiwyg-usedirectuploadtocloud-value="@Model.UseDirectUploadToCloud"
+                                     data-contentitems--wysiwyg-maxfilesize-value="@Model.MaxFileSize"
+                                     data-contentitems--wysiwyg-allowMultipleUploads-value="true"
+                                     data-contentitems--wysiwyg-autoProceed-value="true"
+                                     data-contentitems--wysiwyg-maxnumberoffiles-value="5"
+                                     data-contentitems--wysiwyg-imagemediaitems-value="@Model.ImageMediaItemsJson"
+                                     data-contentitems--wysiwyg-videomediaitems-value="@Model.VideoMediaItemsJson">
                                     <div class="mb-3">
                                         <label class="form-label @Model.FieldValues[i].AsteriskCssIfRequired" asp-for="@Model.FieldValues[i].Label">@Model.FieldValues[i].Label</label>
-                                        <textarea data-contentitems--wysiwyg-target="editor" data-developername="@Model.FieldValues[i].DeveloperName" id="input-@Model.FieldValues[i].DeveloperName" asp-for="@Model.FieldValues[i].Value"></textarea>
+                                        <div data-contentitems--wysiwyg-target="editorContainer"></div>
+                                        <textarea data-contentitems--wysiwyg-target="editorContent"
+                                                data-developername="@Model.FieldValues[i].DeveloperName" 
+                                                id="input-@Model.FieldValues[i].DeveloperName"
+                                                  asp-for="@Model.FieldValues[i].Value" hidden></textarea>
                                         <div class="invalid-feedback">@Model.ErrorMessageFor(Model.FieldValues[i].DeveloperName)</div>
                                         @if (!string.IsNullOrEmpty(Model.FieldValues[i].Description))
                                         {

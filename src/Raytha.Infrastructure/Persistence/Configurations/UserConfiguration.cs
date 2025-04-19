@@ -9,16 +9,6 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
     public void Configure(EntityTypeBuilder<User> builder)
     {
         builder
-            .HasIndex(b => b.EmailAddress)
-            .IsUnique()
-            .IncludeProperties(p => new { p.Id, p.FirstName, p.LastName, p.SsoId, p.AuthenticationSchemeId });
-
-        builder
-            .HasIndex(b => new { b.SsoId, b.AuthenticationSchemeId })
-            .IsUnique()
-            .IncludeProperties(p => new { p.Id, p.EmailAddress, p.FirstName, p.LastName });
-
-        builder
             .HasOne(p => p.AuthenticationScheme)
             .WithMany()
             .HasForeignKey(p => p.AuthenticationSchemeId)
@@ -33,5 +23,8 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
             .HasOne(b => b.LastModifierUser)
             .WithMany()
             .HasForeignKey(b => b.LastModifierUserId);
+
+        builder.HasIndex(b => b.EmailAddress).IsUnique();
+        builder.HasIndex(b => new { b.SsoId, b.AuthenticationSchemeId }).IsUnique();
     }
 }

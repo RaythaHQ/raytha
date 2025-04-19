@@ -31,6 +31,26 @@ Raytha is a versatile and lightweight general purpose content management system.
 
 👀 [Learn more about Raytha on our website.](https://raytha.com) and the [Raytha Youtube channel](https://www.youtube.com/channel/UCuQtF2WwODs2DfZ4pV-2SfA) 📺.
 
+## Easy Deploy with Docker
+
+⚡Raytha is available on [DockerHub](https://hub.docker.com/r/raythahq/raytha) and is designed to work out of the box with a single <strong>Docker container and Postgres</strong>, making it incredibly easy to deploy anywhere. With a docker-compose.yml file, you can get everything up and running in a minute.
+
+Simply download the docker-compose.yml file from the Raytha code repository.
+
+You can [download it here](https://github.com/raythahq/raytha/blob/main/docker-compose.yml) or copy it directly.
+
+Once you have the docker-compose.yml file, navigate to the directory where you saved it and run:
+
+```
+docker-compose up
+```
+
+On the <strong>first run</strong>, Raytha will automatically apply the migration scripts and set up the database. After the migration completes, you’ll be presented with a <strong>setup screen</strong> to configure the CMS.
+
+<strong>Advanced Settings</strong>
+
+Raytha offers a plethora of environment variable settings that you can set to take advantage of additional functionality. If you want to set <strong>SMTP settings</strong> to ensure that Forgot Password and other similar emails are sent from Raytha, or use a <strong>cloud storage such as S3 or Azure Blob</strong>, then review the environment variables in the docker-compose.yml file.
+
 ## Why Raytha?
 
 ### Content Managers Love It
@@ -45,13 +65,13 @@ Raytha is a versatile and lightweight general purpose content management system.
 
 🚀 If you're a .NET developer looking to jumpstart your web application development, Raytha's boilerplate template can save you valuable time. Raytha offers a host of features including user management, role-based access control (RBAC), single sign-on, and audit logs functionality, as well as interfaces for file storage with Azure Blob and S3-compatible providers. Its architecture is built on the well-known [CleanArchitecture](https://github.com/jasontaylordev/CleanArchitecture) template, which means that any .NET developer can easily familiarize themselves with the backend functionality. With Raytha, you can hit the ground running and get your web application up and running in no time.
 
-## Developer Quick Start
+## Build locally
 
 A priority of Raytha is to keep the technology footprint small for getting up and running as quickly as possible. However, you do need the minimum requirements listed below:
 
 * .NET 8
 * npm for compiling javascript
-* SQL Server Express
+* Postgres (default) or SQL Server Express
 * SMTP
 * Visual Studio 2022 or VS Code. All tutorials will assume Visual Studio.
 
@@ -64,22 +84,6 @@ git clone https://github.com/RaythaHQ/raytha.git
 2. Ensure your appsettings.config has a valid database connection string and SMTP credentials. If you do not have access to an SMTP server for local development, [check out Papercut-SMTP](https://github.com/ChangemakerStudios/Papercut-SMTP). Super convenient.
 
 3. Make sure Raytha.Web is set as the Default Project. Compile and run. Raytha will apply the database migrations to your database on first run. 
-
-If you prefer to run migrations manually, you can set `APPLY_PENDING_MIGRATIONS` to `false` in appsettings.json or env variables and then open the `Package Manager Console` and run Entity Framework database migrations:
-
-```
-dotnet ef database update --project .\src\Raytha.Infrastructure --startup-project .\src\Raytha.Web
-```
-
-or run the `FreshCreateOnLatestVersion.sql` script in the /db directory.
-
-**Optional**
-
-By default, it will use local file system and use the directory specified in appsettings.config. You can adjust the appsettings.config if you have access to Azure Blob or an S3 compatible storage.
-
-**Docker**
-
-Raytha is available on [DockerHub with a quick start guide](https://hub.docker.com/r/raythahq/raytha).
 
 ## Community support
 

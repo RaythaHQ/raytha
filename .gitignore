@@ -278,6 +278,9 @@ src/Raytha.Web/Properties/ServiceDependencies/*
 
 # Raytha javascript and theme files
 src/Raytha.Web/wwwroot/raytha_admin/**/*.map
-src/Raytha.Web/wwwroot/raytha_admin/**/*.ts
+src/Raytha.Web/wwwroot/raytha_admin/js/dist/types
+src/Raytha.Web/wwwroot/raytha_admin/js/dist/controllers
+src/Raytha.Web/wwwroot/raytha_admin/js/dist/uppyWrapper
+src/Raytha.Web/wwwroot/raytha_admin/js/dist/wysiwyg
 src/Raytha.Web/wwwroot/raytha_admin/**/*.scss
 src/Raytha.Web/wwwroot/raytha_admin/**/*.txt

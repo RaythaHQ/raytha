@@ -1,28 +1,34 @@
 import { Controller } from "stimulus"
-import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
+import { EditorView, basicSetup } from "codemirror";
+import { EditorState } from "@codemirror/state";
+import { liquid } from "@codemirror/lang-liquid";
+import { indentWithTab } from "@codemirror/commands";
+import { keymap } from "@codemirror/view";
 
 export default class extends Controller {
-    static targets = ["editor", "textarea"]
+    static targets = ["editor", "textarea"];
 
     connect() {
-        this.editor = monaco.editor.create(this.editorTarget,
-            {
-                value: this.textareaTarget.value,
-                language: 'html',
-                automaticLayout: true,
-                scrollBeyondLastLine: false
-            });
-
-        this.boundEditorChangedEvent = this.updateEditorFieldValue.bind(this);
-        this.editor.onDidChangeModelContent(this.boundEditorChangedEvent);
+        const initialValue = this.textareaTarget.value;
+        this.editor = new EditorView({
+            state: EditorState.create({
+                doc: initialValue,
+                extensions: [
+                    basicSetup,
+                    liquid(),
+                    keymap.of([indentWithTab]),
+                    EditorView.updateListener.of((update) => {
+                        if (update.docChanged) {
+                            this.textareaTarget.value = this.editor.state.doc.toString();
+                        }
+                    })
+                ]
+            }),
+            parent: this.editorTarget
+        });
     }
 
     disconnect() {
-        this.editor.dispose();
-    }
-
-    updateEditorFieldValue() {
-        const content = this.editor.getValue();
-        this.textareaTarget.value = content;
+        if (this.editor) this.editor.destroy();
     }
 }

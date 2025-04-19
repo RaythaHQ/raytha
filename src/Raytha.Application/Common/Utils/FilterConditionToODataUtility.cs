@@ -62,6 +62,18 @@ public class FilterConditionToODataUtility
             {
                 expression.Append($"{ConditionOperator.CONTAINS}({condition.Field}, '[]')");
             }
+            else if (chosenColumnAsCustomField != null && chosenColumnAsCustomField.FieldType.DeveloperName == BaseFieldType.Number)
+            {
+                expression.Append($"{condition.Field} {ConditionOperator.EQUALS} null");
+            }
+            else if (chosenColumnAsCustomField != null && chosenColumnAsCustomField.FieldType.DeveloperName == BaseFieldType.Date)
+            {
+                expression.Append($"{condition.Field} {ConditionOperator.EQUALS} null");
+            }
+            else if (condition.Field == BuiltInContentTypeField.CreationTime || condition.Field == BuiltInContentTypeField.LastModificationTime)
+            {
+                expression.Append($"{condition.Field} {ConditionOperator.EQUALS} null");
+            }
             else
             {
                 expression.Append($"{condition.Field} {ConditionOperator.EQUALS} '' {BooleanOperator.OR} {condition.Field} {ConditionOperator.EQUALS} null");
@@ -72,6 +84,18 @@ public class FilterConditionToODataUtility
             if (chosenColumnAsCustomField != null && chosenColumnAsCustomField.FieldType.DeveloperName == BaseFieldType.MultipleSelect)
             {
                 expression.Append($"not {ConditionOperator.CONTAINS}({condition.Field}, '[]')");
+            }
+            else if (chosenColumnAsCustomField != null && chosenColumnAsCustomField.FieldType.DeveloperName == BaseFieldType.Number)
+            {
+                expression.Append($"{condition.Field} {ConditionOperator.NOT_EQUALS} null");
+            }
+            else if (chosenColumnAsCustomField != null && chosenColumnAsCustomField.FieldType.DeveloperName == BaseFieldType.Date)
+            {
+                expression.Append($"{condition.Field} {ConditionOperator.NOT_EQUALS} null");
+            }
+            else if (condition.Field == BuiltInContentTypeField.CreationTime || condition.Field == BuiltInContentTypeField.LastModificationTime)
+            {
+                expression.Append($"{condition.Field} {ConditionOperator.NOT_EQUALS} null");
             }
             else
             {

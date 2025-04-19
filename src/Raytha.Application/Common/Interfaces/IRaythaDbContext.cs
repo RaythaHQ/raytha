@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Raytha.Application.Common.Interfaces;
 
-public interface IRaythaDbContext
+public interface IRaythaDbContext 
 {
     public DbSet<User> Users { get; }
     public DbSet<Role> Roles { get; }
