@@ -17,7 +17,7 @@ public static class FileStorageUtility
     public const string S3_SECRET_KEY_CONFIG_NAME = $"{FILE_STORAGE_PREFIX}_S3_SECRET_KEY";
     public const string S3_SERVICE_URL_CONFIG_NAME = $"{FILE_STORAGE_PREFIX}_S3_SERVICE_URL";
     public const string S3_BUCKET_CONFIG_NAME = $"{FILE_STORAGE_PREFIX}_S3_BUCKET";
-    public const string DIRECT_UPLOAD_TO_CLOUD_CONFIG_NAME = $"{FILE_STORAGE_PREFIX}_DIRECT_UPLOAD_TO_CLOUD";
+    public const string DIRECT_UPLOAD_TO_CLOUD_CONFIG_NAME = $"{FILE_STORAGE_PREFIX}_USE_DIRECT_UPLOAD_TO_CLOUD";
     public const string DATABASE_MAX_SIZE_CONFIG_NAME = $"DATABASE_MAX_SIZE";
 
     public const string LOCAL = "local";
