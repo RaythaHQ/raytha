@@ -1,0 +1,187 @@
+@page "/raytha/settings/authentication-schemes/create"
+@model Raytha.Web.Areas.Admin.Pages.AuthenticationSchemes.Create
+
+@{
+    var pageTitle = "Create authentication scheme";
+    Layout = "SidebarLayout";
+    ViewData["Title"] = pageTitle;
+    ViewData["ActiveMenu"] = "Authentication Schemes";
+    ViewData["ExpandSettingsMenu"] = true;
+}
+
+<div class="row mb-4">
+    @Html.Partial("_Partials/PageHeading", ViewData["Title"])
+    <div class="col-xxl-7 col-xl-8 col-lg-9 col-md-12">
+        <div class="card border-0 shadow mb-4">
+            <div class="card-body">
+                @(await Html.PartialAsync("_Partials/BackToList", "/AuthenticationSchemes/Index"))
+                <form asp-page="/AuthenticationSchemes/Create" method="post" class="py-4" novalidate>
+                    <div class="col-lg-12">
+                        <div class="mb-3">
+                            <label class="form-label raytha-required" asp-for="Form.Label"></label>
+                            <input type="text" class="form-control @Model.HasError("Label")" asp-for="Form.Label" required>
+                            <div class="invalid-feedback">@Model.ErrorMessageFor("Label")</div>
+                        </div>
+                    </div>
+                    <div class="col-lg-12">
+                        <div class="mb-3">
+                            <label class="form-label raytha-required" asp-for="Form.DeveloperName"></label>
+                            <input type="text" class="form-control @Model.HasError("DeveloperName")"
+                                   asp-for="Form.DeveloperName" required>
+                            <div class="invalid-feedback">@Model.ErrorMessageFor("DeveloperName")</div>
+                        </div>
+                    </div>
+                    <div class="col-lg-12">
+                        <div class="form-check">
+                            <input class="form-check-input @Model.HasError("IsEnabledForUsers")" type="checkbox" asp-for="Form.IsEnabledForUsers">
+                            <label class="form-check-label" asp-for="Form.IsEnabledForUsers"></label>
+                            <div class="invalid-feedback">@Model.ErrorMessageFor("IsEnabledForUsers")</div>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input @Model.HasError("IsEnabledForAdmins")" type="checkbox" asp-for="Form.IsEnabledForAdmins">
+                            <label class="form-check-label" asp-for="Form.IsEnabledForAdmins"></label>
+                            <div class="invalid-feedback">@Model.ErrorMessageFor("IsEnabledForAdmins")</div>
+                        </div>
+                    </div>
+                    <div class="col-lg-12">
+                        <div class="mb-3">
+                            <label class="form-label raytha-required" asp-for="Form.AuthenticationSchemeType"></label>
+                            <select class="form-select @Model.HasError("AuthenticationSchemeType")"
+                                    asp-for="Form.AuthenticationSchemeType" asp-items="Model.SupportedAuthenticationSchemeTypes" required>
+                            </select>
+                            <div class="invalid-feedback">@Model.ErrorMessageFor("AuthenticationSchemeType")</div>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-12">
+                        <div class="mb-3">
+                            <label class="form-label raytha-required" asp-for="Form.JwtSecretKey"></label>
+                            <input type="text" class="form-control @Model.HasError("JwtSecretKey")"
+                                   asp-for="Form.JwtSecretKey">
+                            <div class="invalid-feedback">@Model.ErrorMessageFor("JwtSecretKey")</div>
+                        </div>
+                    </div>
+                    <div class="col-lg-12 my-4">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" asp-for="Form.JwtUseHighSecurity">
+                            <label class="form-check-label @Model.HasError("JwtUseHighSecurity")"
+                                   asp-for="Form.JwtUseHighSecurity"></label>
+                            <div class="invalid-feedback">@Model.ErrorMessageFor("JwtUseHighSecurity")</div>
+                            <div class="form-text">Only enable this if you are able to implement the <code>jti</code> claim as part of the JWT payloads.</div>
+                        </div>
+                    </div>
+                    <div class="col-lg-12">
+                        <div class="mb-3">
+                            <label class="form-label raytha-required" asp-for="Form.SamlCertificate"></label>
+                            <textarea class="form-control @Model.HasError("SamlCertificate")" asp-for="Form.SamlCertificate"
+                                      rows="20"></textarea>
+                            <div class="invalid-feedback">@Model.ErrorMessageFor("SamlCertificate")</div>
+                        </div>
+                    </div>
+                    <div class="col-lg-12">
+                        <div class="mb-3">
+                            <label class="form-label raytha-required" asp-for="Form.SamlIdpEntityId"></label>
+                            <input type="text" class="form-control @Model.HasError("SamlIdpEntityId")"
+                                   asp-for="Form.SamlIdpEntityId">
+                            <div class="invalid-feedback">@Model.ErrorMessageFor("SamlIdpEntityId")</div>
+                        </div>
+                    </div>
+                    <div class="col-lg-12">
+                        <div class="mb-3">
+                            <label class="form-label raytha-required" asp-for="Form.SignInUrl"></label>
+                            <input type="url" class="form-control @Model.HasError("SignInUrl")" asp-for="Form.SignInUrl" required>
+                            <div class="invalid-feedback">@Model.ErrorMessageFor("SignInUrl")</div>
+                            <div class="form-text">Redirect users to this url to login on your authentication platform.
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-12">
+                        <div class="mb-3">
+                            <label class="form-label" asp-for="Form.SignOutUrl"></label>
+                            <input type="url" class="form-control @Model.HasError("SignOutUrl")" asp-for="Form.SignOutUrl">
+                            <div class="invalid-feedback">@Model.ErrorMessageFor("SignOutUrl")</div>
+                            <div class="form-text">Users will be redirected to this url after being logged out here.
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-12">
+                        <div class="mb-3">
+                            <label class="form-label raytha-required" asp-for="Form.LoginButtonText"></label>
+                            <input type="text" class="form-control @Model.HasError("LoginButtonText")"
+                                   asp-for="Form.LoginButtonText" required>
+                            <div class="invalid-feedback">@Model.ErrorMessageFor("LoginButtonText")</div>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-success mt-4">Save changes</button> 
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    document.getElementById('Form_Label').addEventListener('input', function () {
+        const labelValue = this.value;
+
+        // Create developer name: remove whitespace, hyphens, and special characters
+        const developerName = labelValue
+            .toLowerCase()
+            .replace(/\s+/g, '_')      // Replace spaces with hyphens
+            .replace(/[^a-z0-9_]/g, '') // Remove special characters
+            .replace(/_+/g, '_');      // Ensure no repeated hyphens
+
+        // Set the value in the developer name input
+        document.getElementById('Form_DeveloperName').value = developerName;
+    });
+
+    document.addEventListener("DOMContentLoaded", function () {
+        const authSchemeType = document.getElementById("Form_AuthenticationSchemeType");
+        const jwtFields = [
+            document.getElementById("Form_JwtSecretKey"),
+            document.getElementById("Form_JwtUseHighSecurity")
+        ];
+        const samlFields = [
+            document.getElementById("Form_SamlCertificate"),
+            document.getElementById("Form_SamlIdpEntityId")
+        ];
+
+        function toggleFields() {
+            const value = authSchemeType.value;
+
+            if (!value) {
+                // Hide all fields if authentication scheme type is empty
+                hideFields([...jwtFields, ...samlFields]);
+            } else if (value.toLowerCase() === "jwt") {
+                // Show only JWT fields
+                showFields(jwtFields);
+                hideFields(samlFields);
+            } else if (value.toLowerCase() === "saml") {
+                // Show only SAML fields
+                showFields(samlFields);
+                hideFields(jwtFields);
+            } else {
+                // Hide all fields for unknown types
+                hideFields([...jwtFields, ...samlFields]);
+            }
+        }
+
+        function hideFields(fields) {
+            fields.forEach(field => {
+                if (field) field.closest(".col-lg-12").style.display = "none";
+            });
+        }
+
+        function showFields(fields) {
+            fields.forEach(field => {
+                if (field) field.closest(".col-lg-12").style.display = "block";
+            });
+        }
+
+        // Initial check on page load
+        toggleFields();
+
+        // Add event listener for changes
+        authSchemeType.addEventListener("change", toggleFields);
+    });
+
+</script>

@@ -1,11 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text.Json;
+﻿using System.Text.Json;
 using CSharpVitamins;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.DataProtection;
-using Microsoft.AspNetCore.Http;
 using Microsoft.OpenApi.Models;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Security;
@@ -15,6 +12,7 @@ using Raytha.Web.Authentication;
 using Raytha.Web.Filters;
 using Raytha.Web.Middlewares;
 using Raytha.Web.Services;
+using RaythaZero.Web.Services;
 
 namespace Microsoft.Extensions.DependencyInjection;
 

@@ -1,0 +1,77 @@
+@page "/raytha/settings/roles/create"
+@model Raytha.Web.Areas.Admin.Pages.Roles.Create
+
+@{
+    var pageTitle = "Create role";
+    Layout = "SidebarLayout";
+    ViewData["Title"] = pageTitle;
+    ViewData["ActiveMenu"] = "Admins";
+    ViewData["ExpandSettingsMenu"] = true;
+}
+
+<div class="row mb-4">
+    @Html.Partial("_Partials/PageHeading", ViewData["Title"])
+    <div class="col-xxl-7 col-xl-8 col-lg-9 col-md-12">
+        <div class="card border-0 shadow mb-4">
+            <div class="card-body">
+                @(await Html.PartialAsync("_Partials/BackToList", "/Roles/Index"))
+                <form asp-page="/Roles/Create" method="post" class="py-4" novalidate>
+                    <div class="col-lg-12">
+                        <div class="mb-3">
+                            <label class="form-label raytha-required" asp-for="Form.Label"></label>
+                            <input type="text" class="form-control @Model.HasError("Label")" asp-for="Form.Label"
+                                required>
+                            <div class="invalid-feedback">@Model.ErrorMessageFor("Label")</div>
+                        </div>
+                    </div>
+                    <div class="col-lg-12">
+                        <div class="mb-3">
+                            <label class="form-label raytha-required" asp-for="Form.DeveloperName"></label>
+                            <input type="text" class="form-control @Model.HasError("DeveloperName")"
+                                asp-for="Form.DeveloperName" required>
+                            <div class="invalid-feedback">@Model.ErrorMessageFor("DeveloperName")</div>
+                        </div>
+                    </div>
+                    <div class="col-lg-12">
+                        <div class="mb-3">
+                            <span class="h6 fw-bold">System permissions</span>
+                        </div>
+
+                        @for (int i = 0; i < Model.Form.SystemPermissions.Length; i++)
+                        {
+                            <div class="form-check">
+                                <input class="form-check-input @Model.HasError("SystemPermissions")" type="checkbox"
+                                    asp-for="Form.SystemPermissions[i].Selected">
+                                <label class="form-check-label"
+                                    asp-for="Form.SystemPermissions[i].Selected">@Model.Form.SystemPermissions[i].Label</label>
+                                <input type="hidden" asp-for="Form.SystemPermissions[i].DeveloperName" />
+                                <input type="hidden" asp-for="Form.SystemPermissions[i].Label" />
+                                @if (i == Model.Form.SystemPermissions.Length - 1)
+                                {
+                                    <div class="invalid-feedback">@Model.ErrorMessageFor("SystemPermissions")</div>
+                                }
+                            </div>
+                        }
+                    </div>
+                    <button type="submit" class="btn btn-success mt-4">Save changes</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.getElementById('Form_Label').addEventListener('input', function () {
+        const labelValue = this.value;
+
+        // Create developer name: remove whitespace, hyphens, and special characters
+        const developerName = labelValue
+            .toLowerCase()
+            .replace(/\s+/g, '_')      // Replace spaces with hyphens
+            .replace(/[^a-z0-9_]/g, '') // Remove special characters
+            .replace(/_+/g, '_');      // Ensure no repeated hyphens
+
+        // Set the value in the developer name input
+        document.getElementById('Form_DeveloperName').value = developerName;
+    });
+</script>

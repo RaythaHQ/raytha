@@ -1,0 +1,89 @@
+@page "/raytha/users"
+@model Raytha.Web.Areas.Admin.Pages.Users.Index
+
+@{
+    var pageTitle = "Users";
+    Layout = "UsersAndUserGroups";
+    ViewData["Title"] = pageTitle;
+    ViewData["ActiveMenu"] = pageTitle;
+}
+
+@(await Html.PartialAsync("_Partials/TableCreateAndSearchBar", new BaseTableCreateAndSearchBarViewModel
+{
+    Pagination = Model.ListView,
+    EntityName = "user",
+    CreateActionName = "/Users/Create"
+}))
+
+<div class="raytha-data-card mb-4">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-centered table-nowrap mb-0 rounded">
+                <thead class="thead-light">
+                    <tr>
+                        @(await Html.PartialAsync("_Partials/TableColumnHeader", new BaseTableColumnHeaderViewModel()
+                        {
+                            Pagination = Model.ListView,
+                            PropertyName = "FirstName",
+                            IsFirst = true,
+                            DisplayName = ViewModelExtensions.GetDisplayName<Index.UsersListItemViewModel>(p => p.FirstName)
+                        }))
+                        @(await Html.PartialAsync("_Partials/TableColumnHeader", new BaseTableColumnHeaderViewModel()
+                        {
+                            Pagination = Model.ListView,
+                            PropertyName = "LastName",
+                            DisplayName = ViewModelExtensions.GetDisplayName<Index.UsersListItemViewModel>(p => p.LastName)
+                        }))
+                        @(await Html.PartialAsync("_Partials/TableColumnHeader", new BaseTableColumnHeaderViewModel()
+                        {
+                            Pagination = Model.ListView,
+                            PropertyName = "EmailAddress",
+                            DisplayName = ViewModelExtensions.GetDisplayName<Index.UsersListItemViewModel>(p =>
+                            p.EmailAddress)
+                        }))
+                        @(await Html.PartialAsync("_Partials/TableColumnHeader", new BaseTableColumnHeaderViewModel()
+                        {
+                            Pagination = Model.ListView,
+                            PropertyName = "CreationTime",
+                            DisplayName = ViewModelExtensions.GetDisplayName<Index.UsersListItemViewModel>(p =>
+                            p.CreationTime)
+                        }))
+                        @(await Html.PartialAsync("_Partials/TableColumnHeader", new BaseTableColumnHeaderViewModel()
+                        {
+                            Pagination = Model.ListView,
+                            PropertyName = "LastLoggedInTime",
+                            DisplayName = ViewModelExtensions.GetDisplayName<Index.UsersListItemViewModel>(p =>
+                            p.LastLoggedInTime)
+                        }))
+                        @(await Html.PartialAsync("_Partials/TableColumnHeader", new BaseTableColumnHeaderViewModel()
+                        {
+                            Pagination = Model.ListView,
+                            PropertyName = "IsActive",
+                            DisplayName = ViewModelExtensions.GetDisplayName<Index.UsersListItemViewModel>(p => p.IsActive)
+                        }))
+                        <th class="border-0">
+                            User Groups
+                        </th>
+                        <th class="border-0 rounded-end">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model.ListView.Items)
+                    {
+                        <tr>
+                            <td>@item.FirstName</td>
+                            <td>@item.LastName</td>
+                            <td>@item.EmailAddress</td>
+                            <td>@item.CreationTime</td>
+                            <td>@item.LastLoggedInTime</td>
+                            <td>@item.IsActive</td>
+                            <td>@item.UserGroups</td>
+                            <td><a asp-page="/Users/Edit" asp-route-id="@item.Id">Edit</a></td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+            <partial name="_Partials/TablePagination" model="@Model.ListView" />
+        </div>
+    </div>
+</div>

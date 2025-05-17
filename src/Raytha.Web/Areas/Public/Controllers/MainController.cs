@@ -1,6 +1,3 @@
-using System;
-using System.Linq;
-using System.Threading.Tasks;
 using CSharpVitamins;
 using Microsoft.AspNetCore.Mvc;
 using Raytha.Application.Common.Exceptions;
@@ -35,7 +32,7 @@ public class MainController : BaseController
         {
             if (string.IsNullOrEmpty(route) || route == "/")
             {
-                if (CurrentOrganization.HomePageType == Route.CONTENT_ITEM_TYPE)
+                if (CurrentOrganization.HomePageType == Domain.Entities.Route.CONTENT_ITEM_TYPE)
                 {
                     var input = new GetContentItemById.Query
                     {
@@ -75,7 +72,7 @@ public class MainController : BaseController
                         ViewData
                     );
                 }
-                else if (CurrentOrganization.HomePageType == Route.VIEW_TYPE)
+                else if (CurrentOrganization.HomePageType == Domain.Entities.Route.VIEW_TYPE)
                 {
                     var view = await Mediator.Send(
                         new GetViewById.Query { Id = CurrentOrganization.HomePageId.Value }
@@ -158,7 +155,7 @@ public class MainController : BaseController
                 var input = new GetRouteByPath.Query { Path = route.TrimEnd('/') };
                 var response = await Mediator.Send(input);
 
-                if (response.Result.PathType == Route.CONTENT_ITEM_TYPE)
+                if (response.Result.PathType == Domain.Entities.Route.CONTENT_ITEM_TYPE)
                 {
                     var contentItem = await Mediator.Send(
                         new GetContentItemById.Query { Id = response.Result.ContentItemId.Value }
@@ -196,7 +193,7 @@ public class MainController : BaseController
                         ViewData
                     );
                 }
-                else if (response.Result.PathType == Route.VIEW_TYPE)
+                else if (response.Result.PathType == Domain.Entities.Route.VIEW_TYPE)
                 {
                     var view = await Mediator.Send(
                         new GetViewById.Query { Id = response.Result.ViewId.Value }

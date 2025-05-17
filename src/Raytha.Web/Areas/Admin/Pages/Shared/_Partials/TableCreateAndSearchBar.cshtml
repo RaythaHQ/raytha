@@ -1,0 +1,27 @@
+﻿@using Microsoft.AspNetCore.Mvc.TagHelpers
+@model Raytha.Web.Areas.Shared.Models.BaseTableCreateAndSearchBarViewModel
+
+@{
+    Layout = null;
+}
+
+<nav class="navbar navbar-expand-lg navbar-light raytha-view-nav">
+    <div class="container-fluid mx-2">
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                <li class="nav-item">
+                    <a class="btn btn-primary" aria-current="page" asp-page="@Model.CreateActionName">
+                        <svg class="icon icon-xs me-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg> Create @Model.EntityName
+                    </a>
+                </li>
+            </ul>
+            <form class="d-flex" asp-page="@Model.Pagination.PageName" method="get">
+                <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search" name="search" value="@Model.Pagination.Search">
+                <button class="btn btn-outline-success" type="submit">Search</button>
+            </form>
+        </div>
+    </div>
+</nav>

@@ -36,6 +36,7 @@ public class Startup
         services.AddApplicationServices();
         services.AddInfrastructureServices(Configuration);
         services.AddWebUIServices();
+        services.AddRazorPages();
     }
 
     public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
@@ -87,6 +88,7 @@ public class Startup
 
         app.UseEndpoints(endpoints =>
         {
+            endpoints.MapRazorPages();
             endpoints.MapControllers();
         });
 

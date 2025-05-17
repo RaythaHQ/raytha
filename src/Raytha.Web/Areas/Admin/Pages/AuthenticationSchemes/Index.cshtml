@@ -1,0 +1,95 @@
+@page "/raytha/settings/authentication-schemes"
+@model Raytha.Web.Areas.Admin.Pages.AuthenticationSchemes.Index
+
+@{
+    var pageTitle = "Authentication schemes";
+    Layout = "SidebarLayout";
+    ViewData["Title"] = pageTitle;
+    ViewData["ActiveMenu"] = "Authentication Schemes";
+    ViewData["ExpandSettingsMenu"] = true;
+}
+
+@Html.Partial("_Partials/PageHeading", pageTitle)
+
+@(await Html.PartialAsync("_Partials/TableCreateAndSearchBar", new BaseTableCreateAndSearchBarViewModel
+{
+    Pagination = Model.ListView,
+    EntityName = "authentication scheme",
+    CreateActionName = "/AuthenticationSchemes/Create"
+}))
+
+<div class="raytha-data-card mb-4">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-centered table-nowrap mb-0 rounded">
+                <thead class="thead-light">
+                    <tr>
+                        @(await Html.PartialAsync("_Partials/TableColumnHeader", new BaseTableColumnHeaderViewModel()
+                        {
+                            Pagination = Model.ListView,
+                            PropertyName = "Label",
+                            IsFirst = true,
+                            DisplayName = ViewModelExtensions.GetDisplayName<Index.AuthenticationSchemesListItemViewModel>(p
+                            => p.Label)
+                        }))
+                        @(await Html.PartialAsync("_Partials/TableColumnHeader", new BaseTableColumnHeaderViewModel()
+                        {
+                            Pagination = Model.ListView,
+                            PropertyName = "DeveloperName",
+                            DisplayName = ViewModelExtensions.GetDisplayName<Index.AuthenticationSchemesListItemViewModel>(p
+                            => p.DeveloperName)
+                        }))
+                        @(await Html.PartialAsync("_Partials/TableColumnHeader", new BaseTableColumnHeaderViewModel()
+                        {
+                            Pagination = Model.ListView,
+                            PropertyName = "LastModificationTime",
+                            DisplayName = ViewModelExtensions.GetDisplayName<Index.AuthenticationSchemesListItemViewModel>(p
+                            => p.LastModificationTime)
+                        }))
+                        <th class="border-0">
+                            Last modified by
+                        </th>
+                        @(await Html.PartialAsync("_Partials/TableColumnHeader", new BaseTableColumnHeaderViewModel()
+                        {
+                            Pagination = Model.ListView,
+                            PropertyName = "AuthenticationSchemeType",
+                            DisplayName = ViewModelExtensions.GetDisplayName<Index.AuthenticationSchemesListItemViewModel>(p
+                            => p.AuthenticationSchemeType)
+                        }))
+                        @(await Html.PartialAsync("_Partials/TableColumnHeader", new BaseTableColumnHeaderViewModel()
+                        {
+                            Pagination = Model.ListView,
+                            PropertyName = "IsEnabledForUsers",
+                            DisplayName = ViewModelExtensions.GetDisplayName<Index.AuthenticationSchemesListItemViewModel>(p
+                            => p.IsEnabledForUsers)
+                        }))
+                        @(await Html.PartialAsync("_Partials/TableColumnHeader", new BaseTableColumnHeaderViewModel()
+                        {
+                            Pagination = Model.ListView,
+                            PropertyName = "IsEnabledForAdmins",
+                            DisplayName = ViewModelExtensions.GetDisplayName<Index.AuthenticationSchemesListItemViewModel>(p
+                            => p.IsEnabledForAdmins)
+                        }))
+                        <th class="border-0 rounded-end">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model.ListView.Items)
+                    {
+                        <tr>
+                            <td>@item.Label</td>
+                            <td>@item.DeveloperName</td>
+                            <td>@item.LastModificationTime</td>
+                            <td>@item.LastModifierUser</td>
+                            <td>@item.AuthenticationSchemeType</td>
+                            <td>@item.IsEnabledForUsers</td>
+                            <td>@item.IsEnabledForAdmins</td>
+                            <td><a asp-page="/AuthenticationSchemes/Edit" asp-route-id="@item.Id">Edit</a></td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+            <partial name="_Partials/TablePagination" model="@Model.ListView" />
+        </div>
+    </div>
+</div>

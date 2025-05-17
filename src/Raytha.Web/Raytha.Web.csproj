@@ -2,6 +2,7 @@
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
     <UserSecretsId>7e3df06b-f996-4ba5-8631-62cd855692f8</UserSecretsId>
+    <ImplicitUsings>enable</ImplicitUsings>
     <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
     <Configurations>Debug;Release;Debug without JS</Configurations>
   </PropertyGroup>

@@ -1,0 +1,114 @@
+@page "/raytha/settings/smtp"
+@model Raytha.Web.Areas.Admin.Pages.Smtp.Index
+
+@{
+    var pageTitle = "SMTP";
+    Layout = "SidebarLayout";
+    ViewData["Title"] = pageTitle;
+    ViewData["ActiveMenu"] = pageTitle;
+    ViewData["ExpandSettingsMenu"] = true;
+}
+
+<div class="py-2">
+    <div class="d-flex justify-content-between w-100 flex-wrap">
+        <div class="mb-3 mb-lg-0">
+            <h1 class="h4">@pageTitle</h1>
+            <p class="mb-0 col-lg-6 col-md-12">An SMTP server is required for the system to send password reset and
+                confirmation emails. You can use a different SMTP server than the one the server administrator
+                configured by providing the details below.</p>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-lg-9 col-md-12">
+        <div class="card border-0 shadow mb-4">
+            <div class="card-body">
+                <form asp-page="/Smtp/Index" method="post" autocomplete="off" novalidate>
+                    <div class="col-lg-12">
+                        <div class="form-check">
+                            @if (Model.MissingSmtpEnvironmentVariables)
+                            {
+                                <input class="form-check-input @Model.HasError("SmtpOverrideSystem")" type="checkbox"
+                                    asp-for="Form.SmtpOverrideSystem" disabled>
+                                <input type="hidden" asp-for="Form.SmtpOverrideSystem">
+                            }
+                            else
+                            {
+                                <input class="form-check-input @Model.HasError("SmtpOverrideSystem")" type="checkbox"
+                                    asp-for="Form.SmtpOverrideSystem">
+                            }
+
+                            <label class="form-check-label" asp-for="Form.SmtpOverrideSystem"></label>
+                            <div class="invalid-feedback">@Model.ErrorMessageFor("SmtpOverrideSystem")</div>
+                        </div>
+                    </div>
+                    <div class="col-lg-12">
+                        <div class="mb-3">
+                            <label class="form-label raytha-required" asp-for="Form.SmtpHost"></label>
+                            <input type="text" class="form-control @Model.HasError("SmtpHost")" asp-for="Form.SmtpHost"
+                                required)>
+                            <div class="invalid-feedback">@Model.ErrorMessageFor("SmtpHost")</div>
+                        </div>
+                    </div>
+                    <div class="col-lg-3">
+                        <div class="mb-3">
+                            <label class="form-label raytha-required" asp-for="Form.SmtpPort"></label>
+                            <input type="number" class="form-control @Model.HasError("SmtpPort")"
+                                asp-for="Form.SmtpPort" required max="65535">
+                            <div class="invalid-feedback">@Model.ErrorMessageFor("SmtpPort")</div>
+                        </div>
+                    </div>
+                    <div class="col-lg-12">
+                        <div class="mb-3">
+                            <label class="form-label" asp-for="Form.SmtpUsername"></label>
+                            <input type="text" class="form-control @Model.HasError("SmtpUsername")"
+                                asp-for="Form.SmtpUsername">
+                            <div class="invalid-feedback">@Model.ErrorMessageFor("SmtpUsername")</div>
+                        </div>
+                    </div>
+                    <div class="col-lg-12">
+                        <div class="mb-3">
+                            <label class="form-label" asp-for="Form.SmtpPassword"></label>
+                            <input type="password" class="form-control @Model.HasError("SmtpPassword")"
+                                asp-for="Form.SmtpPassword">
+                            <div class="invalid-feedback">@Model.ErrorMessageFor("SmtpPassword")</div>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-success mt-4">Save changes</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const smtpOverrideCheckbox = document.getElementById('Form_SmtpOverrideSystem');
+        const smtpUsernameInput = document.getElementById('Form_SmtpUsername');
+        const smtpPasswordInput = document.getElementById('Form_SmtpPassword');
+        const smtpHostInput = document.getElementById('Form_SmtpHost');
+        const smtpPortInput = document.getElementById('Form_SmtpPort');
+
+        // Function to toggle the readonly attribute based on the checkbox state
+        function toggleReadonly() {
+            if (!smtpOverrideCheckbox.checked) {
+                smtpUsernameInput.setAttribute('readonly', 'readonly');
+                smtpPasswordInput.setAttribute('readonly', 'readonly');
+                smtpHostInput.setAttribute('readonly', 'readonly');
+                smtpPortInput.setAttribute('readonly', 'readonly');
+            } else {
+                smtpUsernameInput.removeAttribute('readonly');
+                smtpPasswordInput.removeAttribute('readonly');
+                smtpHostInput.removeAttribute('readonly');
+                smtpPortInput.removeAttribute('readonly');
+            }
+        }
+
+        // Set the initial state on page load
+        toggleReadonly();
+
+        // Add an event listener to toggle the readonly attribute on checkbox change
+        smtpOverrideCheckbox.addEventListener('change', toggleReadonly);
+    });
+</script>
