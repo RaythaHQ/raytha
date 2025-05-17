@@ -124,21 +124,26 @@
                     </span>
                 </a>
             </li>
-            <li class="nav-item">
-                <a asp-route="emptyroute" target="_blank" class="nav-link d-flex justify-content-between">
-                    <span>
-                        <span class="sidebar-icon">
-                            <svg class="icon icon-xs me-2" fill="currentColor" viewBox="0 0 20 20"
-                                xmlns="http://www.w3.org/2000/svg">
-                                <path fill-rule="evenodd"
-                                    d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
-                                    clip-rule="evenodd"></path>
-                            </svg>
+            @if ((await AuthorizationService.AuthorizeAsync(User,
+                        BuiltInSystemPermission.MANAGE_TEMPLATES_PERMISSION)).Succeeded)
+            {
+                <li class="nav-item @(IsActivePage("Themes"))">
+                    <a asp-route="themesindex" class="nav-link d-flex justify-content-between">
+                        <span>
+                            <span class="sidebar-icon">
+                                <svg class="icon icon-xs me-2" fill="currentColor" viewBox="0 0 20 20"
+                                    xmlns="http://www.w3.org/2000/svg">
+                                    <path fill-rule="evenodd"
+                                        d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z"
+                                        clip-rule="evenodd"></path>
+                                </svg>
+                            </span>
+                            <span class="sidebar-text">Themes</span>
                         </span>
-                        <span class="sidebar-text">Live Website</span>
-                    </span>
-                </a>
-            </li>
+                    </a>
+                </li>
+            }
+
             @if ((await AuthorizationService.AuthorizeAsync(User,
                         BuiltInSystemPermission.MANAGE_SYSTEM_SETTINGS_PERMISSION)).Succeeded)
             {
