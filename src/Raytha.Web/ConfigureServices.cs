@@ -184,7 +184,6 @@ public static class ConfigureServices
         services.AddSingleton<ICurrentVersion, CurrentVersion>();
 
         services.AddScoped<ForbidAccessIfRaythaFunctionsAreDisabledFilterAttribute>();
-        services.AddScoped<GetOrSetRecentlyAccessedViewFilterAttribute>();
         services.AddScoped<SetPaginationInformationFilterAttribute>();
         services.AddScoped<IAuthorizationHandler, RaythaAdminAuthorizationHandler>();
         services.AddScoped<IAuthorizationHandler, RaythaAdminContentTypeAuthorizationHandler>();

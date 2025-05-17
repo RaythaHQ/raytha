@@ -2,10 +2,10 @@ using System.ComponentModel.DataAnnotations;
 using CSharpVitamins;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.RazorPages;
 using Raytha.Application.Admins.Commands;
 using Raytha.Application.Roles.Queries;
 using Raytha.Domain.Entities;
+using Raytha.Web.Areas.Admin.Pages.Shared.Models;
 
 namespace Raytha.Web.Areas.Admin.Pages.Admins;
 

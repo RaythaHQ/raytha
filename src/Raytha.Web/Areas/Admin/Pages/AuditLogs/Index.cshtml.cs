@@ -13,6 +13,7 @@ using Raytha.Application.Roles.Commands;
 using Raytha.Application.UserGroups.Commands;
 using Raytha.Application.Users.Commands;
 using Raytha.Domain.Entities;
+using Raytha.Web.Areas.Admin.Pages.Shared.Models;
 using Raytha.Web.Areas.Shared.Models;
 
 namespace Raytha.Web.Areas.Admin.Pages.AuditLogs;

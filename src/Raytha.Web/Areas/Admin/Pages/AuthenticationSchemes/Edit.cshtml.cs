@@ -7,6 +7,7 @@ using Raytha.Application.AuthenticationSchemes.Commands;
 using Raytha.Application.AuthenticationSchemes.Queries;
 using Raytha.Domain.Entities;
 using Raytha.Domain.ValueObjects;
+using Raytha.Web.Areas.Admin.Pages.Shared.Models;
 
 namespace Raytha.Web.Areas.Admin.Pages.AuthenticationSchemes;
 

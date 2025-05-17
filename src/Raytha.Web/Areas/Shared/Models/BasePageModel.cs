@@ -8,7 +8,7 @@ using Raytha.Domain.ValueObjects;
 
 namespace Raytha.Web.Areas.Shared.Models;
 
-public class BasePageModel : PageModel
+public abstract class BasePageModel : PageModel
 {
     public const string ErrorMessageKey = "ErrorMessage";
     public const string SuccessMessageKey = "SuccessMessage";
@@ -65,7 +65,7 @@ public class BasePageModel : PageModel
             && currentPage != "/Setup/Index"
         )
         {
-            context.HttpContext.Response.Redirect($"{CurrentOrganization.PathBase}/admin/setup");
+            context.HttpContext.Response.Redirect($"{CurrentOrganization.PathBase}/raytha/setup");
             return;
         }
 

@@ -75,7 +75,7 @@
                 ContentItemOperations.Read)).Succeeded)
                 {
                     <li class="nav-item @(IsActivePage(contentType.DeveloperName))">
-                        <a asp-route="contentitemsdefault" asp-route-contentTypeDeveloperName="@contentType.DeveloperName"
+                        <a asp-page="contentitemsdefault" asp-route-contentTypeDeveloperName="@contentType.DeveloperName"
                             class="nav-link d-flex justify-content-between">
                             <span>
                                 <span class="sidebar-icon invisible">
@@ -97,7 +97,7 @@
             {
                 <li
                     class="nav-item nav-item d-flex align-items-center justify-content-between justify-content-md-center pt-4">
-                    <a asp-route="contenttypescreate"
+                    <a asp-page="/ContentTypes/Create"
                         class="btn btn-secondary d-inline-flex align-items-center me-2 dropdown-toggle">
                         <svg class="icon icon-xs me-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"
                             xmlns="http://www.w3.org/2000/svg">

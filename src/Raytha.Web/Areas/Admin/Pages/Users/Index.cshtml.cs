@@ -5,6 +5,7 @@ using Raytha.Application.Common.Utils;
 using Raytha.Application.Users.Queries;
 using Raytha.Domain.Entities;
 using Raytha.Domain.ValueObjects;
+using Raytha.Web.Areas.Admin.Pages.Shared.Models;
 using Raytha.Web.Areas.Shared.Models;
 
 namespace Raytha.Web.Areas.Admin.Pages.Users;

@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Raytha.Application.Dashboard.Queries;
+using Raytha.Web.Areas.Admin.Pages.Shared.Models;
 
 namespace Raytha.Web.Areas.Admin.Pages.Dashboard;
 

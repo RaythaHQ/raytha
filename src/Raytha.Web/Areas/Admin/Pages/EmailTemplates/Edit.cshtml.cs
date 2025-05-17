@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Raytha.Application.EmailTemplates.Commands;
 using Raytha.Application.EmailTemplates.Queries;
 using Raytha.Domain.Entities;
+using Raytha.Web.Areas.Admin.Pages.Shared.Models;
 
 namespace Raytha.Web.Areas.Admin.Pages.EmailTemplates;
 

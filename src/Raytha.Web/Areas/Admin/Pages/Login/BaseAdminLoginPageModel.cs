@@ -7,6 +7,7 @@ using Raytha.Application.Common.Models;
 using Raytha.Application.Common.Security;
 using Raytha.Application.Login;
 using Raytha.Domain.ValueObjects;
+using Raytha.Web.Areas.Admin.Pages.Shared.Models;
 
 namespace Raytha.Web.Areas.Admin.Pages.Login;
 
