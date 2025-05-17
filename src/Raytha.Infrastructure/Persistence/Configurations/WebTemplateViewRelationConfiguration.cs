@@ -1,10 +1,11 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using Raytha.Domain.Entities;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using Raytha.Domain.Entities;
 
 namespace Raytha.Infrastructure.Persistence.Configurations;
 
-public class WebTemplateViewRelationConfiguration : IEntityTypeConfiguration<WebTemplateViewRelation>
+public class WebTemplateViewRelationConfiguration
+    : IEntityTypeConfiguration<WebTemplateViewRelation>
 {
     public void Configure(EntityTypeBuilder<WebTemplateViewRelation> builder)
     {
@@ -20,7 +21,6 @@ public class WebTemplateViewRelationConfiguration : IEntityTypeConfiguration<Web
             .HasForeignKey(wtr => wtr.ViewId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        builder.HasIndex(wtr => new { wtr.ViewId, wtr.WebTemplateId })
-            .IsUnique();
+        builder.HasIndex(wtr => new { wtr.ViewId, wtr.WebTemplateId }).IsUnique();
     }
 }

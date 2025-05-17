@@ -1,9 +1,9 @@
-﻿using Amazon.S3;
+﻿using System.Net;
+using Amazon.Runtime;
+using Amazon.S3;
+using Amazon.S3.Model;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Utils;
-using Amazon.S3.Model;
-using System.Net;
-using Amazon.Runtime;
 
 namespace Raytha.Infrastructure.FileStorage;
 
@@ -19,7 +19,12 @@ public class S3FileStorageProvider : IFileStorageProvider
         string serviceUrl = configuration.S3ServiceUrl;
         string bucket = configuration.S3Bucket;
 
-        if (string.IsNullOrEmpty(accessKey) || string.IsNullOrEmpty(secretKey) || string.IsNullOrEmpty(serviceUrl) || string.IsNullOrEmpty(bucket))
+        if (
+            string.IsNullOrEmpty(accessKey)
+            || string.IsNullOrEmpty(secretKey)
+            || string.IsNullOrEmpty(serviceUrl)
+            || string.IsNullOrEmpty(bucket)
+        )
             throw new InvalidOperationException("S3 Environment Variables were not found");
 
         _bucket = bucket;
@@ -29,7 +34,7 @@ public class S3FileStorageProvider : IFileStorageProvider
             {
                 ServiceURL = serviceUrl,
                 ForcePathStyle = true,
-                SignatureMethod = SigningAlgorithm.HmacSHA256
+                SignatureMethod = SigningAlgorithm.HmacSHA256,
             };
 
             _client = new AmazonS3Client(accessKey, secretKey, s3Config);
@@ -38,21 +43,23 @@ public class S3FileStorageProvider : IFileStorageProvider
 
     public async Task DeleteAsync(string key)
     {
-        var request = new DeleteObjectRequest
-        {
-            BucketName = _bucket,
-            Key = key,
-        };
+        var request = new DeleteObjectRequest { BucketName = _bucket, Key = key };
 
         var response = await _client.DeleteObjectAsync(request);
 
         if (response.HttpStatusCode != HttpStatusCode.NoContent)
         {
-            throw new Exception($"Failed to delete object with key '{key}'. Status code: {response.HttpStatusCode}");
+            throw new Exception(
+                $"Failed to delete object with key '{key}'. Status code: {response.HttpStatusCode}"
+            );
         }
     }
 
-    public async Task<string> GetDownloadUrlAsync(string key, DateTime expiresAt, bool inline = true)
+    public async Task<string> GetDownloadUrlAsync(
+        string key,
+        DateTime expiresAt,
+        bool inline = true
+    )
     {
         GetPreSignedUrlRequest request1 = new GetPreSignedUrlRequest
         {
@@ -60,9 +67,11 @@ public class S3FileStorageProvider : IFileStorageProvider
             Key = key,
             Expires = expiresAt,
             Protocol = Protocol.HTTPS,
-            Verb = HttpVerb.GET
+            Verb = HttpVerb.GET,
         };
-        request1.ResponseHeaderOverrides.ContentDisposition = inline ? $"inline; filename={key}" : $"attachment; filename={key}";
+        request1.ResponseHeaderOverrides.ContentDisposition = inline
+            ? $"inline; filename={key}"
+            : $"attachment; filename={key}";
         return _client.GetPreSignedURL(request1);
     }
 
@@ -72,7 +81,13 @@ public class S3FileStorageProvider : IFileStorageProvider
         return url;
     }
 
-    public async Task<string> GetUploadUrlAsync(string key, string fileName, string contentType, DateTime expiresAt, bool inline = true)
+    public async Task<string> GetUploadUrlAsync(
+        string key,
+        string fileName,
+        string contentType,
+        DateTime expiresAt,
+        bool inline = true
+    )
     {
         GetPreSignedUrlRequest request = new GetPreSignedUrlRequest
         {
@@ -80,14 +95,23 @@ public class S3FileStorageProvider : IFileStorageProvider
             Key = key,
             Expires = expiresAt,
             Protocol = Protocol.HTTPS,
-            Verb = HttpVerb.PUT
+            Verb = HttpVerb.PUT,
         };
         request.ResponseHeaderOverrides.ContentType = contentType;
-        request.ResponseHeaderOverrides.ContentDisposition = inline ? $"inline; filename={key}" : $"attachment; filename={key}";
+        request.ResponseHeaderOverrides.ContentDisposition = inline
+            ? $"inline; filename={key}"
+            : $"attachment; filename={key}";
         return _client.GetPreSignedURL(request);
     }
 
-    public async Task<string> SaveAndGetDownloadUrlAsync(byte[] data, string key, string fileName, string contentType, DateTime expiresAt, bool inline = true)
+    public async Task<string> SaveAndGetDownloadUrlAsync(
+        byte[] data,
+        string key,
+        string fileName,
+        string contentType,
+        DateTime expiresAt,
+        bool inline = true
+    )
     {
         GetPreSignedUrlRequest request = new GetPreSignedUrlRequest
         {
@@ -95,7 +119,7 @@ public class S3FileStorageProvider : IFileStorageProvider
             Key = key,
             Expires = expiresAt,
             Protocol = Protocol.HTTPS,
-            Verb = HttpVerb.GET
+            Verb = HttpVerb.GET,
         };
         using (var ms = new MemoryStream())
         {
@@ -107,7 +131,7 @@ public class S3FileStorageProvider : IFileStorageProvider
                 ContentType = contentType,
                 BucketName = _bucket,
                 InputStream = ms,
-                DisablePayloadSigning = true
+                DisablePayloadSigning = true,
             };
             var response = await _client.PutObjectAsync(putObjectRequest);
             if (response.HttpStatusCode != HttpStatusCode.OK)
@@ -116,7 +140,9 @@ public class S3FileStorageProvider : IFileStorageProvider
             }
         }
         request.ResponseHeaderOverrides.ContentType = contentType;
-        request.ResponseHeaderOverrides.ContentDisposition = inline ? $"inline; filename={key}" : $"attachment; filename={key}";
+        request.ResponseHeaderOverrides.ContentDisposition = inline
+            ? $"inline; filename={key}"
+            : $"attachment; filename={key}";
         return _client.GetPreSignedURL(request);
     }
 

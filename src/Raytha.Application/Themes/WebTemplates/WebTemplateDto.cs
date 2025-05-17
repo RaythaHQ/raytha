@@ -48,7 +48,11 @@ public record WebTemplateDto : BaseAuditableEntityDto
             AllowAccessForNewContentTypes = entity.AllowAccessForNewContentTypes,
             ParentTemplateId = entity.ParentTemplateId,
             ParentTemplate = GetProjection(entity.ParentTemplate),
-            TemplateAccessToModelDefinitions = entity.TemplateAccessToModelDefinitions?.ToDictionary(p => (ShortGuid)p.ContentTypeId, p => p.ContentType?.LabelPlural ?? "n/a")!
+            TemplateAccessToModelDefinitions =
+                entity.TemplateAccessToModelDefinitions?.ToDictionary(
+                    p => (ShortGuid)p.ContentTypeId,
+                    p => p.ContentType?.LabelPlural ?? "n/a"
+                )!,
         };
     }
 }

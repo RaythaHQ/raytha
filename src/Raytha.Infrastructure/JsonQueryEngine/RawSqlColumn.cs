@@ -14,9 +14,7 @@ internal class RawSqlColumn
     public const string RELATED_ROUTE_COLUMN_NAME = "route_related";
     public const string RELATED_ITEM_COLUMN_NAME = "related";
 
-    private RawSqlColumn()
-    {
-    }
+    private RawSqlColumn() { }
 
     private RawSqlColumn(string name)
     {
@@ -47,22 +45,28 @@ internal class RawSqlColumn
     {
         return $"{columnPrefix}.{Name}";
     }
+
     public string NameAsColumnLabel(string columnPrefix)
     {
         return $"{columnPrefix}_{Name}";
     }
+
     public string NameAsFullColumnLabel(string columnPrefix)
     {
         return $"{NameAsColumn(columnPrefix)} as {NameAsColumnLabel(columnPrefix)}";
     }
 
-    public static IEnumerable<string> NameAsFullColumnLabelForEnumerable(IEnumerable<RawSqlColumn> columns, string columnPrefix)
+    public static IEnumerable<string> NameAsFullColumnLabelForEnumerable(
+        IEnumerable<RawSqlColumn> columns,
+        string columnPrefix
+    )
     {
         foreach (var item in columns)
         {
             yield return item.NameAsFullColumnLabel(columnPrefix);
         }
     }
+
     public static IEnumerable<RawSqlColumn> ContentItemColumns()
     {
         yield return Id;

@@ -6,8 +6,15 @@ public class BeginLoginWithMagicLinkEvent : BaseEvent, IBeforeSaveChangesNotific
     public bool SendEmail { get; private set; }
     public string Token { get; private set; }
     public string ReturnUrl { get; private set; }
-    public int MagicLinkExpiresInSeconds { get; private set; }  
-    public BeginLoginWithMagicLinkEvent(User user, bool sendEmail, string token, string returnUrl, int magicLinkExpiresInSeconds)
+    public int MagicLinkExpiresInSeconds { get; private set; }
+
+    public BeginLoginWithMagicLinkEvent(
+        User user,
+        bool sendEmail,
+        string token,
+        string returnUrl,
+        int magicLinkExpiresInSeconds
+    )
     {
         User = user;
         SendEmail = sendEmail;

@@ -4,13 +4,10 @@ public class SortOrder : ValueObject
 {
     public const string ASCENDING = "asc";
     public const string DESCENDING = "desc";
-    static SortOrder()
-    {
-    }
 
-    public SortOrder()
-    {
-    }
+    static SortOrder() { }
+
+    public SortOrder() { }
 
     private SortOrder(string label, string developerName)
     {

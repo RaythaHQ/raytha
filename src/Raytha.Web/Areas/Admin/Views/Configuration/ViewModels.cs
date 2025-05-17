@@ -6,10 +6,10 @@ using Raytha.Web.Areas.Admin.Views.Shared;
 namespace Raytha.Web.Areas.Admin.Views.Configuration;
 
 public class Configuration_ViewModel : FormSubmit_ViewModel
-{        
+{
     [Display(Name = "Organization name")]
     public string OrganizationName { get; set; }
-    
+
     [Display(Name = "Website url")]
     public string WebsiteUrl { get; set; }
 
@@ -28,10 +28,7 @@ public class Configuration_ViewModel : FormSubmit_ViewModel
     //helpers
     public IDictionary<string, string> AvailableTimeZones
     {
-        get
-        {
-            return DateTimeExtensions.GetTimeZoneDisplayNames();
-        }
+        get { return DateTimeExtensions.GetTimeZoneDisplayNames(); }
     }
 
     public IDictionary<string, string> AvailableDateFormats
@@ -47,4 +44,3 @@ public class Configuration_ViewModel : FormSubmit_ViewModel
         }
     }
 }
-

@@ -1,4 +1,6 @@
-﻿using FluentValidation.Results;
+﻿using System.Collections.Generic;
+using System.Linq;
+using FluentValidation.Results;
 using MediatR;
 using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Mvc;
@@ -6,8 +8,6 @@ using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.Extensions.DependencyInjection;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Utils;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace Raytha.Web.Areas.Public.Controllers;
 
@@ -20,10 +20,15 @@ public class BaseController : Controller
     private ICurrentUser _currentUser;
     private IAntiforgery _antiforgery;
 
-    protected ISender Mediator => _mediator ??= HttpContext.RequestServices.GetRequiredService<ISender>();
-    protected ICurrentOrganization CurrentOrganization => _currentOrganization ??= HttpContext.RequestServices.GetRequiredService<ICurrentOrganization>();
-    protected ICurrentUser CurrentUser => _currentUser ??= HttpContext.RequestServices.GetRequiredService<ICurrentUser>();
-    protected IAntiforgery Antiforgery => _antiforgery ??= HttpContext.RequestServices.GetRequiredService<IAntiforgery>();
+    protected ISender Mediator =>
+        _mediator ??= HttpContext.RequestServices.GetRequiredService<ISender>();
+    protected ICurrentOrganization CurrentOrganization =>
+        _currentOrganization ??=
+            HttpContext.RequestServices.GetRequiredService<ICurrentOrganization>();
+    protected ICurrentUser CurrentUser =>
+        _currentUser ??= HttpContext.RequestServices.GetRequiredService<ICurrentUser>();
+    protected IAntiforgery Antiforgery =>
+        _antiforgery ??= HttpContext.RequestServices.GetRequiredService<IAntiforgery>();
 
     public const string ErrorMessageKey = "ErrorMessage";
     public const string SuccessMessageKey = "SuccessMessage";
@@ -48,9 +53,15 @@ public class BaseController : Controller
         TempData[ErrorMessageKey] = message;
     }
 
-    protected void SetErrorMessage(string message, IEnumerable<ValidationFailure> errors, int statusCode = 303)
+    protected void SetErrorMessage(
+        string message,
+        IEnumerable<ValidationFailure> errors,
+        int statusCode = 303
+    )
     {
-        var validationSummary = errors.FirstOrDefault(p => p.PropertyName == Constants.VALIDATION_SUMMARY);
+        var validationSummary = errors.FirstOrDefault(p =>
+            p.PropertyName == Constants.VALIDATION_SUMMARY
+        );
         if (validationSummary != null)
         {
             SetErrorMessage(validationSummary.ErrorMessage);
@@ -69,6 +80,7 @@ public class BaseController : Controller
         ViewData[SuccessMessageKey] = message;
         TempData[SuccessMessageKey] = message;
     }
+
     protected void SetWarningMessage(string message)
     {
         ViewData[WarningMessageKey] = message;

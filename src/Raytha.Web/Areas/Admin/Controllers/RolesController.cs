@@ -1,4 +1,7 @@
-﻿using CSharpVitamins;
+﻿using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using CSharpVitamins;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
@@ -10,9 +13,6 @@ using Raytha.Domain.ValueObjects;
 using Raytha.Web.Areas.Admin.Views.Roles;
 using Raytha.Web.Areas.Admin.Views.Shared.ViewModels;
 using Raytha.Web.Filters;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace Raytha.Web.Areas.Admin.Controllers;
 
@@ -22,14 +22,19 @@ public class RolesController : BaseController
 {
     [ServiceFilter(typeof(SetPaginationInformationFilterAttribute))]
     [Route(RAYTHA_ROUTE_PREFIX + "/settings/roles", Name = "rolesindex")]
-    public async Task<IActionResult> Index(string search = "", string orderBy = $"Label {SortOrder.ASCENDING}", int pageNumber = 1, int pageSize = 50)
+    public async Task<IActionResult> Index(
+        string search = "",
+        string orderBy = $"Label {SortOrder.ASCENDING}",
+        int pageNumber = 1,
+        int pageSize = 50
+    )
     {
         var input = new GetRoles.Query
         {
             Search = search,
             PageNumber = pageNumber,
             PageSize = pageSize,
-            OrderBy = orderBy
+            OrderBy = orderBy,
         };
 
         var response = await Mediator.Send(input);
@@ -40,41 +45,49 @@ public class RolesController : BaseController
             Id = p.Id,
         });
 
-        var viewModel = new List_ViewModel<RolesListItem_ViewModel>(items, response.Result.TotalCount);
+        var viewModel = new List_ViewModel<RolesListItem_ViewModel>(
+            items,
+            response.Result.TotalCount
+        );
         return View(viewModel);
     }
 
     [Route(RAYTHA_ROUTE_PREFIX + "/settings/roles/create", Name = "rolescreate")]
     public async Task<IActionResult> Create()
     {
-        var systemPermissions = BuiltInSystemPermission.Permissions.Select(p => new CreateRole_ViewModel.SystemPermissionCheckboxItem_ViewModel
-        {
-            DeveloperName = p.DeveloperName,
-            Label = p.Label,
-            Selected = false
-        });
+        var systemPermissions = BuiltInSystemPermission.Permissions.Select(
+            p => new CreateRole_ViewModel.SystemPermissionCheckboxItem_ViewModel
+            {
+                DeveloperName = p.DeveloperName,
+                Label = p.Label,
+                Selected = false,
+            }
+        );
 
         var contentTypesResponse = await Mediator.Send(new GetContentTypes.Query());
-        var contentTypePermissions = new List<CreateRole_ViewModel.ContentTypePermissionCheckboxItem_ViewModel>();
+        var contentTypePermissions =
+            new List<CreateRole_ViewModel.ContentTypePermissionCheckboxItem_ViewModel>();
         foreach (var contentTypePermission in BuiltInContentTypePermission.Permissions)
         {
             foreach (var contentType in contentTypesResponse.Result.Items)
             {
-                contentTypePermissions.Add(new CreateRole_ViewModel.ContentTypePermissionCheckboxItem_ViewModel
-                {
-                    DeveloperName = contentTypePermission.DeveloperName,
-                    Label = contentTypePermission.Label,
-                    Selected = false,
-                    ContentTypeId = contentType.Id,
-                    ContentTypeLabel = contentType.LabelPlural
-                });
+                contentTypePermissions.Add(
+                    new CreateRole_ViewModel.ContentTypePermissionCheckboxItem_ViewModel
+                    {
+                        DeveloperName = contentTypePermission.DeveloperName,
+                        Label = contentTypePermission.Label,
+                        Selected = false,
+                        ContentTypeId = contentType.Id,
+                        ContentTypeLabel = contentType.LabelPlural,
+                    }
+                );
             }
         }
 
         var model = new CreateRole_ViewModel
         {
             SystemPermissions = systemPermissions.ToArray(),
-            ContentTypePermissions = contentTypePermissions.ToArray()
+            ContentTypePermissions = contentTypePermissions.ToArray(),
         };
         return View(model);
     }
@@ -87,7 +100,9 @@ public class RolesController : BaseController
         var contentTypePermissionsDict = new Dictionary<string, IEnumerable<string>>();
         foreach (var contentPermGroup in model.ContentTypePermissions.GroupBy(p => p.ContentTypeId))
         {
-            var selectedContentPermissions = contentPermGroup.Where(p => p.Selected).Select(p => p.DeveloperName);
+            var selectedContentPermissions = contentPermGroup
+                .Where(p => p.Selected)
+                .Select(p => p.DeveloperName);
             contentTypePermissionsDict.Add(contentPermGroup.Key, selectedContentPermissions);
         }
 
@@ -95,8 +110,10 @@ public class RolesController : BaseController
         {
             Label = model.Label,
             DeveloperName = model.DeveloperName,
-            SystemPermissions = model.SystemPermissions.Where(p => p.Selected).Select(p => p.DeveloperName),
-            ContentTypePermissions = contentTypePermissionsDict
+            SystemPermissions = model
+                .SystemPermissions.Where(p => p.Selected)
+                .Select(p => p.DeveloperName),
+            ContentTypePermissions = contentTypePermissionsDict,
         };
         var response = await Mediator.Send(input);
 
@@ -107,7 +124,10 @@ public class RolesController : BaseController
         }
         else
         {
-            SetErrorMessage("There was an error attempting to create this role. See the error below.", response.GetErrors());
+            SetErrorMessage(
+                "There was an error attempting to create this role. See the error below.",
+                response.GetErrors()
+            );
             return View(model);
         }
     }
@@ -117,27 +137,35 @@ public class RolesController : BaseController
     {
         var response = await Mediator.Send(new GetRoleById.Query { Id = id });
 
-        var systemPermissions = BuiltInSystemPermission.Permissions.Select(p => new EditRole_ViewModel.SystemPermissionCheckboxItem_ViewModel
-        {
-            DeveloperName = p.DeveloperName,
-            Label = p.Label,
-            Selected = response.Result.SystemPermissions.Any(c => c == p.DeveloperName)
-        });
+        var systemPermissions = BuiltInSystemPermission.Permissions.Select(
+            p => new EditRole_ViewModel.SystemPermissionCheckboxItem_ViewModel
+            {
+                DeveloperName = p.DeveloperName,
+                Label = p.Label,
+                Selected = response.Result.SystemPermissions.Any(c => c == p.DeveloperName),
+            }
+        );
 
         var contentTypesResponse = await Mediator.Send(new GetContentTypes.Query());
-        var contentTypePermissions = new List<EditRole_ViewModel.ContentTypePermissionCheckboxItem_ViewModel>();
+        var contentTypePermissions =
+            new List<EditRole_ViewModel.ContentTypePermissionCheckboxItem_ViewModel>();
         foreach (var contentTypePermission in BuiltInContentTypePermission.Permissions)
         {
             foreach (var contentType in contentTypesResponse.Result.Items)
             {
-                contentTypePermissions.Add(new EditRole_ViewModel.ContentTypePermissionCheckboxItem_ViewModel
-                {
-                    DeveloperName = contentTypePermission.DeveloperName,
-                    Label = contentTypePermission.Label,
-                    Selected = response.Result.ContentTypePermissions.Any(c => c.Key == contentType.Id && c.Value.Any(p => p == contentTypePermission.DeveloperName)),
-                    ContentTypeId = contentType.Id,
-                    ContentTypeLabel = contentType.LabelPlural
-                });
+                contentTypePermissions.Add(
+                    new EditRole_ViewModel.ContentTypePermissionCheckboxItem_ViewModel
+                    {
+                        DeveloperName = contentTypePermission.DeveloperName,
+                        Label = contentTypePermission.Label,
+                        Selected = response.Result.ContentTypePermissions.Any(c =>
+                            c.Key == contentType.Id
+                            && c.Value.Any(p => p == contentTypePermission.DeveloperName)
+                        ),
+                        ContentTypeId = contentType.Id,
+                        ContentTypeLabel = contentType.LabelPlural,
+                    }
+                );
             }
         }
 
@@ -148,7 +176,7 @@ public class RolesController : BaseController
             DeveloperName = response.Result.DeveloperName,
             SystemPermissions = systemPermissions.ToArray(),
             ContentTypePermissions = contentTypePermissions.ToArray(),
-            IsSuperAdmin = BuiltInRole.SuperAdmin.DeveloperName == response.Result.DeveloperName
+            IsSuperAdmin = BuiltInRole.SuperAdmin.DeveloperName == response.Result.DeveloperName,
         };
         return View(model);
     }
@@ -161,7 +189,9 @@ public class RolesController : BaseController
         var contentTypePermissionsDict = new Dictionary<string, IEnumerable<string>>();
         foreach (var contentPermGroup in model.ContentTypePermissions.GroupBy(p => p.ContentTypeId))
         {
-            var selectedContentPermissions = contentPermGroup.Where(p => p.Selected).Select(p => p.DeveloperName);
+            var selectedContentPermissions = contentPermGroup
+                .Where(p => p.Selected)
+                .Select(p => p.DeveloperName);
             contentTypePermissionsDict.Add(contentPermGroup.Key, selectedContentPermissions);
         }
 
@@ -169,8 +199,10 @@ public class RolesController : BaseController
         {
             Id = id,
             Label = model.Label,
-            SystemPermissions = model.SystemPermissions.Where(p => p.Selected).Select(p => p.DeveloperName),
-            ContentTypePermissions = contentTypePermissionsDict
+            SystemPermissions = model
+                .SystemPermissions.Where(p => p.Selected)
+                .Select(p => p.DeveloperName),
+            ContentTypePermissions = contentTypePermissionsDict,
         };
 
         var response = await Mediator.Send(input);
@@ -181,7 +213,10 @@ public class RolesController : BaseController
             return RedirectToAction("Edit", new { id });
         }
         {
-            SetErrorMessage("There was an error attempting to update this role. See the error below.", response.GetErrors());
+            SetErrorMessage(
+                "There was an error attempting to update this role. See the error below.",
+                response.GetErrors()
+            );
             model.Id = id;
             return View(model);
         }

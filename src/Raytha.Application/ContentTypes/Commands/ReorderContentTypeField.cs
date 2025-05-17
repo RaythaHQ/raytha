@@ -20,33 +20,44 @@ public class ReorderContentTypeField
     {
         public Validator(IRaythaDbContext db)
         {
-            RuleFor(x => x.NewFieldOrder).Must((request, newFieldOrder) =>
-            {
-                var entity = db.ContentTypeFields
-                    .Include(p => p.ContentType)
-                    .ThenInclude(p => p.ContentTypeFields)
-                    .FirstOrDefault(p => p.Id == request.Id.Guid);
+            RuleFor(x => x.NewFieldOrder)
+                .Must(
+                    (request, newFieldOrder) =>
+                    {
+                        var entity = db
+                            .ContentTypeFields.Include(p => p.ContentType)
+                            .ThenInclude(p => p.ContentTypeFields)
+                            .FirstOrDefault(p => p.Id == request.Id.Guid);
 
-                if (entity == null)
-                    throw new NotFoundException("Content Type Field", request.Id);
+                        if (entity == null)
+                            throw new NotFoundException("Content Type Field", request.Id);
 
-                return !(request.NewFieldOrder <= 0 || request.NewFieldOrder > entity.ContentType.ContentTypeFields.Count());
-
-            }).WithMessage(x => $"Invalid field order: {x.NewFieldOrder}");
+                        return !(
+                            request.NewFieldOrder <= 0
+                            || request.NewFieldOrder > entity.ContentType.ContentTypeFields.Count()
+                        );
+                    }
+                )
+                .WithMessage(x => $"Invalid field order: {x.NewFieldOrder}");
         }
     }
 
     public class Handler : IRequestHandler<Command, CommandResponseDto<ShortGuid>>
     {
         private readonly IRaythaDbContext _db;
+
         public Handler(IRaythaDbContext db)
         {
             _db = db;
         }
-        public async Task<CommandResponseDto<ShortGuid>> Handle(Command request, CancellationToken cancellationToken)
+
+        public async Task<CommandResponseDto<ShortGuid>> Handle(
+            Command request,
+            CancellationToken cancellationToken
+        )
         {
-            var entity = _db.ContentTypeFields
-                .Include(p => p.ContentType)
+            var entity = _db
+                .ContentTypeFields.Include(p => p.ContentType)
                 .ThenInclude(p => p.ContentTypeFields)
                 .First(p => p.Id == request.Id.Guid);
 
@@ -61,10 +72,13 @@ public class ReorderContentTypeField
 
             if (request.NewFieldOrder < originalFieldOrder)
             {
-                foreach (var customField in entity.ContentType.ContentTypeFields
-                            .Where(p => p.Id != entity.Id &&
-                                   p.FieldOrder >= request.NewFieldOrder &&
-                                   p.FieldOrder < originalFieldOrder))
+                foreach (
+                    var customField in entity.ContentType.ContentTypeFields.Where(p =>
+                        p.Id != entity.Id
+                        && p.FieldOrder >= request.NewFieldOrder
+                        && p.FieldOrder < originalFieldOrder
+                    )
+                )
                 {
                     customField.FieldOrder += 1;
                     fieldsToUpdate.Add(customField);
@@ -72,10 +86,13 @@ public class ReorderContentTypeField
             }
             else
             {
-                foreach (var customField in entity.ContentType.ContentTypeFields
-                            .Where(p => p.Id != entity.Id &&
-                                   p.FieldOrder <= request.NewFieldOrder &&
-                                   p.FieldOrder > originalFieldOrder))
+                foreach (
+                    var customField in entity.ContentType.ContentTypeFields.Where(p =>
+                        p.Id != entity.Id
+                        && p.FieldOrder <= request.NewFieldOrder
+                        && p.FieldOrder > originalFieldOrder
+                    )
+                )
                 {
                     customField.FieldOrder -= 1;
                     fieldsToUpdate.Add(customField);

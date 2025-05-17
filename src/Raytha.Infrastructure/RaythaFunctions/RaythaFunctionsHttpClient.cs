@@ -1,6 +1,6 @@
-﻿using Raytha.Application.Common.Interfaces;
-using System.Text;
+﻿using System.Text;
 using System.Text.Json;
+using Raytha.Application.Common.Interfaces;
 
 namespace Raytha.Infrastructure.RaythaFunctions;
 
@@ -18,12 +18,22 @@ public class RaythaFunctionsHttpClient : IRaythaFunctionsHttpClient
         return MakeRequest(url, HttpMethod.Get, headers);
     }
 
-    public dynamic Post(string url, IDictionary<string, object> headers = null, IDictionary<string, object> body = null, bool json = true)
+    public dynamic Post(
+        string url,
+        IDictionary<string, object> headers = null,
+        IDictionary<string, object> body = null,
+        bool json = true
+    )
     {
         return MakeRequest(url, HttpMethod.Post, headers, body, json);
     }
 
-    public dynamic Put(string url, IDictionary<string, object> headers = null, IDictionary<string, object> body = null, bool json = true)
+    public dynamic Put(
+        string url,
+        IDictionary<string, object> headers = null,
+        IDictionary<string, object> body = null,
+        bool json = true
+    )
     {
         return MakeRequest(url, HttpMethod.Put, headers, body, json);
     }
@@ -33,7 +43,13 @@ public class RaythaFunctionsHttpClient : IRaythaFunctionsHttpClient
         return MakeRequest(url, HttpMethod.Delete, headers);
     }
 
-    private dynamic MakeRequest(string url, HttpMethod method, IDictionary<string, object> headers = null, IDictionary<string, object> body = null, bool json = true)
+    private dynamic MakeRequest(
+        string url,
+        HttpMethod method,
+        IDictionary<string, object> headers = null,
+        IDictionary<string, object> body = null,
+        bool json = true
+    )
     {
         if (headers != null)
         {
@@ -49,12 +65,17 @@ public class RaythaFunctionsHttpClient : IRaythaFunctionsHttpClient
         {
             if (json)
             {
-                request.Content = new StringContent(JsonSerializer.Serialize(body), Encoding.UTF8, "application/json");
+                request.Content = new StringContent(
+                    JsonSerializer.Serialize(body),
+                    Encoding.UTF8,
+                    "application/json"
+                );
             }
             else
             {
-                IEnumerable<KeyValuePair<string, string>> bodyAsKv = body
-                    .Select(kvp => new KeyValuePair<string, string>(kvp.Key, kvp.Value.ToString()));
+                IEnumerable<KeyValuePair<string, string>> bodyAsKv = body.Select(
+                    kvp => new KeyValuePair<string, string>(kvp.Key, kvp.Value.ToString())
+                );
                 request.Content = new FormUrlEncodedContent(bodyAsKv);
             }
         }

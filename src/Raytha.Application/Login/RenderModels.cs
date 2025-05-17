@@ -34,22 +34,38 @@ public record SendBeginLoginWithMagicLink_RenderModel : BaseSendToUserEmail_Rend
     }
 }
 
-public record SendCompletedForgotPassword_RenderModel : BaseSendToUserEmail_RenderModel
-{
-}
+public record SendCompletedForgotPassword_RenderModel : BaseSendToUserEmail_RenderModel { }
 
 public record LoginSubmit_RenderModel : BaseFormSubmit_RenderModel
 {
     public string ReturnUrl { get; init; } = string.Empty;
     public bool ShowOrLoginWithSection => HasLoginByMagicLink || HasLoginBySingleSignOn;
-    public bool HasLoginByEmailAndPassword => AuthenticationSchemes.Any(p => p.DeveloperName == AuthenticationSchemeType.EmailAndPassword.DeveloperName);
-    public bool HasLoginByMagicLink => AuthenticationSchemes.Any(p => p.DeveloperName == AuthenticationSchemeType.MagicLink.DeveloperName);
+    public bool HasLoginByEmailAndPassword =>
+        AuthenticationSchemes.Any(p =>
+            p.DeveloperName == AuthenticationSchemeType.EmailAndPassword.DeveloperName
+        );
+    public bool HasLoginByMagicLink =>
+        AuthenticationSchemes.Any(p =>
+            p.DeveloperName == AuthenticationSchemeType.MagicLink.DeveloperName
+        );
     public bool HasLoginBySingleSignOn => AuthenticationSchemes.Any(p => !p.IsBuiltInAuth);
 
-    public AuthenticationScheme_RenderModel EmailAndPassword => HasLoginByEmailAndPassword ? AuthenticationSchemes.First(p => p.DeveloperName == AuthenticationSchemeType.EmailAndPassword.DeveloperName) : null;
-    public AuthenticationScheme_RenderModel MagicLink => HasLoginByMagicLink ? AuthenticationSchemes.First(p => p.DeveloperName == AuthenticationSchemeType.MagicLink.DeveloperName) : null;
-    public IEnumerable<AuthenticationScheme_RenderModel> SingleSignOns => HasLoginBySingleSignOn ? AuthenticationSchemes.Where(p => !p.IsBuiltInAuth) : null;
-    public IEnumerable<AuthenticationScheme_RenderModel> AuthenticationSchemes { get; init; } = new List<AuthenticationScheme_RenderModel>();
+    public AuthenticationScheme_RenderModel EmailAndPassword =>
+        HasLoginByEmailAndPassword
+            ? AuthenticationSchemes.First(p =>
+                p.DeveloperName == AuthenticationSchemeType.EmailAndPassword.DeveloperName
+            )
+            : null;
+    public AuthenticationScheme_RenderModel MagicLink =>
+        HasLoginByMagicLink
+            ? AuthenticationSchemes.First(p =>
+                p.DeveloperName == AuthenticationSchemeType.MagicLink.DeveloperName
+            )
+            : null;
+    public IEnumerable<AuthenticationScheme_RenderModel> SingleSignOns =>
+        HasLoginBySingleSignOn ? AuthenticationSchemes.Where(p => !p.IsBuiltInAuth) : null;
+    public IEnumerable<AuthenticationScheme_RenderModel> AuthenticationSchemes { get; init; } =
+        new List<AuthenticationScheme_RenderModel>();
 
     public override IEnumerable<string> GetDeveloperNames()
     {
@@ -62,25 +78,32 @@ public record LoginSubmit_RenderModel : BaseFormSubmit_RenderModel
         yield return nameof(HasLoginByEmailAndPassword);
         yield return nameof(HasLoginByMagicLink);
         yield return nameof(HasLoginBySingleSignOn);
-        foreach (var item in AuthenticationScheme_RenderModel.FromPrefix("EmailAndPassword").GetDeveloperNames())
+        foreach (
+            var item in AuthenticationScheme_RenderModel
+                .FromPrefix("EmailAndPassword")
+                .GetDeveloperNames()
+        )
         {
             yield return item;
         }
-        foreach (var item in AuthenticationScheme_RenderModel.FromPrefix("MagicLink").GetDeveloperNames())
+        foreach (
+            var item in AuthenticationScheme_RenderModel.FromPrefix("MagicLink").GetDeveloperNames()
+        )
         {
             yield return item;
         }
-        foreach (var item in AuthenticationScheme_RenderModel.FromPrefix("SingleSignOns[0]").GetDeveloperNames())
+        foreach (
+            var item in AuthenticationScheme_RenderModel
+                .FromPrefix("SingleSignOns[0]")
+                .GetDeveloperNames()
+        )
         {
             yield return item;
         }
     }
 }
 
-public record ForgotPasswordSubmit_RenderModel : BaseFormSubmit_RenderModel
-{
-
-}
+public record ForgotPasswordSubmit_RenderModel : BaseFormSubmit_RenderModel { }
 
 public record ForgotPasswordCompleteSubmit_RenderModel : BaseFormSubmit_RenderModel
 {

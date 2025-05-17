@@ -4,7 +4,7 @@ using System.Text.Json;
 namespace Raytha.Domain.Entities;
 
 public class User : BaseAuditableEntity, IPassivable
-{   
+{
     //meta
     public bool IsAdmin { get; set; }
     public bool IsActive { get; set; }
@@ -34,17 +34,24 @@ public class User : BaseAuditableEntity, IPassivable
     [NotMapped]
     public IEnumerable<RecentlyAccessedView> RecentlyAccessedViews
     {
-        get { return JsonSerializer.Deserialize<IEnumerable<RecentlyAccessedView>>(_RecentlyAccessedViews ?? "[]"); }
+        get
+        {
+            return JsonSerializer.Deserialize<IEnumerable<RecentlyAccessedView>>(
+                _RecentlyAccessedViews ?? "[]"
+            );
+        }
         set { _RecentlyAccessedViews = JsonSerializer.Serialize(value); }
     }
 
     public override string ToString()
     {
-        return JsonSerializer.Serialize(new
-        {
-            Id, 
-            FullName, 
-            EmailAddress
-        });
+        return JsonSerializer.Serialize(
+            new
+            {
+                Id,
+                FullName,
+                EmailAddress,
+            }
+        );
     }
 }

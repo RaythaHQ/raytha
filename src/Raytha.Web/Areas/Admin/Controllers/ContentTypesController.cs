@@ -1,21 +1,21 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using System.Threading.Tasks;
-using System;
+﻿using System;
 using System.Linq;
-using Raytha.Application.ContentTypes.Commands;
-using Raytha.Domain.ValueObjects;
-using Raytha.Application.ContentTypes.Queries;
-using Raytha.Web.Filters;
-using Microsoft.AspNetCore.Http;
-using Raytha.Application.Views;
-using Raytha.Domain.ValueObjects.FieldTypes;
-using Raytha.Application.ContentTypes;
-using Raytha.Web.Areas.Admin.Views.ContentTypes;
-using Raytha.Application.Common.Utils;
-using Raytha.Application.ContentItems.Queries;
-using Raytha.Application.ContentItems.Commands;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using Raytha.Application.Common.Utils;
+using Raytha.Application.ContentItems.Commands;
+using Raytha.Application.ContentItems.Queries;
+using Raytha.Application.ContentTypes;
+using Raytha.Application.ContentTypes.Commands;
+using Raytha.Application.ContentTypes.Queries;
+using Raytha.Application.Views;
 using Raytha.Domain.Entities;
+using Raytha.Domain.ValueObjects;
+using Raytha.Domain.ValueObjects.FieldTypes;
+using Raytha.Web.Areas.Admin.Views.ContentTypes;
+using Raytha.Web.Filters;
 using Raytha.Web.Utils;
 
 namespace Raytha.Web.Areas.Admin.Controllers;
@@ -30,7 +30,7 @@ public class ContentTypesController : BaseController
         var viewModel = new ContentTypesCreate_ViewModel
         {
             WebsiteUrl = CurrentOrganization.WebsiteUrl.TrimEnd('/') + "/",
-            DefaultRouteTemplate = "{ContentTypeDeveloperName}/{PrimaryField}"
+            DefaultRouteTemplate = "{ContentTypeDeveloperName}/{PrimaryField}",
         };
         return View(viewModel);
     }
@@ -47,18 +47,25 @@ public class ContentTypesController : BaseController
             LabelSingular = model.LabelSingular,
             DefaultRouteTemplate = model.DefaultRouteTemplate,
             Description = model.Description,
-            DeveloperName = model.DeveloperName
+            DeveloperName = model.DeveloperName,
         };
 
         var response = await Mediator.Send(input);
         if (response.Success)
         {
             SetSuccessMessage($"{model.LabelPlural} edit successfully.");
-            return RedirectToAction("Index", "ContentItems", new { contentTypeDeveloperName = model.DeveloperName.ToDeveloperName() });
+            return RedirectToAction(
+                "Index",
+                "ContentItems",
+                new { contentTypeDeveloperName = model.DeveloperName.ToDeveloperName() }
+            );
         }
         else
         {
-            SetErrorMessage("There were validation errors with your form submission. Please correct the fields below.", response.GetErrors());
+            SetErrorMessage(
+                "There were validation errors with your form submission. Please correct the fields below.",
+                response.GetErrors()
+            );
             model.WebsiteUrl = CurrentOrganization.WebsiteUrl.TrimEnd('/') + "/";
             return View(model);
         }
@@ -66,7 +73,10 @@ public class ContentTypesController : BaseController
 
     [Authorize(Policy = BuiltInContentTypePermission.CONTENT_TYPE_CONFIG_PERMISSION)]
     [ServiceFilter(typeof(GetOrSetRecentlyAccessedViewFilterAttribute))]
-    [Route($"{RAYTHA_ROUTE_PREFIX}/{{{RouteConstants.CONTENT_TYPE_DEVELOPER_NAME}}}/configuration", Name = "contenttypesconfiguration")]
+    [Route(
+        $"{RAYTHA_ROUTE_PREFIX}/{{{RouteConstants.CONTENT_TYPE_DEVELOPER_NAME}}}/configuration",
+        Name = "contenttypesconfiguration"
+    )]
     public async Task<IActionResult> Configuration()
     {
         var viewModel = new ContentTypesEdit_ViewModel
@@ -79,7 +89,11 @@ public class ContentTypesController : BaseController
             Description = CurrentView.ContentType.Description,
             Id = CurrentView.ContentTypeId,
             PrimaryFieldId = CurrentView.ContentType.PrimaryFieldId,
-            ContentTypeFields = CurrentView.ContentType.ContentTypeFields.Where(p => p.FieldType.DeveloperName == BaseFieldType.SingleLineText).ToDictionary(p => p.Id.ToString(), p => p.DeveloperName)
+            ContentTypeFields = CurrentView
+                .ContentType.ContentTypeFields.Where(p =>
+                    p.FieldType.DeveloperName == BaseFieldType.SingleLineText
+                )
+                .ToDictionary(p => p.Id.ToString(), p => p.DeveloperName),
         };
 
         return View(viewModel);
@@ -87,7 +101,10 @@ public class ContentTypesController : BaseController
 
     [Authorize(Policy = BuiltInContentTypePermission.CONTENT_TYPE_CONFIG_PERMISSION)]
     [ServiceFilter(typeof(GetOrSetRecentlyAccessedViewFilterAttribute))]
-    [Route($"{RAYTHA_ROUTE_PREFIX}/{{{RouteConstants.CONTENT_TYPE_DEVELOPER_NAME}}}/configuration", Name = "contenttypesconfiguration")]
+    [Route(
+        $"{RAYTHA_ROUTE_PREFIX}/{{{RouteConstants.CONTENT_TYPE_DEVELOPER_NAME}}}/configuration",
+        Name = "contenttypesconfiguration"
+    )]
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Configuration(ContentTypesEdit_ViewModel model)
@@ -99,7 +116,7 @@ public class ContentTypesController : BaseController
             DefaultRouteTemplate = model.DefaultRouteTemplate,
             Id = CurrentView.ContentTypeId,
             Description = model.Description,
-            PrimaryFieldId = model.PrimaryFieldId
+            PrimaryFieldId = model.PrimaryFieldId,
         };
 
         var response = await Mediator.Send(input);
@@ -110,8 +127,15 @@ public class ContentTypesController : BaseController
         }
         else
         {
-            SetErrorMessage("There were validation errors with your form submission. Please correct the fields below.", response.GetErrors());
-            model.ContentTypeFields = CurrentView.ContentType.ContentTypeFields.Where(p => p.FieldType.DeveloperName == BaseFieldType.SingleLineText).ToDictionary(p => p.Id.ToString(), p => p.DeveloperName);
+            SetErrorMessage(
+                "There were validation errors with your form submission. Please correct the fields below.",
+                response.GetErrors()
+            );
+            model.ContentTypeFields = CurrentView
+                .ContentType.ContentTypeFields.Where(p =>
+                    p.FieldType.DeveloperName == BaseFieldType.SingleLineText
+                )
+                .ToDictionary(p => p.Id.ToString(), p => p.DeveloperName);
             model.WebsiteUrl = CurrentOrganization.WebsiteUrl.TrimEnd('/') + "/";
             return View(model);
         }
@@ -120,8 +144,16 @@ public class ContentTypesController : BaseController
     [Authorize(Policy = BuiltInContentTypePermission.CONTENT_TYPE_CONFIG_PERMISSION)]
     [ServiceFilter(typeof(GetOrSetRecentlyAccessedViewFilterAttribute))]
     [ServiceFilter(typeof(SetPaginationInformationFilterAttribute))]
-    [Route($"{RAYTHA_ROUTE_PREFIX}/{{{RouteConstants.CONTENT_TYPE_DEVELOPER_NAME}}}/fields", Name = "contenttypesfieldslist")]
-    public async Task<IActionResult> FieldsList(string search = "", string orderBy = $"FieldOrder {SortOrder.ASCENDING}", int pageNumber = 1, int pageSize = 50)
+    [Route(
+        $"{RAYTHA_ROUTE_PREFIX}/{{{RouteConstants.CONTENT_TYPE_DEVELOPER_NAME}}}/fields",
+        Name = "contenttypesfieldslist"
+    )]
+    public async Task<IActionResult> FieldsList(
+        string search = "",
+        string orderBy = $"FieldOrder {SortOrder.ASCENDING}",
+        int pageNumber = 1,
+        int pageSize = 50
+    )
     {
         var input = new GetContentTypeFields.Query
         {
@@ -130,7 +162,7 @@ public class ContentTypesController : BaseController
             PageSize = pageSize,
             OrderBy = orderBy,
             DeveloperName = CurrentView.ContentType.DeveloperName,
-            ShowDeletedOnly = false
+            ShowDeletedOnly = false,
         };
         var response = await Mediator.Send(input);
 
@@ -140,7 +172,7 @@ public class ContentTypesController : BaseController
             Label = p.Label,
             DeveloperName = p.DeveloperName,
             FieldType = p.FieldType,
-            IsRequired = p.IsRequired.YesOrNo()
+            IsRequired = p.IsRequired.YesOrNo(),
         });
 
         var viewModel = new FieldsPagination_ViewModel(items, response.Result.TotalCount, false);
@@ -151,8 +183,16 @@ public class ContentTypesController : BaseController
     [Authorize(Policy = BuiltInContentTypePermission.CONTENT_TYPE_CONFIG_PERMISSION)]
     [ServiceFilter(typeof(GetOrSetRecentlyAccessedViewFilterAttribute))]
     [ServiceFilter(typeof(SetPaginationInformationFilterAttribute))]
-    [Route($"{RAYTHA_ROUTE_PREFIX}/{{{RouteConstants.CONTENT_TYPE_DEVELOPER_NAME}}}/deleted-fields", Name = "contenttypesfieldslistdeleted")]
-    public async Task<IActionResult> FieldsListDeleted(string search = "", string orderBy = $"FieldOrder {SortOrder.ASCENDING}", int pageNumber = 1, int pageSize = 50)
+    [Route(
+        $"{RAYTHA_ROUTE_PREFIX}/{{{RouteConstants.CONTENT_TYPE_DEVELOPER_NAME}}}/deleted-fields",
+        Name = "contenttypesfieldslistdeleted"
+    )]
+    public async Task<IActionResult> FieldsListDeleted(
+        string search = "",
+        string orderBy = $"FieldOrder {SortOrder.ASCENDING}",
+        int pageNumber = 1,
+        int pageSize = 50
+    )
     {
         var input = new GetContentTypeFields.Query
         {
@@ -161,7 +201,7 @@ public class ContentTypesController : BaseController
             PageSize = pageSize,
             OrderBy = orderBy,
             DeveloperName = CurrentView.ContentType.DeveloperName,
-            ShowDeletedOnly = true
+            ShowDeletedOnly = true,
         };
         var response = await Mediator.Send(input);
 
@@ -171,7 +211,7 @@ public class ContentTypesController : BaseController
             Label = p.Label,
             DeveloperName = p.DeveloperName,
             FieldType = p.FieldType,
-            IsRequired = p.IsRequired.YesOrNo()
+            IsRequired = p.IsRequired.YesOrNo(),
         });
 
         var viewModel = new FieldsPagination_ViewModel(items, response.Result.TotalCount, true);
@@ -181,7 +221,10 @@ public class ContentTypesController : BaseController
 
     [Authorize(Policy = BuiltInContentTypePermission.CONTENT_TYPE_CONFIG_PERMISSION)]
     [ServiceFilter(typeof(GetOrSetRecentlyAccessedViewFilterAttribute))]
-    [Route($"{RAYTHA_ROUTE_PREFIX}/{{{RouteConstants.CONTENT_TYPE_DEVELOPER_NAME}}}/fields/create", Name = "contenttypesfieldscreate")]
+    [Route(
+        $"{RAYTHA_ROUTE_PREFIX}/{{{RouteConstants.CONTENT_TYPE_DEVELOPER_NAME}}}/fields/create",
+        Name = "contenttypesfieldscreate"
+    )]
     public async Task<IActionResult> FieldsCreate()
     {
         var contentTypes = await Mediator.Send(new GetContentTypes.Query());
@@ -189,8 +232,14 @@ public class ContentTypesController : BaseController
         var viewModel = new FieldsCreate_ViewModel
         {
             ContentTypeId = CurrentView.ContentTypeId,
-            AvailableContentTypes = contentTypes.Result.Items.ToDictionary(p => p.Id.ToString(), p => p.LabelPlural),
-            AvailableFieldTypes = BaseFieldType.SupportedTypes.ToDictionary(p => p.DeveloperName, p => p.Label)
+            AvailableContentTypes = contentTypes.Result.Items.ToDictionary(
+                p => p.Id.ToString(),
+                p => p.LabelPlural
+            ),
+            AvailableFieldTypes = BaseFieldType.SupportedTypes.ToDictionary(
+                p => p.DeveloperName,
+                p => p.Label
+            ),
         };
 
         return View(viewModel);
@@ -198,7 +247,10 @@ public class ContentTypesController : BaseController
 
     [Authorize(Policy = BuiltInContentTypePermission.CONTENT_TYPE_CONFIG_PERMISSION)]
     [ServiceFilter(typeof(GetOrSetRecentlyAccessedViewFilterAttribute))]
-    [Route($"{RAYTHA_ROUTE_PREFIX}/{{{RouteConstants.CONTENT_TYPE_DEVELOPER_NAME}}}/fields/create", Name = "contenttypesfieldscreate")]
+    [Route(
+        $"{RAYTHA_ROUTE_PREFIX}/{{{RouteConstants.CONTENT_TYPE_DEVELOPER_NAME}}}/fields/create",
+        Name = "contenttypesfieldscreate"
+    )]
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> FieldsCreate(FieldsCreate_ViewModel model)
@@ -209,49 +261,82 @@ public class ContentTypesController : BaseController
             DeveloperName = model.DeveloperName,
             ContentTypeId = model.ContentTypeId,
             FieldType = model.FieldType,
-            Choices = model.Choices.Select(p => new ContentTypeFieldChoiceInputDto { Label = p.Label, DeveloperName = p.DeveloperName, Disabled = p.Disabled }),
+            Choices = model.Choices.Select(p => new ContentTypeFieldChoiceInputDto
+            {
+                Label = p.Label,
+                DeveloperName = p.DeveloperName,
+                Disabled = p.Disabled,
+            }),
             IsRequired = model.IsRequired,
             Description = model.Description,
-            RelatedContentTypeId = model.RelatedContentTypeId
+            RelatedContentTypeId = model.RelatedContentTypeId,
         };
         var response = await Mediator.Send(input);
 
         if (response.Success)
         {
             SetSuccessMessage($"{model.Label} was created successfully.");
-            return RedirectToAction("FieldsList", new { contentTypeDeveloperName = CurrentView.ContentType.DeveloperName });
+            return RedirectToAction(
+                "FieldsList",
+                new { contentTypeDeveloperName = CurrentView.ContentType.DeveloperName }
+            );
         }
         else
         {
             var contentTypes = await Mediator.Send(new GetContentTypes.Query());
-            SetErrorMessage("There was an error attempting to save this field definition. See the error below.", response.GetErrors());
+            SetErrorMessage(
+                "There was an error attempting to save this field definition. See the error below.",
+                response.GetErrors()
+            );
 
-            model.AvailableContentTypes = contentTypes.Result.Items.ToDictionary(p => p.Id.ToString(), p => p.LabelPlural);
-            model.AvailableFieldTypes = BaseFieldType.SupportedTypes.ToDictionary(p => p.DeveloperName, p => p.Label);
+            model.AvailableContentTypes = contentTypes.Result.Items.ToDictionary(
+                p => p.Id.ToString(),
+                p => p.LabelPlural
+            );
+            model.AvailableFieldTypes = BaseFieldType.SupportedTypes.ToDictionary(
+                p => p.DeveloperName,
+                p => p.Label
+            );
             return View(model);
         }
     }
 
     [Authorize(Policy = BuiltInContentTypePermission.CONTENT_TYPE_CONFIG_PERMISSION)]
     [ServiceFilter(typeof(GetOrSetRecentlyAccessedViewFilterAttribute))]
-    [Route($"{RAYTHA_ROUTE_PREFIX}/{{{RouteConstants.CONTENT_TYPE_DEVELOPER_NAME}}}/fields/edit/{{id}}", Name = "contenttypesfieldsedit")]
+    [Route(
+        $"{RAYTHA_ROUTE_PREFIX}/{{{RouteConstants.CONTENT_TYPE_DEVELOPER_NAME}}}/fields/edit/{{id}}",
+        Name = "contenttypesfieldsedit"
+    )]
     public async Task<IActionResult> FieldsEdit(string id)
     {
         var response = await Mediator.Send(new GetContentTypeFieldById.Query { Id = id });
         var contentTypes = await Mediator.Send(new GetContentTypes.Query());
-        
+
         var viewModel = new EditField_ViewModel
         {
             Id = response.Result.Id,
             Label = response.Result.Label,
             FieldType = response.Result.FieldType,
             DeveloperName = response.Result.DeveloperName,
-            Choices = response.Result.Choices?.Select(p => new FieldChoiceItem_ViewModel { Label = p.Label, DeveloperName = p.DeveloperName, Disabled = p.Disabled }).ToArray(),
+            Choices = response
+                .Result.Choices?.Select(p => new FieldChoiceItem_ViewModel
+                {
+                    Label = p.Label,
+                    DeveloperName = p.DeveloperName,
+                    Disabled = p.Disabled,
+                })
+                .ToArray(),
             IsRequired = response.Result.IsRequired,
             Description = response.Result.Description,
-            AvailableContentTypes = contentTypes.Result.Items.ToDictionary(p => p.Id.ToString(), p => p.LabelPlural),
-            AvailableFieldTypes = BaseFieldType.SupportedTypes.ToDictionary(p => p.DeveloperName, p => p.Label),
-            RelatedContentTypeId = response.Result.RelatedContentTypeId
+            AvailableContentTypes = contentTypes.Result.Items.ToDictionary(
+                p => p.Id.ToString(),
+                p => p.LabelPlural
+            ),
+            AvailableFieldTypes = BaseFieldType.SupportedTypes.ToDictionary(
+                p => p.DeveloperName,
+                p => p.Label
+            ),
+            RelatedContentTypeId = response.Result.RelatedContentTypeId,
         };
 
         return View(viewModel);
@@ -259,7 +344,10 @@ public class ContentTypesController : BaseController
 
     [Authorize(Policy = BuiltInContentTypePermission.CONTENT_TYPE_CONFIG_PERMISSION)]
     [ServiceFilter(typeof(GetOrSetRecentlyAccessedViewFilterAttribute))]
-    [Route($"{RAYTHA_ROUTE_PREFIX}/{{{RouteConstants.CONTENT_TYPE_DEVELOPER_NAME}}}/fields/edit/{{id}}", Name = "contenttypesfieldsedit")]
+    [Route(
+        $"{RAYTHA_ROUTE_PREFIX}/{{{RouteConstants.CONTENT_TYPE_DEVELOPER_NAME}}}/fields/edit/{{id}}",
+        Name = "contenttypesfieldsedit"
+    )]
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> FieldsEdit(EditField_ViewModel model, string id)
@@ -268,24 +356,41 @@ public class ContentTypesController : BaseController
         {
             Id = id,
             Label = model.Label,
-            Choices = model.Choices?.Select(p => new ContentTypeFieldChoiceInputDto { Label = p.Label, DeveloperName = p.DeveloperName, Disabled = p.Disabled }),
+            Choices = model.Choices?.Select(p => new ContentTypeFieldChoiceInputDto
+            {
+                Label = p.Label,
+                DeveloperName = p.DeveloperName,
+                Disabled = p.Disabled,
+            }),
             IsRequired = model.IsRequired,
-            Description = model.Description
+            Description = model.Description,
         };
         var response = await Mediator.Send(input);
 
         if (response.Success)
         {
             SetSuccessMessage($"{model.Label} was edited successfully.");
-            return RedirectToAction("FieldsList", new { contentTypeDeveloperName = CurrentView.ContentType.DeveloperName });
+            return RedirectToAction(
+                "FieldsList",
+                new { contentTypeDeveloperName = CurrentView.ContentType.DeveloperName }
+            );
         }
         else
         {
-            SetErrorMessage("There was an error attempting to save this field definition. See the error below.", response.GetErrors());
+            SetErrorMessage(
+                "There was an error attempting to save this field definition. See the error below.",
+                response.GetErrors()
+            );
 
             var contentTypes = await Mediator.Send(new GetContentTypes.Query());
-            model.AvailableContentTypes = contentTypes.Result.Items.ToDictionary(p => p.Id.ToString(), p => p.LabelPlural);
-            model.AvailableFieldTypes = BaseFieldType.SupportedTypes.ToDictionary(p => p.DeveloperName, p => p.Label);
+            model.AvailableContentTypes = contentTypes.Result.Items.ToDictionary(
+                p => p.Id.ToString(),
+                p => p.LabelPlural
+            );
+            model.AvailableFieldTypes = BaseFieldType.SupportedTypes.ToDictionary(
+                p => p.DeveloperName,
+                p => p.Label
+            );
             return View(model);
         }
     }
@@ -293,7 +398,10 @@ public class ContentTypesController : BaseController
     [Authorize(Policy = BuiltInContentTypePermission.CONTENT_TYPE_CONFIG_PERMISSION)]
     [ServiceFilter(typeof(GetOrSetRecentlyAccessedViewFilterAttribute))]
     [HttpPost]
-    [Route($"{RAYTHA_ROUTE_PREFIX}/{{{RouteConstants.CONTENT_TYPE_DEVELOPER_NAME}}}/fields/delete/{{id}}", Name = "contenttypesfieldsdelete")]
+    [Route(
+        $"{RAYTHA_ROUTE_PREFIX}/{{{RouteConstants.CONTENT_TYPE_DEVELOPER_NAME}}}/fields/delete/{{id}}",
+        Name = "contenttypesfieldsdelete"
+    )]
     public async Task<IActionResult> FieldsDelete(string id)
     {
         var input = new DeleteContentTypeField.Command { Id = id };
@@ -301,25 +409,37 @@ public class ContentTypesController : BaseController
         if (response.Success)
         {
             SetSuccessMessage($"Content type field has been deleted.");
-            return RedirectToAction("FieldsList", new { contentTypeDeveloperName = CurrentView.ContentType.DeveloperName });
+            return RedirectToAction(
+                "FieldsList",
+                new { contentTypeDeveloperName = CurrentView.ContentType.DeveloperName }
+            );
         }
         else
         {
-            SetErrorMessage("There was an error deleting this content type field", response.GetErrors());
-            return RedirectToAction("FieldsEdit", new { contentTypeDeveloperName = CurrentView.ContentType.DeveloperName, id });
+            SetErrorMessage(
+                "There was an error deleting this content type field",
+                response.GetErrors()
+            );
+            return RedirectToAction(
+                "FieldsEdit",
+                new { contentTypeDeveloperName = CurrentView.ContentType.DeveloperName, id }
+            );
         }
     }
 
     [Authorize(Policy = BuiltInContentTypePermission.CONTENT_TYPE_CONFIG_PERMISSION)]
     [ServiceFilter(typeof(GetOrSetRecentlyAccessedViewFilterAttribute))]
-    [Route($"{RAYTHA_ROUTE_PREFIX}/{{{RouteConstants.CONTENT_TYPE_DEVELOPER_NAME}}}/fields/reorder", Name = "contenttypesfieldsreorder")]
+    [Route(
+        $"{RAYTHA_ROUTE_PREFIX}/{{{RouteConstants.CONTENT_TYPE_DEVELOPER_NAME}}}/fields/reorder",
+        Name = "contenttypesfieldsreorder"
+    )]
     public async Task<IActionResult> FieldsReorder()
     {
         var input = new GetContentTypeFields.Query
         {
             PageSize = int.MaxValue,
             OrderBy = $"FieldOrder {SortOrder.ASCENDING}",
-            DeveloperName = CurrentView.ContentType.DeveloperName
+            DeveloperName = CurrentView.ContentType.DeveloperName,
         };
 
         var response = await Mediator.Send(input);
@@ -330,7 +450,7 @@ public class ContentTypesController : BaseController
             Label = p.Label,
             DeveloperName = p.DeveloperName,
             FieldType = p.FieldType,
-            IsRequired = p.IsRequired.YesOrNo()
+            IsRequired = p.IsRequired.YesOrNo(),
         });
 
         var viewModel = new FieldsPagination_ViewModel(items, response.Result.TotalCount, false);
@@ -340,7 +460,10 @@ public class ContentTypesController : BaseController
 
     [Authorize(Policy = BuiltInContentTypePermission.CONTENT_TYPE_CONFIG_PERMISSION)]
     [ServiceFilter(typeof(GetOrSetRecentlyAccessedViewFilterAttribute))]
-    [Route($"{RAYTHA_ROUTE_PREFIX}/{{{RouteConstants.CONTENT_TYPE_DEVELOPER_NAME}}}/fields/reorder/{{id}}", Name = "contenttypesfieldsreorderajax")]
+    [Route(
+        $"{RAYTHA_ROUTE_PREFIX}/{{{RouteConstants.CONTENT_TYPE_DEVELOPER_NAME}}}/fields/reorder/{{id}}",
+        Name = "contenttypesfieldsreorderajax"
+    )]
     [HttpPatch]
     public async Task<IActionResult> FieldsReorderAjax(string id)
     {
@@ -348,7 +471,7 @@ public class ContentTypesController : BaseController
         var input = new ReorderContentTypeField.Command
         {
             Id = id,
-            NewFieldOrder = Convert.ToInt32(position)
+            NewFieldOrder = Convert.ToInt32(position),
         };
 
         var result = await Mediator.Send(input);
@@ -361,8 +484,16 @@ public class ContentTypesController : BaseController
     [Authorize(Policy = BuiltInContentTypePermission.CONTENT_TYPE_CONFIG_PERMISSION)]
     [ServiceFilter(typeof(GetOrSetRecentlyAccessedViewFilterAttribute))]
     [ServiceFilter(typeof(SetPaginationInformationFilterAttribute))]
-    [Route($"{RAYTHA_ROUTE_PREFIX}/{{{RouteConstants.CONTENT_TYPE_DEVELOPER_NAME}}}/trash", Name = "contenttypesdeletedcontentitemslist")]
-    public async Task<IActionResult> DeletedContentItemsList(string search = "", string orderBy = $"CreationTime {SortOrder.DESCENDING}", int pageNumber = 1, int pageSize = 50)
+    [Route(
+        $"{RAYTHA_ROUTE_PREFIX}/{{{RouteConstants.CONTENT_TYPE_DEVELOPER_NAME}}}/trash",
+        Name = "contenttypesdeletedcontentitemslist"
+    )]
+    public async Task<IActionResult> DeletedContentItemsList(
+        string search = "",
+        string orderBy = $"CreationTime {SortOrder.DESCENDING}",
+        int pageNumber = 1,
+        int pageSize = 50
+    )
     {
         var input = new GetDeletedContentItems.Query
         {
@@ -370,7 +501,7 @@ public class ContentTypesController : BaseController
             PageNumber = pageNumber,
             PageSize = pageSize,
             OrderBy = orderBy,
-            DeveloperName = CurrentView.ContentType.DeveloperName
+            DeveloperName = CurrentView.ContentType.DeveloperName,
         };
         var response = await Mediator.Send(input);
 
@@ -379,18 +510,26 @@ public class ContentTypesController : BaseController
             Id = p.Id,
             PrimaryField = p.PrimaryField,
             DeletedBy = p.CreatorUser?.FullName ?? "N/A",
-            DeletionTime = CurrentOrganization.TimeZoneConverter.UtcToTimeZoneAsDateTimeFormat(p.CreationTime),
-            OriginalContentItemId = p.OriginalContentItemId
+            DeletionTime = CurrentOrganization.TimeZoneConverter.UtcToTimeZoneAsDateTimeFormat(
+                p.CreationTime
+            ),
+            OriginalContentItemId = p.OriginalContentItemId,
         });
 
-        var viewModel = new DeletedContentItemsPagination_ViewModel(items, response.Result.TotalCount);
+        var viewModel = new DeletedContentItemsPagination_ViewModel(
+            items,
+            response.Result.TotalCount
+        );
 
         return View(viewModel);
     }
 
     [Authorize(Policy = BuiltInContentTypePermission.CONTENT_TYPE_CONFIG_PERMISSION)]
     [ServiceFilter(typeof(GetOrSetRecentlyAccessedViewFilterAttribute))]
-    [Route($"{RAYTHA_ROUTE_PREFIX}/{{{RouteConstants.CONTENT_TYPE_DEVELOPER_NAME}}}/trash/restore/{{id}}", Name = "contenttypesdeletedcontentitemsrestore")]
+    [Route(
+        $"{RAYTHA_ROUTE_PREFIX}/{{{RouteConstants.CONTENT_TYPE_DEVELOPER_NAME}}}/trash/restore/{{id}}",
+        Name = "contenttypesdeletedcontentitemsrestore"
+    )]
     [HttpPost]
     public async Task<IActionResult> DeletedContentItemsRestore(string id)
     {
@@ -399,18 +538,35 @@ public class ContentTypesController : BaseController
         if (response.Success)
         {
             SetSuccessMessage($"{CurrentView.ContentType.LabelSingular} has been restored.");
-            return RedirectToAction("Edit", "ContentItems", new { id = response.Result.ToString(), contentTypeDeveloperName = CurrentView.ContentType.DeveloperName });
+            return RedirectToAction(
+                "Edit",
+                "ContentItems",
+                new
+                {
+                    id = response.Result.ToString(),
+                    contentTypeDeveloperName = CurrentView.ContentType.DeveloperName,
+                }
+            );
         }
         else
         {
-            SetErrorMessage($"There was an error restoring this {CurrentView.ContentType.LabelSingular.ToLower()}", response.GetErrors());
-            return RedirectToAction("DeletedContentItemsList", new { contentTypeDeveloperName = CurrentView.ContentType.DeveloperName });
+            SetErrorMessage(
+                $"There was an error restoring this {CurrentView.ContentType.LabelSingular.ToLower()}",
+                response.GetErrors()
+            );
+            return RedirectToAction(
+                "DeletedContentItemsList",
+                new { contentTypeDeveloperName = CurrentView.ContentType.DeveloperName }
+            );
         }
     }
 
     [Authorize(Policy = BuiltInContentTypePermission.CONTENT_TYPE_CONFIG_PERMISSION)]
     [ServiceFilter(typeof(GetOrSetRecentlyAccessedViewFilterAttribute))]
-    [Route($"{RAYTHA_ROUTE_PREFIX}/{{{RouteConstants.CONTENT_TYPE_DEVELOPER_NAME}}}/trash/clear/{{id}}", Name = "contenttypesdeletedcontentitemsclear")]
+    [Route(
+        $"{RAYTHA_ROUTE_PREFIX}/{{{RouteConstants.CONTENT_TYPE_DEVELOPER_NAME}}}/trash/clear/{{id}}",
+        Name = "contenttypesdeletedcontentitemsclear"
+    )]
     [HttpPost]
     public async Task<IActionResult> DeletedContentItemsClear(string id)
     {
@@ -418,20 +574,25 @@ public class ContentTypesController : BaseController
         var response = await Mediator.Send(input);
         if (response.Success)
         {
-            SetSuccessMessage($"{CurrentView.ContentType.LabelSingular} has been permanently removed.");
+            SetSuccessMessage(
+                $"{CurrentView.ContentType.LabelSingular} has been permanently removed."
+            );
         }
         else
         {
-            SetErrorMessage($"There was an error permanently removing this {CurrentView.ContentType.LabelSingular.ToLower()}", response.GetErrors());
+            SetErrorMessage(
+                $"There was an error permanently removing this {CurrentView.ContentType.LabelSingular.ToLower()}",
+                response.GetErrors()
+            );
         }
-        return RedirectToAction("DeletedContentItemsList", new { contentTypeDeveloperName = CurrentView.ContentType.DeveloperName });
+        return RedirectToAction(
+            "DeletedContentItemsList",
+            new { contentTypeDeveloperName = CurrentView.ContentType.DeveloperName }
+        );
     }
 
     protected ViewDto CurrentView
     {
-        get
-        {
-            return HttpContext.Items["CurrentView"] as ViewDto;
-        }
+        get { return HttpContext.Items["CurrentView"] as ViewDto; }
     }
 }

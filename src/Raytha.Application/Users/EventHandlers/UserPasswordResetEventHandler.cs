@@ -21,7 +21,8 @@ public class UserPasswordResetEventHandler : INotificationHandler<UserPasswordRe
         IRaythaDbContext db,
         IEmailer emailerService,
         IRenderEngine renderEngineService,
-        IRelativeUrlBuilder relativeUrlBuilderService)
+        IRelativeUrlBuilder relativeUrlBuilderService
+    )
     {
         _db = db;
         _emailerService = emailerService;
@@ -30,11 +31,16 @@ public class UserPasswordResetEventHandler : INotificationHandler<UserPasswordRe
         _currentOrganization = currentOrganization;
     }
 
-    public async Task Handle(UserPasswordResetEvent notification, CancellationToken cancellationToken)
+    public async Task Handle(
+        UserPasswordResetEvent notification,
+        CancellationToken cancellationToken
+    )
     {
         if (notification.SendEmail)
         {
-            EmailTemplate renderTemplate = _db.EmailTemplates.First(p => p.DeveloperName == BuiltInEmailTemplate.UserPasswordResetEmail);
+            EmailTemplate renderTemplate = _db.EmailTemplates.First(p =>
+                p.DeveloperName == BuiltInEmailTemplate.UserPasswordResetEmail
+            );
 
             SendUserPasswordReset_RenderModel entity = new SendUserPasswordReset_RenderModel
             {
@@ -45,22 +51,30 @@ public class UserPasswordResetEventHandler : INotificationHandler<UserPasswordRe
                 NewPassword = notification.NewPassword,
                 LoginUrl = _relativeUrlBuilderService.AdminLoginUrl(),
                 SsoId = notification.User.SsoId,
-                AuthenticationScheme = notification.User.AuthenticationScheme.DeveloperName
+                AuthenticationScheme = notification.User.AuthenticationScheme.DeveloperName,
             };
 
             var wrappedModel = new Wrapper_RenderModel
             {
-                CurrentOrganization = CurrentOrganization_RenderModel.GetProjection(_currentOrganization),
-                Target = entity
+                CurrentOrganization = CurrentOrganization_RenderModel.GetProjection(
+                    _currentOrganization
+                ),
+                Target = entity,
             };
 
-            string subject = _renderEngineService.RenderAsHtml(renderTemplate.Subject, wrappedModel);
-            string content = _renderEngineService.RenderAsHtml(renderTemplate.Content, wrappedModel);
+            string subject = _renderEngineService.RenderAsHtml(
+                renderTemplate.Subject,
+                wrappedModel
+            );
+            string content = _renderEngineService.RenderAsHtml(
+                renderTemplate.Content,
+                wrappedModel
+            );
             var emailMessage = new EmailMessage
             {
                 Content = content,
                 To = new List<string> { entity.EmailAddress },
-                Subject = subject
+                Subject = subject,
             };
             _emailerService.SendEmail(emailMessage);
         }

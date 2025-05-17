@@ -8,7 +8,6 @@ namespace Raytha.Domain.Exceptions;
 
 public class UnsupportedRaythaFunctionTriggerTypeException : Exception
 {
-    public UnsupportedRaythaFunctionTriggerTypeException(string developerName) : base($"Raytha function trigger type \"{developerName}\" is unsupported.")
-    {
-    }
+    public UnsupportedRaythaFunctionTriggerTypeException(string developerName)
+        : base($"Raytha function trigger type \"{developerName}\" is unsupported.") { }
 }

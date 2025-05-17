@@ -30,13 +30,13 @@ public class UsersListItem_ViewModel
 }
 
 public class UsersCreate_ViewModel : FormSubmit_ViewModel
-{        
+{
     [Display(Name = "First name")]
     public string FirstName { get; set; }
-    
+
     [Display(Name = "Last name")]
     public string LastName { get; set; }
-    
+
     [Display(Name = "Email address")]
     public string EmailAddress { get; set; }
 
@@ -57,13 +57,13 @@ public class UsersCreate_ViewModel : FormSubmit_ViewModel
 public class UsersEdit_ViewModel : FormSubmit_ViewModel
 {
     public string Id { get; set; }
-    
+
     [Display(Name = "First name")]
     public string FirstName { get; set; }
-    
+
     [Display(Name = "Last name")]
     public string LastName { get; set; }
-    
+
     [Display(Name = "Email address")]
     public string EmailAddress { get; set; }
 
@@ -105,7 +105,6 @@ public class UsersResetPassword_ViewModel : FormSubmit_ViewModel
     public bool IsAdmin { get; set; }
 }
 
-
 public class UsersActionsMenu_ViewModel
 {
     public string Id { get; set; }
@@ -116,5 +115,4 @@ public class UsersActionsMenu_ViewModel
 
     //helpers
     public bool EditingMyself => CurrentUserId == Id;
-
 }

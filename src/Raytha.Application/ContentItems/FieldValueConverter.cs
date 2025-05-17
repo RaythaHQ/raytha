@@ -12,6 +12,7 @@ namespace Raytha.Application.ContentItems;
 public class FieldValueConverter
 {
     private readonly ICurrentOrganization _currentOrganization;
+
     public FieldValueConverter(ICurrentOrganization currentOrganization)
     {
         _currentOrganization = currentOrganization;
@@ -24,9 +25,22 @@ public class FieldValueConverter
             //Built in
             { BuiltInContentTypeField.Id, item.Id },
             { "CreatorUser", item.CreatorUser != null ? item.CreatorUser.FullName : "N/A" },
-            { "LastModifierUser", item.LastModifierUser != null ? item.LastModifierUser.FullName : "N/A" },
-            { BuiltInContentTypeField.CreationTime, _currentOrganization.TimeZoneConverter.UtcToTimeZoneAsDateTimeFormat(item.CreationTime) },
-            { BuiltInContentTypeField.LastModificationTime, _currentOrganization.TimeZoneConverter.UtcToTimeZoneAsDateTimeFormat(item.LastModificationTime) },
+            {
+                "LastModifierUser",
+                item.LastModifierUser != null ? item.LastModifierUser.FullName : "N/A"
+            },
+            {
+                BuiltInContentTypeField.CreationTime,
+                _currentOrganization.TimeZoneConverter.UtcToTimeZoneAsDateTimeFormat(
+                    item.CreationTime
+                )
+            },
+            {
+                BuiltInContentTypeField.LastModificationTime,
+                _currentOrganization.TimeZoneConverter.UtcToTimeZoneAsDateTimeFormat(
+                    item.LastModificationTime
+                )
+            },
             { BuiltInContentTypeField.IsPublished, item.IsPublished.YesOrNo() },
             { BuiltInContentTypeField.IsDraft, item.IsDraft.YesOrNo() },
             { BuiltInContentTypeField.PrimaryField, item.PrimaryField },
@@ -38,7 +52,10 @@ public class FieldValueConverter
         {
             if (field.Value is DateTimeFieldValue dateTimeFieldValue)
             {
-                viewModel.Add(field.Key, _currentOrganization.TimeZoneConverter.ToDateFormat(dateTimeFieldValue.Value));
+                viewModel.Add(
+                    field.Key,
+                    _currentOrganization.TimeZoneConverter.ToDateFormat(dateTimeFieldValue.Value)
+                );
             }
             else if (field.Value is GuidFieldValue guidFieldValue)
             {
@@ -64,12 +81,20 @@ public class FieldValueConverter
         return viewModel;
     }
 
-    public string MapValueForChoiceField(BaseFieldType fieldType, dynamic content, ContentTypeFieldDto contentTypeField, ContentTypeFieldChoice contentTypeFieldChoice)
+    public string MapValueForChoiceField(
+        BaseFieldType fieldType,
+        dynamic content,
+        ContentTypeFieldDto contentTypeField,
+        ContentTypeFieldChoice contentTypeFieldChoice
+    )
     {
         string value = "false";
         if (fieldType.DeveloperName == BaseFieldType.MultipleSelect)
         {
-            if (content.ContainsKey(contentTypeField.DeveloperName) && content[contentTypeField.DeveloperName].HasValue)
+            if (
+                content.ContainsKey(contentTypeField.DeveloperName)
+                && content[contentTypeField.DeveloperName].HasValue
+            )
             {
                 var asArray = content[contentTypeField.DeveloperName].Value as IList<string>;
                 bool tempValue = asArray.Contains(contentTypeFieldChoice.DeveloperName);
@@ -83,15 +108,33 @@ public class FieldValueConverter
         return value;
     }
 
-    public string MapValueForField(BaseFieldType fieldType, dynamic content, ContentTypeFieldDto contentTypeField)
+    public string MapValueForField(
+        BaseFieldType fieldType,
+        dynamic content,
+        ContentTypeFieldDto contentTypeField
+    )
     {
         string value = string.Empty;
         if (fieldType.DeveloperName == BaseFieldType.OneToOneRelationship)
         {
             ShortGuid shortGuid = ShortGuid.Empty;
-            if (content.ContainsKey(contentTypeField.DeveloperName) && content[contentTypeField.DeveloperName] != null)
+            if (
+                content.ContainsKey(contentTypeField.DeveloperName)
+                && content[contentTypeField.DeveloperName] != null
+            )
             {
-                var successfullyParsed = ShortGuid.TryParse(content[contentTypeField.DeveloperName].ToString(), out shortGuid) || (content[contentTypeField.DeveloperName] is ContentItemDto && ShortGuid.TryParse(content[contentTypeField.DeveloperName].Id.ToString(), out shortGuid));
+                var successfullyParsed =
+                    ShortGuid.TryParse(
+                        content[contentTypeField.DeveloperName].ToString(),
+                        out shortGuid
+                    )
+                    || (
+                        content[contentTypeField.DeveloperName] is ContentItemDto
+                        && ShortGuid.TryParse(
+                            content[contentTypeField.DeveloperName].Id.ToString(),
+                            out shortGuid
+                        )
+                    );
                 if (successfullyParsed)
                 {
                     value = shortGuid;
@@ -102,7 +145,9 @@ public class FieldValueConverter
         {
             if (content.ContainsKey(contentTypeField.DeveloperName))
             {
-                bool tempValue = content[contentTypeField.DeveloperName].HasValue && content[contentTypeField.DeveloperName].Value;
+                bool tempValue =
+                    content[contentTypeField.DeveloperName].HasValue
+                    && content[contentTypeField.DeveloperName].Value;
                 value = tempValue.ToString();
             }
             else
@@ -117,12 +162,20 @@ public class FieldValueConverter
         return value;
     }
 
-    public string MapRelatedContentItemValueForField(BaseFieldType fieldType, dynamic content, ContentTypeFieldDto contentTypeField)
+    public string MapRelatedContentItemValueForField(
+        BaseFieldType fieldType,
+        dynamic content,
+        ContentTypeFieldDto contentTypeField
+    )
     {
         string value = string.Empty;
         if (fieldType.DeveloperName == BaseFieldType.OneToOneRelationship)
         {
-            if (content.ContainsKey(contentTypeField.DeveloperName) && content[contentTypeField.DeveloperName] is ContentItemDto && content[contentTypeField.DeveloperName] != null)
+            if (
+                content.ContainsKey(contentTypeField.DeveloperName)
+                && content[contentTypeField.DeveloperName] is ContentItemDto
+                && content[contentTypeField.DeveloperName] != null
+            )
             {
                 value = content[contentTypeField.DeveloperName].PrimaryField;
             }

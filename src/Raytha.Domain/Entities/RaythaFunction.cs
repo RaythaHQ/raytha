@@ -7,5 +7,6 @@ public class RaythaFunction : BaseAuditableEntity, IPassivable
     public required RaythaFunctionTriggerType TriggerType { get; set; }
     public required string Code { get; set; }
     public bool IsActive { get; set; }
-    public virtual ICollection<RaythaFunctionRevision> Revisions { get; set; } = new List<RaythaFunctionRevision>();
+    public virtual ICollection<RaythaFunctionRevision> Revisions { get; set; } =
+        new List<RaythaFunctionRevision>();
 }

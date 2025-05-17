@@ -1,3 +1,5 @@
+using System;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
@@ -7,8 +9,6 @@ using Raytha.Application.ContentItems.Commands;
 using Raytha.Application.Dashboard.Queries;
 using Raytha.Domain.Entities;
 using Raytha.Web.Areas.Admin.Views.Dashboard;
-using System;
-using System.Threading.Tasks;
 
 namespace Raytha.Web.Areas.Admin.Controllers;
 
@@ -25,15 +25,24 @@ public class DashboardController : BaseController
         var response = await Mediator.Send(new GetDashboardMetrics.Query());
         var viewModel = new Dashboard_ViewModel
         {
-            CurrentFileStorageSizeInGb = Math.Round(response.Result.FileStorageSize / ONE_GIGABYTE, 2),
+            CurrentFileStorageSizeInGb = Math.Round(
+                response.Result.FileStorageSize / ONE_GIGABYTE,
+                2
+            ),
             CurrentDbSizeInMb = Math.Round(response.Result.DbSize, 2),
             CurrentTotalContentItems = response.Result.TotalContentItems,
             CurrentTotalUsers = response.Result.TotalUsers,
             FileStorageProvider = FileStorageProviderSettings.FileStorageProvider,
             AllowedMimeTypes = FileStorageProviderSettings.AllowedMimeTypes,
             UseDirectUploadToCloud = FileStorageProviderSettings.UseDirectUploadToCloud,
-            MaxTotalDiskSpaceInGb = Math.Round(FileStorageProviderSettings.MaxTotalDiskSpace / ONE_GIGABYTE, 2),
-            MaxTotalDbSizeInMb = Math.Round(FileStorageProviderSettings.MaxTotalDbSize / ONE_MEGABYTE, 2)
+            MaxTotalDiskSpaceInGb = Math.Round(
+                FileStorageProviderSettings.MaxTotalDiskSpace / ONE_GIGABYTE,
+                2
+            ),
+            MaxTotalDbSizeInMb = Math.Round(
+                FileStorageProviderSettings.MaxTotalDbSize / ONE_MEGABYTE,
+                2
+            ),
         };
         return View(viewModel);
     }

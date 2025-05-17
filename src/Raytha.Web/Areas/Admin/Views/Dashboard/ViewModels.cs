@@ -15,6 +15,7 @@ public class Dashboard_ViewModel
     public string AllowedMimeTypes { get; set; }
     public bool UseDirectUploadToCloud { get; set; }
 
-    public decimal FileStoragePercentUsed => Math.Round((CurrentFileStorageSizeInGb / MaxTotalDiskSpaceInGb) * 100, 2);
+    public decimal FileStoragePercentUsed =>
+        Math.Round((CurrentFileStorageSizeInGb / MaxTotalDiskSpaceInGb) * 100, 2);
     public decimal DbPercentUsed => Math.Round((CurrentDbSizeInMb / MaxTotalDbSizeInMb) * 100, 2);
 }

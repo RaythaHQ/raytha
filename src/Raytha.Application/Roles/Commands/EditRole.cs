@@ -15,7 +15,8 @@ public class EditRole
     {
         public string Label { get; init; } = null!;
         public IEnumerable<string> SystemPermissions { get; init; } = null!;
-        public Dictionary<string, IEnumerable<string>> ContentTypePermissions { get; init; } = null!;
+        public Dictionary<string, IEnumerable<string>> ContentTypePermissions { get; init; } =
+            null!;
     }
 
     public class Validator : AbstractValidator<Command>
@@ -29,13 +30,20 @@ public class EditRole
     public class Handler : IRequestHandler<Command, CommandResponseDto<ShortGuid>>
     {
         private readonly IRaythaDbContext _db;
+
         public Handler(IRaythaDbContext db)
         {
             _db = db;
         }
-        public async Task<CommandResponseDto<ShortGuid>> Handle(Command request, CancellationToken cancellationToken)
+
+        public async Task<CommandResponseDto<ShortGuid>> Handle(
+            Command request,
+            CancellationToken cancellationToken
+        )
         {
-            var entity = _db.Roles.Include(p => p.ContentTypeRolePermissions).FirstOrDefault(p => p.Id == request.Id.Guid);
+            var entity = _db
+                .Roles.Include(p => p.ContentTypeRolePermissions)
+                .FirstOrDefault(p => p.Id == request.Id.Guid);
             if (entity == null)
                 throw new NotFoundException("Role", request.Id);
 
@@ -44,16 +52,20 @@ public class EditRole
             //Don't modify super admin permissions ever
             if (entity.DeveloperName != BuiltInRole.SuperAdmin)
             {
-                entity.SystemPermissions = BuiltInSystemPermission.From(request.SystemPermissions.ToArray());
+                entity.SystemPermissions = BuiltInSystemPermission.From(
+                    request.SystemPermissions.ToArray()
+                );
                 entity.ContentTypeRolePermissions.Clear();
 
                 foreach (var permission in request.ContentTypePermissions)
                 {
-                    var permissionAsEnum = BuiltInContentTypePermission.From(permission.Value.ToArray());
+                    var permissionAsEnum = BuiltInContentTypePermission.From(
+                        permission.Value.ToArray()
+                    );
                     var newContentTypePermission = new ContentTypeRolePermission
                     {
                         ContentTypeId = (ShortGuid)permission.Key,
-                        ContentTypePermissions = permissionAsEnum
+                        ContentTypePermissions = permissionAsEnum,
                     };
                     entity.ContentTypeRolePermissions.Add(newContentTypePermission);
                 }

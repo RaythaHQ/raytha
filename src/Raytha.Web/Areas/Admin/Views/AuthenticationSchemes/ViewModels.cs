@@ -64,10 +64,10 @@ public class AuthenticationSchemesCreate_ViewModel : FormSubmit_ViewModel
 
     [Display(Name = "Magic link expires after this amount of seconds")]
     public int MagicLinkExpiresInSeconds { get; set; } = 900;
-    
+
     [Display(Name = "Use added security (implement 'jti' claim)")]
     public bool JwtUseHighSecurity { get; set; } = false;
-    
+
     [Display(Name = "IdP entity id")]
     public string SamlIdpEntityId { get; set; }
 
@@ -78,7 +78,7 @@ public class AuthenticationSchemesCreate_ViewModel : FormSubmit_ViewModel
 public class AuthenticationSchemesEdit_ViewModel : FormSubmit_ViewModel
 {
     public string Id { get; set; }
-    
+
     [Display(Name = "Label")]
     public string Label { get; set; }
 
@@ -114,7 +114,7 @@ public class AuthenticationSchemesEdit_ViewModel : FormSubmit_ViewModel
 
     [Display(Name = "Use added security (implement 'jti' claim)")]
     public bool JwtUseHighSecurity { get; init; } = false;
-    
+
     [Display(Name = "IdP entity id")]
     public string SamlIdpEntityId { get; init; }
 

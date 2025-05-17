@@ -17,16 +17,20 @@ public class LoginWithApiKey
     public class Handler : IRequestHandler<Command, CommandResponseDto<LoginDto>>
     {
         private readonly IRaythaDbContext _db;
+
         public Handler(IRaythaDbContext db)
         {
             _db = db;
         }
 
-        public async Task<CommandResponseDto<LoginDto>> Handle(Command request, CancellationToken cancellationToken)
+        public async Task<CommandResponseDto<LoginDto>> Handle(
+            Command request,
+            CancellationToken cancellationToken
+        )
         {
             var hashedApiKey = PasswordUtility.Hash(request.ApiKey);
-            var entity = _db.ApiKeys
-                .Include(p => p.User)
+            var entity = _db
+                .ApiKeys.Include(p => p.User)
                 .ThenInclude(p => p.UserGroups)
                 .Include(p => p.User)
                 .ThenInclude(p => p.Roles)
@@ -36,7 +40,9 @@ public class LoginWithApiKey
                 throw new InvalidApiKeyException("Api key was not found.");
 
             if (!entity.User.IsActive || !entity.User.IsAdmin)
-                throw new InvalidApiKeyException("Api key is not connected to an active administrator");
+                throw new InvalidApiKeyException(
+                    "Api key is not connected to an active administrator"
+                );
 
             return new CommandResponseDto<LoginDto>(LoginDto.GetProjection(entity.User));
         }

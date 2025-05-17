@@ -4,7 +4,8 @@ namespace Raytha.Domain.ValueObjects.FieldTypes;
 
 public class WysiwygFieldType : TextFieldType
 {
-    public WysiwygFieldType() : base("Wysiwyg", "wysiwyg", false) { }
+    public WysiwygFieldType()
+        : base("Wysiwyg", "wysiwyg", false) { }
 
     public override BaseFieldValue FieldValueFrom(dynamic value)
     {

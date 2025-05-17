@@ -15,11 +15,7 @@ public class EditTheme
         public required string Title { get; set; }
         public required string Description { get; set; }
 
-        public static Command Empty() => new()
-        {
-            Title= string.Empty,
-            Description = string.Empty,
-        };
+        public static Command Empty() => new() { Title = string.Empty, Description = string.Empty };
     }
 
     public class Validator : AbstractValidator<Command>
@@ -28,11 +24,14 @@ public class EditTheme
         {
             RuleFor(x => x.Title).NotEmpty();
             RuleFor(x => x.Description).NotEmpty();
-            RuleFor(x => x).Custom((request, _) =>
-            {
-                if (!db.Themes.Any(rt => rt.Id == request.Id.Guid))
-                    throw new NotFoundException("Theme", request.Id);
-            });
+            RuleFor(x => x)
+                .Custom(
+                    (request, _) =>
+                    {
+                        if (!db.Themes.Any(rt => rt.Id == request.Id.Guid))
+                            throw new NotFoundException("Theme", request.Id);
+                    }
+                );
         }
     }
 
@@ -47,10 +46,15 @@ public class EditTheme
             _mediator = mediator;
         }
 
-        public async Task<CommandResponseDto<ShortGuid>> Handle(Command request, CancellationToken cancellationToken)
+        public async Task<CommandResponseDto<ShortGuid>> Handle(
+            Command request,
+            CancellationToken cancellationToken
+        )
         {
-            var theme = await _db.Themes
-                .FirstAsync(t => t.Id == request.Id.Guid, cancellationToken);
+            var theme = await _db.Themes.FirstAsync(
+                t => t.Id == request.Id.Guid,
+                cancellationToken
+            );
 
             theme.Title = request.Title;
             theme.Description = request.Description;

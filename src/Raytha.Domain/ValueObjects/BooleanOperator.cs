@@ -2,13 +2,9 @@
 
 public class BooleanOperator : ValueObject
 {
-    static BooleanOperator()
-    {
-    }
+    static BooleanOperator() { }
 
-    public BooleanOperator()
-    {
-    }
+    public BooleanOperator() { }
 
     private BooleanOperator(string developerName)
     {
@@ -17,7 +13,9 @@ public class BooleanOperator : ValueObject
 
     public static BooleanOperator From(string developerName)
     {
-        var type = SupportedOperators.FirstOrDefault(p => p.DeveloperName == developerName.ToLower());
+        var type = SupportedOperators.FirstOrDefault(p =>
+            p.DeveloperName == developerName.ToLower()
+        );
 
         if (type == null)
         {

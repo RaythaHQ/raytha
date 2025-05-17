@@ -14,10 +14,7 @@ public class NavigationMenuItemConfiguration : IEntityTypeConfiguration<Navigati
             .HasForeignKey(nmi => nmi.ParentNavigationMenuItemId)
             .OnDelete(DeleteBehavior.ClientCascade);
 
-        builder
-            .HasOne(nm => nm.CreatorUser)
-            .WithMany()
-            .HasForeignKey(nm => nm.CreatorUserId);
+        builder.HasOne(nm => nm.CreatorUser).WithMany().HasForeignKey(nm => nm.CreatorUserId);
 
         builder
             .HasOne(nm => nm.LastModifierUser)

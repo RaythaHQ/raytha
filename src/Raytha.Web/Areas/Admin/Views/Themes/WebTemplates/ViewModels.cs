@@ -42,12 +42,16 @@ public class WebTemplatesPagination_ViewModel : Pagination_ViewModel
     public IEnumerable<WebTemplatesListItem_ViewModel> Items { get; }
     public string ThemeId { get; }
 
-    public WebTemplatesPagination_ViewModel(IEnumerable<WebTemplatesListItem_ViewModel> items, int totalCount, string themeId) : base(totalCount)
+    public WebTemplatesPagination_ViewModel(
+        IEnumerable<WebTemplatesListItem_ViewModel> items,
+        int totalCount,
+        string themeId
+    )
+        : base(totalCount)
     {
         Items = items;
         ThemeId = themeId;
     }
-
 }
 
 public class WebTemplatesCreate_ViewModel : FormSubmit_ViewModel
@@ -83,7 +87,10 @@ public class WebTemplatesCreate_ViewModel : FormSubmit_ViewModel
     public bool UseDirectUploadToCloud { get; set; }
     public string PathBase { get; set; }
     public IEnumerable<WebTemplateDto> ParentTemplates { get; set; }
-    public Dictionary<string, IEnumerable<WebTemplatesInsertVariableListItem_ViewModel>> TemplateVariables { get; set; }
+    public Dictionary<
+        string,
+        IEnumerable<WebTemplatesInsertVariableListItem_ViewModel>
+    > TemplateVariables { get; set; }
 }
 
 public class WebTemplatesEdit_ViewModel : FormSubmit_ViewModel
@@ -121,7 +128,10 @@ public class WebTemplatesEdit_ViewModel : FormSubmit_ViewModel
     public string PathBase { get; set; }
     public Dictionary<string, string> ParentTemplates { get; set; }
     public bool IsBuiltInTemplate { get; set; }
-    public Dictionary<string, IEnumerable<WebTemplatesInsertVariableListItem_ViewModel>> TemplateVariables { get; set; }
+    public Dictionary<
+        string,
+        IEnumerable<WebTemplatesInsertVariableListItem_ViewModel>
+    > TemplateVariables { get; set; }
 }
 
 public class WebTemplateAccessToModelDefinitions_ViewModel
@@ -140,8 +150,10 @@ public class WebTemplatesRevisionsPagination_ViewModel : Pagination_ViewModel
     public string ThemeId { get; set; }
 
     public WebTemplatesRevisionsPagination_ViewModel(
-        IEnumerable<WebTemplatesRevisionsListItem_ViewModel> items, int totalCount) : base(totalCount) => Items = items;
-
+        IEnumerable<WebTemplatesRevisionsListItem_ViewModel> items,
+        int totalCount
+    )
+        : base(totalCount) => Items = items;
 }
 
 public class WebTemplatesRevisionsListItem_ViewModel

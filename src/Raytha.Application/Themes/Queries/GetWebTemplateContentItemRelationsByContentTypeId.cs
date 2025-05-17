@@ -8,13 +8,18 @@ namespace Raytha.Application.Themes.Queries;
 
 public class GetWebTemplateContentItemRelationsByContentTypeId
 {
-    public record Query : IRequest<IQueryResponseDto<IReadOnlyCollection<WebTemplateContentItemRelationDto>>>
+    public record Query
+        : IRequest<IQueryResponseDto<IReadOnlyCollection<WebTemplateContentItemRelationDto>>>
     {
         public required ShortGuid ThemeId { get; init; }
         public required ShortGuid ContentTypeId { get; init; }
     }
 
-    public class Handler : IRequestHandler<Query, IQueryResponseDto<IReadOnlyCollection<WebTemplateContentItemRelationDto>>>
+    public class Handler
+        : IRequestHandler<
+            Query,
+            IQueryResponseDto<IReadOnlyCollection<WebTemplateContentItemRelationDto>>
+        >
     {
         private readonly IRaythaDbContext _db;
 
@@ -23,15 +28,22 @@ public class GetWebTemplateContentItemRelationsByContentTypeId
             _db = db;
         }
 
-        public async Task<IQueryResponseDto<IReadOnlyCollection<WebTemplateContentItemRelationDto>>> Handle(Query request, CancellationToken cancellationToken)
+        public async Task<
+            IQueryResponseDto<IReadOnlyCollection<WebTemplateContentItemRelationDto>>
+        > Handle(Query request, CancellationToken cancellationToken)
         {
-            var webTemplateContentItemRelations = await _db.WebTemplateContentItemRelations
-                .Include(wtr => wtr.WebTemplate)
-                .Where(wtr => wtr.ContentItem!.ContentTypeId == request.ContentTypeId.Guid && wtr.WebTemplate!.ThemeId == request.ThemeId.Guid)
+            var webTemplateContentItemRelations = await _db
+                .WebTemplateContentItemRelations.Include(wtr => wtr.WebTemplate)
+                .Where(wtr =>
+                    wtr.ContentItem!.ContentTypeId == request.ContentTypeId.Guid
+                    && wtr.WebTemplate!.ThemeId == request.ThemeId.Guid
+                )
                 .Select(WebTemplateContentItemRelationDto.GetProjection())
                 .ToArrayAsync(cancellationToken);
 
-            return new QueryResponseDto<IReadOnlyCollection<WebTemplateContentItemRelationDto>>(webTemplateContentItemRelations);
+            return new QueryResponseDto<IReadOnlyCollection<WebTemplateContentItemRelationDto>>(
+                webTemplateContentItemRelations
+            );
         }
     }
 }

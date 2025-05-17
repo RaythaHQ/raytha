@@ -1,4 +1,6 @@
 ﻿using System;
+using System.IO;
+using System.Threading.Tasks;
 using CSharpVitamins;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -8,11 +10,9 @@ using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Utils;
 using Raytha.Application.MediaItems.Commands;
 using Raytha.Application.MediaItems.Queries;
+using Raytha.Application.Themes.Queries;
 using Raytha.Domain.Entities;
 using Raytha.Web.Areas.Admin.Views.MediaItems;
-using System.IO;
-using System.Threading.Tasks;
-using Raytha.Application.Themes.Queries;
 
 namespace Raytha.Web.Areas.Admin.Controllers;
 
@@ -21,22 +21,54 @@ namespace Raytha.Web.Areas.Admin.Controllers;
 public class MediaItemsController : BaseController
 {
     private IRelativeUrlBuilder _relativeUrlBuilder;
-    protected IRelativeUrlBuilder RelativeUrlBuilder => _relativeUrlBuilder ??= HttpContext.RequestServices.GetRequiredService<IRelativeUrlBuilder>();
+    protected IRelativeUrlBuilder RelativeUrlBuilder =>
+        _relativeUrlBuilder ??=
+            HttpContext.RequestServices.GetRequiredService<IRelativeUrlBuilder>();
 
     [HttpPost]
     [Route($"{RAYTHA_ROUTE_PREFIX}/media-items/presign", Name = "mediaitemspresignuploadurl")]
-    public async Task<IActionResult> CloudUploadPresignRequest([FromBody] MediaItemPresignRequest_ViewModel body, string contentType)
+    public async Task<IActionResult> CloudUploadPresignRequest(
+        [FromBody] MediaItemPresignRequest_ViewModel body,
+        string contentType
+    )
     {
         var idForKey = ShortGuid.NewGuid();
-        var objectKey = FileStorageUtility.CreateObjectKeyFromIdAndFileName(idForKey, body.filename);
-        var url = await FileStorageProvider.GetUploadUrlAsync(objectKey, body.filename, body.contentType, FileStorageUtility.GetDefaultExpiry());
+        var objectKey = FileStorageUtility.CreateObjectKeyFromIdAndFileName(
+            idForKey,
+            body.filename
+        );
+        var url = await FileStorageProvider.GetUploadUrlAsync(
+            objectKey,
+            body.filename,
+            body.contentType,
+            FileStorageUtility.GetDefaultExpiry()
+        );
 
-        return Json(new { url, fields = new { id = idForKey.ToString(), fileName = body.filename, body.contentType, objectKey } });
+        return Json(
+            new
+            {
+                url,
+                fields = new
+                {
+                    id = idForKey.ToString(),
+                    fileName = body.filename,
+                    body.contentType,
+                    objectKey,
+                },
+            }
+        );
     }
 
     [HttpPost]
-    [Route($"{RAYTHA_ROUTE_PREFIX}/media-items/create-after-upload", Name = "mediaitemscreateafterupload")]
-    public async Task<IActionResult> CloudUploadCreateAfterUpload([FromBody] MediaItemCreateAfterUpload_ViewModel body, string contentType, string themeId)
+    [Route(
+        $"{RAYTHA_ROUTE_PREFIX}/media-items/create-after-upload",
+        Name = "mediaitemscreateafterupload"
+    )]
+    public async Task<IActionResult> CloudUploadCreateAfterUpload(
+        [FromBody] MediaItemCreateAfterUpload_ViewModel body,
+        string contentType,
+        string themeId
+    )
     {
         var input = new CreateMediaItem.Command
         {
@@ -63,7 +95,11 @@ public class MediaItemsController : BaseController
 
     [HttpPost]
     [Route($"{RAYTHA_ROUTE_PREFIX}/media-items/upload", Name = "mediaitemslocalstorageupload")]
-    public async Task<IActionResult> LocalStorageUpload(IFormFile file, string contentType, string themeId)
+    public async Task<IActionResult> LocalStorageUpload(
+        IFormFile file,
+        string contentType,
+        string themeId
+    )
     {
         if (file.Length <= 0)
         {
@@ -76,8 +112,17 @@ public class MediaItemsController : BaseController
             var data = stream.ToArray();
 
             var idForKey = ShortGuid.NewGuid();
-            var objectKey = FileStorageUtility.CreateObjectKeyFromIdAndFileName(idForKey, file.FileName);
-            await FileStorageProvider.SaveAndGetDownloadUrlAsync(data, objectKey, file.FileName, file.ContentType, FileStorageUtility.GetDefaultExpiry());
+            var objectKey = FileStorageUtility.CreateObjectKeyFromIdAndFileName(
+                idForKey,
+                file.FileName
+            );
+            await FileStorageProvider.SaveAndGetDownloadUrlAsync(
+                data,
+                objectKey,
+                file.FileName,
+                file.ContentType,
+                FileStorageUtility.GetDefaultExpiry()
+            );
 
             var input = new CreateMediaItem.Command
             {
@@ -94,32 +139,56 @@ public class MediaItemsController : BaseController
             if (response.Success)
             {
                 var url = RelativeUrlBuilder.MediaRedirectToFileUrl(objectKey);
-                return Json(new { url, location = url, success = true, fields = new { id = idForKey.ToString(), fileName = file.FileName, file.ContentType, objectKey } });
+                return Json(
+                    new
+                    {
+                        url,
+                        location = url,
+                        success = true,
+                        fields = new
+                        {
+                            id = idForKey.ToString(),
+                            fileName = file.FileName,
+                            file.ContentType,
+                            objectKey,
+                        },
+                    }
+                );
             }
             else
             {
                 this.HttpContext.Response.StatusCode = 403;
                 return Json(new { success = false, error = response.Error });
             }
-        }     
+        }
     }
 
     [AllowAnonymous]
-    [Route($"{RAYTHA_ROUTE_PREFIX}/media-items/objectkey/{{objectKey}}", Name = "mediaitemsredirecttofileurlbyobjectkey")]
+    [Route(
+        $"{RAYTHA_ROUTE_PREFIX}/media-items/objectkey/{{objectKey}}",
+        Name = "mediaitemsredirecttofileurlbyobjectkey"
+    )]
     public IActionResult RedirectToFileUrlByObjectKey(string objectKey)
     {
-        var downloadUrl = FileStorageProvider.GetDownloadUrlAsync(objectKey, FileStorageUtility.GetDefaultExpiry()).Result;
+        var downloadUrl = FileStorageProvider
+            .GetDownloadUrlAsync(objectKey, FileStorageUtility.GetDefaultExpiry())
+            .Result;
         return Redirect(downloadUrl);
     }
 
     [AllowAnonymous]
-    [Route($"{RAYTHA_ROUTE_PREFIX}/media-items/id/{{id}}", Name = "mediaitemsredirecttofileurlbyid")]
+    [Route(
+        $"{RAYTHA_ROUTE_PREFIX}/media-items/id/{{id}}",
+        Name = "mediaitemsredirecttofileurlbyid"
+    )]
     public async Task<IActionResult> RedirectToFileUrlById(string id)
     {
         var input = new GetMediaItemById.Query { Id = id };
         var response = await Mediator.Send(input);
 
-        var downloadUrl = FileStorageProvider.GetDownloadUrlAsync(response.Result.ObjectKey, FileStorageUtility.GetDefaultExpiry()).Result;
+        var downloadUrl = FileStorageProvider
+            .GetDownloadUrlAsync(response.Result.ObjectKey, FileStorageUtility.GetDefaultExpiry())
+            .Result;
         return Redirect(downloadUrl);
     }
 }

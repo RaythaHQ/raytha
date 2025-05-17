@@ -21,15 +21,23 @@ namespace Raytha.Web.Areas.Admin.Controllers;
 public class AuthenticationSchemesController : BaseController
 {
     [ServiceFilter(typeof(SetPaginationInformationFilterAttribute))]
-    [Route(RAYTHA_ROUTE_PREFIX + "/settings/authentication-schemes", Name = "authenticationschemesindex")]
-    public async Task<IActionResult> Index(string search = "", string orderBy = $"Label {SortOrder.ASCENDING}", int pageNumber = 1, int pageSize = 50)
+    [Route(
+        RAYTHA_ROUTE_PREFIX + "/settings/authentication-schemes",
+        Name = "authenticationschemesindex"
+    )]
+    public async Task<IActionResult> Index(
+        string search = "",
+        string orderBy = $"Label {SortOrder.ASCENDING}",
+        int pageNumber = 1,
+        int pageSize = 50
+    )
     {
         var input = new GetAuthenticationSchemes.Query
         {
             Search = search,
             PageNumber = pageNumber,
             PageSize = pageSize,
-            OrderBy = orderBy
+            OrderBy = orderBy,
         };
 
         var response = await Mediator.Send(input);
@@ -39,34 +47,50 @@ public class AuthenticationSchemesController : BaseController
             Id = p.Id,
             Label = p.Label,
             DeveloperName = p.DeveloperName,
-            LastModificationTime = CurrentOrganization.TimeZoneConverter.UtcToTimeZoneAsDateTimeFormat(p.LastModificationTime),
+            LastModificationTime =
+                CurrentOrganization.TimeZoneConverter.UtcToTimeZoneAsDateTimeFormat(
+                    p.LastModificationTime
+                ),
             LastModifierUser = p.LastModifierUser != null ? p.LastModifierUser.FullName : "N/A",
             AuthenticationSchemeType = p.AuthenticationSchemeType.Label,
             IsEnabledForAdmins = p.IsEnabledForAdmins.YesOrNo(),
-            IsEnabledForUsers = p.IsEnabledForUsers.YesOrNo()
+            IsEnabledForUsers = p.IsEnabledForUsers.YesOrNo(),
         });
 
-        var viewModel = new List_ViewModel<AuthenticationSchemesListItem_ViewModel>(items, response.Result.TotalCount);
+        var viewModel = new List_ViewModel<AuthenticationSchemesListItem_ViewModel>(
+            items,
+            response.Result.TotalCount
+        );
         return View(viewModel);
     }
 
-    [Route(RAYTHA_ROUTE_PREFIX + "/settings/authentication-schemes/create", Name = "authenticationschemescreate")]
+    [Route(
+        RAYTHA_ROUTE_PREFIX + "/settings/authentication-schemes/create",
+        Name = "authenticationschemescreate"
+    )]
     public IActionResult Create()
     {
         var supportedAuthenticationTypes = new OrderedDictionary()
         {
             { "", "-- SELECT --" },
             { AuthenticationSchemeType.Jwt.DeveloperName, AuthenticationSchemeType.Jwt.Label },
-            { AuthenticationSchemeType.Saml.DeveloperName, AuthenticationSchemeType.Saml.Label }
+            { AuthenticationSchemeType.Saml.DeveloperName, AuthenticationSchemeType.Saml.Label },
         };
         var viewModel = new AuthenticationSchemesCreate_ViewModel
         {
-            SupportedAuthenticationSchemeTypes = new SelectList(supportedAuthenticationTypes, "Key", "Value")
+            SupportedAuthenticationSchemeTypes = new SelectList(
+                supportedAuthenticationTypes,
+                "Key",
+                "Value"
+            ),
         };
         return View(viewModel);
     }
 
-    [Route(RAYTHA_ROUTE_PREFIX + "/settings/authentication-schemes/create", Name = "authenticationschemescreate")]
+    [Route(
+        RAYTHA_ROUTE_PREFIX + "/settings/authentication-schemes/create",
+        Name = "authenticationschemescreate"
+    )]
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create(AuthenticationSchemesCreate_ViewModel model)
@@ -84,7 +108,7 @@ public class AuthenticationSchemesController : BaseController
             IsEnabledForUsers = model.IsEnabledForUsers,
             DeveloperName = model.DeveloperName,
             SamlIdpEntityId = model.SamlIdpEntityId,
-            JwtUseHighSecurity = model.JwtUseHighSecurity
+            JwtUseHighSecurity = model.JwtUseHighSecurity,
         };
         var response = await Mediator.Send(input);
 
@@ -99,23 +123,42 @@ public class AuthenticationSchemesController : BaseController
             {
                 { "", "-- SELECT --" },
                 { AuthenticationSchemeType.Jwt.DeveloperName, AuthenticationSchemeType.Jwt.Label },
-                { AuthenticationSchemeType.Saml.DeveloperName, AuthenticationSchemeType.Saml.Label }
+                {
+                    AuthenticationSchemeType.Saml.DeveloperName,
+                    AuthenticationSchemeType.Saml.Label
+                },
             };
-            model.SupportedAuthenticationSchemeTypes = new SelectList(supportedAuthenticationTypes, "Key", "Value");
-            SetErrorMessage("There was an error attempting to create this authentication scheme. See the error below.", response.GetErrors());
+            model.SupportedAuthenticationSchemeTypes = new SelectList(
+                supportedAuthenticationTypes,
+                "Key",
+                "Value"
+            );
+            SetErrorMessage(
+                "There was an error attempting to create this authentication scheme. See the error below.",
+                response.GetErrors()
+            );
             return View(model);
         }
     }
 
-    [Route(RAYTHA_ROUTE_PREFIX + "/settings/authentication-schemes/edit/{id}", Name = "authenticationschemesedit")]
+    [Route(
+        RAYTHA_ROUTE_PREFIX + "/settings/authentication-schemes/edit/{id}",
+        Name = "authenticationschemesedit"
+    )]
     public async Task<IActionResult> Edit(string id)
     {
         var supportedAuthenticationTypes = new OrderedDictionary()
         {
-            { AuthenticationSchemeType.EmailAndPassword.DeveloperName, AuthenticationSchemeType.EmailAndPassword.Label },
-            { AuthenticationSchemeType.MagicLink.DeveloperName, AuthenticationSchemeType.MagicLink.Label },
+            {
+                AuthenticationSchemeType.EmailAndPassword.DeveloperName,
+                AuthenticationSchemeType.EmailAndPassword.Label
+            },
+            {
+                AuthenticationSchemeType.MagicLink.DeveloperName,
+                AuthenticationSchemeType.MagicLink.Label
+            },
             { AuthenticationSchemeType.Jwt.DeveloperName, AuthenticationSchemeType.Jwt.Label },
-            { AuthenticationSchemeType.Saml.DeveloperName, AuthenticationSchemeType.Saml.Label }
+            { AuthenticationSchemeType.Saml.DeveloperName, AuthenticationSchemeType.Saml.Label },
         };
         var response = await Mediator.Send(new GetAuthenticationSchemeById.Query { Id = id });
 
@@ -136,13 +179,20 @@ public class AuthenticationSchemesController : BaseController
             SamlIdpEntityId = response.Result.SamlIdpEntityId,
             JwtUseHighSecurity = response.Result.JwtUseHighSecurity,
             MagicLinkExpiresInSeconds = response.Result.MagicLinkExpiresInSeconds,
-            SupportedAuthenticationSchemeTypes = new SelectList(supportedAuthenticationTypes, "Key", "Value")
+            SupportedAuthenticationSchemeTypes = new SelectList(
+                supportedAuthenticationTypes,
+                "Key",
+                "Value"
+            ),
         };
-        
+
         return View(model);
     }
 
-    [Route(RAYTHA_ROUTE_PREFIX + "/settings/authentication-schemes/edit/{id}", Name = "authenticationschemesedit")]
+    [Route(
+        RAYTHA_ROUTE_PREFIX + "/settings/authentication-schemes/edit/{id}",
+        Name = "authenticationschemesedit"
+    )]
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Edit(AuthenticationSchemesEdit_ViewModel model, string id)
@@ -161,7 +211,7 @@ public class AuthenticationSchemesController : BaseController
             IsEnabledForUsers = model.IsEnabledForUsers,
             SamlIdpEntityId = model.SamlIdpEntityId,
             JwtUseHighSecurity = model.JwtUseHighSecurity,
-            MagicLinkExpiresInSeconds = model.MagicLinkExpiresInSeconds
+            MagicLinkExpiresInSeconds = model.MagicLinkExpiresInSeconds,
         };
         var response = await Mediator.Send(input);
 
@@ -174,19 +224,38 @@ public class AuthenticationSchemesController : BaseController
         {
             var supportedAuthenticationTypes = new OrderedDictionary()
             {
-                { AuthenticationSchemeType.EmailAndPassword.DeveloperName, AuthenticationSchemeType.EmailAndPassword.Label },
-                { AuthenticationSchemeType.MagicLink.DeveloperName, AuthenticationSchemeType.MagicLink.Label },
+                {
+                    AuthenticationSchemeType.EmailAndPassword.DeveloperName,
+                    AuthenticationSchemeType.EmailAndPassword.Label
+                },
+                {
+                    AuthenticationSchemeType.MagicLink.DeveloperName,
+                    AuthenticationSchemeType.MagicLink.Label
+                },
                 { AuthenticationSchemeType.Jwt.DeveloperName, AuthenticationSchemeType.Jwt.Label },
-                { AuthenticationSchemeType.Saml.DeveloperName, AuthenticationSchemeType.Saml.Label }
+                {
+                    AuthenticationSchemeType.Saml.DeveloperName,
+                    AuthenticationSchemeType.Saml.Label
+                },
             };
-            SetErrorMessage("There was an error attempting to update this authentication scheme. See the error below.", response.GetErrors());
+            SetErrorMessage(
+                "There was an error attempting to update this authentication scheme. See the error below.",
+                response.GetErrors()
+            );
             model.Id = id;
-            model.SupportedAuthenticationSchemeTypes = new SelectList(supportedAuthenticationTypes, "Key", "Value");
+            model.SupportedAuthenticationSchemeTypes = new SelectList(
+                supportedAuthenticationTypes,
+                "Key",
+                "Value"
+            );
             return View(model);
         }
     }
 
-    [Route(RAYTHA_ROUTE_PREFIX + "/settings/authentication-schemes/delete/{id}", Name = "authenticationschemesdelete")]
+    [Route(
+        RAYTHA_ROUTE_PREFIX + "/settings/authentication-schemes/delete/{id}",
+        Name = "authenticationschemesdelete"
+    )]
     [HttpPost]
     public async Task<IActionResult> Delete(string id)
     {
@@ -199,7 +268,10 @@ public class AuthenticationSchemesController : BaseController
         }
         else
         {
-            SetErrorMessage("There was an error deleting this authentication scheme", response.GetErrors());
+            SetErrorMessage(
+                "There was an error deleting this authentication scheme",
+                response.GetErrors()
+            );
             return RedirectToAction("Edit", new { id });
         }
     }

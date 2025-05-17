@@ -19,13 +19,14 @@ public class BeginImportThemeFromUrl
         public required string Description { get; init; }
         public required string Url { get; init; }
 
-        public static Command Empty() => new()
-        {
-            Title = string.Empty,
-            DeveloperName = string.Empty,
-            Description = string.Empty,
-            Url = string.Empty,
-        };
+        public static Command Empty() =>
+            new()
+            {
+                Title = string.Empty,
+                DeveloperName = string.Empty,
+                Description = string.Empty,
+                Url = string.Empty,
+            };
     }
 
     public class Validator : AbstractValidator<Command>
@@ -36,14 +37,24 @@ public class BeginImportThemeFromUrl
             RuleFor(x => x.Description).NotEmpty();
             RuleFor(x => x.DeveloperName).NotEmpty();
             RuleFor(x => x.Url).NotEmpty();
-            RuleFor(x => x).Custom((request, context) =>
-            {
-                if (db.Themes.Any(t => t.DeveloperName == request.DeveloperName.ToDeveloperName()))
-                    context.AddFailure("DeveloperName", $"A theme with the developer name {request.DeveloperName.ToDeveloperName()} already exists.");
+            RuleFor(x => x)
+                .Custom(
+                    (request, context) =>
+                    {
+                        if (
+                            db.Themes.Any(t =>
+                                t.DeveloperName == request.DeveloperName.ToDeveloperName()
+                            )
+                        )
+                            context.AddFailure(
+                                "DeveloperName",
+                                $"A theme with the developer name {request.DeveloperName.ToDeveloperName()} already exists."
+                            );
 
-                if (!request.Url.IsValidUriFormat())
-                    context.AddFailure("Url", $"Invalid url format: {request.Url}");
-            });
+                        if (!request.Url.IsValidUriFormat())
+                            context.AddFailure("Url", $"Invalid url format: {request.Url}");
+                    }
+                );
         }
     }
 
@@ -56,9 +67,15 @@ public class BeginImportThemeFromUrl
             _taskQueue = taskQueue;
         }
 
-        public async Task<CommandResponseDto<ShortGuid>> Handle(Command request, CancellationToken cancellationToken)
+        public async Task<CommandResponseDto<ShortGuid>> Handle(
+            Command request,
+            CancellationToken cancellationToken
+        )
         {
-            var backgroundJobId = await _taskQueue.EnqueueAsync<BackgroundTask>(request, cancellationToken);
+            var backgroundJobId = await _taskQueue.EnqueueAsync<BackgroundTask>(
+                request,
+                cancellationToken
+            );
 
             return new CommandResponseDto<ShortGuid>(backgroundJobId);
         }
@@ -117,8 +134,8 @@ public class BeginImportThemeFromUrl
                 _db.BackgroundTasks.Update(job);
                 await _db.SaveChangesAsync(cancellationToken);
 
-                var contentTypeIds = await _db.ContentTypes
-                    .Select(ct => ct.Id)
+                var contentTypeIds = await _db
+                    .ContentTypes.Select(ct => ct.Id)
                     .ToArrayAsync(cancellationToken);
 
                 var webTemplateDeveloperNamesWebTemplates = new Dictionary<string, WebTemplate>();
@@ -135,21 +152,37 @@ public class BeginImportThemeFromUrl
                         Content = webTemplateFromJson.Content,
                         IsBaseLayout = webTemplateFromJson.IsBaseLayout,
                         IsBuiltInTemplate = webTemplateFromJson.IsBuiltInTemplate,
-                        AllowAccessForNewContentTypes = webTemplateFromJson.AllowAccessForNewContentTypes,
-                        TemplateAccessToModelDefinitions = webTemplateFromJson.AllowAccessForNewContentTypes
-                            ? contentTypeIds.Select(id => new WebTemplateAccessToModelDefinition { Id = Guid.NewGuid(), ContentTypeId = id, WebTemplateId = webTemplateId}).ToArray()
-                            : new List<WebTemplateAccessToModelDefinition>(),
+                        AllowAccessForNewContentTypes =
+                            webTemplateFromJson.AllowAccessForNewContentTypes,
+                        TemplateAccessToModelDefinitions =
+                            webTemplateFromJson.AllowAccessForNewContentTypes
+                                ? contentTypeIds
+                                    .Select(id => new WebTemplateAccessToModelDefinition
+                                    {
+                                        Id = Guid.NewGuid(),
+                                        ContentTypeId = id,
+                                        WebTemplateId = webTemplateId,
+                                    })
+                                    .ToArray()
+                                : new List<WebTemplateAccessToModelDefinition>(),
                     };
 
-                    webTemplateDeveloperNamesWebTemplates.Add(webTemplate.DeveloperName, webTemplate);
+                    webTemplateDeveloperNamesWebTemplates.Add(
+                        webTemplate.DeveloperName,
+                        webTemplate
+                    );
                 }
 
                 foreach (var themePackageWebTemplate in themePackage.WebTemplates)
                 {
                     if (!string.IsNullOrEmpty(themePackageWebTemplate.ParentTemplateDeveloperName))
                     {
-                        var webTemplate = webTemplateDeveloperNamesWebTemplates[themePackageWebTemplate.DeveloperName];
-                        var parentTemplateId = webTemplateDeveloperNamesWebTemplates[themePackageWebTemplate.ParentTemplateDeveloperName].Id;
+                        var webTemplate = webTemplateDeveloperNamesWebTemplates[
+                            themePackageWebTemplate.DeveloperName
+                        ];
+                        var parentTemplateId = webTemplateDeveloperNamesWebTemplates[
+                            themePackageWebTemplate.ParentTemplateDeveloperName
+                        ].Id;
 
                         webTemplate.ParentTemplateId = parentTemplateId;
                     }
@@ -169,11 +202,25 @@ public class BeginImportThemeFromUrl
 
                 foreach (var mediaItemInThemePackage in themePackage.MediaItems)
                 {
-                    var data = await GetDataFromUrl(mediaItemInThemePackage.DownloadUrl, cancellationToken);
-                    var contentType = FileStorageUtility.GetMimeType(mediaItemInThemePackage.FileName);
-                    var objectKey = FileStorageUtility.CreateObjectKeyFromIdAndFileName(theme.DeveloperName, mediaItemInThemePackage.FileName);
+                    var data = await GetDataFromUrl(
+                        mediaItemInThemePackage.DownloadUrl,
+                        cancellationToken
+                    );
+                    var contentType = FileStorageUtility.GetMimeType(
+                        mediaItemInThemePackage.FileName
+                    );
+                    var objectKey = FileStorageUtility.CreateObjectKeyFromIdAndFileName(
+                        theme.DeveloperName,
+                        mediaItemInThemePackage.FileName
+                    );
 
-                    await _fileStorageProvider.SaveAndGetDownloadUrlAsync(data, objectKey, mediaItemInThemePackage.FileName, contentType, FileStorageUtility.GetDefaultExpiry());
+                    await _fileStorageProvider.SaveAndGetDownloadUrlAsync(
+                        data,
+                        objectKey,
+                        mediaItemInThemePackage.FileName,
+                        contentType,
+                        FileStorageUtility.GetDefaultExpiry()
+                    );
 
                     var mediaItem = new MediaItem
                     {
@@ -204,9 +251,15 @@ public class BeginImportThemeFromUrl
                 }
 
                 await _db.Themes.AddAsync(theme, cancellationToken);
-                await _db.WebTemplates.AddRangeAsync(webTemplateDeveloperNamesWebTemplates.Values, cancellationToken);
+                await _db.WebTemplates.AddRangeAsync(
+                    webTemplateDeveloperNamesWebTemplates.Values,
+                    cancellationToken
+                );
                 await _db.MediaItems.AddRangeAsync(mediaItems, cancellationToken);
-                await _db.ThemeAccessToMediaItems.AddRangeAsync(themeAccessToMediaItems, cancellationToken);
+                await _db.ThemeAccessToMediaItems.AddRangeAsync(
+                    themeAccessToMediaItems,
+                    cancellationToken
+                );
 
                 job.TaskStep = 5;
                 job.StatusInfo = "Finished importing.";
@@ -238,12 +291,17 @@ public class BeginImportThemeFromUrl
             return await content.ReadAsByteArrayAsync(cancellationToken);
         }
 
-        private async Task<HttpContent> GetContentByUrl(string urlToDownload, CancellationToken cancellationToken)
+        private async Task<HttpContent> GetContentByUrl(
+            string urlToDownload,
+            CancellationToken cancellationToken
+        )
         {
             var response = await _httpClient.GetAsync(urlToDownload, cancellationToken);
 
             if (!response.IsSuccessStatusCode)
-                throw new Exception($"Unable to retrieve file from {urlToDownload}: {response.StatusCode} - {response.ReasonPhrase}");
+                throw new Exception(
+                    $"Unable to retrieve file from {urlToDownload}: {response.StatusCode} - {response.ReasonPhrase}"
+                );
 
             return response.Content;
         }

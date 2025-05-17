@@ -1,3 +1,6 @@
+using System;
+using System.Linq;
+using System.Threading.Tasks;
 using CSharpVitamins;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -11,9 +14,6 @@ using Raytha.Domain.ValueObjects;
 using Raytha.Web.Areas.Admin.Views.Shared.ViewModels;
 using Raytha.Web.Areas.Admin.Views.Users;
 using Raytha.Web.Filters;
-using System;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace Raytha.Web.Areas.Admin.Controllers;
 
@@ -23,14 +23,19 @@ public class UsersController : BaseController
 {
     [ServiceFilter(typeof(SetPaginationInformationFilterAttribute))]
     [Route(RAYTHA_ROUTE_PREFIX + "/users", Name = "usersindex")]
-    public async Task<IActionResult> Index(string search = "", string orderBy = $"LastLoggedInTime {SortOrder.DESCENDING}", int pageNumber = 1, int pageSize = 50)
+    public async Task<IActionResult> Index(
+        string search = "",
+        string orderBy = $"LastLoggedInTime {SortOrder.DESCENDING}",
+        int pageNumber = 1,
+        int pageSize = 50
+    )
     {
         var input = new GetUsers.Query
         {
             Search = search,
             OrderBy = orderBy,
             PageNumber = pageNumber,
-            PageSize = pageSize
+            PageSize = pageSize,
         };
 
         var response = await Mediator.Send(input);
@@ -41,13 +46,20 @@ public class UsersController : BaseController
             FirstName = p.FirstName,
             LastName = p.LastName,
             EmailAddress = p.EmailAddress,
-            CreationTime = CurrentOrganization.TimeZoneConverter.UtcToTimeZoneAsDateTimeFormat(p.CreationTime),
-            LastLoggedInTime = CurrentOrganization.TimeZoneConverter.UtcToTimeZoneAsDateTimeFormat(p.LastLoggedInTime),
+            CreationTime = CurrentOrganization.TimeZoneConverter.UtcToTimeZoneAsDateTimeFormat(
+                p.CreationTime
+            ),
+            LastLoggedInTime = CurrentOrganization.TimeZoneConverter.UtcToTimeZoneAsDateTimeFormat(
+                p.LastLoggedInTime
+            ),
             IsActive = p.IsActive.YesOrNo(),
-            UserGroups = string.Join(", ", p.UserGroups.Select(p => p.Label))
+            UserGroups = string.Join(", ", p.UserGroups.Select(p => p.Label)),
         });
 
-        var viewModel = new List_ViewModel<UsersListItem_ViewModel>(items, response.Result.TotalCount);
+        var viewModel = new List_ViewModel<UsersListItem_ViewModel>(
+            items,
+            response.Result.TotalCount
+        );
         return View(viewModel);
     }
 
@@ -55,12 +67,14 @@ public class UsersController : BaseController
     public async Task<IActionResult> Create()
     {
         var userGroupsChoicesResponse = await Mediator.Send(new GetUserGroups.Query());
-        var userGroupsViewModel = userGroupsChoicesResponse.Result.Items.Select(p => new UsersCreate_ViewModel.UserGroupCheckboxItem_ViewModel
-        {
-            Id = p.Id,
-            Label = p.Label,
-            Selected = false
-        }).ToArray();
+        var userGroupsViewModel = userGroupsChoicesResponse
+            .Result.Items.Select(p => new UsersCreate_ViewModel.UserGroupCheckboxItem_ViewModel
+            {
+                Id = p.Id,
+                Label = p.Label,
+                Selected = false,
+            })
+            .ToArray();
 
         var model = new UsersCreate_ViewModel { UserGroups = userGroupsViewModel };
 
@@ -78,7 +92,7 @@ public class UsersController : BaseController
             LastName = model.LastName,
             EmailAddress = model.EmailAddress,
             UserGroups = model.UserGroups?.Where(p => p.Selected).Select(p => (ShortGuid)p.Id),
-            SendEmail = model.SendEmail
+            SendEmail = model.SendEmail,
         };
 
         var response = await Mediator.Send(input);
@@ -90,7 +104,10 @@ public class UsersController : BaseController
         }
         else
         {
-            SetErrorMessage("There was an error attempting to create this user. See the error below.", response.GetErrors());
+            SetErrorMessage(
+                "There was an error attempting to create this user. See the error below.",
+                response.GetErrors()
+            );
             return View(model);
         }
     }
@@ -101,12 +118,14 @@ public class UsersController : BaseController
         var response = await Mediator.Send(new GetUserById.Query { Id = id });
 
         var allUserGroups = await Mediator.Send(new GetUserGroups.Query());
-        var userGroups = allUserGroups.Result.Items.Select(p => new UsersEdit_ViewModel.UserGroupCheckboxItem_ViewModel
-        {
-            Id = p.Id,
-            Label = p.Label,
-            Selected = response.Result.UserGroups.Select(p => p.Id).Contains(p.Id)
-        });
+        var userGroups = allUserGroups.Result.Items.Select(
+            p => new UsersEdit_ViewModel.UserGroupCheckboxItem_ViewModel
+            {
+                Id = p.Id,
+                Label = p.Label,
+                Selected = response.Result.UserGroups.Select(p => p.Id).Contains(p.Id),
+            }
+        );
 
         var model = new UsersEdit_ViewModel
         {
@@ -118,7 +137,7 @@ public class UsersController : BaseController
             CurrentUserId = CurrentUser.UserId,
             IsAdmin = response.Result.IsAdmin,
             EmailAndPasswordEnabledForUsers = CurrentOrganization.EmailAndPasswordIsEnabledForUsers,
-            UserGroups = userGroups.ToArray()
+            UserGroups = userGroups.ToArray(),
         };
         return View(model);
     }
@@ -134,7 +153,7 @@ public class UsersController : BaseController
             FirstName = model.FirstName,
             LastName = model.LastName,
             EmailAddress = model.EmailAddress,
-            UserGroups = model.UserGroups?.Where(p => p.Selected).Select(p => (ShortGuid)p.Id)
+            UserGroups = model.UserGroups?.Where(p => p.Selected).Select(p => (ShortGuid)p.Id),
         };
 
         var response = await Mediator.Send(input);
@@ -146,10 +165,14 @@ public class UsersController : BaseController
         }
         else
         {
-            SetErrorMessage("There was an error attempting to update this admin. See the error below.", response.GetErrors());
+            SetErrorMessage(
+                "There was an error attempting to update this admin. See the error below.",
+                response.GetErrors()
+            );
             var user = await Mediator.Send(new GetUserById.Query { Id = id });
             model.Id = id;
-            model.EmailAndPasswordEnabledForUsers = CurrentOrganization.EmailAndPasswordIsEnabledForUsers;
+            model.EmailAndPasswordEnabledForUsers =
+                CurrentOrganization.EmailAndPasswordIsEnabledForUsers;
             model.CurrentUserId = CurrentUser.UserId;
             model.IsAdmin = user.Result.IsAdmin;
             model.IsActive = user.Result.IsActive;
@@ -181,10 +204,10 @@ public class UsersController : BaseController
             Id = id,
             IsActive = response.Result.IsActive,
             IsAdmin = response.Result.IsAdmin,
-            EmailAndPasswordEnabledForUsers = CurrentOrganization.EmailAndPasswordIsEnabledForUsers
+            EmailAndPasswordEnabledForUsers = CurrentOrganization.EmailAndPasswordIsEnabledForUsers,
         };
 
-        return View(model); 
+        return View(model);
     }
 
     [Route(RAYTHA_ROUTE_PREFIX + "/users/reset-password/{id}", Name = "usersresetpassword")]
@@ -197,7 +220,7 @@ public class UsersController : BaseController
             Id = id,
             ConfirmNewPassword = model.ConfirmNewPassword,
             NewPassword = model.NewPassword,
-            SendEmail = model.SendEmail
+            SendEmail = model.SendEmail,
         };
         var response = await Mediator.Send(input);
 
@@ -208,10 +231,14 @@ public class UsersController : BaseController
         }
         else
         {
-            SetErrorMessage("There was an error attempting to reset this password. See the error below.", response.GetErrors());
+            SetErrorMessage(
+                "There was an error attempting to reset this password. See the error below.",
+                response.GetErrors()
+            );
             var user = await Mediator.Send(new GetUserById.Query { Id = id });
             model.Id = id;
-            model.EmailAndPasswordEnabledForUsers = CurrentOrganization.EmailAndPasswordIsEnabledForUsers;
+            model.EmailAndPasswordEnabledForUsers =
+                CurrentOrganization.EmailAndPasswordIsEnabledForUsers;
             model.CurrentUserId = CurrentUser.UserId;
             model.IsAdmin = user.Result.IsAdmin;
             model.IsActive = user.Result.IsActive;
@@ -272,7 +299,7 @@ public class UsersController : BaseController
         return RedirectToAction("Index");
     }
 
-    public async override void OnActionExecuted(ActionExecutedContext context)
+    public override async void OnActionExecuted(ActionExecutedContext context)
     {
         base.OnActionExecuted(context);
         ViewData["ActiveMenu"] = "Users";

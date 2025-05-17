@@ -9,9 +9,7 @@ namespace Raytha.Application.Themes.WebTemplates.Queries;
 
 public class GetWebTemplateById
 {
-    public record Query : GetEntityByIdInputDto, IRequest<IQueryResponseDto<WebTemplateDto>>
-    {
-    }
+    public record Query : GetEntityByIdInputDto, IRequest<IQueryResponseDto<WebTemplateDto>> { }
 
     public class Handler : IRequestHandler<Query, IQueryResponseDto<WebTemplateDto>>
     {
@@ -22,11 +20,14 @@ public class GetWebTemplateById
             _db = db;
         }
 
-        public async Task<IQueryResponseDto<WebTemplateDto>> Handle(Query request, CancellationToken cancellationToken)
+        public async Task<IQueryResponseDto<WebTemplateDto>> Handle(
+            Query request,
+            CancellationToken cancellationToken
+        )
         {
-            var entity = await _db.WebTemplates
-                .Include(p => p.TemplateAccessToModelDefinitions)
-                    .ThenInclude(p => p.ContentType)
+            var entity = await _db
+                .WebTemplates.Include(p => p.TemplateAccessToModelDefinitions)
+                .ThenInclude(p => p.ContentType)
                 .IncludeParentTemplates(wt => wt.ParentTemplate)
                 .FirstOrDefaultAsync(p => p.Id == request.Id.Guid, cancellationToken);
 

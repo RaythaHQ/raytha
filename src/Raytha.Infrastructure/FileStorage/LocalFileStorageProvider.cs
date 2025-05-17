@@ -10,7 +10,10 @@ public class LocalFileStorageProvider : IFileStorageProvider
 
     private IFileStorageProviderSettings _configuration;
 
-    public LocalFileStorageProvider(IFileStorageProviderSettings configuration, IRelativeUrlBuilder relativeUrlBuilder)
+    public LocalFileStorageProvider(
+        IFileStorageProviderSettings configuration,
+        IRelativeUrlBuilder relativeUrlBuilder
+    )
     {
         _relativeUrlBuilder = relativeUrlBuilder;
         _localStorageDirectory = configuration.LocalDirectory;
@@ -23,7 +26,11 @@ public class LocalFileStorageProvider : IFileStorageProvider
         File.Delete(filePath);
     }
 
-    public async Task<string> GetDownloadUrlAsync(string key, DateTime expiresAt, bool inline = true)
+    public async Task<string> GetDownloadUrlAsync(
+        string key,
+        DateTime expiresAt,
+        bool inline = true
+    )
     {
         return _relativeUrlBuilder.MediaFileLocalStorageUrl(key);
     }
@@ -38,16 +45,31 @@ public class LocalFileStorageProvider : IFileStorageProvider
         return FileStorageUtility.LOCAL;
     }
 
-    public async Task<string> GetUploadUrlAsync(string key, string fileName, string contentType, DateTime expiresAt, bool inline = true)
+    public async Task<string> GetUploadUrlAsync(
+        string key,
+        string fileName,
+        string contentType,
+        DateTime expiresAt,
+        bool inline = true
+    )
     {
         throw new NotImplementedException();
     }
 
-    public async Task<string> SaveAndGetDownloadUrlAsync(byte[] data, string key, string fileName, string contentType, DateTime expiresAt, bool inline = true)
+    public async Task<string> SaveAndGetDownloadUrlAsync(
+        byte[] data,
+        string key,
+        string fileName,
+        string contentType,
+        DateTime expiresAt,
+        bool inline = true
+    )
     {
         if (data.Length > _configuration.MaxFileSize)
         {
-            throw new InvalidDataException($"File size {data.Length} exceeds max file size of {_configuration.MaxFileSize}");
+            throw new InvalidDataException(
+                $"File size {data.Length} exceeds max file size of {_configuration.MaxFileSize}"
+            );
         }
         var filePath = Path.Combine(_localStorageDirectory, key);
         await File.WriteAllBytesAsync(filePath, data);

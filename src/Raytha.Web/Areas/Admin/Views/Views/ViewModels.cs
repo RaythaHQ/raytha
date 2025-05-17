@@ -1,10 +1,10 @@
-﻿using Raytha.Domain.Entities;
+﻿using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.Text.Json;
+using Raytha.Domain.Entities;
 using Raytha.Domain.ValueObjects.FieldTypes;
 using Raytha.Web.Areas.Admin.Views.Shared;
 using Raytha.Web.Areas.Admin.Views.Shared.ViewModels;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.Text.Json;
 
 namespace Raytha.Web.Areas.Admin.Views.Views;
 
@@ -12,8 +12,8 @@ public class ViewsPagination_ViewModel : Pagination_ViewModel, IMustHaveCurrentV
 {
     public IEnumerable<ViewsListItem_ViewModel> Items { get; }
 
-    public ViewsPagination_ViewModel(
-        IEnumerable<ViewsListItem_ViewModel> items, int totalCount) : base(totalCount) => Items = items;
+    public ViewsPagination_ViewModel(IEnumerable<ViewsListItem_ViewModel> items, int totalCount)
+        : base(totalCount) => Items = items;
 
     //helpers
     public CurrentViewForList_ViewModel CurrentView { get; set; }
@@ -110,7 +110,6 @@ public class ViewsPublicSettings_ViewModel : FormSubmit_ViewModel, IMustHaveCurr
     public CurrentViewForList_ViewModel CurrentView { get; set; }
 }
 
-
 public class ViewsColumns_ViewModel : IMustHaveCurrentViewForList
 {
     public ViewsColumnsListItem_ViewModel[] SelectedColumns { get; set; }
@@ -136,10 +135,7 @@ public class ViewsFilter_ViewModel : IMustHaveCurrentViewForList
     public CurrentViewForList_ViewModel CurrentView { get; set; }
     public string ContentTypeFieldsAsJson
     {
-        get
-        {
-            return JsonSerializer.Serialize(ContentTypeFields);
-        }
+        get { return JsonSerializer.Serialize(ContentTypeFields); }
     }
 }
 
@@ -155,6 +151,7 @@ public class FilterSubtree_ViewModel
 {
     public FilterCondition FilterCondition { get; set; }
     public ViewsFilterContentTypeField_ViewModel[] ContentTypeFields { get; set; }
+
     //helpers
     public CurrentViewForList_ViewModel CurrentView { get; set; }
 }

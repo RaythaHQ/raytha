@@ -22,10 +22,12 @@ public class SetAsActiveThemeInternal
             _db = db;
         }
 
-        public async Task<CommandResponseDto<ShortGuid>> Handle(Command request, CancellationToken cancellationToken)
+        public async Task<CommandResponseDto<ShortGuid>> Handle(
+            Command request,
+            CancellationToken cancellationToken
+        )
         {
-            var organizationSettings = await _db.OrganizationSettings
-                .FirstAsync(cancellationToken);
+            var organizationSettings = await _db.OrganizationSettings.FirstAsync(cancellationToken);
 
             organizationSettings.ActiveThemeId = request.ThemeId.Guid;
 

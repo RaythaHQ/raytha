@@ -1,5 +1,5 @@
-﻿using Raytha.Domain.Entities;
-using System.Linq.Expressions;
+﻿using System.Linq.Expressions;
+using Raytha.Domain.Entities;
 
 namespace Raytha.Application.Common.Models;
 
@@ -18,6 +18,7 @@ public record AuditableUserDto : BaseEntityDto
             return $"{FirstName} {LastName}";
         }
     }
+
     public static Expression<Func<User?, AuditableUserDto?>> GetProjection()
     {
         return entity => GetProjection(entity);
@@ -33,7 +34,7 @@ public record AuditableUserDto : BaseEntityDto
             Id = entity.Id,
             FirstName = entity.FirstName,
             LastName = entity.LastName,
-            EmailAddress = entity.EmailAddress
+            EmailAddress = entity.EmailAddress,
         };
     }
 }

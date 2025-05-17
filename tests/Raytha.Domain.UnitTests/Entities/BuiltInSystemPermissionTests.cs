@@ -34,11 +34,12 @@ public class BuiltInSystemPermissionTests
         type.Label.Should().Be(label);
     }
 
-
     [Test]
     public void ShouldHandleListOfPermissions()
     {
-        var typesAsList = BuiltInSystemPermission.From(BuiltInSystemPermission.AllPermissionsAsEnum);
+        var typesAsList = BuiltInSystemPermission.From(
+            BuiltInSystemPermission.AllPermissionsAsEnum
+        );
 
         typesAsList.Count().Should().Be(BuiltInSystemPermission.Permissions.Count());
     }
@@ -46,8 +47,10 @@ public class BuiltInSystemPermissionTests
     [Test]
     public void ShouldThrowUnsupportedColourExceptionGivenNotSupportedColourCode()
     {
-        FluentActions.Invoking(() => BuiltInSystemPermission.From("BadValue"))
-            .Should().Throw<UnsupportedTemplateTypeException>();
+        FluentActions
+            .Invoking(() => BuiltInSystemPermission.From("BadValue"))
+            .Should()
+            .Throw<UnsupportedTemplateTypeException>();
     }
 
     [Test]

@@ -1,5 +1,5 @@
-﻿using Raytha.Application.Common.Interfaces;
-using System.Linq.Expressions;
+﻿using System.Linq.Expressions;
+using Raytha.Application.Common.Interfaces;
 
 namespace Raytha.Application.Common.Models.RenderModels;
 
@@ -7,9 +7,7 @@ public record AuditableUser_RenderModel : IInsertTemplateVariable
 {
     private string _prefix = string.Empty;
 
-    private AuditableUser_RenderModel()
-    {
-    }
+    private AuditableUser_RenderModel() { }
 
     private AuditableUser_RenderModel(string prefix)
     {
@@ -22,10 +20,7 @@ public record AuditableUser_RenderModel : IInsertTemplateVariable
     public string? EmailAddress { get; init; }
     public string FullName
     {
-        get
-        {
-            return $"{FirstName} {LastName}";
-        }
+        get { return $"{FirstName} {LastName}"; }
     }
 
     public static Expression<Func<AuditableUserDto, AuditableUser_RenderModel>> GetProjection()
@@ -43,7 +38,7 @@ public record AuditableUser_RenderModel : IInsertTemplateVariable
             Id = entity.Id,
             FirstName = entity.FirstName,
             LastName = entity.LastName,
-            EmailAddress = entity.EmailAddress
+            EmailAddress = entity.EmailAddress,
         };
     }
 

@@ -24,14 +24,18 @@ namespace Raytha.Migrations.SqlServer
                     PercentComplete = table.Column<int>(type: "int", nullable: false),
                     NumberOfRetries = table.Column<int>(type: "int", nullable: false),
                     CreationTime = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    LastModificationTime = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    LastModificationTime = table.Column<DateTime>(
+                        type: "datetime2",
+                        nullable: true
+                    ),
                     CompletionTime = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    TaskStep = table.Column<int>(type: "int", nullable: false)
+                    TaskStep = table.Column<int>(type: "int", nullable: false),
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_BackgroundTasks", x => x.Id);
-                });
+                }
+            );
 
             migrationBuilder.Sql("ALTER DATABASE CURRENT SET ALLOW_SNAPSHOT_ISOLATION ON;", true);
         }
@@ -39,8 +43,7 @@ namespace Raytha.Migrations.SqlServer
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropTable(
-                name: "BackgroundTasks");
+            migrationBuilder.DropTable(name: "BackgroundTasks");
 
             migrationBuilder.Sql("ALTER DATABASE CURRENT SET ALLOW_SNAPSHOT_ISOLATION OFF;", true);
         }

@@ -27,46 +27,78 @@ public class CreateView
         public Validator(IRaythaDbContext db)
         {
             RuleFor(x => x.Label).NotEmpty();
-            RuleFor(x => x.DeveloperName).NotEmpty().Must(StringExtensions.IsValidDeveloperName).WithMessage("Invalid developer name.");
-            RuleFor(x => x).Custom((request, context) =>
-            {
-                var contentType = db.ContentTypes.FirstOrDefault(p => p.Id == request.ContentTypeId.Guid);
-                if (contentType == null)
-                    throw new NotFoundException("Content Type", request.ContentTypeId);
-
-                if (request.DuplicateFromId.HasValue && request.DuplicateFromId.Value != ShortGuid.Empty)
-                {
-                    var duplicateExists = db.Views.Any(p => p.Id == request.DuplicateFromId.Value.Guid);
-                    if (!duplicateExists)
+            RuleFor(x => x.DeveloperName)
+                .NotEmpty()
+                .Must(StringExtensions.IsValidDeveloperName)
+                .WithMessage("Invalid developer name.");
+            RuleFor(x => x)
+                .Custom(
+                    (request, context) =>
                     {
-                        context.AddFailure(Constants.VALIDATION_SUMMARY, $"View {request.DuplicateFromId} does not exist. Cannot perform duplication.");
-                        return;
+                        var contentType = db.ContentTypes.FirstOrDefault(p =>
+                            p.Id == request.ContentTypeId.Guid
+                        );
+                        if (contentType == null)
+                            throw new NotFoundException("Content Type", request.ContentTypeId);
+
+                        if (
+                            request.DuplicateFromId.HasValue
+                            && request.DuplicateFromId.Value != ShortGuid.Empty
+                        )
+                        {
+                            var duplicateExists = db.Views.Any(p =>
+                                p.Id == request.DuplicateFromId.Value.Guid
+                            );
+                            if (!duplicateExists)
+                            {
+                                context.AddFailure(
+                                    Constants.VALIDATION_SUMMARY,
+                                    $"View {request.DuplicateFromId} does not exist. Cannot perform duplication."
+                                );
+                                return;
+                            }
+                        }
+
+                        if (
+                            db.Views.Any(p =>
+                                p.ContentTypeId == request.ContentTypeId.Guid
+                                && p.DeveloperName == request.DeveloperName.ToDeveloperName()
+                            )
+                        )
+                        {
+                            context.AddFailure(
+                                "DeveloperName",
+                                $"A view with the developer name of {request.DeveloperName.ToDeveloperName()} already exists."
+                            );
+                            return;
+                        }
+
+                        if (request.DeveloperName.Length > 64)
+                        {
+                            context.AddFailure(
+                                "DeveloperName",
+                                $"Developer name cannot be longer than 64 characters."
+                            );
+                            return;
+                        }
                     }
-                }
-
-                if (db.Views.Any(p => p.ContentTypeId == request.ContentTypeId.Guid && p.DeveloperName == request.DeveloperName.ToDeveloperName()))
-                {
-                    context.AddFailure("DeveloperName", $"A view with the developer name of {request.DeveloperName.ToDeveloperName()} already exists.");
-                    return;
-                }
-
-                if (request.DeveloperName.Length > 64)
-                {
-                    context.AddFailure("DeveloperName", $"Developer name cannot be longer than 64 characters.");
-                    return;
-                }
-            });
+                );
         }
     }
 
     public class Handler : IRequestHandler<Command, CommandResponseDto<ShortGuid>>
     {
         private readonly IRaythaDbContext _db;
+
         public Handler(IRaythaDbContext db)
         {
             _db = db;
         }
-        public async Task<CommandResponseDto<ShortGuid>> Handle(Command request, CancellationToken cancellationToken)
+
+        public async Task<CommandResponseDto<ShortGuid>> Handle(
+            Command request,
+            CancellationToken cancellationToken
+        )
         {
             var newEntityId = Guid.NewGuid();
 
@@ -76,11 +108,11 @@ public class CreateView
                 ContentTypeId = request.ContentTypeId.Guid,
                 Label = request.Label,
                 DeveloperName = request.DeveloperName.ToDeveloperName(),
-                Description = request.Description
+                Description = request.Description,
             };
 
-            var activeThemeId = await _db.OrganizationSettings
-                .Select(os => os.ActiveThemeId)
+            var activeThemeId = await _db
+                .OrganizationSettings.Select(os => os.ActiveThemeId)
                 .FirstAsync(cancellationToken);
 
             if (request.DuplicateFromId != ShortGuid.Empty && request.DuplicateFromId.HasValue)
@@ -91,10 +123,13 @@ public class CreateView
                 entity.Sort = originalView.Sort;
                 entity.DefaultNumberOfItemsPerPage = originalView.DefaultNumberOfItemsPerPage;
                 entity.MaxNumberOfItemsPerPage = originalView.MaxNumberOfItemsPerPage;
-                entity.IgnoreClientFilterAndSortQueryParams = originalView.IgnoreClientFilterAndSortQueryParams;
+                entity.IgnoreClientFilterAndSortQueryParams =
+                    originalView.IgnoreClientFilterAndSortQueryParams;
 
-                var originalViewWebTemplateId = await _db.WebTemplateViewRelations
-                    .Where(wtr => wtr.ViewId == originalView.Id && wtr.WebTemplate!.ThemeId == activeThemeId)
+                var originalViewWebTemplateId = await _db
+                    .WebTemplateViewRelations.Where(wtr =>
+                        wtr.ViewId == originalView.Id && wtr.WebTemplate!.ThemeId == activeThemeId
+                    )
                     .Select(wtv => wtv.WebTemplateId)
                     .FirstAsync(cancellationToken);
 
@@ -105,7 +140,10 @@ public class CreateView
                     ViewId = entity.Id,
                 };
 
-                await _db.WebTemplateViewRelations.AddAsync(webTemplateViewRelation, cancellationToken);
+                await _db.WebTemplateViewRelations.AddAsync(
+                    webTemplateViewRelation,
+                    cancellationToken
+                );
             }
             else
             {
@@ -113,24 +151,32 @@ public class CreateView
                 entity.MaxNumberOfItemsPerPage = 1000;
                 entity.IgnoreClientFilterAndSortQueryParams = false;
 
-                var allFieldsForContentType = _db.ContentTypeFields
-                    .Where(p => p.ContentTypeId == request.ContentTypeId.Guid &&
-                            !p.IsDeleted).OrderBy(p => p.FieldOrder);
+                var allFieldsForContentType = _db
+                    .ContentTypeFields.Where(p =>
+                        p.ContentTypeId == request.ContentTypeId.Guid && !p.IsDeleted
+                    )
+                    .OrderBy(p => p.FieldOrder);
 
                 var chosenColumns = new List<ColumnSortOrder>();
                 foreach (var field in allFieldsForContentType)
                 {
-                    chosenColumns.Add(new ColumnSortOrder
-                    {
-                        DeveloperName = field.DeveloperName,
-                        SortOrder = SortOrder.Ascending
-                    });
+                    chosenColumns.Add(
+                        new ColumnSortOrder
+                        {
+                            DeveloperName = field.DeveloperName,
+                            SortOrder = SortOrder.Ascending,
+                        }
+                    );
                 }
 
                 entity.Columns = chosenColumns.Select(p => p.DeveloperName);
 
-                var defaultTemplateId = await _db.WebTemplates
-                    .Where(wt => wt.ThemeId == activeThemeId && wt.DeveloperName == BuiltInWebTemplate.ContentItemListViewPage.DeveloperName)
+                var defaultTemplateId = await _db
+                    .WebTemplates.Where(wt =>
+                        wt.ThemeId == activeThemeId
+                        && wt.DeveloperName
+                            == BuiltInWebTemplate.ContentItemListViewPage.DeveloperName
+                    )
                     .Select(wt => wt.Id)
                     .FirstAsync(cancellationToken);
 
@@ -141,15 +187,14 @@ public class CreateView
                     WebTemplateId = defaultTemplateId,
                 };
 
-                await _db.WebTemplateViewRelations.AddAsync(webTemplateViewRelation, cancellationToken);
+                await _db.WebTemplateViewRelations.AddAsync(
+                    webTemplateViewRelation,
+                    cancellationToken
+                );
             }
 
             var path = GetRoutePath(request.DeveloperName, newEntityId, request.ContentTypeId.Guid);
-            entity.Route = new Route
-            {
-                Path = path,
-                ViewId = newEntityId
-            };
+            entity.Route = new Route { Path = path, ViewId = newEntityId };
 
             _db.Views.Add(entity);
 
@@ -159,8 +204,8 @@ public class CreateView
 
         public string GetRoutePath(string developerName, Guid entityId, Guid contentTypeId)
         {
-            var contentType = _db.ContentTypes
-                .Include(p => p.ContentTypeFields)
+            var contentType = _db
+                .ContentTypes.Include(p => p.ContentTypeFields)
                 .First(p => p.Id == contentTypeId);
 
             string path = string.Empty;
@@ -170,7 +215,11 @@ public class CreateView
             path = path.ToUrlSlug();
             if (_db.Routes.Any(p => p.Path == path))
             {
-                path = $"{contentType.DeveloperName}/{(ShortGuid)entityId}-{developerName}".Truncate(200, string.Empty);
+                path =
+                    $"{contentType.DeveloperName}/{(ShortGuid)entityId}-{developerName}".Truncate(
+                        200,
+                        string.Empty
+                    );
                 path = path.ToUrlSlug();
             }
 

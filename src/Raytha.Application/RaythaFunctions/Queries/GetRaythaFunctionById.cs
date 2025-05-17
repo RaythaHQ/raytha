@@ -7,9 +7,7 @@ namespace Raytha.Application.RaythaFunctions.Queries;
 
 public class GetRaythaFunctionById
 {
-    public record Query : GetEntityByIdInputDto, IRequest<IQueryResponseDto<RaythaFunctionDto>>
-    {
-    }
+    public record Query : GetEntityByIdInputDto, IRequest<IQueryResponseDto<RaythaFunctionDto>> { }
 
     public class Handler : IRequestHandler<Query, IQueryResponseDto<RaythaFunctionDto>>
     {
@@ -20,7 +18,10 @@ public class GetRaythaFunctionById
             _db = db;
         }
 
-        public async Task<IQueryResponseDto<RaythaFunctionDto>> Handle(Query request, CancellationToken cancellationToken)
+        public async Task<IQueryResponseDto<RaythaFunctionDto>> Handle(
+            Query request,
+            CancellationToken cancellationToken
+        )
         {
             var entity = _db.RaythaFunctions.FirstOrDefault(rf => rf.Id == request.Id.Guid);
             if (entity == null)

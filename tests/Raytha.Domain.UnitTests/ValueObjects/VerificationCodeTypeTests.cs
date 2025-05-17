@@ -47,8 +47,10 @@ public class VerificationCodeTypeTests
     [Test]
     public void ShouldThrowUnsupportedColourExceptionGivenNotSupportedColourCode()
     {
-        FluentActions.Invoking(() => VerificationCodeType.From("BadValue"))
-            .Should().Throw<UnsupportedVerificationCodeTypeException>();
+        FluentActions
+            .Invoking(() => VerificationCodeType.From("BadValue"))
+            .Should()
+            .Throw<UnsupportedVerificationCodeTypeException>();
     }
 
     [Test]

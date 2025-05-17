@@ -20,12 +20,21 @@ public class BaseController : Controller
     private IFileStorageProviderSettings _fileStorageSettings;
     private IFileStorageProvider _fileStorageProvider;
 
-    protected ISender Mediator => _mediator ??= HttpContext.RequestServices.GetRequiredService<ISender>();
-    protected ICurrentOrganization CurrentOrganization => _currentOrganization ??= HttpContext.RequestServices.GetRequiredService<ICurrentOrganization>();
-    protected ICurrentUser CurrentUser => _currentUser ??= HttpContext.RequestServices.GetRequiredService<ICurrentUser>();
-    protected IFileStorageProvider FileStorageProvider => _fileStorageProvider ??= HttpContext.RequestServices.GetRequiredService<IFileStorageProvider>();
-    protected IFileStorageProviderSettings FileStorageProviderSettings => _fileStorageSettings ??= HttpContext.RequestServices.GetRequiredService<IFileStorageProviderSettings>();
-    protected ICurrentVersion CurrentVersion => _currentVersion ??= HttpContext.RequestServices.GetRequiredService<ICurrentVersion>();
+    protected ISender Mediator =>
+        _mediator ??= HttpContext.RequestServices.GetRequiredService<ISender>();
+    protected ICurrentOrganization CurrentOrganization =>
+        _currentOrganization ??=
+            HttpContext.RequestServices.GetRequiredService<ICurrentOrganization>();
+    protected ICurrentUser CurrentUser =>
+        _currentUser ??= HttpContext.RequestServices.GetRequiredService<ICurrentUser>();
+    protected IFileStorageProvider FileStorageProvider =>
+        _fileStorageProvider ??=
+            HttpContext.RequestServices.GetRequiredService<IFileStorageProvider>();
+    protected IFileStorageProviderSettings FileStorageProviderSettings =>
+        _fileStorageSettings ??=
+            HttpContext.RequestServices.GetRequiredService<IFileStorageProviderSettings>();
+    protected ICurrentVersion CurrentVersion =>
+        _currentVersion ??= HttpContext.RequestServices.GetRequiredService<ICurrentVersion>();
 
     public override void OnActionExecuting(ActionExecutingContext context)
     {

@@ -1,8 +1,8 @@
-﻿using CSharpVitamins;
+﻿using System.Linq.Expressions;
+using CSharpVitamins;
 using Raytha.Application.Common.Models;
 using Raytha.Application.ContentTypes;
 using Raytha.Domain.Entities;
-using System.Linq.Expressions;
 
 namespace Raytha.Application.Views
 {
@@ -55,7 +55,7 @@ namespace Raytha.Application.Views
                 IsPublished = entity.IsPublished,
                 IgnoreClientFilterAndSortQueryParams = entity.IgnoreClientFilterAndSortQueryParams,
                 DefaultNumberOfItemsPerPage = entity.DefaultNumberOfItemsPerPage,
-                MaxNumberOfItemsPerPage = entity.MaxNumberOfItemsPerPage
+                MaxNumberOfItemsPerPage = entity.MaxNumberOfItemsPerPage,
             };
         }
     }

@@ -9,22 +9,25 @@ namespace Raytha.Application.EmailTemplates.Commands;
 
 public class RevertEmailTemplate
 {
-    public record Command : LoggableEntityRequest<CommandResponseDto<ShortGuid>>
-    {
-    }
+    public record Command : LoggableEntityRequest<CommandResponseDto<ShortGuid>> { }
 
     public class Handler : IRequestHandler<Command, CommandResponseDto<ShortGuid>>
     {
         private readonly IRaythaDbContext _db;
+
         public Handler(IRaythaDbContext db)
         {
             _db = db;
         }
-        public async Task<CommandResponseDto<ShortGuid>> Handle(Command request, CancellationToken cancellationToken)
+
+        public async Task<CommandResponseDto<ShortGuid>> Handle(
+            Command request,
+            CancellationToken cancellationToken
+        )
         {
-            var entity = _db.EmailTemplateRevisions
-                    .Include(p => p.EmailTemplate)
-                    .First(p => p.Id == request.Id.Guid);
+            var entity = _db
+                .EmailTemplateRevisions.Include(p => p.EmailTemplate)
+                .First(p => p.Id == request.Id.Guid);
 
             var newRevision = new EmailTemplateRevision
             {

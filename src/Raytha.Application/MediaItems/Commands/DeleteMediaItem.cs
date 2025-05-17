@@ -10,19 +10,20 @@ namespace Raytha.Application.MediaItems.Commands;
 
 public class DeleteMediaItem
 {
-    public record Command : LoggableEntityRequest<CommandResponseDto<ShortGuid>>
-    {
-    }
+    public record Command : LoggableEntityRequest<CommandResponseDto<ShortGuid>> { }
 
     public class Validator : AbstractValidator<Command>
     {
         public Validator(IRaythaDbContext db)
         {
-            RuleFor(x => x).Custom((request, _) =>
-            {
-                if (!db.MediaItems.Any(mi => mi.Id == request.Id.Guid))
-                    throw new NotFoundException("Media Item", request.Id);
-            });
+            RuleFor(x => x)
+                .Custom(
+                    (request, _) =>
+                    {
+                        if (!db.MediaItems.Any(mi => mi.Id == request.Id.Guid))
+                            throw new NotFoundException("Media Item", request.Id);
+                    }
+                );
         }
     }
 
@@ -37,10 +38,15 @@ public class DeleteMediaItem
             _fileStorageProvider = fileStorageProvider;
         }
 
-        public async Task<CommandResponseDto<ShortGuid>> Handle(Command request, CancellationToken cancellationToken)
+        public async Task<CommandResponseDto<ShortGuid>> Handle(
+            Command request,
+            CancellationToken cancellationToken
+        )
         {
-            var mediaItem = await _db.MediaItems
-                .FirstAsync(mi => mi.Id == request.Id.Guid, cancellationToken);
+            var mediaItem = await _db.MediaItems.FirstAsync(
+                mi => mi.Id == request.Id.Guid,
+                cancellationToken
+            );
 
             await _fileStorageProvider.DeleteAsync(mediaItem.ObjectKey);
 

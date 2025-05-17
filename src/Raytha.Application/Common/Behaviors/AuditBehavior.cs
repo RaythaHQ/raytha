@@ -1,10 +1,10 @@
-﻿using CSharpVitamins;
+﻿using System.Text.Json;
+using CSharpVitamins;
 using MediatR;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Models;
 using Raytha.Application.Common.Utils;
 using Raytha.Domain.Entities;
-using System.Text.Json;
 
 namespace Raytha.Application.Common.Behaviors;
 
@@ -14,13 +14,18 @@ public class AuditBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, TR
     private readonly IRaythaDbContext _db;
     private readonly ICurrentUser _currentUser;
 
-    public AuditBehavior(IRaythaDbContext db, ICurrentUser currentUser) : base()
+    public AuditBehavior(IRaythaDbContext db, ICurrentUser currentUser)
+        : base()
     {
         _db = db;
         _currentUser = currentUser;
     }
 
-    public async Task<TResponse> Handle(TRequest request, RequestHandlerDelegate<TResponse> next, CancellationToken cancellationToken)
+    public async Task<TResponse> Handle(
+        TRequest request,
+        RequestHandlerDelegate<TResponse> next,
+        CancellationToken cancellationToken
+    )
     {
         var response = await next();
 
@@ -42,7 +47,7 @@ public class AuditBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, TR
                     Category = requestAsDynamic.GetLogName(),
                     UserEmail = _currentUser.EmailAddress,
                     IpAddress = _currentUser.RemoteIpAddress,
-                    EntityId = isLoggableEntityRequest ? (ShortGuid)requestAsDynamic.Id : null
+                    EntityId = isLoggableEntityRequest ? (ShortGuid)requestAsDynamic.Id : null,
                 };
                 _db.AuditLogs.Add(auditLog);
                 await _db.SaveChangesAsync(cancellationToken);

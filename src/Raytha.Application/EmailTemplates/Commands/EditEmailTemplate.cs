@@ -25,53 +25,65 @@ public class EditEmailTemplate
         {
             RuleFor(x => x.Subject).NotEmpty();
             RuleFor(x => x.Content).NotEmpty();
-            RuleFor(x => x).Custom((request, context) =>
-            {
-                var entity = db.EmailTemplates.FirstOrDefault(p => p.Id == request.Id.Guid);
-                if (entity == null)
-                    throw new NotFoundException("EmailTemplate", request.Id);
-
-                var ccArray = request.Cc.SplitIntoSeparateEmailAddresses();
-                var bccArray = request.Bcc.SplitIntoSeparateEmailAddresses();
-
-                if (ccArray.Any())
-                {
-                    foreach (var cc in ccArray)
+            RuleFor(x => x)
+                .Custom(
+                    (request, context) =>
                     {
-                        context.AddFailure("Cc", $"{cc} is not in a valid email format.");
-                        return;
-                    }
-                }
+                        var entity = db.EmailTemplates.FirstOrDefault(p => p.Id == request.Id.Guid);
+                        if (entity == null)
+                            throw new NotFoundException("EmailTemplate", request.Id);
 
-                if (bccArray.Any())
-                {
-                    foreach (var bcc in bccArray)
-                    {
-                        context.AddFailure("Bcc", $"{bcc} is not in a valid email format.");
-                        return;
+                        var ccArray = request.Cc.SplitIntoSeparateEmailAddresses();
+                        var bccArray = request.Bcc.SplitIntoSeparateEmailAddresses();
+
+                        if (ccArray.Any())
+                        {
+                            foreach (var cc in ccArray)
+                            {
+                                context.AddFailure("Cc", $"{cc} is not in a valid email format.");
+                                return;
+                            }
+                        }
+
+                        if (bccArray.Any())
+                        {
+                            foreach (var bcc in bccArray)
+                            {
+                                context.AddFailure("Bcc", $"{bcc} is not in a valid email format.");
+                                return;
+                            }
+                        }
                     }
-                }
-            });
+                );
         }
     }
 
     public class Handler : IRequestHandler<Command, CommandResponseDto<ShortGuid>>
     {
         private readonly IRaythaDbContext _db;
+
         public Handler(IRaythaDbContext db)
         {
             _db = db;
         }
-        public async Task<CommandResponseDto<ShortGuid>> Handle(Command request, CancellationToken cancellationToken)
-        {
-            var entity = _db.EmailTemplates
-                    .First(p => p.Id == request.Id.Guid);
 
-            if (BuiltInEmailTemplate.Templates.Any(p => p.DeveloperName == entity.DeveloperName) && !BuiltInEmailTemplate.From(entity.DeveloperName).SafeToCc)
+        public async Task<CommandResponseDto<ShortGuid>> Handle(
+            Command request,
+            CancellationToken cancellationToken
+        )
+        {
+            var entity = _db.EmailTemplates.First(p => p.Id == request.Id.Guid);
+
+            if (
+                BuiltInEmailTemplate.Templates.Any(p => p.DeveloperName == entity.DeveloperName)
+                && !BuiltInEmailTemplate.From(entity.DeveloperName).SafeToCc
+            )
             {
                 if (!string.IsNullOrEmpty(request.Cc) || !string.IsNullOrEmpty(request.Bcc))
                 {
-                    throw new InvalidOperationException($"Cannot set CC or BCC on {entity.DeveloperName} for security reasons.");
+                    throw new InvalidOperationException(
+                        $"Cannot set CC or BCC on {entity.DeveloperName} for security reasons."
+                    );
                 }
             }
 
@@ -81,7 +93,7 @@ public class EditEmailTemplate
                 Content = entity.Content,
                 Subject = entity.Subject,
                 Cc = entity.Cc,
-                Bcc = entity.Bcc
+                Bcc = entity.Bcc,
             };
 
             _db.EmailTemplateRevisions.Add(revision);

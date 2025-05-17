@@ -8,9 +8,7 @@ namespace Raytha.Application.Themes.Queries;
 
 public class GetThemeById
 {
-    public record Query : GetEntityByIdInputDto, IRequest<IQueryResponseDto<ThemeDto>>
-    {
-    }
+    public record Query : GetEntityByIdInputDto, IRequest<IQueryResponseDto<ThemeDto>> { }
 
     public class Handler : IRequestHandler<Query, IQueryResponseDto<ThemeDto>>
     {
@@ -21,10 +19,15 @@ public class GetThemeById
             _db = db;
         }
 
-        public async Task<IQueryResponseDto<ThemeDto>> Handle(Query request, CancellationToken cancellationToken)
+        public async Task<IQueryResponseDto<ThemeDto>> Handle(
+            Query request,
+            CancellationToken cancellationToken
+        )
         {
-            var entity = await _db.Themes
-                .FirstOrDefaultAsync(t => t.Id == request.Id.Guid, cancellationToken);
+            var entity = await _db.Themes.FirstOrDefaultAsync(
+                t => t.Id == request.Id.Guid,
+                cancellationToken
+            );
 
             if (entity == null)
                 throw new NotFoundException("Theme", request.Id);

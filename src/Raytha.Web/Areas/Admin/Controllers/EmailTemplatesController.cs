@@ -21,14 +21,19 @@ public class EmailTemplatesController : BaseController
 {
     [ServiceFilter(typeof(SetPaginationInformationFilterAttribute))]
     [Route(RAYTHA_ROUTE_PREFIX + "/templates/email", Name = "emailtemplatesindex")]
-    public async Task<IActionResult> Index(string search = "", string orderBy = $"Subject {SortOrder.ASCENDING}", int pageNumber = 1, int pageSize = 50)
+    public async Task<IActionResult> Index(
+        string search = "",
+        string orderBy = $"Subject {SortOrder.ASCENDING}",
+        int pageNumber = 1,
+        int pageSize = 50
+    )
     {
         var input = new GetEmailTemplates.Query
         {
             Search = search,
             PageNumber = pageNumber,
             PageSize = pageSize,
-            OrderBy = orderBy
+            OrderBy = orderBy,
         };
 
         var response = await Mediator.Send(input);
@@ -38,11 +43,17 @@ public class EmailTemplatesController : BaseController
             Id = p.Id,
             Subject = p.Subject,
             DeveloperName = p.DeveloperName,
-            LastModificationTime = CurrentOrganization.TimeZoneConverter.UtcToTimeZoneAsDateTimeFormat(p.LastModificationTime),
-            LastModifierUser = p.LastModifierUser != null ? p.LastModifierUser.FullName : "N/A",   
+            LastModificationTime =
+                CurrentOrganization.TimeZoneConverter.UtcToTimeZoneAsDateTimeFormat(
+                    p.LastModificationTime
+                ),
+            LastModifierUser = p.LastModifierUser != null ? p.LastModifierUser.FullName : "N/A",
         });
 
-        var viewModel = new List_ViewModel<EmailTemplatesListItem_ViewModel>(items, response.Result.TotalCount);
+        var viewModel = new List_ViewModel<EmailTemplatesListItem_ViewModel>(
+            items,
+            response.Result.TotalCount
+        );
 
         return View("~/Areas/Admin/Views/EmailTemplates/Index.cshtml", viewModel);
     }
@@ -65,7 +76,7 @@ public class EmailTemplatesController : BaseController
             AllowedMimeTypes = FileStorageProviderSettings.AllowedMimeTypes,
             MaxFileSize = FileStorageProviderSettings.MaxFileSize,
             UseDirectUploadToCloud = FileStorageProviderSettings.UseDirectUploadToCloud,
-            PathBase = CurrentOrganization.PathBase
+            PathBase = CurrentOrganization.PathBase,
         };
 
         return View("~/Areas/Admin/Views/EmailTemplates/Edit.cshtml", model);
@@ -82,7 +93,7 @@ public class EmailTemplatesController : BaseController
             Subject = model.Subject,
             Content = model.Content,
             Bcc = model.Bcc,
-            Cc= model.Cc
+            Cc = model.Cc,
         };
         var response = await Mediator.Send(input);
 
@@ -99,14 +110,25 @@ public class EmailTemplatesController : BaseController
             model.MaxFileSize = FileStorageProviderSettings.MaxFileSize;
             model.UseDirectUploadToCloud = FileStorageProviderSettings.UseDirectUploadToCloud;
             model.PathBase = CurrentOrganization.PathBase;
-            SetErrorMessage("There was an error attempting to update this template. See the error below.", response.GetErrors());
+            SetErrorMessage(
+                "There was an error attempting to update this template. See the error below.",
+                response.GetErrors()
+            );
             return View("~/Areas/Admin/Views/EmailTemplates/Edit.cshtml", model);
         }
     }
 
     [ServiceFilter(typeof(SetPaginationInformationFilterAttribute))]
-    [Route(RAYTHA_ROUTE_PREFIX + "/templates/email/edit/{id}/revisions", Name = "emailtemplatesrevisionsindex")]
-    public async Task<IActionResult> Revisions(string id, string orderBy = $"CreationTime {SortOrder.DESCENDING}", int pageNumber = 1, int pageSize = 50)
+    [Route(
+        RAYTHA_ROUTE_PREFIX + "/templates/email/edit/{id}/revisions",
+        Name = "emailtemplatesrevisionsindex"
+    )]
+    public async Task<IActionResult> Revisions(
+        string id,
+        string orderBy = $"CreationTime {SortOrder.DESCENDING}",
+        int pageNumber = 1,
+        int pageSize = 50
+    )
     {
         var template = await Mediator.Send(new GetEmailTemplateById.Query { Id = id });
 
@@ -123,12 +145,17 @@ public class EmailTemplatesController : BaseController
         {
             Id = p.Id,
             Subject = p.Subject,
-            CreationTime = CurrentOrganization.TimeZoneConverter.UtcToTimeZoneAsDateTimeFormat(p.CreationTime),
+            CreationTime = CurrentOrganization.TimeZoneConverter.UtcToTimeZoneAsDateTimeFormat(
+                p.CreationTime
+            ),
             CreatorUser = p.CreatorUser != null ? p.CreatorUser.FullName : "N/A",
-            Content = p.Content
+            Content = p.Content,
         });
 
-        var viewModel = new EmailTemplatesRevisionsPagination_ViewModel(items, response.Result.TotalCount)
+        var viewModel = new EmailTemplatesRevisionsPagination_ViewModel(
+            items,
+            response.Result.TotalCount
+        )
         {
             EmailTemplateId = template.Result.Id,
         };
@@ -136,7 +163,10 @@ public class EmailTemplatesController : BaseController
         return View("~/Areas/Admin/Views/EmailTemplates/Revisions.cshtml", viewModel);
     }
 
-    [Route(RAYTHA_ROUTE_PREFIX + "/templates/email/edit/{id}/revisions/{revisionId}", Name = "emailtemplatesrevisionsrevert")]
+    [Route(
+        RAYTHA_ROUTE_PREFIX + "/templates/email/edit/{id}/revisions/{revisionId}",
+        Name = "emailtemplatesrevisionsrevert"
+    )]
     [HttpPost]
     public async Task<IActionResult> RevisionsRevert(string id, string revisionId)
     {
@@ -149,24 +179,39 @@ public class EmailTemplatesController : BaseController
         return RedirectToAction("Edit", new { id });
     }
 
-    protected Dictionary<string, IEnumerable<EmailInsertVariableListItem_ViewModel>> GetInsertVariablesViewModel(string emailTemplate)
+    protected Dictionary<
+        string,
+        IEnumerable<EmailInsertVariableListItem_ViewModel>
+    > GetInsertVariablesViewModel(string emailTemplate)
     {
-        var templateVariableDictionary = new Dictionary<string, IEnumerable<EmailInsertVariableListItem_ViewModel>>();
+        var templateVariableDictionary =
+            new Dictionary<string, IEnumerable<EmailInsertVariableListItem_ViewModel>>();
 
-        var currentOrgVariables = InsertVariableTemplateFactory.CurrentOrganization.TemplateInfo.GetTemplateVariables().Select(p => new EmailInsertVariableListItem_ViewModel
-        {
-            DeveloperName = p.Key,
-            TemplateVariable = p.Value
-        });
+        var currentOrgVariables = InsertVariableTemplateFactory
+            .CurrentOrganization.TemplateInfo.GetTemplateVariables()
+            .Select(p => new EmailInsertVariableListItem_ViewModel
+            {
+                DeveloperName = p.Key,
+                TemplateVariable = p.Value,
+            });
 
-        var emailTemplateVariables = InsertVariableTemplateFactory.From(emailTemplate).TemplateInfo.GetTemplateVariables().Select(p => new EmailInsertVariableListItem_ViewModel
-        {
-            DeveloperName = p.Key,
-            TemplateVariable = p.Value
-        });
+        var emailTemplateVariables = InsertVariableTemplateFactory
+            .From(emailTemplate)
+            .TemplateInfo.GetTemplateVariables()
+            .Select(p => new EmailInsertVariableListItem_ViewModel
+            {
+                DeveloperName = p.Key,
+                TemplateVariable = p.Value,
+            });
 
-        templateVariableDictionary.Add(InsertVariableTemplateFactory.CurrentOrganization.VariableCategoryName, currentOrgVariables);
-        templateVariableDictionary.Add(InsertVariableTemplateFactory.From(emailTemplate).VariableCategoryName, emailTemplateVariables);
+        templateVariableDictionary.Add(
+            InsertVariableTemplateFactory.CurrentOrganization.VariableCategoryName,
+            currentOrgVariables
+        );
+        templateVariableDictionary.Add(
+            InsertVariableTemplateFactory.From(emailTemplate).VariableCategoryName,
+            emailTemplateVariables
+        );
 
         return templateVariableDictionary;
     }

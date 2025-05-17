@@ -1,8 +1,8 @@
-﻿using Raytha.Application.Common.Interfaces;
-using Raytha.Domain.Common;
+﻿using System.Net;
 using System.Net.Mail;
-using System.Net;
+using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Utils;
+using Raytha.Domain.Common;
 
 namespace Raytha.Infrastructure.Services;
 
@@ -18,17 +18,27 @@ public class Emailer : IEmailer
     public void SendEmail(EmailMessage message)
     {
         var smtpReplyToName = message.FromName.IfNullOrEmpty(_configuration.SmtpDefaultFromName);
-        var smtpReplyToAddress = message.FromEmailAddress.IfNullOrEmpty(_configuration.SmtpDefaultFromAddress);
+        var smtpReplyToAddress = message.FromEmailAddress.IfNullOrEmpty(
+            _configuration.SmtpDefaultFromAddress
+        );
 
-        using (var smtpClient = new SmtpClient(_configuration.SmtpHost)
-        {
-            Port = _configuration.SmtpPort,
-            Credentials = new NetworkCredential(_configuration.SmtpUsername, _configuration.SmtpPassword),
-            EnableSsl = _configuration.SmtpPort == 587 || _configuration.SmtpPort == 465,
-        })
+        using (
+            var smtpClient = new SmtpClient(_configuration.SmtpHost)
+            {
+                Port = _configuration.SmtpPort,
+                Credentials = new NetworkCredential(
+                    _configuration.SmtpUsername,
+                    _configuration.SmtpPassword
+                ),
+                EnableSsl = _configuration.SmtpPort == 587 || _configuration.SmtpPort == 465,
+            }
+        )
         {
             var messageToSend = new MailMessage();
-            messageToSend.From = new MailAddress(_configuration.SmtpFromAddress, _configuration.SmtpFromName);
+            messageToSend.From = new MailAddress(
+                _configuration.SmtpFromAddress,
+                _configuration.SmtpFromName
+            );
             messageToSend.ReplyToList.Add(new MailAddress(smtpReplyToAddress, smtpReplyToName));
 
             foreach (var to in message.To)
@@ -48,7 +58,9 @@ public class Emailer : IEmailer
 
             foreach (var attachment in message.Attachments)
             {
-                messageToSend.Attachments.Add(new Attachment(new MemoryStream(attachment.Attachment), attachment.FileName));
+                messageToSend.Attachments.Add(
+                    new Attachment(new MemoryStream(attachment.Attachment), attachment.FileName)
+                );
             }
 
             messageToSend.Body = message.Content;

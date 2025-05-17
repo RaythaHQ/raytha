@@ -43,7 +43,8 @@ public class RaythaFunctionsCreate_ViewModel : FormSubmit_ViewModel
     public bool IsActive { get; set; } = true;
 
     [Display(Name = "Code")]
-    public string Code { get; set; } = @"
+    public string Code { get; set; } =
+        @"
     /** The following classes are available:
      * API_V1
      * CurrentOrganization
@@ -119,7 +120,12 @@ public class RaythaFunctionsRevisionsPagination_ViewModel : Pagination_ViewModel
 {
     public IEnumerable<RaythaFunctionsRevisionsListItem_ViewModel> Items { get; }
     public string FunctionId { get; set; }
-    public RaythaFunctionsRevisionsPagination_ViewModel(IEnumerable<RaythaFunctionsRevisionsListItem_ViewModel> items, int totalCount) : base(totalCount) => Items = items;
+
+    public RaythaFunctionsRevisionsPagination_ViewModel(
+        IEnumerable<RaythaFunctionsRevisionsListItem_ViewModel> items,
+        int totalCount
+    )
+        : base(totalCount) => Items = items;
 }
 
 public class RaythaFunctionsRevisionsListItem_ViewModel

@@ -9,19 +9,20 @@ namespace Raytha.Application.Themes.Commands;
 
 public class SetAsActiveTheme
 {
-    public record Command : LoggableEntityRequest<CommandResponseDto<ShortGuid>>
-    {
-    }
+    public record Command : LoggableEntityRequest<CommandResponseDto<ShortGuid>> { }
 
     public class Validator : AbstractValidator<Command>
     {
         public Validator(IRaythaDbContext db)
         {
-            RuleFor(x => x).Custom((request, _) =>
-            {
-                if (!db.Themes.Any(rt => rt.Id == request.Id.Guid))
-                    throw new NotFoundException("Theme", request.Id);
-            });
+            RuleFor(x => x)
+                .Custom(
+                    (request, _) =>
+                    {
+                        if (!db.Themes.Any(rt => rt.Id == request.Id.Guid))
+                            throw new NotFoundException("Theme", request.Id);
+                    }
+                );
         }
     }
 
@@ -34,12 +35,15 @@ public class SetAsActiveTheme
             _mediator = mediator;
         }
 
-        public async Task<CommandResponseDto<ShortGuid>> Handle(Command request, CancellationToken cancellationToken)
+        public async Task<CommandResponseDto<ShortGuid>> Handle(
+            Command request,
+            CancellationToken cancellationToken
+        )
         {
-            await _mediator.Send(new SetAsActiveThemeInternal.Command
-            {
-                ThemeId = request.Id.Guid,
-            }, cancellationToken);
+            await _mediator.Send(
+                new SetAsActiveThemeInternal.Command { ThemeId = request.Id.Guid },
+                cancellationToken
+            );
 
             return new CommandResponseDto<ShortGuid>(request.Id.Guid);
         }

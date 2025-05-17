@@ -4,17 +4,14 @@ using Raytha.Application.Common.Attributes;
 
 namespace Raytha.Application.Common.Models;
 
-public interface ILoggableRequest
-{
-}
+public interface ILoggableRequest { }
 
 public abstract record LoggableRequest<T> : IRequest<T>, ILoggableRequest
 {
     public virtual string GetLogName()
     {
         return this.GetType()
-            .FullName
-            .Replace("Raytha.Application.", string.Empty)
+            .FullName.Replace("Raytha.Application.", string.Empty)
             .Replace("+Command", string.Empty)
             .Replace("NavigationMenu", "Menu")
             .Replace("NavigationMenuItem", "MenuItem")
@@ -22,9 +19,7 @@ public abstract record LoggableRequest<T> : IRequest<T>, ILoggableRequest
     }
 }
 
-public interface ILoggableEntityRequest
-{
-}
+public interface ILoggableEntityRequest { }
 
 public abstract record LoggableEntityRequest<T> : LoggableRequest<T>, ILoggableEntityRequest
 {

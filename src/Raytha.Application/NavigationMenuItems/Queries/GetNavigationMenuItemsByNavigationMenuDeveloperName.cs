@@ -12,7 +12,8 @@ public class GetNavigationMenuItemsByNavigationMenuDeveloperName
         public required string NavigationMenuDeveloperName { get; init; }
     }
 
-    public class Handler : IRequestHandler<Query, IQueryResponseDto<IReadOnlyCollection<NavigationMenuItemDto>>>
+    public class Handler
+        : IRequestHandler<Query, IQueryResponseDto<IReadOnlyCollection<NavigationMenuItemDto>>>
     {
         private readonly IRaythaDbContext _db;
 
@@ -21,15 +22,22 @@ public class GetNavigationMenuItemsByNavigationMenuDeveloperName
             _db = db;
         }
 
-        public async Task<IQueryResponseDto<IReadOnlyCollection<NavigationMenuItemDto>>> Handle(Query request, CancellationToken cancellationToken)
+        public async Task<IQueryResponseDto<IReadOnlyCollection<NavigationMenuItemDto>>> Handle(
+            Query request,
+            CancellationToken cancellationToken
+        )
         {
-            var navigationMenuItems = await _db.NavigationMenuItems
-                .Where(nmi => nmi.NavigationMenu!.DeveloperName == request.NavigationMenuDeveloperName)
+            var navigationMenuItems = await _db
+                .NavigationMenuItems.Where(nmi =>
+                    nmi.NavigationMenu!.DeveloperName == request.NavigationMenuDeveloperName
+                )
                 .OrderBy(nmi => nmi.CreationTime)
                 .Select(NavigationMenuItemDto.GetProjection())
                 .ToArrayAsync(cancellationToken);
 
-            return new QueryResponseDto<IReadOnlyCollection<NavigationMenuItemDto>>(navigationMenuItems);
+            return new QueryResponseDto<IReadOnlyCollection<NavigationMenuItemDto>>(
+                navigationMenuItems
+            );
         }
     }
 }

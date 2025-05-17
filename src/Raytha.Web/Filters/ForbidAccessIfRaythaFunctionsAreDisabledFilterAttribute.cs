@@ -1,8 +1,8 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Raytha.Application.Common.Interfaces;
-using System.Threading.Tasks;
 
 namespace Raytha.Web.Filters;
 
@@ -10,12 +10,17 @@ public class ForbidAccessIfRaythaFunctionsAreDisabledFilterAttribute : ActionFil
 {
     private IRaythaFunctionConfiguration _configuration;
 
-    public ForbidAccessIfRaythaFunctionsAreDisabledFilterAttribute(IRaythaFunctionConfiguration configuration)
+    public ForbidAccessIfRaythaFunctionsAreDisabledFilterAttribute(
+        IRaythaFunctionConfiguration configuration
+    )
     {
         _configuration = configuration;
     }
 
-    public override async Task OnActionExecutionAsync(ActionExecutingContext context, ActionExecutionDelegate next)
+    public override async Task OnActionExecutionAsync(
+        ActionExecutingContext context,
+        ActionExecutionDelegate next
+    )
     {
         if (!_configuration.IsEnabled)
         {

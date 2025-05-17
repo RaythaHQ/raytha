@@ -10,17 +10,16 @@ namespace Raytha.Migrations.Postgres
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.Sql(@"
+            migrationBuilder.Sql(
+                @"
                 UPDATE ""ContentTypeFields""
                 SET ""FieldType"" = 'wysiwyg'
                 WHERE ""FieldType"" = 'long_text';
-            ");
+            "
+            );
         }
 
         /// <inheritdoc />
-        protected override void Down(MigrationBuilder migrationBuilder)
-        {
-
-        }
+        protected override void Down(MigrationBuilder migrationBuilder) { }
     }
 }

@@ -9,9 +9,7 @@ namespace Raytha.Application.Themes.WebTemplates.Commands;
 
 public class RevertWebTemplate
 {
-    public record Command : LoggableEntityRequest<CommandResponseDto<ShortGuid>>
-    {
-    }
+    public record Command : LoggableEntityRequest<CommandResponseDto<ShortGuid>> { }
 
     public class Handler : IRequestHandler<Command, CommandResponseDto<ShortGuid>>
     {
@@ -22,18 +20,21 @@ public class RevertWebTemplate
             _db = db;
         }
 
-        public async Task<CommandResponseDto<ShortGuid>> Handle(Command request, CancellationToken cancellationToken)
+        public async Task<CommandResponseDto<ShortGuid>> Handle(
+            Command request,
+            CancellationToken cancellationToken
+        )
         {
-            var entity = _db.WebTemplateRevisions
-                    .Include(p => p.WebTemplate)
-                    .First(p => p.Id == request.Id.Guid);
+            var entity = _db
+                .WebTemplateRevisions.Include(p => p.WebTemplate)
+                .First(p => p.Id == request.Id.Guid);
 
             var newRevision = new WebTemplateRevision
             {
                 WebTemplateId = entity.WebTemplateId,
                 Content = entity.WebTemplate!.Content,
                 Label = entity.WebTemplate.Label,
-                AllowAccessForNewContentTypes = entity.WebTemplate.AllowAccessForNewContentTypes
+                AllowAccessForNewContentTypes = entity.WebTemplate.AllowAccessForNewContentTypes,
             };
 
             _db.WebTemplateRevisions.Add(newRevision);

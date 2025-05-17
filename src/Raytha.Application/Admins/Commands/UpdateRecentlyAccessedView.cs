@@ -19,38 +19,50 @@ public class UpdateRecentlyAccessedView
     public class Handler : IRequestHandler<Command, CommandResponseDto<ShortGuid>>
     {
         private readonly IRaythaDbContext _db;
+
         public Handler(IRaythaDbContext db)
         {
             _db = db;
         }
-        public async Task<CommandResponseDto<ShortGuid>> Handle(Command request, CancellationToken cancellationToken)
+
+        public async Task<CommandResponseDto<ShortGuid>> Handle(
+            Command request,
+            CancellationToken cancellationToken
+        )
         {
-            var entity = _db.Users
-                    .FirstOrDefault(p => p.Id == request.UserId.Guid);
+            var entity = _db.Users.FirstOrDefault(p => p.Id == request.UserId.Guid);
 
             if (entity == null)
                 throw new NotFoundException("Admin", request.UserId.Guid);
 
             var updatedRecentlyAccessedViews = new List<RecentlyAccessedView>();
-            
-            if (!entity.RecentlyAccessedViews.Any(p => p.ContentTypeId == request.ContentTypeId.Guid))
+
+            if (
+                !entity.RecentlyAccessedViews.Any(p =>
+                    p.ContentTypeId == request.ContentTypeId.Guid
+                )
+            )
             {
-                updatedRecentlyAccessedViews.Add(new RecentlyAccessedView
-                {
-                    ContentTypeId = request.ContentTypeId,
-                    ViewId = request.ViewId
-                });
+                updatedRecentlyAccessedViews.Add(
+                    new RecentlyAccessedView
+                    {
+                        ContentTypeId = request.ContentTypeId,
+                        ViewId = request.ViewId,
+                    }
+                );
             }
 
             foreach (var item in entity.RecentlyAccessedViews)
             {
                 if (item.ContentTypeId == request.ContentTypeId)
                 {
-                    updatedRecentlyAccessedViews.Add(new RecentlyAccessedView
-                    {
-                        ContentTypeId = item.ContentTypeId,
-                        ViewId = request.ViewId
-                    });
+                    updatedRecentlyAccessedViews.Add(
+                        new RecentlyAccessedView
+                        {
+                            ContentTypeId = item.ContentTypeId,
+                            ViewId = request.ViewId,
+                        }
+                    );
                 }
                 else
                 {

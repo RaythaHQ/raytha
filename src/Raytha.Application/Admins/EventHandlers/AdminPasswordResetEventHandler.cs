@@ -1,10 +1,10 @@
-﻿using MediatR;
+﻿using CSharpVitamins;
+using MediatR;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Models.RenderModels;
 using Raytha.Domain.Common;
 using Raytha.Domain.Entities;
 using Raytha.Domain.Events;
-using CSharpVitamins;
 
 namespace Raytha.Application.Admins.EventHandlers;
 
@@ -18,10 +18,11 @@ public class AdminPasswordResetEventHandler : INotificationHandler<AdminPassword
 
     public AdminPasswordResetEventHandler(
         ICurrentOrganization currentOrganization,
-        IRaythaDbContext db, 
-        IEmailer emailerService, 
-        IRenderEngine renderEngineService, 
-        IRelativeUrlBuilder relativeUrlBuilderService)
+        IRaythaDbContext db,
+        IEmailer emailerService,
+        IRenderEngine renderEngineService,
+        IRelativeUrlBuilder relativeUrlBuilderService
+    )
     {
         _db = db;
         _emailerService = emailerService;
@@ -30,11 +31,16 @@ public class AdminPasswordResetEventHandler : INotificationHandler<AdminPassword
         _currentOrganization = currentOrganization;
     }
 
-    public async Task Handle(AdminPasswordResetEvent notification, CancellationToken cancellationToken)
+    public async Task Handle(
+        AdminPasswordResetEvent notification,
+        CancellationToken cancellationToken
+    )
     {
         if (notification.SendEmail)
         {
-            EmailTemplate renderTemplate = _db.EmailTemplates.First(p => p.DeveloperName == BuiltInEmailTemplate.AdminPasswordResetEmail);
+            EmailTemplate renderTemplate = _db.EmailTemplates.First(p =>
+                p.DeveloperName == BuiltInEmailTemplate.AdminPasswordResetEmail
+            );
 
             SendAdminPasswordReset_RenderModel entity = new SendAdminPasswordReset_RenderModel
             {
@@ -45,22 +51,30 @@ public class AdminPasswordResetEventHandler : INotificationHandler<AdminPassword
                 NewPassword = notification.NewPassword,
                 LoginUrl = _relativeUrlBuilderService.AdminLoginUrl(),
                 SsoId = notification.User.SsoId,
-                AuthenticationScheme = notification.User.AuthenticationScheme.DeveloperName
+                AuthenticationScheme = notification.User.AuthenticationScheme.DeveloperName,
             };
 
             var wrappedModel = new Wrapper_RenderModel
             {
-                CurrentOrganization = CurrentOrganization_RenderModel.GetProjection(_currentOrganization),
-                Target = entity
+                CurrentOrganization = CurrentOrganization_RenderModel.GetProjection(
+                    _currentOrganization
+                ),
+                Target = entity,
             };
 
-            string subject = _renderEngineService.RenderAsHtml(renderTemplate.Subject, wrappedModel);
-            string content = _renderEngineService.RenderAsHtml(renderTemplate.Content, wrappedModel);
+            string subject = _renderEngineService.RenderAsHtml(
+                renderTemplate.Subject,
+                wrappedModel
+            );
+            string content = _renderEngineService.RenderAsHtml(
+                renderTemplate.Content,
+                wrappedModel
+            );
             var emailMessage = new EmailMessage
             {
                 Content = content,
                 To = new List<string> { entity.EmailAddress },
-                Subject = subject
+                Subject = subject,
             };
             _emailerService.SendEmail(emailMessage);
         }

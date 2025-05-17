@@ -18,58 +18,70 @@ public class EditAdmin
         public IEnumerable<ShortGuid> Roles { get; init; } = null!;
     }
 
-    public class Validator : AbstractValidator<Command> 
+    public class Validator : AbstractValidator<Command>
     {
-        public Validator(IRaythaDbContext db) 
+        public Validator(IRaythaDbContext db)
         {
             RuleFor(x => x.FirstName).NotEmpty();
             RuleFor(x => x.LastName).NotEmpty();
             RuleFor(x => x.Roles).NotEmpty();
             RuleFor(x => x.EmailAddress).NotEmpty().EmailAddress();
-            RuleFor(x => x).Custom((request, context) =>
-            {
-                var entity = db.Users
-                    .FirstOrDefault(p => p.Id == request.Id.Guid);
-
-                if (entity == null)
-                    throw new NotFoundException("Admin", request.Id);
-
-                if (request.EmailAddress.ToLower() != entity.EmailAddress.ToLower())
-                {
-                    var emailAddressToCheck = request.EmailAddress.ToLower();
-                    var doesAnotherEmailExist = db.Users.Any(p => p.EmailAddress.ToLower() == emailAddressToCheck);
-                    if (doesAnotherEmailExist)
+            RuleFor(x => x)
+                .Custom(
+                    (request, context) =>
                     {
-                        context.AddFailure("EmailAddress", "Another user with this email address already exists");
-                        return;
+                        var entity = db.Users.FirstOrDefault(p => p.Id == request.Id.Guid);
+
+                        if (entity == null)
+                            throw new NotFoundException("Admin", request.Id);
+
+                        if (request.EmailAddress.ToLower() != entity.EmailAddress.ToLower())
+                        {
+                            var emailAddressToCheck = request.EmailAddress.ToLower();
+                            var doesAnotherEmailExist = db.Users.Any(p =>
+                                p.EmailAddress.ToLower() == emailAddressToCheck
+                            );
+                            if (doesAnotherEmailExist)
+                            {
+                                context.AddFailure(
+                                    "EmailAddress",
+                                    "Another user with this email address already exists"
+                                );
+                                return;
+                            }
+                        }
                     }
-                }
-            });
+                );
         }
     }
 
     public class Handler : IRequestHandler<Command, CommandResponseDto<ShortGuid>>
     {
         private readonly IRaythaDbContext _db;
+
         public Handler(IRaythaDbContext db)
         {
             _db = db;
         }
-        public async Task<CommandResponseDto<ShortGuid>> Handle(Command request, CancellationToken cancellationToken)
+
+        public async Task<CommandResponseDto<ShortGuid>> Handle(
+            Command request,
+            CancellationToken cancellationToken
+        )
         {
-            var entity = _db.Users
-                    .Include(p => p.Roles)
-                    .First(p => p.Id == request.Id.Guid && p.IsAdmin);
+            var entity = _db
+                .Users.Include(p => p.Roles)
+                .First(p => p.Id == request.Id.Guid && p.IsAdmin);
 
             entity.FirstName = request.FirstName;
             entity.LastName = request.LastName;
             entity.EmailAddress = request.EmailAddress;
-            
+
             var currentRoleIds = entity.Roles.Select(p => (ShortGuid)p.Id);
 
             var rolesToAddIds = request.Roles.Except(currentRoleIds);
             var rolesToDeleteIds = currentRoleIds.Except(request.Roles);
-            
+
             foreach (var roleToAddId in rolesToAddIds)
             {
                 var roleToAdd = _db.Roles.First(p => p.Id == roleToAddId.Guid);

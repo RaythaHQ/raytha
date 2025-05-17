@@ -24,8 +24,14 @@ public record CurrentOrganization_RenderModel : IInsertTemplateVariable
 
         return new CurrentOrganization_RenderModel
         {
-            EmailAndPasswordIsEnabledForAdmin = entity.AuthenticationSchemes.Any(p => p.DeveloperName == AuthenticationSchemeType.EmailAndPassword.DeveloperName && p.IsEnabledForAdmins),
-            EmailAndPasswordIsEnabledForUsers = entity.AuthenticationSchemes.Any(p => p.DeveloperName == AuthenticationSchemeType.EmailAndPassword.DeveloperName && p.IsEnabledForUsers),
+            EmailAndPasswordIsEnabledForAdmin = entity.AuthenticationSchemes.Any(p =>
+                p.DeveloperName == AuthenticationSchemeType.EmailAndPassword.DeveloperName
+                && p.IsEnabledForAdmins
+            ),
+            EmailAndPasswordIsEnabledForUsers = entity.AuthenticationSchemes.Any(p =>
+                p.DeveloperName == AuthenticationSchemeType.EmailAndPassword.DeveloperName
+                && p.IsEnabledForUsers
+            ),
             OrganizationName = entity.OrganizationName,
             WebsiteUrl = entity.WebsiteUrl,
             TimeZone = entity.TimeZone,
@@ -33,7 +39,9 @@ public record CurrentOrganization_RenderModel : IInsertTemplateVariable
             SmtpDefaultFromAddress = entity.SmtpDefaultFromAddress,
             SmtpDefaultFromName = entity.SmtpDefaultFromName,
             HomePageId = entity.HomePageId,
-            AuthenticationSchemes = entity.AuthenticationSchemes.Select(p => AuthenticationScheme_RenderModel.GetProjection(p))
+            AuthenticationSchemes = entity.AuthenticationSchemes.Select(p =>
+                AuthenticationScheme_RenderModel.GetProjection(p)
+            ),
         };
     }
 
@@ -48,7 +56,11 @@ public record CurrentOrganization_RenderModel : IInsertTemplateVariable
         yield return nameof(SmtpDefaultFromName);
         yield return nameof(DateFormat);
         yield return nameof(HomePageId);
-        foreach (var item in AuthenticationScheme_RenderModel.FromPrefix("AuthenticationSchemes[0]").GetDeveloperNames())
+        foreach (
+            var item in AuthenticationScheme_RenderModel
+                .FromPrefix("AuthenticationSchemes[0]")
+                .GetDeveloperNames()
+        )
         {
             yield return item;
         }
@@ -58,7 +70,10 @@ public record CurrentOrganization_RenderModel : IInsertTemplateVariable
     {
         foreach (var developerName in GetDeveloperNames())
         {
-            yield return new KeyValuePair<string, string>(developerName, $"CurrentOrganization.{developerName}");
+            yield return new KeyValuePair<string, string>(
+                developerName,
+                $"CurrentOrganization.{developerName}"
+            );
         }
     }
 

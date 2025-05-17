@@ -19,13 +19,14 @@ public class CreateRaythaFunction
         public bool IsActive { get; init; }
         public required string Code { get; init; }
 
-        public static Command Empty() => new()
-        {
-            Name = string.Empty,
-            DeveloperName = string.Empty,
-            TriggerType = string.Empty,
-            Code = string.Empty,
-        };
+        public static Command Empty() =>
+            new()
+            {
+                Name = string.Empty,
+                DeveloperName = string.Empty,
+                TriggerType = string.Empty,
+                Code = string.Empty,
+            };
     }
 
     public class Validator : AbstractValidator<Command>
@@ -36,11 +37,21 @@ public class CreateRaythaFunction
             RuleFor(x => x.Code).NotEmpty();
             RuleFor(x => x.TriggerType).NotEmpty();
             RuleFor(x => x.DeveloperName).NotEmpty();
-            RuleFor(x => x).Custom((request, context) =>
-            {
-                if (db.RaythaFunctions.Any(p => p.DeveloperName == request.DeveloperName.ToDeveloperName()))
-                    context.AddFailure("DeveloperName", $"A function with the developer name {request.DeveloperName.ToDeveloperName()} already exists.");
-            });
+            RuleFor(x => x)
+                .Custom(
+                    (request, context) =>
+                    {
+                        if (
+                            db.RaythaFunctions.Any(p =>
+                                p.DeveloperName == request.DeveloperName.ToDeveloperName()
+                            )
+                        )
+                            context.AddFailure(
+                                "DeveloperName",
+                                $"A function with the developer name {request.DeveloperName.ToDeveloperName()} already exists."
+                            );
+                    }
+                );
         }
     }
 
@@ -53,7 +64,10 @@ public class CreateRaythaFunction
             _db = db;
         }
 
-        public async Task<CommandResponseDto<ShortGuid>> Handle(Command request, CancellationToken cancellationToken)
+        public async Task<CommandResponseDto<ShortGuid>> Handle(
+            Command request,
+            CancellationToken cancellationToken
+        )
         {
             var function = new RaythaFunction
             {

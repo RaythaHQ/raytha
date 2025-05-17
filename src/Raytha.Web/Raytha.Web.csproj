@@ -1,12 +1,10 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Web">
-
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
     <UserSecretsId>7e3df06b-f996-4ba5-8631-62cd855692f8</UserSecretsId>
     <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
     <Configurations>Debug;Release;Debug without JS</Configurations>
   </PropertyGroup>
-
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNet.WebApi.Core" Version="5.3.0" />
     <PackageReference Include="Fluid.Core" Version="2.22.0" />
@@ -19,46 +17,53 @@
     <PackageReference Include="Swashbuckle.Core" Version="5.6.0" />
     <PackageReference Include="System.Text.RegularExpressions" Version="4.3.1" />
   </ItemGroup>
-
   <ItemGroup>
     <ProjectReference Include="..\Raytha.Application\Raytha.Application.csproj" />
     <ProjectReference Include="..\Raytha.Infrastructure\Raytha.Infrastructure.csproj" />
     <ProjectReference Include="..\Raytha.Migrations.Postgres\Raytha.Migrations.Postgres.csproj" />
     <ProjectReference Include="..\Raytha.Migrations.SqlServer\Raytha.Migrations.SqlServer.csproj" />
   </ItemGroup>
-
   <PropertyGroup>
     <JsApplicationRoot>wwwroot\raytha_admin\js\</JsApplicationRoot>
     <JsApplicationBundleFile>$(JsApplicationRoot)dist\main.js</JsApplicationBundleFile>
     <NpmInstallStampFile>$(JsApplicationRoot)node_modules\.install-stamp</NpmInstallStampFile>
   </PropertyGroup>
-
   <ItemGroup>
     <UptoDateCheckInput Include="$(JsApplicationRoot)src\**\*" />
     <UptoDateCheckInput Include="$(JsApplicationRoot)package.json" />
   </ItemGroup>
-
   <Target Name="EnsureNodeJsIsInstalled">
     <Exec Command="node --version" ContinueOnError="true">
       <Output TaskParameter="ExitCode" PropertyName="ErrorCode" />
     </Exec>
-    <Error Condition="'$(ErrorCode)' != '0'" Text="Node.js is required to build and run this project. To continue, please install Node.js from https://nodejs.org/, and then restart your command prompt or IDE." />
+    <Error
+      Condition="'$(ErrorCode)' != '0'"
+      Text="Node.js is required to build and run this project. To continue, please install Node.js from https://nodejs.org/, and then restart your command prompt or IDE."
+    />
   </Target>
-  
-  <Target Name="RestoreNpmPackages" DependsOnTargets="EnsureNodeJsIsInstalled" Outputs="$(NpmInstallStampFile)">
+  <Target
+    Name="RestoreNpmPackages"
+    DependsOnTargets="EnsureNodeJsIsInstalled"
+    Outputs="$(NpmInstallStampFile)"
+  >
     <Message Importance="high" Text="Installing npm packages..." />
     <Exec WorkingDirectory="$(JsApplicationRoot)" Command="npm install" />
     <Touch Files="$(NpmInstallStampFile)" AlwaysCreate="true" />
   </Target>
-
   <Target Name="GenerateJsApplicationSourceFileItemGroup" BeforeTargets="BuildJsAppDebug">
     <ItemGroup>
       <JsApplicationSourceFiles Include="$(JsApplicationRoot)src\**\*" />
       <JsApplicationSourceFiles Include="$(NpmInstallStampFile)" />
     </ItemGroup>
   </Target>
-
-  <Target Name="BuildJsAppDebug" BeforeTargets="BeforeBuild" DependsOnTargets="RestoreNpmPackages" Inputs="@(JsApplicationSourceFiles)" Outputs="$(JsApplicationBundleFile)" Condition="'$(Configuration)' == 'Debug' Or '$(Configuration)' == 'Release'">
+  <Target
+    Name="BuildJsAppDebug"
+    BeforeTargets="BeforeBuild"
+    DependsOnTargets="RestoreNpmPackages"
+    Inputs="@(JsApplicationSourceFiles)"
+    Outputs="$(JsApplicationBundleFile)"
+    Condition="'$(Configuration)' == 'Debug' Or '$(Configuration)' == 'Release'"
+  >
     <Message Importance="high" Text="Building javascript application..." />
     <Exec WorkingDirectory="$(JsApplicationRoot)" Command="npm run build" />
   </Target>

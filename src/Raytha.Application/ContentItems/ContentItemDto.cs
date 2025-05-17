@@ -1,9 +1,9 @@
-﻿using CSharpVitamins;
+﻿using System.Linq.Expressions;
+using System.Text.Json.Serialization;
+using CSharpVitamins;
 using Raytha.Application.Common.Models;
 using Raytha.Application.ContentTypes;
 using Raytha.Domain.Entities;
-using System.Linq.Expressions;
-using System.Text.Json.Serialization;
 
 namespace Raytha.Application.ContentItems;
 
@@ -49,7 +49,7 @@ public record ContentItemDto : BaseEntityDto
             PublishedContent = entity.PublishedContent,
             DraftContent = entity.DraftContent,
             RouteId = entity.RouteId,
-            RoutePath = entity.Route.Path
+            RoutePath = entity.Route.Path,
         };
     }
 

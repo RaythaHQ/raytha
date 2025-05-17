@@ -1,6 +1,6 @@
-﻿using Raytha.Web.Utils;
-using System;
+﻿using System;
 using System.Collections.Generic;
+using Raytha.Web.Utils;
 
 namespace Raytha.Web.Areas.Admin.Views.Shared.ViewModels;
 
@@ -35,8 +35,10 @@ public abstract class Pagination_ViewModel : IPagination_ViewModel
     public string ActionName { get; set; }
     public int TotalCount { get; }
 
-    public string PreviousDisabledCss => TotalPages == 0 || PageNumber == 1 ? "disabled" : string.Empty;
-    public string NextDisabledCss => TotalPages == 0 || PageNumber == TotalPages ? "disabled" : string.Empty;
+    public string PreviousDisabledCss =>
+        TotalPages == 0 || PageNumber == 1 ? "disabled" : string.Empty;
+    public string NextDisabledCss =>
+        TotalPages == 0 || PageNumber == TotalPages ? "disabled" : string.Empty;
     public int FirstVisiblePageNumber => Math.Max(1, LastVisiblePageNumber - 3);
     public int LastVisiblePageNumber => Math.Min(TotalPages, Math.Max(1, PageNumber - 1) + 3);
     public int TotalPages => (int)Math.Ceiling((double)(TotalCount) / PageSize);
@@ -58,6 +60,6 @@ public class List_ViewModel<T> : Pagination_ViewModel
 {
     public IEnumerable<T> Items { get; }
 
-    public List_ViewModel(
-        IEnumerable<T> items, int totalCount) : base(totalCount) => Items = items;
+    public List_ViewModel(IEnumerable<T> items, int totalCount)
+        : base(totalCount) => Items = items;
 }

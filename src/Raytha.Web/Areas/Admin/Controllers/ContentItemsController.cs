@@ -34,20 +34,32 @@ public class ContentItemsController : BaseController
 {
     private FieldValueConverter _fieldValueConverter;
     private IRelativeUrlBuilder _relativeUrlBuilder;
-    protected FieldValueConverter FieldValueConverter => _fieldValueConverter ??= HttpContext.RequestServices.GetRequiredService<FieldValueConverter>();
-    protected IRelativeUrlBuilder RelativeUrlBuilder => _relativeUrlBuilder ??= HttpContext.RequestServices.GetRequiredService<IRelativeUrlBuilder>();
+    protected FieldValueConverter FieldValueConverter =>
+        _fieldValueConverter ??=
+            HttpContext.RequestServices.GetRequiredService<FieldValueConverter>();
+    protected IRelativeUrlBuilder RelativeUrlBuilder =>
+        _relativeUrlBuilder ??=
+            HttpContext.RequestServices.GetRequiredService<IRelativeUrlBuilder>();
 
     [Authorize(Policy = BuiltInContentTypePermission.CONTENT_TYPE_READ_PERMISSION)]
     [ServiceFilter(typeof(GetOrSetRecentlyAccessedViewFilterAttribute))]
     [ServiceFilter(typeof(SetPaginationInformationFilterAttribute))]
-    [Route($"{RAYTHA_ROUTE_PREFIX}/{{{RouteConstants.CONTENT_TYPE_DEVELOPER_NAME}}}", Name = "contentitemsdefault")]
-    [Route($"{RAYTHA_ROUTE_PREFIX}/{{{RouteConstants.CONTENT_TYPE_DEVELOPER_NAME}}}/views/{{viewId}}", Name = "contentitemsindex")]
-    public async Task<IActionResult> Index(string search = "",
-                                           string filter = "",
-                                           string orderBy = "",
-                                           int pageNumber = 1,
-                                           int pageSize = 50)
-    {       
+    [Route(
+        $"{RAYTHA_ROUTE_PREFIX}/{{{RouteConstants.CONTENT_TYPE_DEVELOPER_NAME}}}",
+        Name = "contentitemsdefault"
+    )]
+    [Route(
+        $"{RAYTHA_ROUTE_PREFIX}/{{{RouteConstants.CONTENT_TYPE_DEVELOPER_NAME}}}/views/{{viewId}}",
+        Name = "contentitemsindex"
+    )]
+    public async Task<IActionResult> Index(
+        string search = "",
+        string filter = "",
+        string orderBy = "",
+        int pageNumber = 1,
+        int pageSize = 50
+    )
+    {
         var input = new GetContentItems.Query
         {
             Search = search,
@@ -55,24 +67,29 @@ public class ContentItemsController : BaseController
             PageNumber = pageNumber,
             PageSize = pageSize,
             OrderBy = orderBy,
-            Filter = filter
+            Filter = filter,
         };
         var response = await Mediator.Send(input);
 
-        var webTemplateContentItemRelationsResponse = await Mediator.Send(new GetWebTemplateContentItemRelationsByContentTypeId.Query
-        {
-            ThemeId = CurrentOrganization.ActiveThemeId,
-            ContentTypeId = CurrentView.ContentTypeId,
-        });
+        var webTemplateContentItemRelationsResponse = await Mediator.Send(
+            new GetWebTemplateContentItemRelationsByContentTypeId.Query
+            {
+                ThemeId = CurrentOrganization.ActiveThemeId,
+                ContentTypeId = CurrentView.ContentTypeId,
+            }
+        );
 
         var items = response.Result.Items.Select(p =>
         {
-            var templateLabel = webTemplateContentItemRelationsResponse.Result.Where(wtr => wtr.ContentItemId == p.Id).Select(wtr => wtr.WebTemplate.Label).First();
+            var templateLabel = webTemplateContentItemRelationsResponse
+                .Result.Where(wtr => wtr.ContentItemId == p.Id)
+                .Select(wtr => wtr.WebTemplate.Label)
+                .First();
             return new ContentItemsListItem_ViewModel
             {
                 Id = p.Id,
                 IsHomePage = CurrentOrganization.HomePageId == p.Id,
-                FieldValues = FieldValueConverter.MapToListItemValues(p, templateLabel)
+                FieldValues = FieldValueConverter.MapToListItemValues(p, templateLabel),
             };
         });
 
@@ -82,42 +99,52 @@ public class ContentItemsController : BaseController
 
     [Authorize(Policy = BuiltInContentTypePermission.CONTENT_TYPE_EDIT_PERMISSION)]
     [ServiceFilter(typeof(GetOrSetRecentlyAccessedViewFilterAttribute))]
-    [Route($"{RAYTHA_ROUTE_PREFIX}/{{{RouteConstants.CONTENT_TYPE_DEVELOPER_NAME}}}/create", Name = "contentitemscreate")]
+    [Route(
+        $"{RAYTHA_ROUTE_PREFIX}/{{{RouteConstants.CONTENT_TYPE_DEVELOPER_NAME}}}/create",
+        Name = "contentitemscreate"
+    )]
     public async Task<IActionResult> Create()
     {
-        var webTemplates = await Mediator.Send(new GetWebTemplates.Query
-        {
-            ThemeId = CurrentOrganization.ActiveThemeId,
-            ContentTypeId = CurrentView.ContentTypeId,
-            PageSize = int.MaxValue,
-        });
-
-        var imageMediaItemsResponse = await Mediator.Send(new GetMediaItems.Query
-        {
-            ContentType = "image",
-        });
-
-        var videoMediaItemsResponse = await Mediator.Send(new GetMediaItems.Query
-        {
-            ContentType = "video"
-        });
-
-        var fieldValues = CurrentView.ContentType.ContentTypeFields.Select(p => new FieldValue_ViewModel
-        {
-            Label = p.Label,
-            DeveloperName = p.DeveloperName,
-            AvailableChoices = p.Choices?.Select(b => new FieldValueChoiceItem_ViewModel
+        var webTemplates = await Mediator.Send(
+            new GetWebTemplates.Query
             {
-                Label = b.Label,
-                DeveloperName = b.DeveloperName,
-                Disabled = b.Disabled,
-                Value = p.FieldType.DeveloperName == BaseFieldType.MultipleSelect ? "false" : b.DeveloperName
-            }).ToArray(),
-            FieldType = p.FieldType,
-            IsRequired = p.IsRequired,
-            Description = p.Description,
-            RelatedContentTypeId = p.RelatedContentTypeId
-        }).ToArray();
+                ThemeId = CurrentOrganization.ActiveThemeId,
+                ContentTypeId = CurrentView.ContentTypeId,
+                PageSize = int.MaxValue,
+            }
+        );
+
+        var imageMediaItemsResponse = await Mediator.Send(
+            new GetMediaItems.Query { ContentType = "image" }
+        );
+
+        var videoMediaItemsResponse = await Mediator.Send(
+            new GetMediaItems.Query { ContentType = "video" }
+        );
+
+        var fieldValues = CurrentView
+            .ContentType.ContentTypeFields.Select(p => new FieldValue_ViewModel
+            {
+                Label = p.Label,
+                DeveloperName = p.DeveloperName,
+                AvailableChoices = p
+                    .Choices?.Select(b => new FieldValueChoiceItem_ViewModel
+                    {
+                        Label = b.Label,
+                        DeveloperName = b.DeveloperName,
+                        Disabled = b.Disabled,
+                        Value =
+                            p.FieldType.DeveloperName == BaseFieldType.MultipleSelect
+                                ? "false"
+                                : b.DeveloperName,
+                    })
+                    .ToArray(),
+                FieldType = p.FieldType,
+                IsRequired = p.IsRequired,
+                Description = p.Description,
+                RelatedContentTypeId = p.RelatedContentTypeId,
+            })
+            .ToArray();
 
         var viewModel = new ContentItemsCreate_ViewModel
         {
@@ -127,23 +154,30 @@ public class ContentItemsController : BaseController
             MaxFileSize = FileStorageProviderSettings.MaxFileSize,
             UseDirectUploadToCloud = FileStorageProviderSettings.UseDirectUploadToCloud,
             PathBase = CurrentOrganization.PathBase,
-            ImageMediaItemsJson = JsonSerializer.Serialize(imageMediaItemsResponse.Result.Items.Select(mi => new
-            {
-                fileName = mi.FileName,
-                url = RelativeUrlBuilder.MediaRedirectToFileUrl(mi.ObjectKey),
-            })),
-            VideoMediaItemsJson = JsonSerializer.Serialize(videoMediaItemsResponse.Result.Items.Select(mi => new
-            {
-                fileName = mi.FileName,
-                url = RelativeUrlBuilder.MediaRedirectToFileUrl(mi.ObjectKey),
-            })),
+            ImageMediaItemsJson = JsonSerializer.Serialize(
+                imageMediaItemsResponse.Result.Items.Select(mi => new
+                {
+                    fileName = mi.FileName,
+                    url = RelativeUrlBuilder.MediaRedirectToFileUrl(mi.ObjectKey),
+                })
+            ),
+            VideoMediaItemsJson = JsonSerializer.Serialize(
+                videoMediaItemsResponse.Result.Items.Select(mi => new
+                {
+                    fileName = mi.FileName,
+                    url = RelativeUrlBuilder.MediaRedirectToFileUrl(mi.ObjectKey),
+                })
+            ),
         };
         return View(viewModel);
     }
 
     [Authorize(Policy = BuiltInContentTypePermission.CONTENT_TYPE_EDIT_PERMISSION)]
     [ServiceFilter(typeof(GetOrSetRecentlyAccessedViewFilterAttribute))]
-    [Route($"{RAYTHA_ROUTE_PREFIX}/{{{RouteConstants.CONTENT_TYPE_DEVELOPER_NAME}}}/create", Name = "contentitemscreate")]
+    [Route(
+        $"{RAYTHA_ROUTE_PREFIX}/{{{RouteConstants.CONTENT_TYPE_DEVELOPER_NAME}}}/create",
+        Name = "contentitemscreate"
+    )]
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create(ContentItemsCreate_ViewModel model)
@@ -154,54 +188,90 @@ public class ContentItemsController : BaseController
             SaveAsDraft = model.SaveAsDraft,
             TemplateId = model.TemplateId,
             ContentTypeDeveloperName = CurrentView.ContentType.DeveloperName,
-            Content = mappedFieldValuesFromModel
+            Content = mappedFieldValuesFromModel,
         };
         var response = await Mediator.Send(input);
 
         if (response.Success)
         {
             SetSuccessMessage($"{CurrentView.ContentType.LabelSingular} was created successfully.");
-            return RedirectToAction("Edit", new { contentTypeDeveloperName = CurrentView.ContentType.DeveloperName, id = response.Result });
+            return RedirectToAction(
+                "Edit",
+                new
+                {
+                    contentTypeDeveloperName = CurrentView.ContentType.DeveloperName,
+                    id = response.Result,
+                }
+            );
         }
         else
         {
-            SetErrorMessage("There was an error attempting to save this page. See the error below.", response.GetErrors());
+            SetErrorMessage(
+                "There was an error attempting to save this page. See the error below.",
+                response.GetErrors()
+            );
 
-            var webTemplates = await Mediator.Send(new GetWebTemplates.Query
-            {
-                ThemeId = CurrentOrganization.ActiveThemeId,
-                ContentTypeId = CurrentView.ContentTypeId,
-                PageSize = int.MaxValue
-            });
-
-            var fieldValues = CurrentView.ContentType.ContentTypeFields.Select(p => new FieldValue_ViewModel
-            {
-                Label = p.Label,
-                DeveloperName = p.DeveloperName,
-                AvailableChoices = p.Choices?.Select(b => new FieldValueChoiceItem_ViewModel
+            var webTemplates = await Mediator.Send(
+                new GetWebTemplates.Query
                 {
-                    Label = b.Label,
-                    DeveloperName = b.DeveloperName,
-                    Disabled = b.Disabled,
-                    Value = p.FieldType.DeveloperName == BaseFieldType.MultipleSelect ? model.FieldValues.First(c => c.DeveloperName.ToDeveloperName() == p.DeveloperName)
-                                                    .AvailableChoices.Where(a => a.Value == "true").Select(z => z.DeveloperName.ToDeveloperName()).Contains(b.DeveloperName).ToString() : b.DeveloperName
-                }).ToArray(),
-                FieldType = p.FieldType,
-                IsRequired = p.IsRequired,
-                Description = p.Description,
-                RelatedContentItemPrimaryField = model.FieldValues.First(c => c.DeveloperName.ToDeveloperName() == p.DeveloperName).RelatedContentItemPrimaryField,
-                RelatedContentTypeId = p.RelatedContentTypeId,
-                Value = model.FieldValues.First(c => c.DeveloperName.ToDeveloperName() == p.DeveloperName).Value
-            }).ToArray();
+                    ThemeId = CurrentOrganization.ActiveThemeId,
+                    ContentTypeId = CurrentView.ContentTypeId,
+                    PageSize = int.MaxValue,
+                }
+            );
+
+            var fieldValues = CurrentView
+                .ContentType.ContentTypeFields.Select(p => new FieldValue_ViewModel
+                {
+                    Label = p.Label,
+                    DeveloperName = p.DeveloperName,
+                    AvailableChoices = p
+                        .Choices?.Select(b => new FieldValueChoiceItem_ViewModel
+                        {
+                            Label = b.Label,
+                            DeveloperName = b.DeveloperName,
+                            Disabled = b.Disabled,
+                            Value =
+                                p.FieldType.DeveloperName == BaseFieldType.MultipleSelect
+                                    ? model
+                                        .FieldValues.First(c =>
+                                            c.DeveloperName.ToDeveloperName() == p.DeveloperName
+                                        )
+                                        .AvailableChoices.Where(a => a.Value == "true")
+                                        .Select(z => z.DeveloperName.ToDeveloperName())
+                                        .Contains(b.DeveloperName)
+                                        .ToString()
+                                    : b.DeveloperName,
+                        })
+                        .ToArray(),
+                    FieldType = p.FieldType,
+                    IsRequired = p.IsRequired,
+                    Description = p.Description,
+                    RelatedContentItemPrimaryField = model
+                        .FieldValues.First(c =>
+                            c.DeveloperName.ToDeveloperName() == p.DeveloperName
+                        )
+                        .RelatedContentItemPrimaryField,
+                    RelatedContentTypeId = p.RelatedContentTypeId,
+                    Value = model
+                        .FieldValues.First(c =>
+                            c.DeveloperName.ToDeveloperName() == p.DeveloperName
+                        )
+                        .Value,
+                })
+                .ToArray();
 
             var viewModel = new ContentItemsCreate_ViewModel
             {
-                AvailableTemplates = webTemplates.Result?.Items.ToDictionary(p => p.Id, p => p.Label),
+                AvailableTemplates = webTemplates.Result?.Items.ToDictionary(
+                    p => p.Id,
+                    p => p.Label
+                ),
                 FieldValues = fieldValues,
                 AllowedMimeTypes = FileStorageProviderSettings.AllowedMimeTypes,
                 MaxFileSize = FileStorageProviderSettings.MaxFileSize,
                 UseDirectUploadToCloud = FileStorageProviderSettings.UseDirectUploadToCloud,
-                PathBase = CurrentOrganization.PathBase
+                PathBase = CurrentOrganization.PathBase,
             };
 
             return View(viewModel);
@@ -210,20 +280,24 @@ public class ContentItemsController : BaseController
 
     [Authorize(Policy = BuiltInContentTypePermission.CONTENT_TYPE_READ_PERMISSION)]
     [ServiceFilter(typeof(GetOrSetRecentlyAccessedViewFilterAttribute))]
-    [Route($"{RAYTHA_ROUTE_PREFIX}/{{{RouteConstants.CONTENT_TYPE_DEVELOPER_NAME}}}/edit/{{id}}", Name = "contentitemsedit")]
-    [Route($"{RAYTHA_ROUTE_PREFIX}/{{{RouteConstants.CONTENT_TYPE_DEVELOPER_NAME}}}/view/{{id}}", Name = "contentitemsview")]
+    [Route(
+        $"{RAYTHA_ROUTE_PREFIX}/{{{RouteConstants.CONTENT_TYPE_DEVELOPER_NAME}}}/edit/{{id}}",
+        Name = "contentitemsedit"
+    )]
+    [Route(
+        $"{RAYTHA_ROUTE_PREFIX}/{{{RouteConstants.CONTENT_TYPE_DEVELOPER_NAME}}}/view/{{id}}",
+        Name = "contentitemsview"
+    )]
     public async Task<IActionResult> Edit(string id, string backToListUrl = "")
     {
         var response = await Mediator.Send(new GetContentItemById.Query { Id = id });
-        var imageMediaItemsResponse = await Mediator.Send(new GetMediaItems.Query
-        {
-            ContentType = "image",
-        });
+        var imageMediaItemsResponse = await Mediator.Send(
+            new GetMediaItems.Query { ContentType = "image" }
+        );
 
-        var videoMediaItemsResponse = await Mediator.Send(new GetMediaItems.Query
-        {
-            ContentType = "video"
-        });
+        var videoMediaItemsResponse = await Mediator.Send(
+            new GetMediaItems.Query { ContentType = "video" }
+        );
 
         var viewModel = new ContentItemsEdit_ViewModel
         {
@@ -235,35 +309,56 @@ public class ContentItemsController : BaseController
             MaxFileSize = FileStorageProviderSettings.MaxFileSize,
             UseDirectUploadToCloud = FileStorageProviderSettings.UseDirectUploadToCloud,
             PathBase = CurrentOrganization.PathBase,
-            ImageMediaItemsJson = JsonSerializer.Serialize(imageMediaItemsResponse.Result.Items.Select(mi => new
-            {
-                fileName = mi.FileName,
-                url = RelativeUrlBuilder.MediaRedirectToFileUrl(mi.ObjectKey),
-            })),
-            VideoMediaItemsJson = JsonSerializer.Serialize(videoMediaItemsResponse.Result.Items.Select(mi => new
-            {
-                fileName = mi.FileName,
-                url = RelativeUrlBuilder.MediaRedirectToFileUrl(mi.ObjectKey),
-            })),
-            FieldValues = CurrentView.ContentType.ContentTypeFields.Select(p => new FieldValue_ViewModel
-            {
-                Label = p.Label,
-                DeveloperName = p.DeveloperName,
-                AvailableChoices = p.Choices?.Select(b => new FieldValueChoiceItem_ViewModel
+            ImageMediaItemsJson = JsonSerializer.Serialize(
+                imageMediaItemsResponse.Result.Items.Select(mi => new
                 {
-                    Label = b.Label,
-                    DeveloperName = b.DeveloperName,
-                    Disabled = b.Disabled,
-                    Value = FieldValueConverter.MapValueForChoiceField(p.FieldType, response.Result.DraftContent, p, b),
-                }).ToArray(),
-                FieldType = p.FieldType,
-                IsRequired = p.IsRequired,
-                Description = p.Description,
-                Value = FieldValueConverter.MapValueForField(p.FieldType, response.Result.DraftContent, p),
-                RelatedContentItemPrimaryField = FieldValueConverter.MapRelatedContentItemValueForField(p.FieldType, response.Result.DraftContent, p),
-                RelatedContentTypeId = p.RelatedContentTypeId
-            }
-            ).ToArray()
+                    fileName = mi.FileName,
+                    url = RelativeUrlBuilder.MediaRedirectToFileUrl(mi.ObjectKey),
+                })
+            ),
+            VideoMediaItemsJson = JsonSerializer.Serialize(
+                videoMediaItemsResponse.Result.Items.Select(mi => new
+                {
+                    fileName = mi.FileName,
+                    url = RelativeUrlBuilder.MediaRedirectToFileUrl(mi.ObjectKey),
+                })
+            ),
+            FieldValues = CurrentView
+                .ContentType.ContentTypeFields.Select(p => new FieldValue_ViewModel
+                {
+                    Label = p.Label,
+                    DeveloperName = p.DeveloperName,
+                    AvailableChoices = p
+                        .Choices?.Select(b => new FieldValueChoiceItem_ViewModel
+                        {
+                            Label = b.Label,
+                            DeveloperName = b.DeveloperName,
+                            Disabled = b.Disabled,
+                            Value = FieldValueConverter.MapValueForChoiceField(
+                                p.FieldType,
+                                response.Result.DraftContent,
+                                p,
+                                b
+                            ),
+                        })
+                        .ToArray(),
+                    FieldType = p.FieldType,
+                    IsRequired = p.IsRequired,
+                    Description = p.Description,
+                    Value = FieldValueConverter.MapValueForField(
+                        p.FieldType,
+                        response.Result.DraftContent,
+                        p
+                    ),
+                    RelatedContentItemPrimaryField =
+                        FieldValueConverter.MapRelatedContentItemValueForField(
+                            p.FieldType,
+                            response.Result.DraftContent,
+                            p
+                        ),
+                    RelatedContentTypeId = p.RelatedContentTypeId,
+                })
+                .ToArray(),
         };
 
         return View(viewModel);
@@ -271,7 +366,10 @@ public class ContentItemsController : BaseController
 
     [Authorize(Policy = BuiltInContentTypePermission.CONTENT_TYPE_EDIT_PERMISSION)]
     [ServiceFilter(typeof(GetOrSetRecentlyAccessedViewFilterAttribute))]
-    [Route($"{RAYTHA_ROUTE_PREFIX}/{{{RouteConstants.CONTENT_TYPE_DEVELOPER_NAME}}}/edit/{{id}}", Name = "contentitemsedit")]
+    [Route(
+        $"{RAYTHA_ROUTE_PREFIX}/{{{RouteConstants.CONTENT_TYPE_DEVELOPER_NAME}}}/edit/{{id}}",
+        Name = "contentitemsedit"
+    )]
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Edit(ContentItemsEdit_ViewModel model, string id)
@@ -280,18 +378,24 @@ public class ContentItemsController : BaseController
         {
             Id = id,
             SaveAsDraft = model.SaveAsDraft,
-            Content = MapFromFieldValueModel(model.FieldValues)
+            Content = MapFromFieldValueModel(model.FieldValues),
         };
         var editResponse = await Mediator.Send(input);
 
         if (editResponse.Success)
         {
             SetSuccessMessage($"{CurrentView.ContentType.LabelSingular} was edited successfully.");
-            return RedirectToAction("Edit", new { id, contentTypeDeveloperName = CurrentView.ContentType.DeveloperName });
+            return RedirectToAction(
+                "Edit",
+                new { id, contentTypeDeveloperName = CurrentView.ContentType.DeveloperName }
+            );
         }
         else
         {
-            SetErrorMessage("There was an error attempting to save this page. See the error below.", editResponse.GetErrors());
+            SetErrorMessage(
+                "There was an error attempting to save this page. See the error below.",
+                editResponse.GetErrors()
+            );
 
             var response = await Mediator.Send(new GetContentItemById.Query { Id = id });
 
@@ -304,25 +408,46 @@ public class ContentItemsController : BaseController
                 MaxFileSize = FileStorageProviderSettings.MaxFileSize,
                 UseDirectUploadToCloud = FileStorageProviderSettings.UseDirectUploadToCloud,
                 PathBase = CurrentOrganization.PathBase,
-                FieldValues = CurrentView.ContentType.ContentTypeFields.Select(p => new FieldValue_ViewModel
-                {
-                    Label = p.Label,
-                    DeveloperName = p.DeveloperName,
-                    AvailableChoices = p.Choices?.Select(b => new FieldValueChoiceItem_ViewModel
+                FieldValues = CurrentView
+                    .ContentType.ContentTypeFields.Select(p => new FieldValue_ViewModel
                     {
-                        Label = b.Label,
-                        DeveloperName = b.DeveloperName,
-                        Disabled = b.Disabled,
-                        Value = p.FieldType.DeveloperName == BaseFieldType.MultipleSelect ? model.FieldValues.First(c => c.DeveloperName.ToDeveloperName() == p.DeveloperName)
-                                                    .AvailableChoices.Where(a => a.Value == "true").Select(z => z.DeveloperName.ToDeveloperName()).Contains(b.DeveloperName).ToString() : b.DeveloperName
-                    }).ToArray(),
-                    FieldType = p.FieldType,
-                    IsRequired = p.IsRequired,
-                    Description = p.Description,
-                    Value = model.FieldValues.First(c => c.DeveloperName.ToDeveloperName() == p.DeveloperName).Value,
-                    RelatedContentItemPrimaryField = model.FieldValues.First(c => c.DeveloperName.ToDeveloperName() == p.DeveloperName).RelatedContentItemPrimaryField,
-                    RelatedContentTypeId = p.RelatedContentTypeId
-                }).ToArray()
+                        Label = p.Label,
+                        DeveloperName = p.DeveloperName,
+                        AvailableChoices = p
+                            .Choices?.Select(b => new FieldValueChoiceItem_ViewModel
+                            {
+                                Label = b.Label,
+                                DeveloperName = b.DeveloperName,
+                                Disabled = b.Disabled,
+                                Value =
+                                    p.FieldType.DeveloperName == BaseFieldType.MultipleSelect
+                                        ? model
+                                            .FieldValues.First(c =>
+                                                c.DeveloperName.ToDeveloperName() == p.DeveloperName
+                                            )
+                                            .AvailableChoices.Where(a => a.Value == "true")
+                                            .Select(z => z.DeveloperName.ToDeveloperName())
+                                            .Contains(b.DeveloperName)
+                                            .ToString()
+                                        : b.DeveloperName,
+                            })
+                            .ToArray(),
+                        FieldType = p.FieldType,
+                        IsRequired = p.IsRequired,
+                        Description = p.Description,
+                        Value = model
+                            .FieldValues.First(c =>
+                                c.DeveloperName.ToDeveloperName() == p.DeveloperName
+                            )
+                            .Value,
+                        RelatedContentItemPrimaryField = model
+                            .FieldValues.First(c =>
+                                c.DeveloperName.ToDeveloperName() == p.DeveloperName
+                            )
+                            .RelatedContentItemPrimaryField,
+                        RelatedContentTypeId = p.RelatedContentTypeId,
+                    })
+                    .ToArray(),
             };
 
             return View(viewModel);
@@ -330,12 +455,26 @@ public class ContentItemsController : BaseController
     }
 
     [Authorize(Policy = BuiltInContentTypePermission.CONTENT_TYPE_EDIT_PERMISSION)]
-    [Route($"{RAYTHA_ROUTE_PREFIX}/{{{RouteConstants.CONTENT_TYPE_DEVELOPER_NAME}}}/relationship/autocomplete", Name = "contentitemsrelationshipautocomplete")]
-    public async Task<IActionResult> RelationshipAutocomplete(string relatedContentTypeId, string q = "")
+    [Route(
+        $"{RAYTHA_ROUTE_PREFIX}/{{{RouteConstants.CONTENT_TYPE_DEVELOPER_NAME}}}/relationship/autocomplete",
+        Name = "contentitemsrelationshipautocomplete"
+    )]
+    public async Task<IActionResult> RelationshipAutocomplete(
+        string relatedContentTypeId,
+        string q = ""
+    )
     {
         var viewModel = new List<KeyValuePair<string, string>>();
-        var relatedContentType = await Mediator.Send(new GetContentTypeById.Query { Id = relatedContentTypeId });
-        var results = await Mediator.Send(new GetContentItems.Query { ContentType = relatedContentType.Result.DeveloperName, Search = q });
+        var relatedContentType = await Mediator.Send(
+            new GetContentTypeById.Query { Id = relatedContentTypeId }
+        );
+        var results = await Mediator.Send(
+            new GetContentItems.Query
+            {
+                ContentType = relatedContentType.Result.DeveloperName,
+                Search = q,
+            }
+        );
         foreach (var item in results.Result.Items)
         {
             viewModel.Add(new KeyValuePair<string, string>(item.Id.ToString(), item.PrimaryField));
@@ -347,15 +486,23 @@ public class ContentItemsController : BaseController
     [Authorize(Policy = BuiltInContentTypePermission.CONTENT_TYPE_EDIT_PERMISSION)]
     [ServiceFilter(typeof(SetPaginationInformationFilterAttribute))]
     [ServiceFilter(typeof(GetOrSetRecentlyAccessedViewFilterAttribute))]
-    [Route($"{RAYTHA_ROUTE_PREFIX}/{{{RouteConstants.CONTENT_TYPE_DEVELOPER_NAME}}}/revisions/{{id}}", Name = "contentitemsrevisions")]
-    public async Task<IActionResult> Revisions(string id, string orderBy = $"CreationTime {SortOrder.DESCENDING}", int pageNumber = 1, int pageSize = 50)
+    [Route(
+        $"{RAYTHA_ROUTE_PREFIX}/{{{RouteConstants.CONTENT_TYPE_DEVELOPER_NAME}}}/revisions/{{id}}",
+        Name = "contentitemsrevisions"
+    )]
+    public async Task<IActionResult> Revisions(
+        string id,
+        string orderBy = $"CreationTime {SortOrder.DESCENDING}",
+        int pageNumber = 1,
+        int pageSize = 50
+    )
     {
         var input = new GetContentItemRevisionsByContentItemId.Query
         {
             Id = id,
             PageNumber = pageNumber,
             PageSize = pageSize,
-            OrderBy = orderBy
+            OrderBy = orderBy,
         };
 
         var response = await Mediator.Send(input);
@@ -363,19 +510,30 @@ public class ContentItemsController : BaseController
         var items = response.Result.Items.Select(p => new ContentItemsRevisionsListItem_ViewModel
         {
             Id = p.Id,
-            CreationTime = CurrentOrganization.TimeZoneConverter.UtcToTimeZoneAsDateTimeFormat(p.CreationTime),
+            CreationTime = CurrentOrganization.TimeZoneConverter.UtcToTimeZoneAsDateTimeFormat(
+                p.CreationTime
+            ),
             CreatorUser = p.CreatorUser != null ? p.CreatorUser.FullName : "N/A",
-            ContentAsJson = JsonSerializer.Serialize(p.PublishedContent)
+            ContentAsJson = JsonSerializer.Serialize(p.PublishedContent),
         });
 
-        var viewModel = new ContentItemsRevisionsPagination_ViewModel(items, response.Result.TotalCount) { Id = id };
+        var viewModel = new ContentItemsRevisionsPagination_ViewModel(
+            items,
+            response.Result.TotalCount
+        )
+        {
+            Id = id,
+        };
         return View(viewModel);
     }
 
     [Authorize(Policy = BuiltInContentTypePermission.CONTENT_TYPE_EDIT_PERMISSION)]
     [ServiceFilter(typeof(SetPaginationInformationFilterAttribute))]
     [ServiceFilter(typeof(GetOrSetRecentlyAccessedViewFilterAttribute))]
-    [Route($"{RAYTHA_ROUTE_PREFIX}/{{{RouteConstants.CONTENT_TYPE_DEVELOPER_NAME}}}/revisions/{{id}}/{{revisionId}}", Name = "contentitemsrevisionsrevert")]
+    [Route(
+        $"{RAYTHA_ROUTE_PREFIX}/{{{RouteConstants.CONTENT_TYPE_DEVELOPER_NAME}}}/revisions/{{id}}/{{revisionId}}",
+        Name = "contentitemsrevisionsrevert"
+    )]
     [HttpPost]
     public async Task<IActionResult> RevisionsRevert(string id, string revisionId)
     {
@@ -384,18 +542,27 @@ public class ContentItemsController : BaseController
         if (response.Success)
         {
             SetSuccessMessage($"{CurrentView.ContentType.LabelSingular} has been reverted.");
-            return RedirectToAction("Edit", new { id, contentTypeDeveloperName = CurrentView.ContentType.DeveloperName });
+            return RedirectToAction(
+                "Edit",
+                new { id, contentTypeDeveloperName = CurrentView.ContentType.DeveloperName }
+            );
         }
         else
         {
             SetErrorMessage("There was an error reverting this content item", response.GetErrors());
-            return RedirectToAction("Revisions", new { id, contentTypeDeveloperName = CurrentView.ContentType.DeveloperName });
+            return RedirectToAction(
+                "Revisions",
+                new { id, contentTypeDeveloperName = CurrentView.ContentType.DeveloperName }
+            );
         }
     }
 
     [ServiceFilter(typeof(GetOrSetRecentlyAccessedViewFilterAttribute))]
     [Authorize(Policy = BuiltInContentTypePermission.CONTENT_TYPE_EDIT_PERMISSION)]
-    [Route($"{RAYTHA_ROUTE_PREFIX}/{{{RouteConstants.CONTENT_TYPE_DEVELOPER_NAME}}}/unpublish/{{id}}", Name = "contentitemsunpublish")]
+    [Route(
+        $"{RAYTHA_ROUTE_PREFIX}/{{{RouteConstants.CONTENT_TYPE_DEVELOPER_NAME}}}/unpublish/{{id}}",
+        Name = "contentitemsunpublish"
+    )]
     [HttpPost]
     public async Task<IActionResult> Unpublish(string id)
     {
@@ -407,14 +574,23 @@ public class ContentItemsController : BaseController
         }
         else
         {
-            SetErrorMessage("There was an error unpublishing this content item.", response.GetErrors());
+            SetErrorMessage(
+                "There was an error unpublishing this content item.",
+                response.GetErrors()
+            );
         }
-        return RedirectToAction("Edit", new { id, contentTypeDeveloperName = CurrentView.ContentType.DeveloperName });
+        return RedirectToAction(
+            "Edit",
+            new { id, contentTypeDeveloperName = CurrentView.ContentType.DeveloperName }
+        );
     }
 
     [ServiceFilter(typeof(GetOrSetRecentlyAccessedViewFilterAttribute))]
     [Authorize(Policy = BuiltInContentTypePermission.CONTENT_TYPE_EDIT_PERMISSION)]
-    [Route($"{RAYTHA_ROUTE_PREFIX}/{{{RouteConstants.CONTENT_TYPE_DEVELOPER_NAME}}}/discard-draft/{{id}}", Name = "contentitemsdiscarddraft")]
+    [Route(
+        $"{RAYTHA_ROUTE_PREFIX}/{{{RouteConstants.CONTENT_TYPE_DEVELOPER_NAME}}}/discard-draft/{{id}}",
+        Name = "contentitemsdiscarddraft"
+    )]
     [HttpPost]
     public async Task<IActionResult> DiscardDraft(string id)
     {
@@ -426,14 +602,23 @@ public class ContentItemsController : BaseController
         }
         else
         {
-            SetErrorMessage("There was an error discarding the draft of this content item.", response.GetErrors());
+            SetErrorMessage(
+                "There was an error discarding the draft of this content item.",
+                response.GetErrors()
+            );
         }
-        return RedirectToAction("Edit", new { id, contentTypeDeveloperName = CurrentView.ContentType.DeveloperName });
+        return RedirectToAction(
+            "Edit",
+            new { id, contentTypeDeveloperName = CurrentView.ContentType.DeveloperName }
+        );
     }
 
     [ServiceFilter(typeof(GetOrSetRecentlyAccessedViewFilterAttribute))]
     [Authorize(Policy = BuiltInContentTypePermission.CONTENT_TYPE_EDIT_PERMISSION)]
-    [Route($"{RAYTHA_ROUTE_PREFIX}/{{{RouteConstants.CONTENT_TYPE_DEVELOPER_NAME}}}/delete/{{id}}", Name = "contentitemsdelete")]
+    [Route(
+        $"{RAYTHA_ROUTE_PREFIX}/{{{RouteConstants.CONTENT_TYPE_DEVELOPER_NAME}}}/delete/{{id}}",
+        Name = "contentitemsdelete"
+    )]
     [HttpPost]
     public async Task<IActionResult> Delete(string id)
     {
@@ -442,18 +627,34 @@ public class ContentItemsController : BaseController
         if (response.Success)
         {
             SetSuccessMessage($"{CurrentView.ContentType.LabelSingular} has been deleted.");
-            return RedirectToAction("Index", new { contentTypeDeveloperName = CurrentView.ContentType.DeveloperName, viewId = CurrentView.Id });
+            return RedirectToAction(
+                "Index",
+                new
+                {
+                    contentTypeDeveloperName = CurrentView.ContentType.DeveloperName,
+                    viewId = CurrentView.Id,
+                }
+            );
         }
         else
         {
-            SetErrorMessage($"There was an error deleting this {CurrentView.ContentType.LabelSingular.ToLower()}", response.GetErrors());
-            return RedirectToAction("Edit", new { id, contentTypeDeveloperName = CurrentView.ContentType.DeveloperName });
+            SetErrorMessage(
+                $"There was an error deleting this {CurrentView.ContentType.LabelSingular.ToLower()}",
+                response.GetErrors()
+            );
+            return RedirectToAction(
+                "Edit",
+                new { id, contentTypeDeveloperName = CurrentView.ContentType.DeveloperName }
+            );
         }
     }
 
     [ServiceFilter(typeof(GetOrSetRecentlyAccessedViewFilterAttribute))]
     [Authorize(Policy = BuiltInSystemPermission.MANAGE_SYSTEM_SETTINGS_PERMISSION)]
-    [Route($"{RAYTHA_ROUTE_PREFIX}/{{{RouteConstants.CONTENT_TYPE_DEVELOPER_NAME}}}/set-as-home-page/{{id}}", Name = "contentitemssetashomepage")]
+    [Route(
+        $"{RAYTHA_ROUTE_PREFIX}/{{{RouteConstants.CONTENT_TYPE_DEVELOPER_NAME}}}/set-as-home-page/{{id}}",
+        Name = "contentitemssetashomepage"
+    )]
     [HttpPost]
     public async Task<IActionResult> SetAsHomePage(string id)
     {
@@ -461,35 +662,53 @@ public class ContentItemsController : BaseController
         var response = await Mediator.Send(input);
         if (response.Success)
         {
-            SetSuccessMessage($"{CurrentView.ContentType.LabelSingular} set as home page successfully.");
-            return RedirectToAction("Settings", new { id, contentTypeDeveloperName = CurrentView.ContentType.DeveloperName });
+            SetSuccessMessage(
+                $"{CurrentView.ContentType.LabelSingular} set as home page successfully."
+            );
+            return RedirectToAction(
+                "Settings",
+                new { id, contentTypeDeveloperName = CurrentView.ContentType.DeveloperName }
+            );
         }
         else
         {
-            SetErrorMessage($"There was an error setting this as the home page.", response.GetErrors());
+            SetErrorMessage(
+                $"There was an error setting this as the home page.",
+                response.GetErrors()
+            );
         }
-        return RedirectToAction("Settings", new { id, contentTypeDeveloperName = CurrentView.ContentType.DeveloperName });
+        return RedirectToAction(
+            "Settings",
+            new { id, contentTypeDeveloperName = CurrentView.ContentType.DeveloperName }
+        );
     }
 
     [ServiceFilter(typeof(GetOrSetRecentlyAccessedViewFilterAttribute))]
     [Authorize(Policy = BuiltInContentTypePermission.CONTENT_TYPE_EDIT_PERMISSION)]
-    [Route($"{RAYTHA_ROUTE_PREFIX}/{{{RouteConstants.CONTENT_TYPE_DEVELOPER_NAME}}}/settings/{{id}}", Name = "contentitemssettings")]
+    [Route(
+        $"{RAYTHA_ROUTE_PREFIX}/{{{RouteConstants.CONTENT_TYPE_DEVELOPER_NAME}}}/settings/{{id}}",
+        Name = "contentitemssettings"
+    )]
     public async Task<IActionResult> Settings(string id)
     {
         var response = await Mediator.Send(new GetContentItemById.Query { Id = id });
 
-        var webTemplates = await Mediator.Send(new GetWebTemplates.Query
-        {
-            ThemeId = CurrentOrganization.ActiveThemeId,
-            ContentTypeId = CurrentView.ContentTypeId,
-            PageSize = int.MaxValue,
-        });
+        var webTemplates = await Mediator.Send(
+            new GetWebTemplates.Query
+            {
+                ThemeId = CurrentOrganization.ActiveThemeId,
+                ContentTypeId = CurrentView.ContentTypeId,
+                PageSize = int.MaxValue,
+            }
+        );
 
-        var webTemplateResponse = await Mediator.Send(new GetWebTemplateByContentItemId.Query
-        {
-            ContentItemId = id,
-            ThemeId = CurrentOrganization.ActiveThemeId,
-        });
+        var webTemplateResponse = await Mediator.Send(
+            new GetWebTemplateByContentItemId.Query
+            {
+                ContentItemId = id,
+                ThemeId = CurrentOrganization.ActiveThemeId,
+            }
+        );
 
         var viewModel = new ContentItemsSettings_ViewModel
         {
@@ -497,15 +716,22 @@ public class ContentItemsController : BaseController
             TemplateId = webTemplateResponse.Result.Id,
             IsHomePage = CurrentOrganization.HomePageId == response.Result.Id,
             RoutePath = response.Result.RoutePath,
-            WebsiteUrl = CurrentOrganization.WebsiteUrl.TrimEnd('/') + CurrentOrganization.PathBase + "/",
-            AvailableTemplates = webTemplates.Result?.Items.ToDictionary(p => p.Id.ToString(), p => p.Label)
+            WebsiteUrl =
+                CurrentOrganization.WebsiteUrl.TrimEnd('/') + CurrentOrganization.PathBase + "/",
+            AvailableTemplates = webTemplates.Result?.Items.ToDictionary(
+                p => p.Id.ToString(),
+                p => p.Label
+            ),
         };
         return View(viewModel);
     }
 
     [ServiceFilter(typeof(GetOrSetRecentlyAccessedViewFilterAttribute))]
     [Authorize(Policy = BuiltInContentTypePermission.CONTENT_TYPE_EDIT_PERMISSION)]
-    [Route($"{RAYTHA_ROUTE_PREFIX}/{{{RouteConstants.CONTENT_TYPE_DEVELOPER_NAME}}}/settings/{{id}}", Name = "contentitemssettings")]
+    [Route(
+        $"{RAYTHA_ROUTE_PREFIX}/{{{RouteConstants.CONTENT_TYPE_DEVELOPER_NAME}}}/settings/{{id}}",
+        Name = "contentitemssettings"
+    )]
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Settings(ContentItemsSettings_ViewModel model, string id)
@@ -514,35 +740,50 @@ public class ContentItemsController : BaseController
         {
             Id = id,
             TemplateId = model.TemplateId,
-            RoutePath = model.RoutePath
+            RoutePath = model.RoutePath,
         };
 
         var editResponse = await Mediator.Send(input);
         if (editResponse.Success)
         {
             SetSuccessMessage($"{CurrentView.ContentType.LabelSingular} was edited successfully.");
-            return RedirectToAction("Settings", new { id, contentTypeDeveloperName = CurrentView.ContentType.DeveloperName });
+            return RedirectToAction(
+                "Settings",
+                new { id, contentTypeDeveloperName = CurrentView.ContentType.DeveloperName }
+            );
         }
         else
         {
-            SetErrorMessage("There was an error attempting to save this page. See the error below.", editResponse.GetErrors());
+            SetErrorMessage(
+                "There was an error attempting to save this page. See the error below.",
+                editResponse.GetErrors()
+            );
 
-            var webTemplatesResponse = await Mediator.Send(new GetWebTemplates.Query
-            {
-                ThemeId = CurrentOrganization.ActiveThemeId,
-                ContentTypeId = CurrentView.ContentTypeId,
-                PageSize = int.MaxValue,
-            });
+            var webTemplatesResponse = await Mediator.Send(
+                new GetWebTemplates.Query
+                {
+                    ThemeId = CurrentOrganization.ActiveThemeId,
+                    ContentTypeId = CurrentView.ContentTypeId,
+                    PageSize = int.MaxValue,
+                }
+            );
 
-            model.AvailableTemplates = webTemplatesResponse.Result?.Items.ToDictionary(p => p.Id.ToString(), p => p.Label);
-            model.WebsiteUrl = CurrentOrganization.WebsiteUrl.TrimEnd('/') + CurrentOrganization.PathBase + "/";
+            model.AvailableTemplates = webTemplatesResponse.Result?.Items.ToDictionary(
+                p => p.Id.ToString(),
+                p => p.Label
+            );
+            model.WebsiteUrl =
+                CurrentOrganization.WebsiteUrl.TrimEnd('/') + CurrentOrganization.PathBase + "/";
             return View(model);
         }
     }
 
     [Authorize(Policy = BuiltInContentTypePermission.CONTENT_TYPE_READ_PERMISSION)]
     [ServiceFilter(typeof(GetOrSetRecentlyAccessedViewFilterAttribute))]
-    [Route($"{RAYTHA_ROUTE_PREFIX}/{{{RouteConstants.CONTENT_TYPE_DEVELOPER_NAME}}}/views/{{viewId}}/export-to-csv", Name = "contentitemsexporttocsv")]
+    [Route(
+        $"{RAYTHA_ROUTE_PREFIX}/{{{RouteConstants.CONTENT_TYPE_DEVELOPER_NAME}}}/views/{{viewId}}/export-to-csv",
+        Name = "contentitemsexporttocsv"
+    )]
     public async Task<IActionResult> BeginExportToCsv()
     {
         return View(new ContentItemsExportToCsv_ViewModel());
@@ -550,7 +791,10 @@ public class ContentItemsController : BaseController
 
     [Authorize(Policy = BuiltInContentTypePermission.CONTENT_TYPE_READ_PERMISSION)]
     [ServiceFilter(typeof(GetOrSetRecentlyAccessedViewFilterAttribute))]
-    [Route($"{RAYTHA_ROUTE_PREFIX}/{{{RouteConstants.CONTENT_TYPE_DEVELOPER_NAME}}}/views/{{viewId}}/export-to-csv", Name = "contentitemsexporttocsv")]
+    [Route(
+        $"{RAYTHA_ROUTE_PREFIX}/{{{RouteConstants.CONTENT_TYPE_DEVELOPER_NAME}}}/views/{{viewId}}/export-to-csv",
+        Name = "contentitemsexporttocsv"
+    )]
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> BeginExportToCsv(ContentItemsExportToCsv_ViewModel model)
@@ -558,33 +802,50 @@ public class ContentItemsController : BaseController
         var input = new BeginExportContentItemsToCsv.Command
         {
             ViewId = CurrentView.Id,
-            ExportOnlyColumnsFromView = model.ViewColumnsOnly
+            ExportOnlyColumnsFromView = model.ViewColumnsOnly,
         };
         var response = await Mediator.Send(input);
 
         if (response.Success)
         {
             SetSuccessMessage($"Export in progress.");
-            return RedirectToAction("BackgroundTaskStatus", new { contentTypeDeveloperName = CurrentView.ContentType.DeveloperName, id = response.Result });
+            return RedirectToAction(
+                "BackgroundTaskStatus",
+                new
+                {
+                    contentTypeDeveloperName = CurrentView.ContentType.DeveloperName,
+                    id = response.Result,
+                }
+            );
         }
         else
         {
-            SetErrorMessage("There was an error attempting to begin this export. See the error below.", response.GetErrors());
+            SetErrorMessage(
+                "There was an error attempting to begin this export. See the error below.",
+                response.GetErrors()
+            );
             return View(model);
         }
     }
 
     [Authorize(Policy = BuiltInContentTypePermission.CONTENT_TYPE_READ_PERMISSION)]
     [ServiceFilter(typeof(GetOrSetRecentlyAccessedViewFilterAttribute))]
-    [Route($"{RAYTHA_ROUTE_PREFIX}/{{{RouteConstants.CONTENT_TYPE_DEVELOPER_NAME}}}/background-task/status/{{id}}", Name = "contentitemsbackgroundtaskstatus")]
+    [Route(
+        $"{RAYTHA_ROUTE_PREFIX}/{{{RouteConstants.CONTENT_TYPE_DEVELOPER_NAME}}}/background-task/status/{{id}}",
+        Name = "contentitemsbackgroundtaskstatus"
+    )]
     public async Task<IActionResult> BackgroundTaskStatus(string id, bool json = false)
     {
         var response = await Mediator.Send(new GetBackgroundTaskById.Query { Id = id });
 
-        return json ? Ok(response.Result) : View(new ContentItemsBackgroundTaskStatus_ViewModel
-        {
-            PathBase = CurrentOrganization.PathBase
-        });
+        return json
+            ? Ok(response.Result)
+            : View(
+                new ContentItemsBackgroundTaskStatus_ViewModel
+                {
+                    PathBase = CurrentOrganization.PathBase,
+                }
+            );
     }
 
     private dynamic MapFromFieldValueModel(FieldValue_ViewModel[] fieldValues)
@@ -593,7 +854,9 @@ public class ContentItemsController : BaseController
 
         foreach (var fieldValue in fieldValues)
         {
-            var contentTypeField = CurrentView.ContentType.ContentTypeFields.First(p => p.DeveloperName == fieldValue.DeveloperName.ToDeveloperName());
+            var contentTypeField = CurrentView.ContentType.ContentTypeFields.First(p =>
+                p.DeveloperName == fieldValue.DeveloperName.ToDeveloperName()
+            );
             if (contentTypeField.FieldType.DeveloperName == BaseFieldType.OneToOneRelationship)
             {
                 Guid guid = (ShortGuid)fieldValue.Value;
@@ -601,8 +864,14 @@ public class ContentItemsController : BaseController
             }
             else if (contentTypeField.FieldType.DeveloperName == BaseFieldType.MultipleSelect)
             {
-                var selectedChoices = fieldValue.AvailableChoices.Where(p => p.Value == "true").Select(p => p.DeveloperName).ToArray();
-                mappedFieldValues.Add(fieldValue.DeveloperName, contentTypeField.FieldType.FieldValueFrom(selectedChoices).Value);
+                var selectedChoices = fieldValue
+                    .AvailableChoices.Where(p => p.Value == "true")
+                    .Select(p => p.DeveloperName)
+                    .ToArray();
+                mappedFieldValues.Add(
+                    fieldValue.DeveloperName,
+                    contentTypeField.FieldType.FieldValueFrom(selectedChoices).Value
+                );
             }
             else
             {
@@ -615,27 +884,30 @@ public class ContentItemsController : BaseController
 
     protected ViewDto CurrentView
     {
-        get
-        {
-            return HttpContext.Items["CurrentView"] as ViewDto;
-        }
+        get { return HttpContext.Items["CurrentView"] as ViewDto; }
     }
 
     [Authorize(Policy = BuiltInContentTypePermission.CONTENT_TYPE_EDIT_PERMISSION)]
     [ServiceFilter(typeof(GetOrSetRecentlyAccessedViewFilterAttribute))]
-    [Route($"{RAYTHA_ROUTE_PREFIX}/{{{RouteConstants.CONTENT_TYPE_DEVELOPER_NAME}}}/views/{{viewId}}/import-from-csv", Name = "contentitemsimportfromcsv")]
+    [Route(
+        $"{RAYTHA_ROUTE_PREFIX}/{{{RouteConstants.CONTENT_TYPE_DEVELOPER_NAME}}}/views/{{viewId}}/import-from-csv",
+        Name = "contentitemsimportfromcsv"
+    )]
     public async Task<IActionResult> BeginImportFromCsv()
     {
         return View(new ContentItemsImportFromCsv_ViewModel());
     }
+
     [Authorize(Policy = BuiltInContentTypePermission.CONTENT_TYPE_EDIT_PERMISSION)]
     [ServiceFilter(typeof(GetOrSetRecentlyAccessedViewFilterAttribute))]
-    [Route($"{RAYTHA_ROUTE_PREFIX}/{{{RouteConstants.CONTENT_TYPE_DEVELOPER_NAME}}}/views/{{viewId}}/import-from-csv", Name = "contentitemsimportfromcsv")]
+    [Route(
+        $"{RAYTHA_ROUTE_PREFIX}/{{{RouteConstants.CONTENT_TYPE_DEVELOPER_NAME}}}/views/{{viewId}}/import-from-csv",
+        Name = "contentitemsimportfromcsv"
+    )]
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> BeginImportFromCsv(ContentItemsImportFromCsv_ViewModel model)
     {
-       
         IFormFile importFile = model.ImportFile;
         byte[] fileBytes = null;
         if (importFile != null)
@@ -653,7 +925,7 @@ public class ContentItemsController : BaseController
             ImportMethod = model.ImportMethod,
             CsvAsBytes = fileBytes,
             ImportAsDraft = model.ImportAsDraft,
-            ContentTypeId = CurrentView.ContentTypeId
+            ContentTypeId = CurrentView.ContentTypeId,
         };
 
         var response = await Mediator.Send(input);
@@ -661,11 +933,21 @@ public class ContentItemsController : BaseController
         if (response.Success)
         {
             SetSuccessMessage($"Import in progress.");
-            return RedirectToAction("BackgroundTaskStatus", new { contentTypeDeveloperName = CurrentView.ContentType.DeveloperName, id = response.Result });
+            return RedirectToAction(
+                "BackgroundTaskStatus",
+                new
+                {
+                    contentTypeDeveloperName = CurrentView.ContentType.DeveloperName,
+                    id = response.Result,
+                }
+            );
         }
         else
         {
-            SetErrorMessage("There was an error attempting while importing. See the error below.", response.GetErrors());
+            SetErrorMessage(
+                "There was an error attempting while importing. See the error below.",
+                response.GetErrors()
+            );
             return View(model);
         }
     }

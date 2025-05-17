@@ -25,12 +25,17 @@ public record ContentItemRaythaFunctionTargetDto : BaseEntityDto
     public AuditableUserDto? LastModifierUser { get; init; }
     public DateTime? LastModificationTime { get; init; }
 
-    public static Expression<Func<ContentItem, WebTemplate, ContentItemRaythaFunctionTargetDto>> GetProjection()
+    public static Expression<
+        Func<ContentItem, WebTemplate, ContentItemRaythaFunctionTargetDto>
+    > GetProjection()
     {
         return (contentItem, webTemplate) => GetProjection(contentItem, webTemplate);
     }
 
-    public static ContentItemRaythaFunctionTargetDto GetProjection(ContentItem contentItem, WebTemplate webTemplate)
+    public static ContentItemRaythaFunctionTargetDto GetProjection(
+        ContentItem contentItem,
+        WebTemplate webTemplate
+    )
     {
         return new ContentItemRaythaFunctionTargetDto
         {
@@ -57,5 +62,4 @@ public record ContentItemRaythaFunctionTargetDto : BaseEntityDto
     {
         return PrimaryField;
     }
-
 }

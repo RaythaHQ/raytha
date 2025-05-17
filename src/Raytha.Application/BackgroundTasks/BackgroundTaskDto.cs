@@ -1,6 +1,6 @@
-﻿using Raytha.Application.Common.Models;
+﻿using System.Linq.Expressions;
+using Raytha.Application.Common.Models;
 using Raytha.Domain.Entities;
-using System.Linq.Expressions;
 
 namespace Raytha.Application.BackgroundTasks;
 
@@ -22,6 +22,7 @@ public record BackgroundTaskDto : BaseEntityDto
     {
         return entity => GetProjection(entity);
     }
+
     public static BackgroundTaskDto GetProjection(BackgroundTask entity)
     {
         return new BackgroundTaskDto
@@ -37,7 +38,7 @@ public record BackgroundTaskDto : BaseEntityDto
             StatusInfo = entity.StatusInfo,
             PercentComplete = entity.PercentComplete,
             NumberOfRetries = entity.NumberOfRetries,
-            TaskStep = entity.TaskStep
+            TaskStep = entity.TaskStep,
         };
     }
 }

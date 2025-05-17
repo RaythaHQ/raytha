@@ -1,7 +1,7 @@
+using System.Linq.Expressions;
 using CSharpVitamins;
 using Raytha.Application.Common.Models;
 using Raytha.Domain.Entities;
-using System.Linq.Expressions;
 
 namespace Raytha.Application.EmailTemplates;
 
@@ -14,6 +14,7 @@ public record EmailTemplateRevisionDto : BaseAuditableEntityDto
     public string Bcc { get; init; }
     public AuditableUserDto? CreatorUser { get; init; }
     public EmailTemplateDto? EmailTemplate { get; init; }
+
     public static Expression<Func<EmailTemplateRevision, EmailTemplateRevisionDto>> GetProjection()
     {
         return entity => GetProjection(entity);
@@ -35,7 +36,7 @@ public record EmailTemplateRevisionDto : BaseAuditableEntityDto
             CreatorUserId = entity.CreatorUserId,
             CreationTime = entity.CreationTime,
             CreatorUser = AuditableUserDto.GetProjection(entity.CreatorUser),
-            EmailTemplate = EmailTemplateDto.GetProjection(entity.EmailTemplate)
+            EmailTemplate = EmailTemplateDto.GetProjection(entity.EmailTemplate),
         };
     }
 }

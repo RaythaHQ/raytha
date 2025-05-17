@@ -15,11 +15,8 @@ public class CreateNavigationMenu
         public required string Label { get; init; }
         public required string DeveloperName { get; init; }
 
-        public static Command Empty() => new()
-        {
-            Label = string.Empty,
-            DeveloperName = string.Empty,
-        };
+        public static Command Empty() =>
+            new() { Label = string.Empty, DeveloperName = string.Empty };
     }
 
     public class Validator : AbstractValidator<Command>
@@ -28,11 +25,21 @@ public class CreateNavigationMenu
         {
             RuleFor(x => x.Label).NotEmpty();
             RuleFor(x => x.DeveloperName).NotEmpty();
-            RuleFor(x => x).Custom((request, context) =>
-            {
-                if (db.NavigationMenus.Any(nm => nm.DeveloperName == request.DeveloperName.ToDeveloperName()))
-                    context.AddFailure("DeveloperName", $"A menu with the developer name {request.DeveloperName.ToDeveloperName()} already exists.");
-            });
+            RuleFor(x => x)
+                .Custom(
+                    (request, context) =>
+                    {
+                        if (
+                            db.NavigationMenus.Any(nm =>
+                                nm.DeveloperName == request.DeveloperName.ToDeveloperName()
+                            )
+                        )
+                            context.AddFailure(
+                                "DeveloperName",
+                                $"A menu with the developer name {request.DeveloperName.ToDeveloperName()} already exists."
+                            );
+                    }
+                );
         }
     }
 
@@ -45,7 +52,10 @@ public class CreateNavigationMenu
             _db = db;
         }
 
-        public async Task<CommandResponseDto<ShortGuid>> Handle(Command request, CancellationToken cancellationToken)
+        public async Task<CommandResponseDto<ShortGuid>> Handle(
+            Command request,
+            CancellationToken cancellationToken
+        )
         {
             var entity = new NavigationMenu
             {

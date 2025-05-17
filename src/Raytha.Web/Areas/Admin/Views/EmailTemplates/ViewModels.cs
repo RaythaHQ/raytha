@@ -46,7 +46,10 @@ public class EmailTemplatesEdit_ViewModel : FormSubmit_ViewModel
     public string AllowedMimeTypes { get; set; }
     public bool UseDirectUploadToCloud { get; set; }
     public string PathBase { get; set; }
-    public Dictionary<string, IEnumerable<EmailInsertVariableListItem_ViewModel>> TemplateVariables { get; set; }
+    public Dictionary<
+        string,
+        IEnumerable<EmailInsertVariableListItem_ViewModel>
+    > TemplateVariables { get; set; }
 }
 
 public class EmailTemplatesRevisionsPagination_ViewModel : Pagination_ViewModel
@@ -56,8 +59,10 @@ public class EmailTemplatesRevisionsPagination_ViewModel : Pagination_ViewModel
     public string EmailTemplateId { get; set; }
 
     public EmailTemplatesRevisionsPagination_ViewModel(
-        IEnumerable<EmailTemplatesRevisionsListItem_ViewModel> items, int totalCount) : base(totalCount) => Items = items;
-
+        IEnumerable<EmailTemplatesRevisionsListItem_ViewModel> items,
+        int totalCount
+    )
+        : base(totalCount) => Items = items;
 }
 
 public class EmailTemplatesRevisionsListItem_ViewModel

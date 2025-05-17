@@ -1,7 +1,7 @@
-﻿using CSharpVitamins;
+﻿using System.Linq.Expressions;
+using CSharpVitamins;
 using Raytha.Application.Common.Models;
 using Raytha.Domain.Entities;
-using System.Linq.Expressions;
 
 namespace Raytha.Application.ContentTypes;
 
@@ -12,16 +12,14 @@ public record ContentTypeDto : BaseEntityDto
     public string LabelSingular { get; init; } = string.Empty;
     public string DeveloperName { get; init; } = string.Empty;
     public string DefaultRouteTemplate { get; init; } = string.Empty;
-    public IEnumerable<ContentTypeFieldDto> ContentTypeFields { get; init; } = new List<ContentTypeFieldDto>();
+    public IEnumerable<ContentTypeFieldDto> ContentTypeFields { get; init; } =
+        new List<ContentTypeFieldDto>();
     public string Description { get; init; } = string.Empty;
     public ShortGuid PrimaryFieldId { get; init; }
 
     public ContentTypeFieldDto PrimaryField
     {
-        get
-        {
-            return ContentTypeFields.FirstOrDefault(p => p.Id == PrimaryFieldId);
-        }
+        get { return ContentTypeFields.FirstOrDefault(p => p.Id == PrimaryFieldId); }
     }
 
     public ContentTypeFieldDto GetCustomField(string developerName)
@@ -46,12 +44,13 @@ public record ContentTypeDto : BaseEntityDto
             LabelSingular = entity.LabelSingular,
             DeveloperName = entity.DeveloperName,
             IsActive = entity.IsActive,
-            ContentTypeFields = entity.ContentTypeFields?.AsQueryable()
-            .OrderBy(p => p.FieldOrder)
-            .Select(ContentTypeFieldDto.GetProjection()),
+            ContentTypeFields = entity
+                .ContentTypeFields?.AsQueryable()
+                .OrderBy(p => p.FieldOrder)
+                .Select(ContentTypeFieldDto.GetProjection()),
             Description = entity.Description,
             PrimaryFieldId = entity.PrimaryFieldId,
-            DefaultRouteTemplate = entity.DefaultRouteTemplate
+            DefaultRouteTemplate = entity.DefaultRouteTemplate,
         };
     }
 }

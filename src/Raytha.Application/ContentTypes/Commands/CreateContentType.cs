@@ -29,45 +29,66 @@ public class CreateContentType
             RuleFor(x => x.LabelSingular).NotEmpty();
             RuleFor(x => x.DeveloperName).NotEmpty();
             RuleFor(x => x.DefaultRouteTemplate).NotEmpty();
-            RuleFor(x => x).Custom((request, context) =>
-            {
-                if (db.ContentTypes.Any(p => p.DeveloperName == request.DeveloperName.ToDeveloperName()))
-                {
-                    context.AddFailure("DeveloperName", $"A content type with the developer name {request.DeveloperName.ToDeveloperName()} already exists.");
-                    return;
-                }
+            RuleFor(x => x)
+                .Custom(
+                    (request, context) =>
+                    {
+                        if (
+                            db.ContentTypes.Any(p =>
+                                p.DeveloperName == request.DeveloperName.ToDeveloperName()
+                            )
+                        )
+                        {
+                            context.AddFailure(
+                                "DeveloperName",
+                                $"A content type with the developer name {request.DeveloperName.ToDeveloperName()} already exists."
+                            );
+                            return;
+                        }
 
-                if (request.DefaultRouteTemplate.IsProtectedRoutePath())
-                {
-                    context.AddFailure("DefaultRouteTemplate", "Default route path cannot begin with a protected path.");
-                    return;
-                }
+                        if (request.DefaultRouteTemplate.IsProtectedRoutePath())
+                        {
+                            context.AddFailure(
+                                "DefaultRouteTemplate",
+                                "Default route path cannot begin with a protected path."
+                            );
+                            return;
+                        }
 
-                var activeThemeId = db.OrganizationSettings
-                    .Select(os => os.ActiveThemeId)
-                    .First();
+                        var activeThemeId = db
+                            .OrganizationSettings.Select(os => os.ActiveThemeId)
+                            .First();
 
-                var areTemplatesAvailableForCurrentContentType = db.WebTemplates
-                    .Where(wt => wt.ThemeId == activeThemeId)
-                    .Any(wt => wt.AllowAccessForNewContentTypes && !wt.IsBaseLayout);
+                        var areTemplatesAvailableForCurrentContentType = db
+                            .WebTemplates.Where(wt => wt.ThemeId == activeThemeId)
+                            .Any(wt => wt.AllowAccessForNewContentTypes && !wt.IsBaseLayout);
 
-                if (!areTemplatesAvailableForCurrentContentType)
-                {
-                    context.AddFailure(Constants.VALIDATION_SUMMARY, "There are no default web templates accessible for new content types. Set a template to allow access to new content types.");
-                    return;
-                }
-            });
+                        if (!areTemplatesAvailableForCurrentContentType)
+                        {
+                            context.AddFailure(
+                                Constants.VALIDATION_SUMMARY,
+                                "There are no default web templates accessible for new content types. Set a template to allow access to new content types."
+                            );
+                            return;
+                        }
+                    }
+                );
         }
     }
 
     public class Handler : IRequestHandler<Command, CommandResponseDto<ShortGuid>>
     {
         private readonly IRaythaDbContext _db;
+
         public Handler(IRaythaDbContext db)
         {
             _db = db;
         }
-        public async Task<CommandResponseDto<ShortGuid>> Handle(Command request, CancellationToken cancellationToken)
+
+        public async Task<CommandResponseDto<ShortGuid>> Handle(
+            Command request,
+            CancellationToken cancellationToken
+        )
         {
             var newContentTypeId = Guid.NewGuid();
             var primaryFieldId = Guid.NewGuid();
@@ -78,7 +99,7 @@ public class CreateContentType
                 LabelSingular = request.LabelSingular,
                 Description = request.Description,
                 DefaultRouteTemplate = request.DefaultRouteTemplate,
-                DeveloperName = request.DeveloperName.ToDeveloperName()
+                DeveloperName = request.DeveloperName.ToDeveloperName(),
             };
             _db.ContentTypes.Add(entity);
 
@@ -89,7 +110,7 @@ public class CreateContentType
                 DeveloperName = "title",
                 ContentTypeId = newContentTypeId,
                 FieldOrder = 1,
-                FieldType = BaseFieldType.SingleLineText
+                FieldType = BaseFieldType.SingleLineText,
             };
             _db.ContentTypeFields.Add(titlePageField);
 
@@ -102,7 +123,7 @@ public class CreateContentType
                 DeveloperName = "content",
                 ContentTypeId = newContentTypeId,
                 FieldOrder = 2,
-                FieldType = BaseFieldType.Wysiwyg
+                FieldType = BaseFieldType.Wysiwyg,
             };
             _db.ContentTypeFields.Add(contentPageField);
 
@@ -116,20 +137,29 @@ public class CreateContentType
                 Route = new Route
                 {
                     ViewId = newViewId,
-                    Path = $"{request.DeveloperName.ToDeveloperName()}"
+                    Path = $"{request.DeveloperName.ToDeveloperName()}",
                 },
-                Columns = new[] { BuiltInContentTypeField.PrimaryField.DeveloperName, BuiltInContentTypeField.CreationTime.DeveloperName, BuiltInContentTypeField.Template.DeveloperName },
-                IsPublished = true
+                Columns = new[]
+                {
+                    BuiltInContentTypeField.PrimaryField.DeveloperName,
+                    BuiltInContentTypeField.CreationTime.DeveloperName,
+                    BuiltInContentTypeField.Template.DeveloperName,
+                },
+                IsPublished = true,
             };
 
             _db.Views.Add(newView);
 
-            var activeThemeId = await _db.OrganizationSettings
-                .Select(os => os.ActiveThemeId)
+            var activeThemeId = await _db
+                .OrganizationSettings.Select(os => os.ActiveThemeId)
                 .FirstAsync(cancellationToken);
 
-            var defaultWebTemplates = await _db.WebTemplates
-                .Where(wt => wt.ThemeId == activeThemeId && !wt.IsBaseLayout && wt.AllowAccessForNewContentTypes)
+            var defaultWebTemplates = await _db
+                .WebTemplates.Where(wt =>
+                    wt.ThemeId == activeThemeId
+                    && !wt.IsBaseLayout
+                    && wt.AllowAccessForNewContentTypes
+                )
                 .ToArrayAsync(cancellationToken);
 
             foreach (var webTemplate in defaultWebTemplates)
@@ -137,13 +167,19 @@ public class CreateContentType
                 var templateAccessModel = new WebTemplateAccessToModelDefinition
                 {
                     ContentTypeId = newContentTypeId,
-                    WebTemplateId = webTemplate.Id
+                    WebTemplateId = webTemplate.Id,
                 };
 
-                await _db.WebTemplateAccessToModelDefinitions.AddAsync(templateAccessModel, cancellationToken);
+                await _db.WebTemplateAccessToModelDefinitions.AddAsync(
+                    templateAccessModel,
+                    cancellationToken
+                );
             }
 
-            var defaultContentListView = defaultWebTemplates.FirstOrDefault(p => p.DeveloperName == BuiltInWebTemplate.ContentItemListViewPage.DeveloperName) ?? defaultWebTemplates.First();
+            var defaultContentListView =
+                defaultWebTemplates.FirstOrDefault(p =>
+                    p.DeveloperName == BuiltInWebTemplate.ContentItemListViewPage.DeveloperName
+                ) ?? defaultWebTemplates.First();
 
             var webTemplateViewRelation = new WebTemplateViewRelation
             {
@@ -154,16 +190,18 @@ public class CreateContentType
 
             await _db.WebTemplateViewRelations.AddAsync(webTemplateViewRelation, cancellationToken);
 
-            var roles = _db.Roles
-                .Include(p => p.ContentTypeRolePermissions)
+            var roles = _db
+                .Roles.Include(p => p.ContentTypeRolePermissions)
                 .Where(p => p.SystemPermissions.HasFlag(SystemPermissions.ManageContentTypes));
             foreach (var role in roles)
             {
-                role.ContentTypeRolePermissions.Add(new ContentTypeRolePermission
-                {
-                    ContentTypeId = newContentTypeId,
-                    ContentTypePermissions = BuiltInContentTypePermission.AllPermissionsAsEnum
-                });
+                role.ContentTypeRolePermissions.Add(
+                    new ContentTypeRolePermission
+                    {
+                        ContentTypeId = newContentTypeId,
+                        ContentTypePermissions = BuiltInContentTypePermission.AllPermissionsAsEnum,
+                    }
+                );
             }
 
             await _db.SaveChangesAsync(cancellationToken);

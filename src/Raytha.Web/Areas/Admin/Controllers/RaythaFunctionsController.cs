@@ -1,9 +1,14 @@
 ﻿using System;
+using System.IO;
 using System.Linq;
+using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
+using Newtonsoft.Json;
 using Raytha.Application.Common.Utils;
 using Raytha.Application.RaythaFunctions.Commands;
 using Raytha.Application.RaythaFunctions.Queries;
@@ -13,11 +18,6 @@ using Raytha.Web.Areas.Admin.Views.RaythaFunctions;
 using Raytha.Web.Areas.Admin.Views.Shared.ViewModels;
 using Raytha.Web.Filters;
 using Raytha.Web.Utils;
-using Newtonsoft.Json;
-using Microsoft.AspNetCore.Http;
-using System.Text.Json;
-using System.IO;
-using System.Text;
 
 namespace Raytha.Web.Areas.Admin.Controllers;
 
@@ -28,7 +28,11 @@ public class RaythaFunctionsController : BaseController
 {
     [ServiceFilter(typeof(SetPaginationInformationFilterAttribute))]
     [Route($"{RAYTHA_ROUTE_PREFIX}/functions", Name = "functionsindex")]
-    public async Task<IActionResult> Index(string search = "", int pageNumber = 1, int pageSize = 50)
+    public async Task<IActionResult> Index(
+        string search = "",
+        int pageNumber = 1,
+        int pageSize = 50
+    )
     {
         var input = new GetRaythaFunctions.Query
         {
@@ -46,12 +50,17 @@ public class RaythaFunctionsController : BaseController
             DeveloperName = rf.DeveloperName,
             TriggerType = rf.TriggerType.Label,
             IsActive = rf.IsActive.YesOrNo(),
-            LastModificationTime = CurrentOrganization.TimeZoneConverter.UtcToTimeZoneAsDateTimeFormat(rf.LastModificationTime),
+            LastModificationTime =
+                CurrentOrganization.TimeZoneConverter.UtcToTimeZoneAsDateTimeFormat(
+                    rf.LastModificationTime
+                ),
             LastModifierUser = rf.LastModifierUser?.FullName ?? "N/A",
-
         });
 
-        var viewModel = new List_ViewModel<RaythaFunctionsListItem_ViewModel>(items, response.Result.TotalCount);
+        var viewModel = new List_ViewModel<RaythaFunctionsListItem_ViewModel>(
+            items,
+            response.Result.TotalCount
+        );
 
         return View(viewModel);
     }
@@ -86,7 +95,10 @@ public class RaythaFunctionsController : BaseController
         }
         else
         {
-            SetErrorMessage("There was an error attempting to create this function. See the error below.", response.GetErrors());
+            SetErrorMessage(
+                "There was an error attempting to create this function. See the error below.",
+                response.GetErrors()
+            );
 
             return View(model);
         }
@@ -134,7 +146,10 @@ public class RaythaFunctionsController : BaseController
         }
         else
         {
-            SetErrorMessage("There was an error attempting to update this function. See the error below.", response.GetErrors());
+            SetErrorMessage(
+                "There was an error attempting to update this function. See the error below.",
+                response.GetErrors()
+            );
 
             model.Id = id;
 
@@ -164,8 +179,16 @@ public class RaythaFunctionsController : BaseController
         }
     }
 
-    [Route($"{RAYTHA_ROUTE_PREFIX}/functions/edit/{{id}}/revisions", Name = "functionsrevisionsindex")]
-    public async Task<IActionResult> Revisions(string id, string orderBy = $"CreationTime {SortOrder.DESCENDING}", int pageNumber = 1, int pageSize = 50)
+    [Route(
+        $"{RAYTHA_ROUTE_PREFIX}/functions/edit/{{id}}/revisions",
+        Name = "functionsrevisionsindex"
+    )]
+    public async Task<IActionResult> Revisions(
+        string id,
+        string orderBy = $"CreationTime {SortOrder.DESCENDING}",
+        int pageNumber = 1,
+        int pageSize = 50
+    )
     {
         var input = new GetRaythaFunctionRevisionsByRaythaFunctionId.Query
         {
@@ -177,15 +200,22 @@ public class RaythaFunctionsController : BaseController
 
         var response = await Mediator.Send(input);
 
-        var items = response.Result.Items.Select(rfr => new RaythaFunctionsRevisionsListItem_ViewModel
-        {
-            Id = rfr.Id,
-            Code = rfr.Code,
-            CreationTime = CurrentOrganization.TimeZoneConverter.UtcToTimeZoneAsDateTimeFormat(rfr.CreationTime),
-            CreatorUser = rfr.CreatorUser?.FullName ?? "N/A",
-        });
+        var items = response.Result.Items.Select(
+            rfr => new RaythaFunctionsRevisionsListItem_ViewModel
+            {
+                Id = rfr.Id,
+                Code = rfr.Code,
+                CreationTime = CurrentOrganization.TimeZoneConverter.UtcToTimeZoneAsDateTimeFormat(
+                    rfr.CreationTime
+                ),
+                CreatorUser = rfr.CreatorUser?.FullName ?? "N/A",
+            }
+        );
 
-        var viewModel = new RaythaFunctionsRevisionsPagination_ViewModel(items, response.Result.TotalCount)
+        var viewModel = new RaythaFunctionsRevisionsPagination_ViewModel(
+            items,
+            response.Result.TotalCount
+        )
         {
             FunctionId = id,
         };
@@ -194,7 +224,10 @@ public class RaythaFunctionsController : BaseController
     }
 
     [HttpPost]
-    [Route($"{RAYTHA_ROUTE_PREFIX}/functions/edit/{{id}}/revisions/{{revisionId}}", Name = "functionsrevisionsrevert")]
+    [Route(
+        $"{RAYTHA_ROUTE_PREFIX}/functions/edit/{{id}}/revisions/{{revisionId}}",
+        Name = "functionsrevisionsrevert"
+    )]
     public async Task<IActionResult> RevisionRevert(string id, string revisionId)
     {
         var input = new RevertRaythaFunction.Command { Id = revisionId };
@@ -216,14 +249,16 @@ public class RaythaFunctionsController : BaseController
     }
 
     [AllowAnonymous]
-    [Route($"{RAYTHA_ROUTE_PREFIX}/functions/execute/{{{RouteConstants.FUNCTION_DEVELOPER_NAME}}}", Name = "functionsexecute")]
+    [Route(
+        $"{RAYTHA_ROUTE_PREFIX}/functions/execute/{{{RouteConstants.FUNCTION_DEVELOPER_NAME}}}",
+        Name = "functionsexecute"
+    )]
     public async Task<IActionResult> Execute(string functionDeveloperName)
     {
         string payloadJson = null;
         if (HttpContext.Request.HasFormContentType)
         {
             payloadJson = System.Text.Json.JsonSerializer.Serialize(HttpContext.Request.Form);
-
         }
         else
         {
@@ -237,7 +272,7 @@ public class RaythaFunctionsController : BaseController
             DeveloperName = functionDeveloperName,
             RequestMethod = HttpContext.Request.Method,
             QueryJson = JsonConvert.SerializeObject(HttpContext.Request.Query),
-            PayloadJson = payloadJson 
+            PayloadJson = payloadJson,
         };
 
         var response = await Mediator.Send(input);
@@ -246,15 +281,14 @@ public class RaythaFunctionsController : BaseController
             dynamic result = response.Result;
             return result.contentType switch
             {
-                "application/json" => Json(result.body, new JsonSerializerOptions
-                {
-                    PropertyNamingPolicy = null,
-                    WriteIndented = true
-                }),
+                "application/json" => Json(
+                    result.body,
+                    new JsonSerializerOptions { PropertyNamingPolicy = null, WriteIndented = true }
+                ),
                 "text/html" => Content(result.body, result.contentType),
                 "redirectToUrl" => Redirect(result.body),
                 "statusCode" => StatusCode(result.statusCode, result.body),
-                _ => throw new NotSupportedException()
+                _ => throw new NotSupportedException(),
             };
         }
         else

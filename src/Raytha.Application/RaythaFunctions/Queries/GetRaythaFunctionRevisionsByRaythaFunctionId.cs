@@ -10,13 +10,16 @@ namespace Raytha.Application.RaythaFunctions.Queries;
 
 public class GetRaythaFunctionRevisionsByRaythaFunctionId
 {
-    public record Query : GetPagedEntitiesInputDto, IRequest<IQueryResponseDto<ListResultDto<RaythaFunctionRevisionDto>>>
+    public record Query
+        : GetPagedEntitiesInputDto,
+            IRequest<IQueryResponseDto<ListResultDto<RaythaFunctionRevisionDto>>>
     {
         public ShortGuid Id { get; init; }
         public override string OrderBy { get; init; } = $"CreationTime {SortOrder.Descending}";
     }
 
-    public class Handler : IRequestHandler<Query, IQueryResponseDto<ListResultDto<RaythaFunctionRevisionDto>>>
+    public class Handler
+        : IRequestHandler<Query, IQueryResponseDto<ListResultDto<RaythaFunctionRevisionDto>>>
     {
         private readonly IRaythaDbContext _db;
 
@@ -25,16 +28,24 @@ public class GetRaythaFunctionRevisionsByRaythaFunctionId
             _db = db;
         }
 
-        public async Task<IQueryResponseDto<ListResultDto<RaythaFunctionRevisionDto>>> Handle(Query request, CancellationToken cancellationToken)
+        public async Task<IQueryResponseDto<ListResultDto<RaythaFunctionRevisionDto>>> Handle(
+            Query request,
+            CancellationToken cancellationToken
+        )
         {
-            var query = _db.RaythaFunctionRevisions
-                .Include(rfr => rfr.CreatorUser)
+            var query = _db
+                .RaythaFunctionRevisions.Include(rfr => rfr.CreatorUser)
                 .Where(rfr => rfr.RaythaFunctionId == request.Id.Guid);
 
             var total = await query.CountAsync();
-            var items = query.ApplyPaginationInput(request).Select(RaythaFunctionRevisionDto.GetProjection()).ToArray();
+            var items = query
+                .ApplyPaginationInput(request)
+                .Select(RaythaFunctionRevisionDto.GetProjection())
+                .ToArray();
 
-            return new QueryResponseDto<ListResultDto<RaythaFunctionRevisionDto>>(new ListResultDto<RaythaFunctionRevisionDto>(items, total));
+            return new QueryResponseDto<ListResultDto<RaythaFunctionRevisionDto>>(
+                new ListResultDto<RaythaFunctionRevisionDto>(items, total)
+            );
         }
     }
 }

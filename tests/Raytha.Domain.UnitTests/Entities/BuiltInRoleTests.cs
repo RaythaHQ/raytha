@@ -47,8 +47,10 @@ public class BuiltInRoleTests
     [Test]
     public void ShouldThrowUnsupportedColourExceptionGivenNotSupportedColourCode()
     {
-        FluentActions.Invoking(() => BuiltInRole.From("BadValue"))
-            .Should().Throw<UnsupportedTemplateTypeException>();
+        FluentActions
+            .Invoking(() => BuiltInRole.From("BadValue"))
+            .Should()
+            .Throw<UnsupportedTemplateTypeException>();
     }
 
     [Test]

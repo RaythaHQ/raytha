@@ -37,20 +37,23 @@ public class AuditLogsController : BaseController
 {
     [Route(RAYTHA_ROUTE_PREFIX + "/audit-logs", Name = "auditlogsindex")]
     public async Task<IActionResult> Index(
-        string category = "", 
-        string startDate = "", 
-        string endDate = "", 
-        string emailAddress = "", 
-        string entityId = "", 
-        string orderBy = $"CreationTime {SortOrder.DESCENDING}", 
-        int pageNumber = 1, 
-        int pageSize = 50)
+        string category = "",
+        string startDate = "",
+        string endDate = "",
+        string emailAddress = "",
+        string entityId = "",
+        string orderBy = $"CreationTime {SortOrder.DESCENDING}",
+        int pageNumber = 1,
+        int pageSize = 50
+    )
     {
         DateTime? startDateAsUtc = DateTimeExtensions.GetDateFromString(startDate);
-        DateTime? endDateAsUtc = DateTimeExtensions.GetDateFromString(endDate); 
+        DateTime? endDateAsUtc = DateTimeExtensions.GetDateFromString(endDate);
 
         if (startDateAsUtc.HasValue)
-            startDateAsUtc = CurrentOrganization.TimeZoneConverter.UtcToTimeZone(startDateAsUtc.Value);
+            startDateAsUtc = CurrentOrganization.TimeZoneConverter.UtcToTimeZone(
+                startDateAsUtc.Value
+            );
 
         if (endDateAsUtc.HasValue)
             endDateAsUtc = CurrentOrganization.TimeZoneConverter.UtcToTimeZone(endDateAsUtc.Value);
@@ -73,7 +76,7 @@ public class AuditLogsController : BaseController
             EndDateAsUtc = endDateAsUtc,
             Category = category,
             EmailAddress = emailAddress,
-            EntityId = shortGuid
+            EntityId = shortGuid,
         };
 
         var response = await Mediator.Send(input);
@@ -81,19 +84,27 @@ public class AuditLogsController : BaseController
         if (!response.Success)
         {
             SetErrorMessage(response.Error);
-            viewModel = new AuditLogsPagination_ViewModel(new List<AuditLogsListItem_ViewModel>(), 0);
+            viewModel = new AuditLogsPagination_ViewModel(
+                new List<AuditLogsListItem_ViewModel>(),
+                0
+            );
         }
         else
         {
             var items = response.Result.Items.Select(p => new AuditLogsListItem_ViewModel
             {
                 Id = p.Id,
-                CreationTime = CurrentOrganization.TimeZoneConverter.UtcToTimeZoneAsDateTimeFormat(p.CreationTime),
+                CreationTime = CurrentOrganization.TimeZoneConverter.UtcToTimeZoneAsDateTimeFormat(
+                    p.CreationTime
+                ),
                 Category = p.Category,
                 UserEmail = p.UserEmail,
-                EntityId = p.EntityId.HasValue && p.EntityId.Value != ShortGuid.Empty ? p.EntityId.Value : "N/A",
+                EntityId =
+                    p.EntityId.HasValue && p.EntityId.Value != ShortGuid.Empty
+                        ? p.EntityId.Value
+                        : "N/A",
                 Request = p.Request,
-                IpAddress = p.IpAddress
+                IpAddress = p.IpAddress,
             });
             viewModel = new AuditLogsPagination_ViewModel(items, response.Result.TotalCount);
         }
@@ -128,12 +139,10 @@ public class AuditLogsController : BaseController
             new RemoveAdminAccess.Command().GetLogName(),
             new Application.Admins.Commands.ResetPassword.Command().GetLogName(),
             new Application.Admins.Commands.SetIsActive.Command().GetLogName(),
-
             //AuthenticationSchemes
             new CreateAuthenticationScheme.Command().GetLogName(),
             new DeleteAuthenticationScheme.Command().GetLogName(),
             new EditAuthenticationScheme.Command().GetLogName(),
-
             //ContentItems
             new BeginExportContentItemsToCsv.Command().GetLogName(),
             new BeginImportContentItemsFromCsv.Command().GetLogName(),
@@ -147,7 +156,6 @@ public class AuditLogsController : BaseController
             new RevertContentItem.Command().GetLogName(),
             new Application.ContentItems.Commands.SetAsHomePage.Command().GetLogName(),
             new UnpublishContentItem.Command().GetLogName(),
-
             //ContentTypes
             new CreateContentType.Command().GetLogName(),
             new CreateContentTypeField.Command().GetLogName(),
@@ -155,7 +163,6 @@ public class AuditLogsController : BaseController
             new EditContentType.Command().GetLogName(),
             new EditContentTypeField.Command().GetLogName(),
             new ReorderContentTypeField.Command().GetLogName(),
-
             //Login
             new BeginForgotPassword.Command().GetLogName(),
             new BeginLoginWithMagicLink.Command().GetLogName(),
@@ -167,25 +174,20 @@ public class AuditLogsController : BaseController
             new LoginWithEmailAndPassword.Command().GetLogName(),
             new LoginWithJwt.Command().GetLogName(),
             new LoginWithSaml.Command().GetLogName(),
-
             //MediaItems
             CreateMediaItem.Command.Empty().GetLogName(),
             new DeleteMediaItem.Command().GetLogName(),
-
             //OrganizationSettings
             new EditConfiguration.Command().GetLogName(),
             new EditSmtp.Command().GetLogName(),
             new InitialSetup.Command().GetLogName(),
-
             //Roles
             new CreateRole.Command().GetLogName(),
             new DeleteRole.Command().GetLogName(),
             new EditRole.Command().GetLogName(),
-
             //Email-Templates
             new EditEmailTemplate.Command().GetLogName(),
             new RevertEmailTemplate.Command().GetLogName(),
-
             //Themes
             BeginDuplicateTheme.Command.Empty().GetLogName(),
             BeginImportThemeFromUrl.Command.Empty().GetLogName(),
@@ -196,13 +198,11 @@ public class AuditLogsController : BaseController
             ExportTheme.Command.Empty().GetLogName(),
             new SetAsActiveTheme.Command().GetLogName(),
             ToggleThemeExportability.Command.Empty().GetLogName(),
-
             //Web-Templates
             CreateWebTemplate.Command.Empty().GetLogName(),
             new DeleteWebTemplate.Command().GetLogName(),
             EditWebTemplate.Command.Empty().GetLogName(),
             new RevertWebTemplate.Command().GetLogName(),
-
             //Menus
             CreateNavigationMenu.Command.Empty().GetLogName(),
             CreateNavigationMenuRevision.Command.Empty().GetLogName(),
@@ -210,31 +210,26 @@ public class AuditLogsController : BaseController
             new DeleteNavigationMenu.Command().GetLogName(),
             new RevertNavigationMenu.Command().GetLogName(),
             new SetAsMainMenu.Command().GetLogName(),
-
             //MenuItems
             CreateNavigationMenuItem.Command.Empty().GetLogName(),
             DeleteNavigationMenuItem.Command.Empty().GetLogName(),
             EditNavigationMenuItem.Command.Empty().GetLogName(),
             new ReorderNavigationMenuItems.Command().GetLogName(),
-
             //Functions
             CreateRaythaFunction.Command.Empty().GetLogName(),
             EditRaythaFunction.Command.Empty().GetLogName(),
             new DeleteRaythaFunction.Command().GetLogName(),
             new RevertRaythaFunction.Command().GetLogName(),
-
             //UserGroups
             new CreateUserGroup.Command().GetLogName(),
             new DeleteUserGroup.Command().GetLogName(),
             new EditUserGroup.Command().GetLogName(),
-
             //Users
             new Application.Users.Commands.CreateUser.Command().GetLogName(),
             new DeleteUser.Command().GetLogName(),
             new EditUser.Command().GetLogName(),
             new Application.Users.Commands.ResetPassword.Command().GetLogName(),
             new Application.Users.Commands.SetIsActive.Command().GetLogName(),
-
             //Views
             new CreateView.Command().GetLogName(),
             new DeleteView.Command().GetLogName(),

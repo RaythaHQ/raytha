@@ -26,4 +26,3 @@ public class ChangeProfile_ViewModel : FormSubmit_ViewModel
     [Display(Name = "Email address")]
     public string EmailAddress { get; set; }
 }
-

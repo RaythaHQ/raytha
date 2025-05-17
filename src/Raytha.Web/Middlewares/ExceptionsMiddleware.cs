@@ -1,11 +1,11 @@
-﻿using Microsoft.AspNetCore.Builder;
-using System.Text;
-using System;
-using Raytha.Application.Common.Exceptions;
-using Microsoft.AspNetCore.Diagnostics;
+﻿using System;
 using System.Net;
+using System.Text;
 using System.Text.Json;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.Extensions.Configuration;
+using Raytha.Application.Common.Exceptions;
 
 namespace Raytha.Web.Middlewares;
 
@@ -24,7 +24,9 @@ public class ExceptionsMiddleware
                 {
                     if (error.Error is NotFoundException)
                     {
-                        errorBytes = GetErrorMessageAsByteArray("The resource you requested was not found.");
+                        errorBytes = GetErrorMessageAsByteArray(
+                            "The resource you requested was not found."
+                        );
                         context.Response.StatusCode = (int)HttpStatusCode.NotFound;
                     }
                     else if (error.Error is FormatException)
@@ -39,7 +41,9 @@ public class ExceptionsMiddleware
                     }
                     else if (error.Error is InvalidApiKeyException)
                     {
-                        errorBytes = GetErrorMessageAsByteArray($"Api key error: {error.Error.Message}");
+                        errorBytes = GetErrorMessageAsByteArray(
+                            $"Api key error: {error.Error.Message}"
+                        );
                     }
                     else
                     {

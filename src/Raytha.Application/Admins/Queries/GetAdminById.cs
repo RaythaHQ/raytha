@@ -8,22 +8,24 @@ namespace Raytha.Application.Admins.Queries;
 
 public class GetAdminById
 {
-    public record Query : GetEntityByIdInputDto, IRequest<IQueryResponseDto<AdminDto>> 
-    {
-    }
+    public record Query : GetEntityByIdInputDto, IRequest<IQueryResponseDto<AdminDto>> { }
 
     public class Handler : IRequestHandler<Query, IQueryResponseDto<AdminDto>>
     {
         private readonly IRaythaDbContext _db;
+
         public Handler(IRaythaDbContext db)
         {
             _db = db;
         }
-        
-        public async Task<IQueryResponseDto<AdminDto>> Handle(Query request, CancellationToken cancellationToken)
-        {                   
-            var entity = _db.Users
-                .Include(p => p.Roles)
+
+        public async Task<IQueryResponseDto<AdminDto>> Handle(
+            Query request,
+            CancellationToken cancellationToken
+        )
+        {
+            var entity = _db
+                .Users.Include(p => p.Roles)
                 .FirstOrDefault(p => p.Id == request.Id.Guid);
 
             if (entity == null)

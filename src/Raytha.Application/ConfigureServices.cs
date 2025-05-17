@@ -1,4 +1,5 @@
-﻿using FluentValidation;
+﻿using System.Reflection;
+using FluentValidation;
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 using Raytha.Application.Common.Behaviors;
@@ -6,7 +7,6 @@ using Raytha.Application.Common.Shared;
 using Raytha.Application.ContentItems;
 using Raytha.Application.ContentItems.Commands;
 using Raytha.Application.ContentItems.EventHandlers;
-using System.Reflection;
 using Raytha.Application.Themes.Commands;
 using static Raytha.Application.ContentItems.EventHandlers.ContentItemCreatedEventHandler;
 
@@ -34,4 +34,3 @@ public static class ConfigureServices
         return services;
     }
 }
-

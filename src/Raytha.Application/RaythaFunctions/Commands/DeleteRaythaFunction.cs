@@ -9,19 +9,20 @@ namespace Raytha.Application.RaythaFunctions.Commands;
 
 public class DeleteRaythaFunction
 {
-    public record Command : LoggableEntityRequest<CommandResponseDto<ShortGuid>>
-    {
-    }
+    public record Command : LoggableEntityRequest<CommandResponseDto<ShortGuid>> { }
 
     public class Validator : AbstractValidator<Command>
     {
         public Validator(IRaythaDbContext db)
         {
-            RuleFor(x => x).Custom((request, _) =>
-            {
-                if (!db.RaythaFunctions.Any(p => p.Id == request.Id.Guid))
-                    throw new NotFoundException("Raytha Function", request.Id);
-            });
+            RuleFor(x => x)
+                .Custom(
+                    (request, _) =>
+                    {
+                        if (!db.RaythaFunctions.Any(p => p.Id == request.Id.Guid))
+                            throw new NotFoundException("Raytha Function", request.Id);
+                    }
+                );
         }
     }
 
@@ -34,7 +35,10 @@ public class DeleteRaythaFunction
             _db = db;
         }
 
-        public async Task<CommandResponseDto<ShortGuid>> Handle(Command request, CancellationToken cancellationToken)
+        public async Task<CommandResponseDto<ShortGuid>> Handle(
+            Command request,
+            CancellationToken cancellationToken
+        )
         {
             var function = _db.RaythaFunctions.First(rf => rf.Id == request.Id.Guid);
 

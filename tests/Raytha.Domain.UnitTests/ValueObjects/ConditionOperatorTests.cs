@@ -77,8 +77,10 @@ public class ConditionOperatorTests
     [Test]
     public void ShouldThrowUnsupportedColourExceptionGivenNotSupportedColourCode()
     {
-        FluentActions.Invoking(() => ConditionOperator.From("BadValue"))
-            .Should().Throw<UnsupportedConditionOperatorException>();
+        FluentActions
+            .Invoking(() => ConditionOperator.From("BadValue"))
+            .Should()
+            .Throw<UnsupportedConditionOperatorException>();
     }
 
     [Test]

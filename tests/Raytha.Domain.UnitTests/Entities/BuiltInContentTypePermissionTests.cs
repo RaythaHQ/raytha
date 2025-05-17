@@ -28,11 +28,12 @@ public class BuiltInContentTypePermissionTests
         type.Label.Should().Be(label);
     }
 
-
     [Test]
     public void ShouldHandleListOfPermissions()
     {
-        var typesAsList = BuiltInContentTypePermission.From(BuiltInContentTypePermission.AllPermissionsAsEnum);
+        var typesAsList = BuiltInContentTypePermission.From(
+            BuiltInContentTypePermission.AllPermissionsAsEnum
+        );
 
         typesAsList.Count().Should().Be(BuiltInContentTypePermission.Permissions.Count());
     }
@@ -40,8 +41,10 @@ public class BuiltInContentTypePermissionTests
     [Test]
     public void ShouldThrowUnsupportedColourExceptionGivenNotSupportedColourCode()
     {
-        FluentActions.Invoking(() => BuiltInContentTypePermission.From("BadValue"))
-            .Should().Throw<UnsupportedContentTypePermissionException>();
+        FluentActions
+            .Invoking(() => BuiltInContentTypePermission.From("BadValue"))
+            .Should()
+            .Throw<UnsupportedContentTypePermissionException>();
     }
 
     [Test]

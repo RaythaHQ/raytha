@@ -7,29 +7,32 @@ namespace Raytha.Application.ContentItems.Queries;
 
 public class GetContentItemById
 {
-    public record Query : GetEntityByIdInputDto, IRequest<IQueryResponseDto<ContentItemDto>>
-    {
-    }
+    public record Query : GetEntityByIdInputDto, IRequest<IQueryResponseDto<ContentItemDto>> { }
 
     public class Handler : IRequestHandler<Query, IQueryResponseDto<ContentItemDto>>
     {
         private readonly IRaythaDbJsonQueryEngine _db;
         private readonly IContentTypeInRoutePath _contentTypeInRoutePath;
+
         public Handler(IRaythaDbJsonQueryEngine db, IContentTypeInRoutePath contentTypeInRoutePath)
         {
             _db = db;
             _contentTypeInRoutePath = contentTypeInRoutePath;
         }
-        
-        public async Task<IQueryResponseDto<ContentItemDto>> Handle(Query request, CancellationToken cancellationToken)
+
+        public async Task<IQueryResponseDto<ContentItemDto>> Handle(
+            Query request,
+            CancellationToken cancellationToken
+        )
         {
-            var entity = _db
-                .FirstOrDefault(request.Id.Guid);
+            var entity = _db.FirstOrDefault(request.Id.Guid);
 
             if (entity == null)
                 throw new NotFoundException("Content item", request.Id);
 
-            _contentTypeInRoutePath.ValidateContentTypeInRoutePathMatchesValue(entity.ContentType.DeveloperName);
+            _contentTypeInRoutePath.ValidateContentTypeInRoutePathMatchesValue(
+                entity.ContentType.DeveloperName
+            );
 
             return new QueryResponseDto<ContentItemDto>(ContentItemDto.GetProjection(entity));
         }

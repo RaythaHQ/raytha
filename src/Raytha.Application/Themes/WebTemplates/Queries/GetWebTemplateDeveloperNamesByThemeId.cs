@@ -1,8 +1,8 @@
 ﻿using CSharpVitamins;
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Models;
-using Microsoft.EntityFrameworkCore;
 
 namespace Raytha.Application.Themes.WebTemplates.Queries;
 
@@ -22,10 +22,13 @@ public class GetWebTemplateDeveloperNamesByThemeId
             _db = db;
         }
 
-        public async Task<IQueryResponseDto<IReadOnlyCollection<string>>> Handle(Query request, CancellationToken cancellationToken)
+        public async Task<IQueryResponseDto<IReadOnlyCollection<string>>> Handle(
+            Query request,
+            CancellationToken cancellationToken
+        )
         {
-            var webTemplateDeveloperNameItems = await _db.WebTemplates
-                .Where(wt => wt.ThemeId == request.ThemeId.Guid)
+            var webTemplateDeveloperNameItems = await _db
+                .WebTemplates.Where(wt => wt.ThemeId == request.ThemeId.Guid)
                 .Select(wt => wt.DeveloperName!)
                 .ToArrayAsync(cancellationToken);
 

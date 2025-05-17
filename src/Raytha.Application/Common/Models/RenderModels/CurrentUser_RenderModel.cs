@@ -36,7 +36,7 @@ public record CurrentUser_RenderModel : IInsertTemplateVariable
             UserId = entity.UserId,
             IsAdmin = entity.IsAdmin,
             Roles = entity.Roles,
-            UserGroups = entity.UserGroups
+            UserGroups = entity.UserGroups,
         };
     }
 
@@ -61,7 +61,10 @@ public record CurrentUser_RenderModel : IInsertTemplateVariable
     {
         foreach (var developerName in GetDeveloperNames())
         {
-            yield return new KeyValuePair<string, string>(developerName, $"CurrentUser.{developerName}");
+            yield return new KeyValuePair<string, string>(
+                developerName,
+                $"CurrentUser.{developerName}"
+            );
         }
     }
 

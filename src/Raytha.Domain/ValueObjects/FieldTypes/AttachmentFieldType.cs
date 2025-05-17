@@ -3,7 +3,8 @@ using Raytha.Domain.ValueObjects.FieldValues;
 
 public class AttachmentFieldType : BaseFieldType
 {
-    public AttachmentFieldType() : base("Attachment", "attachment", false) { }
+    public AttachmentFieldType()
+        : base("Attachment", "attachment", false) { }
 
     public override IEnumerable<ConditionOperator> SupportedConditionOperators
     {

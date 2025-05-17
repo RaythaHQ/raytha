@@ -1,5 +1,5 @@
-﻿using Raytha.Application.Common.Interfaces;
-using System.Linq.Expressions;
+﻿using System.Linq.Expressions;
+using Raytha.Application.Common.Interfaces;
 using Raytha.Application.NavigationMenuItems;
 
 namespace Raytha.Application.NavigationMenus;
@@ -12,20 +12,30 @@ public record NavigationMenu_RenderModel : IInsertTemplateVariable
     public bool IsMainMenu { get; init; }
     public required IEnumerable<NavigationMenuItem_RenderModel> MenuItems { get; init; }
 
-    public static NavigationMenu_RenderModel Empty() => new()
-    {
-        Id = string.Empty,
-        Label = string.Empty,
-        DeveloperName = string.Empty,
-        MenuItems = new List<NavigationMenuItem_RenderModel>(),
-    };
+    public static NavigationMenu_RenderModel Empty() =>
+        new()
+        {
+            Id = string.Empty,
+            Label = string.Empty,
+            DeveloperName = string.Empty,
+            MenuItems = new List<NavigationMenuItem_RenderModel>(),
+        };
 
-    public static Expression<Func<NavigationMenuDto, IReadOnlyCollection<NavigationMenuItem_RenderModel>, NavigationMenu_RenderModel>> GetProjection()
+    public static Expression<
+        Func<
+            NavigationMenuDto,
+            IReadOnlyCollection<NavigationMenuItem_RenderModel>,
+            NavigationMenu_RenderModel
+        >
+    > GetProjection()
     {
         return (entity, menuItems) => GetProjection(entity, menuItems);
     }
 
-    public static NavigationMenu_RenderModel GetProjection(NavigationMenuDto entity, IReadOnlyCollection<NavigationMenuItem_RenderModel> menuItems)
+    public static NavigationMenu_RenderModel GetProjection(
+        NavigationMenuDto entity,
+        IReadOnlyCollection<NavigationMenuItem_RenderModel> menuItems
+    )
     {
         return new NavigationMenu_RenderModel
         {

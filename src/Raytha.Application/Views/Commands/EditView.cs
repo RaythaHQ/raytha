@@ -26,11 +26,16 @@ public class EditView
     public class Handler : IRequestHandler<Command, ICommandResponseDto<ShortGuid>>
     {
         private readonly IRaythaDbContext _db;
+
         public Handler(IRaythaDbContext db)
         {
             _db = db;
         }
-        public async Task<ICommandResponseDto<ShortGuid>> Handle(Command request, CancellationToken cancellationToken)
+
+        public async Task<ICommandResponseDto<ShortGuid>> Handle(
+            Command request,
+            CancellationToken cancellationToken
+        )
         {
             var entity = _db.Views.FirstOrDefault(p => p.Id == request.Id.Guid);
             if (entity == null)

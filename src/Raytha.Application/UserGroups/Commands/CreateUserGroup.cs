@@ -21,29 +21,41 @@ public class CreateUserGroup
         public Validator(IRaythaDbContext db)
         {
             RuleFor(x => x.Label).NotEmpty();
-            RuleFor(x => x.DeveloperName).Must(StringExtensions.IsValidDeveloperName).WithMessage("Invalid developer name.");
-            RuleFor(x => x.DeveloperName).Must((request, developerName) =>
-            {
-                var entity = db.UserGroups.FirstOrDefault(p => p.DeveloperName == request.DeveloperName.ToDeveloperName());
-                return !(entity != null);
-            }).WithMessage("A user group with that developer name already exists.");
+            RuleFor(x => x.DeveloperName)
+                .Must(StringExtensions.IsValidDeveloperName)
+                .WithMessage("Invalid developer name.");
+            RuleFor(x => x.DeveloperName)
+                .Must(
+                    (request, developerName) =>
+                    {
+                        var entity = db.UserGroups.FirstOrDefault(p =>
+                            p.DeveloperName == request.DeveloperName.ToDeveloperName()
+                        );
+                        return !(entity != null);
+                    }
+                )
+                .WithMessage("A user group with that developer name already exists.");
         }
     }
 
     public class Handler : IRequestHandler<Command, CommandResponseDto<ShortGuid>>
     {
         private readonly IRaythaDbContext _db;
+
         public Handler(IRaythaDbContext db)
         {
             _db = db;
         }
 
-        public async Task<CommandResponseDto<ShortGuid>> Handle(Command request, CancellationToken cancellationToken)
+        public async Task<CommandResponseDto<ShortGuid>> Handle(
+            Command request,
+            CancellationToken cancellationToken
+        )
         {
             UserGroup entity = new UserGroup
             {
                 Label = request.Label,
-                DeveloperName = request.DeveloperName.ToDeveloperName()
+                DeveloperName = request.DeveloperName.ToDeveloperName(),
             };
 
             _db.UserGroups.Add(entity);

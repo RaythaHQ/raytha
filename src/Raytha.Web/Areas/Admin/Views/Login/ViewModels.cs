@@ -26,14 +26,41 @@ public class LoginWithEmailAndPassword_ViewModel : FormSubmit_ViewModel
 
     //helpers
     public bool ShowOrLoginWithSection => HasLoginByMagicLink || HasLoginBySingleSignOn;
-    public bool HasLoginByEmailAndPassword => AuthenticationSchemes.Any(p => p.AuthenticationSchemeType == AuthenticationSchemeType.EmailAndPassword);
-    public bool HasLoginByMagicLink => AuthenticationSchemes.Any(p => p.AuthenticationSchemeType == AuthenticationSchemeType.MagicLink);
-    public bool HasLoginBySingleSignOn => AuthenticationSchemes.Any(p => p.AuthenticationSchemeType == AuthenticationSchemeType.Jwt || p.AuthenticationSchemeType == AuthenticationSchemeType.Saml);
+    public bool HasLoginByEmailAndPassword =>
+        AuthenticationSchemes.Any(p =>
+            p.AuthenticationSchemeType == AuthenticationSchemeType.EmailAndPassword
+        );
+    public bool HasLoginByMagicLink =>
+        AuthenticationSchemes.Any(p =>
+            p.AuthenticationSchemeType == AuthenticationSchemeType.MagicLink
+        );
+    public bool HasLoginBySingleSignOn =>
+        AuthenticationSchemes.Any(p =>
+            p.AuthenticationSchemeType == AuthenticationSchemeType.Jwt
+            || p.AuthenticationSchemeType == AuthenticationSchemeType.Saml
+        );
 
-    public LoginAuthenticationSchemeChoiceItem_ViewModel EmailAndPassword => HasLoginByEmailAndPassword ? AuthenticationSchemes.First(p => p.AuthenticationSchemeType == AuthenticationSchemeType.EmailAndPassword) : null;
-    public LoginAuthenticationSchemeChoiceItem_ViewModel MagicLink => HasLoginByMagicLink ? AuthenticationSchemes.First(p => p.AuthenticationSchemeType == AuthenticationSchemeType.MagicLink) : null;
-    public IEnumerable<LoginAuthenticationSchemeChoiceItem_ViewModel> SingleSignOns => HasLoginBySingleSignOn ? AuthenticationSchemes.Where(p => p.AuthenticationSchemeType == AuthenticationSchemeType.Jwt || p.AuthenticationSchemeType == AuthenticationSchemeType.Saml) : null;
-    public IEnumerable<LoginAuthenticationSchemeChoiceItem_ViewModel> AuthenticationSchemes { get; init; } = new List<LoginAuthenticationSchemeChoiceItem_ViewModel>();
+    public LoginAuthenticationSchemeChoiceItem_ViewModel EmailAndPassword =>
+        HasLoginByEmailAndPassword
+            ? AuthenticationSchemes.First(p =>
+                p.AuthenticationSchemeType == AuthenticationSchemeType.EmailAndPassword
+            )
+            : null;
+    public LoginAuthenticationSchemeChoiceItem_ViewModel MagicLink =>
+        HasLoginByMagicLink
+            ? AuthenticationSchemes.First(p =>
+                p.AuthenticationSchemeType == AuthenticationSchemeType.MagicLink
+            )
+            : null;
+    public IEnumerable<LoginAuthenticationSchemeChoiceItem_ViewModel> SingleSignOns =>
+        HasLoginBySingleSignOn
+            ? AuthenticationSchemes.Where(p =>
+                p.AuthenticationSchemeType == AuthenticationSchemeType.Jwt
+                || p.AuthenticationSchemeType == AuthenticationSchemeType.Saml
+            )
+            : null;
+    public IEnumerable<LoginAuthenticationSchemeChoiceItem_ViewModel> AuthenticationSchemes { get; init; } =
+        new List<LoginAuthenticationSchemeChoiceItem_ViewModel>();
 }
 
 public class LoginWithMagicLink_ViewModel : FormSubmit_ViewModel
@@ -43,14 +70,41 @@ public class LoginWithMagicLink_ViewModel : FormSubmit_ViewModel
 
     //helpers
     public bool ShowOrLoginWithSection => HasLoginByMagicLink || HasLoginBySingleSignOn;
-    public bool HasLoginByEmailAndPassword => AuthenticationSchemes.Any(p => p.AuthenticationSchemeType == AuthenticationSchemeType.EmailAndPassword);
-    public bool HasLoginByMagicLink => AuthenticationSchemes.Any(p => p.AuthenticationSchemeType == AuthenticationSchemeType.MagicLink);
-    public bool HasLoginBySingleSignOn => AuthenticationSchemes.Any(p => p.AuthenticationSchemeType == AuthenticationSchemeType.Jwt || p.AuthenticationSchemeType == AuthenticationSchemeType.Saml);
+    public bool HasLoginByEmailAndPassword =>
+        AuthenticationSchemes.Any(p =>
+            p.AuthenticationSchemeType == AuthenticationSchemeType.EmailAndPassword
+        );
+    public bool HasLoginByMagicLink =>
+        AuthenticationSchemes.Any(p =>
+            p.AuthenticationSchemeType == AuthenticationSchemeType.MagicLink
+        );
+    public bool HasLoginBySingleSignOn =>
+        AuthenticationSchemes.Any(p =>
+            p.AuthenticationSchemeType == AuthenticationSchemeType.Jwt
+            || p.AuthenticationSchemeType == AuthenticationSchemeType.Saml
+        );
 
-    public LoginAuthenticationSchemeChoiceItem_ViewModel EmailAndPassword => HasLoginByEmailAndPassword ? AuthenticationSchemes.First(p => p.AuthenticationSchemeType == AuthenticationSchemeType.EmailAndPassword) : null;
-    public LoginAuthenticationSchemeChoiceItem_ViewModel MagicLink => HasLoginByMagicLink ? AuthenticationSchemes.First(p => p.AuthenticationSchemeType == AuthenticationSchemeType.MagicLink) : null;
-    public IEnumerable<LoginAuthenticationSchemeChoiceItem_ViewModel> SingleSignOns => HasLoginBySingleSignOn ? AuthenticationSchemes.Where(p => p.AuthenticationSchemeType == AuthenticationSchemeType.Jwt || p.AuthenticationSchemeType == AuthenticationSchemeType.Saml) : null;
-    public IEnumerable<LoginAuthenticationSchemeChoiceItem_ViewModel> AuthenticationSchemes { get; init; } = new List<LoginAuthenticationSchemeChoiceItem_ViewModel>();
+    public LoginAuthenticationSchemeChoiceItem_ViewModel EmailAndPassword =>
+        HasLoginByEmailAndPassword
+            ? AuthenticationSchemes.First(p =>
+                p.AuthenticationSchemeType == AuthenticationSchemeType.EmailAndPassword
+            )
+            : null;
+    public LoginAuthenticationSchemeChoiceItem_ViewModel MagicLink =>
+        HasLoginByMagicLink
+            ? AuthenticationSchemes.First(p =>
+                p.AuthenticationSchemeType == AuthenticationSchemeType.MagicLink
+            )
+            : null;
+    public IEnumerable<LoginAuthenticationSchemeChoiceItem_ViewModel> SingleSignOns =>
+        HasLoginBySingleSignOn
+            ? AuthenticationSchemes.Where(p =>
+                p.AuthenticationSchemeType == AuthenticationSchemeType.Jwt
+                || p.AuthenticationSchemeType == AuthenticationSchemeType.Saml
+            )
+            : null;
+    public IEnumerable<LoginAuthenticationSchemeChoiceItem_ViewModel> AuthenticationSchemes { get; init; } =
+        new List<LoginAuthenticationSchemeChoiceItem_ViewModel>();
 }
 
 public class BeginForgotPassword_ViewModel : FormSubmit_ViewModel
@@ -69,4 +123,3 @@ public class CompleteForgotPassword_ViewModel : FormSubmit_ViewModel
     [Display(Name = "Re-type your new password")]
     public string ConfirmNewPassword { get; set; }
 }
-

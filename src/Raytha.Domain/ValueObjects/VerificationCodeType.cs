@@ -2,13 +2,9 @@
 
 public class VerificationCodeType : ValueObject
 {
-    static VerificationCodeType()
-    {
-    }
+    static VerificationCodeType() { }
 
-    private VerificationCodeType()
-    {
-    }
+    private VerificationCodeType() { }
 
     private VerificationCodeType(string label, string developerName)
     {

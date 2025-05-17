@@ -1,30 +1,35 @@
-﻿using Raytha.Infrastructure.Persistence.Interceptors;
-using Raytha.Application.Common.Interfaces;
-using Raytha.Infrastructure.Persistence;
-using Raytha.Infrastructure.Services;
+﻿using System.Data;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Data.SqlClient;
-using System.Data;
-using Raytha.Infrastructure.FileStorage;
+using Microsoft.Extensions.Hosting;
+using Npgsql;
+using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Utils;
 using Raytha.Infrastructure.BackgroundTasks;
-using Microsoft.Extensions.Hosting;
 using Raytha.Infrastructure.Configurations;
-using Raytha.Infrastructure.RaythaFunctions;
-using Raytha.Infrastructure.JsonQueryEngine.SqlServer;
-using Npgsql;
+using Raytha.Infrastructure.FileStorage;
 using Raytha.Infrastructure.JsonQueryEngine.Postgres;
+using Raytha.Infrastructure.JsonQueryEngine.SqlServer;
+using Raytha.Infrastructure.Persistence;
+using Raytha.Infrastructure.Persistence.Interceptors;
+using Raytha.Infrastructure.RaythaFunctions;
+using Raytha.Infrastructure.Services;
 
 namespace Microsoft.Extensions.DependencyInjection;
 
 public static class ConfigureServices
 {
-    public static IServiceCollection AddInfrastructureServices(this IServiceCollection services, IConfiguration configuration)
+    public static IServiceCollection AddInfrastructureServices(
+        this IServiceCollection services,
+        IConfiguration configuration
+    )
     {
         var dbConnectionString = configuration.GetConnectionString("DefaultConnection");
 
-        var dbProviderType = DbProviderHelper.GetDatabaseProviderTypeFromConnectionString(dbConnectionString);
+        var dbProviderType = DbProviderHelper.GetDatabaseProviderTypeFromConnectionString(
+            dbConnectionString
+        );
 
         services.AddScoped<AuditableEntitySaveChangesInterceptor>();
 
@@ -32,32 +37,45 @@ public static class ConfigureServices
         {
             services.AddDbContext<RaythaDbContext>(options =>
             {
-                options.UseNpgsql(dbConnectionString, npgsqlOptions =>
-                {
-                    npgsqlOptions.EnableRetryOnFailure(maxRetryCount: 5);
-                    npgsqlOptions.MigrationsAssembly("Raytha.Migrations.Postgres");
-                });
+                options.UseNpgsql(
+                    dbConnectionString,
+                    npgsqlOptions =>
+                    {
+                        npgsqlOptions.EnableRetryOnFailure(maxRetryCount: 5);
+                        npgsqlOptions.MigrationsAssembly("Raytha.Migrations.Postgres");
+                    }
+                );
             });
             services.AddTransient<IRaythaDbJsonQueryEngine, RaythaDbPostgresJsonQueryEngine>();
             services.AddTransient<IDbConnection>(_ => new NpgsqlConnection(dbConnectionString));
-            services.AddScoped<IRaythaDbContext>(provider => provider.GetRequiredService<RaythaDbContext>());
+            services.AddScoped<IRaythaDbContext>(provider =>
+                provider.GetRequiredService<RaythaDbContext>()
+            );
         }
-        else 
+        else
         {
             services.AddDbContext<RaythaDbContext>(options =>
             {
-                options.UseSqlServer(dbConnectionString, sqlServerOptions =>
-                {
-                    sqlServerOptions.EnableRetryOnFailure(maxRetryCount: 5);
-                    sqlServerOptions.MigrationsAssembly("Raytha.Migrations.SqlServer");
-                });
+                options.UseSqlServer(
+                    dbConnectionString,
+                    sqlServerOptions =>
+                    {
+                        sqlServerOptions.EnableRetryOnFailure(maxRetryCount: 5);
+                        sqlServerOptions.MigrationsAssembly("Raytha.Migrations.SqlServer");
+                    }
+                );
             });
             services.AddTransient<IRaythaDbJsonQueryEngine, RaythaDbSqlServerJsonQueryEngine>();
             services.AddTransient<IDbConnection>(_ => new SqlConnection(dbConnectionString));
-            services.AddScoped<IRaythaDbContext>(provider => provider.GetRequiredService<RaythaDbContext>());
+            services.AddScoped<IRaythaDbContext>(provider =>
+                provider.GetRequiredService<RaythaDbContext>()
+            );
         }
 
-        services.AddSingleton<ICurrentOrganizationConfiguration, CurrentOrganizationConfiguration>();
+        services.AddSingleton<
+            ICurrentOrganizationConfiguration,
+            CurrentOrganizationConfiguration
+        >();
         services.AddSingleton<IRaythaFunctionConfiguration, RaythaFunctionConfiguration>();
         services.AddScoped<IEmailerConfiguration, EmailerConfiguration>();
 
@@ -66,7 +84,9 @@ public static class ConfigureServices
         services.AddTransient<IRaythaRawDbInfo, RaythaRawDbInfo>();
 
         //file storage provider
-        var fileStorageProvider = configuration[FileStorageUtility.CONFIG_NAME].IfNullOrEmpty(FileStorageUtility.LOCAL).ToLower();
+        var fileStorageProvider = configuration[FileStorageUtility.CONFIG_NAME]
+            .IfNullOrEmpty(FileStorageUtility.LOCAL)
+            .ToLower();
         if (fileStorageProvider == FileStorageUtility.LOCAL)
         {
             services.AddScoped<IFileStorageProvider, LocalFileStorageProvider>();
@@ -81,7 +101,9 @@ public static class ConfigureServices
         }
         else
         {
-            throw new NotImplementedException($"Unsupported file storage provider: {fileStorageProvider}");
+            throw new NotImplementedException(
+                $"Unsupported file storage provider: {fileStorageProvider}"
+            );
         }
 
         for (int i = 0; i < Convert.ToInt32(configuration["NUM_BACKGROUND_WORKERS"] ?? "4"); i++)
@@ -94,7 +116,6 @@ public static class ConfigureServices
         services.AddTransient<IRaythaFunctionScriptEngine, RaythaFunctionScriptEngine>();
         services.AddScoped<IRaythaFunctionApi_V1, RaythaFunctionApi_V1>();
         services.AddSingleton<IRaythaFunctionSemaphore, RaythaFunctionSemaphore>();
-
 
         return services;
     }

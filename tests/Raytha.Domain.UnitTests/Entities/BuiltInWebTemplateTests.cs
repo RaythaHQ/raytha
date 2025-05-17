@@ -52,8 +52,10 @@ public class BuiltInWebTemplateTests
     [Test]
     public void ShouldThrowUnsupportedColourExceptionGivenNotSupportedColourCode()
     {
-        FluentActions.Invoking(() => BuiltInWebTemplate.From("BadValue"))
-            .Should().Throw<UnsupportedTemplateTypeException>();
+        FluentActions
+            .Invoking(() => BuiltInWebTemplate.From("BadValue"))
+            .Should()
+            .Throw<UnsupportedTemplateTypeException>();
     }
 
     [Test]

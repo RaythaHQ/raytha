@@ -37,14 +37,18 @@ namespace Raytha.Web.Areas.Admin.Controllers;
 public class ThemesController : BaseController
 {
     private IRelativeUrlBuilder _relativeUrlBuilder;
-    protected IRelativeUrlBuilder RelativeUrlBuilder => _relativeUrlBuilder ??= HttpContext.RequestServices.GetRequiredService<IRelativeUrlBuilder>();
+    protected IRelativeUrlBuilder RelativeUrlBuilder =>
+        _relativeUrlBuilder ??=
+            HttpContext.RequestServices.GetRequiredService<IRelativeUrlBuilder>();
 
     [ServiceFilter(typeof(SetPaginationInformationFilterAttribute))]
     [Route($"{RAYTHA_ROUTE_PREFIX}/themes", Name = "themesindex")]
-    public async Task<IActionResult> Index(string search = "",
-                                           string orderBy = $"CreationTime {SortOrder.DESCENDING}",
-                                           int pageNumber = 1,
-                                           int pageSize = 50)
+    public async Task<IActionResult> Index(
+        string search = "",
+        string orderBy = $"CreationTime {SortOrder.DESCENDING}",
+        int pageNumber = 1,
+        int pageSize = 50
+    )
     {
         var input = new GetThemes.Query
         {
@@ -62,11 +66,17 @@ public class ThemesController : BaseController
             Title = t.Title,
             DeveloperName = t.DeveloperName,
             Description = t.Description,
-            LastModificationTime = CurrentOrganization.TimeZoneConverter.UtcToTimeZoneAsDateTimeFormat(t.LastModificationTime),
+            LastModificationTime =
+                CurrentOrganization.TimeZoneConverter.UtcToTimeZoneAsDateTimeFormat(
+                    t.LastModificationTime
+                ),
             LastModifierUser = t.LastModifierUser?.FullName ?? "N/A",
         });
 
-        var viewModel = new List_ViewModel<ThemesListItem_ViewModel>(items, themesResponse.Result.TotalCount);
+        var viewModel = new List_ViewModel<ThemesListItem_ViewModel>(
+            items,
+            themesResponse.Result.TotalCount
+        );
 
         return View(viewModel);
     }
@@ -100,7 +110,10 @@ public class ThemesController : BaseController
         }
         else
         {
-            SetErrorMessage("There was an error attempting to create this theme. See the error below.", response.GetErrors());
+            SetErrorMessage(
+                "There was an error attempting to create this theme. See the error below.",
+                response.GetErrors()
+            );
 
             return View(model);
         }
@@ -109,15 +122,11 @@ public class ThemesController : BaseController
     [Route($"{RAYTHA_ROUTE_PREFIX}/themes/duplicate", Name = "themesduplicate")]
     public async Task<IActionResult> BeginDuplicate()
     {
-        var themesResponse = await Mediator.Send(new GetThemes.Query
-        {
-            OrderBy = $"CreationTime {SortOrder.ASCENDING}",
-        });
+        var themesResponse = await Mediator.Send(
+            new GetThemes.Query { OrderBy = $"CreationTime {SortOrder.ASCENDING}" }
+        );
 
-        return View(new ThemesDuplicate_ViewModel
-        {
-            Themes = themesResponse.Result.Items,
-        });
+        return View(new ThemesDuplicate_ViewModel { Themes = themesResponse.Result.Items });
     }
 
     [HttpPost]
@@ -144,12 +153,14 @@ public class ThemesController : BaseController
         }
         else
         {
-            SetErrorMessage("There was an error attempting to duplicate this theme. See the error below.", response.GetErrors());
+            SetErrorMessage(
+                "There was an error attempting to duplicate this theme. See the error below.",
+                response.GetErrors()
+            );
 
-            var themesResponse = await Mediator.Send(new GetThemes.Query
-            {
-                OrderBy = $"CreationTime {SortOrder.ASCENDING}",
-            });
+            var themesResponse = await Mediator.Send(
+                new GetThemes.Query { OrderBy = $"CreationTime {SortOrder.ASCENDING}" }
+            );
 
             model.Themes = themesResponse.Result.Items;
 
@@ -160,10 +171,7 @@ public class ThemesController : BaseController
     [Route($"{RAYTHA_ROUTE_PREFIX}/themes/edit/{{id}}", Name = "themesedit")]
     public async Task<IActionResult> Edit(string id)
     {
-        var input = new GetThemeById.Query
-        {
-            Id = id
-        };
+        var input = new GetThemeById.Query { Id = id };
 
         var response = await Mediator.Send(input);
 
@@ -200,7 +208,10 @@ public class ThemesController : BaseController
         }
         else
         {
-            SetErrorMessage("There was an error attempting to update this theme. See the error below.", response.GetErrors());
+            SetErrorMessage(
+                "There was an error attempting to update this theme. See the error below.",
+                response.GetErrors()
+            );
 
             return View(model);
         }
@@ -210,10 +221,7 @@ public class ThemesController : BaseController
     [Route($"{RAYTHA_ROUTE_PREFIX}/themes/delete/{{id}}", Name = "themesdelete")]
     public async Task<IActionResult> Delete(string id)
     {
-        var input = new DeleteTheme.Command
-        {
-            Id = id
-        };
+        var input = new DeleteTheme.Command { Id = id };
 
         var response = await Mediator.Send(input);
 
@@ -233,36 +241,45 @@ public class ThemesController : BaseController
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    [Route($"{RAYTHA_ROUTE_PREFIX}/themes/set-as-active-theme/{{id}}", Name = "themessetasactivetheme")]
+    [Route(
+        $"{RAYTHA_ROUTE_PREFIX}/themes/set-as-active-theme/{{id}}",
+        Name = "themessetasactivetheme"
+    )]
     public async Task<IActionResult> SetAsActiveTheme(string id)
     {
-        var webTemplateDeveloperNamesWithoutRelationResponse = await Mediator.Send(new GetWebTemplateDeveloperNamesWithoutRelation.Query
-        {
-            ThemeId = id,
-        });
+        var webTemplateDeveloperNamesWithoutRelationResponse = await Mediator.Send(
+            new GetWebTemplateDeveloperNamesWithoutRelation.Query { ThemeId = id }
+        );
 
         if (webTemplateDeveloperNamesWithoutRelationResponse.Result.Any())
         {
-            var newActiveThemeWebTemplateDeveloperNamesResponse = await Mediator.Send(new GetWebTemplateDeveloperNamesByThemeId.Query
-            {
-                ThemeId = id,
-            });
+            var newActiveThemeWebTemplateDeveloperNamesResponse = await Mediator.Send(
+                new GetWebTemplateDeveloperNamesByThemeId.Query { ThemeId = id }
+            );
 
             var model = new ThemesMatchingWebTemplates_ViewModel
             {
                 ThemeId = id,
-                ActiveThemeWebTemplateDeveloperNames = webTemplateDeveloperNamesWithoutRelationResponse.Result,
-                NewActiveThemeWebTemplateDeveloperNames = newActiveThemeWebTemplateDeveloperNamesResponse.Result,
-                WebTemplateMappings = webTemplateDeveloperNamesWithoutRelationResponse.Result.ToDictionary(dn => dn, developerName => newActiveThemeWebTemplateDeveloperNamesResponse.Result.Any(dn => dn == developerName) ? developerName :string.Empty)
+                ActiveThemeWebTemplateDeveloperNames =
+                    webTemplateDeveloperNamesWithoutRelationResponse.Result,
+                NewActiveThemeWebTemplateDeveloperNames =
+                    newActiveThemeWebTemplateDeveloperNamesResponse.Result,
+                WebTemplateMappings =
+                    webTemplateDeveloperNamesWithoutRelationResponse.Result.ToDictionary(
+                        dn => dn,
+                        developerName =>
+                            newActiveThemeWebTemplateDeveloperNamesResponse.Result.Any(dn =>
+                                dn == developerName
+                            )
+                                ? developerName
+                                : string.Empty
+                    ),
             };
 
             return View("~/Areas/Admin/Views/Themes/MatchingWebTemplates.cshtml", model);
         }
 
-        var input = new SetAsActiveTheme.Command
-        {
-            Id = id,
-        };
+        var input = new SetAsActiveTheme.Command { Id = id };
 
         var response = await Mediator.Send(input);
 
@@ -272,7 +289,10 @@ public class ThemesController : BaseController
         }
         else
         {
-            SetErrorMessage("An error occurred when setting the theme as active. See the error below.", response.GetErrors());
+            SetErrorMessage(
+                "An error occurred when setting the theme as active. See the error below.",
+                response.GetErrors()
+            );
         }
 
         return RedirectToAction(nameof(Edit), new { id });
@@ -280,8 +300,14 @@ public class ThemesController : BaseController
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    [Route($"{RAYTHA_ROUTE_PREFIX}/themes/set-as-active-theme/{{id}}/matching-web-templates", Name = "themesmatchingwebtemplates")]
-    public async Task<IActionResult> BeginMatchingWebTemplates(string id, ThemesMatchingWebTemplates_ViewModel model)
+    [Route(
+        $"{RAYTHA_ROUTE_PREFIX}/themes/set-as-active-theme/{{id}}/matching-web-templates",
+        Name = "themesmatchingwebtemplates"
+    )]
+    public async Task<IActionResult> BeginMatchingWebTemplates(
+        string id,
+        ThemesMatchingWebTemplates_ViewModel model
+    )
     {
         var input = new BeginMatchWebTemplates.Command
         {
@@ -299,7 +325,10 @@ public class ThemesController : BaseController
         }
         else
         {
-            SetErrorMessage("An error occurred when setting the theme as active. See the error below.", response.GetErrors());
+            SetErrorMessage(
+                "An error occurred when setting the theme as active. See the error below.",
+                response.GetErrors()
+            );
 
             return RedirectToAction(nameof(Edit), new { id });
         }
@@ -308,17 +337,17 @@ public class ThemesController : BaseController
     [Route($"{RAYTHA_ROUTE_PREFIX}/themes/edit/{{id}}/export", Name = "themesexport")]
     public async Task<IActionResult> Export(string id)
     {
-        var response = await Mediator.Send(new GetThemeById.Query
-        {
-            Id = id,
-        });
+        var response = await Mediator.Send(new GetThemeById.Query { Id = id });
 
-        return View(new ThemesExport_ViewModel
-        {
-            Id = id,
-            IsExportable = response.Result.IsExportable,
-            Url = $"{CurrentOrganization.WebsiteUrl}/{RAYTHA_ROUTE_PREFIX}/themes/export/{response.Result.DeveloperName}",
-        });
+        return View(
+            new ThemesExport_ViewModel
+            {
+                Id = id,
+                IsExportable = response.Result.IsExportable,
+                Url =
+                    $"{CurrentOrganization.WebsiteUrl}/{RAYTHA_ROUTE_PREFIX}/themes/export/{response.Result.DeveloperName}",
+            }
+        );
     }
 
     [HttpPost]
@@ -335,9 +364,14 @@ public class ThemesController : BaseController
         var response = await Mediator.Send(input);
 
         if (response.Success)
-            SetSuccessMessage($"The current theme export {(model.IsExportable ? "enabled" : "disabled ")}");
+            SetSuccessMessage(
+                $"The current theme export {(model.IsExportable ? "enabled" : "disabled ")}"
+            );
         else
-            SetErrorMessage("An error occurred while saving. See the error below.", response.GetErrors());
+            SetErrorMessage(
+                "An error occurred while saving. See the error below.",
+                response.GetErrors()
+            );
 
         return RedirectToAction(nameof(Export), new { id });
     }
@@ -371,47 +405,42 @@ public class ThemesController : BaseController
         }
         else
         {
-            SetErrorMessage("There was an error attempting while importing. See the error below.", response.GetErrors());
+            SetErrorMessage(
+                "There was an error attempting while importing. See the error below.",
+                response.GetErrors()
+            );
 
             return View(model);
         }
     }
 
-    [Route($"{RAYTHA_ROUTE_PREFIX}/themes/background-task/status/{{id}}", Name = "themesbackgroundtaskstatus")]
+    [Route(
+        $"{RAYTHA_ROUTE_PREFIX}/themes/background-task/status/{{id}}",
+        Name = "themesbackgroundtaskstatus"
+    )]
     public async Task<IActionResult> BackgroundTaskStatus(string id, bool json = false)
     {
-        var response = await Mediator.Send(new GetBackgroundTaskById.Query
-        {
-            Id = id,
-        });
+        var response = await Mediator.Send(new GetBackgroundTaskById.Query { Id = id });
 
         var model = new ThemesBackgroundTaskStatus_ViewModel
         {
             PathBase = CurrentOrganization.PathBase,
         };
 
-        return json
-            ? Ok(response.Result)
-            : View(model);
+        return json ? Ok(response.Result) : View(model);
     }
 
     [AllowAnonymous]
     [Route($"{RAYTHA_ROUTE_PREFIX}/themes/export/{{developerName}}")]
     public async Task<IActionResult> ExportTheme(string developerName)
     {
-        var input = new ExportTheme.Command
-        {
-            DeveloperName = developerName,
-        };
+        var input = new ExportTheme.Command { DeveloperName = developerName };
 
         var response = await Mediator.Send(input);
 
         if (response.Success)
         {
-            return Json(response.Result, new JsonSerializerOptions
-            {
-                WriteIndented = true,
-            });
+            return Json(response.Result, new JsonSerializerOptions { WriteIndented = true });
         }
         else
         {
@@ -421,12 +450,17 @@ public class ThemesController : BaseController
 
     [ServiceFilter(typeof(SetPaginationInformationFilterAttribute))]
     [Authorize(Policy = BuiltInSystemPermission.MANAGE_TEMPLATES_PERMISSION)]
-    [Route($"{RAYTHA_ROUTE_PREFIX}/themes/edit/{{themeId}}/web-templates", Name = "webtemplatesindex")]
-    public async Task<IActionResult> WebTemplatesIndex(string themeId,
-                                                       string orderBy = $"Label {SortOrder.ASCENDING}",
-                                                       string search = "",
-                                                       int pageNumber = 1,
-                                                       int pageSize = 50)
+    [Route(
+        $"{RAYTHA_ROUTE_PREFIX}/themes/edit/{{themeId}}/web-templates",
+        Name = "webtemplatesindex"
+    )]
+    public async Task<IActionResult> WebTemplatesIndex(
+        string themeId,
+        string orderBy = $"Label {SortOrder.ASCENDING}",
+        string search = "",
+        int pageNumber = 1,
+        int pageSize = 50
+    )
     {
         var input = new GetWebTemplates.Query
         {
@@ -444,48 +478,69 @@ public class ThemesController : BaseController
             Id = p.Id,
             Label = p.Label,
             DeveloperName = p.DeveloperName,
-            LastModificationTime = CurrentOrganization.TimeZoneConverter.UtcToTimeZoneAsDateTimeFormat(p.LastModificationTime),
+            LastModificationTime =
+                CurrentOrganization.TimeZoneConverter.UtcToTimeZoneAsDateTimeFormat(
+                    p.LastModificationTime
+                ),
             LastModifierUser = p.LastModifierUser != null ? p.LastModifierUser.FullName : "N/A",
             IsBuiltInTemplate = p.IsBuiltInTemplate.YesOrNo(),
-            ParentTemplate = p.ParentTemplate != null
-                ? new WebTemplatesListItem_ViewModel.ParentTemplate_ViewModel { Id = p.ParentTemplate.Id, Label = p.ParentTemplate.Label }
-                : null
+            ParentTemplate =
+                p.ParentTemplate != null
+                    ? new WebTemplatesListItem_ViewModel.ParentTemplate_ViewModel
+                    {
+                        Id = p.ParentTemplate.Id,
+                        Label = p.ParentTemplate.Label,
+                    }
+                    : null,
         });
 
-        var viewModel = new WebTemplatesPagination_ViewModel(items, response.Result.TotalCount, themeId);
+        var viewModel = new WebTemplatesPagination_ViewModel(
+            items,
+            response.Result.TotalCount,
+            themeId
+        );
 
         return View("~/Areas/Admin/Views/Themes/WebTemplates/Index.cshtml", viewModel);
     }
 
     [Authorize(Policy = BuiltInSystemPermission.MANAGE_TEMPLATES_PERMISSION)]
-    [Route($"{RAYTHA_ROUTE_PREFIX}/themes/edit/{{themeId}}/web-templates/create", Name = "webtemplatescreate")]
+    [Route(
+        $"{RAYTHA_ROUTE_PREFIX}/themes/edit/{{themeId}}/web-templates/create",
+        Name = "webtemplatescreate"
+    )]
     public async Task<IActionResult> WebTemplatesCreate(string themeId)
     {
-        var webTemplatesResponse = await Mediator.Send(new GetWebTemplates.Query
-        {
-            ThemeId = themeId,
-            PageSize = int.MaxValue,
-            BaseLayoutsOnly = true
-        });
+        var webTemplatesResponse = await Mediator.Send(
+            new GetWebTemplates.Query
+            {
+                ThemeId = themeId,
+                PageSize = int.MaxValue,
+                BaseLayoutsOnly = true,
+            }
+        );
 
-        var contentTypesResponse = await Mediator.Send(new GetContentTypes.Query
-        {
-            PageSize = int.MaxValue
-        });
+        var contentTypesResponse = await Mediator.Send(
+            new GetContentTypes.Query { PageSize = int.MaxValue }
+        );
 
-        var mediaItemsResponse = await Mediator.Send(new GetMediaItemsByThemeId.Query
-        {
-            ThemeId = themeId,
-        });
+        var mediaItemsResponse = await Mediator.Send(
+            new GetMediaItemsByThemeId.Query { ThemeId = themeId }
+        );
 
-        var templateAccessList = contentTypesResponse.Result.Items.Select(p => new WebTemplateAccessToModelDefinitions_ViewModel
-        {
-            Id = p.Id,
-            Key = p.LabelPlural,
-            Value = true
-        });
+        var templateAccessList = contentTypesResponse.Result.Items.Select(
+            p => new WebTemplateAccessToModelDefinitions_ViewModel
+            {
+                Id = p.Id,
+                Key = p.LabelPlural,
+                Value = true,
+            }
+        );
 
-        var templateVariableDictionary = GetInsertVariablesViewModel(string.Empty, false, contentTypesResponse.Result.Items);
+        var templateVariableDictionary = GetInsertVariablesViewModel(
+            string.Empty,
+            false,
+            contentTypesResponse.Result.Items
+        );
 
         var viewModel = new WebTemplatesCreate_ViewModel
         {
@@ -506,8 +561,14 @@ public class ThemesController : BaseController
     [HttpPost]
     [ValidateAntiForgeryToken]
     [Authorize(Policy = BuiltInSystemPermission.MANAGE_TEMPLATES_PERMISSION)]
-    [Route($"{RAYTHA_ROUTE_PREFIX}/themes/edit/{{themeId}}/web-templates/create", Name = "webtemplatescreate")]
-    public async Task<IActionResult> WebTemplatesCreate(WebTemplatesCreate_ViewModel model, string themeId)
+    [Route(
+        $"{RAYTHA_ROUTE_PREFIX}/themes/edit/{{themeId}}/web-templates/create",
+        Name = "webtemplatescreate"
+    )]
+    public async Task<IActionResult> WebTemplatesCreate(
+        WebTemplatesCreate_ViewModel model,
+        string themeId
+    )
     {
         var input = new CreateWebTemplate.Command
         {
@@ -517,7 +578,9 @@ public class ThemesController : BaseController
             ParentTemplateId = model.ParentTemplateId,
             IsBaseLayout = model.IsBaseLayout,
             DeveloperName = model.DeveloperName,
-            TemplateAccessToModelDefinitions = model.TemplateAccessToModelDefinitions.Where(p => p.Value).Select(p => (ShortGuid)p.Id),
+            TemplateAccessToModelDefinitions = model
+                .TemplateAccessToModelDefinitions.Where(p => p.Value)
+                .Select(p => (ShortGuid)p.Id),
             AllowAccessForNewContentTypes = model.AllowAccessForNewContentTypes,
         };
 
@@ -527,28 +590,37 @@ public class ThemesController : BaseController
         {
             SetSuccessMessage($"{model.Label} was created successfully.");
 
-            return RedirectToAction(nameof(WebTemplatesEdit), new { themeId, id = response.Result });
+            return RedirectToAction(
+                nameof(WebTemplatesEdit),
+                new { themeId, id = response.Result }
+            );
         }
         else
         {
-
-            var baseLayouts = await Mediator.Send(new GetWebTemplates.Query
-            {
-                ThemeId = themeId,
-                PageSize = int.MaxValue,
-                BaseLayoutsOnly = true
-            });
+            var baseLayouts = await Mediator.Send(
+                new GetWebTemplates.Query
+                {
+                    ThemeId = themeId,
+                    PageSize = int.MaxValue,
+                    BaseLayoutsOnly = true,
+                }
+            );
 
             model.ParentTemplates = baseLayouts.Result.Items;
 
-            var contentTypes = await Mediator.Send(new GetContentTypes.Query { PageSize = int.MaxValue });
-            var templateVariableDictionary = GetInsertVariablesViewModel(model.DeveloperName, false, contentTypes.Result.Items);
+            var contentTypes = await Mediator.Send(
+                new GetContentTypes.Query { PageSize = int.MaxValue }
+            );
+            var templateVariableDictionary = GetInsertVariablesViewModel(
+                model.DeveloperName,
+                false,
+                contentTypes.Result.Items
+            );
             model.TemplateVariables = templateVariableDictionary;
 
-            var mediaItemsResponse = await Mediator.Send(new GetMediaItemsByThemeId.Query
-            {
-                ThemeId = themeId,
-            });
+            var mediaItemsResponse = await Mediator.Send(
+                new GetMediaItemsByThemeId.Query { ThemeId = themeId }
+            );
 
             model.MediaItems = mediaItemsResponse.Result;
 
@@ -558,48 +630,70 @@ public class ThemesController : BaseController
             model.UseDirectUploadToCloud = FileStorageProviderSettings.UseDirectUploadToCloud;
             model.PathBase = CurrentOrganization.PathBase;
 
-            SetErrorMessage("There was an error attempting to update this template. See the error below.", response.GetErrors());
+            SetErrorMessage(
+                "There was an error attempting to update this template. See the error below.",
+                response.GetErrors()
+            );
 
             return View("~/Areas/Admin/Views/Themes/WebTemplates/Create.cshtml", model);
         }
     }
 
     [Authorize(Policy = BuiltInSystemPermission.MANAGE_TEMPLATES_PERMISSION)]
-    [Route($"{RAYTHA_ROUTE_PREFIX}/themes/edit/{{themeId}}/web-templates/edit/{{id}}", Name = "webtemplatesedit")]
+    [Route(
+        $"{RAYTHA_ROUTE_PREFIX}/themes/edit/{{themeId}}/web-templates/edit/{{id}}",
+        Name = "webtemplatesedit"
+    )]
     public async Task<IActionResult> WebTemplatesEdit(string themeId, string id)
     {
         var webTemplateResponse = await Mediator.Send(new GetWebTemplateById.Query { Id = id });
 
-        var baseLayouts = await Mediator.Send(new GetWebTemplates.Query
-        {
-            ThemeId = themeId,
-            PageSize = int.MaxValue,
-            BaseLayoutsOnly = true
-        });
+        var baseLayouts = await Mediator.Send(
+            new GetWebTemplates.Query
+            {
+                ThemeId = themeId,
+                PageSize = int.MaxValue,
+                BaseLayoutsOnly = true,
+            }
+        );
 
-        var childLayouts = GetChildren(baseLayouts.Result.Items.ToArray(), webTemplateResponse.Result);
+        var childLayouts = GetChildren(
+            baseLayouts.Result.Items.ToArray(),
+            webTemplateResponse.Result
+        );
         var lineage = childLayouts.Union(new List<WebTemplateDto>() { webTemplateResponse.Result });
-        var excepted = baseLayouts.Result.Items.Select(p => p.DeveloperName).Except(lineage.Select(p => p.DeveloperName));
-        var baseLayoutsDictionary = baseLayouts.Result.Items.Where(p => excepted.Contains(p.DeveloperName)).ToDictionary(k => k.Id.ToString(), v => v.Label);
+        var excepted = baseLayouts
+            .Result.Items.Select(p => p.DeveloperName)
+            .Except(lineage.Select(p => p.DeveloperName));
+        var baseLayoutsDictionary = baseLayouts
+            .Result.Items.Where(p => excepted.Contains(p.DeveloperName))
+            .ToDictionary(k => k.Id.ToString(), v => v.Label);
 
         var contentTypes = await Mediator.Send(new GetContentTypes.Query());
         var templateAccessChoiceItems = new List<WebTemplateAccessToModelDefinitions_ViewModel>();
         foreach (var contentType in contentTypes.Result.Items)
         {
-            templateAccessChoiceItems.Add(new WebTemplateAccessToModelDefinitions_ViewModel
-            {
-                Id = contentType.Id,
-                Key = contentType.LabelPlural,
-                Value = webTemplateResponse.Result.TemplateAccessToModelDefinitions.ContainsKey(contentType.Id)
-            });
+            templateAccessChoiceItems.Add(
+                new WebTemplateAccessToModelDefinitions_ViewModel
+                {
+                    Id = contentType.Id,
+                    Key = contentType.LabelPlural,
+                    Value = webTemplateResponse.Result.TemplateAccessToModelDefinitions.ContainsKey(
+                        contentType.Id
+                    ),
+                }
+            );
         }
 
-        var templateVariableDictionary = GetInsertVariablesViewModel(webTemplateResponse.Result.DeveloperName, webTemplateResponse.Result.IsBuiltInTemplate, contentTypes.Result.Items);
+        var templateVariableDictionary = GetInsertVariablesViewModel(
+            webTemplateResponse.Result.DeveloperName,
+            webTemplateResponse.Result.IsBuiltInTemplate,
+            contentTypes.Result.Items
+        );
 
-        var mediaItemsResponse = await Mediator.Send(new GetMediaItemsByThemeId.Query
-        {
-            ThemeId = themeId,
-        });
+        var mediaItemsResponse = await Mediator.Send(
+            new GetMediaItemsByThemeId.Query { ThemeId = themeId }
+        );
 
         var model = new WebTemplatesEdit_ViewModel
         {
@@ -613,7 +707,9 @@ public class ThemesController : BaseController
             IsBuiltInTemplate = webTemplateResponse.Result.IsBuiltInTemplate,
             TemplateAccessToModelDefinitions = templateAccessChoiceItems.ToArray(),
             TemplateVariables = templateVariableDictionary,
-            AllowAccessForNewContentTypes = webTemplateResponse.Result.AllowAccessForNewContentTypes,
+            AllowAccessForNewContentTypes = webTemplateResponse
+                .Result
+                .AllowAccessForNewContentTypes,
             AllowedMimeTypes = FileStorageProviderSettings.AllowedMimeTypes,
             MaxFileSize = FileStorageProviderSettings.MaxFileSize,
             UseDirectUploadToCloud = FileStorageProviderSettings.UseDirectUploadToCloud,
@@ -622,8 +718,13 @@ public class ThemesController : BaseController
             MediaItems = mediaItemsResponse.Result,
         };
 
-        if (WebTemplateExtensions.HasRenderBodyTag(webTemplateResponse.Result.Content) && !webTemplateResponse.Result.IsBaseLayout)
-            SetWarningMessage("{% renderbody %} is present and this template is not a base layout. This may result in a rendering error or crash if not handled properly.");
+        if (
+            WebTemplateExtensions.HasRenderBodyTag(webTemplateResponse.Result.Content)
+            && !webTemplateResponse.Result.IsBaseLayout
+        )
+            SetWarningMessage(
+                "{% renderbody %} is present and this template is not a base layout. This may result in a rendering error or crash if not handled properly."
+            );
 
         return View("~/Areas/Admin/Views/Themes/WebTemplates/Edit.cshtml", model);
     }
@@ -631,8 +732,15 @@ public class ThemesController : BaseController
     [HttpPost]
     [ValidateAntiForgeryToken]
     [Authorize(Policy = BuiltInSystemPermission.MANAGE_TEMPLATES_PERMISSION)]
-    [Route($"{RAYTHA_ROUTE_PREFIX}/themes/edit/{{themeId}}/web-templates/edit/{{id}}", Name = "webtemplatesedit")]
-    public async Task<IActionResult> WebTemplatesEdit(WebTemplatesEdit_ViewModel model, string themeId, string id)
+    [Route(
+        $"{RAYTHA_ROUTE_PREFIX}/themes/edit/{{themeId}}/web-templates/edit/{{id}}",
+        Name = "webtemplatesedit"
+    )]
+    public async Task<IActionResult> WebTemplatesEdit(
+        WebTemplatesEdit_ViewModel model,
+        string themeId,
+        string id
+    )
     {
         var input = new EditWebTemplate.Command
         {
@@ -642,7 +750,9 @@ public class ThemesController : BaseController
             ParentTemplateId = model.ParentTemplateId,
             IsBaseLayout = model.IsBaseLayout,
             AllowAccessForNewContentTypes = model.AllowAccessForNewContentTypes,
-            TemplateAccessToModelDefinitions = model.TemplateAccessToModelDefinitions.Where(p => p.Value).Select(p => (ShortGuid)p.Id)
+            TemplateAccessToModelDefinitions = model
+                .TemplateAccessToModelDefinitions.Where(p => p.Value)
+                .Select(p => (ShortGuid)p.Id),
         };
         var response = await Mediator.Send(input);
 
@@ -655,27 +765,43 @@ public class ThemesController : BaseController
         {
             var templateResponse = await Mediator.Send(new GetWebTemplateById.Query { Id = id });
 
-            var baseLayouts = await Mediator.Send(new GetWebTemplates.Query
-            {
-                ThemeId = themeId,
-                PageSize = int.MaxValue,
-                BaseLayoutsOnly = true
-            });
+            var baseLayouts = await Mediator.Send(
+                new GetWebTemplates.Query
+                {
+                    ThemeId = themeId,
+                    PageSize = int.MaxValue,
+                    BaseLayoutsOnly = true,
+                }
+            );
 
-            var childLayouts = GetChildren(baseLayouts.Result.Items.ToArray(), templateResponse.Result);
-            var lineage = childLayouts.Union(new List<WebTemplateDto>() { templateResponse.Result });
-            var excepted = baseLayouts.Result.Items.Select(p => p.DeveloperName).Except(lineage.Select(p => p.DeveloperName));
-            var baseLayoutsDictionary = baseLayouts.Result.Items.Where(p => excepted.Contains(p.DeveloperName)).ToDictionary(k => k.Id.ToString(), v => v.Label);
+            var childLayouts = GetChildren(
+                baseLayouts.Result.Items.ToArray(),
+                templateResponse.Result
+            );
+            var lineage = childLayouts.Union(
+                new List<WebTemplateDto>() { templateResponse.Result }
+            );
+            var excepted = baseLayouts
+                .Result.Items.Select(p => p.DeveloperName)
+                .Except(lineage.Select(p => p.DeveloperName));
+            var baseLayoutsDictionary = baseLayouts
+                .Result.Items.Where(p => excepted.Contains(p.DeveloperName))
+                .ToDictionary(k => k.Id.ToString(), v => v.Label);
             model.ParentTemplates = baseLayoutsDictionary;
 
-            var contentTypes = await Mediator.Send(new GetContentTypes.Query { PageSize = int.MaxValue });
-            var templateVariableDictionary = GetInsertVariablesViewModel(templateResponse.Result.DeveloperName, templateResponse.Result.IsBuiltInTemplate, contentTypes.Result.Items);
+            var contentTypes = await Mediator.Send(
+                new GetContentTypes.Query { PageSize = int.MaxValue }
+            );
+            var templateVariableDictionary = GetInsertVariablesViewModel(
+                templateResponse.Result.DeveloperName,
+                templateResponse.Result.IsBuiltInTemplate,
+                contentTypes.Result.Items
+            );
             model.TemplateVariables = templateVariableDictionary;
 
-            var mediaItemsResponse = await Mediator.Send(new GetMediaItemsByThemeId.Query
-            {
-                ThemeId = themeId,
-            });
+            var mediaItemsResponse = await Mediator.Send(
+                new GetMediaItemsByThemeId.Query { ThemeId = themeId }
+            );
 
             model.MediaItems = mediaItemsResponse.Result;
 
@@ -685,7 +811,10 @@ public class ThemesController : BaseController
             model.UseDirectUploadToCloud = FileStorageProviderSettings.UseDirectUploadToCloud;
             model.PathBase = CurrentOrganization.PathBase;
 
-            SetErrorMessage("There was an error attempting to update this template. See the error below.", response.GetErrors());
+            SetErrorMessage(
+                "There was an error attempting to update this template. See the error below.",
+                response.GetErrors()
+            );
 
             return View("~/Areas/Admin/Views/Themes/WebTemplates/Edit.cshtml", model);
         }
@@ -693,13 +822,13 @@ public class ThemesController : BaseController
 
     [HttpPost]
     [Authorize(Policy = BuiltInSystemPermission.MANAGE_TEMPLATES_PERMISSION)]
-    [Route($"{RAYTHA_ROUTE_PREFIX}/themes/edit/{{themeId}}/web-templates/delete/{{id}}", Name = "webtemplatesdelete")]
+    [Route(
+        $"{RAYTHA_ROUTE_PREFIX}/themes/edit/{{themeId}}/web-templates/delete/{{id}}",
+        Name = "webtemplatesdelete"
+    )]
     public async Task<IActionResult> WebTemplatesDelete(string themeId, string id)
     {
-        var input = new DeleteWebTemplate.Command
-        {
-            Id = id,
-        };
+        var input = new DeleteWebTemplate.Command { Id = id };
 
         var response = await Mediator.Send(input);
         if (response.Success)
@@ -712,18 +841,23 @@ public class ThemesController : BaseController
         {
             SetErrorMessage("There was an error deleting this web-template", response.GetErrors());
 
-            return RedirectToAction(nameof(WebTemplatesEdit), new { themeId, id, });
+            return RedirectToAction(nameof(WebTemplatesEdit), new { themeId, id });
         }
     }
 
     [ServiceFilter(typeof(SetPaginationInformationFilterAttribute))]
     [Authorize(Policy = BuiltInSystemPermission.MANAGE_TEMPLATES_PERMISSION)]
-    [Route($"{RAYTHA_ROUTE_PREFIX}/themes/edit/{{themeId}}/web-templates/edit/{{id}}/revisions", Name = "webtemplatesrevisionsindex")]
-    public async Task<IActionResult> Revisions(string themeId,
-                                               string id,
-                                               string orderBy = $"CreationTime {SortOrder.DESCENDING}",
-                                               int pageNumber = 1,
-                                               int pageSize = 50)
+    [Route(
+        $"{RAYTHA_ROUTE_PREFIX}/themes/edit/{{themeId}}/web-templates/edit/{{id}}/revisions",
+        Name = "webtemplatesrevisionsindex"
+    )]
+    public async Task<IActionResult> Revisions(
+        string themeId,
+        string id,
+        string orderBy = $"CreationTime {SortOrder.DESCENDING}",
+        int pageNumber = 1,
+        int pageSize = 50
+    )
     {
         var template = await Mediator.Send(new GetWebTemplateById.Query { Id = id });
 
@@ -740,12 +874,17 @@ public class ThemesController : BaseController
         {
             Id = p.Id,
             Label = p.Label,
-            CreationTime = CurrentOrganization.TimeZoneConverter.UtcToTimeZoneAsDateTimeFormat(p.CreationTime),
+            CreationTime = CurrentOrganization.TimeZoneConverter.UtcToTimeZoneAsDateTimeFormat(
+                p.CreationTime
+            ),
             CreatorUser = p.CreatorUser != null ? p.CreatorUser.FullName : "N/A",
-            Content = p.Content
+            Content = p.Content,
         });
 
-        var viewModel = new WebTemplatesRevisionsPagination_ViewModel(items, response.Result.TotalCount)
+        var viewModel = new WebTemplatesRevisionsPagination_ViewModel(
+            items,
+            response.Result.TotalCount
+        )
         {
             TemplateId = template.Result.Id,
             IsBuiltInTemplate = template.Result.IsBuiltInTemplate,
@@ -757,13 +896,13 @@ public class ThemesController : BaseController
 
     [HttpPost]
     [Authorize(Policy = BuiltInSystemPermission.MANAGE_TEMPLATES_PERMISSION)]
-    [Route($"{RAYTHA_ROUTE_PREFIX}/themes/edit/{{themeId}}/web-templates/{{id}}/revisions/{{revisionId}}", Name = "webtemplatesrevisionsrevert")]
+    [Route(
+        $"{RAYTHA_ROUTE_PREFIX}/themes/edit/{{themeId}}/web-templates/{{id}}/revisions/{{revisionId}}",
+        Name = "webtemplatesrevisionsrevert"
+    )]
     public async Task<IActionResult> RevisionsRevert(string themeId, string id, string revisionId)
     {
-        var input = new RevertWebTemplate.Command
-        {
-            Id = revisionId
-        };
+        var input = new RevertWebTemplate.Command { Id = revisionId };
 
         var response = await Mediator.Send(input);
 
@@ -772,17 +911,14 @@ public class ThemesController : BaseController
         else
             SetErrorMessage("There was an error reverting this template", response.GetErrors());
 
-        return RedirectToAction(nameof(WebTemplatesEdit), new { themeId, id, });
+        return RedirectToAction(nameof(WebTemplatesEdit), new { themeId, id });
     }
 
     [ServiceFilter(typeof(SetPaginationInformationFilterAttribute))]
     [Route($"{RAYTHA_ROUTE_PREFIX}/themes/edit/{{themeId}}/media-items", Name = "mediaitemsindex")]
     public async Task<IActionResult> MediaItemsIndex(string themeId)
     {
-        var input = new GetMediaItemsByThemeId.Query
-        {
-            ThemeId = themeId
-        };
+        var input = new GetMediaItemsByThemeId.Query { ThemeId = themeId };
 
         var response = await Mediator.Send(input);
         var items = response.Result.Select(mi => new MediaItemsListItem_ViewModel
@@ -794,23 +930,19 @@ public class ThemesController : BaseController
             ObjectKey = mi.ObjectKey,
         });
 
-        var viewModel = new MediaItemList_ViewModel
-        {
-            ThemeId = themeId,
-            Items = items,
-        };
+        var viewModel = new MediaItemList_ViewModel { ThemeId = themeId, Items = items };
 
         return View("~/Areas/Admin/Views/Themes/MediaItems/Index.cshtml", viewModel);
     }
 
     [HttpPost]
-    [Route($"{RAYTHA_ROUTE_PREFIX}/themes/edit/{{themeId}}/media-items/delete/{{id}}", Name = "mediaitemsdelete")]
+    [Route(
+        $"{RAYTHA_ROUTE_PREFIX}/themes/edit/{{themeId}}/media-items/delete/{{id}}",
+        Name = "mediaitemsdelete"
+    )]
     public async Task<IActionResult> MediaItemsDelete(string themeId, string id)
     {
-        var input = new DeleteMediaItem.Command
-        {
-            Id = id,
-        };
+        var input = new DeleteMediaItem.Command { Id = id };
 
         var response = await Mediator.Send(input);
 
@@ -834,93 +966,159 @@ public class ThemesController : BaseController
         return result;
     }
 
-    protected Dictionary<string, IEnumerable<WebTemplatesInsertVariableListItem_ViewModel>> GetInsertVariablesViewModel(string templateName, bool isBuiltInTemplate, IEnumerable<ContentTypeDto> contentTypes)
+    protected Dictionary<
+        string,
+        IEnumerable<WebTemplatesInsertVariableListItem_ViewModel>
+    > GetInsertVariablesViewModel(
+        string templateName,
+        bool isBuiltInTemplate,
+        IEnumerable<ContentTypeDto> contentTypes
+    )
     {
-        var templateVariableDictionary = new Dictionary<string, IEnumerable<WebTemplatesInsertVariableListItem_ViewModel>>();
-        var requestVariables = InsertVariableTemplateFactory.Request.TemplateInfo.GetTemplateVariables().Select(p => new WebTemplatesInsertVariableListItem_ViewModel
-        {
-            DeveloperName = p.Key,
-            TemplateVariable = p.Value
-        });
+        var templateVariableDictionary =
+            new Dictionary<string, IEnumerable<WebTemplatesInsertVariableListItem_ViewModel>>();
+        var requestVariables = InsertVariableTemplateFactory
+            .Request.TemplateInfo.GetTemplateVariables()
+            .Select(p => new WebTemplatesInsertVariableListItem_ViewModel
+            {
+                DeveloperName = p.Key,
+                TemplateVariable = p.Value,
+            });
 
-        var currentOrgVariables = InsertVariableTemplateFactory.CurrentOrganization.TemplateInfo.GetTemplateVariables().Select(p => new WebTemplatesInsertVariableListItem_ViewModel
-        {
-            DeveloperName = p.Key,
-            TemplateVariable = p.Value
-        });
+        var currentOrgVariables = InsertVariableTemplateFactory
+            .CurrentOrganization.TemplateInfo.GetTemplateVariables()
+            .Select(p => new WebTemplatesInsertVariableListItem_ViewModel
+            {
+                DeveloperName = p.Key,
+                TemplateVariable = p.Value,
+            });
 
-        var currentUserVariables = InsertVariableTemplateFactory.CurrentUser.TemplateInfo.GetTemplateVariables().Select(p => new WebTemplatesInsertVariableListItem_ViewModel
-        {
-            DeveloperName = p.Key,
-            TemplateVariable = p.Value
-        });
+        var currentUserVariables = InsertVariableTemplateFactory
+            .CurrentUser.TemplateInfo.GetTemplateVariables()
+            .Select(p => new WebTemplatesInsertVariableListItem_ViewModel
+            {
+                DeveloperName = p.Key,
+                TemplateVariable = p.Value,
+            });
 
-        var navigationMenuVariables = InsertVariableTemplateFactory.NavigationMenu.TemplateInfo.GetTemplateVariables().Select(p => new WebTemplatesInsertVariableListItem_ViewModel
-        {
-            DeveloperName = p.Key,
-            TemplateVariable = p.Value,
-        });
+        var navigationMenuVariables = InsertVariableTemplateFactory
+            .NavigationMenu.TemplateInfo.GetTemplateVariables()
+            .Select(p => new WebTemplatesInsertVariableListItem_ViewModel
+            {
+                DeveloperName = p.Key,
+                TemplateVariable = p.Value,
+            });
 
-        var navigationMenuItemVariables = InsertVariableTemplateFactory.NavigationMenuItem.TemplateInfo.GetTemplateVariables().Select(p => new WebTemplatesInsertVariableListItem_ViewModel
-        {
-            DeveloperName = p.Key,
-            TemplateVariable = p.Value,
-        });
+        var navigationMenuItemVariables = InsertVariableTemplateFactory
+            .NavigationMenuItem.TemplateInfo.GetTemplateVariables()
+            .Select(p => new WebTemplatesInsertVariableListItem_ViewModel
+            {
+                DeveloperName = p.Key,
+                TemplateVariable = p.Value,
+            });
 
-        templateVariableDictionary.Add(InsertVariableTemplateFactory.Request.VariableCategoryName, requestVariables);
-        templateVariableDictionary.Add(InsertVariableTemplateFactory.CurrentOrganization.VariableCategoryName, currentOrgVariables);
-        templateVariableDictionary.Add(InsertVariableTemplateFactory.CurrentUser.VariableCategoryName, currentUserVariables);
-        templateVariableDictionary.Add(InsertVariableTemplateFactory.NavigationMenu.VariableCategoryName, navigationMenuVariables);
-        templateVariableDictionary.Add(InsertVariableTemplateFactory.NavigationMenuItem.VariableCategoryName, navigationMenuItemVariables);
+        templateVariableDictionary.Add(
+            InsertVariableTemplateFactory.Request.VariableCategoryName,
+            requestVariables
+        );
+        templateVariableDictionary.Add(
+            InsertVariableTemplateFactory.CurrentOrganization.VariableCategoryName,
+            currentOrgVariables
+        );
+        templateVariableDictionary.Add(
+            InsertVariableTemplateFactory.CurrentUser.VariableCategoryName,
+            currentUserVariables
+        );
+        templateVariableDictionary.Add(
+            InsertVariableTemplateFactory.NavigationMenu.VariableCategoryName,
+            navigationMenuVariables
+        );
+        templateVariableDictionary.Add(
+            InsertVariableTemplateFactory.NavigationMenuItem.VariableCategoryName,
+            navigationMenuItemVariables
+        );
 
         if (ShowContentVariablesForTemplate(templateName) || !isBuiltInTemplate)
         {
-            var contentTypeVariables = InsertVariableTemplateFactory.ContentType.TemplateInfo.GetTemplateVariables().Select(p => new WebTemplatesInsertVariableListItem_ViewModel
-            {
-                DeveloperName = p.Key,
-                TemplateVariable = p.Value
-            });
+            var contentTypeVariables = InsertVariableTemplateFactory
+                .ContentType.TemplateInfo.GetTemplateVariables()
+                .Select(p => new WebTemplatesInsertVariableListItem_ViewModel
+                {
+                    DeveloperName = p.Key,
+                    TemplateVariable = p.Value,
+                });
 
-            var builtInContentItemVariables = InsertVariableTemplateFactory.ContentItem.TemplateInfo.GetTemplateVariables().Select(p => new WebTemplatesInsertVariableListItem_ViewModel
-            {
-                DeveloperName = p.Key,
-                TemplateVariable = p.Value
-            });
+            var builtInContentItemVariables = InsertVariableTemplateFactory
+                .ContentItem.TemplateInfo.GetTemplateVariables()
+                .Select(p => new WebTemplatesInsertVariableListItem_ViewModel
+                {
+                    DeveloperName = p.Key,
+                    TemplateVariable = p.Value,
+                });
 
-            var listResultVariables = InsertVariableTemplateFactory.ContentItemListResult.TemplateInfo.GetTemplateVariables().Select(p => new WebTemplatesInsertVariableListItem_ViewModel
-            {
-                DeveloperName = p.Key,
-                TemplateVariable = p.Value
-            });
+            var listResultVariables = InsertVariableTemplateFactory
+                .ContentItemListResult.TemplateInfo.GetTemplateVariables()
+                .Select(p => new WebTemplatesInsertVariableListItem_ViewModel
+                {
+                    DeveloperName = p.Key,
+                    TemplateVariable = p.Value,
+                });
 
-
-            templateVariableDictionary.Add(InsertVariableTemplateFactory.ContentType.VariableCategoryName, contentTypeVariables);
-            templateVariableDictionary.Add($"{InsertVariableTemplateFactory.ContentItemListResult.VariableCategoryName} (list result)", listResultVariables);
-            templateVariableDictionary.Add($"{InsertVariableTemplateFactory.ContentItem.VariableCategoryName} (single item)", builtInContentItemVariables);
+            templateVariableDictionary.Add(
+                InsertVariableTemplateFactory.ContentType.VariableCategoryName,
+                contentTypeVariables
+            );
+            templateVariableDictionary.Add(
+                $"{InsertVariableTemplateFactory.ContentItemListResult.VariableCategoryName} (list result)",
+                listResultVariables
+            );
+            templateVariableDictionary.Add(
+                $"{InsertVariableTemplateFactory.ContentItem.VariableCategoryName} (single item)",
+                builtInContentItemVariables
+            );
 
             foreach (var item in contentTypes)
             {
-                var allCustomVariables = item.ContentTypeFields.Select(p => new WebTemplatesInsertVariableListItem_ViewModel
-                {
-                    DeveloperName = $"{p.DeveloperName}{RenderValueProperty(p.FieldType)}",
-                    TemplateVariable = $"{InsertVariableTemplateFactory.ContentItem.VariableCategoryName}.PublishedContent.{p.DeveloperName}{RenderValueProperty(p.FieldType)}"
-                }).ToList();
-                allCustomVariables.AddRange(item.ContentTypeFields.Where(p => p.FieldType.DeveloperName != BaseFieldType.OneToOneRelationship.DeveloperName).Select(p => new WebTemplatesInsertVariableListItem_ViewModel
-                {
-                    DeveloperName = $"{p.DeveloperName}.Value",
-                    TemplateVariable = $"{InsertVariableTemplateFactory.ContentItem.VariableCategoryName}.PublishedContent.{p.DeveloperName}.Value"
-                }));
-                templateVariableDictionary.Add($"{item.LabelSingular}", allCustomVariables.OrderBy(p => p.DeveloperName));
+                var allCustomVariables = item
+                    .ContentTypeFields.Select(p => new WebTemplatesInsertVariableListItem_ViewModel
+                    {
+                        DeveloperName = $"{p.DeveloperName}{RenderValueProperty(p.FieldType)}",
+                        TemplateVariable =
+                            $"{InsertVariableTemplateFactory.ContentItem.VariableCategoryName}.PublishedContent.{p.DeveloperName}{RenderValueProperty(p.FieldType)}",
+                    })
+                    .ToList();
+                allCustomVariables.AddRange(
+                    item.ContentTypeFields.Where(p =>
+                            p.FieldType.DeveloperName
+                            != BaseFieldType.OneToOneRelationship.DeveloperName
+                        )
+                        .Select(p => new WebTemplatesInsertVariableListItem_ViewModel
+                        {
+                            DeveloperName = $"{p.DeveloperName}.Value",
+                            TemplateVariable =
+                                $"{InsertVariableTemplateFactory.ContentItem.VariableCategoryName}.PublishedContent.{p.DeveloperName}.Value",
+                        })
+                );
+                templateVariableDictionary.Add(
+                    $"{item.LabelSingular}",
+                    allCustomVariables.OrderBy(p => p.DeveloperName)
+                );
             }
         }
         else
         {
-            var webTemplateVariables = InsertVariableTemplateFactory.From(templateName).TemplateInfo.GetTemplateVariables().Select(p => new WebTemplatesInsertVariableListItem_ViewModel
-            {
-                DeveloperName = p.Key,
-                TemplateVariable = p.Value
-            });
-            templateVariableDictionary.Add(InsertVariableTemplateFactory.From(templateName).VariableCategoryName, webTemplateVariables);
+            var webTemplateVariables = InsertVariableTemplateFactory
+                .From(templateName)
+                .TemplateInfo.GetTemplateVariables()
+                .Select(p => new WebTemplatesInsertVariableListItem_ViewModel
+                {
+                    DeveloperName = p.Key,
+                    TemplateVariable = p.Value,
+                });
+            templateVariableDictionary.Add(
+                InsertVariableTemplateFactory.From(templateName).VariableCategoryName,
+                webTemplateVariables
+            );
         }
 
         return templateVariableDictionary;

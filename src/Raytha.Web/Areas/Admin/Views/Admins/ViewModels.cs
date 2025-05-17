@@ -33,13 +33,13 @@ public class AdminsListItem_ViewModel
 }
 
 public class AdminsCreate_ViewModel : FormSubmit_ViewModel
-{        
+{
     [Display(Name = "First name")]
     public string FirstName { get; set; }
-    
+
     [Display(Name = "Last name")]
     public string LastName { get; set; }
-    
+
     [Display(Name = "Email address")]
     public string EmailAddress { get; set; }
 
@@ -60,19 +60,19 @@ public class AdminsCreate_ViewModel : FormSubmit_ViewModel
 public class AdminsEdit_ViewModel : FormSubmit_ViewModel
 {
     public string Id { get; set; }
-    
+
     [Display(Name = "First name")]
     public string FirstName { get; set; }
-    
+
     [Display(Name = "Last name")]
     public string LastName { get; set; }
-    
+
     [Display(Name = "Email address")]
     public string EmailAddress { get; set; }
 
     [Display(Name = "Is active")]
     public bool IsActive { get; set; }
-    
+
     public RoleCheckboxItem_ViewModel[] Roles { get; set; }
 
     //helpers
@@ -107,7 +107,6 @@ public class AdminsResetPassword_ViewModel : FormSubmit_ViewModel
     public bool EmailAndPasswordEnabledForAdmins { get; set; }
 }
 
-
 public class AdminsActionsMenu_ViewModel
 {
     public string Id { get; set; }
@@ -121,7 +120,6 @@ public class AdminsActionsMenu_ViewModel
     public bool EditingMyself => CurrentUserId == Id;
 }
 
-
 public class ApiKeysPagination_ViewModel : Pagination_ViewModel
 {
     public string Id { get; set; }
@@ -129,8 +127,8 @@ public class ApiKeysPagination_ViewModel : Pagination_ViewModel
 
     public IEnumerable<ApiKeysListItem_ViewModel> Items { get; }
 
-    public ApiKeysPagination_ViewModel(
-        IEnumerable<ApiKeysListItem_ViewModel> items, int totalCount) : base(totalCount) => Items = items;
+    public ApiKeysPagination_ViewModel(IEnumerable<ApiKeysListItem_ViewModel> items, int totalCount)
+        : base(totalCount) => Items = items;
 
     //helpers
     public string CurrentUserId { get; set; }
@@ -138,7 +136,6 @@ public class ApiKeysPagination_ViewModel : Pagination_ViewModel
     public bool EmailAndPasswordEnabledForAdmins { get; set; }
     public bool IsActive { get; set; }
 }
-
 
 public class ApiKeysListItem_ViewModel
 {

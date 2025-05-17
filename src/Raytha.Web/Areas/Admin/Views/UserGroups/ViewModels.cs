@@ -1,5 +1,5 @@
-﻿using Raytha.Web.Areas.Admin.Views.Shared;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
+using Raytha.Web.Areas.Admin.Views.Shared;
 
 namespace Raytha.Web.Areas.Admin.Views.UserGroups;
 

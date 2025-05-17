@@ -14,10 +14,6 @@ public class MediaItemJson
 
     public static MediaItemJson GetProjection(string fileName, string downloadUrl)
     {
-        return new MediaItemJson
-        {
-            FileName = fileName,
-            DownloadUrl = downloadUrl,
-        };
+        return new MediaItemJson { FileName = fileName, DownloadUrl = downloadUrl };
     }
 }

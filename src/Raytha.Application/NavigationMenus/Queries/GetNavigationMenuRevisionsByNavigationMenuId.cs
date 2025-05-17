@@ -10,13 +10,16 @@ namespace Raytha.Application.NavigationMenus.Queries;
 
 public class GetNavigationMenuRevisionsByNavigationMenuId
 {
-    public record Query : GetPagedEntitiesInputDto, IRequest<IQueryResponseDto<ListResultDto<NavigationMenuRevisionDto>>>
+    public record Query
+        : GetPagedEntitiesInputDto,
+            IRequest<IQueryResponseDto<ListResultDto<NavigationMenuRevisionDto>>>
     {
         public required ShortGuid NavigationMenuId { get; init; }
         public override string OrderBy { get; init; } = $"CreationTime {SortOrder.Descending}";
     }
 
-    public class Handler : IRequestHandler<Query, IQueryResponseDto<ListResultDto<NavigationMenuRevisionDto>>>
+    public class Handler
+        : IRequestHandler<Query, IQueryResponseDto<ListResultDto<NavigationMenuRevisionDto>>>
     {
         private readonly IRaythaDbContext _db;
 
@@ -25,16 +28,24 @@ public class GetNavigationMenuRevisionsByNavigationMenuId
             _db = db;
         }
 
-        public async Task<IQueryResponseDto<ListResultDto<NavigationMenuRevisionDto>>> Handle(Query request, CancellationToken cancellationToken)
+        public async Task<IQueryResponseDto<ListResultDto<NavigationMenuRevisionDto>>> Handle(
+            Query request,
+            CancellationToken cancellationToken
+        )
         {
-            var query = _db.NavigationMenuRevisions
-                .Include(nmr => nmr.CreatorUser)
+            var query = _db
+                .NavigationMenuRevisions.Include(nmr => nmr.CreatorUser)
                 .Where(nmr => nmr.NavigationMenuId == request.NavigationMenuId.Guid);
 
             var total = await query.CountAsync(cancellationToken);
-            var items = await query.ApplyPaginationInput(request).Select(NavigationMenuRevisionDto.GetProjection()).ToArrayAsync(cancellationToken);
+            var items = await query
+                .ApplyPaginationInput(request)
+                .Select(NavigationMenuRevisionDto.GetProjection())
+                .ToArrayAsync(cancellationToken);
 
-            return new QueryResponseDto<ListResultDto<NavigationMenuRevisionDto>>(new ListResultDto<NavigationMenuRevisionDto>(items, total));
+            return new QueryResponseDto<ListResultDto<NavigationMenuRevisionDto>>(
+                new ListResultDto<NavigationMenuRevisionDto>(items, total)
+            );
         }
     }
 }

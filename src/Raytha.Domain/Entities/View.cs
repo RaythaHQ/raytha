@@ -26,22 +26,33 @@ public class View : BaseAuditableEntity
     [NotMapped]
     public IEnumerable<string> Columns
     {
-        get { return JsonSerializer.Deserialize<IEnumerable<string>>(_Columns ?? "[]") ?? new List<string>(); }
+        get
+        {
+            return JsonSerializer.Deserialize<IEnumerable<string>>(_Columns ?? "[]")
+                ?? new List<string>();
+        }
         set { _Columns = JsonSerializer.Serialize(value); }
     }
 
     [NotMapped]
     public IEnumerable<ColumnSortOrder> Sort
     {
-        get { return JsonSerializer.Deserialize<IEnumerable<ColumnSortOrder>>(_Sort ?? "[]") ?? new List<ColumnSortOrder>(); }
+        get
+        {
+            return JsonSerializer.Deserialize<IEnumerable<ColumnSortOrder>>(_Sort ?? "[]")
+                ?? new List<ColumnSortOrder>();
+        }
         set { _Sort = JsonSerializer.Serialize(value); }
     }
 
     [NotMapped]
     public IEnumerable<FilterCondition> Filter
     {
-        get { return JsonSerializer.Deserialize<IEnumerable<FilterCondition>>(_Filter ?? "[]") ?? new List<FilterCondition>(); }
+        get
+        {
+            return JsonSerializer.Deserialize<IEnumerable<FilterCondition>>(_Filter ?? "[]")
+                ?? new List<FilterCondition>();
+        }
         set { _Filter = JsonSerializer.Serialize(value); }
     }
 }
-

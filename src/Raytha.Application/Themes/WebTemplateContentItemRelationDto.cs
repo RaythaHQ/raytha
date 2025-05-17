@@ -8,15 +8,19 @@ namespace Raytha.Application.Themes;
 
 public record WebTemplateContentItemRelationDto : BaseEntityDto
 {
-    public required WebTemplateDto WebTemplate { get; init; } 
+    public required WebTemplateDto WebTemplate { get; init; }
     public required ShortGuid ContentItemId { get; init; }
 
-    public static Expression<Func<WebTemplateContentItemRelation, WebTemplateContentItemRelationDto>> GetProjection()
+    public static Expression<
+        Func<WebTemplateContentItemRelation, WebTemplateContentItemRelationDto>
+    > GetProjection()
     {
         return entity => GetProjection(entity);
     }
 
-    public static WebTemplateContentItemRelationDto GetProjection(WebTemplateContentItemRelation entity)
+    public static WebTemplateContentItemRelationDto GetProjection(
+        WebTemplateContentItemRelation entity
+    )
     {
         return new WebTemplateContentItemRelationDto
         {

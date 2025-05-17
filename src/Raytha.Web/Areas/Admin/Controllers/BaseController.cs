@@ -29,13 +29,24 @@ public class BaseController : Controller
     private IEmailer _emailer;
     private IEmailerConfiguration _emailerConfiguration;
 
-    protected ISender Mediator => _mediator ??= HttpContext.RequestServices.GetRequiredService<ISender>();
-    protected ICurrentOrganization CurrentOrganization => _currentOrganization ??= HttpContext.RequestServices.GetRequiredService<ICurrentOrganization>();
-    protected ICurrentUser CurrentUser => _currentUser ??= HttpContext.RequestServices.GetRequiredService<ICurrentUser>();
-    protected IFileStorageProvider FileStorageProvider => _fileStorageProvider ??= HttpContext.RequestServices.GetRequiredService<IFileStorageProvider>();
-    protected IFileStorageProviderSettings FileStorageProviderSettings => _fileStorageSettings ??= HttpContext.RequestServices.GetRequiredService<IFileStorageProviderSettings>();
-    protected IEmailer Emailer => _emailer ??= HttpContext.RequestServices.GetRequiredService<IEmailer>();
-    protected IEmailerConfiguration EmailerConfiguration => _emailerConfiguration ??= HttpContext.RequestServices.GetRequiredService<IEmailerConfiguration>();
+    protected ISender Mediator =>
+        _mediator ??= HttpContext.RequestServices.GetRequiredService<ISender>();
+    protected ICurrentOrganization CurrentOrganization =>
+        _currentOrganization ??=
+            HttpContext.RequestServices.GetRequiredService<ICurrentOrganization>();
+    protected ICurrentUser CurrentUser =>
+        _currentUser ??= HttpContext.RequestServices.GetRequiredService<ICurrentUser>();
+    protected IFileStorageProvider FileStorageProvider =>
+        _fileStorageProvider ??=
+            HttpContext.RequestServices.GetRequiredService<IFileStorageProvider>();
+    protected IFileStorageProviderSettings FileStorageProviderSettings =>
+        _fileStorageSettings ??=
+            HttpContext.RequestServices.GetRequiredService<IFileStorageProviderSettings>();
+    protected IEmailer Emailer =>
+        _emailer ??= HttpContext.RequestServices.GetRequiredService<IEmailer>();
+    protected IEmailerConfiguration EmailerConfiguration =>
+        _emailerConfiguration ??=
+            HttpContext.RequestServices.GetRequiredService<IEmailerConfiguration>();
 
     protected void CheckIfErrorOrSuccessMessageExist()
     {
@@ -56,9 +67,15 @@ public class BaseController : Controller
         TempData[ErrorMessageKey] = message;
     }
 
-    protected void SetErrorMessage(string message, IEnumerable<ValidationFailure> errors, int statusCode = 303)
+    protected void SetErrorMessage(
+        string message,
+        IEnumerable<ValidationFailure> errors,
+        int statusCode = 303
+    )
     {
-        var validationSummary = errors.FirstOrDefault(p => p.PropertyName == Constants.VALIDATION_SUMMARY);
+        var validationSummary = errors.FirstOrDefault(p =>
+            p.PropertyName == Constants.VALIDATION_SUMMARY
+        );
         if (validationSummary != null)
         {
             SetErrorMessage(validationSummary.ErrorMessage);
@@ -68,7 +85,10 @@ public class BaseController : Controller
             SetErrorMessage(message);
         }
 
-        ViewData["ValidationErrors"] = errors?.ToDictionary(k => k.PropertyName, v => v.ErrorMessage);
+        ViewData["ValidationErrors"] = errors?.ToDictionary(
+            k => k.PropertyName,
+            v => v.ErrorMessage
+        );
         this.HttpContext.Response.StatusCode = statusCode;
     }
 
@@ -77,6 +97,7 @@ public class BaseController : Controller
         ViewData[SuccessMessageKey] = message;
         TempData[SuccessMessageKey] = message;
     }
+
     protected void SetWarningMessage(string message)
     {
         ViewData[WarningMessageKey] = message;
@@ -106,34 +127,36 @@ public class BaseController : Controller
 
     /// <summary>
     /// Get the cookie
-    /// </summary>  
-    /// <param name="key">Key </param>  
-    /// <returns>string value</returns>  
+    /// </summary>
+    /// <param name="key">Key </param>
+    /// <returns>string value</returns>
     public string GetCookie(string key)
     {
         return Request.Cookies[key];
     }
 
-    /// <summary>  
-    /// Set the cookie  
-    /// </summary>  
-    /// <param name="key">key (unique identifier)</param>  
-    /// <param name="value">value to store in cookie object</param>  
-    /// <param name="expireTime">expiration time</param>  
+    /// <summary>
+    /// Set the cookie
+    /// </summary>
+    /// <param name="key">key (unique identifier)</param>
+    /// <param name="value">value to store in cookie object</param>
+    /// <param name="expireTime">expiration time</param>
     public void AddToCookies(string key, string value, int? expireTime = null)
     {
         var option = new CookieOptions
         {
-            Expires = expireTime.HasValue ? DateTime.Now.AddMinutes(expireTime.Value) : DateTime.Now.AddHours(10)
+            Expires = expireTime.HasValue
+                ? DateTime.Now.AddMinutes(expireTime.Value)
+                : DateTime.Now.AddHours(10),
         };
 
         Response.Cookies.Append(key, value, option);
     }
 
-    /// <summary>  
-    /// Delete the key  
-    /// </summary>  
-    /// <param name="key">Key</param>  
+    /// <summary>
+    /// Delete the key
+    /// </summary>
+    /// <param name="key">Key</param>
     public void RemoveCookie(string key)
     {
         Response.Cookies.Delete(key);

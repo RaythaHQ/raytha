@@ -25,7 +25,7 @@ public class ConfigurationController : BaseController
             DateFormat = response.Result.DateFormat,
             TimeZone = response.Result.TimeZone,
             SmtpDefaultFromAddress = response.Result.SmtpDefaultFromAddress,
-            SmtpDefaultFromName = response.Result.SmtpDefaultFromName
+            SmtpDefaultFromName = response.Result.SmtpDefaultFromName,
         };
         return View(viewModel);
     }
@@ -42,7 +42,7 @@ public class ConfigurationController : BaseController
             DateFormat = model.DateFormat,
             WebsiteUrl = model.WebsiteUrl,
             SmtpDefaultFromAddress = model.SmtpDefaultFromAddress,
-            SmtpDefaultFromName = model.SmtpDefaultFromName
+            SmtpDefaultFromName = model.SmtpDefaultFromName,
         };
         var response = await Mediator.Send(input);
         if (response.Success)
@@ -52,7 +52,10 @@ public class ConfigurationController : BaseController
         }
         else
         {
-            SetErrorMessage("There was an error attempting the configuration. See the error below.", response.GetErrors());
+            SetErrorMessage(
+                "There was an error attempting the configuration. See the error below.",
+                response.GetErrors()
+            );
             return View(model);
         }
     }

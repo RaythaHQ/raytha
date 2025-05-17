@@ -1,6 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using Raytha.Domain.Entities;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using Raytha.Domain.Entities;
 
 namespace Raytha.Infrastructure.Persistence.Configurations;
 
@@ -8,14 +8,8 @@ public class RaythaFunctionRevisionConfiguration : IEntityTypeConfiguration<Rayt
 {
     public void Configure(EntityTypeBuilder<RaythaFunctionRevision> builder)
     {
-        builder
-            .HasOne(b => b.CreatorUser)
-            .WithMany()
-            .HasForeignKey(b => b.CreatorUserId);
+        builder.HasOne(b => b.CreatorUser).WithMany().HasForeignKey(b => b.CreatorUserId);
 
-        builder
-            .HasOne(b => b.LastModifierUser)
-            .WithMany()
-            .HasForeignKey(b => b.LastModifierUserId);
+        builder.HasOne(b => b.LastModifierUser).WithMany().HasForeignKey(b => b.LastModifierUserId);
     }
 }

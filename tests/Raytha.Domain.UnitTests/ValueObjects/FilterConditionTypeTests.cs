@@ -35,8 +35,10 @@ public class FilterConditionTypeTests
     [Test]
     public void ShouldThrowUnsupportedColourExceptionGivenNotSupportedColourCode()
     {
-        FluentActions.Invoking(() => FilterConditionType.From("BadValue"))
-            .Should().Throw<FilterConditionTypeNotFoundException>();
+        FluentActions
+            .Invoking(() => FilterConditionType.From("BadValue"))
+            .Should()
+            .Throw<FilterConditionTypeNotFoundException>();
     }
 
     [Test]

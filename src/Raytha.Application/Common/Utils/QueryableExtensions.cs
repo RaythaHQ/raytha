@@ -1,16 +1,24 @@
-﻿using Raytha.Application.Common.Models;
-using System.Linq.Dynamic.Core;
+﻿using System.Linq.Dynamic.Core;
+using Raytha.Application.Common.Models;
 
 namespace Raytha.Application.Common.Utils;
 
 public static class QueryableExtensions
 {
-    public static IQueryable<T> ApplyPaginationInput<T>(this IQueryable<T> source, GetPagedEntitiesInputDto input) where T : class
+    public static IQueryable<T> ApplyPaginationInput<T>(
+        this IQueryable<T> source,
+        GetPagedEntitiesInputDto input
+    )
+        where T : class
     {
-        if (source == null) throw new ArgumentNullException(nameof(source));
-        if (input == null) throw new ArgumentNullException(nameof(input));
+        if (source == null)
+            throw new ArgumentNullException(nameof(source));
+        if (input == null)
+            throw new ArgumentNullException(nameof(input));
 
-        IEnumerable<GetPagedEntitiesInputDtoOrderByItem> orderByItems = input.GetOrderByItems().Where(p => typeof(T).GetProperty(p.OrderByPropertyName) != null);
+        IEnumerable<GetPagedEntitiesInputDtoOrderByItem> orderByItems = input
+            .GetOrderByItems()
+            .Where(p => typeof(T).GetProperty(p.OrderByPropertyName) != null);
 
         if (orderByItems.Any())
         {

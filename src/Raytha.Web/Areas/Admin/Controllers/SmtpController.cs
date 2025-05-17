@@ -26,12 +26,14 @@ public class SmtpController : BaseController
             SmtpPort = response.Result.SmtpPort,
             SmtpUsername = response.Result.SmtpUsername,
             SmtpPassword = response.Result.SmtpPassword,
-            MissingSmtpEnvironmentVariables = isMissingSmtpEnvVars
+            MissingSmtpEnvironmentVariables = isMissingSmtpEnvVars,
         };
-        
+
         if (isMissingSmtpEnvVars)
-            SetWarningMessage("The server administrator has not set SMTP environment variables (SMTP_HOST, SMTP_PORT, SMTP_USERNAME, SMTP_PASSWORD) on this host. Therefore you must specify SMTP server details below.");
-        
+            SetWarningMessage(
+                "The server administrator has not set SMTP environment variables (SMTP_HOST, SMTP_PORT, SMTP_USERNAME, SMTP_PASSWORD) on this host. Therefore you must specify SMTP server details below."
+            );
+
         return View(viewModel);
     }
 
@@ -46,11 +48,11 @@ public class SmtpController : BaseController
             SmtpHost = model.SmtpHost,
             SmtpPort = model.SmtpPort,
             SmtpUsername = model.SmtpUsername,
-            SmtpPassword = model.SmtpPassword
+            SmtpPassword = model.SmtpPassword,
         };
 
         var response = await Mediator.Send(input);
-        
+
         if (response.Success)
         {
             SetSuccessMessage("SMTP has been updated successfully.");
@@ -58,7 +60,9 @@ public class SmtpController : BaseController
         }
         else
         {
-            SetErrorMessage("There was an error attempting to edit the configuration. See the error below.");
+            SetErrorMessage(
+                "There was an error attempting to edit the configuration. See the error below."
+            );
             this.HttpContext.Response.StatusCode = 303;
             return View(model);
         }

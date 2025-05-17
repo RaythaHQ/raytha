@@ -17,39 +17,51 @@ public class SetIsActive
 
     public class Validator : AbstractValidator<Command>
     {
-        public Validator(
-            IRaythaDbContext db,
-            ICurrentUser currentUser)
+        public Validator(IRaythaDbContext db, ICurrentUser currentUser)
         {
-            RuleFor(x => x).Custom((request, context) =>
-            {
-                if (request.Id == currentUser.UserId)
-                {
-                    context.AddFailure(Constants.VALIDATION_SUMMARY, "You cannot change the status on your own account.");
-                    return;
-                }
+            RuleFor(x => x)
+                .Custom(
+                    (request, context) =>
+                    {
+                        if (request.Id == currentUser.UserId)
+                        {
+                            context.AddFailure(
+                                Constants.VALIDATION_SUMMARY,
+                                "You cannot change the status on your own account."
+                            );
+                            return;
+                        }
 
-                var entity = db.Users.FirstOrDefault(p => p.Id == request.Id.Guid);
-                if (entity == null)
-                    throw new NotFoundException("User", request.Id);
+                        var entity = db.Users.FirstOrDefault(p => p.Id == request.Id.Guid);
+                        if (entity == null)
+                            throw new NotFoundException("User", request.Id);
 
-                if (entity.IsAdmin)
-                {
-                    context.AddFailure(Constants.VALIDATION_SUMMARY, "You cannot change the status of another administrator account.");
-                    return;
-                }
-            });
+                        if (entity.IsAdmin)
+                        {
+                            context.AddFailure(
+                                Constants.VALIDATION_SUMMARY,
+                                "You cannot change the status of another administrator account."
+                            );
+                            return;
+                        }
+                    }
+                );
         }
     }
 
     public class Handler : IRequestHandler<Command, CommandResponseDto<ShortGuid>>
     {
         private readonly IRaythaDbContext _db;
+
         public Handler(IRaythaDbContext db)
         {
             _db = db;
         }
-        public async Task<CommandResponseDto<ShortGuid>> Handle(Command request, CancellationToken cancellationToken)
+
+        public async Task<CommandResponseDto<ShortGuid>> Handle(
+            Command request,
+            CancellationToken cancellationToken
+        )
         {
             var entity = _db.Users.First(p => p.Id == request.Id.Guid);
 
@@ -61,4 +73,3 @@ public class SetIsActive
         }
     }
 }
-

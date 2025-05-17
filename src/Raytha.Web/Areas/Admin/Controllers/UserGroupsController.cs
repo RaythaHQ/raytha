@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using System.Linq;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Raytha.Application.UserGroups.Commands;
@@ -8,8 +10,6 @@ using Raytha.Domain.ValueObjects;
 using Raytha.Web.Areas.Admin.Views.Shared.ViewModels;
 using Raytha.Web.Areas.Admin.Views.UserGroups;
 using Raytha.Web.Filters;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace Raytha.Web.Areas.Admin.Controllers;
 
@@ -19,14 +19,19 @@ public class UserGroupsController : BaseController
 {
     [ServiceFilter(typeof(SetPaginationInformationFilterAttribute))]
     [Route(RAYTHA_ROUTE_PREFIX + "/users/groups", Name = "usergroupsindex")]
-    public async Task<IActionResult> Index(string search = "", string orderBy = $"Label {SortOrder.ASCENDING}", int pageNumber = 1, int pageSize = 50)
+    public async Task<IActionResult> Index(
+        string search = "",
+        string orderBy = $"Label {SortOrder.ASCENDING}",
+        int pageNumber = 1,
+        int pageSize = 50
+    )
     {
         var input = new GetUserGroups.Query
         {
             Search = search,
             PageNumber = pageNumber,
             PageSize = pageSize,
-            OrderBy = orderBy
+            OrderBy = orderBy,
         };
 
         var response = await Mediator.Send(input);
@@ -37,7 +42,10 @@ public class UserGroupsController : BaseController
             Id = p.Id,
         });
 
-        var viewModel = new List_ViewModel<UserGroupsListItem_ViewModel>(items, response.Result.TotalCount);
+        var viewModel = new List_ViewModel<UserGroupsListItem_ViewModel>(
+            items,
+            response.Result.TotalCount
+        );
         return View(viewModel);
     }
 
@@ -56,7 +64,7 @@ public class UserGroupsController : BaseController
         var input = new CreateUserGroup.Command
         {
             Label = model.Label,
-            DeveloperName = model.DeveloperName
+            DeveloperName = model.DeveloperName,
         };
         var response = await Mediator.Send(input);
 
@@ -67,7 +75,10 @@ public class UserGroupsController : BaseController
         }
         else
         {
-            SetErrorMessage("There was an error attempting to create this user group. See the error below.", response.GetErrors());
+            SetErrorMessage(
+                "There was an error attempting to create this user group. See the error below.",
+                response.GetErrors()
+            );
             return View(model);
         }
     }
@@ -81,7 +92,7 @@ public class UserGroupsController : BaseController
         {
             Id = response.Result.Id,
             Label = response.Result.Label,
-            DeveloperName = response.Result.DeveloperName
+            DeveloperName = response.Result.DeveloperName,
         };
         return View(model);
     }
@@ -91,11 +102,7 @@ public class UserGroupsController : BaseController
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Edit(EditUserGroup_ViewModel model, string id)
     {
-        var input = new EditUserGroup.Command
-        {
-            Id = id,
-            Label = model.Label
-        };
+        var input = new EditUserGroup.Command { Id = id, Label = model.Label };
 
         var response = await Mediator.Send(input);
 
@@ -105,7 +112,10 @@ public class UserGroupsController : BaseController
             return RedirectToAction("Edit", new { id });
         }
         {
-            SetErrorMessage("There was an error attempting to update this user group. See the error below.", response.GetErrors());
+            SetErrorMessage(
+                "There was an error attempting to update this user group. See the error below.",
+                response.GetErrors()
+            );
             model.Id = id;
             return View(model);
         }

@@ -23,7 +23,6 @@ public class BuiltInEmailTemplateTests
         type.DeveloperName.Should().Be(developerName);
     }
 
-
     [Test]
     public void ShouldPerformImplicitConversionToString()
     {
@@ -43,8 +42,10 @@ public class BuiltInEmailTemplateTests
     [Test]
     public void ShouldThrowUnsupportedColourExceptionGivenNotSupportedColourCode()
     {
-        FluentActions.Invoking(() => BuiltInEmailTemplate.From("BadValue"))
-            .Should().Throw<UnsupportedTemplateTypeException>();
+        FluentActions
+            .Invoking(() => BuiltInEmailTemplate.From("BadValue"))
+            .Should()
+            .Throw<UnsupportedTemplateTypeException>();
     }
 
     [Test]

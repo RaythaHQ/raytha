@@ -9,22 +9,24 @@ namespace Raytha.Application.Views.Queries;
 
 public class GetViewById
 {
-    public record Query : GetEntityByIdInputDto, IRequest<IQueryResponseDto<ViewDto>>
-    {
-    }
+    public record Query : GetEntityByIdInputDto, IRequest<IQueryResponseDto<ViewDto>> { }
 
     public class Handler : IRequestHandler<Query, IQueryResponseDto<ViewDto>>
     {
         private readonly IRaythaDbContext _db;
+
         public Handler(IRaythaDbContext db)
         {
             _db = db;
         }
 
-        public async Task<IQueryResponseDto<ViewDto>> Handle(Query request, CancellationToken cancellationToken)
+        public async Task<IQueryResponseDto<ViewDto>> Handle(
+            Query request,
+            CancellationToken cancellationToken
+        )
         {
-            var entity = _db.Views
-                .Include(p => p.Route)
+            var entity = _db
+                .Views.Include(p => p.Route)
                 .Include(p => p.ContentType)
                 .ThenInclude(p => p.ContentTypeFields)
                 .FirstOrDefault(p => p.Id == request.Id.Guid);

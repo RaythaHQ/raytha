@@ -20,14 +20,19 @@ public class ToggleViewAsFavoriteForAdmin
     public class Handler : IRequestHandler<Command, CommandResponseDto<ShortGuid>>
     {
         private readonly IRaythaDbContext _db;
+
         public Handler(IRaythaDbContext db)
         {
             _db = db;
         }
-        public async Task<CommandResponseDto<ShortGuid>> Handle(Command request, CancellationToken cancellationToken)
+
+        public async Task<CommandResponseDto<ShortGuid>> Handle(
+            Command request,
+            CancellationToken cancellationToken
+        )
         {
-            var entity = _db.Views
-                .Include(p => p.UserFavorites)
+            var entity = _db
+                .Views.Include(p => p.UserFavorites)
                 .FirstOrDefault(p => p.Id == request.ViewId.Guid);
 
             if (entity == null)
@@ -39,7 +44,10 @@ public class ToggleViewAsFavoriteForAdmin
 
             if (!request.SetAsFavorite)
             {
-                if (entity.UserFavorites != null && entity.UserFavorites.Any(p => p.Id == request.UserId.Guid))
+                if (
+                    entity.UserFavorites != null
+                    && entity.UserFavorites.Any(p => p.Id == request.UserId.Guid)
+                )
                 {
                     entity.UserFavorites.Remove(user);
                 }

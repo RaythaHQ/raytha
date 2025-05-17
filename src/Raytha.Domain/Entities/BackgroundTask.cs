@@ -17,13 +17,9 @@ public class BackgroundTask : BaseEntity, IHasCreationTime, IHasModificationTime
 
 public class BackgroundTaskStatus : ValueObject
 {
-    static BackgroundTaskStatus()
-    {
-    }
+    static BackgroundTaskStatus() { }
 
-    public BackgroundTaskStatus()
-    {
-    }
+    public BackgroundTaskStatus() { }
 
     private BackgroundTaskStatus(string label, string developerName)
     {
@@ -42,6 +38,7 @@ public class BackgroundTaskStatus : ValueObject
 
         return type;
     }
+
     public static BackgroundTaskStatus Enqueued => new("Enqueued", "enqueued");
     public static BackgroundTaskStatus Processing => new("Processing", "processing");
     public static BackgroundTaskStatus Complete => new("Complete", "complete");

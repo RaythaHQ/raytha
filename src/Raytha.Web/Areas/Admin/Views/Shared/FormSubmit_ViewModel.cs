@@ -15,7 +15,9 @@ public class FormSubmit_ViewModel : IFormValidation
 
     public string HasError(string propertyName)
     {
-        return ValidationFailures != null && ValidationFailures.Any(p => p.Key == propertyName) ? "is-invalid" : string.Empty;
+        return ValidationFailures != null && ValidationFailures.Any(p => p.Key == propertyName)
+            ? "is-invalid"
+            : string.Empty;
     }
 
     public string ErrorMessageFor(string propertyName)

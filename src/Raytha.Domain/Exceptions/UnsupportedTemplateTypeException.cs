@@ -3,7 +3,5 @@
 public class UnsupportedTemplateTypeException : Exception
 {
     public UnsupportedTemplateTypeException(string developerName)
-        : base($"Template type \"{developerName}\" is unsupported.")
-    {
-    }
+        : base($"Template type \"{developerName}\" is unsupported.") { }
 }

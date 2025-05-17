@@ -1,9 +1,9 @@
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Raytha.Application.Common.Security;
 using Raytha.Application.OrganizationSettings.Queries;
 using Raytha.Web.Authentication;
-using System.Threading.Tasks;
 
 namespace Raytha.Web.Areas.Api.Controllers.V1;
 
@@ -18,7 +18,7 @@ public class PingController : BaseController
         {
             Success = response.Success,
             Version = CurrentVersion.Version,
-            OrganizationName = response.Result.OrganizationName
+            OrganizationName = response.Result.OrganizationName,
         };
     }
 }

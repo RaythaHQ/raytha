@@ -8,19 +8,11 @@ public class ThemeConfiguration : IEntityTypeConfiguration<Theme>
 {
     public void Configure(EntityTypeBuilder<Theme> builder)
     {
-        builder
-            .HasIndex(t => t.DeveloperName)
-            .IsUnique();
+        builder.HasIndex(t => t.DeveloperName).IsUnique();
 
-        builder
-            .HasOne(t => t.CreatorUser)
-            .WithMany()
-            .HasForeignKey(t => t.CreatorUserId);
+        builder.HasOne(t => t.CreatorUser).WithMany().HasForeignKey(t => t.CreatorUserId);
 
-        builder
-            .HasOne(t => t.LastModifierUser)
-            .WithMany()
-            .HasForeignKey(t => t.LastModifierUserId);
+        builder.HasOne(t => t.LastModifierUser).WithMany().HasForeignKey(t => t.LastModifierUserId);
 
         builder
             .HasMany(t => t.WebTemplates)

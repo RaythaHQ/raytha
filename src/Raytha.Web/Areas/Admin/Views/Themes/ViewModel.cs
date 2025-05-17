@@ -92,7 +92,7 @@ public class ThemesExport_ViewModel : FormSubmit_ViewModel
     public string Url { get; set; }
 }
 
-public class ThemesBackgroundTaskStatus_ViewModel 
+public class ThemesBackgroundTaskStatus_ViewModel
 {
     public string PathBase { get; set; }
 }
@@ -102,7 +102,8 @@ public class ThemesMatchingWebTemplates_ViewModel
     public string ThemeId { get; set; }
     public IEnumerable<string> ActiveThemeWebTemplateDeveloperNames { get; set; }
     public IEnumerable<string> NewActiveThemeWebTemplateDeveloperNames { get; set; }
-    public IDictionary<string, string> WebTemplateMappings { get; set; } = new Dictionary<string, string>();
+    public IDictionary<string, string> WebTemplateMappings { get; set; } =
+        new Dictionary<string, string>();
 }
 
 public class ThemesDuplicate_ViewModel : FormSubmit_ViewModel

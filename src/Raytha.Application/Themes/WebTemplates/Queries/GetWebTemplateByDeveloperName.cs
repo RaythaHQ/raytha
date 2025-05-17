@@ -25,13 +25,21 @@ public class GetWebTemplateByDeveloperName
             _db = db;
         }
 
-        public async Task<IQueryResponseDto<WebTemplateDto>> Handle(Query request, CancellationToken cancellationToken)
+        public async Task<IQueryResponseDto<WebTemplateDto>> Handle(
+            Query request,
+            CancellationToken cancellationToken
+        )
         {
-            var webTemplate = await _db.WebTemplates
-                .Include(wt => wt.TemplateAccessToModelDefinitions)
-                    .ThenInclude(p => p.ContentType)
+            var webTemplate = await _db
+                .WebTemplates.Include(wt => wt.TemplateAccessToModelDefinitions)
+                .ThenInclude(p => p.ContentType)
                 .IncludeParentTemplates(wt => wt.ParentTemplate)
-                .FirstOrDefaultAsync(wt => wt.DeveloperName == request.DeveloperName.ToDeveloperName() && wt.ThemeId == request.ThemeId.Guid, cancellationToken);
+                .FirstOrDefaultAsync(
+                    wt =>
+                        wt.DeveloperName == request.DeveloperName.ToDeveloperName()
+                        && wt.ThemeId == request.ThemeId.Guid,
+                    cancellationToken
+                );
 
             if (webTemplate == null)
                 throw new NotFoundException("Template", request.DeveloperName);

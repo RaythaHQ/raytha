@@ -1,8 +1,8 @@
-﻿using CSharpVitamins;
+﻿using System;
+using System.Collections.Generic;
+using CSharpVitamins;
 using Raytha.Domain.ValueObjects;
 using Raytha.Web.Areas.Admin.Views.Shared.ViewModels;
-using System;
-using System.Collections.Generic;
 
 namespace Raytha.Web.Areas.Admin.Views.AuditLogs;
 
@@ -11,7 +11,10 @@ public class AuditLogsPagination_ViewModel : Pagination_ViewModel
     public IEnumerable<AuditLogsListItem_ViewModel> Items { get; }
 
     public AuditLogsPagination_ViewModel(
-        IEnumerable<AuditLogsListItem_ViewModel> items, int totalCount) : base(totalCount) => Items = items;
+        IEnumerable<AuditLogsListItem_ViewModel> items,
+        int totalCount
+    )
+        : base(totalCount) => Items = items;
 
     public DateTime? StartDate { get; set; }
     public DateTime? EndDate { get; set; }

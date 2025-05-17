@@ -4,7 +4,8 @@ namespace Raytha.Domain.ValueObjects.FieldTypes;
 
 public class DateFieldType : BaseFieldType
 {
-    public DateFieldType() : base("Date", "date", false) { }
+    public DateFieldType()
+        : base("Date", "date", false) { }
 
     public override IEnumerable<ConditionOperator> SupportedConditionOperators
     {
@@ -28,20 +29,22 @@ public class DateFieldType : BaseFieldType
 
     public override string SqlServerSingleJsonValue(params string[] args)
     {
-        int sqlDateOutput = args[3] switch {
+        int sqlDateOutput = args[3] switch
+        {
             "MM/dd/yyyy" => 101,
             "dd/MM/yyyy" => 103,
-            _ => 0
+            _ => 0,
         };
         return $" TRY_CONVERT(datetime, JSON_VALUE({args[0]}.{args[1]}, '$.{args[2]}'), {sqlDateOutput}) ";
     }
 
     public override string SqlServerOrderByExpression(params string[] args)
     {
-        int sqlDateOutput = args[3] switch {
+        int sqlDateOutput = args[3] switch
+        {
             "MM/dd/yyyy" => 101,
             "dd/MM/yyyy" => 103,
-            _ => 0
+            _ => 0,
         };
         return $" TRY_CONVERT(datetime, JSON_VALUE({args[0]}.{args[1]}, '$.{args[2]}'), {sqlDateOutput}) {args[4]} ";
     }
@@ -55,6 +58,7 @@ public class DateFieldType : BaseFieldType
             '{dateFormat}'
         )";
     }
+
     public override string PostgresOrderByExpression(params string[] args)
     {
         string dateFormat = args[3].ToUpper(); //US or UK format

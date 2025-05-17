@@ -16,28 +16,32 @@ namespace Raytha.Migrations.SqlServer
                 table: "Views",
                 type: "int",
                 nullable: false,
-                defaultValue: 25);
+                defaultValue: 25
+            );
 
             migrationBuilder.AddColumn<bool>(
                 name: "IgnoreClientFilterAndSortQueryParams",
                 table: "Views",
                 type: "bit",
                 nullable: false,
-                defaultValue: false);
+                defaultValue: false
+            );
 
             migrationBuilder.AddColumn<int>(
                 name: "MaxNumberOfItemsPerPage",
                 table: "Views",
                 type: "int",
                 nullable: false,
-                defaultValue: 1000);
+                defaultValue: 1000
+            );
 
             migrationBuilder.AddColumn<string>(
                 name: "HomePageType",
                 table: "OrganizationSettings",
                 type: "nvarchar(max)",
                 nullable: false,
-                defaultValue: "ContentItem");
+                defaultValue: "ContentItem"
+            );
 
             migrationBuilder.CreateTable(
                 name: "ApiKeys",
@@ -47,7 +51,7 @@ namespace Raytha.Migrations.SqlServer
                     ApiKeyHash = table.Column<byte[]>(type: "varbinary(900)", nullable: false),
                     UserId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     CreatorUserId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
-                    CreationTime = table.Column<DateTime>(type: "datetime2", nullable: false)
+                    CreationTime = table.Column<DateTime>(type: "datetime2", nullable: false),
                 },
                 constraints: table =>
                 {
@@ -56,70 +60,71 @@ namespace Raytha.Migrations.SqlServer
                         name: "FK_ApiKeys_Users_CreatorUserId",
                         column: x => x.CreatorUserId,
                         principalTable: "Users",
-                        principalColumn: "Id");
+                        principalColumn: "Id"
+                    );
                     table.ForeignKey(
                         name: "FK_ApiKeys_Users_UserId",
                         column: x => x.UserId,
                         principalTable: "Users",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
+                        onDelete: ReferentialAction.Cascade
+                    );
+                }
+            );
 
             migrationBuilder.CreateTable(
                 name: "DataProtectionKeys",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
+                    Id = table
+                        .Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     FriendlyName = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    Xml = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                    Xml = table.Column<string>(type: "nvarchar(max)", nullable: true),
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_DataProtectionKeys", x => x.Id);
-                });
+                }
+            );
 
             migrationBuilder.CreateIndex(
                 name: "IX_ApiKeys_ApiKeyHash",
                 table: "ApiKeys",
                 column: "ApiKeyHash",
-                unique: true);
+                unique: true
+            );
 
             migrationBuilder.CreateIndex(
                 name: "IX_ApiKeys_CreatorUserId",
                 table: "ApiKeys",
-                column: "CreatorUserId");
+                column: "CreatorUserId"
+            );
 
             migrationBuilder.CreateIndex(
                 name: "IX_ApiKeys_UserId",
                 table: "ApiKeys",
-                column: "UserId");
+                column: "UserId"
+            );
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropTable(
-                name: "ApiKeys");
+            migrationBuilder.DropTable(name: "ApiKeys");
 
-            migrationBuilder.DropTable(
-                name: "DataProtectionKeys");
+            migrationBuilder.DropTable(name: "DataProtectionKeys");
 
-            migrationBuilder.DropColumn(
-                name: "DefaultNumberOfItemsPerPage",
-                table: "Views");
+            migrationBuilder.DropColumn(name: "DefaultNumberOfItemsPerPage", table: "Views");
 
             migrationBuilder.DropColumn(
                 name: "IgnoreClientFilterAndSortQueryParams",
-                table: "Views");
+                table: "Views"
+            );
 
-            migrationBuilder.DropColumn(
-                name: "MaxNumberOfItemsPerPage",
-                table: "Views");
+            migrationBuilder.DropColumn(name: "MaxNumberOfItemsPerPage", table: "Views");
 
-            migrationBuilder.DropColumn(
-                name: "HomePageType",
-                table: "OrganizationSettings");
+            migrationBuilder.DropColumn(name: "HomePageType", table: "OrganizationSettings");
         }
     }
 }

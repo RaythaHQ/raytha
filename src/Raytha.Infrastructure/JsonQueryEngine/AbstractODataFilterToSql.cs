@@ -1,11 +1,11 @@
-﻿using CSharpVitamins;
+﻿using System.ComponentModel.DataAnnotations;
+using System.Text;
+using System.Text.RegularExpressions;
+using CSharpVitamins;
 using Microsoft.OData.Edm;
 using Microsoft.OData.ModelBuilder;
 using Microsoft.OData.UriParser;
 using Raytha.Domain.Entities;
-using System.ComponentModel.DataAnnotations;
-using System.Text;
-using System.Text.RegularExpressions;
 
 namespace Raytha.Infrastructure.JsonQueryEngine;
 
@@ -34,7 +34,8 @@ internal abstract class AbstractODataFilterToSql
 
     public abstract string GenerateSql(string filterExpression);
 
-    protected abstract class AbstractODataFilterToSqlVisitor<TSource> : QueryNodeVisitor<TSource> where TSource : class
+    protected abstract class AbstractODataFilterToSqlVisitor<TSource> : QueryNodeVisitor<TSource>
+        where TSource : class
     {
         protected StringBuilder whereClause = new StringBuilder();
         protected ContentType _contentType;
@@ -46,7 +47,8 @@ internal abstract class AbstractODataFilterToSql
 
         public virtual string GetWhereClause()
         {
-            return whereClause.ToString()
+            return whereClause
+                .ToString()
                 .Replace("!= null", "IS NOT NULL")
                 .Replace("= null", "IS NULL");
         }
@@ -117,7 +119,9 @@ internal abstract class AbstractODataFilterToSql
                     whereClause.Append(" <= ");
                     break;
                 default:
-                    throw new NotImplementedException($"Binary operator {nodeIn.OperatorKind} not supported.");
+                    throw new NotImplementedException(
+                        $"Binary operator {nodeIn.OperatorKind} not supported."
+                    );
             }
 
             var right = bon.Right;
@@ -143,7 +147,9 @@ internal abstract class AbstractODataFilterToSql
             }
             else if (nextNode is SingleValueOpenPropertyAccessNode)
             {
-                var realFieldName = UseDeveloperNameForPrimaryField(((SingleValueOpenPropertyAccessNode)nextNode).Name);
+                var realFieldName = UseDeveloperNameForPrimaryField(
+                    ((SingleValueOpenPropertyAccessNode)nextNode).Name
+                );
                 HandleSingleValueProperty(realFieldName);
             }
             else if (nextNode is ConvertNode)

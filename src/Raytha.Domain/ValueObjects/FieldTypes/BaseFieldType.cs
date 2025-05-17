@@ -1,17 +1,13 @@
-﻿using Raytha.Domain.ValueObjects.FieldValues;
-using System.ComponentModel.DataAnnotations.Schema;
+﻿using System.ComponentModel.DataAnnotations.Schema;
+using Raytha.Domain.ValueObjects.FieldValues;
 
 namespace Raytha.Domain.ValueObjects.FieldTypes;
 
 public abstract class BaseFieldType : ValueObject
 {
-    static BaseFieldType()
-    {
-    }
+    static BaseFieldType() { }
 
-    protected BaseFieldType()
-    {
-    }
+    protected BaseFieldType() { }
 
     protected BaseFieldType(string label, string developerName, bool hasChoices)
     {
@@ -132,7 +128,8 @@ public abstract class BaseFieldType : ValueObject
 
 public abstract class EqualsOrNotEqualsFieldType : BaseFieldType
 {
-    public EqualsOrNotEqualsFieldType(string label, string developerName, bool hasChoices) : base(label, developerName, hasChoices) { }
+    public EqualsOrNotEqualsFieldType(string label, string developerName, bool hasChoices)
+        : base(label, developerName, hasChoices) { }
 
     public override IEnumerable<ConditionOperator> SupportedConditionOperators
     {
@@ -142,12 +139,12 @@ public abstract class EqualsOrNotEqualsFieldType : BaseFieldType
             yield return ConditionOperator.NOT_EQUALS;
         }
     }
-
 }
 
 public abstract class TextFieldType : BaseFieldType
 {
-    public TextFieldType(string label, string developerName, bool hasChoices) : base(label, developerName, hasChoices) { }
+    public TextFieldType(string label, string developerName, bool hasChoices)
+        : base(label, developerName, hasChoices) { }
 
     public override IEnumerable<ConditionOperator> SupportedConditionOperators
     {
@@ -169,7 +166,8 @@ public abstract class TextFieldType : BaseFieldType
 
 public abstract class SingleSelectFieldType : BaseFieldType
 {
-    public SingleSelectFieldType(string label, string developerName, bool hasChoices) : base(label, developerName, hasChoices) { }
+    public SingleSelectFieldType(string label, string developerName, bool hasChoices)
+        : base(label, developerName, hasChoices) { }
 
     public override IEnumerable<ConditionOperator> SupportedConditionOperators
     {
@@ -185,7 +183,8 @@ public abstract class SingleSelectFieldType : BaseFieldType
 
 public abstract class NumericValueFieldType : BaseFieldType
 {
-    public NumericValueFieldType(string label, string developerName, bool hasChoices) : base(label, developerName, hasChoices) { }
+    public NumericValueFieldType(string label, string developerName, bool hasChoices)
+        : base(label, developerName, hasChoices) { }
 
     public override IEnumerable<ConditionOperator> SupportedConditionOperators
     {
@@ -214,11 +213,11 @@ public abstract class NumericValueFieldType : BaseFieldType
 
     public override string PostgresOrderByExpression(params string[] args)
     {
-        return $" CASE WHEN ({args[0]}.\"{args[1]}\"->>'{args[2]}') ~ '^[0-9]+(\\.[0-9]+)?$' THEN ({args[0]}.\"{args[1]}\"->> '{args[2]}')::decimal ELSE NULL END {args[3]}, {args[0]}.\"{args[1]}\"->>'{args[2]}' {args[3]} "; 
+        return $" CASE WHEN ({args[0]}.\"{args[1]}\"->>'{args[2]}') ~ '^[0-9]+(\\.[0-9]+)?$' THEN ({args[0]}.\"{args[1]}\"->> '{args[2]}')::decimal ELSE NULL END {args[3]}, {args[0]}.\"{args[1]}\"->>'{args[2]}' {args[3]} ";
     }
 
     public override string PostgresSingleJsonValue(params string[] args)
     {
-        return $" CASE WHEN ({args[0]}.\"{args[1]}\"->>'{args[2]}') ~ '^[0-9]+(\\.[0-9]+)?$' THEN ({args[0]}.\"{args[1]}\"->> '{args[2]}')::decimal(18, 2) ELSE NULL END"; 
+        return $" CASE WHEN ({args[0]}.\"{args[1]}\"->>'{args[2]}') ~ '^[0-9]+(\\.[0-9]+)?$' THEN ({args[0]}.\"{args[1]}\"->> '{args[2]}')::decimal(18, 2) ELSE NULL END";
     }
 }

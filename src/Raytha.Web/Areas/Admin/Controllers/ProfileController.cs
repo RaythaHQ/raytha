@@ -16,7 +16,7 @@ public class ProfileController : BaseController
         {
             FirstName = CurrentUser.FirstName,
             LastName = CurrentUser.LastName,
-            EmailAddress = CurrentUser.EmailAddress
+            EmailAddress = CurrentUser.EmailAddress,
         };
 
         ViewData["ActiveMenu"] = "My Profile";
@@ -28,12 +28,14 @@ public class ProfileController : BaseController
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Profile(ChangeProfile_ViewModel model)
     {
-        var response = await Mediator.Send(new ChangeProfile.Command 
-        { 
-            Id = CurrentUser.UserId.Value,
-            FirstName = model.FirstName,
-            LastName = model.LastName
-        });
+        var response = await Mediator.Send(
+            new ChangeProfile.Command
+            {
+                Id = CurrentUser.UserId.Value,
+                FirstName = model.FirstName,
+                LastName = model.LastName,
+            }
+        );
 
         if (response.Success)
         {
@@ -42,7 +44,9 @@ public class ProfileController : BaseController
         }
         else
         {
-            SetErrorMessage("There was an error attempting to change your profile. See the error below.");
+            SetErrorMessage(
+                "There was an error attempting to change your profile. See the error below."
+            );
             this.HttpContext.Response.StatusCode = 303;
             ViewData["ActiveMenu"] = "My Profile";
             return View(model);
@@ -74,13 +78,15 @@ public class ProfileController : BaseController
             return RedirectToAction("Profile");
         }
 
-        var response = await Mediator.Send(new ChangePassword.Command 
-        { 
-            Id = CurrentUser.UserId.Value,
-            CurrentPassword = model.CurrentPassword,
-            NewPassword = model.NewPassword,
-            ConfirmNewPassword = model.ConfirmNewPassword
-        });
+        var response = await Mediator.Send(
+            new ChangePassword.Command
+            {
+                Id = CurrentUser.UserId.Value,
+                CurrentPassword = model.CurrentPassword,
+                NewPassword = model.NewPassword,
+                ConfirmNewPassword = model.ConfirmNewPassword,
+            }
+        );
 
         if (response.Success)
         {
@@ -90,7 +96,9 @@ public class ProfileController : BaseController
         else
         {
             ViewData["ActiveMenu"] = "Change Password";
-            SetErrorMessage("There was an error attempting to change your password. See the error below.");
+            SetErrorMessage(
+                "There was an error attempting to change your password. See the error below."
+            );
             this.HttpContext.Response.StatusCode = 303;
             return View(model);
         }

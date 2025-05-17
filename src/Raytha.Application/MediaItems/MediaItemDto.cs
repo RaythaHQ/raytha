@@ -1,6 +1,6 @@
-﻿using Raytha.Application.Common.Models;
+﻿using System.Linq.Expressions;
+using Raytha.Application.Common.Models;
 using Raytha.Domain.Entities;
-using System.Linq.Expressions;
 
 namespace Raytha.Application.MediaItems;
 
@@ -30,7 +30,7 @@ public record MediaItemDto : BaseAuditableEntityDto
             CreationTime = entity.CreationTime,
             LastModificationTime = entity.LastModificationTime,
             LastModifierUserId = entity.LastModifierUserId,
-            ObjectKey = entity.ObjectKey
+            ObjectKey = entity.ObjectKey,
         };
     }
 }

@@ -1,7 +1,7 @@
-﻿using Raytha.Domain.ValueObjects;
-using System.Globalization;
+﻿using System.Globalization;
 using System.Text;
 using System.Text.RegularExpressions;
+using Raytha.Domain.ValueObjects;
 
 namespace Raytha.Application.Common.Utils;
 
@@ -18,7 +18,8 @@ public static class StringExtensions
 
     public static bool IsValidDeveloperName(string source)
     {
-        return !string.IsNullOrEmpty(source.ToDeveloperName()) && !IsProtectedRoutePath(source.ToDeveloperName());
+        return !string.IsNullOrEmpty(source.ToDeveloperName())
+            && !IsProtectedRoutePath(source.ToDeveloperName());
     }
 
     public static bool IsValidUriFormat(this string link)
@@ -80,7 +81,10 @@ public static class StringExtensions
     public static bool IsProtectedRoutePath(this string value)
     {
         value = value.ToUrlSlug().ToLower();
-        bool isRaythaPath = value == "raytha" || value.StartsWith("raytha/") || ProtectedRoutePaths().Any(p => value.StartsWith(p));
+        bool isRaythaPath =
+            value == "raytha"
+            || value.StartsWith("raytha/")
+            || ProtectedRoutePaths().Any(p => value.StartsWith(p));
         return isRaythaPath;
     }
 
@@ -141,9 +145,7 @@ public static class StringExtensions
 
     public static string? Truncate(this string? value, int maxLength, string truncationSuffix = "…")
     {
-        return value?.Length > maxLength
-            ? value.Substring(0, maxLength) + truncationSuffix
-            : value;
+        return value?.Length > maxLength ? value.Substring(0, maxLength) + truncationSuffix : value;
     }
 
     public static string StripHtml(this string input)
@@ -156,16 +158,18 @@ public static class StringExtensions
         return tagsExpression.Replace(input, " ");
     }
 
-    public static (string column, SortOrder sortOrder) SplitIntoColumnAndSortOrder(this string input)
+    public static (string column, SortOrder sortOrder) SplitIntoColumnAndSortOrder(
+        this string input
+    )
     {
         if (string.IsNullOrEmpty(input))
             return (null, null);
-        
+
         var (column, directionString) = input.Split(' ', 2) switch
         {
             var arr when arr.Length == 2 => (arr[0], arr[1]),
             var arr when arr.Length == 1 => (arr[0], string.Empty),
-            _ => (string.Empty, string.Empty)
+            _ => (string.Empty, string.Empty),
         };
         var direction = SortOrder.From(directionString);
         return (column, direction);
@@ -173,7 +177,7 @@ public static class StringExtensions
 
     public static string ApplySqlStringLikeOperator(this string input, string operation)
     {
-        switch(operation.ToLower())
+        switch (operation.ToLower())
         {
             case "startswith":
                 return $"{input}%";

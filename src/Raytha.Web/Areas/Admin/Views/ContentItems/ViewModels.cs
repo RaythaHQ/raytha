@@ -8,12 +8,18 @@ using Raytha.Web.Areas.Admin.Views.Shared.ViewModels;
 
 namespace Raytha.Web.Areas.Admin.Views.ContentItems;
 
-public class ContentItemsPagination_ViewModel : Pagination_ViewModel, IMustHaveCurrentViewForList, IMustHaveFavoriteViewsForList
+public class ContentItemsPagination_ViewModel
+    : Pagination_ViewModel,
+        IMustHaveCurrentViewForList,
+        IMustHaveFavoriteViewsForList
 {
     public IEnumerable<ContentItemsListItem_ViewModel> Items { get; }
 
     public ContentItemsPagination_ViewModel(
-        IEnumerable<ContentItemsListItem_ViewModel> items, int totalCount) : base(totalCount) => Items = items;
+        IEnumerable<ContentItemsListItem_ViewModel> items,
+        int totalCount
+    )
+        : base(totalCount) => Items = items;
 
     //helpers
     public CurrentViewForList_ViewModel CurrentView { get; set; }
@@ -78,7 +84,6 @@ public class ContentItemsCreate_ViewModel : FormSubmit_ViewModel, IMustHaveCurre
     public CurrentViewForList_ViewModel CurrentView { get; set; }
 }
 
-
 public class ContentItemsEdit_ViewModel : FormSubmit_ViewModel, IMustHaveCurrentViewForList
 {
     public string Id { get; set; }
@@ -106,14 +111,19 @@ public class ContentItemsActionsMenu_ViewModel
     public string ContentTypeDeveloperName { get; set; }
 }
 
-public class ContentItemsRevisionsPagination_ViewModel : Pagination_ViewModel, IMustHaveCurrentViewForList
+public class ContentItemsRevisionsPagination_ViewModel
+    : Pagination_ViewModel,
+        IMustHaveCurrentViewForList
 {
     public string Id { get; set; }
 
     public IEnumerable<ContentItemsRevisionsListItem_ViewModel> Items { get; }
 
     public ContentItemsRevisionsPagination_ViewModel(
-        IEnumerable<ContentItemsRevisionsListItem_ViewModel> items, int totalCount) : base(totalCount) => Items = items;
+        IEnumerable<ContentItemsRevisionsListItem_ViewModel> items,
+        int totalCount
+    )
+        : base(totalCount) => Items = items;
 
     //helpers
     public CurrentViewForList_ViewModel CurrentView { get; set; }
@@ -158,12 +168,13 @@ public class ContentItemsExportToCsv_ViewModel : FormSubmit_ViewModel, IMustHave
     //helpers
     public CurrentViewForList_ViewModel CurrentView { get; set; }
 }
+
 public class ContentItemsImportFromCsv_ViewModel : FormSubmit_ViewModel, IMustHaveCurrentViewForList
 {
     public bool ImportAsDraft { get; set; }
     public IFormFile ImportFile { get; set; }
 
-    [Display(Name ="Which content items to import?")]
+    [Display(Name = "Which content items to import?")]
     public string ImportMethod { get; set; }
     public CurrentViewForList_ViewModel CurrentView { get; set; }
 }

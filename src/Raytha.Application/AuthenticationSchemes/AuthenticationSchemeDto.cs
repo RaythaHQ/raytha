@@ -1,7 +1,7 @@
+using System.Linq.Expressions;
 using Raytha.Application.Common.Models;
 using Raytha.Domain.Entities;
 using Raytha.Domain.ValueObjects;
-using System.Linq.Expressions;
 
 namespace Raytha.Application.AuthenticationSchemes;
 
@@ -10,7 +10,7 @@ public record AuthenticationSchemeDto : BaseAuditableEntityDto
     public AuthenticationSchemeType AuthenticationSchemeType { get; init; }
     public string Label { get; init; } = string.Empty;
     public string DeveloperName { get; init; } = string.Empty;
-    public bool IsBuiltInAuth { get; init; } 
+    public bool IsBuiltInAuth { get; init; }
     public bool IsEnabledForUsers { get; init; }
     public bool IsEnabledForAdmins { get; init; }
     public string SamlCertificate { get; init; } = string.Empty;
@@ -28,6 +28,7 @@ public record AuthenticationSchemeDto : BaseAuditableEntityDto
     {
         return authScheme => GetProjection(authScheme);
     }
+
     public static AuthenticationSchemeDto GetProjection(AuthenticationScheme entity)
     {
         return new AuthenticationSchemeDto
@@ -51,7 +52,7 @@ public record AuthenticationSchemeDto : BaseAuditableEntityDto
             AuthenticationSchemeType = entity.AuthenticationSchemeType,
             MagicLinkExpiresInSeconds = entity.MagicLinkExpiresInSeconds,
             JwtUseHighSecurity = entity.JwtUseHighSecurity,
-            SamlIdpEntityId = entity.SamlIdpEntityId
+            SamlIdpEntityId = entity.SamlIdpEntityId,
         };
     }
 }

@@ -1,10 +1,10 @@
-﻿using MediatR;
+﻿using CSharpVitamins;
+using MediatR;
 using Raytha.Application.Common.Interfaces;
+using Raytha.Application.Common.Models.RenderModels;
 using Raytha.Domain.Common;
 using Raytha.Domain.Entities;
 using Raytha.Domain.Events;
-using CSharpVitamins;
-using Raytha.Application.Common.Models.RenderModels;
 
 namespace Raytha.Application.Login.EventHandlers;
 
@@ -18,10 +18,11 @@ public class BeginForgotPasswordEventHandler : INotificationHandler<BeginForgotP
 
     public BeginForgotPasswordEventHandler(
         ICurrentOrganization currentOrganization,
-        IRaythaDbContext db, 
-        IEmailer emailerService, 
-        IRenderEngine renderEngineService, 
-        IRelativeUrlBuilder relativeUrlBuilderService)
+        IRaythaDbContext db,
+        IEmailer emailerService,
+        IRenderEngine renderEngineService,
+        IRelativeUrlBuilder relativeUrlBuilderService
+    )
     {
         _db = db;
         _emailerService = emailerService;
@@ -30,36 +31,51 @@ public class BeginForgotPasswordEventHandler : INotificationHandler<BeginForgotP
         _currentOrganization = currentOrganization;
     }
 
-    public async Task Handle(BeginForgotPasswordEvent notification, CancellationToken cancellationToken)
+    public async Task Handle(
+        BeginForgotPasswordEvent notification,
+        CancellationToken cancellationToken
+    )
     {
         if (notification.SendEmail)
         {
-            EmailTemplate renderTemplate = _db.EmailTemplates.First(p => p.DeveloperName == BuiltInEmailTemplate.LoginBeginForgotPasswordEmail);
+            EmailTemplate renderTemplate = _db.EmailTemplates.First(p =>
+                p.DeveloperName == BuiltInEmailTemplate.LoginBeginForgotPasswordEmail
+            );
             SendBeginForgotPassword_RenderModel entity = new SendBeginForgotPassword_RenderModel
             {
                 Id = (ShortGuid)notification.User.Id,
                 FirstName = notification.User.FirstName,
                 LastName = notification.User.LastName,
                 EmailAddress = notification.User.EmailAddress,
-                ForgotPasswordCompleteUrl = notification.User.IsAdmin ? _relativeUrlBuilderService.AdminForgotPasswordCompleteUrl(notification.Token) : _relativeUrlBuilderService.UserForgotPasswordCompleteUrl(notification.Token),
+                ForgotPasswordCompleteUrl = notification.User.IsAdmin
+                    ? _relativeUrlBuilderService.AdminForgotPasswordCompleteUrl(notification.Token)
+                    : _relativeUrlBuilderService.UserForgotPasswordCompleteUrl(notification.Token),
                 SsoId = notification.User.SsoId,
                 AuthenticationScheme = notification.User.AuthenticationScheme.DeveloperName,
-                IsAdmin = notification.User.IsAdmin
+                IsAdmin = notification.User.IsAdmin,
             };
 
             var wrappedModel = new Wrapper_RenderModel
             {
-                CurrentOrganization = CurrentOrganization_RenderModel.GetProjection(_currentOrganization),
-                Target = entity
+                CurrentOrganization = CurrentOrganization_RenderModel.GetProjection(
+                    _currentOrganization
+                ),
+                Target = entity,
             };
 
-            string subject = _renderEngineService.RenderAsHtml(renderTemplate.Subject, wrappedModel);
-            string content = _renderEngineService.RenderAsHtml(renderTemplate.Content, wrappedModel);
+            string subject = _renderEngineService.RenderAsHtml(
+                renderTemplate.Subject,
+                wrappedModel
+            );
+            string content = _renderEngineService.RenderAsHtml(
+                renderTemplate.Content,
+                wrappedModel
+            );
             var emailMessage = new EmailMessage
             {
                 Content = content,
                 To = new List<string> { entity.EmailAddress },
-                Subject = subject
+                Subject = subject,
             };
             _emailerService.SendEmail(emailMessage);
         }

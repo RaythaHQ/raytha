@@ -24,31 +24,43 @@ public class AdminsController : BaseController
 {
     [ServiceFilter(typeof(SetPaginationInformationFilterAttribute))]
     [Route(RAYTHA_ROUTE_PREFIX + "/settings/admins", Name = "adminsindex")]
-    public async Task<IActionResult> Index(string search = "", string orderBy = $"LastLoggedInTime {SortOrder.DESCENDING}", int pageNumber = 1, int pageSize = 50)
+    public async Task<IActionResult> Index(
+        string search = "",
+        string orderBy = $"LastLoggedInTime {SortOrder.DESCENDING}",
+        int pageNumber = 1,
+        int pageSize = 50
+    )
     {
         var input = new GetAdmins.Query
         {
             Search = search,
             OrderBy = orderBy,
             PageNumber = pageNumber,
-            PageSize = pageSize
+            PageSize = pageSize,
         };
 
         var response = await Mediator.Send(input);
 
         var items = response.Result.Items.Select(p => new AdminsListItem_ViewModel
         {
-            Id = p.Id,  
+            Id = p.Id,
             FirstName = p.FirstName,
             LastName = p.LastName,
             EmailAddress = p.EmailAddress,
-            CreationTime = CurrentOrganization.TimeZoneConverter.UtcToTimeZoneAsDateTimeFormat(p.CreationTime),
-            LastLoggedInTime = CurrentOrganization.TimeZoneConverter.UtcToTimeZoneAsDateTimeFormat(p.LastLoggedInTime),
+            CreationTime = CurrentOrganization.TimeZoneConverter.UtcToTimeZoneAsDateTimeFormat(
+                p.CreationTime
+            ),
+            LastLoggedInTime = CurrentOrganization.TimeZoneConverter.UtcToTimeZoneAsDateTimeFormat(
+                p.LastLoggedInTime
+            ),
             IsActive = p.IsActive.YesOrNo(),
-            Roles = string.Join(", ", p.Roles.Select(p => p.Label))
+            Roles = string.Join(", ", p.Roles.Select(p => p.Label)),
         });
 
-        var viewModel = new List_ViewModel<AdminsListItem_ViewModel>(items, response.Result.TotalCount);
+        var viewModel = new List_ViewModel<AdminsListItem_ViewModel>(
+            items,
+            response.Result.TotalCount
+        );
         return View(viewModel);
     }
 
@@ -56,12 +68,14 @@ public class AdminsController : BaseController
     public async Task<IActionResult> Create()
     {
         var roleChoicesResponse = await Mediator.Send(new GetRoles.Query());
-        var rolesViewModel = roleChoicesResponse.Result.Items.Select(p => new AdminsCreate_ViewModel.RoleCheckboxItem_ViewModel
-        {
-            Id = p.Id,
-            Label = p.Label,
-            Selected = false
-        }).ToArray();
+        var rolesViewModel = roleChoicesResponse
+            .Result.Items.Select(p => new AdminsCreate_ViewModel.RoleCheckboxItem_ViewModel
+            {
+                Id = p.Id,
+                Label = p.Label,
+                Selected = false,
+            })
+            .ToArray();
 
         var model = new AdminsCreate_ViewModel { Roles = rolesViewModel };
 
@@ -79,7 +93,7 @@ public class AdminsController : BaseController
             LastName = model.LastName,
             EmailAddress = model.EmailAddress,
             Roles = model.Roles.Where(p => p.Selected).Select(p => (ShortGuid)p.Id),
-            SendEmail = model.SendEmail
+            SendEmail = model.SendEmail,
         };
 
         var response = await Mediator.Send(input);
@@ -91,7 +105,10 @@ public class AdminsController : BaseController
         }
         else
         {
-            SetErrorMessage("There was an error attempting to create this admin. See the error below.", response.GetErrors());
+            SetErrorMessage(
+                "There was an error attempting to create this admin. See the error below.",
+                response.GetErrors()
+            );
             return View(model);
         }
     }
@@ -102,13 +119,15 @@ public class AdminsController : BaseController
         var response = await Mediator.Send(new GetAdminById.Query { Id = id });
 
         var allRoles = await Mediator.Send(new GetRoles.Query());
-        var userRoles = allRoles.Result.Items.Select(p => new AdminsEdit_ViewModel.RoleCheckboxItem_ViewModel
-        {
-            Id = p.Id,
-            Label = p.Label,
-            IsSuperAdmin = BuiltInRole.SuperAdmin == p.DeveloperName,
-            Selected = response.Result.Roles.Select(p => p.Id).Contains(p.Id)
-        });
+        var userRoles = allRoles.Result.Items.Select(
+            p => new AdminsEdit_ViewModel.RoleCheckboxItem_ViewModel
+            {
+                Id = p.Id,
+                Label = p.Label,
+                IsSuperAdmin = BuiltInRole.SuperAdmin == p.DeveloperName,
+                Selected = response.Result.Roles.Select(p => p.Id).Contains(p.Id),
+            }
+        );
 
         var model = new AdminsEdit_ViewModel
         {
@@ -119,7 +138,8 @@ public class AdminsController : BaseController
             Roles = userRoles.ToArray(),
             IsActive = response.Result.IsActive,
             CurrentUserId = CurrentUser.UserId,
-            EmailAndPasswordEnabledForAdmins = CurrentOrganization.EmailAndPasswordIsEnabledForAdmins
+            EmailAndPasswordEnabledForAdmins =
+                CurrentOrganization.EmailAndPasswordIsEnabledForAdmins,
         };
         return View(model);
     }
@@ -135,7 +155,7 @@ public class AdminsController : BaseController
             FirstName = model.FirstName,
             LastName = model.LastName,
             EmailAddress = model.EmailAddress,
-            Roles = model.Roles.Where(p => p.Selected).Select(p => (ShortGuid)p.Id)
+            Roles = model.Roles.Where(p => p.Selected).Select(p => (ShortGuid)p.Id),
         };
 
         var response = await Mediator.Send(input);
@@ -147,10 +167,14 @@ public class AdminsController : BaseController
         }
         else
         {
-            SetErrorMessage("There was an error attempting to update this admin. See the error below.", response.GetErrors());
+            SetErrorMessage(
+                "There was an error attempting to update this admin. See the error below.",
+                response.GetErrors()
+            );
             var admin = await Mediator.Send(new GetUserById.Query { Id = id });
             model.Id = id;
-            model.EmailAndPasswordEnabledForAdmins = CurrentOrganization.EmailAndPasswordIsEnabledForAdmins;
+            model.EmailAndPasswordEnabledForAdmins =
+                CurrentOrganization.EmailAndPasswordIsEnabledForAdmins;
             model.CurrentUserId = CurrentUser.UserId;
             model.IsActive = admin.Result.IsActive;
 
@@ -158,7 +182,10 @@ public class AdminsController : BaseController
         }
     }
 
-    [Route(RAYTHA_ROUTE_PREFIX + "/settings/admins/reset-password/{id}", Name = "adminsresetpassword")]
+    [Route(
+        RAYTHA_ROUTE_PREFIX + "/settings/admins/reset-password/{id}",
+        Name = "adminsresetpassword"
+    )]
     public async Task<IActionResult> ResetPassword(string id)
     {
         if (!CurrentOrganization.EmailAndPasswordIsEnabledForAdmins)
@@ -174,13 +201,17 @@ public class AdminsController : BaseController
             CurrentUserId = CurrentUser.UserId,
             Id = id,
             IsActive = response.Result.IsActive,
-            EmailAndPasswordEnabledForAdmins = CurrentOrganization.EmailAndPasswordIsEnabledForAdmins
+            EmailAndPasswordEnabledForAdmins =
+                CurrentOrganization.EmailAndPasswordIsEnabledForAdmins,
         };
-        
+
         return View(model);
     }
 
-    [Route(RAYTHA_ROUTE_PREFIX + "/settings/admins/reset-password/{id}", Name = "adminsresetpassword")]
+    [Route(
+        RAYTHA_ROUTE_PREFIX + "/settings/admins/reset-password/{id}",
+        Name = "adminsresetpassword"
+    )]
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> ResetPassword(AdminsResetPassword_ViewModel model, string id)
@@ -190,7 +221,7 @@ public class AdminsController : BaseController
             Id = id,
             ConfirmNewPassword = model.ConfirmNewPassword,
             NewPassword = model.NewPassword,
-            SendEmail = model.SendEmail
+            SendEmail = model.SendEmail,
         };
         var response = await Mediator.Send(input);
 
@@ -201,11 +232,15 @@ public class AdminsController : BaseController
         }
         else
         {
-            SetErrorMessage("There was an error attempting to reset this password. See the error below.", response.GetErrors());
+            SetErrorMessage(
+                "There was an error attempting to reset this password. See the error below.",
+                response.GetErrors()
+            );
             var admin = await Mediator.Send(new GetAdminById.Query { Id = id });
             model.Id = id;
             model.IsActive = admin.Result.IsActive;
-            model.EmailAndPasswordEnabledForAdmins = CurrentOrganization.EmailAndPasswordIsEnabledForAdmins;
+            model.EmailAndPasswordEnabledForAdmins =
+                CurrentOrganization.EmailAndPasswordIsEnabledForAdmins;
             model.CurrentUserId = CurrentUser.UserId;
 
             return View(model);
@@ -247,7 +282,10 @@ public class AdminsController : BaseController
         return RedirectToAction("Edit", new { id });
     }
 
-    [Route(RAYTHA_ROUTE_PREFIX + "/settings/admins/remove-access/{id}", Name = "adminsremoveaccess")]
+    [Route(
+        RAYTHA_ROUTE_PREFIX + "/settings/admins/remove-access/{id}",
+        Name = "adminsremoveaccess"
+    )]
     [HttpPost]
     public async Task<IActionResult> RemoveAccess(string id)
     {
@@ -277,21 +315,25 @@ public class AdminsController : BaseController
         {
             SetErrorMessage(response.Error, response.GetErrors());
         }
-            
+
         return RedirectToAction("Index");
     }
 
-
     [Route(RAYTHA_ROUTE_PREFIX + "/settings/admins/apikeys/{id}", Name = "adminsapikeyslist")]
     [ServiceFilter(typeof(SetPaginationInformationFilterAttribute))]
-    public async Task<IActionResult> ApiKeys(string id, string orderBy = $"CreationTime {SortOrder.ASCENDING}", int pageNumber = 1, int pageSize = 50)
+    public async Task<IActionResult> ApiKeys(
+        string id,
+        string orderBy = $"CreationTime {SortOrder.ASCENDING}",
+        int pageNumber = 1,
+        int pageSize = 50
+    )
     {
         var input = new GetApiKeysForAdmin.Query
         {
             UserId = id,
             OrderBy = orderBy,
             PageNumber = pageNumber,
-            PageSize = pageSize
+            PageSize = pageSize,
         };
 
         var response = await Mediator.Send(input);
@@ -299,7 +341,9 @@ public class AdminsController : BaseController
         var items = response.Result.Items.Select(p => new ApiKeysListItem_ViewModel
         {
             Id = p.Id,
-            CreationTime = CurrentOrganization.TimeZoneConverter.UtcToTimeZoneAsDateTimeFormat(p.CreationTime)
+            CreationTime = CurrentOrganization.TimeZoneConverter.UtcToTimeZoneAsDateTimeFormat(
+                p.CreationTime
+            ),
         });
 
         var admin = await Mediator.Send(new GetAdminById.Query { Id = id });
@@ -308,8 +352,9 @@ public class AdminsController : BaseController
         {
             Id = admin.Result.Id,
             IsActive = admin.Result.IsActive,
-            EmailAndPasswordEnabledForAdmins = CurrentOrganization.EmailAndPasswordIsEnabledForAdmins,
-            CurrentUserId = CurrentUser.UserId
+            EmailAndPasswordEnabledForAdmins =
+                CurrentOrganization.EmailAndPasswordIsEnabledForAdmins,
+            CurrentUserId = CurrentUser.UserId,
         };
 
         if (TempData["ApiKey"] != null)
@@ -320,7 +365,10 @@ public class AdminsController : BaseController
         return View(viewModel);
     }
 
-    [Route(RAYTHA_ROUTE_PREFIX + "/settings/admins/apikeys/{id}/create", Name = "adminsapikeyscreate")]
+    [Route(
+        RAYTHA_ROUTE_PREFIX + "/settings/admins/apikeys/{id}/create",
+        Name = "adminsapikeyscreate"
+    )]
     [HttpPost]
     public async Task<IActionResult> ApiKeysCreate(string id)
     {
@@ -337,7 +385,10 @@ public class AdminsController : BaseController
         return RedirectToAction("ApiKeys", new { id });
     }
 
-    [Route(RAYTHA_ROUTE_PREFIX + "/settings/admins/apikeys/{id}/delete/{apikeyId}", Name = "adminsapikeysdelete")]
+    [Route(
+        RAYTHA_ROUTE_PREFIX + "/settings/admins/apikeys/{id}/delete/{apikeyId}",
+        Name = "adminsapikeysdelete"
+    )]
     [HttpPost]
     public async Task<IActionResult> ApiKeysDelete(string id, string apikeyId)
     {

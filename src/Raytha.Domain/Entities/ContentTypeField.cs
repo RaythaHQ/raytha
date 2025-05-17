@@ -22,20 +22,20 @@ public class ContentTypeField : BaseFullAuditableEntity
     [NotMapped]
     public IEnumerable<ContentTypeFieldChoice> Choices
     {
-        get { return JsonSerializer.Deserialize<IEnumerable<ContentTypeFieldChoice>>(_Choices ?? "[]") ?? new List<ContentTypeFieldChoice>(); }
+        get
+        {
+            return JsonSerializer.Deserialize<IEnumerable<ContentTypeFieldChoice>>(_Choices ?? "[]")
+                ?? new List<ContentTypeFieldChoice>();
+        }
         set { _Choices = JsonSerializer.Serialize(value); }
     }
 }
 
 public class BuiltInContentTypeField : ValueObject
 {
-    static BuiltInContentTypeField()
-    {
-    }
+    static BuiltInContentTypeField() { }
 
-    private BuiltInContentTypeField()
-    {
-    }
+    private BuiltInContentTypeField() { }
 
     private BuiltInContentTypeField(string label, string developerName, BaseFieldType fieldType)
     {
@@ -56,15 +56,23 @@ public class BuiltInContentTypeField : ValueObject
         return type;
     }
 
-    public static BuiltInContentTypeField PrimaryField => new("Primary field", "PrimaryField", BaseFieldType.SingleLineText);
-    public static BuiltInContentTypeField CreationTime => new("Created at", "CreationTime", BaseFieldType.Date);
-    public static BuiltInContentTypeField CreatorUser => new("Created by", "CreatorUser", BaseFieldType.SingleLineText);
-    public static BuiltInContentTypeField LastModificationTime => new("Last modified at", "LastModificationTime", BaseFieldType.Date);
-    public static BuiltInContentTypeField LastModifierUser => new("Last modified by", "LastModifierUser", BaseFieldType.SingleLineText);
+    public static BuiltInContentTypeField PrimaryField =>
+        new("Primary field", "PrimaryField", BaseFieldType.SingleLineText);
+    public static BuiltInContentTypeField CreationTime =>
+        new("Created at", "CreationTime", BaseFieldType.Date);
+    public static BuiltInContentTypeField CreatorUser =>
+        new("Created by", "CreatorUser", BaseFieldType.SingleLineText);
+    public static BuiltInContentTypeField LastModificationTime =>
+        new("Last modified at", "LastModificationTime", BaseFieldType.Date);
+    public static BuiltInContentTypeField LastModifierUser =>
+        new("Last modified by", "LastModifierUser", BaseFieldType.SingleLineText);
     public static BuiltInContentTypeField Id => new("Id", "Id", BaseFieldType.Id);
-    public static BuiltInContentTypeField IsDraft => new("Is draft", "IsDraft", BaseFieldType.Checkbox);
-    public static BuiltInContentTypeField IsPublished => new("Is published", "IsPublished", BaseFieldType.Checkbox);
-    public static BuiltInContentTypeField Template => new("Template", "Template", BaseFieldType.SingleLineText);
+    public static BuiltInContentTypeField IsDraft =>
+        new("Is draft", "IsDraft", BaseFieldType.Checkbox);
+    public static BuiltInContentTypeField IsPublished =>
+        new("Is published", "IsPublished", BaseFieldType.Checkbox);
+    public static BuiltInContentTypeField Template =>
+        new("Template", "Template", BaseFieldType.SingleLineText);
 
     public string Label { get; private set; } = string.Empty;
     public string DeveloperName { get; private set; } = string.Empty;

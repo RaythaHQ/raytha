@@ -14,15 +14,14 @@ public record TableColumnHeader_ViewModel
     {
         get
         {
-            return Model.OrderByPropertyName == PropertyName && Model.OrderByDirection == "desc" ? $"{PropertyName} asc" : $"{PropertyName} desc";
+            return Model.OrderByPropertyName == PropertyName && Model.OrderByDirection == "desc"
+                ? $"{PropertyName} asc"
+                : $"{PropertyName} desc";
         }
     }
 
     public bool IsCurrentlySorting
     {
-        get
-        {
-            return Model.OrderByPropertyName == PropertyName;
-        }
+        get { return Model.OrderByPropertyName == PropertyName; }
     }
 }

@@ -9,14 +9,9 @@ public class RaythaFunctionConfiguration : IEntityTypeConfiguration<RaythaFuncti
 {
     public void Configure(EntityTypeBuilder<RaythaFunction> builder)
     {
-        builder
-            .HasIndex(rf => rf.DeveloperName)
-            .IsUnique();
+        builder.HasIndex(rf => rf.DeveloperName).IsUnique();
 
-        builder
-            .HasOne(rf => rf.CreatorUser)
-            .WithMany()
-            .HasForeignKey(rf => rf.CreatorUserId);
+        builder.HasOne(rf => rf.CreatorUser).WithMany().HasForeignKey(rf => rf.CreatorUserId);
 
         builder
             .HasOne(rf => rf.LastModifierUser)

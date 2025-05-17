@@ -1,8 +1,8 @@
-﻿using Microsoft.OpenApi.Models;
+﻿using System.Linq;
+using System.Reflection;
+using Microsoft.OpenApi.Models;
 using Raytha.Application.Common.Attributes;
 using Swashbuckle.AspNetCore.SwaggerGen;
-using System.Linq;
-using System.Reflection;
 
 namespace Raytha.Web.Middlewares;
 
@@ -10,8 +10,10 @@ public class LowercaseDocumentFilter : IDocumentFilter
 {
     public void Apply(OpenApiDocument swaggerDoc, DocumentFilterContext context)
     {
-        var paths = swaggerDoc.Paths.ToDictionary(entry => LowercaseEverythingButParameters(entry.Key),
-            entry => entry.Value);
+        var paths = swaggerDoc.Paths.ToDictionary(
+            entry => LowercaseEverythingButParameters(entry.Key),
+            entry => entry.Value
+        );
         swaggerDoc.Paths = new OpenApiPaths();
         foreach (var (key, value) in paths)
         {
@@ -19,7 +21,8 @@ public class LowercaseDocumentFilter : IDocumentFilter
         }
     }
 
-    private static string LowercaseEverythingButParameters(string key) => string.Join('/', key.Split('/').Select(x => x.Contains("{") ? x : x.ToLower()));
+    private static string LowercaseEverythingButParameters(string key) =>
+        string.Join('/', key.Split('/').Select(x => x.Contains("{") ? x : x.ToLower()));
 }
 
 public class ExcludePropertyFromOpenApiDocsFilter : ISchemaFilter
@@ -29,15 +32,15 @@ public class ExcludePropertyFromOpenApiDocsFilter : ISchemaFilter
         if (schema?.Properties == null)
             return;
 
-        var excludedProperties =
-            context.Type.GetProperties().Where(
-                t => t.GetCustomAttribute<ExcludePropertyFromOpenApiDocs>() != null);
+        var excludedProperties = context
+            .Type.GetProperties()
+            .Where(t => t.GetCustomAttribute<ExcludePropertyFromOpenApiDocs>() != null);
 
         foreach (var excludedProperty in excludedProperties)
         {
-            var propertyToRemove =
-                schema.Properties.Keys.SingleOrDefault(
-                    x => x.ToLower() == excludedProperty.Name.ToLower());
+            var propertyToRemove = schema.Properties.Keys.SingleOrDefault(x =>
+                x.ToLower() == excludedProperty.Name.ToLower()
+            );
 
             if (propertyToRemove != null)
             {

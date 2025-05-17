@@ -17,15 +17,20 @@ public class GetEmailTemplateByName
     public class Handler : IRequestHandler<Query, IQueryResponseDto<EmailTemplateDto>>
     {
         private readonly IRaythaDbContext _db;
+
         public Handler(IRaythaDbContext db)
         {
             _db = db;
         }
 
-        public async Task<IQueryResponseDto<EmailTemplateDto>> Handle(Query request, CancellationToken cancellationToken)
+        public async Task<IQueryResponseDto<EmailTemplateDto>> Handle(
+            Query request,
+            CancellationToken cancellationToken
+        )
         {
-            var entity = _db.EmailTemplates
-                .FirstOrDefault(p => p.DeveloperName == request.DeveloperName.ToDeveloperName());
+            var entity = _db.EmailTemplates.FirstOrDefault(p =>
+                p.DeveloperName == request.DeveloperName.ToDeveloperName()
+            );
 
             if (entity == null)
                 throw new NotFoundException("EmailTemplate", request.DeveloperName);

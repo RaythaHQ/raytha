@@ -9,7 +9,8 @@ public static class PasswordUtility
 
     public static string RandomPassword(int length)
     {
-        char[] characters = "abcdefghijklmnopqursuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890!@#$%(){}[]_".ToCharArray();
+        char[] characters =
+            "abcdefghijklmnopqursuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890!@#$%(){}[]_".ToCharArray();
         Random random = new Random();
         StringBuilder newPassword = new StringBuilder(string.Empty, length);
         for (int i = 0; i < length; i++)
@@ -18,6 +19,7 @@ public static class PasswordUtility
         }
         return newPassword.ToString();
     }
+
     public static byte[] RandomSalt()
     {
         byte[] bytes = new byte[128 / 8];
@@ -27,6 +29,7 @@ public static class PasswordUtility
             return bytes;
         }
     }
+
     public static byte[] Hash(string value)
     {
         return SHA256.Create().ComputeHash(Encoding.UTF8.GetBytes(value));
@@ -42,6 +45,7 @@ public static class PasswordUtility
         byte[] saltedValue = value.Concat(salt).ToArray();
         return SHA256.Create().ComputeHash(saltedValue);
     }
+
     public static bool IsMatch(byte[] password1, byte[] password2)
     {
         if (password1.Length != password2.Length)

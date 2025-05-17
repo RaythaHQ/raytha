@@ -1,6 +1,7 @@
 ﻿namespace Raytha.Application.Common.Models;
 
-public record ListResultDto<T> where T : class
+public record ListResultDto<T>
+    where T : class
 {
     public ListResultDto(IEnumerable<T> items, int totalCount)
     {

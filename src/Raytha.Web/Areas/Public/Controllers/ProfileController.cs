@@ -1,3 +1,6 @@
+using System.Linq;
+using System.Security.Claims;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
@@ -8,9 +11,6 @@ using Raytha.Application.Users;
 using Raytha.Domain.Entities;
 using Raytha.Web.Areas.Public.DbViewEngine;
 using Raytha.Web.Areas.Public.Views.Profile;
-using System.Linq;
-using System.Security.Claims;
-using System.Threading.Tasks;
 
 namespace Raytha.Web.Areas.Public.Controllers;
 
@@ -23,10 +23,14 @@ public class ProfileController : BaseController
     {
         ChangeProfileSubmit_RenderModel viewModel = new ChangeProfileSubmit_RenderModel
         {
-            RequestVerificationToken = Antiforgery.GetAndStoreTokens(HttpContext).RequestToken
+            RequestVerificationToken = Antiforgery.GetAndStoreTokens(HttpContext).RequestToken,
         };
 
-        return new AccountActionViewResult(BuiltInWebTemplate.ChangeProfilePage, viewModel, ViewData);
+        return new AccountActionViewResult(
+            BuiltInWebTemplate.ChangeProfilePage,
+            viewModel,
+            ViewData
+        );
     }
 
     [Route("account/me", Name = "userprofile")]
@@ -34,19 +38,21 @@ public class ProfileController : BaseController
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Profile(ChangeProfile_ViewModel model)
     {
-        var response = await Mediator.Send(new ChangeProfile.Command
-        {
-            Id = CurrentUser.UserId.Value,
-            FirstName = model.FirstName,
-            LastName = model.LastName
-        });
+        var response = await Mediator.Send(
+            new ChangeProfile.Command
+            {
+                Id = CurrentUser.UserId.Value,
+                FirstName = model.FirstName,
+                LastName = model.LastName,
+            }
+        );
 
         if (response.Success)
         {
             ChangeProfileSubmit_RenderModel viewModel = new ChangeProfileSubmit_RenderModel
             {
                 SuccessMessage = "Profile successfully updated.",
-                RequestVerificationToken = Antiforgery.GetAndStoreTokens(HttpContext).RequestToken
+                RequestVerificationToken = Antiforgery.GetAndStoreTokens(HttpContext).RequestToken,
             };
 
             var identity = HttpContext.User.Identity as ClaimsIdentity;
@@ -64,19 +70,33 @@ public class ProfileController : BaseController
             identity.AddClaim(new Claim(ClaimTypes.Surname, model.LastName));
 
             ClaimsPrincipal principal = new ClaimsPrincipal(identity);
-            await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(principal), new AuthenticationProperties() { IsPersistent = true });
+            await HttpContext.SignInAsync(
+                CookieAuthenticationDefaults.AuthenticationScheme,
+                new ClaimsPrincipal(principal),
+                new AuthenticationProperties() { IsPersistent = true }
+            );
 
-            return new AccountActionViewResult(BuiltInWebTemplate.ChangeProfilePage, viewModel, ViewData);
+            return new AccountActionViewResult(
+                BuiltInWebTemplate.ChangeProfilePage,
+                viewModel,
+                ViewData
+            );
         }
         else
         {
             ChangeProfileSubmit_RenderModel viewModel = new ChangeProfileSubmit_RenderModel
             {
-                ValidationFailures = response.GetErrors()?.ToDictionary(k => k.PropertyName, v => v.ErrorMessage),
-                RequestVerificationToken = Antiforgery.GetAndStoreTokens(HttpContext).RequestToken
+                ValidationFailures = response
+                    .GetErrors()
+                    ?.ToDictionary(k => k.PropertyName, v => v.ErrorMessage),
+                RequestVerificationToken = Antiforgery.GetAndStoreTokens(HttpContext).RequestToken,
             };
 
-            return new AccountActionViewResult(BuiltInWebTemplate.ChangeProfilePage, viewModel, ViewData);
+            return new AccountActionViewResult(
+                BuiltInWebTemplate.ChangeProfilePage,
+                viewModel,
+                ViewData
+            );
         }
     }
 
@@ -85,15 +105,24 @@ public class ProfileController : BaseController
     {
         if (!CurrentOrganization.EmailAndPasswordIsEnabledForUsers)
         {
-            return new ErrorActionViewResult(BuiltInWebTemplate.Error403, 403, new GenericError_RenderModel(), ViewData);
+            return new ErrorActionViewResult(
+                BuiltInWebTemplate.Error403,
+                403,
+                new GenericError_RenderModel(),
+                ViewData
+            );
         }
 
         ChangePasswordSubmit_RenderModel viewModel = new ChangePasswordSubmit_RenderModel
         {
-            RequestVerificationToken = Antiforgery.GetAndStoreTokens(HttpContext).RequestToken
+            RequestVerificationToken = Antiforgery.GetAndStoreTokens(HttpContext).RequestToken,
         };
 
-        return new AccountActionViewResult(BuiltInWebTemplate.ChangePasswordPage, viewModel, ViewData);
+        return new AccountActionViewResult(
+            BuiltInWebTemplate.ChangePasswordPage,
+            viewModel,
+            ViewData
+        );
     }
 
     [Route("account/me/change-password", Name = "userchangepassword")]
@@ -103,37 +132,53 @@ public class ProfileController : BaseController
     {
         if (!CurrentOrganization.EmailAndPasswordIsEnabledForUsers)
         {
-            return new ErrorActionViewResult(BuiltInWebTemplate.Error403, 403, new GenericError_RenderModel(), ViewData);
+            return new ErrorActionViewResult(
+                BuiltInWebTemplate.Error403,
+                403,
+                new GenericError_RenderModel(),
+                ViewData
+            );
         }
 
-        var response = await Mediator.Send(new ChangePassword.Command
-        {
-            Id = CurrentUser.UserId.Value,
-            CurrentPassword = model.CurrentPassword,
-            NewPassword = model.NewPassword,
-            ConfirmNewPassword = model.ConfirmNewPassword
-        });
+        var response = await Mediator.Send(
+            new ChangePassword.Command
+            {
+                Id = CurrentUser.UserId.Value,
+                CurrentPassword = model.CurrentPassword,
+                NewPassword = model.NewPassword,
+                ConfirmNewPassword = model.ConfirmNewPassword,
+            }
+        );
 
         if (response.Success)
         {
             ChangePasswordSubmit_RenderModel viewModel = new ChangePasswordSubmit_RenderModel
             {
                 SuccessMessage = "Password successfully updated.",
-                RequestVerificationToken = Antiforgery.GetAndStoreTokens(HttpContext).RequestToken
+                RequestVerificationToken = Antiforgery.GetAndStoreTokens(HttpContext).RequestToken,
             };
 
-            return new AccountActionViewResult(BuiltInWebTemplate.ChangePasswordPage, viewModel, ViewData);
+            return new AccountActionViewResult(
+                BuiltInWebTemplate.ChangePasswordPage,
+                viewModel,
+                ViewData
+            );
         }
         else
         {
             ChangePasswordSubmit_RenderModel viewModel = new ChangePasswordSubmit_RenderModel
             {
-                ValidationFailures = response.GetErrors()?.ToDictionary(k => k.PropertyName, v => v.ErrorMessage),
-                RequestVerificationToken = Antiforgery.GetAndStoreTokens(HttpContext).RequestToken
+                ValidationFailures = response
+                    .GetErrors()
+                    ?.ToDictionary(k => k.PropertyName, v => v.ErrorMessage),
+                RequestVerificationToken = Antiforgery.GetAndStoreTokens(HttpContext).RequestToken,
             };
 
-            return new AccountActionViewResult(BuiltInWebTemplate.ChangePasswordPage, viewModel, ViewData);
+            return new AccountActionViewResult(
+                BuiltInWebTemplate.ChangePasswordPage,
+                viewModel,
+                ViewData
+            );
         }
     }
 }
-

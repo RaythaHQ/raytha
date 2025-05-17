@@ -8,11 +8,12 @@ namespace Raytha.Application.RaythaFunctions.Queries;
 
 public class GetRaythaFunctions
 {
-    public record Query : GetPagedEntitiesInputDto, IRequest<IQueryResponseDto<ListResultDto<RaythaFunctionDto>>>
-    {
-    }
+    public record Query
+        : GetPagedEntitiesInputDto,
+            IRequest<IQueryResponseDto<ListResultDto<RaythaFunctionDto>>> { }
 
-    public class Handler : IRequestHandler<Query, IQueryResponseDto<ListResultDto<RaythaFunctionDto>>>
+    public class Handler
+        : IRequestHandler<Query, IQueryResponseDto<ListResultDto<RaythaFunctionDto>>>
     {
         private readonly IRaythaDbContext _db;
 
@@ -21,24 +22,31 @@ public class GetRaythaFunctions
             _db = db;
         }
 
-        public async Task<IQueryResponseDto<ListResultDto<RaythaFunctionDto>>> Handle(Query request, CancellationToken cancellationToken)
+        public async Task<IQueryResponseDto<ListResultDto<RaythaFunctionDto>>> Handle(
+            Query request,
+            CancellationToken cancellationToken
+        )
         {
-            var query = _db.RaythaFunctions
-                .Include(rf => rf.LastModifierUser)
-                .AsQueryable();
+            var query = _db.RaythaFunctions.Include(rf => rf.LastModifierUser).AsQueryable();
 
             if (!string.IsNullOrEmpty(request.Search))
             {
                 var searchQuery = request.Search.ToLower();
-                query = query.Where(rf => 
-                    rf.Name.ToLower().Contains(searchQuery) || 
-                    rf.DeveloperName.ToLower().Contains(searchQuery));
+                query = query.Where(rf =>
+                    rf.Name.ToLower().Contains(searchQuery)
+                    || rf.DeveloperName.ToLower().Contains(searchQuery)
+                );
             }
 
             var total = await query.CountAsync();
-            var items = query.ApplyPaginationInput(request).Select(RaythaFunctionDto.GetProjection()).ToArray();
+            var items = query
+                .ApplyPaginationInput(request)
+                .Select(RaythaFunctionDto.GetProjection())
+                .ToArray();
 
-            return new QueryResponseDto<ListResultDto<RaythaFunctionDto>>(new ListResultDto<RaythaFunctionDto>(items, total));
+            return new QueryResponseDto<ListResultDto<RaythaFunctionDto>>(
+                new ListResultDto<RaythaFunctionDto>(items, total)
+            );
         }
     }
 }

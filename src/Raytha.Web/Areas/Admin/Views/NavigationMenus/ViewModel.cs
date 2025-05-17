@@ -1,8 +1,8 @@
-﻿using Raytha.Web.Areas.Admin.Views.Shared;
-using Raytha.Web.Areas.Admin.Views.Shared.ViewModels;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using Raytha.Application.NavigationMenuItems;
+using Raytha.Web.Areas.Admin.Views.Shared;
+using Raytha.Web.Areas.Admin.Views.Shared.ViewModels;
 
 namespace Raytha.Web.Areas.Admin.Views.NavigationMenus;
 
@@ -54,7 +54,12 @@ public class NavigationMenuRevisionsPagination_ViewModel : Pagination_ViewModel
     public IEnumerable<NavigationMenuRevisionsListItem_ViewModel> Items { get; }
     public string NavigationMenuId { get; set; }
 
-    public NavigationMenuRevisionsPagination_ViewModel(IEnumerable<NavigationMenuRevisionsListItem_ViewModel> items, int totalCount, string navigationMenuId) : base(totalCount)
+    public NavigationMenuRevisionsPagination_ViewModel(
+        IEnumerable<NavigationMenuRevisionsListItem_ViewModel> items,
+        int totalCount,
+        string navigationMenuId
+    )
+        : base(totalCount)
     {
         Items = items;
         NavigationMenuId = navigationMenuId;
@@ -93,7 +98,10 @@ public class NavigationMenuItemsReorder_VieModel
     public string NavigationMenuId { get; set; }
     public string ParentNavigationMenuId { get; set; }
     public IEnumerable<NavigationMenuItemDto> NavigationMenuItemsForSelect { get; set; }
-    public IDictionary<string, List<NavigationMenuItemsListItem_ViewModel>> NavigationMenuItemsByParentNavigationMenuItemId { get; set; }
+    public IDictionary<
+        string,
+        List<NavigationMenuItemsListItem_ViewModel>
+    > NavigationMenuItemsByParentNavigationMenuItemId { get; set; }
 }
 
 public class NavigationMenuItemsListItem_ViewModel

@@ -19,9 +19,14 @@ public class SetupController : Controller
     private ICurrentOrganization _currentOrganization;
     private IEmailerConfiguration _emailerConfiguration;
 
-    protected ISender Mediator => _mediator ??= HttpContext.RequestServices.GetRequiredService<ISender>();
-    protected ICurrentOrganization CurrentOrganization => _currentOrganization ??= HttpContext.RequestServices.GetRequiredService<ICurrentOrganization>();
-    protected IEmailerConfiguration EmailerConfiguration => _emailerConfiguration ??= HttpContext.RequestServices.GetRequiredService<IEmailerConfiguration>();
+    protected ISender Mediator =>
+        _mediator ??= HttpContext.RequestServices.GetRequiredService<ISender>();
+    protected ICurrentOrganization CurrentOrganization =>
+        _currentOrganization ??=
+            HttpContext.RequestServices.GetRequiredService<ICurrentOrganization>();
+    protected IEmailerConfiguration EmailerConfiguration =>
+        _emailerConfiguration ??=
+            HttpContext.RequestServices.GetRequiredService<IEmailerConfiguration>();
 
     [Route(RAYTHA_ROUTE_PREFIX + "/setup", Name = "setupindex")]
     public IActionResult Index()
@@ -31,7 +36,7 @@ public class SetupController : Controller
 
         var viewModel = new Setup_ViewModel
         {
-            MissingSmtpEnvironmentVariables = EmailerConfiguration.IsMissingSmtpEnvVars()
+            MissingSmtpEnvironmentVariables = EmailerConfiguration.IsMissingSmtpEnvVars(),
         };
         return View(viewModel);
     }
@@ -58,7 +63,7 @@ public class SetupController : Controller
             SmtpDefaultFromName = model.SmtpDefaultFromName,
             OrganizationName = model.OrganizationName,
             TimeZone = model.TimeZone,
-            WebsiteUrl = model.WebsiteUrl
+            WebsiteUrl = model.WebsiteUrl,
         };
 
         var response = await Mediator.Send(input);
@@ -68,7 +73,8 @@ public class SetupController : Controller
         }
         else
         {
-            ViewData["ErrorMessage"] = "There was an error submitting the initial setup. See the error below.";
+            ViewData["ErrorMessage"] =
+                "There was an error submitting the initial setup. See the error below.";
             this.HttpContext.Response.StatusCode = 303;
             return View(model);
         }

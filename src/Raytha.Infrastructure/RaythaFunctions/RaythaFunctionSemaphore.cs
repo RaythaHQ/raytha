@@ -4,7 +4,6 @@ namespace Raytha.Infrastructure.RaythaFunctions;
 
 public class RaythaFunctionSemaphore : SemaphoreSlim, IRaythaFunctionSemaphore
 {
-    public RaythaFunctionSemaphore(IRaythaFunctionConfiguration configuration) : base(configuration.MaxActive)
-    {
-    }
+    public RaythaFunctionSemaphore(IRaythaFunctionConfiguration configuration)
+        : base(configuration.MaxActive) { }
 }

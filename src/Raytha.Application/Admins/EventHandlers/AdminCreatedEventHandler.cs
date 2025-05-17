@@ -18,10 +18,11 @@ public class AdminCreatedEventHandler : INotificationHandler<AdminCreatedEvent>
 
     public AdminCreatedEventHandler(
         ICurrentOrganization currentOrganization,
-        IRaythaDbContext db, 
-        IEmailer emailerService, 
-        IRenderEngine renderEngineService, 
-        IRelativeUrlBuilder relativeUrlBuilderService)
+        IRaythaDbContext db,
+        IEmailer emailerService,
+        IRenderEngine renderEngineService,
+        IRelativeUrlBuilder relativeUrlBuilderService
+    )
     {
         _db = db;
         _emailerService = emailerService;
@@ -34,7 +35,9 @@ public class AdminCreatedEventHandler : INotificationHandler<AdminCreatedEvent>
     {
         if (notification.SendEmail)
         {
-            EmailTemplate renderTemplate = _db.EmailTemplates.First(p => p.DeveloperName == BuiltInEmailTemplate.AdminWelcomeEmail);
+            EmailTemplate renderTemplate = _db.EmailTemplates.First(p =>
+                p.DeveloperName == BuiltInEmailTemplate.AdminWelcomeEmail
+            );
 
             SendAdminWelcomeEmail_RenderModel entity = new SendAdminWelcomeEmail_RenderModel
             {
@@ -45,23 +48,32 @@ public class AdminCreatedEventHandler : INotificationHandler<AdminCreatedEvent>
                 NewPassword = notification.NewPassword,
                 LoginUrl = _relativeUrlBuilderService.AdminLoginUrl(),
                 AuthenticationScheme = notification.User.AuthenticationScheme?.DeveloperName,
-                LoginWithEmailAndPasswordIsEnabled = _currentOrganization.EmailAndPasswordIsEnabledForAdmins,
-                IsNewlyCreatedUser = notification.IsNewlyCreatedUser
+                LoginWithEmailAndPasswordIsEnabled =
+                    _currentOrganization.EmailAndPasswordIsEnabledForAdmins,
+                IsNewlyCreatedUser = notification.IsNewlyCreatedUser,
             };
 
             var wrappedModel = new Wrapper_RenderModel
             {
-                CurrentOrganization = CurrentOrganization_RenderModel.GetProjection(_currentOrganization),
-                Target = entity
+                CurrentOrganization = CurrentOrganization_RenderModel.GetProjection(
+                    _currentOrganization
+                ),
+                Target = entity,
             };
 
-            string subject = _renderEngineService.RenderAsHtml(renderTemplate.Subject, wrappedModel);
-            string content = _renderEngineService.RenderAsHtml(renderTemplate.Content, wrappedModel);
+            string subject = _renderEngineService.RenderAsHtml(
+                renderTemplate.Subject,
+                wrappedModel
+            );
+            string content = _renderEngineService.RenderAsHtml(
+                renderTemplate.Content,
+                wrappedModel
+            );
             var emailMessage = new EmailMessage
             {
                 Content = content,
                 To = new List<string> { entity.EmailAddress },
-                Subject = subject
+                Subject = subject,
             };
             _emailerService.SendEmail(emailMessage);
         }

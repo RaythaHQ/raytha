@@ -15,7 +15,8 @@ public class CreateRole
         public string Label { get; init; } = null!;
         public string DeveloperName { get; init; } = null!;
         public IEnumerable<string> SystemPermissions { get; init; } = null!;
-        public Dictionary<string, IEnumerable<string>> ContentTypePermissions { get; init; } = null!;
+        public Dictionary<string, IEnumerable<string>> ContentTypePermissions { get; init; } =
+            null!;
     }
 
     public class Validator : AbstractValidator<Command>
@@ -23,45 +24,61 @@ public class CreateRole
         public Validator(IRaythaDbContext db)
         {
             RuleFor(x => x.Label).NotEmpty();
-            RuleFor(x => x.DeveloperName).Must(StringExtensions.IsValidDeveloperName).WithMessage("Invalid developer name.");
-            RuleFor(x => x.DeveloperName).Must((request, developerName) =>
-            {
-                var entity = db.Roles.FirstOrDefault(p => p.DeveloperName == request.DeveloperName.ToDeveloperName());
-                return !(entity != null);
-            }).WithMessage("A role with that developer name already exists.");
+            RuleFor(x => x.DeveloperName)
+                .Must(StringExtensions.IsValidDeveloperName)
+                .WithMessage("Invalid developer name.");
+            RuleFor(x => x.DeveloperName)
+                .Must(
+                    (request, developerName) =>
+                    {
+                        var entity = db.Roles.FirstOrDefault(p =>
+                            p.DeveloperName == request.DeveloperName.ToDeveloperName()
+                        );
+                        return !(entity != null);
+                    }
+                )
+                .WithMessage("A role with that developer name already exists.");
         }
     }
 
     public class Handler : IRequestHandler<Command, CommandResponseDto<ShortGuid>>
     {
         private readonly IRaythaDbContext _db;
+
         public Handler(IRaythaDbContext db)
         {
             _db = db;
         }
 
-        public async Task<CommandResponseDto<ShortGuid>> Handle(Command request, CancellationToken cancellationToken)
+        public async Task<CommandResponseDto<ShortGuid>> Handle(
+            Command request,
+            CancellationToken cancellationToken
+        )
         {
             var contentTypeRolePermissions = new List<ContentTypeRolePermission>();
 
-            var builtInSystemPermissions = BuiltInSystemPermission.From(request.SystemPermissions.ToArray());
+            var builtInSystemPermissions = BuiltInSystemPermission.From(
+                request.SystemPermissions.ToArray()
+            );
 
             foreach (var contentTypePermission in request.ContentTypePermissions)
             {
                 var contentTypeRolePermission = new ContentTypeRolePermission
                 {
                     ContentTypeId = (ShortGuid)contentTypePermission.Key,
-                    ContentTypePermissions = BuiltInContentTypePermission.From(contentTypePermission.Value.ToArray())
+                    ContentTypePermissions = BuiltInContentTypePermission.From(
+                        contentTypePermission.Value.ToArray()
+                    ),
                 };
                 contentTypeRolePermissions.Add(contentTypeRolePermission);
             }
-            
+
             Role entity = new Role
             {
                 Label = request.Label,
                 DeveloperName = request.DeveloperName.ToDeveloperName(),
                 SystemPermissions = builtInSystemPermissions,
-                ContentTypeRolePermissions = contentTypeRolePermissions
+                ContentTypeRolePermissions = contentTypeRolePermissions,
             };
 
             _db.Roles.Add(entity);

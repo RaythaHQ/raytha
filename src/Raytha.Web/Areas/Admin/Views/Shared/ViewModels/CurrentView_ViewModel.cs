@@ -1,5 +1,5 @@
-﻿using Raytha.Domain.Entities;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using Raytha.Domain.Entities;
 
 namespace Raytha.Web.Areas.Admin.Views.Shared.ViewModels;
 

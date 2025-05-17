@@ -36,8 +36,10 @@ public class BooleanOperatorTests
     [Test]
     public void ShouldThrowUnsupportedColourExceptionGivenNotSupportedColourCode()
     {
-        FluentActions.Invoking(() => BooleanOperator.From("BadValue"))
-            .Should().Throw<UnsupportedBooleanOperatorException>();
+        FluentActions
+            .Invoking(() => BooleanOperator.From("BadValue"))
+            .Should()
+            .Throw<UnsupportedBooleanOperatorException>();
     }
 
     [Test]
