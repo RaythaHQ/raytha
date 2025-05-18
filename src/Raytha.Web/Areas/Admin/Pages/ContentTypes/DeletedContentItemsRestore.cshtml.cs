@@ -16,9 +16,8 @@ public class DeletedContentItemsRestore : BaseContentTypeContextPageModel
         if (response.Success)
         {
             SetSuccessMessage($"{CurrentView.ContentType.LabelSingular} has been restored.");
-            return RedirectToAction(
-                "Edit",
-                "ContentItems",
+            return RedirectToPage(
+                "/ContentItems/Edit",
                 new
                 {
                     id = response.Result.ToString(),
@@ -32,8 +31,8 @@ public class DeletedContentItemsRestore : BaseContentTypeContextPageModel
                 $"There was an error restoring this {CurrentView.ContentType.LabelSingular.ToLower()}",
                 response.GetErrors()
             );
-            return RedirectToAction(
-                "DeletedContentItemsList",
+            return RedirectToPage(
+                "/ContentTypes/DeletedContentItemsList",
                 new { contentTypeDeveloperName = CurrentView.ContentType.DeveloperName }
             );
         }

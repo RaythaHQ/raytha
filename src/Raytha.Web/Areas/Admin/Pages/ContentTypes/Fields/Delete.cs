@@ -6,10 +6,10 @@ using Raytha.Domain.Entities;
 using Raytha.Domain.ValueObjects.FieldTypes;
 using Raytha.Web.Areas.Admin.Pages.Shared.Models;
 
-namespace Raytha.Web.Areas.Admin.Pages.ContentTypes;
+namespace Raytha.Web.Areas.Admin.Pages.ContentTypes.Fields;
 
 [Authorize(Policy = BuiltInSystemPermission.MANAGE_CONTENT_TYPES_PERMISSION)]
-public class FieldsList : BaseContentTypeContextPageModel
+public class Delete : BaseContentTypeContextPageModel
 {
     public string WebsiteUrl { get; set; }
     public Dictionary<string, string> ContentTypeFields { get; set; }

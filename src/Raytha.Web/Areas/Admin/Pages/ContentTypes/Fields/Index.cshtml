@@ -1,8 +1,8 @@
-@page "/raytha/{contentTypeDeveloperName}/trash"
-@model Raytha.Web.Areas.Admin.Pages.ContentTypes.DeletedContentItemsList
+@page "/raytha/{contentTypeDeveloperName}/fields"
+@model Raytha.Web.Areas.Admin.Pages.ContentTypes.Fields.Index
 
 @{
-    var pageTitle = $"{Model.CurrentView.ContentType.LabelPlural} > Deleted content items";
+    var pageTitle = $"{Model.CurrentView.ContentType.LabelPlural} > Fields";
     Layout = "SidebarLayout";
     ViewData["Title"] = pageTitle;
     ViewData["ActiveMenu"] = Model.CurrentView.ContentType.DeveloperName;
@@ -43,7 +43,7 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z">
                         </path>
-                    </svg> <strong>Configuration</strong></a></li>
+                    </svg> Configuration</a></li>
             <li><a class="dropdown-item" asp-route="contenttypesfieldslist"
                     asp-route-contentTypeDeveloperName="@Model.CurrentView.ContentType.DeveloperName"><svg
                         class="icon icon-xs" fill="none" stroke="currentColor" viewBox="0 0 24 24"
@@ -51,7 +51,7 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z">
                         </path>
-                    </svg> Fields</a></li>
+                    </svg> <strong>Fields</strong></a></li>
             <li><a class="dropdown-item" asp-route="contenttypesdeletedcontentitemslist"
                     asp-route-contentTypeDeveloperName="@Model.CurrentView.ContentType.DeveloperName"><svg
                         class="icon icon-xs" fill="none" stroke="currentColor" viewBox="0 0 24 24"
@@ -71,6 +71,45 @@
             <span class="navbar-toggler-icon"></span>
         </button>
         <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                <li class="nav-item">
+                    <a class="btn btn-primary" aria-current="page" asp-route="contenttypesfieldscreate"
+                        asp-route-contentTypeDeveloperName="@Model.CurrentView.ContentType.DeveloperName">
+                        <svg class="icon icon-xs me-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                            xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                        </svg> Create field</a>
+                </li>
+                <li class="nav-item">
+                    <a class="btn btn-secondary mx-4" aria-current="page" asp-route="contenttypesfieldsreorder"
+                        asp-route-contentTypeDeveloperName="@Model.CurrentView.ContentType.DeveloperName">
+                        <svg class="icon icon-xs me-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                            xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16">
+                            </path>
+                        </svg> Reorder fields</a>
+                </li>
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" data-bs-toggle="dropdown" href="#" role="button"
+                        aria-expanded="false"><svg class="icon icon-sm" fill="none" stroke="currentColor"
+                            viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M5 12h.01M12 12h.01M19 12h.01M6 12a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0z">
+                            </path>
+                        </svg></a>
+                    <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+                        <li><a class="dropdown-item" asp-route="contenttypesfieldslistdeleted"
+                                asp-route-contentTypeDeveloperName="@Model.CurrentView.ContentType.DeveloperName"
+                                asp-route-viewId="@Model.CurrentView.Id"><svg class="icon icon-xs" fill="none"
+                                    stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
+                                    </path>
+                                </svg> Deleted fields</a></li>
+                    </ul>
+                </li>
+            </ul>
             <form class="d-flex" asp-action="@Model.ListView.PageName" method="get">
                 <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search" name="search"
                     value="@Model.ListView.Search">
@@ -79,6 +118,8 @@
         </div>
     </div>
 </nav>
+
+
 <div class="raytha-data-card mb-4">
     <div class="card-body">
         <div class="table-responsive">
@@ -87,63 +128,46 @@
                     <tr>
                         @(await Html.PartialAsync("_TableColumnHeader", new BaseTableColumnHeaderViewModel()
                         {
-                            PropertyName = "PrimaryField",
+                            PropertyName = "Label",
                             IsFirst = true,
-                            DisplayName = ViewModelExtensions.GetDisplayName<Raytha.Web.Areas.Admin.Pages.ContentTypes.DeletedContentItemsList.DeletedContentItemsListItemViewModel>(p =>
-                            p.PrimaryField)
+                            DisplayName = ViewModelExtensions.GetDisplayName<Index.FieldsListItemViewModel>(p => p.Label)
                         }))
                         @(await Html.PartialAsync("_TableColumnHeader", new BaseTableColumnHeaderViewModel()
                         {
-                            PropertyName = "DeletionTime",
-                            DisplayName = ViewModelExtensions.GetDisplayName<DeletedContentItemsList.DeletedContentItemsListItemViewModel>(p =>
-                            p.DeletionTime)
+                            PropertyName = "DeveloperName",
+                            DisplayName = ViewModelExtensions.GetDisplayName<Index.FieldsListItemViewModel>(p =>
+                            p.DeveloperName)
                         }))
-                        <th class="border-0">Deleted by</th>
-                        <th class="border-0">Original id</th>
-                        <th class="border-0 rounded-end">Restore</th>
-                        <th class="border-0 rounded-end">Clear</th>
+                        <th class="border-0">Field type</th>
+
+                        @if (!Model.ListView.ShowDeletedOnly)
+                        {
+                            <th class="border-0">Is required</th>
+                            <th class="border-0 rounded-end">Action</th>
+                        }
                     </tr>
                 </thead>
                 <tbody>
                     @foreach (var item in Model.ListView.Items)
                     {
                         <tr>
-                            <td>@item.PrimaryField</td>
-                            <td>@item.DeletionTime</td>
-                            <td>@item.DeletedBy</td>
-                            <td>@item.OriginalContentItemId</td>
-                            <td>
-                                <form method="post" asp-route="contenttypesdeletedcontentitemsrestore"
-                                    asp-route-contentTypeDeveloperName="@Model.CurrentView.ContentType.DeveloperName"
-                                    asp-route-id="@item.Id">
-                                    <button class="btn btn-link btn-xs">
-                                        <svg class="icon icon-xs" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                                            xmlns="http://www.w3.org/2000/svg">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-                                        </svg>
-                                    </button>
-                                </form>
-                            </td>
-                            <td>
-                                <form method="post" asp-route="contenttypesdeletedcontentitemsclear"
-                                    asp-route-contentTypeDeveloperName="@Model.CurrentView.ContentType.DeveloperName"
-                                    asp-route-id="@item.Id">
-                                    <button class="text-danger btn btn-link btn-xs">
-                                        <svg class="icon icon-sm mx-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                                            xmlns="http://www.w3.org/2000/svg">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
-                                            </path>
-                                        </svg>
-                                    </button>
-                                </form>
-                            </td>
+                            <td>@item.Label</td>
+                            <td>@item.DeveloperName</td>
+                            <td>@item.FieldType</td>
+
+                            @if (!Model.ListView.ShowDeletedOnly)
+                            {
+                                <td>@item.IsRequired</td>
+                                <td><a asp-route="contenttypesfieldsedit" asp-route-id="@item.Id"
+                                        asp-route-contentTypeDeveloperName="@Model.CurrentView.ContentType.DeveloperName">Edit</a>
+                                </td>
+                            }
+
                         </tr>
                     }
                 </tbody>
             </table>
-            <partial name="_Partials/TablePagination" model="@Model.ListView" />
+            <partial name="_TablePagination" model="Model" />
         </div>
     </div>
 </div>

@@ -44,7 +44,7 @@ public class DeletedContentItemsList
             OriginalContentItemId = p.OriginalContentItemId,
         });
 
-        var viewModel = new ListViewModel<DeletedContentItemsListItemViewModel>(
+        ListView = new ListViewModel<DeletedContentItemsListItemViewModel>(
             items,
             response.Result.TotalCount
         );
@@ -52,12 +52,7 @@ public class DeletedContentItemsList
         return Page();
     }
 
-    public async Task<IActionResult> OnPost()
-    {
-        return Page();
-    }
-
-    public record DeletedContentItemsListItemViewModel
+    public class DeletedContentItemsListItemViewModel
     {
         public string Id { get; init; }
 
