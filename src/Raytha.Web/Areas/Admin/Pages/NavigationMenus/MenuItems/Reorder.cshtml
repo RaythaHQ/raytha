@@ -1,0 +1,66 @@
+@page "/raytha/menus/edit/{navigationMenuId}/menu-items/reorder/{id}"
+@using Raytha.Application.Common.Utils
+@model Raytha.Web.Areas.Admin.Pages.NavigationMenus.MenuItems.Reorder
+@{
+    var pageTitle = "Menus > Menu items > Reorder";
+    Layout = "SubActionLayout";
+    ViewData["Title"] = pageTitle;
+    ViewData["ActiveMenu"] = "Menus";
+    ViewData["ActiveSubMenu"] = "Menu items";
+}
+
+@section headstyles
+{
+    <link rel="stylesheet" href="~/raytha_admin/css/notyf.min.css" />
+}
+
+@{
+    async Task RenderNavigationMenuItemsList(string parentNavigationMenuId,
+    List<NavigationMenuItemsListItemViewModel>
+    navigationMenuItems)
+    {
+        <ul data-controller="shared--reorderlist" data-shared--reorderlist-animation-value="150"
+            data-shared--reorderlist-reorder-type-value="Menu items" class="list-group mt-4" id="@parentNavigationMenuId"
+            @(parentNavigationMenuId != "" ? "hidden = true" : "")>
+            @foreach (var item in navigationMenuItems)
+            {
+                <li data-sortable-update-url="@Url.Action("MenuItemsReorderAjax", new { navigationMenuId = Model.NavigationMenuId, id = item.Id })"
+                    class="list-group-item border raytha-draggable d-flex justify-content-between">
+                    <div>
+                        @item.Label <small>@item.Url</small>
+                    </div>
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"
+                        class="icon icon-xs me-2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 9h16.5m-16.5 6.75h16.5" />
+                    </svg>
+                </li>
+            }
+        </ul>
+    }
+}
+
+<div class="col-xxl-7 col-xl-8 col-lg-9 col-md-12">
+    <div class="card border-0 shadow mb-4">
+        <div class="card-body">
+
+            <div class="py-4" data-controller="navigationmenuitems--items"
+                data-navigationmenuitems--items-updateurl-value="@Url.Action("MenuItemsReorder", new { navigationMenuId = Model.NavigationMenuId })">
+                <div class="col-lg-12">
+                    <div class="mb-3">
+                        <label class="form-label">Parent menu item</label>
+                        <select id="keySelect" data-action="change->navigationmenuitems--items#handleChange"
+                            class="form-select" asp-for="@Model.ParentNavigationMenuId"
+                            asp-items="@(new SelectList(Model.NavigationMenuItemsForSelect, "Id", "Label"))">
+                            <option value="">(root)</option>
+                        </select>
+                        <hr />
+                    </div>
+                </div>
+                @foreach (var item in Model.NavigationMenuItemsByParentNavigationMenuItemId)
+                {
+                    await RenderNavigationMenuItemsList(item.Key, item.Value);
+                }
+            </div>
+        </div>
+    </div>
+</div>

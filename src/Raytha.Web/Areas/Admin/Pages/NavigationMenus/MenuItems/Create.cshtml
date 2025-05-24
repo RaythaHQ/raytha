@@ -1,0 +1,41 @@
+@page "/raytha/menus/{navigationMenuId}/menu-items/create"
+@model Raytha.Web.Areas.Admin.Pages.NavigationMenus.MenuItems.Create
+
+@{
+    var pageTitle = "Menus > Create";
+    Layout = "SidebarLayout";
+    ViewData["Title"] = pageTitle;
+    ViewData["ActiveMenu"] = "Menus";
+}
+
+@Html.Partial("_Partials/PageHeading", ViewData["Title"])
+<div class="row mb-4">
+    <div class="col-xxl-7 col-xl-8 col-lg-9 col-md-12">
+        <div class="card border-0 shadow mb-4">
+            <div class="card-body">
+                <partial name="/_Partials/BackToList" model="@Model" />
+                <form asp-route="menuscreate" method="post" class="py-4" data-controller="shared--developername">
+                    <div class="col-lg-12 col-md-12">
+                        <div class="mb-3">
+                            <label class="form-label raytha-required" asp-for="Form.Label"></label>
+                            <input type="text" class="form-control @Model.HasError("Label")" asp-for="Form.Label"
+                                data-shared--developername-target="name"
+                                data-action="keyup->shared--developername#setDeveloperName change->shared--developername#setDeveloperName">
+                            <div class="invalid-feedback">@Model.ErrorMessageFor("Label")</div>
+                        </div>
+                    </div>
+                    <div class="col-lg-12 col-md-12">
+                        <div class="mb-3">
+                            <label class="form-label raytha-required" asp-for="Form.DeveloperName"></label>
+                            <input type="text" class="form-control @Model.HasError("DeveloperName")"
+                                asp-for="Form.DeveloperName" data-shared--developername-target="developername">
+                            <div class="invalid-feedback">@Model.ErrorMessageFor("DeveloperName")</div>
+                            <div class="form-text">You cannot change the developer name after it has been created.</div>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-success mt-4">Save</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
