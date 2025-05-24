@@ -1,0 +1,100 @@
+@page "/raytha/functions"
+@model Raytha.Web.Areas.Admin.Pages.RaythaFunctions.Index
+
+@{
+    var pageTitle = "Raytha Functions";
+    Layout = "SidebarLayout";
+    ViewData["Title"] = pageTitle;
+    ViewData["ActiveMenu"] = "Raytha Functions";
+}
+
+
+@section headstyles
+{
+    <style>
+        table thead th:last-child {
+            position: sticky;
+            right: 0;
+            z-index: 2;
+            background-color: white;
+        }
+
+        table tbody td:last-child {
+            position: sticky;
+            right: 0;
+            z-index: 2;
+            background-color: white;
+        }
+    </style>
+}
+
+
+@Html.Partial("_Partials/PageHeading", pageTitle)
+@(await Html.PartialAsync("_TableCreateAndSearchBar", new BaseTableCreateAndSearchBarViewModel()
+{
+    EntityName = "function",
+    CreateActionName = "functionscreate"
+}))
+
+<div class="raytha-data-card mb-4">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-centered table-nowrap mb-0 rounded">
+                <thead class="thead-light">
+                    <tr>
+                        @(await Html.PartialAsync("_TableColumnHeader", new BaseTableColumnHeaderViewModel()
+                        {
+                            PropertyName = "Name",
+                            IsFirst = true,
+                            DisplayName = ViewModelExtensions.GetDisplayName<Index.RaythaFunctionsListItemViewModel>(p =>
+                            p.Name)
+                        }))
+                        @(await Html.PartialAsync("_TableColumnHeader", new BaseTableColumnHeaderViewModel()
+                        {
+                            PropertyName = "DeveloperName",
+                            DisplayName = ViewModelExtensions.GetDisplayName<Index.RaythaFunctionsListItemViewModel>(p =>
+                            p.DeveloperName)
+                        }))
+                        @(await Html.PartialAsync("_TableColumnHeader", new BaseTableColumnHeaderViewModel()
+                        {
+                            PropertyName = "TriggerType",
+                            DisplayName = ViewModelExtensions.GetDisplayName<Index.RaythaFunctionsListItemViewModel>(p =>
+                            p.TriggerType)
+                        }))
+                        @(await Html.PartialAsync("_TableColumnHeader", new BaseTableColumnHeaderViewModel()
+                        {
+                            PropertyName = "LastModificationTime",
+                            DisplayName = ViewModelExtensions.GetDisplayName<Index.RaythaFunctionsListItemViewModel>(p =>
+                            p.LastModificationTime)
+                        }))
+                        <th class="border-0">
+                            Last modified by
+                        </th>
+                        @(await Html.PartialAsync("_TableColumnHeader", new BaseTableColumnHeaderViewModel()
+                        {
+                            PropertyName = "IsActive",
+                            DisplayName = ViewModelExtensions.GetDisplayName<Index.RaythaFunctionsListItemViewModel>(p =>
+                            p.IsActive)
+                        }))
+                        <th class="border-0 rounded-end">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model.ListView.Items)
+                    {
+                        <tr>
+                            <td>@item.Name</td>
+                            <td>@item.DeveloperName</td>
+                            <td>@item.TriggerType</td>
+                            <td>@item.LastModificationTime</td>
+                            <td>@item.LastModifierUser</td>
+                            <td>@item.IsActive</td>
+                            <td><a asp-route="functionsedit" asp-route-id="@item.Id">Edit</a></td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+            <partial name="_TablePagination" model="@Model" />
+        </div>
+    </div>
+</div>
