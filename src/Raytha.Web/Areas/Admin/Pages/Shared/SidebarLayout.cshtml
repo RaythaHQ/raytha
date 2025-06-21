@@ -75,7 +75,7 @@
                 ContentItemOperations.Read)).Succeeded)
                 {
                     <li class="nav-item @(IsActivePage(contentType.DeveloperName))">
-                        <a asp-page="contentitemsdefault" asp-route-contentTypeDeveloperName="@contentType.DeveloperName"
+                        <a asp-page="/ContentItems/Index" asp-route-contentTypeDeveloperName="@contentType.DeveloperName"
                             class="nav-link d-flex justify-content-between">
                             <span>
                                 <span class="sidebar-icon invisible">
@@ -128,7 +128,7 @@
                         BuiltInSystemPermission.MANAGE_TEMPLATES_PERMISSION)).Succeeded)
             {
                 <li class="nav-item @(IsActivePage("Themes"))">
-                    <a asp-route="themesindex" class="nav-link d-flex justify-content-between">
+                    <a asp-page="/Themes/Index" class="nav-link d-flex justify-content-between">
                         <span>
                             <span class="sidebar-icon">
                                 <svg class="icon icon-xs me-2" fill="currentColor" viewBox="0 0 20 20"
@@ -166,7 +166,7 @@
                         BuiltInSystemPermission.MANAGE_CONTENT_TYPES_PERMISSION)).Succeeded)
             {
                 <li class="nav-item @(IsActivePage("Menus"))">
-                    <a asp-route="menusindex" class="nav-link d-flex justify-content-between">
+                    <a asp-page="/NavigationMenus/Index" class="nav-link d-flex justify-content-between">
                         <span>
                             <span class="sidebar-icon">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-xs me-2" fill="currentColor"
@@ -185,7 +185,7 @@
                         RaythaFunctionConfiguration.IsEnabled)
             {
                 <li class="nav-item @(IsActivePage("Functions"))">
-                    <a asp-route="functionsindex" class="nav-link d-flex justify-content-between">
+                    <a asp-page="/RaythaFunctions/Index" class="nav-link d-flex justify-content-between">
                         <span>
                             <span class="sidebar-icon">
                                 <svg class="icon icon-xs me-2" fill="currentColor" version="1.1" id="_x32_"

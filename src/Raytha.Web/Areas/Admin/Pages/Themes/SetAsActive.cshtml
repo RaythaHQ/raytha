@@ -1,0 +1,44 @@
+@page "/raytha/themes/set-as-active/{id}"
+@model Raytha.Web.Areas.Admin.Pages.Themes.SetAsActive
+
+@{
+    var pageTitle = "Themes > Set as active";
+    Layout = "SidebarLayout";
+    ViewData["Title"] = pageTitle;
+    ViewData["ActiveMenu"] = "Themes";
+}
+
+<div class="raytha-data-card mb-4 raytha-border-top">
+    <div class="card-body">
+        <form method="post" asp-route="themesmatchingwebtemplates" asp-route-id="@Model.Form.ThemeId" class="py-4" >
+            <div class="table-responsive">
+                <table class="table mb-0 rounded">
+                    <thead class="thead-light">
+                    <tr>
+                        <th class="border-0 rounded-start">Current Theme</th>
+                        <th class="border-0 rounded-end">New Theme</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    @foreach (var activeThemeWebTemplateDeveloperName in Model.Form.ActiveThemeWebTemplateDeveloperNames)
+                    {
+                        <tr>
+                            <td>
+                                <small>@activeThemeWebTemplateDeveloperName</small>
+                            </td>
+                            <td>
+                                @{
+                                    <select class="form-select" required asp-for="@Model.Form.WebTemplateMappings[activeThemeWebTemplateDeveloperName]" asp-items="@(new SelectList(Model.Form.NewActiveThemeWebTemplateDeveloperNames))">
+                                        <option value="">--SELECT--</option>
+                                    </select>
+                                }
+                            </td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+            <button type="submit" class="btn btn-success mt-4">Save</button>
+        </form>
+    </div>
+</div>

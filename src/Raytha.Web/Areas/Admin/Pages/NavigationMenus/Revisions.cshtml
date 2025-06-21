@@ -27,13 +27,6 @@
                     <thead class="thead-light">
                         <tr>
                             <th class="border-0 rounded-start">Action</th>
-                            @(await Html.PartialAsync("_TableColumnHeader", new BaseTableColumnHeaderViewModel
-                            {
-                                PropertyName = "CreationTime",
-                                DisplayName =
-                                                        ViewModelExtensions.GetDisplayName < Revisions.> (p =>
-                                                        p.CreationTime)
-                            }))
                             <th class="border-0">Menu items</th>
                             <th class="border-0 rounded-start">
                                 Created by

@@ -1,0 +1,73 @@
+using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Raytha.Application.Themes.Commands;
+using Raytha.Application.Themes.Queries;
+using Raytha.Domain.Entities;
+using Raytha.Web.Areas.Admin.Pages.Shared.Models;
+
+namespace Raytha.Web.Areas.Admin.Pages.Themes;
+
+[Authorize(Policy = BuiltInSystemPermission.MANAGE_TEMPLATES_PERMISSION)]
+public class Edit : BaseAdminPageModel
+{
+    [BindProperty]
+    public FormModel Form { get; set; }
+
+    public async Task<IActionResult> OnGet(string id)
+    {
+        var input = new GetThemeById.Query { Id = id };
+
+        var response = await Mediator.Send(input);
+
+        Form = new FormModel
+        {
+            Id = id,
+            Title = response.Result.Title,
+            DeveloperName = response.Result.DeveloperName,
+            Description = response.Result.Description,
+        };
+
+        return Page();
+    }
+
+    public async Task<IActionResult> OnPost(string id)
+    {
+        var input = new EditTheme.Command
+        {
+            Id = id,
+            Title = Form.Title,
+            Description = Form.Description,
+        };
+
+        var response = await Mediator.Send(input);
+
+        if (response.Success)
+        {
+            SetSuccessMessage($"{Form.Title} was updated successfully.");
+            return RedirectToPage("/Themes/Edit", new { id = response.Result.Guid });
+        }
+        else
+        {
+            SetErrorMessage(
+                "There was an error attempting to update this theme. See the error below.",
+                response.GetErrors()
+            );
+            return Page();
+        }
+    }
+
+    public record FormModel
+    {
+        public string Id { get; init; }
+
+        [Display(Name = "Title")]
+        public string Title { get; init; }
+
+        [Display(Name = "Developer Name")]
+        public string DeveloperName { get; init; }
+
+        [Display(Name = "Description")]
+        public string Description { get; init; }
+    }
+}

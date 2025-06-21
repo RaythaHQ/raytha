@@ -1,0 +1,54 @@
+@page "/raytha/themes/create"
+@model Raytha.Web.Areas.Admin.Pages.Themes.Create
+
+@{
+    var pageTitle = "Themes > Create";
+    Layout = "SidebarLayout";
+    ViewData["Title"] = pageTitle;
+    ViewData["ActiveMenu"] = "Themes";
+}
+
+<div class="row mb-4">
+    @Html.Partial("_Partials/PageHeading", ViewData["Title"])
+    <div class="col-xxl-7 col-xl-8 col-lg-9 col-md-12">
+        <div class="card border-0 shadow mb-4">
+            <div class="card-body">
+                <form asp-route="themescreate" method="post" class="py-4" data-controller="shared--developername">
+                    <div class="col-lg-12 col-md-12">
+                        <div class="mb-3">
+                            <label class="form-label raytha-required" asp-for="Form.Title"></label>
+                            <input type="text" class="form-control @Model.HasError("Title")" asp-for="Form.Title"
+                                   data-shared--developername-target="title"
+                                   data-action="keyup->shared--developername#setDeveloperName change->shared--developername#setDeveloperName">
+                            <div class="invalid-feedback">@Model.ErrorMessageFor("Title")</div>
+                        </div>
+                    </div>
+                    <div class="col-lg-12 col-md-12">
+                        <div class="mb-3">
+                            <label class="form-label raytha-required" asp-for="Form.DeveloperName"></label>
+                            <input type="text" class="form-control @Model.HasError("DeveloperName")" asp-for="Form.DeveloperName" data-shared--developername-target="developername">
+                            <div class="invalid-feedback">@Model.ErrorMessageFor("DeveloperName")</div>
+                            <div class="form-text">You cannot change the developer name after it has been created.</div>
+                        </div>
+                    </div>
+                    <div class="col-lg-12 col-md-12">
+                        <div class="mb-3">
+                            <label class="form-label raytha-required" asp-for="Form.Description"></label>
+                            <input type="text" class="form-control @Model.HasError("Description")" asp-for="Form.Description">
+                            <div class="invalid-feedback">@Model.ErrorMessageFor("Description")</div>
+                        </div>
+                    </div>
+                    <div class="col-lg-12 col-md-12 my-4">
+                        <div class="form-check">
+                            <input class="form-check-input @Model.HasError("InsertDefaultThemeMediaItems")" type="checkbox" asp-for="Form.InsertDefaultThemeMediaItems">
+                            <label class="form-check-label" asp-for="Form.InsertDefaultThemeMediaItems"></label>
+                            <div class="invalid-feedback">@Model.ErrorMessageFor("InsertDefaultThemeMediaItems")</div>
+                        </div>
+                        <div class="form-text">Add media items that are included in web-templates (bootstrap.min.cs, bootstrap.bundle.min.js, favicon.ico, raythadotcom_screenshot.webp)</div>
+                    </div>
+                    <button type="submit" class="btn btn-success mt-4">Save</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

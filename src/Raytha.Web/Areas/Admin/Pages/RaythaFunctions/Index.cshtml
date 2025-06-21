@@ -8,32 +8,12 @@
     ViewData["ActiveMenu"] = "Raytha Functions";
 }
 
-
-@section headstyles
-{
-    <style>
-        table thead th:last-child {
-            position: sticky;
-            right: 0;
-            z-index: 2;
-            background-color: white;
-        }
-
-        table tbody td:last-child {
-            position: sticky;
-            right: 0;
-            z-index: 2;
-            background-color: white;
-        }
-    </style>
-}
-
-
 @Html.Partial("_Partials/PageHeading", pageTitle)
-@(await Html.PartialAsync("_TableCreateAndSearchBar", new BaseTableCreateAndSearchBarViewModel()
+@(await Html.PartialAsync("_Partials/TableCreateAndSearchBar", new BaseTableCreateAndSearchBarViewModel()
 {
+    Pagination = Model.ListView,
     EntityName = "function",
-    CreateActionName = "functionscreate"
+    CreateActionName = "/RaythaFunctions/Create",
 }))
 
 <div class="raytha-data-card mb-4">
@@ -42,27 +22,31 @@
             <table class="table table-centered table-nowrap mb-0 rounded">
                 <thead class="thead-light">
                     <tr>
-                        @(await Html.PartialAsync("_TableColumnHeader", new BaseTableColumnHeaderViewModel()
+                        @(await Html.PartialAsync("_Partials/TableColumnHeader", new BaseTableColumnHeaderViewModel()
                         {
+                            Pagination = Model.ListView,
                             PropertyName = "Name",
                             IsFirst = true,
                             DisplayName = ViewModelExtensions.GetDisplayName<Index.RaythaFunctionsListItemViewModel>(p =>
                             p.Name)
                         }))
-                        @(await Html.PartialAsync("_TableColumnHeader", new BaseTableColumnHeaderViewModel()
+                        @(await Html.PartialAsync("_Partials/TableColumnHeader", new BaseTableColumnHeaderViewModel()
                         {
+                            Pagination = Model.ListView,
                             PropertyName = "DeveloperName",
                             DisplayName = ViewModelExtensions.GetDisplayName<Index.RaythaFunctionsListItemViewModel>(p =>
                             p.DeveloperName)
                         }))
-                        @(await Html.PartialAsync("_TableColumnHeader", new BaseTableColumnHeaderViewModel()
+                        @(await Html.PartialAsync("_Partials/TableColumnHeader", new BaseTableColumnHeaderViewModel()
                         {
+                            Pagination = Model.ListView,
                             PropertyName = "TriggerType",
                             DisplayName = ViewModelExtensions.GetDisplayName<Index.RaythaFunctionsListItemViewModel>(p =>
                             p.TriggerType)
                         }))
-                        @(await Html.PartialAsync("_TableColumnHeader", new BaseTableColumnHeaderViewModel()
+                        @(await Html.PartialAsync("_Partials/TableColumnHeader", new BaseTableColumnHeaderViewModel()
                         {
+                            Pagination = Model.ListView,
                             PropertyName = "LastModificationTime",
                             DisplayName = ViewModelExtensions.GetDisplayName<Index.RaythaFunctionsListItemViewModel>(p =>
                             p.LastModificationTime)
@@ -70,8 +54,9 @@
                         <th class="border-0">
                             Last modified by
                         </th>
-                        @(await Html.PartialAsync("_TableColumnHeader", new BaseTableColumnHeaderViewModel()
+                        @(await Html.PartialAsync("_Partials/TableColumnHeader", new BaseTableColumnHeaderViewModel()
                         {
+                            Pagination = Model.ListView,
                             PropertyName = "IsActive",
                             DisplayName = ViewModelExtensions.GetDisplayName<Index.RaythaFunctionsListItemViewModel>(p =>
                             p.IsActive)
@@ -89,12 +74,12 @@
                             <td>@item.LastModificationTime</td>
                             <td>@item.LastModifierUser</td>
                             <td>@item.IsActive</td>
-                            <td><a asp-route="functionsedit" asp-route-id="@item.Id">Edit</a></td>
+                            <td><a asp-page="/RaythaFunctions/Edit" asp-route-id="@item.Id">Edit</a></td>
                         </tr>
                     }
                 </tbody>
             </table>
-            <partial name="_TablePagination" model="@Model" />
+            <partial name="_Partials/TablePagination" model="@Model.ListView" />
         </div>
     </div>
 </div>

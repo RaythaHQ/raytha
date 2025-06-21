@@ -11,7 +11,7 @@
 @Html.Partial("_Partials/PageHeading", ViewData["Title"])
 
 <div class="row mb-4" data-controller="shared--fieldchoices shared--relatedcontenttype"
-    data-shared--fieldchoices-nextitemnumber-value="@Model.Choices.Count()">
+    data-shared--fieldchoices-nextitemnumber-value="@Model.Form.Choices.Count()">
     <div class="col-xxl-7 col-xl-8 col-lg-9 col-md-12">
         <div class="card border-0 shadow mb-4">
             <div class="card-body">
@@ -190,9 +190,4 @@
             </div>
         </div>
     </div>
-    @(await Html.PartialAsync("_FieldsActionsMenu", new FieldsActionsMenuViewModel
-    {
-        Id = Model.Form.Id,
-        ContentTypeDeveloperName = Model.CurrentView.ContentType.DeveloperName
-    }))
 </div>

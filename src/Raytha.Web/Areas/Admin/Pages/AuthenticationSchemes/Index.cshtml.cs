@@ -11,9 +11,9 @@ using Raytha.Web.Areas.Shared.Models;
 namespace Raytha.Web.Areas.Admin.Pages.AuthenticationSchemes;
 
 [Authorize(Policy = BuiltInSystemPermission.MANAGE_SYSTEM_SETTINGS_PERMISSION)]
-public class Index : BaseAdminPageModel, IHasListView<Index.RaythaFunctionsListItemViewModel>
+public class Index : BaseAdminPageModel, IHasListView<Index.AuthenticationSchemesListItemViewModel>
 {
-    public ListViewModel<RaythaFunctionsListItemViewModel> ListView { get; set; }
+    public ListViewModel<AuthenticationSchemesListItemViewModel> ListView { get; set; }
 
     public async Task<IActionResult> OnGet(
         string search = "",
@@ -32,7 +32,7 @@ public class Index : BaseAdminPageModel, IHasListView<Index.RaythaFunctionsListI
 
         var response = await Mediator.Send(input);
 
-        var items = response.Result.Items.Select(p => new RaythaFunctionsListItemViewModel
+        var items = response.Result.Items.Select(p => new AuthenticationSchemesListItemViewModel()
         {
             Id = p.Id,
             Label = p.Label,
@@ -47,14 +47,14 @@ public class Index : BaseAdminPageModel, IHasListView<Index.RaythaFunctionsListI
             IsEnabledForUsers = p.IsEnabledForUsers.YesOrNo(),
         });
 
-        ListView = new ListViewModel<RaythaFunctionsListItemViewModel>(
+        ListView = new ListViewModel<AuthenticationSchemesListItemViewModel>(
             items,
             response.Result.TotalCount
         );
         return Page();
     }
 
-    public record RaythaFunctionsListItemViewModel
+    public record AuthenticationSchemesListItemViewModel
     {
         public string Id { get; init; }
 

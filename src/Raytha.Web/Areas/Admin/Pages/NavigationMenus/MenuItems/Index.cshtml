@@ -23,18 +23,18 @@
             <table class="table mb-0 rounded">
                 <thead class="thead-light">
                     <tr>
-                        @(await Html.PartialAsync("_TableColumnHeader", new TableColumnHeaderViewModel
+                        @(await Html.PartialAsync("_TableColumnHeader", new BaseTableColumnHeaderViewModel
                         {
                             PropertyName = "Label",
                             IsFirst = true,
                             DisplayName = ViewModelExtensions.GetDisplayName<Index.NavigationMenusListItemViewModel>(nm => nm.Label)
                         }))
-                        @(await Html.PartialAsync("_TableColumnHeader", new TableColumnHeader_ViewModel
+                        @(await Html.PartialAsync("_TableColumnHeader", new BaseTableColumnHeaderViewModel
                         {
                             PropertyName = "DeveloperName",
                             DisplayName = ViewModelExtensions.GetDisplayName<Index.NavigationMenusListItemViewModel>(nm => nm.DeveloperName)
                         }))
-                        @(await Html.PartialAsync("_TableColumnHeader", new TableColumnHeader_ViewModel
+                        @(await Html.PartialAsync("_TableColumnHeader", new BaseTableColumnHeaderViewModel
                         {
                             PropertyName = "LastModificationTime",
                             DisplayName = ViewModelExtensions.GetDisplayName<Index.NavigationMenusListItemViewModel>(nm => nm.LastModificationTime)

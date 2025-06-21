@@ -36,7 +36,7 @@ public class ProfileController : BaseController
     [Route("account/me", Name = "userprofile")]
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Profile(ChangeProfile_ViewModel model)
+    public async Task<IActionResult> Profile(ChangeProfileViewModel model)
     {
         var response = await Mediator.Send(
             new ChangeProfile.Command
@@ -128,7 +128,7 @@ public class ProfileController : BaseController
     [Route("account/me/change-password", Name = "userchangepassword")]
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> ChangePassword(ChangePassword_ViewModel model)
+    public async Task<IActionResult> ChangePassword(ChangePasswordViewModel model)
     {
         if (!CurrentOrganization.EmailAndPasswordIsEnabledForUsers)
         {

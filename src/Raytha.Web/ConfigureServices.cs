@@ -162,10 +162,7 @@ public static class ConfigureServices
 
         services.AddScoped<CustomCookieAuthenticationEvents>();
         services
-            .AddControllersWithViews(options =>
-            {
-                options.Filters.Add<SetFormValidationErrorsFilterAttribute>();
-            })
+            .AddControllersWithViews(options => { })
             .AddJsonOptions(o =>
             {
                 o.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
@@ -184,7 +181,6 @@ public static class ConfigureServices
         services.AddSingleton<ICurrentVersion, CurrentVersion>();
 
         services.AddScoped<ForbidAccessIfRaythaFunctionsAreDisabledFilterAttribute>();
-        services.AddScoped<SetPaginationInformationFilterAttribute>();
         services.AddScoped<IAuthorizationHandler, RaythaAdminAuthorizationHandler>();
         services.AddScoped<IAuthorizationHandler, RaythaAdminContentTypeAuthorizationHandler>();
         services.AddScoped<IAuthorizationHandler, RaythaApiAuthorizationHandler>();

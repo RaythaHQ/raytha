@@ -33,6 +33,9 @@
     <UptoDateCheckInput Include="$(JsApplicationRoot)src\**\*" />
     <UptoDateCheckInput Include="$(JsApplicationRoot)package.json" />
   </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Areas\Admin\Pages\Views\" />
+  </ItemGroup>
   <Target Name="EnsureNodeJsIsInstalled">
     <Exec Command="node --version" ContinueOnError="true">
       <Output TaskParameter="ExitCode" PropertyName="ErrorCode" />

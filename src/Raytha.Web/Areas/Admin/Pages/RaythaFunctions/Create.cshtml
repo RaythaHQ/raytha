@@ -15,22 +15,19 @@
         <div class="card border-0 shadow mb-4">
             <div class="card-body">
                 @(await Html.PartialAsync("_Partials/BackToList", "/RaythaFunctions/Index"))
-                <form asp-route="functionscreate" method="post" class="py-4"
+                <form asp-page="/RaythaFunctions/Create" method="post" class="py-4"
                     data-controller="shared--developername raythafunctions--codehighlighting">
                     <div class="col-lg-12 col-md-12">
                         <div class="mb-3">
                             <label class="form-label raytha-required" asp-for="Form.Name"></label>
-                            <input type="text" class="form-control @Model.HasError("Name")" asp-for="Form.Name"
-                                data-shared--developername-target="name"
-                                data-action="keyup->shared--developername#setDeveloperName change->shared--developername#setDeveloperName">
+                            <input type="text" class="form-control @Model.HasError("Name")" asp-for="Form.Name">
                             <div class="invalid-feedback">@Model.ErrorMessageFor("Name")</div>
                         </div>
                     </div>
                     <div class="col-lg-12 col-md-12">
                         <div class="mb-3">
                             <label class="form-label raytha-required" asp-for="Form.DeveloperName"></label>
-                            <input type="text" class="form-control @Model.HasError("DeveloperName")"
-                                asp-for="Form.DeveloperName" data-shared--developername-target="developername">
+                            <input type="text" class="form-control @Model.HasError("DeveloperName")" asp-for="Form.DeveloperName">
                             <div class="invalid-feedback">@Model.ErrorMessageFor("DeveloperName")</div>
                             <div class="form-text">You cannot change the developer name after it has been created.</div>
                         </div>
@@ -61,7 +58,7 @@
                             <div class="@Model.HasError("Code")" id="editorContainer"
                                 style="height:600px;overflow: auto;"
                                 data-raythafunctions--codehighlighting-target="editor"></div>
-                            <input type="hidden" asp-for="Form.Code"
+                            <input type="hidden" asp-for="Form.Code" 
                                 data-raythafunctions--codehighlighting-target="textarea">
                             <div class="invalid-feedback">@Model.ErrorMessageFor("Code")</div>
                         </div>
@@ -77,3 +74,50 @@
         height: 100%;
     }
 </style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        bindDeveloperNameSync('Form_Name', 'Form_DeveloperName');
+    });
+</script>
+
+<script type="importmap">
+  {
+    "imports": {
+      "style-mod": "https://esm.sh/style-mod",
+      "w3c-keyname": "https://esm.sh/w3c-keyname",
+      "crelt": "https://esm.sh/crelt",
+      "@@marijn/find-cluster-break": "https://esm.sh/@@marijn/find-cluster-break",
+      "@@lezer/": "https://esm.sh/*@@lezer/",
+      "@@codemirror/": "https://esm.sh/*@@codemirror/",
+      "codemirror": "https://esm.sh/*codemirror"
+    }
+  }
+</script>
+
+<script type="module">
+    import { EditorState } from '@@codemirror/state';
+    import { EditorView, basicSetup } from 'codemirror';
+    import { javascript } from '@@codemirror/lang-javascript';
+    import { indentWithTab } from '@@codemirror/commands';
+    import { keymap } from '@@codemirror/view';
+
+    const startState = EditorState.create({
+        doc: @Html.Raw(Json.Serialize(Model.Form.Code)),
+        extensions: [
+            basicSetup,
+            javascript(),
+            keymap.of([indentWithTab]),
+            EditorView.updateListener.of((update) => {
+                if (update.docChanged) {
+                    document.getElementById('Form_Code').value = view.state.doc.toString();
+                }
+            })
+        ],
+    });
+
+    const view = new EditorView({
+      state: startState,
+      parent: document.getElementById('editorContainer')
+    });
+</script>

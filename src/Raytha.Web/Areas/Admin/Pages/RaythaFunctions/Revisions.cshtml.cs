@@ -13,6 +13,7 @@ namespace Raytha.Web.Areas.Admin.Pages.RaythaFunctions;
 [Authorize(Policy = BuiltInSystemPermission.MANAGE_SYSTEM_SETTINGS_PERMISSION)]
 public class Revisions : BaseAdminPageModel, ISubActionViewModel
 {
+    public RaythaFunctionsRevisionsPaginationViewModel ListView { get; set; }
     public string Id { get; set; }
 
     public async Task<IActionResult> OnGet(
@@ -45,7 +46,7 @@ public class Revisions : BaseAdminPageModel, ISubActionViewModel
             }
         );
 
-        var viewModel = new RaythaFunctionsRevisionsPagination_ViewModel(
+        ListView = new RaythaFunctionsRevisionsPaginationViewModel(
             items,
             response.Result.TotalCount
         )
@@ -74,12 +75,12 @@ public class Revisions : BaseAdminPageModel, ISubActionViewModel
         }
     }
 
-    public record RaythaFunctionsRevisionsPagination_ViewModel : PaginationViewModel
+    public record RaythaFunctionsRevisionsPaginationViewModel : PaginationViewModel
     {
         public IEnumerable<RaythaFunctionsRevisionsListItemViewModel> Items { get; }
         public string FunctionId { get; set; }
 
-        public RaythaFunctionsRevisionsPagination_ViewModel(
+        public RaythaFunctionsRevisionsPaginationViewModel(
             IEnumerable<RaythaFunctionsRevisionsListItemViewModel> items,
             int totalCount
         )

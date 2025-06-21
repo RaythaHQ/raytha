@@ -9,14 +9,9 @@
     ViewData["ActiveSubMenu"] = "Menu items";
 }
 
-@section headstyles
-{
-    <link rel="stylesheet" href="~/raytha_admin/css/notyf.min.css" />
-}
-
 @{
     async Task RenderNavigationMenuItemsList(string parentNavigationMenuId,
-    List<NavigationMenuItemsListItemViewModel>
+    List<Reorder.NavigationMenuItemsListItemViewModel>
     navigationMenuItems)
     {
         <ul data-controller="shared--reorderlist" data-shared--reorderlist-animation-value="150"
