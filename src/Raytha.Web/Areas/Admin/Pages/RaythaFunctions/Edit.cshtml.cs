@@ -9,10 +9,15 @@ using Raytha.Web.Areas.Admin.Pages.Shared.Models;
 namespace Raytha.Web.Areas.Admin.Pages.RaythaFunctions;
 
 [Authorize(Policy = BuiltInSystemPermission.MANAGE_SYSTEM_SETTINGS_PERMISSION)]
-public class Edit : BaseAdminPageModel
+public class Edit : BaseAdminPageModel, ISubActionViewModel
 {
     [BindProperty]
     public FormModel Form { get; set; }
+
+    public string Id { get; set; }
+    public bool IsActive { get; set; }
+
+    public bool IsAdmin { get; set; }
 
     public async Task<IActionResult> OnGet(string id)
     {
@@ -27,6 +32,9 @@ public class Edit : BaseAdminPageModel
             IsActive = response.Result.IsActive,
             Code = response.Result.Code,
         };
+        Id = id;
+        IsActive = response.Result.IsActive;
+        IsAdmin = false; // functions don't have admin flag currently
         return Page();
     }
 
@@ -56,6 +64,10 @@ public class Edit : BaseAdminPageModel
             );
 
             Form.Id = id;
+            // ensure layout's ISubActionViewModel properties are set for the layout
+            Id = id;
+            IsActive = Form.IsActive;
+            IsAdmin = false;
             return Page();
         }
     }

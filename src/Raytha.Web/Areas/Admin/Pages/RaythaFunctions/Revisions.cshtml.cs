@@ -15,6 +15,9 @@ public class Revisions : BaseAdminPageModel, ISubActionViewModel
 {
     public RaythaFunctionsRevisionsPaginationViewModel ListView { get; set; }
     public string Id { get; set; }
+    public bool IsActive { get; set; }
+
+    public bool IsAdmin { get; set; }
 
     public async Task<IActionResult> OnGet(
         string id,
@@ -56,7 +59,7 @@ public class Revisions : BaseAdminPageModel, ISubActionViewModel
         return Page();
     }
 
-    public async Task<IActionResult> Revert(string id, string revisionId)
+    public async Task<IActionResult> OnPostRevert(string id, string revisionId)
     {
         Id = id;
         var input = new RevertRaythaFunction.Command { Id = revisionId };
