@@ -26,11 +26,63 @@
     </div>
     <div class="col-lg-12">
         <div class="mb-3">
-            <label class="form-label" asp-for="Form.Content"></label><br />
-            <textarea asp-for="Form.Content" rows="20" class="form-control @Model.HasError("Content")"></textarea>
-            <div class="invalid-feedback">@Model.ErrorMessageFor("Content")</div>
+            <label class="form-label raytha-required" asp-for="Form.Content"></label><br />
+            <div class="@Model.HasError("Code")" id="editorContainer" style="height:600px;overflow: auto;"
+                data-raythafunctions--codehighlighting-target="editor"></div>
+            <input type="hidden" asp-for="Form.Content" data-raythafunctions--codehighlighting-target="textarea">
+            <div class="invalid-feedback">@Model.ErrorMessageFor("Code")</div>
         </div>
     </div>
     <input type="hidden" asp-for="Form.Id">
     <button type="submit" class="btn btn-success mt-4">Publish changes</button>
 </form>
+
+<script type="importmap">
+  {
+    "imports": {
+      "style-mod": "https://esm.sh/style-mod",
+      "w3c-keyname": "https://esm.sh/w3c-keyname",
+      "crelt": "https://esm.sh/crelt",
+      "@@marijn/find-cluster-break": "https://esm.sh/@@marijn/find-cluster-break",
+      "@@lezer/": "https://esm.sh/*@@lezer/",
+      "@@codemirror/": "https://esm.sh/*@@codemirror/",
+      "codemirror": "https://esm.sh/*codemirror"
+    }
+  }
+</script>
+
+<script type="module">
+    import { EditorState } from '@@codemirror/state';
+    import { EditorView, basicSetup } from 'codemirror';
+    import { html } from '@@codemirror/lang-html';
+    import { javascript } from '@@codemirror/lang-javascript';
+    import { css } from '@@codemirror/lang-css';
+    import { indentWithTab } from '@@codemirror/commands';
+    import { keymap } from '@@codemirror/view';
+
+    // Use the HTML language which supports mixed JS/CSS inside <script>/<style> tags
+    const startState = EditorState.create({
+        doc: @Html.Raw(Json.Serialize(Model.Form.Content ?? string.Empty)),
+        extensions: [
+            basicSetup,
+            html({
+                matchClosingTags: true,
+                autoCloseTags: true,
+                codeLanguages: [javascript(), css()]
+            }),
+            keymap.of([indentWithTab]),
+            EditorView.updateListener.of((update) => {
+                if (update.docChanged) {
+                    // Hidden input for the Content field on this form is 'Form_Content'
+                    const el = document.getElementById('Form_Content');
+                    if (el) el.value = view.state.doc.toString();
+                }
+            })
+        ],
+    });
+
+    const view = new EditorView({
+        state: startState,
+        parent: document.getElementById('editorContainer')
+    });
+</script>
