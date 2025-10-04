@@ -20,11 +20,13 @@ public class Reorder : BaseAdminPageModel, ISubActionViewModel
         List<NavigationMenuItemsListItemViewModel>
     > NavigationMenuItemsByParentNavigationMenuItemId { get; set; }
     public string NavigationMenuItemId { get; set; }
+    public bool IsNavigationMenuItem { get; set; }
 
     public async Task<IActionResult> OnGet(string navigationMenuId, string id)
     {
         NavigationMenuId = navigationMenuId;
         NavigationMenuItemId = id;
+        IsNavigationMenuItem = false;
 
         var input = new GetNavigationMenuItemsByNavigationMenuId.Query
         {

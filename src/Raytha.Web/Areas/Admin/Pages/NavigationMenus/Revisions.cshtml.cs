@@ -20,7 +20,6 @@ public class Revisions : BaseAdminPageModel, ISubActionViewModel
 
     public async Task<IActionResult> OnGet(
         string id,
-        string search = "",
         string orderBy = $"CreationTime {SortOrder.DESCENDING}",
         int pageNumber = 1,
         int pageSize = 50

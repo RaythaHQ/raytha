@@ -34,7 +34,7 @@
                 <div class="nav-wrapper position-relative">
                     <ul class="nav nav-pills nav-fill flex-column vertical-tab">
                         <li class="nav-item">
-                            <a class="nav-link @IsActivePage("Edit")" asp-route="menusedit"
+                            <a class="nav-link @IsActivePage("Edit")" asp-page="/NavigationMenus/Edit"
                                 asp-route-id="@Model.NavigationMenuId">
                                 <svg class="icon icon-sm mx-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"
                                     xmlns="http://www.w3.org/2000/svg">
@@ -46,7 +46,7 @@
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link @IsActivePage("Menu items")" asp-route="menuitems"
+                            <a class="nav-link @IsActivePage("Menu items")" asp-page="/NavigationMenus/MenuItems/Index"
                                 asp-route-navigationMenuId="@Model.NavigationMenuId">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-sm" fill="none"
                                     stroke="currentColor" viewBox="0 0 24 24" fill="none">
@@ -61,7 +61,7 @@
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link @IsActivePage("Revisions")" asp-route="menusrevisionsindex"
+                            <a class="nav-link @IsActivePage("Revisions")" asp-page="/NavigationMenus/Revisions"
                                 asp-route-id="@Model.NavigationMenuId">
                                 <svg class="icon icon-sm mx-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"
                                     xmlns="http://www.w3.org/2000/svg">
@@ -72,10 +72,9 @@
                                 Revisions
                             </a>
                         </li>
-                        <li class="nav-item" data-controller="shared--confirmaction"
-                            data-shared--confirmaction-title-value="Are you sure you want to delete this menu? This action cannot be undone.">
-                            <form method="post" asp-route="menusdelete" asp-route-id="@Model.NavigationMenuId"
-                                data-shared--confirmaction-target="form">
+                        <li class="nav-item">
+                            <form method="post" asp-page="/NavigationMenus/Delete"
+                                asp-route-id="@Model.NavigationMenuId" onsubmit="return confirmDelete();">
                                 <button
                                     class="nav-link d-inline-flex align-items-center justify-content-center text-danger"
                                     data-action="click->shared--confirmaction#warning">
@@ -95,3 +94,9 @@
         </div>
     </div>
 </div>
+
+<script>
+    function confirmDelete() {
+        return confirm("Are you sure you want to delete this menu?");
+    }
+</script>

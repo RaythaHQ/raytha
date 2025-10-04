@@ -17,6 +17,8 @@ public class Edit : BaseAdminPageModel, ISubActionViewModel
     public string NavigationMenuId { get; set; }
     public string NavigationMenuItemId { get; set; }
 
+    public bool IsNavigationMenuItem { get; set; }
+
     [BindProperty]
     public FormModel Form { get; set; }
 
@@ -24,6 +26,7 @@ public class Edit : BaseAdminPageModel, ISubActionViewModel
     {
         NavigationMenuId = navigationMenuId;
         NavigationMenuItemId = id;
+        IsNavigationMenuItem = true;
 
         var navigationMenuItemResponse = await Mediator.Send(
             new GetNavigationMenuItemById.Query { Id = id }

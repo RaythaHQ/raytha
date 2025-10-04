@@ -11,9 +11,11 @@ using Raytha.Web.Areas.Admin.Pages.Shared.Models;
 namespace Raytha.Web.Areas.Admin.Pages.NavigationMenus.MenuItems;
 
 [Authorize(Policy = BuiltInSystemPermission.MANAGE_CONTENT_TYPES_PERMISSION)]
-public class Create : BaseAdminPageModel
+public class Create : BaseAdminPageModel, ISubActionViewModel
 {
     public string NavigationMenuId { get; set; }
+    public string NavigationMenuItemId { get; set; }
+    public bool IsNavigationMenuItem { get; set; }
 
     [BindProperty]
     public FormModel Form { get; set; }
@@ -21,6 +23,7 @@ public class Create : BaseAdminPageModel
     public async Task<IActionResult> OnGet(string navigationMenuId)
     {
         NavigationMenuId = navigationMenuId;
+        IsNavigationMenuItem = false;
         var input = new GetNavigationMenuItemsByNavigationMenuId.Query
         {
             NavigationMenuId = navigationMenuId,

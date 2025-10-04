@@ -20,6 +20,10 @@ public class Edit : BaseAdminPageModel, ISubActionViewModel
 
     public async Task<IActionResult> OnGet(string id)
     {
+        NavigationMenuId = id;
+        IsNavigationMenuItem = false;
+        NavigationMenuItemId = string.Empty;
+
         var input = new GetNavigationMenuById.Query { Id = id };
 
         var response = await Mediator.Send(input);
@@ -31,6 +35,7 @@ public class Edit : BaseAdminPageModel, ISubActionViewModel
             DeveloperName = response.Result.DeveloperName,
             IsMainMenu = response.Result.IsMainMenu,
         };
+
         return Page();
     }
 

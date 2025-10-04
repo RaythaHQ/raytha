@@ -1,7 +1,8 @@
 using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Raytha.Application.NavigationMenus.Queries;
+using Raytha.Application.Common.Utils;
+using Raytha.Application.NavigationMenuItems.Queries;
 using Raytha.Domain.Entities;
 using Raytha.Domain.ValueObjects;
 using Raytha.Web.Areas.Admin.Pages.Shared.Models;
@@ -10,79 +11,65 @@ using Raytha.Web.Areas.Shared.Models;
 namespace Raytha.Web.Areas.Admin.Pages.NavigationMenus.MenuItems;
 
 [Authorize(Policy = BuiltInSystemPermission.MANAGE_CONTENT_TYPES_PERMISSION)]
-public class Index : BaseAdminPageModel
+public class Index : BaseAdminPageModel, ISubActionViewModel
 {
-    public ListViewModel<NavigationMenusListItemViewModel> ListView { get; set; }
+    public ListViewModel<NavigationMenuItemsListItemViewModel> ListView { get; set; }
+    public string NavigationMenuId { get; set; }
+    public bool IsNavigationMenuItem { get; set; }
+    public string NavigationMenuItemId { get; set; }
 
-    public async Task<IActionResult> OnGet(
-        string search = "",
-        string orderBy = $"CreationTime {SortOrder.DESCENDING}",
-        int pageNumber = 1,
-        int pageSize = 50
-    )
+    public async Task<IActionResult> OnGet(string navigationMenuId)
     {
-        var input = new GetNavigationMenus.Query
+        NavigationMenuId = navigationMenuId;
+        IsNavigationMenuItem = false;
+        NavigationMenuItemId = string.Empty;
+
+        var input = new GetNavigationMenuItemsByNavigationMenuId.Query
         {
-            Search = search,
-            OrderBy = orderBy,
-            PageNumber = pageNumber,
-            PageSize = pageSize,
+            NavigationMenuId = navigationMenuId,
         };
 
-        var allNavigationMenuResponse = await Mediator.Send(input);
-        var latestNavigationMenuRevisionsResponse = await Mediator.Send(
-            new GetLatestNavigationMenuRevisions.Query()
+        var response = await Mediator.Send(input);
+        var items = response.Result.BuildTree<NavigationMenuItemsListItemViewModel>(
+            (nmi, nestedNavigationMenuItems, _) =>
+                new NavigationMenuItemsListItemViewModel
+                {
+                    Id = nmi.Id,
+                    Label = nmi.Label,
+                    Url = nmi.Url,
+                    IsDisabled = nmi.IsDisabled,
+                    OpenInNewTab = nmi.OpenInNewTab,
+                    CssClassName = nmi.CssClassName,
+                    MenuItems = nestedNavigationMenuItems,
+                }
         );
 
-        var items = allNavigationMenuResponse.Result.Items.Select(nm =>
-        {
-            var latestRevision = latestNavigationMenuRevisionsResponse.Result.FirstOrDefault(nmr =>
-                nmr.NavigationMenuId == nm.Id
-            );
-            var (lastModificationTime, lastModificationUser) =
-                Nullable.Compare(nm.LastModificationTime, latestRevision?.CreationTime) > 0
-                    ? (nm.LastModificationTime, nm.LastModifierUser)
-                    : (latestRevision?.CreationTime, latestRevision?.CreatorUser);
-
-            return new NavigationMenusListItemViewModel
-            {
-                Id = nm.Id,
-                Label = nm.Label,
-                DeveloperName = nm.DeveloperName,
-                IsMainMenu = nm.IsMainMenu,
-                LastModificationTime =
-                    CurrentOrganization.TimeZoneConverter.UtcToTimeZoneAsDateTimeFormat(
-                        lastModificationTime
-                    ),
-                LastModifierUser = lastModificationUser?.FullName ?? "N/A",
-            };
-        });
-
-        ListView = new ListViewModel<NavigationMenusListItemViewModel>(
+        ListView = new ListViewModel<NavigationMenuItemsListItemViewModel>(
             items,
-            allNavigationMenuResponse.Result.TotalCount
+            response.Result.Count
         );
-
         return Page();
     }
 
-    public record NavigationMenusListItemViewModel
+    public record NavigationMenuItemsListItemViewModel
     {
         public string Id { get; init; }
 
         [Display(Name = "Label")]
         public string Label { get; init; }
 
-        [Display(Name = "Developer name")]
-        public string DeveloperName { get; init; }
+        [Display(Name = "Url")]
+        public string Url { get; init; }
 
-        [Display(Name = "Is main menu")]
-        public bool IsMainMenu { get; init; }
+        [Display(Name = "Disabled")]
+        public bool IsDisabled { get; init; }
 
-        [Display(Name = "Last modified at")]
-        public string LastModificationTime { get; init; }
+        [Display(Name = "Open in new tab")]
+        public bool OpenInNewTab { get; init; }
 
-        [Display(Name = "Last modified by")]
-        public string LastModifierUser { get; init; }
+        [Display(Name = "Css class name")]
+        public string CssClassName { get; init; }
+
+        public IEnumerable<NavigationMenuItemsListItemViewModel> MenuItems { get; init; } = null!;
     }
 }

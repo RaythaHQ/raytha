@@ -1,72 +1,98 @@
-@page "/raytha/menus"
-@model Raytha.Web.Areas.Admin.Pages.NavigationMenus.Index
-
+@page "/raytha/menus/{navigationMenuId}/menu-items"
+@model Raytha.Web.Areas.Admin.Pages.NavigationMenus.MenuItems.Index
+@using Raytha.Application.Common.Utils
 @{
     var pageTitle = "Menus";
-    Layout = "SidebarLayout";
+    Layout = "SubActionLayout";
     ViewData["Title"] = pageTitle;
     ViewData["ActiveMenu"] = "Menus";
+    ViewData["ActiveSubMenu"] = "Menu items";
 }
 
 
-@Html.Partial("_Partials/PageHeading", ViewData["Title"])
+<style>
+    .nestedMenuItem td:first-child {
+        padding-left: calc((var(--level) - 1) * 25px + 7px);
+    }
+</style>
 
-@(await Html.PartialAsync("_TableCreateAndSearchBar", new BaseTableCreateAndSearchBarViewModel
-{
-    EntityName = "menu",
-    CreateActionName = "menuscreate"
-}))
+@{
+    async Task RenderNestedNavigationMenuItems(IEnumerable<Index.NavigationMenuItemsListItemViewModel> nestedNavigationMenuItems, int dataLevel)
+    {
+        @foreach (var item in nestedNavigationMenuItems)
+        {
+            <tr class="nestedMenuItem" style="--level: @dataLevel">
+                <td>└─ @item.Label</td>
+                <td>@item.Url</td>
+                <td>@item.IsDisabled.YesOrNo()</td>
+                <td>@item.OpenInNewTab.YesOrNo()</td>
+                <td>@item.CssClassName</td>
+                <td>
+                    <a asp-page="/NavigationMenus/MenuItems/Edit" asp-route-id="@item.Id" asp-route-navigationMenuId="@Model.NavigationMenuId">Edit</a>
+                </td>
+            </tr>
 
-<div class="raytha-data-card mb-4">
-    <div class="card-body">
+            if (item.MenuItems.Any())
+            {
+                var newDataLevel = dataLevel + 1;
+                await RenderNestedNavigationMenuItems((item.MenuItems as IEnumerable<Index.NavigationMenuItemsListItemViewModel>), newDataLevel);
+            }
+        }
+    }
+}
+
+
+<nav class="navbar navbar-expand-lg navbar-light">
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+            <li class="nav-item">
+                <a class="btn btn-primary" aria-current="page" asp-page="/NavigationMenus/MenuItems/Create" asp-route-navigationMenuId=@Model.NavigationMenuId>
+                    <svg class="icon icon-xs me-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg> Create menu item
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="btn btn-secondary mx-4" aria-current="page" asp-route="/NavigationMenus/MenuItems/Reorder" asp-route-navigationMenuId=@Model.NavigationMenuId>
+                    <svg class="icon icon-xs me-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16"></path></svg> Reorder menu items
+                </a>
+            </li>
+        </ul>
+    </div>
+</nav>
+
+
         <div class="table-responsive">
             <table class="table mb-0 rounded">
                 <thead class="thead-light">
-                    <tr>
-                        @(await Html.PartialAsync("_TableColumnHeader", new BaseTableColumnHeaderViewModel
-                        {
-                            PropertyName = "Label",
-                            IsFirst = true,
-                            DisplayName = ViewModelExtensions.GetDisplayName<Index.NavigationMenusListItemViewModel>(nm => nm.Label)
-                        }))
-                        @(await Html.PartialAsync("_TableColumnHeader", new BaseTableColumnHeaderViewModel
-                        {
-                            PropertyName = "DeveloperName",
-                            DisplayName = ViewModelExtensions.GetDisplayName<Index.NavigationMenusListItemViewModel>(nm => nm.DeveloperName)
-                        }))
-                        @(await Html.PartialAsync("_TableColumnHeader", new BaseTableColumnHeaderViewModel
-                        {
-                            PropertyName = "LastModificationTime",
-                            DisplayName = ViewModelExtensions.GetDisplayName<Index.NavigationMenusListItemViewModel>(nm => nm.LastModificationTime)
-                        }))
-                        <th class="border-0">
-                            Last modified by
-                        </th>
-                        <th class="border-0 rounded-end">Action</th>
-                    </tr>
+                <tr>
+                    <th class="border-0 rounded-start">Label</th>
+                    <th class="border-0">Url</th>
+                    <th class="border-0">Disabled</th>
+                    <th class="border-0">Open in new tab</th>
+                    <th class="border-0">Css class name</th>
+                    <th class="border-0 rounded-end">Action</th>
+                </tr>
                 </thead>
                 <tbody>
                     @foreach (var item in Model.ListView.Items)
                     {
                         <tr>
                             <td>@item.Label</td>
-                            <td>@item.DeveloperName</td>
-                            <td>@item.LastModificationTime</td>
-                            <td>@item.LastModifierUser</td>
+                            <td>@item.Url</td>
+                            <td>@item.IsDisabled.YesOrNo()</td>
+                            <td>@item.OpenInNewTab.YesOrNo()</td>
+                            <td>@item.CssClassName</td>
                             <td>
-                                <a asp-route="menusedit" asp-route-id="@item.Id">Edit</a>
-                                @if (item.IsMainMenu)
-                                {
-                                    <svg class="icon icon-xs" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" />
-                                    </svg>
-                                }
+                                <a asp-page="/NavigationMenus/MenuItems/Edit" asp-route-id=@item.Id asp-route-navigationMenuId=@Model.NavigationMenuId>Edit</a>
                             </td>
                         </tr>
+                        if (item.MenuItems.Any())
+                        {
+                            await RenderNestedNavigationMenuItems((IEnumerable<Index.NavigationMenuItemsListItemViewModel>)item.MenuItems, 1);
+                        }
                     }
                 </tbody>
             </table>
-            <partial name="_TablePagination" model="@Model" />
         </div>
-    </div>
-</div>
