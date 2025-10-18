@@ -6,12 +6,20 @@
     Layout = "SidebarLayout";
     ViewData["Title"] = pageTitle;
     ViewData["ActiveMenu"] = "Menus";
+
+    BackLinkOptions back = new BackLinkOptions
+    {
+        Page = "/NavigationMenus/MenuItems/Index",
+        RouteValues = new RouteValueDictionary { ["navigationMenuId"] = Model.NavigationMenuId }
+    };
 }
 
-<div class="row mb-4" data-controller="shared--developername">
+@Html.Partial("_Partials/PageHeading", ViewData["Title"])
+<div class="row mb-4">
     <div class="col-xxl-7 col-xl-8 col-lg-9 col-md-12">
         <div class="card border-0 shadow mb-4">
             <div class="card-body">
+                @(await Html.PartialAsync("_Partials/BackToList", back))
                 <form asp-route="menuitemscreate" method="post" class="py-4"
                     asp-route-navigationMenuId="@Model.NavigationMenuId">
                     <div class="col-lg-12">
@@ -35,8 +43,8 @@
                     </div>
                     <div class="col-lg-12 col-md-12">
                         <div class="mb-3">
-                            <label class="form-label raytha-required" asp-for="Url"></label>
-                            <input type="text" class="form-control @Model.HasError("Url")" asp-for="Url" required>
+                            <label class="form-label raytha-required" asp-for="Form.Url"></label>
+                            <input type="text" class="form-control @Model.HasError("Url")" asp-for="Form.Url" required>
                             <div class="invalid-feedback">@Model.ErrorMessageFor("Url")</div>
                         </div>
                     </div>
@@ -79,3 +87,9 @@
         </div>
     </div>
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        bindDeveloperNameSync('Form_Label', 'Form_DeveloperName');
+    });
+</script>

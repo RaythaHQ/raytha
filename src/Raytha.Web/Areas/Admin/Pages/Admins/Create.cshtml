@@ -7,6 +7,11 @@
     ViewData["Title"] = pageTitle;
     ViewData["ActiveMenu"] = "Admins";
     ViewData["ExpandSettingsMenu"] = true;
+
+    BackLinkOptions back = new BackLinkOptions
+    {
+        Page = "/Admins/Index"
+    };
 }
 
 <div class="row mb-4">
@@ -14,7 +19,7 @@
     <div class="col-xxl-7 col-xl-8 col-lg-9 col-md-12">
         <div class="card border-0 shadow mb-4">
             <div class="card-body">
-                @(await Html.PartialAsync("_Partials/BackToList", "/Admins/Index"))
+                @(await Html.PartialAsync("_Partials/BackToList", back))
                 <form asp-page="/Admins/Create" method="post" class="py-4" novalidate>
                     <div class="row">
                         <div class="col">

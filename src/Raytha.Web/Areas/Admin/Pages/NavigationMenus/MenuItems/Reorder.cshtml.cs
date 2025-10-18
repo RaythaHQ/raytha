@@ -22,11 +22,9 @@ public class Reorder : BaseAdminPageModel, ISubActionViewModel
     public string NavigationMenuItemId { get; set; }
     public bool IsNavigationMenuItem { get; set; }
 
-    public async Task<IActionResult> OnGet(string navigationMenuId, string id)
+    public async Task<IActionResult> OnGet(string navigationMenuId, string parentMenuItem = null)
     {
         NavigationMenuId = navigationMenuId;
-        NavigationMenuItemId = id;
-        IsNavigationMenuItem = false;
 
         var input = new GetNavigationMenuItemsByNavigationMenuId.Query
         {
@@ -55,16 +53,23 @@ public class Reorder : BaseAdminPageModel, ISubActionViewModel
             .Where(kv => !string.IsNullOrEmpty(kv.Key))
             .Select(kv => response.Result.First(nmi => nmi.Id == kv.Key));
 
-        ParentNavigationMenuId = null;
+        ParentNavigationMenuId = parentMenuItem;
         NavigationMenuItemsByParentNavigationMenuItemId =
-            navigationMenuItemsByParentNavigationMenuItemId;
+            navigationMenuItemsByParentNavigationMenuItemId
+                .Where(p => p.Key == (parentMenuItem ?? string.Empty))
+                .ToDictionary(k => k.Key, v => v.Value);
         NavigationMenuItemsForSelect = navigationMenuItemsForSelect;
         NavigationMenuId = navigationMenuId;
 
         return Page();
     }
 
-    public async Task<IActionResult> Ajax([FromForm] string position, string id)
+    public async Task<IActionResult> OnPostAjaxAsync(
+        string navigationMenuId,
+        string position,
+        string id,
+        string parentMenuItem = null
+    )
     {
         var input = new ReorderNavigationMenuItems.Command
         {

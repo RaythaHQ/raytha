@@ -8,9 +8,14 @@
     ViewData["Title"] = pageTitle;
     ViewData["ActiveMenu"] = "Raytha Functions";
     ViewData["ActiveSubMenu"] = "Edit";
+
+    BackLinkOptions back = new BackLinkOptions
+    {
+        Page = "/RaythaFunctions/Index"
+    };
 }
 
-@(await Html.PartialAsync("_Partials/BackToList", "/RaythaFunctions/Index"))
+@(await Html.PartialAsync("_Partials/BackToList", back))
 <form asp-page="/RaythaFunctions/Edit" asp-route-id="@Model.Form.Id" method="post" class="py-4" novalidate>
     <input type="hidden" asp-for="Form.Id">
     <div class="col-lg-12 col-md-12">

@@ -9,6 +9,11 @@
     ViewData["ActiveMenu"] = "Admins";
     ViewData["ActiveSubMenu"] = "Edit";
     ViewData["ExpandSettingsMenu"] = true;
+
+    BackLinkOptions back = new BackLinkOptions
+    {
+        Page = "/Admins/Index"
+    };
 }
 
 @functions {
@@ -17,7 +22,7 @@
         return Model.Form.Id == CurrentUser.UserId;
     }
 }
-@(await Html.PartialAsync("_Partials/BackToList", "/Admins/Index"))
+@(await Html.PartialAsync("_Partials/BackToList", back))
 <form asp-page="/Admins/Edit" method="post" class="py-4" asp-route-id="@Model.Form.Id" novalidate>
     <div class="row">
         <div class="col">

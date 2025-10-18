@@ -7,9 +7,14 @@
     ViewData["Title"] = pageTitle;
     ViewData["ActiveMenu"] = "Menus";
     ViewData["ActiveSubMenu"] = "Edit";
+
+    BackLinkOptions back = new BackLinkOptions
+    {
+        Page = "/NavigationMenus/Index"
+    };
 }
 
-@(await Html.PartialAsync("_Partials/BackToList", "/NavigationMenus/Index"))
+@(await Html.PartialAsync("_Partials/BackToList", back))
 <form asp-page="/NavigationMenus/Edit" asp-route-id="@Model.Form.Id" method="post" class="py-4" novalidate>
     <input type="hidden" asp-for="Form.Id">
     <div class="col-lg-12 col-md-12">

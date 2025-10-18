@@ -1,4 +1,4 @@
-@page "/raytha/menus/edit/{navigationMenuId}/menu-items/reorder/{id}"
+@page "/raytha/menus/edit/{navigationMenuId}/menu-items/reorder/{parentMenuItem?}"
 @using Raytha.Application.Common.Utils
 @model Raytha.Web.Areas.Admin.Pages.NavigationMenus.MenuItems.Reorder
 @{
@@ -7,6 +7,16 @@
     ViewData["Title"] = pageTitle;
     ViewData["ActiveMenu"] = "Menus";
     ViewData["ActiveSubMenu"] = "Menu items";
+
+    var rootUrl = Url.Page(
+    pageName: null,
+    values: new { navigationMenuId = Model.NavigationMenuId, parentMenuItem = string.Empty } // no parent segment
+    );
+
+    var parentUrlTemplate = Url.Page(
+    pageName: null,
+    values: new { navigationMenuId = Model.NavigationMenuId, parentMenuItem = "__PARENT__" }
+    );
 }
 
 @{
@@ -14,48 +24,111 @@
     List<Reorder.NavigationMenuItemsListItemViewModel>
     navigationMenuItems)
     {
-        <ul data-controller="shared--reorderlist" data-shared--reorderlist-animation-value="150"
-            data-shared--reorderlist-reorder-type-value="Menu items" class="list-group mt-4" id="@parentNavigationMenuId"
-            @(parentNavigationMenuId != "" ? "hidden = true" : "")>
+        <ul id="menuList" class="list-group mt-4">
             @foreach (var item in navigationMenuItems)
             {
-                <li data-sortable-update-url="@Url.Action("MenuItemsReorderAjax", new { navigationMenuId = Model.NavigationMenuId, id = item.Id })"
-                    class="list-group-item border raytha-draggable d-flex justify-content-between">
+                <li class="list-group-item border raytha-draggable d-flex justify-content-between align-items-center"
+                    data-id="@item.Id">
                     <div>
                         @item.Label <small>@item.Url</small>
                     </div>
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"
-                        class="icon icon-xs me-2">
+                        class="icon icon-xs me-2 drag-handle">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 9h16.5m-16.5 6.75h16.5" />
                     </svg>
                 </li>
             }
+
+            @Html.AntiForgeryToken()
+
         </ul>
     }
 }
 
-<div class="col-xxl-7 col-xl-8 col-lg-9 col-md-12">
-    <div class="card border-0 shadow mb-4">
-        <div class="card-body">
 
-            <div class="py-4" data-controller="navigationmenuitems--items"
-                data-navigationmenuitems--items-updateurl-value="@Url.Action("MenuItemsReorder", new { navigationMenuId = Model.NavigationMenuId })">
-                <div class="col-lg-12">
-                    <div class="mb-3">
-                        <label class="form-label">Parent menu item</label>
-                        <select id="keySelect" data-action="change->navigationmenuitems--items#handleChange"
-                            class="form-select" asp-for="@Model.ParentNavigationMenuId"
-                            asp-items="@(new SelectList(Model.NavigationMenuItemsForSelect, "Id", "Label"))">
-                            <option value="">(root)</option>
-                        </select>
-                        <hr />
-                    </div>
-                </div>
-                @foreach (var item in Model.NavigationMenuItemsByParentNavigationMenuItemId)
-                {
-                    await RenderNavigationMenuItemsList(item.Key, item.Value);
-                }
-            </div>
+<div class="py-4">
+    <div class="col-lg-12">
+        <div class="mb-3">
+            <label class="form-label">Parent menu item</label>
+            <select id="keySelect" data-action="change->navigationmenuitems--items#handleChange" class="form-select"
+                asp-for="@Model.ParentNavigationMenuId"
+                asp-items="@(new SelectList(Model.NavigationMenuItemsForSelect, "Id", "Label"))">
+                <option value="">(root)</option>
+            </select>
+            <hr />
         </div>
     </div>
+    @foreach (var item in Model.NavigationMenuItemsByParentNavigationMenuItemId)
+    {
+        await RenderNavigationMenuItemsList(item.Key, item.Value);
+    }
 </div>
+
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
+<script>
+    (function () {
+        const listEl = document.getElementById('menuList');
+        if (!listEl) return;
+
+        const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
+
+        function showNotification(message, ok = true) {
+            const n = document.createElement('div');
+            n.textContent = message;
+            Object.assign(n.style, {
+                position: 'fixed', bottom: '20px', right: '20px',
+                padding: '10px 16px', borderRadius: '6px', color: '#fff',
+                fontWeight: '500', background: ok ? '#28a745' : '#dc3545',
+                boxShadow: '0 2px 6px rgba(0,0,0,.2)', zIndex: 9999
+            });
+            document.body.appendChild(n); setTimeout(() => n.remove(), 2500);
+        }
+
+        async function onReordered(evt) {
+            const id = evt.item.dataset.id;          // ID of dragged item
+            const newPosition = evt.newIndex + 1;    // zero-based -> human-friendly
+
+            // Send data to server
+            fetch('@Url.Page(null, new { handler = "Ajax" })', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: new URLSearchParams({ id, position: newPosition, __RequestVerificationToken: token })
+            })
+                .then(res => {
+                    if (!res.ok) {
+
+                        showNotification('Failed to save order ❌', false);
+                    }
+                    else {
+
+                        showNotification('Menu order saved ✅', true);
+                    }
+                    return res.text();
+                })
+                .then(console.log)
+                .catch(console.error);
+        }
+
+        new Sortable(listEl, {
+            animation: 150,
+            ghostClass: 'bg-light',
+            onEnd: onReordered
+        });
+    })();
+    (function () {
+        const sel = document.getElementById('keySelect');
+        if (!sel) return;
+
+        const rootUrl = '@rootUrl';
+        const parentTpl = '@parentUrlTemplate';
+
+        sel.addEventListener('change', (e) => {
+            const v = e.target.value;
+            const url = v
+                ? parentTpl.replace('__PARENT__', encodeURIComponent(v))
+                : rootUrl;
+
+            window.location.assign(url); // or .href = url
+        });
+    })();
+</script>
