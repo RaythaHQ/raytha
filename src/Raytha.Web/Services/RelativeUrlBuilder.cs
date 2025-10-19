@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.WebUtilities;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Utils;
+using Raytha.Web.Services;
 
 namespace RaythaZero.Web.Services;
 
@@ -46,15 +47,27 @@ public class RelativeUrlBuilder : IRelativeUrlBuilder
 
     public string MediaRedirectToFileUrl(string objectKey) =>
         ResolveUrlIfHttpContextAccessExists(
+            "MediaItems",
             "RedirectToFileUrlByObjectKey",
-            new
-            {
-                area = "Admin",
-                controller = "MediaItems",
-                action = "RedirectToFileUrlByObjectKey",
-                objectKey,
-            }
+            new { area = "Admin", objectKey }
         );
+
+    public string MediaCloudUploadPresignUrl() =>
+        ResolveUrlIfHttpContextAccessExists(
+            "MediaItems",
+            "CloudUploadPresignRequest",
+            new { area = "Admin" }
+        );
+
+    public string MediaCloudUploadCreateAfterUploadUrl() =>
+        ResolveUrlIfHttpContextAccessExists(
+            "MediaItems",
+            "CloudUploadCreateAfterUpload",
+            new { area = "Admin" }
+        );
+
+    public string MediaDirectUploadUrl() =>
+        ResolveUrlIfHttpContextAccessExists("MediaItems", "DirectUpload", new { area = "Admin" });
 
     public string MediaFileLocalStorageUrl(string objectKey) =>
         GetBaseUrl() + $"/_static-files/{objectKey}";
@@ -96,6 +109,28 @@ public class RelativeUrlBuilder : IRelativeUrlBuilder
         else
         {
             return _generator.GetUriByPage(_httpContextAccessor.HttpContext, page, values: values);
+        }
+    }
+
+    private string ResolveUrlIfHttpContextAccessExists(
+        string controller,
+        string action,
+        object values
+    )
+    {
+        if (_httpContextAccessor.HttpContext == null)
+        {
+            return _generator.GetPathByAction(action, controller, values: values);
+        }
+        else
+        {
+            var url = _generator.GetUriByAction(
+                _httpContextAccessor.HttpContext,
+                action,
+                controller,
+                values: values
+            );
+            return url;
         }
     }
 

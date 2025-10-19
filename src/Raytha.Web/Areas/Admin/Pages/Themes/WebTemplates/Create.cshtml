@@ -12,9 +12,17 @@
         Page = $"/Themes/WebTemplates/Index",
         RouteValues = new RouteValueDictionary { ["themeId"] = Model.Form.ThemeId }
     };
+
+    var uploadOptions = new FileUploadOptions
+    {
+        DragDropZoneTarget = "#uploadassets-dragdrop",
+        CopyUrlsTarget = "#uploadassets-urls",
+        ThemeId = Model.Form.ThemeId
+    };
+
 }
 
-<div class="row mb-4" data-controller="templates--isbaselayout shared--developername templates--codehighlighting">
+<div class="row mb-4">
     @Html.Partial("_Partials/PageHeading", ViewData["Title"])
     <div class="col-xxl-7 col-xl-8 col-lg-9 col-md-12">
         <div class="card border-0 shadow mb-4">
@@ -25,8 +33,7 @@
                         <div class="mb-3">
                             <label class="form-label raytha-required" asp-for="Form.Label"></label>
                             <input type="text" class="form-control @Model.HasError("Label")" asp-for="Form.Label"
-                                required data-shared--developername-target="label"
-                                data-action="keyup->shared--developername#setDeveloperName change->shared--developername#setDeveloperName">
+                                id="Form_Label" required>
                             <div class="invalid-feedback">@Model.ErrorMessageFor("Label")</div>
                         </div>
                     </div>
@@ -34,7 +41,7 @@
                         <div class="mb-3">
                             <label class="form-label" asp-for="Form.DeveloperName"></label>
                             <input type="text" class="form-control @Model.HasError("DeveloperName")"
-                                asp-for="Form.DeveloperName" required data-shared--developername-target="developername">
+                                asp-for="Form.DeveloperName" id="Form_DeveloperName" required>
                             <div class="invalid-feedback">@Model.ErrorMessageFor("DeveloperName")</div>
                         </div>
                     </div>
@@ -49,18 +56,23 @@
                             <div class="invalid-feedback">@Model.ErrorMessageFor("ParentTemplateId")</div>
                         </div>
                     </div>
+
+                    <!-- Base layout toggle -->
                     <div class="col-lg-12 col-md-12 my-4">
                         <div class="form-check">
-                            <input data-templates--isbaselayout-target="isBaseLayout" class="form-check-input"
-                                type="checkbox" asp-for="Form.IsBaseLayout"
-                                data-action="change->templates--isbaselayout#toggleBaseLayoutInstructions">
+                            <input class="form-check-input" type="checkbox" asp-for="Form.IsBaseLayout"
+                                id="Form_IsBaseLayout">
                             <label class="form-check-label" asp-for="Form.IsBaseLayout"></label>
                         </div>
-                        <div class="form-text" data-templates--isbaselayout-target="isBaseLayoutInstructions">Base
-                            layouts require the use of <code>{% renderbody %}</code> in the template. This tag will be
-                            replaced by the content in child templates.</div>
+                        <div class="form-text" id="isBaseLayoutInstructions">
+                            Base layouts require the use of <code>{% renderbody %}</code> in the template. This tag will
+                            be
+                            replaced by the content in child templates.
+                        </div>
                     </div>
-                    <div class="col-lg-12 col-md-12 my-4" data-templates--isbaselayout-target="templateAccessList">
+
+                    <!-- Sections to show/hide based on base layout -->
+                    <div class="col-lg-12 col-md-12 my-4" id="templateAccessList">
                         <div class="mb-3">
                             <label class="form-label" asp-for="@Model.Form.TemplateAccessToModelDefinitions"></label>
                             @for (int i = 0; i < Model.Form.TemplateAccessToModelDefinitions.Count(); i++)
@@ -71,73 +83,66 @@
                                     <input type="hidden" asp-for="@Model.Form.TemplateAccessToModelDefinitions[i].Id" />
                                     <input type="hidden" asp-for="@Model.Form.TemplateAccessToModelDefinitions[i].Key" />
                                     <label class="form-check-label"
-                                        asp-for="@Model.Form.TemplateAccessToModelDefinitions[i].Value">@Model.Form.TemplateAccessToModelDefinitions[i].Key</label>
+                                        asp-for="@Model.Form.TemplateAccessToModelDefinitions[i].Value">
+                                        @Model.Form.TemplateAccessToModelDefinitions[i].Key
+                                    </label>
                                     @if (i == Model.Form.TemplateAccessToModelDefinitions.Length - 1)
                                     {
-                                        <div class="invalid-feedback">@Model.ErrorMessageFor("TemplateAccessToModelDefinitions")
+                                        <div class="invalid-feedback">
+                                            @Model.ErrorMessageFor("TemplateAccessToModelDefinitions")
                                         </div>
                                     }
                                 </div>
                             }
                         </div>
                     </div>
-                    <div class="col-lg-12 col-md-12 my-4"
-                        data-templates--isbaselayout-target="allowAccessForNewContentTypes">
+
+                    <div class="col-lg-12 col-md-12 my-4" id="allowAccessForNewContentTypes">
                         <div class="form-check">
                             <input class="form-check-input @Model.HasError("AllowAccessForNewContentTypes")"
                                 type="checkbox" asp-for="Form.AllowAccessForNewContentTypes">
                             <label class="form-check-label" asp-for="Form.AllowAccessForNewContentTypes"></label>
                             <div class="invalid-feedback">@Model.ErrorMessageFor("AllowAccessForNewContentTypes")</div>
                         </div>
-                        <div class="form-text">At least 1 non base layout template must be available for new content
-                            types.</div>
+                        <div class="form-text">
+                            At least 1 non base layout template must be available for new content types.
+                        </div>
                     </div>
+
+                    <!-- Code editor -->
                     <div class="col-lg-12">
                         <div class="mb-3">
                             <label class="form-label raytha-required" asp-for="Form.Content"></label><br />
-                            <div class="@Model.HasError("Code")" id="editorContainer"
-                                style="height:600px;overflow: auto;"
-                                data-raythafunctions--codehighlighting-target="editor"></div>
-                            <input type="hidden" asp-for="Form.Content"
-                                data-raythafunctions--codehighlighting-target="textarea">
+                            <button class="btn btn-sm btn-secondary mb-2" type="button" data-bs-toggle="offcanvas"
+                                data-bs-target="#insertvariablemenu" aria-controls="insertvariablemenu">
+                                Insert variable
+                            </button>
+                            <div id="editorContainer" style="height:600px;overflow: auto;"></div>
+                            <input type="hidden" asp-for="Form.Content" id="Form_Content">
                             <div class="invalid-feedback">@Model.ErrorMessageFor("Code")</div>
 
-                            <div id="uploadAssets" data-controller="templates--uploadasset"
-                                data-templates--uploadasset-fieldid-value="uploadAssets"
-                                data-templates--uploadasset-mimetypes-value="@Model.Form.AllowedMimeTypes"
-                                data-templates--uploadasset-usedirectuploadtocloud-value="@Model.Form.UseDirectUploadToCloud"
-                                data-templates--uploadasset-maxfilesize-value="@Model.Form.MaxFileSize"
-                                data-templates--uploadasset-pathbase-value="@Model.Form.PathBase"
-                                data-templates--uploadasset-themeid-value="@Model.Form.ThemeId">
-
-                                <div id="uploadAssets-uppy" data-templates--uploadasset-target="uppyContainer"></div>
+                            <!-- Upload assets / copy URLs -->
+                            <div id="uploadassets">
+                                <div id="uploadassets-dragdrop"></div>
                                 <div>
-                                    <div class="toast align-items-center text-white bg-success border-0" role="alert"
-                                        aria-live="assertive" aria-atomic="true"
-                                        data-templates--uploadasset-target="toast">
-                                        <div class="d-flex">
-                                            <div class="toast-body">
-                                                Successfully copied to the clipboard!
-                                            </div>
-                                            <button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast"
-                                                aria-label="Close"></button>
-                                        </div>
-                                    </div>
-                                    <ul id="uploadAssets-uppy-copyurls" class="list-group"
-                                        data-templates--uploadasset-target="uppyCopyUrls">
+                                    <ul id="uploadassets-urls" class="list-group">
                                         @foreach (var mediaItem in Model.Form.MediaItems)
                                         {
                                             <li class="list-group-item">
                                                 <a target="_blank" class="text-secondary"
-                                                    href="@Model.Form.PathBase/raytha/media-items/objectkey/@mediaItem.ObjectKey">@mediaItem.FileName</a>
+                                                    href="@Model.Form.PathBase/raytha/media-items/objectkey/@mediaItem.ObjectKey">
+                                                    @mediaItem.FileName
+                                                </a>
                                                 |
                                                 <a href="javascript:void(0);" class="text-primary"
-                                                    data-action="templates--uploadasset#copyToClipboard"
-                                                    data-id="@mediaItem.ObjectKey" data-copyas="public">Copy as public</a> |
+                                                    data-id="@mediaItem.ObjectKey" data-copyas="public">
+                                                    Copy as public
+                                                </a>
+                                                |
                                                 <a href="javascript:void(0);" class="text-primary"
-                                                    data-action="templates--uploadasset#copyToClipboard"
-                                                    data-id="@mediaItem.ObjectKey" data-copyas="redirect">Copy as
-                                                    redirect</a>
+                                                    data-id="@mediaItem.ObjectKey" data-copyas="redirect">
+                                                    Copy as redirect
+                                                </a>
                                             </li>
                                         }
                                     </ul>
@@ -145,12 +150,14 @@
                             </div>
                         </div>
                     </div>
+
                     <button type="submit" class="btn btn-success mt-4">Publish changes</button>
                 </form>
             </div>
         </div>
     </div>
 </div>
+
 <partial name="_InsertVariableMenu.cshtml" model="Model.Form.TemplateVariables" />
 
 <script type="importmap">
@@ -176,7 +183,134 @@
     import { indentWithTab } from '@@codemirror/commands';
     import { keymap } from '@@codemirror/view';
 
-    // Use the HTML language which supports mixed JS/CSS inside <script>/<style> tags
+    // --- Developer name sync (vanilla JS) ---
+    function slugifyDeveloperName(text) {
+        // lower, replace whitespace with underscores, remove invalid chars, collapse underscores
+        return (text || '')
+            .toLowerCase()
+            .normalize('NFKD')                // handle accents
+            .replace(/[\u0300-\u036f]/g, '')  // strip diacritics
+            .replace(/[^a-z0-9\s_-]/g, '')    // keep alnum, space, underscore, hyphen
+            .trim()
+            .replace(/\s+/g, '_')
+            .replace(/_+/g, '_')
+            .substring(0, 128);               // reasonable max length
+    }
+
+    function bindDeveloperNameSync(labelId, devNameId) {
+        const labelEl = document.getElementById(labelId);
+        const devEl = document.getElementById(devNameId);
+        if (!labelEl || !devEl) return;
+
+        let userOverrode = false;
+
+        // If dev name already has a value different from slug(label), consider it overridden
+        const initialSlug = slugifyDeveloperName(labelEl.value);
+        if (devEl.value && devEl.value !== initialSlug) {
+            userOverrode = true;
+        }
+
+        // If user types in dev name, stop auto-sync
+        ['input', 'change'].forEach(evt =>
+            devEl.addEventListener(evt, () => { userOverrode = true; }, { passive: true })
+        );
+
+        const sync = () => {
+            if (!userOverrode) {
+                devEl.value = slugifyDeveloperName(labelEl.value);
+            }
+        };
+
+        ['input', 'keyup', 'change'].forEach(evt =>
+            labelEl.addEventListener(evt, sync, { passive: true })
+        );
+    }
+
+    // --- Base layout toggle (vanilla JS) ---
+    function setupBaseLayoutToggle() {
+        const checkbox = document.getElementById('Form_IsBaseLayout');
+        const instructions = document.getElementById('isBaseLayoutInstructions');
+        const accessList = document.getElementById('templateAccessList');
+        const allowNewTypes = document.getElementById('allowAccessForNewContentTypes');
+        if (!checkbox || !instructions || !accessList || !allowNewTypes) return;
+
+        const applyState = () => {
+            const isChecked = !!checkbox.checked;
+            // mimic old Stimulus logic
+            instructions.hidden = !isChecked ? true : false;
+            accessList.hidden = isChecked ? true : false;
+            allowNewTypes.hidden = isChecked ? true : false;
+            // ensure form value is "true"/"false" as strings
+            checkbox.value = isChecked ? 'true' : 'false';
+        };
+
+        checkbox.addEventListener('change', applyState, { passive: true });
+        // run on load
+        applyState();
+    }
+
+    // --- Copy to clipboard for asset links (vanilla JS) ---
+    function setupCopyAssetLinks() {
+        const container = document.getElementById('uploadAssets');
+        if (!container) return;
+
+        const pathBase = container.getAttribute('data-path-base') || '';
+        const copyList = document.getElementById('uploadAssets-uppy-copyurls');
+        const toastEl = document.getElementById('copyToast');
+
+        function showToast() {
+            // Use Bootstrap toast if available; otherwise simple fallback
+            const bs = window.bootstrap && window.bootstrap.Toast ? new window.bootstrap.Toast(toastEl) : null;
+            if (bs) {
+                bs.show();
+            } else if (toastEl) {
+                toastEl.style.display = 'block';
+                setTimeout(() => { toastEl.style.display = 'none'; }, 1600);
+            }
+        }
+
+        async function copyText(text) {
+            try {
+                await navigator.clipboard.writeText(text);
+                showToast();
+            } catch {
+                // Fallback if clipboard API blocked
+                const ta = document.createElement('textarea');
+                ta.value = text;
+                ta.style.position = 'fixed';
+                ta.style.opacity = '0';
+                document.body.appendChild(ta);
+                ta.select();
+                try { document.execCommand('copy'); } catch { }
+                document.body.removeChild(ta);
+                showToast();
+            }
+        }
+
+        if (!copyList) return;
+        copyList.addEventListener('click', (e) => {
+            const target = e.target;
+            if (!(target instanceof Element)) return;
+            const copyAs = target.getAttribute('data-copyas');
+            const id = target.getAttribute('data-id');
+            if (!copyAs || !id) return;
+
+            e.preventDefault();
+
+            // Construct the URL or token to copy
+            let toCopy = '';
+            if (copyAs === 'public') {
+                toCopy = `${pathBase}/raytha/media-items/objectkey/${id}`;
+            } else if (copyAs === 'redirect') {
+                // Best guess without original controller: typical redirect endpoint
+                toCopy = `${pathBase}/raytha/media-items/redirect/${id}`;
+            }
+
+            if (toCopy) copyText(toCopy);
+        });
+    }
+
+    // --- CodeMirror editor (already vanilla) ---
     const startState = EditorState.create({
         doc: @Html.Raw(Json.Serialize(Model.Form.Content ?? string.Empty)),
         extensions: [
@@ -189,7 +323,6 @@
             keymap.of([indentWithTab]),
             EditorView.updateListener.of((update) => {
                 if (update.docChanged) {
-                    // Hidden input for the Content field on this form is 'Form_Content'
                     const el = document.getElementById('Form_Content');
                     if (el) el.value = view.state.doc.toString();
                 }
@@ -202,7 +335,12 @@
         parent: document.getElementById('editorContainer')
     });
 
+    // Initialize vanilla hooks
     document.addEventListener('DOMContentLoaded', function () {
         bindDeveloperNameSync('Form_Label', 'Form_DeveloperName');
+        setupBaseLayoutToggle();
+        setupCopyAssetLinks();
     });
 </script>
+
+@Html.Partial("_Partials/FileUpload", uploadOptions)

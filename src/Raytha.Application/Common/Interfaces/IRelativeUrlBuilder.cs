@@ -1,4 +1,6 @@
-﻿namespace Raytha.Application.Common.Interfaces;
+﻿using System.Web;
+
+namespace Raytha.Application.Common.Interfaces;
 
 public interface IRelativeUrlBuilder
 {
@@ -7,6 +9,9 @@ public interface IRelativeUrlBuilder
     string AdminForgotPasswordCompleteUrl(string token);
     string MediaRedirectToFileUrl(string objectKey);
     string MediaFileLocalStorageUrl(string objectKey);
+    string MediaCloudUploadPresignUrl();
+    string MediaCloudUploadCreateAfterUploadUrl();
+    string MediaDirectUploadUrl();
     string UserLoginUrl(string returnUrl = "");
     string UserLoginWithMagicLinkCompleteUrl(string token, string returnUrl = "");
     string UserForgotPasswordCompleteUrl(string token);

@@ -23,6 +23,9 @@ public class Create : BaseAdminPageModel
     [BindProperty]
     public FormModel Form { get; set; }
 
+    public string UploadAssetsUrl =>
+        Url.Page("/Api/MediaItems/UploadForTheme", new { themeId = Form.ThemeId });
+
     public async Task<IActionResult> OnGet(string themeId)
     {
         var webTemplatesResponse = await Mediator.Send(

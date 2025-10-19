@@ -95,7 +95,7 @@ public class MediaItemsController : BaseController
 
     [HttpPost]
     [Route($"{RAYTHA_ROUTE_PREFIX}/media-items/upload", Name = "mediaitemslocalstorageupload")]
-    public async Task<IActionResult> LocalStorageUpload(
+    public async Task<IActionResult> DirectUpload(
         IFormFile file,
         string contentType,
         string themeId
