@@ -9,10 +9,13 @@ using Raytha.Web.Areas.Admin.Pages.Shared.Models;
 namespace Raytha.Web.Areas.Admin.Pages.Themes;
 
 [Authorize(Policy = BuiltInSystemPermission.MANAGE_TEMPLATES_PERMISSION)]
-public class SetAsActive : BaseAdminPageModel
+public class SetAsActive : BaseAdminPageModel, ISubActionViewModel
 {
     [BindProperty]
     public FormModel Form { get; set; }
+
+    public string Id { get; set; }
+    public bool IsActive { get; set; }
 
     public async Task<IActionResult> OnGet(string id)
     {
@@ -44,7 +47,8 @@ public class SetAsActive : BaseAdminPageModel
                                 : string.Empty
                     ),
             };
-
+            Id = id;
+            IsActive = CurrentOrganization.ActiveThemeId == id;
             return Page();
         }
 

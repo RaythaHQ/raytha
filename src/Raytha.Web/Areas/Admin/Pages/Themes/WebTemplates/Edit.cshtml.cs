@@ -73,7 +73,7 @@ public class Edit : BaseAdminPageModel
             new GetMediaItemsByThemeId.Query { ThemeId = themeId }
         );
 
-        var model = new FormModel
+        Form = new FormModel
         {
             Id = webTemplateResponse.Result.Id,
             Content = webTemplateResponse.Result.Content,
@@ -109,7 +109,7 @@ public class Edit : BaseAdminPageModel
 
     public Dictionary<
         string,
-        IEnumerable<WebTemplatesInsertVariableListItemViewModel>
+        IEnumerable<IWebTemplatesInsertVariableListItemViewModel>
     > GetInsertVariablesViewModel(
         string templateName,
         bool isBuiltInTemplate,
@@ -117,7 +117,7 @@ public class Edit : BaseAdminPageModel
     )
     {
         var templateVariableDictionary =
-            new Dictionary<string, IEnumerable<WebTemplatesInsertVariableListItemViewModel>>();
+            new Dictionary<string, IEnumerable<IWebTemplatesInsertVariableListItemViewModel>>();
         var requestVariables = InsertVariableTemplateFactory
             .Request.TemplateInfo.GetTemplateVariables()
             .Select(p => new WebTemplatesInsertVariableListItemViewModel
@@ -326,11 +326,12 @@ public class Edit : BaseAdminPageModel
         public bool IsBuiltInTemplate { get; set; }
         public Dictionary<
             string,
-            IEnumerable<WebTemplatesInsertVariableListItemViewModel>
+            IEnumerable<IWebTemplatesInsertVariableListItemViewModel>
         > TemplateVariables { get; set; }
     }
 
     public record WebTemplatesInsertVariableListItemViewModel
+        : IWebTemplatesInsertVariableListItemViewModel
     {
         public string DeveloperName { get; set; }
         public string TemplateVariable { get; set; }

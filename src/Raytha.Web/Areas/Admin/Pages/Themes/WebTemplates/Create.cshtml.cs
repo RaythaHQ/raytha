@@ -145,7 +145,7 @@ public class Create : BaseAdminPageModel
 
     public Dictionary<
         string,
-        IEnumerable<WebTemplatesInsertVariableListItemViewModel>
+        IEnumerable<IWebTemplatesInsertVariableListItemViewModel>
     > GetInsertVariablesViewModel(
         string templateName,
         bool isBuiltInTemplate,
@@ -153,7 +153,7 @@ public class Create : BaseAdminPageModel
     )
     {
         var templateVariableDictionary =
-            new Dictionary<string, IEnumerable<WebTemplatesInsertVariableListItemViewModel>>();
+            new Dictionary<string, IEnumerable<IWebTemplatesInsertVariableListItemViewModel>>();
         var requestVariables = InsertVariableTemplateFactory
             .Request.TemplateInfo.GetTemplateVariables()
             .Select(p => new WebTemplatesInsertVariableListItemViewModel
@@ -348,11 +348,12 @@ public class Create : BaseAdminPageModel
         public IEnumerable<WebTemplateDto> ParentTemplates { get; set; }
         public Dictionary<
             string,
-            IEnumerable<WebTemplatesInsertVariableListItemViewModel>
+            IEnumerable<IWebTemplatesInsertVariableListItemViewModel>
         > TemplateVariables { get; set; }
     }
 
     public record WebTemplatesInsertVariableListItemViewModel
+        : IWebTemplatesInsertVariableListItemViewModel
     {
         public string DeveloperName { get; set; }
         public string TemplateVariable { get; set; }

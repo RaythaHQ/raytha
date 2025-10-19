@@ -9,10 +9,13 @@ using Raytha.Web.Areas.Admin.Pages.Shared.Models;
 namespace Raytha.Web.Areas.Admin.Pages.Themes;
 
 [Authorize(Policy = BuiltInSystemPermission.MANAGE_TEMPLATES_PERMISSION)]
-public class Export : BaseAdminPageModel
+public class Export : BaseAdminPageModel, ISubActionViewModel
 {
     [BindProperty]
     public FormModel Form { get; set; }
+
+    public string Id { get; set; }
+    public bool IsActive { get; set; }
 
     public async Task<IActionResult> OnGet(string id)
     {
@@ -25,6 +28,9 @@ public class Export : BaseAdminPageModel
             Url =
                 $"{CurrentOrganization.WebsiteUrl}/raytha/themes/export/{response.Result.DeveloperName}",
         };
+
+        Id = id;
+        IsActive = CurrentOrganization.ActiveThemeId == id;
         return Page();
     }
 

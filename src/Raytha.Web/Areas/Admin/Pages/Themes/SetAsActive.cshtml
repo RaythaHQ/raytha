@@ -3,38 +3,41 @@
 
 @{
     var pageTitle = "Themes > Set as active";
-    Layout = "SidebarLayout";
+    Layout = "SubActionLayout";
     ViewData["Title"] = pageTitle;
     ViewData["ActiveMenu"] = "Themes";
 }
 
 <div class="raytha-data-card mb-4 raytha-border-top">
     <div class="card-body">
-        <form method="post" asp-route="themesmatchingwebtemplates" asp-route-id="@Model.Form.ThemeId" class="py-4" >
+        <form method="post" asp-page="/Themes/SetAsActive" asp-route-id="@Model.Form.ThemeId" class="py-4">
             <div class="table-responsive">
                 <table class="table mb-0 rounded">
                     <thead class="thead-light">
-                    <tr>
-                        <th class="border-0 rounded-start">Current Theme</th>
-                        <th class="border-0 rounded-end">New Theme</th>
-                    </tr>
+                        <tr>
+                            <th class="border-0 rounded-start">Current Theme</th>
+                            <th class="border-0 rounded-end">New Theme</th>
+                        </tr>
                     </thead>
                     <tbody>
-                    @foreach (var activeThemeWebTemplateDeveloperName in Model.Form.ActiveThemeWebTemplateDeveloperNames)
-                    {
-                        <tr>
-                            <td>
-                                <small>@activeThemeWebTemplateDeveloperName</small>
-                            </td>
-                            <td>
-                                @{
-                                    <select class="form-select" required asp-for="@Model.Form.WebTemplateMappings[activeThemeWebTemplateDeveloperName]" asp-items="@(new SelectList(Model.Form.NewActiveThemeWebTemplateDeveloperNames))">
-                                        <option value="">--SELECT--</option>
-                                    </select>
-                                }
-                            </td>
-                        </tr>
-                    }
+                        @foreach (var activeThemeWebTemplateDeveloperName in
+                                                Model.Form.ActiveThemeWebTemplateDeveloperNames)
+                        {
+                            <tr>
+                                <td>
+                                    <small>@activeThemeWebTemplateDeveloperName</small>
+                                </td>
+                                <td>
+                                    @{
+                                        <select class="form-select" required
+                                            asp-for="@Model.Form.WebTemplateMappings[activeThemeWebTemplateDeveloperName]"
+                                            asp-items="@(new SelectList(Model.Form.NewActiveThemeWebTemplateDeveloperNames))">
+                                            <option value="">--SELECT--</option>
+                                        </select>
+                                    }
+                                </td>
+                            </tr>
+                        }
                     </tbody>
                 </table>
             </div>

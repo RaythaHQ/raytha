@@ -15,6 +15,7 @@ public class Create : BaseAdminPageModel
 
     public IActionResult OnGet()
     {
+        Form = new FormModel();
         return Page();
     }
 

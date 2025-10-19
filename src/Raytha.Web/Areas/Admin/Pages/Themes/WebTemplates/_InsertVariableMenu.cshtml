@@ -1,0 +1,137 @@
+@model Dictionary<string, IEnumerable<IWebTemplatesInsertVariableListItemViewModel>>
+
+<style>
+    .list-group-item {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+</style>
+
+<div>
+    <div class="offcanvas offcanvas-end" tabindex="-1" id="insertvariablemenu" aria-labelledby="insertvariablemenu">
+        <div class="offcanvas-header">
+            <h5 id="offcanvasRightLabel">Variables</h5>
+            <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+        </div>
+        <div class="offcanvas-body">
+            <div class="list-group list-group-flush">
+                <input id="variable-filter" type="text" class="filter form-control" placeholder="Filter variables" />
+                <button id="copy-all" class="btn btn-sm btn-secondary my-2 d-none" type="button">
+                    Copy to clipboard
+                </button>
+
+                <div id="copy-toast" class="toast align-items-center text-white bg-success border-0" role="alert"
+                    aria-live="assertive" aria-atomic="true">
+                    <div class="d-flex">
+                        <div class="toast-body">Successfully copied to the clipboard!</div>
+                        <button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast"
+                            aria-label="Close"></button>
+                    </div>
+                </div>
+
+                @foreach (var contentType in Model)
+                {
+                    <label class="list-group-item fw-bold" data-section="@contentType.Key">@contentType.Key</label>
+                    foreach (var variable in contentType.Value)
+                    {
+                        <label class="list-group-item variable-item" data-filter-key="@variable.DeveloperName"
+                            data-section-item="@contentType.Key">
+                            <input class="form-check-input me-1 variable-checkbox" type="checkbox"
+                                value="@variable.TemplateVariable">
+                            @variable.DeveloperName
+                        </label>
+                    }
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    (function () {
+        // Scope to this offcanvas instance by ID (safe if partial appears once per page)
+        const root = document.getElementById('insertvariablemenu');
+        if (!root) return;
+
+        const filterInput = root.querySelector('#variable-filter');
+        const copyBtn = root.querySelector('#copy-all');
+        const toastEl = root.querySelector('#copy-toast');
+
+        const itemEls = Array.from(root.querySelectorAll('.variable-item'));
+        const checkboxEls = Array.from(root.querySelectorAll('.variable-checkbox'));
+        const sectionHeaders = Array.from(root.querySelectorAll('[data-section]'));
+
+        // Build set of all sections
+        const allSections = Array.from(
+            new Set(itemEls.map(el => el.getAttribute('data-section-item')))
+        );
+
+        function updateSectionVisibility() {
+            // Start with all sections hidden
+            const visible = Object.fromEntries(allSections.map(s => [s, false]));
+
+            // Mark sections visible if they have at least one visible item
+            itemEls.forEach(el => {
+                if (!el.classList.contains('d-none')) {
+                    const s = el.getAttribute('data-section-item');
+                    if (s in visible) visible[s] = true;
+                }
+            });
+
+            // Toggle section header labels accordingly
+            sectionHeaders.forEach(h => {
+                const key = h.getAttribute('data-section');
+                h.classList.toggle('d-none', !visible[key]);
+            });
+        }
+
+        function filterItems() {
+            const term = (filterInput.value || '').toLowerCase().trim();
+
+            itemEls.forEach(el => {
+                const key = (el.getAttribute('data-filter-key') || '').toLowerCase();
+                const hide = term && !key.includes(term);
+                el.classList.toggle('d-none', hide);
+            });
+
+            updateSectionVisibility();
+        }
+
+        function updateCopyButton() {
+            const checked = checkboxEls.filter(cb => cb.checked);
+            if (checked.length > 0) {
+                const label = checked.length === 1 ? 'variable' : 'variables';
+                copyBtn.textContent = `Copy ${checked.length} ${label} to clipboard`;
+                copyBtn.classList.remove('d-none');
+            } else {
+                copyBtn.classList.add('d-none');
+            }
+        }
+
+        async function copyCheckedToClipboard() {
+            const checked = checkboxEls.filter(cb => cb.checked);
+            const text = checked.map(cb => `{{ ${cb.value} }}`).join('\n') + (checked.length ? '\n' : '');
+            try {
+                await navigator.clipboard.writeText(text);
+                if (window.bootstrap && toastEl) {
+                    const toast = bootstrap.Toast.getOrCreateInstance(toastEl);
+                    toast.show();
+                }
+            } catch (e) {
+                console.error('Clipboard write failed:', e);
+                // Fallback UI if needed
+                alert('Copy failed. You can select and copy manually.');
+            }
+        }
+
+        // Events
+        filterInput.addEventListener('input', filterItems);
+        checkboxEls.forEach(cb => cb.addEventListener('change', updateCopyButton));
+        copyBtn.addEventListener('click', copyCheckedToClipboard);
+
+        // Initial state
+        filterItems();
+        updateCopyButton();
+    })();
+</script>
