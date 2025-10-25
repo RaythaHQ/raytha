@@ -5,6 +5,7 @@ using Raytha.Application.EmailTemplates.Commands;
 using Raytha.Application.EmailTemplates.Queries;
 using Raytha.Domain.Entities;
 using Raytha.Web.Areas.Admin.Pages.Shared.Models;
+using Raytha.Web.Utils;
 
 namespace Raytha.Web.Areas.Admin.Pages.EmailTemplates;
 
@@ -15,9 +16,16 @@ public class Edit : BaseAdminPageModel, ISubActionViewModel
     public FormModel Form { get; set; }
     public string Id { get; set; }
 
+    public Dictionary<
+        string,
+        IEnumerable<IEmailTemplatesInsertVariableListItemViewModel>
+    > TemplateVariables { get; set; }
+
     public async Task<IActionResult> OnGet(string id)
     {
         var response = await Mediator.Send(new GetEmailTemplateById.Query { Id = id });
+
+        TemplateVariables = GetInsertVariablesViewModel(response.Result.DeveloperName);
 
         Form = new FormModel
         {
@@ -28,13 +36,14 @@ public class Edit : BaseAdminPageModel, ISubActionViewModel
             Cc = response.Result.Cc,
             Bcc = response.Result.Bcc,
         };
-
         Id = response.Result.Id;
         return Page();
     }
 
     public async Task<IActionResult> OnPost(string id)
     {
+        var template = await Mediator.Send(new GetEmailTemplateById.Query { Id = id });
+        TemplateVariables = GetInsertVariablesViewModel(template.Result.DeveloperName);
         var input = new EditEmailTemplate.Command
         {
             Id = id,
@@ -59,6 +68,50 @@ public class Edit : BaseAdminPageModel, ISubActionViewModel
             Id = Form.Id;
             return Page();
         }
+    }
+
+    protected Dictionary<
+        string,
+        IEnumerable<IEmailTemplatesInsertVariableListItemViewModel>
+    > GetInsertVariablesViewModel(string emailTemplate)
+    {
+        var templateVariableDictionary =
+            new Dictionary<string, IEnumerable<IEmailTemplatesInsertVariableListItemViewModel>>();
+
+        var currentOrgVariables = InsertVariableTemplateFactory
+            .CurrentOrganization.TemplateInfo.GetTemplateVariables()
+            .Select(p => new EmailInsertVariableListItemViewModel
+            {
+                DeveloperName = p.Key,
+                TemplateVariable = p.Value,
+            });
+
+        var emailTemplateVariables = InsertVariableTemplateFactory
+            .From(emailTemplate)
+            .TemplateInfo.GetTemplateVariables()
+            .Select(p => new EmailInsertVariableListItemViewModel
+            {
+                DeveloperName = p.Key,
+                TemplateVariable = p.Value,
+            });
+
+        templateVariableDictionary.Add(
+            InsertVariableTemplateFactory.CurrentOrganization.VariableCategoryName,
+            currentOrgVariables
+        );
+        templateVariableDictionary.Add(
+            InsertVariableTemplateFactory.From(emailTemplate).VariableCategoryName,
+            emailTemplateVariables
+        );
+
+        return templateVariableDictionary;
+    }
+
+    public class EmailInsertVariableListItemViewModel
+        : IEmailTemplatesInsertVariableListItemViewModel
+    {
+        public string DeveloperName { get; set; }
+        public string TemplateVariable { get; set; }
     }
 
     public record FormModel

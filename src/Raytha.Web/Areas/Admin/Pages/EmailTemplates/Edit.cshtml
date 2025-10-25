@@ -1,14 +1,25 @@
 @page "/raytha/email-templates/edit/{id}"
 @model Raytha.Web.Areas.Admin.Pages.EmailTemplates.Edit
-
+@inject IRelativeUrlBuilder RelativeUrlBuilder
 @{
-    var pageTitle = "Edit template";
+    var pageTitle = "Email templates > Edit template";
     Layout = "SubActionLayout";
     ViewData["Title"] = pageTitle;
     ViewData["ActiveMenu"] = "Email Templates";
     ViewData["ActiveSubMenu"] = "Edit";
+
+    var back = new BackLinkOptions
+    {
+        Page = $"/EmailTemplates/Index"
+    };
+
+    var uploadOptions = new FileUploadOptions
+    {
+        DragDropZoneTarget = "#uploadassets-dragdrop",
+        CopyUrlsTarget = "#uploadassets-urls"
+    };
 }
-@(await Html.PartialAsync("_Partials/BackToList", "/EmailTemplates/Index"))
+@(await Html.PartialAsync("_Partials/BackToList", back))
 <form asp-page="/EmailTemplates/Edit" asp-route-id="@Model.Form.Id" method="post" class="py-4" novalidate>
     <div class="col-lg-12">
         <div class="mb-3">
@@ -27,16 +38,31 @@
     <div class="col-lg-12">
         <div class="mb-3">
             <label class="form-label raytha-required" asp-for="Form.Content"></label><br />
-            <div class="@Model.HasError("Code")" id="editorContainer" style="height:600px;overflow: auto;"
-                data-raythafunctions--codehighlighting-target="editor"></div>
-            <input type="hidden" asp-for="Form.Content" data-raythafunctions--codehighlighting-target="textarea">
+            <button class="btn btn-sm btn-secondary mb-2" type="button" data-bs-toggle="offcanvas"
+                data-bs-target="#insertvariablemenu" aria-controls="insertvariablemenu">Insert
+                variable</button>
+
+            <div id="editorContainer" style="height:600px;overflow: auto;"></div>
+            <input type="hidden" asp-for="Form.Content" id="Form_Content">
             <div class="invalid-feedback">@Model.ErrorMessageFor("Code")</div>
+
+            <!-- Upload assets / copy URLs -->
+            <div id="uploadassets">
+                <div id="uploadassets-dragdrop"></div>
+                <div>
+                    <ul id="uploadassets-urls" class="list-group">
+                        <li class="list-group-item">
+                        </li>
+                    </ul>
+                </div>
+            </div>
         </div>
     </div>
     <input type="hidden" asp-for="Form.Id">
     <button type="submit" class="btn btn-success mt-4">Publish changes</button>
 </form>
 
+<partial name="_InsertVariableMenu.cshtml" model="Model.TemplateVariables" />
 <script type="importmap">
   {
     "imports": {
@@ -85,4 +111,9 @@
         state: startState,
         parent: document.getElementById('editorContainer')
     });
+
+    document.addEventListener('DOMContentLoaded', function () {
+        setupCopyAssetLinks();
+    });
 </script>
+@Html.Partial("_Partials/FileUpload", uploadOptions)

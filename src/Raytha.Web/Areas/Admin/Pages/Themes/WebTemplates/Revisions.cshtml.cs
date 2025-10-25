@@ -1,6 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Raytha.Application.Themes.WebTemplates.Commands;
 using Raytha.Application.Themes.WebTemplates.Queries;
 using Raytha.Domain.Entities;
 using Raytha.Domain.ValueObjects;
@@ -10,9 +11,12 @@ using Raytha.Web.Areas.Shared.Models;
 namespace Raytha.Web.Areas.Admin.Pages.Themes.WebTemplates;
 
 [Authorize(Policy = BuiltInSystemPermission.MANAGE_TEMPLATES_PERMISSION)]
-public class Revisions : BaseAdminPageModel
+public class Revisions : BaseAdminPageModel, ISubActionViewModel
 {
     public WebTemplatesRevisionsPaginationViewModel ListView { get; set; }
+
+    public string ThemeId { get; set; }
+    public string Id { get; set; }
 
     public async Task<IActionResult> OnGet(
         string themeId,
@@ -51,7 +55,25 @@ public class Revisions : BaseAdminPageModel
             ThemeId = themeId,
         };
 
+        Id = id;
+        ThemeId = themeId;
+
         return Page();
+    }
+
+    public async Task<IActionResult> OnPostRevert(string themeId, string id, string revisionId)
+    {
+        var input = new RevertWebTemplate.Command { Id = revisionId };
+        var response = await Mediator.Send(input);
+        if (response.Success)
+        {
+            SetSuccessMessage($"Template has been reverted.");
+        }
+        else
+        {
+            SetErrorMessage("There was an error reverting this template", response.GetErrors());
+        }
+        return RedirectToPage("/Themes/WebTemplates/Edit", new { themeId, id });
     }
 
     public record WebTemplatesRevisionsPaginationViewModel : PaginationViewModel

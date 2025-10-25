@@ -56,6 +56,12 @@ public class Index : BaseAdminPageModel
         });
 
         ListView = new WebTemplatesPaginationViewModel(items, response.Result.TotalCount, themeId);
+        ListView.PageNumber = pageNumber;
+        ListView.PageSize = pageSize;
+        ListView.Search = search;
+        (ListView.OrderByPropertyName, ListView.OrderByDirection) =
+            orderBy.SplitIntoColumnAndSortOrder();
+        ListView.PageName = "Index";
 
         return Page();
     }

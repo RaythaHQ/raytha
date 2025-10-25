@@ -1,5 +1,6 @@
 @page "/raytha/themes/edit/{themeId}/web-templates/create"
 @model Raytha.Web.Areas.Admin.Pages.Themes.WebTemplates.Create
+@inject IRelativeUrlBuilder RelativeUrlBuilder
 
 @{
     var pageTitle = "Themes > Web templates > Create";
@@ -130,7 +131,7 @@
                                         {
                                             <li class="list-group-item">
                                                 <a target="_blank" class="text-secondary"
-                                                    href="@Model.Form.PathBase/raytha/media-items/objectkey/@mediaItem.ObjectKey">
+                                                    href="@RelativeUrlBuilder.MediaRedirectToFileUrl(@mediaItem.ObjectKey)">
                                                     @mediaItem.FileName
                                                 </a>
                                                 |
@@ -247,67 +248,6 @@
         checkbox.addEventListener('change', applyState, { passive: true });
         // run on load
         applyState();
-    }
-
-    // --- Copy to clipboard for asset links (vanilla JS) ---
-    function setupCopyAssetLinks() {
-        const container = document.getElementById('uploadAssets');
-        if (!container) return;
-
-        const pathBase = container.getAttribute('data-path-base') || '';
-        const copyList = document.getElementById('uploadAssets-uppy-copyurls');
-        const toastEl = document.getElementById('copyToast');
-
-        function showToast() {
-            // Use Bootstrap toast if available; otherwise simple fallback
-            const bs = window.bootstrap && window.bootstrap.Toast ? new window.bootstrap.Toast(toastEl) : null;
-            if (bs) {
-                bs.show();
-            } else if (toastEl) {
-                toastEl.style.display = 'block';
-                setTimeout(() => { toastEl.style.display = 'none'; }, 1600);
-            }
-        }
-
-        async function copyText(text) {
-            try {
-                await navigator.clipboard.writeText(text);
-                showToast();
-            } catch {
-                // Fallback if clipboard API blocked
-                const ta = document.createElement('textarea');
-                ta.value = text;
-                ta.style.position = 'fixed';
-                ta.style.opacity = '0';
-                document.body.appendChild(ta);
-                ta.select();
-                try { document.execCommand('copy'); } catch { }
-                document.body.removeChild(ta);
-                showToast();
-            }
-        }
-
-        if (!copyList) return;
-        copyList.addEventListener('click', (e) => {
-            const target = e.target;
-            if (!(target instanceof Element)) return;
-            const copyAs = target.getAttribute('data-copyas');
-            const id = target.getAttribute('data-id');
-            if (!copyAs || !id) return;
-
-            e.preventDefault();
-
-            // Construct the URL or token to copy
-            let toCopy = '';
-            if (copyAs === 'public') {
-                toCopy = `${pathBase}/raytha/media-items/objectkey/${id}`;
-            } else if (copyAs === 'redirect') {
-                // Best guess without original controller: typical redirect endpoint
-                toCopy = `${pathBase}/raytha/media-items/redirect/${id}`;
-            }
-
-            if (toCopy) copyText(toCopy);
-        });
     }
 
     // --- CodeMirror editor (already vanilla) ---

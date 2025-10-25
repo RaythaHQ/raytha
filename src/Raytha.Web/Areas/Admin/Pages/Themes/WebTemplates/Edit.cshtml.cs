@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using CSharpVitamins;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
@@ -8,6 +9,7 @@ using Raytha.Application.ContentTypes.Queries;
 using Raytha.Application.MediaItems;
 using Raytha.Application.Themes.MediaItems.Queries;
 using Raytha.Application.Themes.WebTemplates;
+using Raytha.Application.Themes.WebTemplates.Commands;
 using Raytha.Application.Themes.WebTemplates.Queries;
 using Raytha.Domain.Entities;
 using Raytha.Domain.ValueObjects.FieldTypes;
@@ -17,13 +19,18 @@ using Raytha.Web.Utils;
 namespace Raytha.Web.Areas.Admin.Pages.Themes.WebTemplates;
 
 [Authorize(Policy = BuiltInSystemPermission.MANAGE_TEMPLATES_PERMISSION)]
-public class Edit : BaseAdminPageModel
+public class Edit : BaseAdminPageModel, ISubActionViewModel
 {
     [BindProperty]
     public FormModel Form { get; set; }
 
+    public string ThemeId { get; set; }
+    public string Id { get; set; }
+
     public async Task<IActionResult> OnGet(string themeId, string id)
     {
+        ThemeId = themeId;
+        Id = id;
         var webTemplateResponse = await Mediator.Send(new GetWebTemplateById.Query { Id = id });
 
         var baseLayouts = await Mediator.Send(
@@ -40,12 +47,7 @@ public class Edit : BaseAdminPageModel
             webTemplateResponse.Result
         );
         var lineage = childLayouts.Union(new List<WebTemplateDto>() { webTemplateResponse.Result });
-        var excepted = baseLayouts
-            .Result.Items.Select(p => p.DeveloperName)
-            .Except(lineage.Select(p => p.DeveloperName));
-        var baseLayoutsDictionary = baseLayouts
-            .Result.Items.Where(p => excepted.Contains(p.DeveloperName))
-            .ToDictionary(k => k.Id.ToString(), v => v.Label);
+        var excepted = baseLayouts.Result.Items.Except(lineage);
 
         var contentTypes = await Mediator.Send(new GetContentTypes.Query());
         var templateAccessChoiceItems = new List<WebTemplateAccessToModelDefinitionsViewModel>();
@@ -80,7 +82,7 @@ public class Edit : BaseAdminPageModel
             Label = webTemplateResponse.Result.Label,
             DeveloperName = webTemplateResponse.Result.DeveloperName,
             ParentTemplateId = webTemplateResponse.Result.ParentTemplateId,
-            ParentTemplates = baseLayoutsDictionary,
+            ParentTemplates = excepted,
             IsBaseLayout = webTemplateResponse.Result.IsBaseLayout,
             IsBuiltInTemplate = webTemplateResponse.Result.IsBuiltInTemplate,
             TemplateAccessToModelDefinitions = templateAccessChoiceItems.ToArray(),
@@ -105,6 +107,75 @@ public class Edit : BaseAdminPageModel
             );
 
         return Page();
+    }
+
+    public async Task<IActionResult> OnPost(string themeId, string id)
+    {
+        var input = new EditWebTemplate.Command
+        {
+            Id = id,
+            Label = Form.Label,
+            Content = Form.Content,
+            ParentTemplateId = Form.ParentTemplateId,
+            IsBaseLayout = Form.IsBaseLayout,
+            TemplateAccessToModelDefinitions = Form
+                .TemplateAccessToModelDefinitions.Where(p => p.Value)
+                .Select(p => (ShortGuid)p.Id),
+            AllowAccessForNewContentTypes = Form.AllowAccessForNewContentTypes,
+        };
+
+        var response = await Mediator.Send(input);
+
+        if (response.Success)
+        {
+            SetSuccessMessage($"{Form.Label} was edited successfully.");
+            return RedirectToPage(
+                "/Themes/WebTemplates/Edit",
+                new { themeId, id = response.Result }
+            );
+        }
+        else
+        {
+            var baseLayouts = await Mediator.Send(
+                new GetWebTemplates.Query
+                {
+                    ThemeId = themeId,
+                    PageSize = int.MaxValue,
+                    BaseLayoutsOnly = true,
+                }
+            );
+
+            Form.ParentTemplates = baseLayouts.Result.Items;
+
+            var contentTypes = await Mediator.Send(
+                new GetContentTypes.Query { PageSize = int.MaxValue }
+            );
+            var templateVariableDictionary = GetInsertVariablesViewModel(
+                Form.DeveloperName,
+                false,
+                contentTypes.Result.Items
+            );
+            Form.TemplateVariables = templateVariableDictionary;
+
+            var mediaItemsResponse = await Mediator.Send(
+                new GetMediaItemsByThemeId.Query { ThemeId = themeId }
+            );
+
+            Form.MediaItems = mediaItemsResponse.Result;
+
+            Form.ThemeId = themeId;
+            Form.AllowedMimeTypes = FileStorageProviderSettings.AllowedMimeTypes;
+            Form.MaxFileSize = FileStorageProviderSettings.MaxFileSize;
+            Form.UseDirectUploadToCloud = FileStorageProviderSettings.UseDirectUploadToCloud;
+            Form.PathBase = CurrentOrganization.PathBase;
+
+            SetErrorMessage(
+                "There was an error attempting to update this template. See the error below.",
+                response.GetErrors()
+            );
+
+            return Page();
+        }
     }
 
     public Dictionary<
@@ -322,7 +393,7 @@ public class Edit : BaseAdminPageModel
         public string AllowedMimeTypes { get; set; }
         public bool UseDirectUploadToCloud { get; set; }
         public string PathBase { get; set; }
-        public Dictionary<string, string> ParentTemplates { get; set; }
+        public IEnumerable<WebTemplateDto> ParentTemplates { get; set; }
         public bool IsBuiltInTemplate { get; set; }
         public Dictionary<
             string,

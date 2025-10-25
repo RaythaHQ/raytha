@@ -52,6 +52,13 @@ public class RelativeUrlBuilder : IRelativeUrlBuilder
             new { area = "Admin", objectKey }
         );
 
+    public string MediaPublicFileUrl(string objectKey) =>
+        ResolveUrlIfHttpContextAccessExists(
+            "MediaItems",
+            "RedirectToFileUrlByObjectKey",
+            new { area = "Admin", objectKey }
+        );
+
     public string MediaCloudUploadPresignUrl() =>
         ResolveUrlIfHttpContextAccessExists(
             "MediaItems",
