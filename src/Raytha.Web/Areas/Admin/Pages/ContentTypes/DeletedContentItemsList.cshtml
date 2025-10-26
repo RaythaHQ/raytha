@@ -85,15 +85,17 @@
             <table class="table table-centered table-nowrap mb-0 rounded">
                 <thead class="thead-light">
                     <tr>
-                        @(await Html.PartialAsync("_TableColumnHeader", new BaseTableColumnHeaderViewModel()
+                        @(await Html.PartialAsync("_Partials/TableColumnHeader", new BaseTableColumnHeaderViewModel()
                         {
+                            Pagination = Model.ListView,
                             PropertyName = "PrimaryField",
                             IsFirst = true,
                             DisplayName = ViewModelExtensions.GetDisplayName<Raytha.Web.Areas.Admin.Pages.ContentTypes.DeletedContentItemsList.DeletedContentItemsListItemViewModel>(p =>
                             p.PrimaryField)
                         }))
-                        @(await Html.PartialAsync("_TableColumnHeader", new BaseTableColumnHeaderViewModel()
+                        @(await Html.PartialAsync("_Partials/TableColumnHeader", new BaseTableColumnHeaderViewModel()
                         {
+                            Pagination = Model.ListView,
                             PropertyName = "DeletionTime",
                             DisplayName = ViewModelExtensions.GetDisplayName<DeletedContentItemsList.DeletedContentItemsListItemViewModel>(p =>
                             p.DeletionTime)

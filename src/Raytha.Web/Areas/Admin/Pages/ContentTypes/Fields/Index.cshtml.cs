@@ -43,6 +43,17 @@ public class Index : BaseContentTypeContextPageModel
             IsRequired = p.IsRequired.YesOrNo(),
         });
 
+        ListView = new FieldsPaginationViewModel(
+            items,
+            response.Result.TotalCount,
+            showDeletedOnly
+        );
+        ListView.PageNumber = pageNumber;
+        ListView.PageSize = pageSize;
+        (ListView.OrderByPropertyName, ListView.OrderByDirection) =
+            orderBy.SplitIntoColumnAndSortOrder();
+        ListView.Search = search;
+
         return Page();
     }
 

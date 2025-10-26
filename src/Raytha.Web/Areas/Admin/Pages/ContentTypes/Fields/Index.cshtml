@@ -126,14 +126,16 @@
             <table class="table table-centered table-nowrap mb-0 rounded">
                 <thead class="thead-light">
                     <tr>
-                        @(await Html.PartialAsync("_TableColumnHeader", new BaseTableColumnHeaderViewModel()
+                        @(await Html.PartialAsync("_Partials/TableColumnHeader", new BaseTableColumnHeaderViewModel()
                         {
+                            Pagination = Model.ListView,
                             PropertyName = "Label",
                             IsFirst = true,
                             DisplayName = ViewModelExtensions.GetDisplayName<Index.FieldsListItemViewModel>(p => p.Label)
                         }))
-                        @(await Html.PartialAsync("_TableColumnHeader", new BaseTableColumnHeaderViewModel()
+                        @(await Html.PartialAsync("_Partials/TableColumnHeader", new BaseTableColumnHeaderViewModel()
                         {
+                            Pagination = Model.ListView,
                             PropertyName = "DeveloperName",
                             DisplayName = ViewModelExtensions.GetDisplayName<Index.FieldsListItemViewModel>(p =>
                             p.DeveloperName)
@@ -167,7 +169,7 @@
                     }
                 </tbody>
             </table>
-            <partial name="_TablePagination" model="Model" />
+            <partial name="_Partials/TablePagination" model="Model.ListView" />
         </div>
     </div>
 </div>
