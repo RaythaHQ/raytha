@@ -13,13 +13,25 @@ namespace Raytha.Web.Areas.Admin.Pages.Shared.Models;
 
 public abstract class BaseContentTypeContextPageModel : BaseAdminPageModel
 {
-    public ViewDto CurrentView { get; set; }
+    private ViewDto _currentView;
+    public ViewDto CurrentView => _currentView;
 
     public override async Task OnPageHandlerExecutionAsync(
         PageHandlerExecutingContext context,
         PageHandlerExecutionDelegate next
     )
     {
+        await GetCurrentView(context);
+        await base.OnPageHandlerExecutionAsync(context, next);
+    }
+
+    protected async Task<ViewDto> GetCurrentView(PageHandlerExecutingContext context)
+    {
+        if (_currentView != null)
+        {
+            return _currentView;
+        }
+
         string contentTypeDeveloperName =
             context.RouteData.Values[RouteConstants.CONTENT_TYPE_DEVELOPER_NAME] as string;
         ShortGuid viewId = null;
@@ -100,7 +112,7 @@ public abstract class BaseContentTypeContextPageModel : BaseAdminPageModel
             viewDto = response.Result;
         }
 
-        CurrentView = viewDto;
-        await base.OnPageHandlerExecutionAsync(context, next);
+        _currentView = viewDto;
+        return _currentView;
     }
 }
