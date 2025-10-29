@@ -9,7 +9,7 @@
 
     BackLinkOptions back = new BackLinkOptions
     {
-        Page = "/Users/Index"
+        Page = RouteNames.Users.Index
     };
 }
 
@@ -19,7 +19,7 @@
         <div class="card border-0 shadow mb-4">
             <div class="card-body">
                 @(await Html.PartialAsync("_Partials/BackToList", back))
-                <form asp-page="/Users/Create" method="post" class="py-4" novalidate>
+                <form asp-page="@RouteNames.Users.Create" method="post" class="py-4" novalidate>
                     <div class="row">
                         <div class="col">
                             <div class="mb-3">
