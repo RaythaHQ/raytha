@@ -1,13 +1,15 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.RazorPages;
 using Raytha.Application.ContentItems;
 using Raytha.Application.ContentItems.Queries;
 using Raytha.Application.Themes.Queries;
+using Raytha.Domain.Entities;
 using Raytha.Web.Areas.Admin.Pages.Shared.Models;
 using Raytha.Web.Areas.Shared.Models;
 
 namespace Raytha.Web.Areas.Admin.Pages.ContentItems;
 
+[Authorize(Policy = BuiltInContentTypePermission.CONTENT_TYPE_EDIT_PERMISSION)]
 public class Index
     : BaseHasFavoriteViewsPageModel,
         IHasListView<Index.ContentItemsListItemViewModel>
