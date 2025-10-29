@@ -1,0 +1,46 @@
+@page "/raytha/{contentTypeDeveloperName}/edit/{id}/revisions"
+@model Raytha.Web.Areas.Admin.Pages.ContentItems.Revisions
+
+@{
+    var pageTitle = "Themes > Web templates > Revisions";
+    Layout = "SubActionLayout";
+    ViewData["Title"] = pageTitle;
+    ViewData["ActiveMenu"] = "Themes";
+    ViewData["ActiveSubMenu"] = "Revisions";
+}
+<div class="table-responsive">
+    <table class="table table-centered table-nowrap mb-0 rounded">
+        <thead class="thead-light">
+            <tr>
+                <th class="border-0 rounded-start">Action</th>
+                @(await Html.PartialAsync("_Partials/TableColumnHeader", new BaseTableColumnHeaderViewModel()
+                {
+                    Pagination = Model.ListView,
+                    PropertyName = "CreationTime",
+                    DisplayName =
+                                ViewModelExtensions.GetDisplayName<Revisions.WebTemplatesRevisionsListItemViewModel>(p
+                                => p.CreationTime)
+                }))
+                <th class="border-0"></th>
+                <th class="border-0">
+                    Label
+                </th>
+                <th class="border-0 rounded-start">
+                    Created by
+                </th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model.ListView.Items)
+            {
+            }
+        </tbody>
+    </table>
+    <partial name="_Partials/TablePagination" model="@Model.ListView" />
+</div>
+
+<script>
+    function confirmDelete() {
+        return confirm("Are you sure you want to revert to this web template?");
+    }
+</script>

@@ -69,7 +69,7 @@
             {
                 <li>
                     <form method="post" asp-route="viewsfavorite" asp-route-contentTypeDeveloperName="@Model.CurrentView.ContentType.DeveloperName
-                                                " asp-route-viewId="@Model.CurrentView.Id">
+                                                    " asp-route-viewId="@Model.CurrentView.Id">
                         <button class="dropdown-item">
                             <svg class="icon icon-xs" fill="none" stroke="currentColor" viewBox="0 0 24 24"
                                 xmlns="http://www.w3.org/2000/svg">
@@ -401,7 +401,7 @@
                                     <td></td>
                                 }
                             }
-                            <td class="sticky-table-headers__sticky"><a asp-route="contentitemsedit"
+                            <td class="sticky-table-headers__sticky"><a asp-page="/ContentItems/Edit"
                                     asp-route-contentTypeDeveloperName="@Model.CurrentView.ContentType.DeveloperName"
                                     asp-route-id="@item.Id"
                                     asp-route-backToListUrl="@Url.Action("Index", "ContentItems", new { search = Model.ListView.Search, orderBy = Model.ListView.OrderByAsString, pageNumber = Model.ListView.PageNumber, pageSize = Model.ListView.PageSize })">
