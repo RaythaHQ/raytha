@@ -7,7 +7,6 @@ using Raytha.Application.ContentItems;
 using Raytha.Application.ContentItems.Commands;
 using Raytha.Application.ContentItems.Queries;
 using Raytha.Application.MediaItems.Queries;
-using Raytha.Application.Themes.WebTemplates.Queries;
 using Raytha.Application.Views;
 using Raytha.Domain.Entities;
 using Raytha.Domain.ValueObjects.FieldTypes;
@@ -25,13 +24,12 @@ public class Edit : BaseHasFavoriteViewsPageModel, ISubActionViewModel
     protected FieldValueConverter FieldValueConverter =>
         _fieldValueConverter ??=
             HttpContext.RequestServices.GetRequiredService<FieldValueConverter>();
-    public string WebsiteUrl { get; set; }
-    public Dictionary<string, string> ContentTypeFields { get; set; }
+    public string BackToListUrl { get; set; }
 
     [BindProperty]
     public FormModel Form { get; set; }
 
-    public async Task<IActionResult> OnGet(string id)
+    public async Task<IActionResult> OnGet(string id, string backToListUrl = "")
     {
         var response = await Mediator.Send(new GetContentItemById.Query { Id = id });
 
@@ -45,6 +43,8 @@ public class Edit : BaseHasFavoriteViewsPageModel, ISubActionViewModel
 
         Form = new FormModel
         {
+            IsDraft = response.Result.IsDraft,
+            IsPublished = response.Result.IsPublished,
             Id = response.Result.Id,
             AllowedMimeTypes = FileStorageProviderSettings.AllowedMimeTypes,
             MaxFileSize = FileStorageProviderSettings.MaxFileSize,
@@ -103,11 +103,11 @@ public class Edit : BaseHasFavoriteViewsPageModel, ISubActionViewModel
         };
 
         Id = id;
-
+        BackToListUrl = backToListUrl;
         return Page();
     }
 
-    public async Task<IActionResult> OnPost(string id)
+    public async Task<IActionResult> OnPost(string id, string backToListUrl = "")
     {
         var mappedFieldValuesFromModel = MapFromFieldValueModel(Form.FieldValues);
         var input = new EditContentItem.Command
@@ -141,6 +141,8 @@ public class Edit : BaseHasFavoriteViewsPageModel, ISubActionViewModel
             Form = new FormModel
             {
                 Id = Form.Id,
+                IsDraft = response.Result.IsDraft,
+                IsPublished = response.Result.IsPublished,
                 AllowedMimeTypes = FileStorageProviderSettings.AllowedMimeTypes,
                 MaxFileSize = FileStorageProviderSettings.MaxFileSize,
                 UseDirectUploadToCloud = FileStorageProviderSettings.UseDirectUploadToCloud,
@@ -185,7 +187,7 @@ public class Edit : BaseHasFavoriteViewsPageModel, ISubActionViewModel
         }
 
         Id = id;
-
+        BackToListUrl = backToListUrl;
         return Page();
     }
 

@@ -9,9 +9,16 @@
     ViewData["Title"] = pageTitle;
     ViewData["ActiveMenu"] = Model.CurrentView.ContentType.DeveloperName;
     ViewData["ActiveSubMenu"] = $"Edit";
+    BackLinkOptions back = new BackLinkOptions
+    {
+        Href = Model.BackToListUrl,
+        Page = RouteNames.ContentItems.Index,
+        RouteValues = new RouteValueDictionary { ["contentTypeDeveloperName"] = Model.CurrentView.ContentType.DeveloperName }
+    };
 }
 
 
+@(await Html.PartialAsync("_Partials/BackToList", back))
 @if (!(await AuthorizationService.AuthorizeAsync(User, Model.CurrentView.ContentType.DeveloperName,
 ContentItemOperations.Edit)).Succeeded)
 {
@@ -44,7 +51,7 @@ ContentItemOperations.Edit)).Succeeded)
 }
 else
 {
-    <form asp-page="/ContentItems/Edit" asp-route-id="@Model.Form.Id" method="post">
+    <form asp-page="@RouteNames.ContentItems.Edit" asp-route-id="@Model.Form.Id" method="post" asp-route-backToListUrl="@Model.BackToListUrl">
         <div>
             @for (int i = 0; i < Model.Form.FieldValues.Count(); i++)
             {

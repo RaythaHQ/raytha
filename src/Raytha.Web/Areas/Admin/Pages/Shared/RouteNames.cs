@@ -76,6 +76,8 @@ public static class RouteNames
         public const string Create = "/ContentItems/Create";
         public const string Edit = "/ContentItems/Edit";
         public const string Delete = "/ContentItems/Delete";
+        public const string Revisions = "/ContentItems/Revisions";
+        public const string Settings = "/ContentItems/Settings";
     }
 
     /// <summary>
@@ -115,4 +117,3 @@ public static class RouteNames
         public const string Index = "/Setup/Index";
     }
 }
-

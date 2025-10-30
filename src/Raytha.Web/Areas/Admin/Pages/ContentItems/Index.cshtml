@@ -11,6 +11,14 @@
     ViewData["ActiveMenu"] = Model.CurrentView.ContentType.DeveloperName;
 
     var columnsAsList = Model.CurrentView.Columns.ToList();
+    var backToListUrl = Url.Page("Index", "ContentItems", new
+    {
+        search = Model.ListView.Search,
+        orderBy =
+    Model.ListView.OrderByAsString,
+        pageNumber = Model.ListView.PageNumber,
+        pageSize = Model.ListView.PageSize
+    });
 }
 
 <style>
@@ -69,7 +77,7 @@
             {
                 <li>
                     <form method="post" asp-route="viewsfavorite" asp-route-contentTypeDeveloperName="@Model.CurrentView.ContentType.DeveloperName
-                                                    " asp-route-viewId="@Model.CurrentView.Id">
+                                                                        " asp-route-viewId="@Model.CurrentView.Id">
                         <button class="dropdown-item">
                             <svg class="icon icon-xs" fill="none" stroke="currentColor" viewBox="0 0 24 24"
                                 xmlns="http://www.w3.org/2000/svg">
@@ -246,8 +254,9 @@
                                                 Model.CurrentView.ContentType.DeveloperName, ContentItemOperations.Edit)).Succeeded)
                         {
                             <li>
-                                <a class="dropdown-item" asp-page="/ContentItems/Create"
-                                    asp-route-contentTypeDeveloperName="@Model.CurrentView.ContentType.DeveloperName">
+                                <a class="dropdown-item" asp-page="@RouteNames.ContentItems.Create"
+                                    asp-route-contentTypeDeveloperName="@Model.CurrentView.ContentType.DeveloperName"
+                                    asp-route-backToListUrl="@backToListUrl">
                                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
                                         stroke-width="1.5" stroke="currentColor" class="icon icon-xs">
                                         <path stroke-linecap="round" stroke-linejoin="round"
@@ -401,10 +410,9 @@
                                     <td></td>
                                 }
                             }
-                            <td class="sticky-table-headers__sticky"><a asp-page="/ContentItems/Edit"
+                            <td class="sticky-table-headers__sticky"><a asp-page="@RouteNames.ContentItems.Edit"
                                     asp-route-contentTypeDeveloperName="@Model.CurrentView.ContentType.DeveloperName"
-                                    asp-route-id="@item.Id"
-                                    asp-route-backToListUrl="@Url.Action("Index", "ContentItems", new { search = Model.ListView.Search, orderBy = Model.ListView.OrderByAsString, pageNumber = Model.ListView.PageNumber, pageSize = Model.ListView.PageSize })">
+                                    asp-route-id="@item.Id" asp-route-backToListUrl="@backToListUrl">
                                     Edit</a>
                                 @if (item.IsHomePage)
                                 {

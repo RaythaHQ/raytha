@@ -47,7 +47,7 @@ BuiltInSystemPermission.MANAGE_SYSTEM_SETTINGS_PERMISSION)).Succeeded)
     <hr />
     if (!Model.Form.IsHomePage)
     {
-        <form asp-route="/ContentItems/Settings" asp-page-handler="SetAsHomePage" method="post" class="py-4"
+        <form asp-page="@RouteNames.ContentItems.Settings" asp-page-handler="SetAsHomePage" method="post" class="py-4"
             asp-route-contentTypeDeveloperName="@Model.CurrentView.ContentType.DeveloperName" asp-route-id="@Model.Id">
             <div class="col-lg-12">
                 <button type="submit" class="btn btn-secondary mx-2">Set as home page</button>
