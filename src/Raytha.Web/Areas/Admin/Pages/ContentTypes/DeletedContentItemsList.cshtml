@@ -16,12 +16,13 @@
     
     var searchConfig = new SearchBarConfig
     {
-        ActionPage = Model.ListView.PageName,
+        ActionPage = RouteNames.ContentTypes.DeletedContentItemsList,
         SearchValue = Model.ListView.Search,
         Placeholder = "Search deleted items"
     };
 }
 
+<div>
 @await Html.PartialAsync("_Partials/PageHeading", ViewData["Title"])
 
 @await Html.PartialAsync("_Partials/_ContentTypeNavTabs", navModel)
@@ -97,4 +98,5 @@
             <partial name="_Partials/TablePagination" model="@Model.ListView" />
         </div>
     </div>
+</div>
 </div>

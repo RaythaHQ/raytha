@@ -6,6 +6,7 @@ using Raytha.Application.ContentTypes.Commands;
 using Raytha.Application.ContentTypes.Queries;
 using Raytha.Domain.Entities;
 using Raytha.Domain.ValueObjects;
+using Raytha.Web.Areas.Admin.Pages.Shared;
 using Raytha.Web.Areas.Admin.Pages.Shared.Models;
 using Raytha.Web.Areas.Shared.Models;
 
@@ -18,6 +19,32 @@ public class Reorder : BaseContentTypeContextPageModel
 
     public async Task<IActionResult> OnGet()
     {
+        // Set breadcrumbs for navigation
+        SetBreadcrumbs(
+            new BreadcrumbNode
+            {
+                Label = CurrentView.ContentType.LabelPlural,
+                RouteName = RouteNames.ContentItems.Index,
+                RouteValues = new Dictionary<string, string>
+                {
+                    { "contentTypeDeveloperName", CurrentView.ContentType.DeveloperName }
+                },
+                IsActive = false,
+            },
+            new BreadcrumbNode
+            {
+                Label = "Fields",
+                RouteName = RouteNames.ContentTypes.Fields.Index,
+                IsActive = false,
+            },
+            new BreadcrumbNode
+            {
+                Label = "Reorder",
+                RouteName = RouteNames.ContentTypes.Fields.Reorder,
+                IsActive = true,
+            }
+        );
+
         var input = new GetContentTypeFields.Query
         {
             PageSize = int.MaxValue,

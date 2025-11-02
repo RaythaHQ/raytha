@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Raytha.Application.ContentItems.Commands;
 using Raytha.Domain.Entities;
+using Raytha.Web.Areas.Admin.Pages.Shared;
 using Raytha.Web.Areas.Admin.Pages.Shared.Models;
 
 namespace Raytha.Web.Areas.Admin.Pages.ContentTypes;
@@ -27,7 +28,7 @@ public class DeletedContentItemsClear : BaseContentTypeContextPageModel
             );
         }
         return RedirectToPage(
-            "/ContentTypes/DeletedContentItemsList",
+            RouteNames.ContentTypes.DeletedContentItemsList,
             new { contentTypeDeveloperName = CurrentView.ContentType.DeveloperName }
         );
     }

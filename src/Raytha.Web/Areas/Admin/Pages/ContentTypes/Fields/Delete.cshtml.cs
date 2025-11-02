@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Raytha.Application.ContentTypes.Commands;
 using Raytha.Application.ContentTypes.Queries;
 using Raytha.Domain.Entities;
+using Raytha.Web.Areas.Admin.Pages.Shared;
 using Raytha.Web.Areas.Admin.Pages.Shared.Models;
 
 namespace Raytha.Web.Areas.Admin.Pages.ContentTypes.Fields;
@@ -22,8 +23,8 @@ public class Delete : BaseContentTypeContextPageModel
             SetErrorMessage(response.Error, response.GetErrors());
         }
         return RedirectToPage(
-            "/ContentTypes/Fields/Index",
-            new { contentTypeByDeveloperName = CurrentView.ContentType.DeveloperName }
+            RouteNames.ContentTypes.Fields.Index,
+            new { contentTypeDeveloperName = CurrentView.ContentType.DeveloperName }
         );
     }
 }

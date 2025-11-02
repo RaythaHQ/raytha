@@ -15,6 +15,7 @@
     };
 }
 
+<div>
 @await Html.PartialAsync("_Partials/PageHeading", ViewData["Title"])
 
 @await Html.PartialAsync("_Partials/_ContentTypeNavTabs", navModel)
@@ -46,7 +47,7 @@
                         </svg> Reorder fields</a>
                 </li>
             </ul>
-            <form class="d-flex" asp-action="@Model.ListView.PageName" method="get">
+            <form class="d-flex" asp-page="@RouteNames.ContentTypes.Fields.Index" method="get">
                 <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search" name="search"
                     value="@Model.ListView.Search">
                 <button class="btn btn-outline-success" type="submit">Search</button>
@@ -108,4 +109,5 @@
             <partial name="_Partials/TablePagination" model="Model.ListView" />
         </div>
     </div>
+</div>
 </div>

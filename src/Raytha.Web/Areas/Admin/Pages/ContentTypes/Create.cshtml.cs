@@ -4,7 +4,9 @@ using Microsoft.AspNetCore.Mvc;
 using Raytha.Application.Common.Utils;
 using Raytha.Application.ContentTypes.Commands;
 using Raytha.Domain.Entities;
+using Raytha.Web.Areas.Admin.Pages.Shared;
 using Raytha.Web.Areas.Admin.Pages.Shared.Models;
+using Raytha.Web.Areas.Shared.Models;
 
 namespace Raytha.Web.Areas.Admin.Pages.ContentTypes;
 
@@ -18,6 +20,22 @@ public class Create : BaseAdminPageModel
 
     public async Task<IActionResult> OnGet()
     {
+        // Set breadcrumbs for navigation
+        SetBreadcrumbs(
+            new BreadcrumbNode
+            {
+                Label = "Content Types",
+                RouteName = RouteNames.Dashboard.Index,
+                IsActive = false,
+            },
+            new BreadcrumbNode
+            {
+                Label = "Create",
+                RouteName = RouteNames.ContentTypes.Create,
+                IsActive = true,
+            }
+        );
+
         WebsiteUrl = CurrentOrganization.WebsiteUrl.TrimEnd('/') + "/";
         Form = new FormModel { DefaultRouteTemplate = "{ContentTypeDeveloperName}/{PrimaryField}" };
         return Page();
@@ -39,7 +57,7 @@ public class Create : BaseAdminPageModel
         {
             SetSuccessMessage($"{Form.LabelPlural} edit successfully.");
             return RedirectToPage(
-                "/ContentItems/Index",
+                RouteNames.ContentItems.Index,
                 new { contentTypeDeveloperName = Form.DeveloperName.ToDeveloperName() }
             );
         }

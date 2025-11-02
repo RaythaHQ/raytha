@@ -6,7 +6,9 @@ using Raytha.Application.ContentTypes.Commands;
 using Raytha.Application.ContentTypes.Queries;
 using Raytha.Domain.Entities;
 using Raytha.Domain.ValueObjects.FieldTypes;
+using Raytha.Web.Areas.Admin.Pages.Shared;
 using Raytha.Web.Areas.Admin.Pages.Shared.Models;
+using Raytha.Web.Areas.Shared.Models;
 
 namespace Raytha.Web.Areas.Admin.Pages.ContentTypes.Fields;
 
@@ -22,6 +24,32 @@ public class Edit : BaseContentTypeContextPageModel
     public async Task<IActionResult> OnGet(string id)
     {
         var response = await Mediator.Send(new GetContentTypeFieldById.Query { Id = id });
+        
+        // Set breadcrumbs for navigation
+        SetBreadcrumbs(
+            new BreadcrumbNode
+            {
+                Label = CurrentView.ContentType.LabelPlural,
+                RouteName = RouteNames.ContentItems.Index,
+                RouteValues = new Dictionary<string, string>
+                {
+                    { "contentTypeDeveloperName", CurrentView.ContentType.DeveloperName }
+                },
+                IsActive = false,
+            },
+            new BreadcrumbNode
+            {
+                Label = "Fields",
+                RouteName = RouteNames.ContentTypes.Fields.Index,
+                IsActive = false,
+            },
+            new BreadcrumbNode
+            {
+                Label = "Edit",
+                RouteName = RouteNames.ContentTypes.Fields.Edit,
+                IsActive = true,
+            }
+        );
         var contentTypes = await Mediator.Send(new GetContentTypes.Query());
         AvailableContentTypes = contentTypes.Result.Items.ToDictionary(
             p => p.Id.ToString(),
@@ -74,7 +102,7 @@ public class Edit : BaseContentTypeContextPageModel
         {
             SetSuccessMessage($"{Form.Label} was edited successfully.");
             return RedirectToPage(
-                "/ContentTypes/FieldsList",
+                RouteNames.ContentTypes.Fields.Index,
                 new { contentTypeDeveloperName = CurrentView.ContentType.DeveloperName }
             );
         }

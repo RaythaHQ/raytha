@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Raytha.Application.ContentItems.Queries;
 using Raytha.Domain.Entities;
 using Raytha.Domain.ValueObjects;
+using Raytha.Web.Areas.Admin.Pages.Shared;
 using Raytha.Web.Areas.Admin.Pages.Shared.Models;
 using Raytha.Web.Areas.Shared.Models;
 
@@ -23,6 +24,23 @@ public class DeletedContentItemsList
         int pageSize = 50
     )
     {
+        // Set breadcrumbs for navigation
+        SetBreadcrumbs(
+            new BreadcrumbNode
+            {
+                Label = CurrentView.ContentType.LabelPlural,
+                RouteName = RouteNames.ContentItems.Index,
+                RouteValues = new Dictionary<string, string> { { "contentTypeDeveloperName", CurrentView.ContentType.DeveloperName } },
+                IsActive = false,
+            },
+            new BreadcrumbNode
+            {
+                Label = "Deleted Items",
+                RouteName = RouteNames.ContentTypes.DeletedContentItemsList,
+                IsActive = true,
+            }
+        );
+
         var input = new GetDeletedContentItems.Query
         {
             Search = search,

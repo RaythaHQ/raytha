@@ -4,7 +4,9 @@ using Microsoft.AspNetCore.Mvc;
 using Raytha.Application.ContentTypes.Commands;
 using Raytha.Domain.Entities;
 using Raytha.Domain.ValueObjects.FieldTypes;
+using Raytha.Web.Areas.Admin.Pages.Shared;
 using Raytha.Web.Areas.Admin.Pages.Shared.Models;
+using Raytha.Web.Areas.Shared.Models;
 
 namespace Raytha.Web.Areas.Admin.Pages.ContentTypes;
 
@@ -19,6 +21,23 @@ public class Configuration : BaseContentTypeContextPageModel
 
     public async Task<IActionResult> OnGet()
     {
+        // Set breadcrumbs for navigation
+        SetBreadcrumbs(
+            new BreadcrumbNode
+            {
+                Label = CurrentView.ContentType.LabelPlural,
+                RouteName = RouteNames.ContentItems.Index,
+                RouteValues = new Dictionary<string, string> { { "contentTypeDeveloperName", CurrentView.ContentType.DeveloperName } },
+                IsActive = false,
+            },
+            new BreadcrumbNode
+            {
+                Label = "Configuration",
+                RouteName = RouteNames.ContentTypes.Configuration,
+                IsActive = true,
+            }
+        );
+
         WebsiteUrl = CurrentOrganization.WebsiteUrl.TrimEnd('/') + "/";
         ContentTypeFields = CurrentView
             .ContentType.ContentTypeFields.Where(p =>
@@ -56,7 +75,7 @@ public class Configuration : BaseContentTypeContextPageModel
         if (response.Success)
         {
             SetSuccessMessage($"{Form.LabelPlural} edit successfully.");
-            return RedirectToPage("/ContentTypes/Configuration");
+            return RedirectToPage(RouteNames.ContentTypes.Configuration);
         }
         else
         {

@@ -6,7 +6,9 @@ using Raytha.Application.ContentTypes.Commands;
 using Raytha.Application.ContentTypes.Queries;
 using Raytha.Domain.Entities;
 using Raytha.Domain.ValueObjects.FieldTypes;
+using Raytha.Web.Areas.Admin.Pages.Shared;
 using Raytha.Web.Areas.Admin.Pages.Shared.Models;
+using Raytha.Web.Areas.Shared.Models;
 
 namespace Raytha.Web.Areas.Admin.Pages.ContentTypes.Fields;
 
@@ -21,6 +23,32 @@ public class Create : BaseContentTypeContextPageModel
 
     public async Task<IActionResult> OnGet()
     {
+        // Set breadcrumbs for navigation
+        SetBreadcrumbs(
+            new BreadcrumbNode
+            {
+                Label = CurrentView.ContentType.LabelPlural,
+                RouteName = RouteNames.ContentItems.Index,
+                RouteValues = new Dictionary<string, string>
+                {
+                    { "contentTypeDeveloperName", CurrentView.ContentType.DeveloperName }
+                },
+                IsActive = false,
+            },
+            new BreadcrumbNode
+            {
+                Label = "Fields",
+                RouteName = RouteNames.ContentTypes.Fields.Index,
+                IsActive = false,
+            },
+            new BreadcrumbNode
+            {
+                Label = "Create",
+                RouteName = RouteNames.ContentTypes.Fields.Create,
+                IsActive = true,
+            }
+        );
+
         var contentTypes = await Mediator.Send(new GetContentTypes.Query());
 
         AvailableContentTypes = contentTypes.Result.Items.ToDictionary(
@@ -59,7 +87,7 @@ public class Create : BaseContentTypeContextPageModel
         {
             SetSuccessMessage($"{Form.Label} was created successfully.");
             return RedirectToPage(
-                "/ContentTypes/FieldsList",
+                RouteNames.ContentTypes.Fields.Index,
                 new { contentTypeDeveloperName = CurrentView.ContentType.DeveloperName }
             );
         }

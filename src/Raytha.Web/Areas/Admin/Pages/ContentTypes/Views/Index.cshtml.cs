@@ -5,6 +5,7 @@ using Raytha.Application.Common.Utils;
 using Raytha.Application.Views.Queries;
 using Raytha.Domain.Entities;
 using Raytha.Domain.ValueObjects;
+using Raytha.Web.Areas.Admin.Pages.Shared;
 using Raytha.Web.Areas.Admin.Pages.Shared.Models;
 using Raytha.Web.Areas.Shared.Models;
 
@@ -24,6 +25,26 @@ public class Index
         int pageSize = 50
     )
     {
+        // Set breadcrumbs for navigation
+        SetBreadcrumbs(
+            new BreadcrumbNode
+            {
+                Label = CurrentView.ContentType.LabelPlural,
+                RouteName = RouteNames.ContentItems.Index,
+                RouteValues = new Dictionary<string, string>
+                {
+                    { "contentTypeDeveloperName", CurrentView.ContentType.DeveloperName }
+                },
+                IsActive = false,
+            },
+            new BreadcrumbNode
+            {
+                Label = "Views",
+                RouteName = RouteNames.ContentTypes.Views.Index,
+                IsActive = true,
+            }
+        );
+
         var favoriteViewsForAdmin = await Mediator.Send(
             new GetFavoriteViewsForAdmin.Query
             {
