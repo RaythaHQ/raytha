@@ -143,4 +143,147 @@ public static class RouteNames
     {
         public const string Index = "/Setup/Index";
     }
+
+    /// <summary>
+    /// Route constants for dashboard pages.
+    /// </summary>
+    public static class Dashboard
+    {
+        public const string Index = "/Dashboard/Index";
+    }
+
+    /// <summary>
+    /// Route constants for theme management pages.
+    /// </summary>
+    public static class Themes
+    {
+        public const string Index = "/Themes/Index";
+        public const string Create = "/Themes/Create";
+        public const string Edit = "/Themes/Edit";
+        public const string Delete = "/Themes/Delete";
+        public const string AccessToTemplateRedirect = "/Themes/AccessToTemplateRedirect";
+        public const string ExportTheme = "/Themes/ExportTheme";
+
+        /// <summary>
+        /// Route constants for theme template management pages.
+        /// </summary>
+        public static class Templates
+        {
+            public const string Index = "/Themes/Templates/Index";
+            public const string Create = "/Themes/Templates/Create";
+            public const string Edit = "/Themes/Templates/Edit";
+            public const string Delete = "/Themes/Templates/Delete";
+            public const string Revert = "/Themes/Templates/Revert";
+        }
+
+        /// <summary>
+        /// Route constants for theme media assets pages.
+        /// </summary>
+        public static class MediaItems
+        {
+            public const string Index = "/Themes/MediaItems/Index";
+        }
+    }
+
+    /// <summary>
+    /// Route constants for email template management pages.
+    /// </summary>
+    public static class EmailTemplates
+    {
+        public const string Index = "/EmailTemplates/Index";
+        public const string Edit = "/EmailTemplates/Edit";
+        public const string Revisions = "/EmailTemplates/Revisions";
+    }
+
+    /// <summary>
+    /// Route constants for navigation menu management pages.
+    /// </summary>
+    public static class NavigationMenus
+    {
+        public const string Index = "/NavigationMenus/Index";
+        public const string Create = "/NavigationMenus/Create";
+        public const string Edit = "/NavigationMenus/Edit";
+        public const string Delete = "/NavigationMenus/Delete";
+        public const string Revisions = "/NavigationMenus/Revisions";
+        public const string SetAsMainMenu = "/NavigationMenus/SetAsMainMenu";
+
+        /// <summary>
+        /// Route constants for navigation menu item management pages.
+        /// </summary>
+        public static class MenuItems
+        {
+            public const string Index = "/NavigationMenus/MenuItems/Index";
+            public const string Create = "/NavigationMenus/MenuItems/Create";
+            public const string Edit = "/NavigationMenus/MenuItems/Edit";
+            public const string Delete = "/NavigationMenus/MenuItems/Delete";
+            public const string Reorder = "/NavigationMenus/MenuItems/Reorder";
+        }
+    }
+
+    /// <summary>
+    /// Route constants for Raytha Functions management pages.
+    /// </summary>
+    public static class RaythaFunctions
+    {
+        public const string Index = "/RaythaFunctions/Index";
+        public const string Create = "/RaythaFunctions/Create";
+        public const string Edit = "/RaythaFunctions/Edit";
+        public const string Delete = "/RaythaFunctions/Delete";
+        public const string Revisions = "/RaythaFunctions/Revisions";
+    }
+
+    /// <summary>
+    /// Route constants for authentication scheme management pages.
+    /// </summary>
+    public static class AuthenticationSchemes
+    {
+        public const string Index = "/AuthenticationSchemes/Index";
+        public const string Create = "/AuthenticationSchemes/Create";
+        public const string Edit = "/AuthenticationSchemes/Edit";
+        public const string Delete = "/AuthenticationSchemes/Delete";
+    }
+
+    /// <summary>
+    /// Route constants for audit log pages.
+    /// </summary>
+    public static class AuditLogs
+    {
+        public const string Index = "/AuditLogs/Index";
+    }
+
+    /// <summary>
+    /// Route constants for user profile pages.
+    /// </summary>
+    public static class Profile
+    {
+        public const string Index = "/Profile/Index";
+        public const string ChangePassword = "/Profile/ChangePassword";
+    }
+
+    /// <summary>
+    /// Route constants for SMTP configuration pages.
+    /// </summary>
+    public static class Smtp
+    {
+        public const string Index = "/Smtp/Index";
+    }
+
+    /// <summary>
+    /// Route constants for login and authentication pages.
+    /// </summary>
+    public static class Login
+    {
+        public const string LoginRedirect = "/Login/LoginRedirect";
+        public const string LoginWithEmailAndPassword = "/Login/LoginWithEmailAndPassword";
+        public const string LoginWithMagicLink = "/Login/LoginWithMagicLink";
+        public const string LoginWithMagicLinkSent = "/Login/LoginWithMagicLinkSent";
+        public const string LoginWithMagicLinkComplete = "/Login/LoginWithMagicLinkComplete";
+        public const string LoginWithSaml = "/Login/LoginWithSaml";
+        public const string LoginWithSso = "/Login/LoginWithSso";
+        public const string LoginWithJwt = "/Login/LoginWithJwt";
+        public const string ForgotPassword = "/Login/ForgotPassword";
+        public const string ForgotPasswordSent = "/Login/ForgotPasswordSent";
+        public const string ForgotPasswordComplete = "/Login/ForgotPasswordComplete";
+        public const string Logout = "/Login/Logout";
+    }
 }

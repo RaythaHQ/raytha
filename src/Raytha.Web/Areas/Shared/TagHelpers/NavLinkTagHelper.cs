@@ -9,12 +9,16 @@ namespace Raytha.Web.Areas.Shared.TagHelpers;
 /// Tag helper for marking navigation links as active based on the current page route.
 /// Automatically adds the specified CSS class (default: "active") when the link matches the current page.
 /// Usage: &lt;a nav-active-section="Configuration" asp-page="..." class="nav-link"&gt;Configuration&lt;/a&gt;
+/// Or: &lt;a nav-route-name="/Users/Index" asp-page="..." class="nav-link"&gt;Users&lt;/a&gt;
 /// </summary>
 [HtmlTargetElement("a", Attributes = NavActiveSectionAttributeName)]
+[HtmlTargetElement("a", Attributes = NavRouteNameAttributeName)]
 public class NavLinkTagHelper : TagHelper
 {
     private const string NavActiveSectionAttributeName = "nav-active-section";
     private const string NavActiveClassAttributeName = "nav-active-class";
+    private const string NavRouteNameAttributeName = "nav-route-name";
+    private const string NavMatchModeAttributeName = "nav-match-mode";
 
     /// <summary>
     /// Gets or sets the ViewContext for accessing route data.
@@ -31,10 +35,24 @@ public class NavLinkTagHelper : TagHelper
     public string? NavSection { get; set; }
 
     /// <summary>
+    /// Gets or sets the route name to match against the current page.
+    /// If specified, uses exact route name matching instead of section matching.
+    /// </summary>
+    [HtmlAttributeName(NavRouteNameAttributeName)]
+    public string? NavRouteName { get; set; }
+
+    /// <summary>
     /// Gets or sets the CSS class to add when the link is active (default: "active").
     /// </summary>
     [HtmlAttributeName(NavActiveClassAttributeName)]
     public string ActiveClass { get; set; } = "active";
+
+    /// <summary>
+    /// Gets or sets the matching mode: "contains" (default), "exact", or "startswith".
+    /// Only applies when using nav-active-section (not nav-route-name).
+    /// </summary>
+    [HtmlAttributeName(NavMatchModeAttributeName)]
+    public string MatchMode { get; set; } = "contains";
 
     /// <summary>
     /// Order for this tag helper. Set to run after built-in tag helpers (e.g., asp-page).
@@ -42,13 +60,19 @@ public class NavLinkTagHelper : TagHelper
     public override int Order => 100;
 
     /// <summary>
-    /// Processes the tag by adding the active class if the current page matches the nav section.
+    /// Processes the tag by adding the active class if the current page matches the nav section or route name.
     /// </summary>
     /// <param name="context">The tag helper context.</param>
     /// <param name="output">The tag helper output.</param>
     public override void Process(TagHelperContext context, TagHelperOutput output)
     {
-        if (ViewContext == null || string.IsNullOrWhiteSpace(NavSection))
+        if (ViewContext == null)
+        {
+            return;
+        }
+
+        // If neither section nor route name specified, nothing to do
+        if (string.IsNullOrWhiteSpace(NavSection) && string.IsNullOrWhiteSpace(NavRouteName))
         {
             return;
         }
@@ -58,7 +82,19 @@ public class NavLinkTagHelper : TagHelper
             .RouteData.Values["contentTypeDeveloperName"]
             ?.ToString();
 
-        if (IsActive(currentPage, NavSection, contentTypeDeveloperName))
+        bool isActive = false;
+
+        // Route name matching takes precedence
+        if (!string.IsNullOrWhiteSpace(NavRouteName))
+        {
+            isActive = string.Equals(currentPage, NavRouteName, StringComparison.OrdinalIgnoreCase);
+        }
+        else if (!string.IsNullOrWhiteSpace(NavSection))
+        {
+            isActive = IsActive(currentPage, NavSection, contentTypeDeveloperName);
+        }
+
+        if (isActive)
         {
             var existingClass = output.Attributes.FirstOrDefault(a => a.Name == "class");
             if (existingClass != null)
@@ -73,11 +109,16 @@ public class NavLinkTagHelper : TagHelper
             {
                 output.Attributes.SetAttribute("class", ActiveClass);
             }
+
+            // Add ARIA attribute for accessibility
+            output.Attributes.SetAttribute("aria-current", "page");
         }
 
         // Remove the custom attributes so they don't appear in the rendered HTML
         output.Attributes.RemoveAll(NavActiveSectionAttributeName);
         output.Attributes.RemoveAll(NavActiveClassAttributeName);
+        output.Attributes.RemoveAll(NavRouteNameAttributeName);
+        output.Attributes.RemoveAll(NavMatchModeAttributeName);
     }
 
     /// <summary>
@@ -96,9 +137,10 @@ public class NavLinkTagHelper : TagHelper
 
         // Normalize the current page path for comparison
         var normalizedPage = currentPage.ToLowerInvariant();
+        var normalizedSection = navSection.ToLowerInvariant();
 
-        // Check for exact section matches
-        return navSection.ToLowerInvariant() switch
+        // Special case handling for specific sections
+        var isSpecialMatch = normalizedSection switch
         {
             "configuration" => normalizedPage.Contains(
                 "/contenttypes/configuration",
@@ -120,7 +162,23 @@ public class NavLinkTagHelper : TagHelper
                 "/contentitems",
                 StringComparison.OrdinalIgnoreCase
             ) && !normalizedPage.Contains("/contenttypes", StringComparison.OrdinalIgnoreCase),
-            _ => normalizedPage.Contains(navSection, StringComparison.OrdinalIgnoreCase),
+            _ => (bool?)null, // Not a special case
+        };
+
+        if (isSpecialMatch.HasValue)
+        {
+            return isSpecialMatch.Value;
+        }
+
+        // Apply match mode for general cases
+        return MatchMode.ToLowerInvariant() switch
+        {
+            "exact" => normalizedPage.Equals(normalizedSection, StringComparison.OrdinalIgnoreCase),
+            "startswith" => normalizedPage.StartsWith(
+                normalizedSection,
+                StringComparison.OrdinalIgnoreCase
+            ),
+            _ => normalizedPage.Contains(normalizedSection, StringComparison.OrdinalIgnoreCase),
         };
     }
 }

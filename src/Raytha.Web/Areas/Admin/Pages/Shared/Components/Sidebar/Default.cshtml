@@ -1,0 +1,125 @@
+@using Raytha.Web.Areas.Admin.Pages.Shared.Infrastructure.Navigation
+@using Raytha.Web.Areas.Admin.Pages.Shared.Components.Sidebar
+@model SidebarViewModel
+
+<ul class="nav flex-column pt-3 pt-md-0">
+    @foreach (var item in Model.MenuItems)
+    {
+        @if (item.IsDivider)
+        {
+            <!-- Divider/separator -->
+            <li role="separator" class="dropdown-divider mt-4 mb-3 border-gray-700"></li>
+        }
+        else if (item.Children != null && item.Children.Any())
+        {
+            <!-- Menu item with children (collapsible submenu) -->
+            var hasActiveChild = IsAnyChildActive(item, Model.ActiveMenu);
+            var isExpanded = hasActiveChild;
+            var submenuId = $"submenu-{item.Id.ToLower().Replace(" ", "-")}";
+            var itemCssClass = item.CssClass ?? "";
+            if (item.Id == Model.ActiveMenu)
+            {
+                itemCssClass = itemCssClass + " active";
+            }
+            <li class="nav-item">
+                <span class="nav-link @itemCssClass @(isExpanded ? "" : "collapsed") d-flex justify-content-between align-items-center"
+                      data-bs-toggle="collapse"
+                      data-bs-target="#@submenuId"
+                      aria-expanded="@(isExpanded ? "true" : "false")">
+                    <span>
+                        @if (!string.IsNullOrEmpty(item.Icon))
+                        {
+                            <span class="sidebar-icon">
+                                @Html.Raw(item.Icon)
+                            </span>
+                        }
+                        <span class="sidebar-text">@item.Label</span>
+                    </span>
+                    <span class="link-arrow">
+                        <svg class="icon icon-sm" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                            <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
+                        </svg>
+                    </span>
+                </span>
+                <div class="multi-level collapse @(isExpanded ? "show" : "")" role="list" id="@submenuId">
+                    <ul class="flex-column nav">
+                        @foreach (var child in item.Children)
+                        {
+                            var childCssClass = child.CssClass ?? "";
+                            if (child.Id == Model.ActiveMenu)
+                            {
+                                childCssClass = childCssClass + " active";
+                            }
+                            <li class="nav-item @childCssClass">
+                                <a class="nav-link"
+                                   asp-page="@child.RouteName">
+                                    @if (!string.IsNullOrEmpty(child.Icon))
+                                    {
+                                        <span class="sidebar-icon">
+                                            @Html.Raw(child.Icon)
+                                        </span>
+                                    }
+                                    <span class="sidebar-text">@child.Label</span>
+                                </a>
+                            </li>
+                        }
+                    </ul>
+                </div>
+            </li>
+        }
+        else
+        {
+            <!-- Simple menu item (no children) -->
+            var itemCssClass = item.CssClass ?? "";
+            if (item.Id == Model.ActiveMenu)
+            {
+                itemCssClass = itemCssClass + " active";
+            }
+            <li class="nav-item @itemCssClass">
+                @if (!string.IsNullOrEmpty(item.RouteName))
+                {
+                    var targetAttr = item.OpenInNewTab ? "_blank" : "";
+                    <a asp-page="@item.RouteName"
+                       class="nav-link d-flex justify-content-between"
+                       target="@targetAttr">
+                        <span>
+                            @if (!string.IsNullOrEmpty(item.Icon))
+                            {
+                                <span class="sidebar-icon">
+                                    @Html.Raw(item.Icon)
+                                </span>
+                            }
+                            <span class="sidebar-text">@item.Label</span>
+                        </span>
+                    </a>
+                }
+                else
+                {
+                    <!-- Item without route (e.g., external link handled separately) -->
+                    <span class="nav-link d-flex justify-content-between">
+                        <span>
+                            @if (!string.IsNullOrEmpty(item.Icon))
+                            {
+                                <span class="sidebar-icon">
+                                    @Html.Raw(item.Icon)
+                                </span>
+                            }
+                            <span class="sidebar-text">@item.Label</span>
+                        </span>
+                    </span>
+                }
+            </li>
+        }
+    }
+</ul>
+
+@functions {
+    bool IsAnyChildActive(NavMenuItem item, string? activeMenu)
+    {
+        if (item.Children == null || string.IsNullOrEmpty(activeMenu))
+        {
+            return false;
+        }
+        return item.Children.Any(c => c.Id == activeMenu);
+    }
+}

@@ -342,7 +342,10 @@
 </nav>
 
 <main role="main" class="pb-3 content">
-    @Html.Partial("_Partials/FlashMessage")
+    <div class="container-fluid px-4">
+        <breadcrumbs />
+        <alert />
+    </div>
     @RenderBody()
     @Html.Partial("_Partials/Footer")
 </main>

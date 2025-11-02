@@ -319,6 +319,16 @@ public abstract class BasePageModel : PageModel
     {
         return ValidationFailures?.GetValueOrDefault(propertyName);
     }
+
+    /// <summary>
+    /// Sets breadcrumbs for the current page.
+    /// Breadcrumbs will be rendered by the breadcrumbs TagHelper in the layout.
+    /// </summary>
+    /// <param name="breadcrumbs">The breadcrumb nodes to display.</param>
+    protected void SetBreadcrumbs(params BreadcrumbNode[] breadcrumbs)
+    {
+        ViewData["Breadcrumbs"] = breadcrumbs;
+    }
 }
 
 /// <summary>

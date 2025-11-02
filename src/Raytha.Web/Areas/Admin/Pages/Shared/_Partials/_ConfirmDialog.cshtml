@@ -1,0 +1,52 @@
+@using Raytha.Web.Areas.Admin.Pages.Shared.Models
+@model ConfirmActionModel
+
+<div class="modal fade" id="@Model.Id" tabindex="-1" aria-labelledby="@(Model.Id)-label" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="@(Model.Id)-label">@Model.Title</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                @if (Model.ShowWarning)
+                {
+                    <div class="alert alert-warning" role="alert">
+                        <strong>⚠️ Warning!</strong> This action cannot be undone.
+                    </div>
+                }
+                <p>@Model.Message</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    @(Model.CancelButtonText ?? "Cancel")
+                </button>
+                <form method="post" id="@(Model.Id)-form">
+                    @if (Model.RouteValues != null)
+                    {
+                        foreach (var kvp in Model.RouteValues)
+                        {
+                            <input type="hidden" name="@kvp.Key" value="@kvp.Value" />
+                        }
+                    }
+                    <button type="submit" class="btn @Model.ConfirmButtonClass">
+                        @Model.ConfirmButtonText
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Set form action dynamically when modal is shown
+    document.getElementById('@Model.Id').addEventListener('show.bs.modal', function (event) {
+        var button = event.relatedTarget;
+        if (button) {
+            var actionUrl = button.getAttribute('data-action-url');
+            if (actionUrl) {
+                document.getElementById('@(Model.Id)-form').action = actionUrl;
+            }
+        }
+    });
+</script>

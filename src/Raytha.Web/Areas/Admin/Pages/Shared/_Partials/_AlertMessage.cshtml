@@ -1,0 +1,28 @@
+@using Raytha.Web.Areas.Shared.Models
+@model AlertMessage
+
+@{
+    var alertType = Model.Type switch
+    {
+        AlertType.Success => "success",
+        AlertType.Error => "danger",
+        AlertType.Warning => "warning",
+        AlertType.Info => "info",
+        _ => "info"
+    };
+
+    var dismissibleClass = Model.IsDismissible ? " alert-dismissible fade show" : "";
+}
+
+<div class="alert alert-@alertType@dismissibleClass mt-2" role="alert">
+    @if (!string.IsNullOrEmpty(Model.Title))
+    {
+        <h5 class="alert-heading">@Model.Title</h5>
+    }
+    @Model.Message
+    @if (Model.IsDismissible)
+    {
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    }
+</div>
+
