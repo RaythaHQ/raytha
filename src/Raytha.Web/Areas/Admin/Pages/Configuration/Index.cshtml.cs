@@ -4,7 +4,9 @@ using Microsoft.AspNetCore.Mvc;
 using Raytha.Application.Common.Utils;
 using Raytha.Application.OrganizationSettings.Queries;
 using Raytha.Domain.Entities;
+using Raytha.Web.Areas.Admin.Pages.Shared;
 using Raytha.Web.Areas.Admin.Pages.Shared.Models;
+using Raytha.Web.Areas.Shared.Models;
 
 namespace Raytha.Web.Areas.Admin.Pages.Configuration;
 
@@ -34,6 +36,22 @@ public class Index : BaseAdminPageModel
 
     public async Task<IActionResult> OnGet()
     {
+        // Set breadcrumbs for navigation
+        SetBreadcrumbs(
+            new BreadcrumbNode
+            {
+                Label = "Settings",
+                RouteName = RouteNames.Configuration.Index,
+                IsActive = false,
+            },
+            new BreadcrumbNode
+            {
+                Label = "Configuration",
+                RouteName = RouteNames.Configuration.Index,
+                IsActive = true,
+            }
+        );
+
         var input = new GetOrganizationSettings.Query();
         var response = await Mediator.Send(input);
         Form = new FormModel
@@ -64,7 +82,7 @@ public class Index : BaseAdminPageModel
         if (response.Success)
         {
             SetSuccessMessage("Configuration has been updated successfully.");
-            return RedirectToPage("/Configuration/Index");
+            return RedirectToPage(RouteNames.Configuration.Index);
         }
         else
         {
