@@ -36,9 +36,7 @@
     "@codemirror/lang-liquid": "^6.2.2",
     "@codemirror/state": "^6.4.1",
     "@codemirror/view": "^6.35.0",
-    "@hotwired/turbo": "^8.0.4",
     "@popperjs/core": "^2.11.8",
-    "@stimulus-components/sortable": "^5.0.1",
     "@tiptap/core": "^2.10.3",
     "@tiptap/extension-blockquote": "^2.10.3",
     "@tiptap/extension-bold": "^2.10.3",
@@ -93,7 +91,6 @@
     "lodash.debounce": "^4.0.8",
     "notyf": "^3.10.0",
     "simplebar": "^6.2.5",
-    "stimulus": "^3.2.2",
     "sweetalert2": "11.4.8",
     "uuid": "^10.0.0"
   }

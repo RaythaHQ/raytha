@@ -1,12 +1,9 @@
-import { Application } from "stimulus";
-import { definitionsFromContext } from "stimulus/webpack-helpers";
 import { Datepicker } from 'vanillajs-datepicker';
-import * as Turbo from "@hotwired/turbo";
 import * as bootstrap from 'bootstrap';
 import Swal from 'sweetalert2';
 import 'simplebar';
 var d = document;
-document.addEventListener("turbo:load", function () {
+document.addEventListener("DOMContentLoaded", function () {
     var popoverTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="popover"]'));
     var popoverList = popoverTriggerList.map(function (popoverTriggerEl) {
         return new bootstrap.Popover(popoverTriggerEl);
@@ -68,6 +65,3 @@ document.addEventListener("turbo:load", function () {
         return new bootstrap.Offcanvas(offcanvasEl);
     });
 });
-var application = Application.start();
-var context = require.context("./controllers/", true, /^\.\/.*\.(js|ts)$/);
-application.load(definitionsFromContext(context));
