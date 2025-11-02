@@ -13,6 +13,7 @@ using Raytha.Application.Roles.Commands;
 using Raytha.Application.UserGroups.Commands;
 using Raytha.Application.Users.Commands;
 using Raytha.Domain.Entities;
+using Raytha.Web.Areas.Admin.Pages.Shared;
 using Raytha.Web.Areas.Admin.Pages.Shared.Models;
 using Raytha.Web.Areas.Shared.Models;
 
@@ -100,6 +101,16 @@ public class Index : BaseAdminPageModel
         int pageSize = 50
     )
     {
+        // Set breadcrumbs for navigation
+        SetBreadcrumbs(
+            new BreadcrumbNode
+            {
+                Label = "Audit Logs",
+                RouteName = RouteNames.AuditLogs.Index,
+                IsActive = true,
+            }
+        );
+
         DateTime? startDateAsUtc = DateTimeExtensions.GetDateFromString(startDate);
         DateTime? endDateAsUtc = DateTimeExtensions.GetDateFromString(endDate);
 

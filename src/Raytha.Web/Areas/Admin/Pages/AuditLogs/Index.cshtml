@@ -24,10 +24,11 @@
         }
     }
 }
-@Html.Partial("_Partials/PageHeading", pageTitle)
-<div class="raytha-data-card mb-4">
-    <div class="card-body">
-        <form asp-page="/AuditLogs/Index" method="get">
+<div>
+    @Html.Partial("_Partials/PageHeading", pageTitle)
+    <div class="raytha-data-card mb-4">
+        <div class="card-body">
+            <form asp-page="@RouteNames.AuditLogs.Index" method="get">
             <div class="row">
                 <div class="col-lg-3 col-md-12">
                     <div class="mb-3">
@@ -100,7 +101,7 @@
                 <thead class="thead-light">
                     <tr>
                         <th class="border-0 rounded-start">
-                            <a asp-page="@Model.ListView.PageName" asp-route-emailAddress="@Model.UserEmail"
+                            <a asp-page="@RouteNames.AuditLogs.Index" asp-route-emailAddress="@Model.UserEmail"
                                 asp-route-category="@Model.Category" asp-route-startDate="@Model.StartDate"
                                 asp-route-endDate="@Model.EndDate" asp-route-entityId="@Model.EntityId"
                                 asp-route-orderBy="@(OrderByThisColumn("CreationTime"))"
@@ -134,7 +135,7 @@
                             </a>
                         </th>
                         <th class="border-0">
-                            <a asp-page="@Model.ListView.PageName" asp-route-emailAddress="@Model.UserEmail"
+                            <a asp-page="@RouteNames.AuditLogs.Index" asp-route-emailAddress="@Model.UserEmail"
                                 asp-route-category="@Model.Category" asp-route-startDate="@Model.StartDate"
                                 asp-route-endDate="@Model.EndDate" asp-route-entityId="@Model.EntityId"
                                 asp-route-orderBy="@(OrderByThisColumn("Category"))"
@@ -169,7 +170,7 @@
                         </th>
                         <th class="border-0">Ip Address</th>
                         <th class="border-0">
-                            <a asp-page="@Model.ListView.PageName" asp-route-emailAddress="@Model.UserEmail"
+                            <a asp-page="@RouteNames.AuditLogs.Index" asp-route-emailAddress="@Model.UserEmail"
                                 asp-route-category="@Model.Category" asp-route-startDate="@Model.StartDate"
                                 asp-route-endDate="@Model.EndDate" asp-route-entityId="@Model.EntityId"
                                 asp-route-orderBy="@(OrderByThisColumn("UserEmail"))"
@@ -240,7 +241,7 @@
                 <nav aria-label="page navigation" class="py-4">
                     <ul class="pagination">
                         <li class="page-item @Model.ListView.PreviousDisabledCss">
-                            <a asp-page="@Model.ListView.PageName" asp-route-emailAddress="@Model.UserEmail"
+                            <a asp-page="@RouteNames.AuditLogs.Index" asp-route-emailAddress="@Model.UserEmail"
                                 asp-route-category="@Model.Category" asp-route-startDate="@Model.StartDate"
                                 asp-route-endDate="@Model.EndDate" asp-route-entityId="@Model.EntityId"
                                 asp-route-orderBy="@Model.ListView.OrderByAsString" asp-route-pageNumber="1"
@@ -254,7 +255,7 @@
                         </li>
 
                         <li class="page-item @Model.ListView.PreviousDisabledCss">
-                            <a asp-page="@Model.ListView.PageName" asp-route-emailAddress="@Model.UserEmail"
+                            <a asp-page="@RouteNames.AuditLogs.Index" asp-route-emailAddress="@Model.UserEmail"
                                 asp-route-category="@Model.Category" asp-route-startDate="@Model.StartDate"
                                 asp-route-endDate="@Model.EndDate" asp-route-entityId="@Model.EntityId"
                                 asp-route-orderBy="@Model.ListView.OrderByAsString"
@@ -276,7 +277,7 @@
                         @for (var i = Model.ListView.FirstVisiblePageNumber; i <= Model.ListView.LastVisiblePageNumber; i++)
                         {
                             <li class="page-item @(i == Model.ListView.PageNumber ? "active" : "")">
-                                <a asp-page="@Model.ListView.PageName" asp-route-emailAddress="@Model.UserEmail"
+                                <a asp-page="@RouteNames.AuditLogs.Index" asp-route-emailAddress="@Model.UserEmail"
                                     asp-route-category="@Model.Category" asp-route-startDate="@Model.StartDate"
                                     asp-route-endDate="@Model.EndDate" asp-route-entityId="@Model.EntityId"
                                     asp-route-orderBy="@Model.ListView.OrderByAsString" asp-route-pageNumber="@i"
@@ -292,7 +293,7 @@
                         }
 
                         <li class="page-item @Model.ListView.NextDisabledCss">
-                            <a asp-page="@Model.ListView.PageName" asp-route-emailAddress="@Model.UserEmail"
+                            <a asp-page="@RouteNames.AuditLogs.Index" asp-route-emailAddress="@Model.UserEmail"
                                 asp-route-category="@Model.Category" asp-route-startDate="@Model.StartDate"
                                 asp-route-endDate="@Model.EndDate" asp-route-entityId="@Model.EntityId"
                                 asp-route-orderBy="@Model.ListView.OrderByAsString"
@@ -307,7 +308,7 @@
                         </li>
 
                         <li class="page-item @Model.ListView.NextDisabledCss">
-                            <a asp-page="@Model.ListView.PageName" asp-route-emailAddress="@Model.UserEmail"
+                            <a asp-page="@RouteNames.AuditLogs.Index" asp-route-emailAddress="@Model.UserEmail"
                                 asp-route-category="@Model.Category" asp-route-startDate="@Model.StartDate"
                                 asp-route-endDate="@Model.EndDate" asp-route-entityId="@Model.EntityId"
                                 asp-route-orderBy="@Model.ListView.OrderByAsString"
@@ -324,5 +325,6 @@
                 </nav>
             }
         </div>
+    </div>
     </div>
 </div>
