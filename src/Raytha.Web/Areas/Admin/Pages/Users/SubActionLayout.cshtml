@@ -24,7 +24,7 @@
 }
 
 <div class="row mb-4">
-    @Html.Partial("_Partials/PageHeading", ViewData["Title"])
+    <partial name="_Partials/PageHeading" model='ViewData["Title"]' />
     @if (Model.IsAdmin)
     {
         <div class="row">

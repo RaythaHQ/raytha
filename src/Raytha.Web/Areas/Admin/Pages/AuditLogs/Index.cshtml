@@ -25,7 +25,7 @@
     }
 }
 <div>
-    @Html.Partial("_Partials/PageHeading", pageTitle)
+    <partial name="_Partials/PageHeading" model="pageTitle" />
     <div class="raytha-data-card mb-4">
         <div class="card-body">
             <form asp-page="@RouteNames.AuditLogs.Index" method="get">

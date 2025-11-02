@@ -25,7 +25,7 @@
 }
 
 <div class="row mb-4">
-    @Html.Partial("_Partials/PageHeading", ViewData["Title"])
+    <partial name="_Partials/PageHeading" model='ViewData["Title"]' />
     <div class="col-xxl-7 col-xl-8 col-lg-9 col-md-12">
         <div class="card border-0 shadow mb-4">
             <div class="card-body">
@@ -51,8 +51,8 @@
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link @IsActivePage("Revisions")" asp-page="@RouteNames.RaythaFunctions.Revisions"
-                                asp-route-id="@Model.Id">
+                            <a class="nav-link @IsActivePage("Revisions")"
+                                asp-page="@RouteNames.RaythaFunctions.Revisions" asp-route-id="@Model.Id">
                                 <svg class="icon icon-sm" fill="none" stroke="currentColor" viewBox="0 0 24 24"
                                     xmlns="http://www.w3.org/2000/svg">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"

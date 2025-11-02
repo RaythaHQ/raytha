@@ -10,7 +10,7 @@
 }
 
 <div>
-    @Html.Partial("_Partials/PageHeading", pageTitle)
+    <partial name="_Partials/PageHeading" model="pageTitle" />
 
     @(await Html.PartialAsync("_Partials/TableCreateAndSearchBar", new BaseTableCreateAndSearchBarViewModel
     {
