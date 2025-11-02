@@ -13,7 +13,7 @@
 {
     Pagination = Model.ListView,
     EntityName = "role",
-    CreateActionName = "/Roles/Create"
+    CreateActionName = RouteNames.Roles.Create
 }))
 
 <div class="raytha-data-card mb-4">
@@ -45,7 +45,7 @@
                         <tr>
                             <td>@item.Label</td>
                             <td>@item.DeveloperName</td>
-                            <td><a asp-page="/Roles/Edit" asp-route-id="@item.Id">Edit</a></td>
+                            <td><a asp-page="@RouteNames.Roles.Edit" asp-route-id="@item.Id">Edit</a></td>
                         </tr>
                     }
                 </tbody>

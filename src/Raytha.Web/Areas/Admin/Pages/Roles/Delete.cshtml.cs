@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Raytha.Application.Roles.Commands;
 using Raytha.Domain.Entities;
+using Raytha.Web.Areas.Admin.Pages.Shared;
 using Raytha.Web.Areas.Admin.Pages.Shared.Models;
 
 namespace Raytha.Web.Areas.Admin.Pages.Roles;
@@ -15,12 +16,12 @@ public class Delete : BaseAdminPageModel
         if (response.Success)
         {
             SetSuccessMessage($"Role has been deleted.");
-            return RedirectToPage("/Roles/Index");
+            return RedirectToPage(RouteNames.Roles.Index);
         }
         else
         {
             SetErrorMessage("There was a problem deleting this role", response.GetErrors());
-            return RedirectToPage("/Roles/Edit", new { id });
+            return RedirectToPage(RouteNames.Roles.Edit, new { id });
         }
     }
 }
