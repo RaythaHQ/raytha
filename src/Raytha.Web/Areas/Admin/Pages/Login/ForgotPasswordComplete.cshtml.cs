@@ -1,6 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Mvc;
 using Raytha.Application.Login.Queries;
+using Raytha.Web.Areas.Admin.Pages.Shared;
 
 namespace Raytha.Web.Areas.Admin.Pages.Login;
 
@@ -55,7 +56,7 @@ public class ForgotPasswordComplete : BaseAdminLoginPageModel
         if (response.Success)
         {
             SetSuccessMessage("Password changed successfully. Please login.");
-            return RedirectToPage("/Login/LoginWithEmailAndPassword");
+            return RedirectToPage(RouteNames.Login.LoginWithEmailAndPassword);
         }
 
         SetErrorMessage(response.GetErrors());

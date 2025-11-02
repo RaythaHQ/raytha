@@ -28,7 +28,7 @@
                         </div>
                     }
 
-                    <form method="post" asp-page="/Login/LoginWithMagicLink"
+                    <form method="post" asp-page="@RouteNames.Login.LoginWithMagicLink"
                         asp-route-returnUrl="@(ViewData["returnUrl"])" class="mt-4">
                         <!-- Form -->
                         <div class="form-group mb-4">

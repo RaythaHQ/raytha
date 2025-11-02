@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Raytha.Web.Areas.Admin.Pages.Shared;
 
 namespace Raytha.Web.Areas.Admin.Pages.Login;
 
@@ -24,7 +25,7 @@ public class LoginWithJwt : BaseAdminLoginPageModel
                 return Redirect(returnUrl);
             }
 
-            return RedirectToPage("/Dashboard/Index");
+            return RedirectToPage(RouteNames.Dashboard.Index);
         }
         else
         {

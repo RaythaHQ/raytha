@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Raytha.Application.AuthenticationSchemes.Queries;
 using Raytha.Domain.ValueObjects;
+using Raytha.Web.Areas.Admin.Pages.Shared;
 
 namespace Raytha.Web.Areas.Admin.Pages.Login;
 
@@ -54,7 +55,7 @@ public class LoginWithSso : BaseAdminLoginPageModel
         }
         catch (Exception e)
         {
-            return RedirectToPage("/Login/LoginWithEmailAndPassword", new { area = "Admin" });
+            return RedirectToPage(RouteNames.Login.LoginWithEmailAndPassword, new { area = "Admin" });
         }
     }
 }

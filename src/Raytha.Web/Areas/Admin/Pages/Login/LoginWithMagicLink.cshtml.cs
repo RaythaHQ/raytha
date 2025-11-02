@@ -1,6 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Mvc;
 using Raytha.Application.AuthenticationSchemes.Queries;
+using Raytha.Web.Areas.Admin.Pages.Shared;
 
 namespace Raytha.Web.Areas.Admin.Pages.Login;
 
@@ -23,14 +24,14 @@ public class LoginWithMagicLink : BaseAdminLoginPageModel
         {
             var singleSignOnScheme = response.Result.Items.First();
             return RedirectToPage(
-                "/Login/LoginWithSso",
+                RouteNames.Login.LoginWithSso,
                 new { developerName = singleSignOnScheme.DeveloperName, returnUrl }
             );
         }
 
         ViewData["returnUrl"] = returnUrl;
         if (BuiltInAuthIsEmailAndPasswordOnly(response.Result))
-            return RedirectToPage("/Login/LoginWithEmailAndPassword", new { returnUrl });
+            return RedirectToPage(RouteNames.Login.LoginWithEmailAndPassword, new { returnUrl });
 
         AuthenticationSchemes = response.Result.Items.Select(
             p => new LoginAuthenticationSchemeChoiceItemViewModel
@@ -57,7 +58,7 @@ public class LoginWithMagicLink : BaseAdminLoginPageModel
 
         if (response.Success)
         {
-            return RedirectToPage("/Login/LoginWithMagicLinkSent");
+            return RedirectToPage(RouteNames.Login.LoginWithMagicLinkSent);
         }
         else
         {

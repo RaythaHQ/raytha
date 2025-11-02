@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Raytha.Web.Areas.Admin.Pages.Shared;
 
 namespace Raytha.Web.Areas.Admin.Pages.Login;
 
@@ -25,13 +26,13 @@ public class LoginWithMagicLinkComplete : BaseAdminLoginPageModel
             }
             else
             {
-                return RedirectToPage("/Dashboard/Index");
+                return RedirectToPage(RouteNames.Dashboard.Index);
             }
         }
         else
         {
             SetErrorMessage(response.Error);
-            return RedirectToPage("/Login/LoginWithMagicLink", new { returnUrl });
+            return RedirectToPage(RouteNames.Login.LoginWithMagicLink, new { returnUrl });
         }
     }
 }

@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Mvc;
+using Raytha.Web.Areas.Admin.Pages.Shared;
 
 namespace Raytha.Web.Areas.Admin.Pages.Login;
 
@@ -29,7 +30,7 @@ public class ForgotPassword : BaseAdminLoginPageModel
         );
         if (response.Success)
         {
-            return RedirectToPage("/Login/ForgotPasswordSent");
+            return RedirectToPage(RouteNames.Login.ForgotPasswordSent);
         }
 
         SetErrorMessage(response.GetErrors());
