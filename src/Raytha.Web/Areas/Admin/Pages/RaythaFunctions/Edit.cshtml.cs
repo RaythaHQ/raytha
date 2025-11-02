@@ -4,7 +4,9 @@ using Microsoft.AspNetCore.Mvc;
 using Raytha.Application.RaythaFunctions.Commands;
 using Raytha.Application.RaythaFunctions.Queries;
 using Raytha.Domain.Entities;
+using Raytha.Web.Areas.Admin.Pages.Shared;
 using Raytha.Web.Areas.Admin.Pages.Shared.Models;
+using Raytha.Web.Areas.Shared.Models;
 
 namespace Raytha.Web.Areas.Admin.Pages.RaythaFunctions;
 
@@ -21,6 +23,11 @@ public class Edit : BaseAdminPageModel, ISubActionViewModel
 
     public async Task<IActionResult> OnGet(string id)
     {
+        SetBreadcrumbs(
+            new BreadcrumbNode { Label = "Raytha Functions", RouteName = RouteNames.RaythaFunctions.Index, IsActive = false },
+            new BreadcrumbNode { Label = "Edit", RouteName = RouteNames.RaythaFunctions.Edit, IsActive = true }
+        );
+
         var response = await Mediator.Send(new GetRaythaFunctionById.Query { Id = id });
 
         Form = new FormModel
@@ -54,7 +61,7 @@ public class Edit : BaseAdminPageModel, ISubActionViewModel
         if (response.Success)
         {
             SetSuccessMessage($"{Form.Name} was updated successfully.");
-            return RedirectToPage("/RaythaFunctions/Edit", new { id });
+            return RedirectToPage(RouteNames.RaythaFunctions.Edit, new { id });
         }
         else
         {

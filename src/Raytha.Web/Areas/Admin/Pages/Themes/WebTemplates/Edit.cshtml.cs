@@ -13,7 +13,9 @@ using Raytha.Application.Themes.WebTemplates.Commands;
 using Raytha.Application.Themes.WebTemplates.Queries;
 using Raytha.Domain.Entities;
 using Raytha.Domain.ValueObjects.FieldTypes;
+using Raytha.Web.Areas.Admin.Pages.Shared;
 using Raytha.Web.Areas.Admin.Pages.Shared.Models;
+using Raytha.Web.Areas.Shared.Models;
 using Raytha.Web.Utils;
 
 namespace Raytha.Web.Areas.Admin.Pages.Themes.WebTemplates;
@@ -29,6 +31,12 @@ public class Edit : BaseAdminPageModel, ISubActionViewModel
 
     public async Task<IActionResult> OnGet(string themeId, string id)
     {
+        SetBreadcrumbs(
+            new BreadcrumbNode { Label = "Themes", RouteName = RouteNames.Themes.Index, IsActive = false },
+            new BreadcrumbNode { Label = "Web Templates", RouteName = RouteNames.Themes.WebTemplates.Index, IsActive = false },
+            new BreadcrumbNode { Label = "Edit", RouteName = RouteNames.Themes.WebTemplates.Edit, IsActive = true }
+        );
+
         ThemeId = themeId;
         Id = id;
         var webTemplateResponse = await Mediator.Send(new GetWebTemplateById.Query { Id = id });
@@ -130,7 +138,7 @@ public class Edit : BaseAdminPageModel, ISubActionViewModel
         {
             SetSuccessMessage($"{Form.Label} was edited successfully.");
             return RedirectToPage(
-                "/Themes/WebTemplates/Edit",
+                RouteNames.Themes.WebTemplates.Edit,
                 new { themeId, id = response.Result }
             );
         }

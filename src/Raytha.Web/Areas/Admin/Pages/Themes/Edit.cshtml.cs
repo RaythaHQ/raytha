@@ -4,7 +4,9 @@ using Microsoft.AspNetCore.Mvc;
 using Raytha.Application.Themes.Commands;
 using Raytha.Application.Themes.Queries;
 using Raytha.Domain.Entities;
+using Raytha.Web.Areas.Admin.Pages.Shared;
 using Raytha.Web.Areas.Admin.Pages.Shared.Models;
+using Raytha.Web.Areas.Shared.Models;
 
 namespace Raytha.Web.Areas.Admin.Pages.Themes;
 
@@ -22,6 +24,22 @@ public class Edit : BaseAdminPageModel, ISubActionViewModel
         var input = new GetThemeById.Query { Id = id };
 
         var response = await Mediator.Send(input);
+        
+        // Set breadcrumbs for navigation
+        SetBreadcrumbs(
+            new BreadcrumbNode
+            {
+                Label = "Themes",
+                RouteName = RouteNames.Themes.Index,
+                IsActive = false,
+            },
+            new BreadcrumbNode
+            {
+                Label = "Edit",
+                RouteName = RouteNames.Themes.Edit,
+                IsActive = true,
+            }
+        );
 
         Form = new FormModel
         {
@@ -50,7 +68,7 @@ public class Edit : BaseAdminPageModel, ISubActionViewModel
         if (response.Success)
         {
             SetSuccessMessage($"{Form.Title} was updated successfully.");
-            return RedirectToPage("/Themes/Edit", new { id = response.Result.Guid });
+            return RedirectToPage(RouteNames.Themes.Edit, new { id = response.Result.Guid });
         }
         else
         {

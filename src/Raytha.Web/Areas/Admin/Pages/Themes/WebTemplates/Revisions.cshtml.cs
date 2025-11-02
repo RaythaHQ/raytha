@@ -5,6 +5,7 @@ using Raytha.Application.Themes.WebTemplates.Commands;
 using Raytha.Application.Themes.WebTemplates.Queries;
 using Raytha.Domain.Entities;
 using Raytha.Domain.ValueObjects;
+using Raytha.Web.Areas.Admin.Pages.Shared;
 using Raytha.Web.Areas.Admin.Pages.Shared.Models;
 using Raytha.Web.Areas.Shared.Models;
 
@@ -26,6 +27,12 @@ public class Revisions : BaseAdminPageModel, ISubActionViewModel
         int pageSize = 50
     )
     {
+        SetBreadcrumbs(
+            new BreadcrumbNode { Label = "Themes", RouteName = RouteNames.Themes.Index, IsActive = false },
+            new BreadcrumbNode { Label = "Web Templates", RouteName = RouteNames.Themes.WebTemplates.Index, IsActive = false },
+            new BreadcrumbNode { Label = "Revisions", RouteName = RouteNames.Themes.WebTemplates.Revisions, IsActive = true }
+        );
+
         var template = await Mediator.Send(new GetWebTemplateById.Query { Id = id });
 
         var input = new GetWebTemplateRevisionsByTemplateId.Query
@@ -73,7 +80,7 @@ public class Revisions : BaseAdminPageModel, ISubActionViewModel
         {
             SetErrorMessage("There was an error reverting this template", response.GetErrors());
         }
-        return RedirectToPage("/Themes/WebTemplates/Edit", new { themeId, id });
+        return RedirectToPage(RouteNames.Themes.WebTemplates.Edit, new { themeId, id });
     }
 
     public record WebTemplatesRevisionsPaginationViewModel : PaginationViewModel

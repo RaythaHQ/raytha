@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Raytha.Application.Themes.Queries;
 using Raytha.Domain.Entities;
 using Raytha.Domain.ValueObjects;
+using Raytha.Web.Areas.Admin.Pages.Shared;
 using Raytha.Web.Areas.Admin.Pages.Shared.Models;
 using Raytha.Web.Areas.Shared.Models;
 
@@ -21,6 +22,16 @@ public class Index : BaseAdminPageModel, IHasListView<Index.ThemesListItemViewMo
         int pageSize = 50
     )
     {
+        // Set breadcrumbs for navigation
+        SetBreadcrumbs(
+            new BreadcrumbNode
+            {
+                Label = "Themes",
+                RouteName = RouteNames.Themes.Index,
+                IsActive = true,
+            }
+        );
+
         var input = new GetThemes.Query
         {
             Search = search,

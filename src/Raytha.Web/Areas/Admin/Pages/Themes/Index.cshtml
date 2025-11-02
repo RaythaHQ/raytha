@@ -9,6 +9,7 @@
     ViewData["ActiveMenu"] = pageTitle;
 }
 
+<div>
 @Html.Partial("_Partials/PageHeading", pageTitle)
 <nav class="navbar navbar-expand-lg navbar-light raytha-view-nav raytha-border-top">
     <div class="container-fluid">
@@ -30,7 +31,7 @@
                     </button>
                     <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
                         <li>
-                            <a class="dropdown-item" asp-page="/Themes/Create">
+                            <a class="dropdown-item" asp-page="@RouteNames.Themes.Create">
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
                                     stroke-width="1.5" stroke="currentColor" class="icon icon-xs">
                                     <path stroke-linecap="round" stroke-linejoin="round"
@@ -41,7 +42,7 @@
                             </a>
                         </li>
                         <li>
-                            <a class="dropdown-item" asp-page="/Themes/Duplicate">
+                            <a class="dropdown-item" asp-page="@RouteNames.Themes.Duplicate">
                                 <svg class="icon icon-xs" fill="none" stroke="currentColor" viewBox="0 0 24 24"
                                     xmlns="http://www.w3.org/2000/svg">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -52,7 +53,7 @@
                             </a>
                         </li>
                         <li>
-                            <a class="dropdown-item" asp-page="/Themes/Import">
+                            <a class="dropdown-item" asp-page="@RouteNames.Themes.Import">
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
                                     stroke-width="1.5" stroke="currentColor" class="icon icon-xs">
                                     <path stroke-linecap="round" stroke-linejoin="round"
@@ -123,7 +124,7 @@
                             <td>@item.LastModificationTime</td>
                             <td>@item.LastModifierUser</td>
                             <td>
-                                <a asp-page="/Themes/Edit" asp-route-id="@item.Id">Edit</a>
+                                <a asp-page="@RouteNames.Themes.Edit" asp-route-id="@item.Id">Edit</a>
                                 @if (CurrentOrganization.ActiveThemeId == item.Id)
                                 {
                                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
@@ -140,4 +141,5 @@
             <partial name="_Partials/TablePagination" model="@Model.ListView" />
         </div>
     </div>
+</div>
 </div>

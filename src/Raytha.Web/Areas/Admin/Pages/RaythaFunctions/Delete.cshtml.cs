@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Raytha.Application.RaythaFunctions.Commands;
 using Raytha.Domain.Entities;
+using Raytha.Web.Areas.Admin.Pages.Shared;
 using Raytha.Web.Areas.Admin.Pages.Shared.Models;
 
 namespace Raytha.Web.Areas.Admin.Pages.RaythaFunctions;
@@ -18,12 +19,12 @@ public class Delete : BaseAdminPageModel
         if (response.Success)
         {
             SetSuccessMessage("Function has been deleted.");
-            return RedirectToPage("/RaythaFunctions/Index");
+            return RedirectToPage(RouteNames.RaythaFunctions.Index);
         }
         else
         {
             SetErrorMessage("There was an error deleting this function", response.GetErrors());
-            return RedirectToPage("/RaythaFunctions/Edit", new { id });
+            return RedirectToPage(RouteNames.RaythaFunctions.Edit, new { id });
         }
     }
 }

@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Raytha.Application.Themes.Commands;
 using Raytha.Domain.Entities;
+using Raytha.Web.Areas.Admin.Pages.Shared;
 using Raytha.Web.Areas.Admin.Pages.Shared.Models;
 
 namespace Raytha.Web.Areas.Admin.Pages.Themes;
@@ -18,12 +19,12 @@ public class Delete : BaseAdminPageModel
         if (response.Success)
         {
             SetSuccessMessage("Theme has been deleted.");
-            return RedirectToPage("/Themes/Index");
+            return RedirectToPage(RouteNames.Themes.Index);
         }
         else
         {
             SetErrorMessage("There was an error deleting this theme", response.GetErrors());
-            return RedirectToPage("/Themes/Edit", new { id });
+            return RedirectToPage(RouteNames.Themes.Edit, new { id });
         }
     }
 }

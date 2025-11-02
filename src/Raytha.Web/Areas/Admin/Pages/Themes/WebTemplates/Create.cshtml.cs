@@ -12,7 +12,9 @@ using Raytha.Application.Themes.WebTemplates.Commands;
 using Raytha.Application.Themes.WebTemplates.Queries;
 using Raytha.Domain.Entities;
 using Raytha.Domain.ValueObjects.FieldTypes;
+using Raytha.Web.Areas.Admin.Pages.Shared;
 using Raytha.Web.Areas.Admin.Pages.Shared.Models;
+using Raytha.Web.Areas.Shared.Models;
 using Raytha.Web.Utils;
 
 namespace Raytha.Web.Areas.Admin.Pages.Themes.WebTemplates;
@@ -28,6 +30,12 @@ public class Create : BaseAdminPageModel
 
     public async Task<IActionResult> OnGet(string themeId)
     {
+        SetBreadcrumbs(
+            new BreadcrumbNode { Label = "Themes", RouteName = RouteNames.Themes.Index, IsActive = false },
+            new BreadcrumbNode { Label = "Web Templates", RouteName = RouteNames.Themes.WebTemplates.Index, IsActive = false },
+            new BreadcrumbNode { Label = "Create", RouteName = RouteNames.Themes.WebTemplates.Create, IsActive = true }
+        );
+
         var webTemplatesResponse = await Mediator.Send(
             new GetWebTemplates.Query
             {
@@ -98,7 +106,7 @@ public class Create : BaseAdminPageModel
         {
             SetSuccessMessage($"{Form.Label} was created successfully.");
             return RedirectToPage(
-                "/Themes/WebTemplates/Edit",
+                RouteNames.Themes.WebTemplates.Edit,
                 new { themeId, id = response.Result }
             );
         }

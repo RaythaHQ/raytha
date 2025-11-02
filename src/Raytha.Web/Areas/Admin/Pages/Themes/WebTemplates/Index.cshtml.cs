@@ -5,6 +5,7 @@ using Raytha.Application.Common.Utils;
 using Raytha.Application.Themes.WebTemplates.Queries;
 using Raytha.Domain.Entities;
 using Raytha.Domain.ValueObjects;
+using Raytha.Web.Areas.Admin.Pages.Shared;
 using Raytha.Web.Areas.Admin.Pages.Shared.Models;
 using Raytha.Web.Areas.Shared.Models;
 
@@ -23,6 +24,11 @@ public class Index : BaseAdminPageModel
         int pageSize = 50
     )
     {
+        SetBreadcrumbs(
+            new BreadcrumbNode { Label = "Themes", RouteName = RouteNames.Themes.Index, IsActive = false },
+            new BreadcrumbNode { Label = "Web Templates", RouteName = RouteNames.Themes.WebTemplates.Index, IsActive = true }
+        );
+
         var input = new GetWebTemplates.Query
         {
             ThemeId = themeId,

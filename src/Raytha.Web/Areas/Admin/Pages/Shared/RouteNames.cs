@@ -163,8 +163,27 @@ public static class RouteNames
         public const string Create = "/Themes/Create";
         public const string Edit = "/Themes/Edit";
         public const string Delete = "/Themes/Delete";
+        public const string Duplicate = "/Themes/Duplicate";
+        public const string Import = "/Themes/Import";
+        public const string Export = "/Themes/Export";
+        public const string ExportAsJson = "/Themes/ExportAsJson";
+        public const string MediaItems = "/Themes/MediaItems";
+        public const string SetAsActive = "/Themes/SetAsActive";
+        public const string BackgroundTaskStatus = "/Themes/BackgroundTaskStatus";
         public const string AccessToTemplateRedirect = "/Themes/AccessToTemplateRedirect";
         public const string ExportTheme = "/Themes/ExportTheme";
+
+        /// <summary>
+        /// Route constants for theme web templates management pages.
+        /// </summary>
+        public static class WebTemplates
+        {
+            public const string Index = "/Themes/WebTemplates/Index";
+            public const string Create = "/Themes/WebTemplates/Create";
+            public const string Edit = "/Themes/WebTemplates/Edit";
+            public const string Delete = "/Themes/WebTemplates/Delete";
+            public const string Revisions = "/Themes/WebTemplates/Revisions";
+        }
 
         /// <summary>
         /// Route constants for theme template management pages.
@@ -176,14 +195,6 @@ public static class RouteNames
             public const string Edit = "/Themes/Templates/Edit";
             public const string Delete = "/Themes/Templates/Delete";
             public const string Revert = "/Themes/Templates/Revert";
-        }
-
-        /// <summary>
-        /// Route constants for theme media assets pages.
-        /// </summary>
-        public static class MediaItems
-        {
-            public const string Index = "/Themes/MediaItems/Index";
         }
     }
 
@@ -231,6 +242,7 @@ public static class RouteNames
         public const string Create = "/RaythaFunctions/Create";
         public const string Edit = "/RaythaFunctions/Edit";
         public const string Delete = "/RaythaFunctions/Delete";
+        public const string Execute = "/RaythaFunctions/Execute";
         public const string Revisions = "/RaythaFunctions/Revisions";
     }
 

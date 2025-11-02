@@ -4,7 +4,9 @@ using Microsoft.AspNetCore.Mvc;
 using Raytha.Application.Themes.Commands;
 using Raytha.Application.Themes.Queries;
 using Raytha.Domain.Entities;
+using Raytha.Web.Areas.Admin.Pages.Shared;
 using Raytha.Web.Areas.Admin.Pages.Shared.Models;
+using Raytha.Web.Areas.Shared.Models;
 
 namespace Raytha.Web.Areas.Admin.Pages.Themes;
 
@@ -19,6 +21,11 @@ public class Export : BaseAdminPageModel, ISubActionViewModel
 
     public async Task<IActionResult> OnGet(string id)
     {
+        SetBreadcrumbs(
+            new BreadcrumbNode { Label = "Themes", RouteName = RouteNames.Themes.Index, IsActive = false },
+            new BreadcrumbNode { Label = "Export", RouteName = RouteNames.Themes.Export, IsActive = true }
+        );
+
         var response = await Mediator.Send(new GetThemeById.Query { Id = id });
 
         Form = new FormModel
@@ -54,7 +61,7 @@ public class Export : BaseAdminPageModel, ISubActionViewModel
                 response.GetErrors()
             );
 
-        return RedirectToPage("/Themes/Export", new { id });
+        return RedirectToPage(RouteNames.Themes.Export, new { id });
     }
 
     public record FormModel

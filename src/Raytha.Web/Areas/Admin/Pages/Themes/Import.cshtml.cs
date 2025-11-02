@@ -3,7 +3,9 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Raytha.Application.Themes.Commands;
 using Raytha.Domain.Entities;
+using Raytha.Web.Areas.Admin.Pages.Shared;
 using Raytha.Web.Areas.Admin.Pages.Shared.Models;
+using Raytha.Web.Areas.Shared.Models;
 
 namespace Raytha.Web.Areas.Admin.Pages.Themes;
 
@@ -15,6 +17,11 @@ public class Import : BaseAdminPageModel
 
     public IActionResult OnGet()
     {
+        SetBreadcrumbs(
+            new BreadcrumbNode { Label = "Themes", RouteName = RouteNames.Themes.Index, IsActive = false },
+            new BreadcrumbNode { Label = "Import", RouteName = RouteNames.Themes.Import, IsActive = true }
+        );
+
         Form = new FormModel();
         return Page();
     }
@@ -34,7 +41,7 @@ public class Import : BaseAdminPageModel
         if (response.Success)
         {
             SetSuccessMessage("Import in progress.");
-            return RedirectToPage("/Themes/BackgroundTaskStatus", new { id = response.Result });
+            return RedirectToPage(RouteNames.Themes.BackgroundTaskStatus, new { id = response.Result });
         }
         else
         {

@@ -4,7 +4,9 @@ using Raytha.Application.Themes.Commands;
 using Raytha.Application.Themes.Queries;
 using Raytha.Application.Themes.WebTemplates.Queries;
 using Raytha.Domain.Entities;
+using Raytha.Web.Areas.Admin.Pages.Shared;
 using Raytha.Web.Areas.Admin.Pages.Shared.Models;
+using Raytha.Web.Areas.Shared.Models;
 
 namespace Raytha.Web.Areas.Admin.Pages.Themes;
 
@@ -19,6 +21,11 @@ public class SetAsActive : BaseAdminPageModel, ISubActionViewModel
 
     public async Task<IActionResult> OnGet(string id)
     {
+        SetBreadcrumbs(
+            new BreadcrumbNode { Label = "Themes", RouteName = RouteNames.Themes.Index, IsActive = false },
+            new BreadcrumbNode { Label = "Set as Active", RouteName = RouteNames.Themes.SetAsActive, IsActive = true }
+        );
+
         var webTemplateDeveloperNamesWithoutRelationResponse = await Mediator.Send(
             new GetWebTemplateDeveloperNamesWithoutRelation.Query { ThemeId = id }
         );
@@ -67,7 +74,7 @@ public class SetAsActive : BaseAdminPageModel, ISubActionViewModel
                 response.GetErrors()
             );
         }
-        return RedirectToPage("/Themes/Edit", new { id });
+        return RedirectToPage(RouteNames.Themes.Edit, new { id });
     }
 
     public async Task<IActionResult> OnPost(string id)
@@ -83,7 +90,7 @@ public class SetAsActive : BaseAdminPageModel, ISubActionViewModel
         if (response.Success)
         {
             SetSuccessMessage("Set as the active theme in progress.");
-            return RedirectToPage("/Themes/BackgroundTaskStatus", new { id = response.Result });
+            return RedirectToPage(RouteNames.Themes.BackgroundTaskStatus, new { id = response.Result });
         }
         else
         {
@@ -91,7 +98,7 @@ public class SetAsActive : BaseAdminPageModel, ISubActionViewModel
                 "An error occurred when setting the theme as active. See the error below.",
                 response.GetErrors()
             );
-            return RedirectToPage("/Themes/Edit", new { id });
+            return RedirectToPage(RouteNames.Themes.Edit, new { id });
         }
     }
 

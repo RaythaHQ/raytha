@@ -3,7 +3,9 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Raytha.Application.Themes.Commands;
 using Raytha.Domain.Entities;
+using Raytha.Web.Areas.Admin.Pages.Shared;
 using Raytha.Web.Areas.Admin.Pages.Shared.Models;
+using Raytha.Web.Areas.Shared.Models;
 
 namespace Raytha.Web.Areas.Admin.Pages.Themes;
 
@@ -15,6 +17,22 @@ public class Create : BaseAdminPageModel
 
     public IActionResult OnGet()
     {
+        // Set breadcrumbs for navigation
+        SetBreadcrumbs(
+            new BreadcrumbNode
+            {
+                Label = "Themes",
+                RouteName = RouteNames.Themes.Index,
+                IsActive = false,
+            },
+            new BreadcrumbNode
+            {
+                Label = "Create",
+                RouteName = RouteNames.Themes.Create,
+                IsActive = true,
+            }
+        );
+
         Form = new FormModel();
         return Page();
     }
@@ -34,7 +52,7 @@ public class Create : BaseAdminPageModel
         if (response.Success)
         {
             SetSuccessMessage($"{Form.Title} was created successfully.");
-            return RedirectToPage("/Themes/Edit", new { id = response.Result.Guid });
+            return RedirectToPage(RouteNames.Themes.Edit, new { id = response.Result.Guid });
         }
         else
         {

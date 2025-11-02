@@ -7,7 +7,9 @@ using Raytha.Application.Themes.Commands;
 using Raytha.Application.Themes.Queries;
 using Raytha.Domain.Entities;
 using Raytha.Domain.ValueObjects;
+using Raytha.Web.Areas.Admin.Pages.Shared;
 using Raytha.Web.Areas.Admin.Pages.Shared.Models;
+using Raytha.Web.Areas.Shared.Models;
 
 namespace Raytha.Web.Areas.Admin.Pages.Themes;
 
@@ -19,6 +21,11 @@ public class Duplicate : BaseAdminPageModel
 
     public async Task<IActionResult> OnGet()
     {
+        SetBreadcrumbs(
+            new BreadcrumbNode { Label = "Themes", RouteName = RouteNames.Themes.Index, IsActive = false },
+            new BreadcrumbNode { Label = "Duplicate", RouteName = RouteNames.Themes.Duplicate, IsActive = true }
+        );
+
         var themesResponse = await Mediator.Send(
             new GetThemes.Query { OrderBy = $"CreationTime {SortOrder.ASCENDING}" }
         );
@@ -43,7 +50,7 @@ public class Duplicate : BaseAdminPageModel
         if (response.Success)
         {
             SetSuccessMessage("Creating a duplicate theme in progress.");
-            return RedirectToPage("/Themes/BackgroundTaskStatus", new { id = response.Result });
+            return RedirectToPage(RouteNames.Themes.BackgroundTaskStatus, new { id = response.Result });
         }
         else
         {

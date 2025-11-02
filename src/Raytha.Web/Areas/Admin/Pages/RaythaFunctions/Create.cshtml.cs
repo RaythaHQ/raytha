@@ -3,7 +3,9 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Raytha.Application.RaythaFunctions.Commands;
 using Raytha.Domain.Entities;
+using Raytha.Web.Areas.Admin.Pages.Shared;
 using Raytha.Web.Areas.Admin.Pages.Shared.Models;
+using Raytha.Web.Areas.Shared.Models;
 
 namespace Raytha.Web.Areas.Admin.Pages.RaythaFunctions;
 
@@ -15,6 +17,11 @@ public class Create : BaseAdminPageModel
 
     public async Task<IActionResult> OnGet()
     {
+        SetBreadcrumbs(
+            new BreadcrumbNode { Label = "Raytha Functions", RouteName = RouteNames.RaythaFunctions.Index, IsActive = false },
+            new BreadcrumbNode { Label = "Create", RouteName = RouteNames.RaythaFunctions.Create, IsActive = true }
+        );
+
         Form = new FormModel();
         return Page();
     }
@@ -35,7 +42,7 @@ public class Create : BaseAdminPageModel
         if (response.Success)
         {
             SetSuccessMessage($"{Form.Name} was created successfully.");
-            return RedirectToPage("/RaythaFunctions/Index");
+            return RedirectToPage(RouteNames.RaythaFunctions.Index);
         }
         else
         {

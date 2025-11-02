@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Raytha.Application.Themes.WebTemplates.Commands;
 using Raytha.Domain.Entities;
+using Raytha.Web.Areas.Admin.Pages.Shared;
 using Raytha.Web.Areas.Admin.Pages.Shared.Models;
 
 namespace Raytha.Web.Areas.Admin.Pages.Themes.WebTemplates;
@@ -18,12 +19,12 @@ public class Delete : BaseAdminPageModel
         if (response.Success)
         {
             SetSuccessMessage("Web-template has been deleted.");
-            return RedirectToPage("/Themes/WebTemplates/Index", new { themeId });
+            return RedirectToPage(RouteNames.Themes.WebTemplates.Index, new { themeId });
         }
         else
         {
             SetErrorMessage("There was an error deleting this web-template", response.GetErrors());
-            return RedirectToPage("/Themes/WebTemplates/Edit", new { themeId, id });
+            return RedirectToPage(RouteNames.Themes.WebTemplates.Edit, new { themeId, id });
         }
     }
 }

@@ -5,6 +5,7 @@ using Raytha.Application.RaythaFunctions.Commands;
 using Raytha.Application.RaythaFunctions.Queries;
 using Raytha.Domain.Entities;
 using Raytha.Domain.ValueObjects;
+using Raytha.Web.Areas.Admin.Pages.Shared;
 using Raytha.Web.Areas.Admin.Pages.Shared.Models;
 using Raytha.Web.Areas.Shared.Models;
 
@@ -26,6 +27,11 @@ public class Revisions : BaseAdminPageModel, ISubActionViewModel
         int pageSize = 50
     )
     {
+        SetBreadcrumbs(
+            new BreadcrumbNode { Label = "Raytha Functions", RouteName = RouteNames.RaythaFunctions.Index, IsActive = false },
+            new BreadcrumbNode { Label = "Revisions", RouteName = RouteNames.RaythaFunctions.Revisions, IsActive = true }
+        );
+
         Id = id;
         var input = new GetRaythaFunctionRevisionsByRaythaFunctionId.Query
         {
@@ -69,12 +75,12 @@ public class Revisions : BaseAdminPageModel, ISubActionViewModel
         if (response.Success)
         {
             SetSuccessMessage("Function has been reverted.");
-            return RedirectToPage("/RaythaFunctions/Edit", new { id });
+            return RedirectToPage(RouteNames.RaythaFunctions.Edit, new { id });
         }
         else
         {
             SetErrorMessage("There was an error reverting this function", response.GetErrors());
-            return RedirectToPage("/RaythaFunctions/Revisions", new { id });
+            return RedirectToPage(RouteNames.RaythaFunctions.Revisions, new { id });
         }
     }
 

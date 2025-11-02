@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Raytha.Application.MediaItems.Commands;
 using Raytha.Application.Themes.MediaItems.Queries;
 using Raytha.Domain.Entities;
+using Raytha.Web.Areas.Admin.Pages.Shared;
 using Raytha.Web.Areas.Admin.Pages.Shared.Models;
 using Raytha.Web.Areas.Shared.Models;
 
@@ -18,6 +19,11 @@ public class MediaItems : BaseAdminPageModel, ISubActionViewModel
 
     public async Task<IActionResult> OnGet(string themeId)
     {
+        SetBreadcrumbs(
+            new BreadcrumbNode { Label = "Themes", RouteName = RouteNames.Themes.Index, IsActive = false },
+            new BreadcrumbNode { Label = "Media Items", RouteName = RouteNames.Themes.MediaItems, IsActive = true }
+        );
+
         var input = new GetMediaItemsByThemeId.Query { ThemeId = themeId };
 
         var response = await Mediator.Send(input);
@@ -54,7 +60,7 @@ public class MediaItems : BaseAdminPageModel, ISubActionViewModel
         {
             SetErrorMessage("There was an error deleting this media item", response.GetErrors());
         }
-        return RedirectToPage("/Themes/MediaItems", new { themeId });
+        return RedirectToPage(RouteNames.Themes.MediaItems, new { themeId });
     }
 
     public record ThemesMediaItemListItemViewModel

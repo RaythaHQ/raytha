@@ -5,6 +5,7 @@ using Raytha.Application.Common.Utils;
 using Raytha.Application.RaythaFunctions.Queries;
 using Raytha.Domain.Entities;
 using Raytha.Domain.ValueObjects;
+using Raytha.Web.Areas.Admin.Pages.Shared;
 using Raytha.Web.Areas.Admin.Pages.Shared.Models;
 using Raytha.Web.Areas.Shared.Models;
 
@@ -22,6 +23,15 @@ public class Index : BaseAdminPageModel, IHasListView<Index.RaythaFunctionsListI
         int pageSize = 50
     )
     {
+        SetBreadcrumbs(
+            new BreadcrumbNode
+            {
+                Label = "Raytha Functions",
+                RouteName = RouteNames.RaythaFunctions.Index,
+                IsActive = true,
+            }
+        );
+
         var input = new GetRaythaFunctions.Query
         {
             Search = search,
