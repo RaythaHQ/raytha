@@ -4,7 +4,9 @@ using Microsoft.AspNetCore.Mvc;
 using Raytha.Application.UserGroups.Commands;
 using Raytha.Application.UserGroups.Queries;
 using Raytha.Domain.Entities;
+using Raytha.Web.Areas.Admin.Pages.Shared;
 using Raytha.Web.Areas.Admin.Pages.Shared.Models;
+using Raytha.Web.Areas.Shared.Models;
 
 namespace Raytha.Web.Areas.Admin.Pages.UserGroups;
 
@@ -16,6 +18,28 @@ public class Edit : BaseAdminPageModel
 
     public async Task<IActionResult> OnGet(string id)
     {
+        // Set breadcrumbs for navigation
+        SetBreadcrumbs(
+            new BreadcrumbNode
+            {
+                Label = "Users",
+                RouteName = RouteNames.Users.Index,
+                IsActive = false,
+            },
+            new BreadcrumbNode
+            {
+                Label = "User Groups",
+                RouteName = RouteNames.UserGroups.Index,
+                IsActive = false,
+            },
+            new BreadcrumbNode
+            {
+                Label = "Edit",
+                RouteName = RouteNames.UserGroups.Edit,
+                IsActive = true,
+            }
+        );
+
         var response = await Mediator.Send(new GetUserGroupById.Query { Id = id });
 
         Form = new FormModel
@@ -36,7 +60,7 @@ public class Edit : BaseAdminPageModel
         if (response.Success)
         {
             SetSuccessMessage($"{Form.Label} was updated successfully.");
-            return RedirectToPage("/UserGroups/Edit", new { id });
+            return RedirectToPage(RouteNames.UserGroups.Edit, new { id });
         }
         {
             SetErrorMessage(

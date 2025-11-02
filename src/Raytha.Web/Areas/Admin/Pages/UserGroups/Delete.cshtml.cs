@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Raytha.Application.UserGroups.Commands;
 using Raytha.Domain.Entities;
+using Raytha.Web.Areas.Admin.Pages.Shared;
 using Raytha.Web.Areas.Admin.Pages.Shared.Models;
 
 namespace Raytha.Web.Areas.Admin.Pages.UserGroups;
@@ -15,12 +16,12 @@ public class Delete : BaseAdminPageModel
         if (response.Success)
         {
             SetSuccessMessage($"User group has been deleted.");
-            return RedirectToPage("/UserGroups/Index");
+            return RedirectToPage(RouteNames.UserGroups.Index);
         }
         else
         {
             SetErrorMessage("There was a problem deleting this user group", response.GetErrors());
-            return RedirectToPage("/UserGroups/Edit", new { id = id });
+            return RedirectToPage(RouteNames.UserGroups.Edit, new { id = id });
         }
     }
 }

@@ -3,7 +3,9 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Raytha.Application.UserGroups.Commands;
 using Raytha.Domain.Entities;
+using Raytha.Web.Areas.Admin.Pages.Shared;
 using Raytha.Web.Areas.Admin.Pages.Shared.Models;
+using Raytha.Web.Areas.Shared.Models;
 
 namespace Raytha.Web.Areas.Admin.Pages.UserGroups;
 
@@ -15,6 +17,28 @@ public class Create : BaseAdminPageModel
 
     public async Task<IActionResult> OnGet()
     {
+        // Set breadcrumbs for navigation
+        SetBreadcrumbs(
+            new BreadcrumbNode
+            {
+                Label = "Users",
+                RouteName = RouteNames.Users.Index,
+                IsActive = false,
+            },
+            new BreadcrumbNode
+            {
+                Label = "User Groups",
+                RouteName = RouteNames.UserGroups.Index,
+                IsActive = false,
+            },
+            new BreadcrumbNode
+            {
+                Label = "Create",
+                RouteName = RouteNames.UserGroups.Create,
+                IsActive = true,
+            }
+        );
+
         Form = new FormModel();
         return Page();
     }
@@ -31,7 +55,7 @@ public class Create : BaseAdminPageModel
         if (response.Success)
         {
             SetSuccessMessage($"{Form.Label} was created successfully.");
-            return RedirectToPage("/UserGroups/Index");
+            return RedirectToPage(RouteNames.UserGroups.Index);
         }
         else
         {

@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Raytha.Application.UserGroups.Queries;
 using Raytha.Domain.Entities;
 using Raytha.Domain.ValueObjects;
+using Raytha.Web.Areas.Admin.Pages.Shared;
 using Raytha.Web.Areas.Admin.Pages.Shared.Models;
 using Raytha.Web.Areas.Shared.Models;
 
@@ -21,6 +22,22 @@ public class Index : BaseAdminPageModel, IHasListView<Index.UserGroupsListItemVi
         int pageSize = 50
     )
     {
+        // Set breadcrumbs for navigation
+        SetBreadcrumbs(
+            new BreadcrumbNode
+            {
+                Label = "Users",
+                RouteName = RouteNames.Users.Index,
+                IsActive = false,
+            },
+            new BreadcrumbNode
+            {
+                Label = "User Groups",
+                RouteName = RouteNames.UserGroups.Index,
+                IsActive = true,
+            }
+        );
+
         var input = new GetUserGroups.Query
         {
             Search = search,
