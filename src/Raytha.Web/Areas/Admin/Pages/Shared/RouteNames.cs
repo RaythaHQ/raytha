@@ -31,7 +31,9 @@ public static class RouteNames
         public const string Delete = "/Admins/Delete";
         public const string Suspend = "/Admins/Suspend";
         public const string Restore = "/Admins/Restore";
+        public const string RemoveAccess = "/Admins/RemoveAccess";
         public const string ResetPassword = "/Admins/ResetPassword";
+        public const string ApiKeys = "/Admins/ApiKeys";
     }
 
     /// <summary>

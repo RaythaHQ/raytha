@@ -3,10 +3,9 @@
 @model Raytha.Web.Areas.Admin.Pages.Admins.Index
 
 @{
-    var pageTitle = "Admins";
     Layout = "AdminsAndRolesLayout";
-    ViewData["Title"] = pageTitle;
-    ViewData["ActiveMenu"] = pageTitle;
+    ViewData["Title"] = "Admins";
+    ViewData["ActiveMenu"] = "Admins";
     ViewData["ExpandSettingsMenu"] = true;
 }
 
@@ -14,7 +13,7 @@
 {
     Pagination = Model.ListView,
     EntityName = "admin",
-    CreateActionName = "/Admins/Create"
+    CreateActionName = RouteNames.Admins.Create
 }))
 
 <div class="raytha-data-card mb-4">
@@ -83,7 +82,7 @@
                             <td>@item.LastLoggedInTime</td>
                             <td>@item.IsActive</td>
                             <td>@item.Roles</td>
-                            <td><a asp-page="/Admins/Edit" asp-route-id="@item.Id">Edit</a></td>
+                            <td><a asp-page="@RouteNames.Admins.Edit" asp-route-id="@item.Id">Edit</a></td>
                         </tr>
                     }
                 </tbody>

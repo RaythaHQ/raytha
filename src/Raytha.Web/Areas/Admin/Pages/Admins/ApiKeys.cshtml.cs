@@ -5,6 +5,7 @@ using Raytha.Application.Admins.Commands;
 using Raytha.Application.Admins.Queries;
 using Raytha.Domain.Entities;
 using Raytha.Domain.ValueObjects;
+using Raytha.Web.Areas.Admin.Pages.Shared;
 using Raytha.Web.Areas.Admin.Pages.Shared.Models;
 using Raytha.Web.Areas.Shared.Models;
 
@@ -29,6 +30,28 @@ public class ApiKeys
         int pageSize = 50
     )
     {
+        // Set breadcrumbs for navigation
+        SetBreadcrumbs(
+            new BreadcrumbNode
+            {
+                Label = "Settings",
+                RouteName = RouteNames.Configuration.Index,
+                IsActive = false
+            },
+            new BreadcrumbNode
+            {
+                Label = "Admins",
+                RouteName = RouteNames.Admins.Index,
+                IsActive = false
+            },
+            new BreadcrumbNode
+            {
+                Label = "API Keys",
+                RouteName = RouteNames.Admins.ApiKeys,
+                IsActive = true
+            }
+        );
+
         var input = new GetApiKeysForAdmin.Query
         {
             UserId = id,
@@ -71,7 +94,7 @@ public class ApiKeys
         {
             SetErrorMessage(response.Error, response.GetErrors());
         }
-        return RedirectToPage("ApiKeys", new { id });
+        return RedirectToPage(RouteNames.Admins.ApiKeys, new { id });
     }
 
     public async Task<IActionResult> OnPostDelete(string id, string apikeyId)
@@ -86,7 +109,7 @@ public class ApiKeys
             SetErrorMessage(response.Error, response.GetErrors());
         }
 
-        return RedirectToPage("/Admins/ApiKeys", new { id });
+        return RedirectToPage(RouteNames.Admins.ApiKeys, new { id });
     }
 
     public class ApiKeysListItemViewModel

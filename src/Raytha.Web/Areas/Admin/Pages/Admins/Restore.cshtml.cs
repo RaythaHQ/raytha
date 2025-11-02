@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Raytha.Application.Admins.Commands;
 using Raytha.Domain.Entities;
+using Raytha.Web.Areas.Admin.Pages.Shared;
 using Raytha.Web.Areas.Admin.Pages.Shared.Models;
 
 namespace Raytha.Web.Areas.Admin.Pages.Admins;
@@ -21,6 +22,6 @@ public class Restore : BaseAdminPageModel
             SetErrorMessage(response.Error);
         }
 
-        return RedirectToPage("/Admins/Edit", new { id });
+        return RedirectToPage(RouteNames.Admins.Edit, new { id });
     }
 }

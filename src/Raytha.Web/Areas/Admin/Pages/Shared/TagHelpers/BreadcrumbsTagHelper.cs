@@ -120,10 +120,15 @@ public class BreadcrumbsTagHelper : TagHelper
     {
         // Use LinkGenerator to generate page URLs
         var httpContext = ViewContext.HttpContext;
-        var values =
-            routeValues != null
-                ? new RouteValueDictionary(routeValues)
-                : new RouteValueDictionary();
+        var values = new RouteValueDictionary();
+        
+        if (routeValues != null)
+        {
+            foreach (var kvp in routeValues)
+            {
+                values.Add(kvp.Key, kvp.Value);
+            }
+        }
 
         return _linkGenerator.GetPathByPage(httpContext, routeName, values: values) ?? "#";
     }

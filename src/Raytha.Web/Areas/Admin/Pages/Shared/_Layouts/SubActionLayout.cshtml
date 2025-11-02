@@ -9,38 +9,39 @@
     var backLinkText = ViewData["BackLinkLabel"] as string ?? "Back to list";
 }
 
-<div class="row mb-4">
-    @if (!string.IsNullOrEmpty(backPage))
-    {
-        @await Html.PartialAsync("_Partials/BackToList", new BackLinkOptions
+<div>
+    <div class="row mb-4">
+        @if (!string.IsNullOrEmpty(backPage))
         {
-            Page = backPage,
-        RouteValues = backRouteValues ?? new RouteValueDictionary(),
-        Text = backLinkText
-        })
-        }
+            @await Html.PartialAsync("_Partials/BackToList", new BackLinkOptions
+            {
+                Page = backPage,
+                RouteValues = backRouteValues ?? new RouteValueDictionary(),
+                Text = backLinkText
+                })
+                }
 
-    @await Html.PartialAsync("_Partials/PageHeading", ViewData["Title"])
+        @await Html.PartialAsync("_Partials/PageHeading", ViewData["Title"])
 
-    <div class="col-xxl-7 col-xl-8 col-lg-9 col-md-12">
-        <div class="card border-0 shadow mb-4">
-            <div class="card-body">
-                <alert />
-                @RenderBody()
-            </div>
-        </div>
-    </div>
-
-    @if (IsSectionDefined("Sidebar"))
-    {
-        <div class="col-lg-3 col-md-12">
+        <div class="col-xxl-7 col-xl-8 col-lg-9 col-md-12">
             <div class="card border-0 shadow mb-4">
                 <div class="card-body">
-                    @RenderSection("Sidebar", required: false)
+                    @RenderBody()
                 </div>
             </div>
         </div>
-    }
+
+        @if (IsSectionDefined("Sidebar"))
+        {
+            <div class="col-lg-3 col-md-12">
+                <div class="card border-0 shadow mb-4">
+                    <div class="card-body">
+                        @RenderSection("Sidebar", required: false)
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
 </div>
 
 @section Scripts {

@@ -3,7 +3,9 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Raytha.Application.Admins.Queries;
 using Raytha.Domain.Entities;
+using Raytha.Web.Areas.Admin.Pages.Shared;
 using Raytha.Web.Areas.Admin.Pages.Shared.Models;
+using Raytha.Web.Areas.Shared.Models;
 
 namespace Raytha.Web.Areas.Admin.Pages.Admins;
 
@@ -21,12 +23,37 @@ public class ResetPassword : BaseAdminPageModel, ISubActionViewModel
         if (!CurrentOrganization.EmailAndPasswordIsEnabledForAdmins)
         {
             SetErrorMessage("Authentication scheme is disabled");
-            return RedirectToPage("/Admins/Edit", new { id });
+            return RedirectToPage(RouteNames.Admins.Edit, new { id });
         }
 
-        Form = new FormModel();
+        // Set breadcrumbs for navigation
+        SetBreadcrumbs(
+            new BreadcrumbNode
+            {
+                Label = "Settings",
+                RouteName = RouteNames.Configuration.Index,
+                IsActive = false
+            },
+            new BreadcrumbNode
+            {
+                Label = "Admins",
+                RouteName = RouteNames.Admins.Index,
+                IsActive = false
+            },
+            new BreadcrumbNode
+            {
+                Label = "Reset Password",
+                RouteName = RouteNames.Admins.ResetPassword,
+                IsActive = true
+            }
+        );
 
         var response = await Mediator.Send(new GetAdminById.Query { Id = id });
+
+        Form = new FormModel
+        {
+            Id = id
+        };
 
         Id = id;
         IsActive = response.Result.IsActive;
@@ -47,7 +74,7 @@ public class ResetPassword : BaseAdminPageModel, ISubActionViewModel
         if (response.Success)
         {
             SetSuccessMessage($"Password was reset successfully.");
-            return RedirectToPage("/Admins/Index");
+            return RedirectToPage(RouteNames.Admins.Index);
         }
         else
         {

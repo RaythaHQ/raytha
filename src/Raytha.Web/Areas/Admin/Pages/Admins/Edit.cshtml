@@ -3,9 +3,8 @@
 @model Raytha.Web.Areas.Admin.Pages.Admins.Edit
 
 @{
-    var pageTitle = "Edit admin";
     Layout = "SubActionLayout";
-    ViewData["Title"] = pageTitle;
+    ViewData["Title"] = "Edit admin";
     ViewData["ActiveMenu"] = "Admins";
     ViewData["ActiveSubMenu"] = "Edit";
     ViewData["ExpandSettingsMenu"] = true;
@@ -23,7 +22,7 @@
     }
 }
 @(await Html.PartialAsync("_Partials/BackToList", back))
-<form asp-page="/Admins/Edit" method="post" class="py-4" asp-route-id="@Model.Form.Id" novalidate>
+<form asp-page="@RouteNames.Admins.Edit" method="post" class="py-4" asp-route-id="@Model.Form.Id" novalidate>
     <div class="row">
         <div class="col">
             <div class="mb-3">

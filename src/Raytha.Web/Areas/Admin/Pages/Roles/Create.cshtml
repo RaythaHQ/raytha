@@ -2,11 +2,15 @@
 @model Raytha.Web.Areas.Admin.Pages.Roles.Create
 
 @{
-    var pageTitle = "Create role";
     Layout = "SidebarLayout";
-    ViewData["Title"] = pageTitle;
-    ViewData["ActiveMenu"] = "Admins";
+    ViewData["Title"] = "Create role";
+    ViewData["ActiveMenu"] = "Roles";
     ViewData["ExpandSettingsMenu"] = true;
+
+    BackLinkOptions back = new BackLinkOptions
+    {
+        Page = RouteNames.Roles.Index
+    };
 }
 
 <div class="row mb-4">
@@ -14,8 +18,9 @@
     <div class="col-xxl-7 col-xl-8 col-lg-9 col-md-12">
         <div class="card border-0 shadow mb-4">
             <div class="card-body">
-                @(await Html.PartialAsync("_Partials/BackToList", "/Roles/Index"))
-                <form asp-page="/Roles/Create" method="post" class="py-4" novalidate>
+                @(await Html.PartialAsync("_Partials/BackToList", back))
+                <form asp-page="@RouteNames.Roles.Create" method="post" class="py-4" novalidate
+                    data-role-permissions-form>
                     <div class="col-lg-12">
                         <div class="mb-3">
                             <label class="form-label raytha-required" asp-for="Form.Label"></label>
@@ -41,7 +46,8 @@
                         {
                             <div class="form-check">
                                 <input class="form-check-input @Model.HasError("SystemPermissions")" type="checkbox"
-                                    asp-for="Form.SystemPermissions[i].Selected">
+                                    asp-for="Form.SystemPermissions[i].Selected" data-permission-type="system"
+                                    data-permission="@Model.Form.SystemPermissions[i].DeveloperName">
                                 <label class="form-check-label"
                                     asp-for="Form.SystemPermissions[i].Selected">@Model.Form.SystemPermissions[i].Label</label>
                                 <input type="hidden" asp-for="Form.SystemPermissions[i].DeveloperName" />
@@ -53,6 +59,31 @@
                             </div>
                         }
                     </div>
+                    <div class="col-lg-12"></div>
+                    @foreach (var contentType in Model.Form.ContentTypePermissions.GroupBy(p => p.ContentTypeId))
+                    {
+                        <div class="mb-3">
+                            <span class="h6 fw-bold">@contentType.First().ContentTypeLabel permissions</span>
+                        </div>
+                        @foreach (var permission in contentType)
+                        {
+                            var permissionIndex = Model.Form.ContentTypePermissions.ToList().IndexOf(permission);
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox"
+                                    asp-for="Form.ContentTypePermissions[permissionIndex].Selected"
+                                    data-permission-type="contenttype"
+                                    data-contenttypeid="@Model.Form.ContentTypePermissions[permissionIndex].ContentTypeId"
+                                    data-permission="@Model.Form.ContentTypePermissions[permissionIndex].DeveloperName"
+                                    data-permissionindex="@permissionIndex">
+                                <label class="form-check-label"
+                                    asp-for="Form.ContentTypePermissions[permissionIndex].Selected">@Model.Form.ContentTypePermissions[permissionIndex].Label</label>
+                                <input type="hidden" asp-for="Form.ContentTypePermissions[permissionIndex].DeveloperName" />
+                                <input type="hidden" asp-for="Form.ContentTypePermissions[permissionIndex].Label" />
+                                <input type="hidden" asp-for="Form.ContentTypePermissions[permissionIndex].ContentTypeId" />
+                                <input type="hidden" asp-for="Form.ContentTypePermissions[permissionIndex].ContentTypeLabel" />
+                            </div>
+                        }
+                    }
                     <button type="submit" class="btn btn-success mt-4">Save changes</button>
                 </form>
             </div>
@@ -75,3 +106,4 @@
         document.getElementById('Form_DeveloperName').value = developerName;
     });
 </script>
+<script src="~/raytha_admin/js/src/shared/role-permissions.js"></script>

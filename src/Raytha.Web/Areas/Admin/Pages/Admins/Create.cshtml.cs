@@ -5,7 +5,9 @@ using Microsoft.AspNetCore.Mvc;
 using Raytha.Application.Admins.Commands;
 using Raytha.Application.Roles.Queries;
 using Raytha.Domain.Entities;
+using Raytha.Web.Areas.Admin.Pages.Shared;
 using Raytha.Web.Areas.Admin.Pages.Shared.Models;
+using Raytha.Web.Areas.Shared.Models;
 
 namespace Raytha.Web.Areas.Admin.Pages.Admins;
 
@@ -17,6 +19,28 @@ public class Create : BaseAdminPageModel
 
     public async Task<IActionResult> OnGet()
     {
+        // Set breadcrumbs for navigation
+        SetBreadcrumbs(
+            new BreadcrumbNode
+            {
+                Label = "Settings",
+                RouteName = RouteNames.Configuration.Index,
+                IsActive = false
+            },
+            new BreadcrumbNode
+            {
+                Label = "Admins",
+                RouteName = RouteNames.Admins.Index,
+                IsActive = false
+            },
+            new BreadcrumbNode
+            {
+                Label = "Create",
+                RouteName = RouteNames.Admins.Create,
+                IsActive = true
+            }
+        );
+
         var roleChoicesResponse = await Mediator.Send(new GetRoles.Query());
         Form = new FormModel
         {
@@ -48,7 +72,7 @@ public class Create : BaseAdminPageModel
         if (response.Success)
         {
             SetSuccessMessage($"{Form.FirstName} {Form.LastName} was created successfully.");
-            return RedirectToPage("/Admins/Index");
+            return RedirectToPage(RouteNames.Admins.Index);
         }
         else
         {

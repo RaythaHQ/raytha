@@ -1,6 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Raytha.Application.ContentTypes.Queries;
 using Raytha.Application.Roles.Commands;
 using Raytha.Domain.Entities;
 using Raytha.Web.Areas.Admin.Pages.Shared.Models;
@@ -16,7 +17,7 @@ public class Create : BaseAdminPageModel
     public async Task<IActionResult> OnGet()
     {
         var systemPermissions = BuiltInSystemPermission.Permissions.Select(
-            p => new FormModel.SystemPermissionCheckboxItem_ViewModel
+            p => new FormModel.SystemPermissionCheckboxItemViewModel
             {
                 DeveloperName = p.DeveloperName,
                 Label = p.Label,
@@ -24,12 +25,46 @@ public class Create : BaseAdminPageModel
             }
         );
 
-        Form = new FormModel { SystemPermissions = systemPermissions.ToArray() };
+        var contentTypesResponse = await Mediator.Send(new GetContentTypes.Query());
+        var contentTypePermissions =
+            new List<FormModel.ContentTypePermissionCheckboxItemViewModel>();
+
+        foreach (var contentTypePermission in BuiltInContentTypePermission.Permissions)
+        {
+            foreach (var contentType in contentTypesResponse.Result.Items)
+            {
+                contentTypePermissions.Add(
+                    new FormModel.ContentTypePermissionCheckboxItemViewModel
+                    {
+                        DeveloperName = contentTypePermission.DeveloperName,
+                        Label = contentTypePermission.Label,
+                        Selected = false,
+                        ContentTypeId = contentType.Id,
+                        ContentTypeLabel = contentType.LabelPlural,
+                    }
+                );
+            }
+        }
+
+        Form = new FormModel
+        {
+            SystemPermissions = systemPermissions.ToArray(),
+            ContentTypePermissions = contentTypePermissions.ToArray(),
+        };
         return Page();
     }
 
     public async Task<IActionResult> OnPost()
     {
+        var contentTypePermissionsDict = new Dictionary<string, IEnumerable<string>>();
+        foreach (var contentPermGroup in Form.ContentTypePermissions.GroupBy(p => p.ContentTypeId))
+        {
+            var selectedContentPermissions = contentPermGroup
+                .Where(p => p.Selected)
+                .Select(p => p.DeveloperName);
+            contentTypePermissionsDict.Add(contentPermGroup.Key, selectedContentPermissions);
+        }
+
         var input = new CreateRole.Command
         {
             Label = Form.Label,
@@ -37,6 +72,7 @@ public class Create : BaseAdminPageModel
             SystemPermissions = Form
                 .SystemPermissions.Where(p => p.Selected)
                 .Select(p => p.DeveloperName),
+            ContentTypePermissions = contentTypePermissionsDict,
         };
         var response = await Mediator.Send(input);
 
@@ -63,13 +99,24 @@ public class Create : BaseAdminPageModel
         [Display(Name = "Developer name")]
         public string DeveloperName { get; set; }
 
-        public SystemPermissionCheckboxItem_ViewModel[] SystemPermissions { get; set; }
+        public SystemPermissionCheckboxItemViewModel[] SystemPermissions { get; set; }
 
-        public class SystemPermissionCheckboxItem_ViewModel
+        public ContentTypePermissionCheckboxItemViewModel[] ContentTypePermissions { get; set; }
+
+        public class SystemPermissionCheckboxItemViewModel
         {
             public string DeveloperName { get; set; }
             public bool Selected { get; set; }
             public string Label { get; set; }
+        }
+
+        public class ContentTypePermissionCheckboxItemViewModel
+        {
+            public string DeveloperName { get; set; }
+            public bool Selected { get; set; }
+            public string Label { get; set; }
+            public string ContentTypeLabel { get; set; }
+            public string ContentTypeId { get; set; }
         }
     }
 }

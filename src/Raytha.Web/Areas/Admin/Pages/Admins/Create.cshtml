@@ -2,25 +2,24 @@
 @model Raytha.Web.Areas.Admin.Pages.Admins.Create
 
 @{
-    var pageTitle = "Create admin";
     Layout = "SidebarLayout";
-    ViewData["Title"] = pageTitle;
+    ViewData["Title"] = "Create admin";
     ViewData["ActiveMenu"] = "Admins";
     ViewData["ExpandSettingsMenu"] = true;
 
     BackLinkOptions back = new BackLinkOptions
     {
-        Page = "/Admins/Index"
+        Page = RouteNames.Admins.Index
     };
 }
 
 <div class="row mb-4">
-    @Html.Partial("_Partials/PageHeading", ViewData["Title"])
-    <div class="col-xxl-7 col-xl-8 col-lg-9 col-md-12">
-        <div class="card border-0 shadow mb-4">
-            <div class="card-body">
-                @(await Html.PartialAsync("_Partials/BackToList", back))
-                <form asp-page="/Admins/Create" method="post" class="py-4" novalidate>
+        @Html.Partial("_Partials/PageHeading", ViewData["Title"])
+        <div class="col-xxl-7 col-xl-8 col-lg-9 col-md-12">
+            <div class="card border-0 shadow mb-4">
+                <div class="card-body">
+                    @(await Html.PartialAsync("_Partials/BackToList", back))
+                    <form asp-page="@RouteNames.Admins.Create" method="post" class="py-4" novalidate>
                     <div class="row">
                         <div class="col">
                             <div class="mb-3">

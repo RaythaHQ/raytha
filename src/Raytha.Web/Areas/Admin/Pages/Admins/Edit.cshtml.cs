@@ -6,7 +6,9 @@ using Raytha.Application.Admins.Commands;
 using Raytha.Application.Admins.Queries;
 using Raytha.Application.Roles.Queries;
 using Raytha.Domain.Entities;
+using Raytha.Web.Areas.Admin.Pages.Shared;
 using Raytha.Web.Areas.Admin.Pages.Shared.Models;
+using Raytha.Web.Areas.Shared.Models;
 
 namespace Raytha.Web.Areas.Admin.Pages.Admins;
 
@@ -21,6 +23,28 @@ public class Edit : BaseAdminPageModel, ISubActionViewModel
 
     public async Task<IActionResult> OnGet(string id)
     {
+        // Set breadcrumbs for navigation
+        SetBreadcrumbs(
+            new BreadcrumbNode
+            {
+                Label = "Settings",
+                RouteName = RouteNames.Configuration.Index,
+                IsActive = false
+            },
+            new BreadcrumbNode
+            {
+                Label = "Admins",
+                RouteName = RouteNames.Admins.Index,
+                IsActive = false
+            },
+            new BreadcrumbNode
+            {
+                Label = "Edit",
+                RouteName = RouteNames.Admins.Edit,
+                IsActive = true
+            }
+        );
+
         var response = await Mediator.Send(new GetAdminById.Query { Id = id });
 
         var allRoles = await Mediator.Send(new GetRoles.Query());
@@ -62,7 +86,7 @@ public class Edit : BaseAdminPageModel, ISubActionViewModel
         if (response.Success)
         {
             SetSuccessMessage($"{Form.FirstName} {Form.LastName} was updated successfully.");
-            return RedirectToPage("/Admins/Edit", new { id });
+            return RedirectToPage(RouteNames.Admins.Edit, new { id });
         }
         else
         {
