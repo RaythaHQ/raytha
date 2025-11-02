@@ -1,0 +1,15 @@
+@model Dictionary<string, string>
+
+@if (Model != null && Model.Any())
+{
+    <div class="alert alert-danger" role="alert">
+        <h5 class="alert-heading">Validation Errors</h5>
+        <ul class="mb-0">
+            @foreach (var error in Model)
+            {
+                <li><strong>@error.Key:</strong> @error.Value</li>
+            }
+        </ul>
+    </div>
+}
+

@@ -1,0 +1,35 @@
+@using Raytha.Web.Areas.Admin.Pages.Shared.Models
+@model EmptyStateModel
+
+<div class="text-center py-5">
+    @if (!string.IsNullOrEmpty(Model.Icon))
+    {
+        <div class="mb-3">
+            @Html.Raw(Model.Icon)
+        </div>
+    }
+    <h5 class="text-muted">@Model.Title</h5>
+    @if (!string.IsNullOrEmpty(Model.Message))
+    {
+        <p class="text-muted">@Model.Message</p>
+    }
+    @if (Model.Action != null)
+    {
+        @if (Model.Action.RouteValues != null)
+        {
+            <a asp-page="@Model.Action.Route" 
+               asp-all-route-data="Model.Action.RouteValues"
+               class="btn btn-primary mt-3">
+                @Model.Action.Label
+            </a>
+        }
+        else
+        {
+            <a asp-page="@Model.Action.Route" 
+               class="btn btn-primary mt-3">
+                @Model.Action.Label
+            </a>
+        }
+    }
+</div>
+
