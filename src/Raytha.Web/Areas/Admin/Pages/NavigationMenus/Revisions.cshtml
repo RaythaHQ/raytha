@@ -16,7 +16,8 @@
             <tr>
                 <th class="border-0 rounded-start">Action</th>
                 <th class="border-0">Menu items</th>
-                <th class="border-0 rounded-start">
+                <th class="border-0">View</th>
+                <th class="border-0 rounded-end">
                     Created by
                 </th>
             </tr>
@@ -26,10 +27,10 @@
             {
                 <tr>
                     <td class="align-middle">
-                        <form method="post" asp-page="/NavigationMenus/Revisions" asp-page-handler="Revert" ,
+                        <form method="post" asp-page="@RouteNames.NavigationMenus.Revisions" asp-page-handler="Revert"
                             asp-route-revisionId="@item.Id" asp-route-id="@Model.NavigationMenuId"
                             onsubmit="return confirmRevert();">
-                            <button class="btn btn-sm btn-success" data-action="click->shared--confirmaction#warning">
+                            <button class="btn btn-sm btn-success">
                                 Revert
                             </button>
                         </form>

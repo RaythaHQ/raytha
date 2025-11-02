@@ -10,12 +10,12 @@
 
     BackLinkOptions back = new BackLinkOptions
     {
-        Page = "/NavigationMenus/Index"
+        Page = RouteNames.NavigationMenus.Index
     };
 }
 
 @(await Html.PartialAsync("_Partials/BackToList", back))
-<form asp-page="/NavigationMenus/Edit" asp-route-id="@Model.Form.Id" method="post" class="py-4" novalidate>
+<form asp-page="@RouteNames.NavigationMenus.Edit" asp-route-id="@Model.Form.Id" method="post" class="py-4" novalidate>
     <input type="hidden" asp-for="Form.Id">
     <div class="col-lg-12 col-md-12">
         <div class="mb-3">
@@ -38,7 +38,7 @@
 <hr />
 @if (!Model.Form.IsMainMenu)
 {
-    <form asp-page="/NavigationMenus/SetAsMainMenu" method="post" class="py-4" asp-route-id="@Model.Form.Id">
+    <form asp-page="@RouteNames.NavigationMenus.SetAsMainMenu" method="post" class="py-4" asp-route-id="@Model.Form.Id">
         <div class="col-lg-12">
             <button type="submit" class="btn btn-secondary mx-2">Set as main menu</button>
         </div>

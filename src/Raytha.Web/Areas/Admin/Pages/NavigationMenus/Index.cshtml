@@ -8,17 +8,17 @@
     ViewData["ActiveMenu"] = "Menus";
 }
 
+<div>
+    @Html.Partial("_Partials/PageHeading", pageTitle)
 
-@Html.Partial("_Partials/PageHeading", pageTitle)
+    @(await Html.PartialAsync("_Partials/TableCreateAndSearchBar", new BaseTableCreateAndSearchBarViewModel()
+    {
+        Pagination = Model.ListView,
+        EntityName = "menu",
+        CreateActionName = RouteNames.NavigationMenus.Create,
+    }))
 
-@(await Html.PartialAsync("_Partials/TableCreateAndSearchBar", new BaseTableCreateAndSearchBarViewModel()
-{
-    Pagination = Model.ListView,
-    EntityName = "menu",
-    CreateActionName = "/NavigationMenus/Create",
-}))
-
-<div class="raytha-data-card mb-4">
+    <div class="raytha-data-card mb-4">
     <div class="card-body">
         <div class="table-responsive">
             <table class="table mb-0 rounded">
@@ -61,7 +61,7 @@
                             <td>@item.LastModificationTime</td>
                             <td>@item.LastModifierUser</td>
                             <td>
-                                <a asp-page="/NavigationMenus/Edit" asp-route-id="@item.Id">Edit</a>
+                                <a asp-page="@RouteNames.NavigationMenus.Edit" asp-route-id="@item.Id">Edit</a>
                                 @if (item.IsMainMenu)
                                 {
                                     <svg class="icon icon-xs" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
@@ -77,5 +77,6 @@
             </table>
             <partial name="_Partials/TablePagination" model="@Model.ListView" />
         </div>
+    </div>
     </div>
 </div>

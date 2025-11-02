@@ -1,10 +1,12 @@
 using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Raytha.Application.Common.Utils;
 using Raytha.Application.NavigationMenus.Commands;
 using Raytha.Application.NavigationMenus.Queries;
 using Raytha.Domain.Entities;
 using Raytha.Domain.ValueObjects;
+using Raytha.Web.Areas.Admin.Pages.Shared;
 using Raytha.Web.Areas.Admin.Pages.Shared.Models;
 using Raytha.Web.Areas.Shared.Models;
 
@@ -25,6 +27,22 @@ public class Revisions : BaseAdminPageModel, ISubActionViewModel
         int pageSize = 50
     )
     {
+        // Set breadcrumbs for navigation
+        SetBreadcrumbs(
+            new BreadcrumbNode
+            {
+                Label = "Menus",
+                RouteName = RouteNames.NavigationMenus.Index,
+                IsActive = false,
+            },
+            new BreadcrumbNode
+            {
+                Label = "Revisions",
+                RouteName = RouteNames.NavigationMenus.Revisions,
+                IsActive = true,
+            }
+        );
+
         NavigationMenuId = id;
         IsNavigationMenuItem = false;
         NavigationMenuItemId = string.Empty;
@@ -53,10 +71,17 @@ public class Revisions : BaseAdminPageModel, ISubActionViewModel
             response.Result.TotalCount,
             id
         );
+
+        var (orderByPropertyName, orderByDirection) = orderBy.SplitIntoColumnAndSortOrder();
+        ListView.OrderByPropertyName = orderByPropertyName;
+        ListView.OrderByDirection = orderByDirection;
+        ListView.PageNumber = pageNumber;
+        ListView.PageSize = pageSize;
+
         return Page();
     }
 
-    public async Task<IActionResult> Revert(string id, string revisionId)
+    public async Task<IActionResult> OnPostRevert(string id, string revisionId)
     {
         var input = new RevertNavigationMenu.Command { Id = revisionId };
 
@@ -65,12 +90,12 @@ public class Revisions : BaseAdminPageModel, ISubActionViewModel
         if (response.Success)
         {
             SetSuccessMessage("Menu has been reverted.");
-            return RedirectToPage("/NavigationMenus/Edit", new { id = response.Result });
+            return RedirectToPage(RouteNames.NavigationMenus.Edit, new { id = response.Result });
         }
         else
         {
             SetErrorMessage("There was an error reverting this menu", response.GetErrors());
-            return RedirectToPage("/NavigationMenus/Revisions", new { id });
+            return RedirectToPage(RouteNames.NavigationMenus.Revisions, new { id });
         }
     }
 

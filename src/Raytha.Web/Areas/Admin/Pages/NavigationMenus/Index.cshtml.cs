@@ -1,9 +1,11 @@
 using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Raytha.Application.Common.Utils;
 using Raytha.Application.NavigationMenus.Queries;
 using Raytha.Domain.Entities;
 using Raytha.Domain.ValueObjects;
+using Raytha.Web.Areas.Admin.Pages.Shared;
 using Raytha.Web.Areas.Admin.Pages.Shared.Models;
 using Raytha.Web.Areas.Shared.Models;
 
@@ -21,6 +23,16 @@ public class Index : BaseAdminPageModel
         int pageSize = 50
     )
     {
+        // Set breadcrumbs for navigation
+        SetBreadcrumbs(
+            new BreadcrumbNode
+            {
+                Label = "Menus",
+                RouteName = RouteNames.NavigationMenus.Index,
+                IsActive = true,
+            }
+        );
+
         var input = new GetNavigationMenus.Query
         {
             Search = search,
@@ -62,6 +74,13 @@ public class Index : BaseAdminPageModel
             items,
             allNavigationMenuResponse.Result.TotalCount
         );
+
+        var (orderByPropertyName, orderByDirection) = orderBy.SplitIntoColumnAndSortOrder();
+        ListView.OrderByPropertyName = orderByPropertyName;
+        ListView.OrderByDirection = orderByDirection;
+        ListView.PageNumber = pageNumber;
+        ListView.PageSize = pageSize;
+        ListView.Search = search;
 
         return Page();
     }

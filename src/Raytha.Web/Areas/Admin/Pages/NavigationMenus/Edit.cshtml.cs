@@ -4,7 +4,9 @@ using Microsoft.AspNetCore.Mvc;
 using Raytha.Application.NavigationMenus.Commands;
 using Raytha.Application.NavigationMenus.Queries;
 using Raytha.Domain.Entities;
+using Raytha.Web.Areas.Admin.Pages.Shared;
 using Raytha.Web.Areas.Admin.Pages.Shared.Models;
+using Raytha.Web.Areas.Shared.Models;
 
 namespace Raytha.Web.Areas.Admin.Pages.NavigationMenus;
 
@@ -20,6 +22,22 @@ public class Edit : BaseAdminPageModel, ISubActionViewModel
 
     public async Task<IActionResult> OnGet(string id)
     {
+        // Set breadcrumbs for navigation
+        SetBreadcrumbs(
+            new BreadcrumbNode
+            {
+                Label = "Menus",
+                RouteName = RouteNames.NavigationMenus.Index,
+                IsActive = false,
+            },
+            new BreadcrumbNode
+            {
+                Label = "Edit",
+                RouteName = RouteNames.NavigationMenus.Edit,
+                IsActive = true,
+            }
+        );
+
         NavigationMenuId = id;
         IsNavigationMenuItem = false;
         NavigationMenuItemId = string.Empty;
@@ -48,7 +66,7 @@ public class Edit : BaseAdminPageModel, ISubActionViewModel
         if (response.Success)
         {
             SetSuccessMessage($"{Form.Label} was edited successfully.");
-            return RedirectToPage("/NavigationMenus/Edit", new { id = response.Result });
+            return RedirectToPage(RouteNames.NavigationMenus.Edit, new { id = response.Result });
         }
         else
         {

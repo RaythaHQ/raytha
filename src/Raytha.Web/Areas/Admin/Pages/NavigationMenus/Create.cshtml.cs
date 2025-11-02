@@ -3,7 +3,9 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Raytha.Application.NavigationMenus.Commands;
 using Raytha.Domain.Entities;
+using Raytha.Web.Areas.Admin.Pages.Shared;
 using Raytha.Web.Areas.Admin.Pages.Shared.Models;
+using Raytha.Web.Areas.Shared.Models;
 
 namespace Raytha.Web.Areas.Admin.Pages.NavigationMenus;
 
@@ -18,6 +20,22 @@ public class Create : BaseAdminPageModel
 
     public async Task<IActionResult> OnGet()
     {
+        // Set breadcrumbs for navigation
+        SetBreadcrumbs(
+            new BreadcrumbNode
+            {
+                Label = "Menus",
+                RouteName = RouteNames.NavigationMenus.Index,
+                IsActive = false,
+            },
+            new BreadcrumbNode
+            {
+                Label = "Create",
+                RouteName = RouteNames.NavigationMenus.Create,
+                IsActive = true,
+            }
+        );
+
         Form = new FormModel();
         IsMenuItems = false;
         return Page();
@@ -36,7 +54,7 @@ public class Create : BaseAdminPageModel
         if (response.Success)
         {
             SetSuccessMessage($"{Form.Label} was created successfully.");
-            return RedirectToPage("/NavigationMenus/Edit", new { id = response.Result });
+            return RedirectToPage(RouteNames.NavigationMenus.Edit, new { id = response.Result });
         }
         else
         {
