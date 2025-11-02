@@ -20,8 +20,7 @@
         <div class="card border-0 shadow mb-4">
             <div class="card-body">
                 @(await Html.PartialAsync("_Partials/BackToList", back))
-                <form asp-page="/RaythaFunctions/Create" method="post" class="py-4"
-                    data-controller="shared--developername raythafunctions--codehighlighting">
+                <form asp-page="/RaythaFunctions/Create" method="post" class="py-4">
                     <div class="col-lg-12 col-md-12">
                         <div class="mb-3">
                             <label class="form-label raytha-required" asp-for="Form.Name"></label>
@@ -62,10 +61,8 @@
                         <div class="mb-3">
                             <label class="form-label raytha-required" asp-for="Form.Code"></label><br />
                             <div class="@Model.HasError("Code")" id="editorContainer"
-                                style="height:600px;overflow: auto;"
-                                data-raythafunctions--codehighlighting-target="editor"></div>
-                            <input type="hidden" asp-for="Form.Code"
-                                data-raythafunctions--codehighlighting-target="textarea">
+                                style="height:600px;overflow: auto;"></div>
+                            <input type="hidden" asp-for="Form.Code" id="Form_Code">
                             <div class="invalid-feedback">@Model.ErrorMessageFor("Code")</div>
                         </div>
                     </div>
@@ -75,11 +72,6 @@
         </div>
     </div>
 </div>
-<style>
-    .CodeMirror {
-        height: 100%;
-    }
-</style>
 
 <script type="importmap">
   {
@@ -121,3 +113,5 @@
         parent: document.getElementById('editorContainer')
     });
 </script>
+
+<script type="module" defer src="~/js/pages/raytha-functions/create.js"></script>

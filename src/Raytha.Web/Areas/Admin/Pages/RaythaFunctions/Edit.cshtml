@@ -56,7 +56,7 @@
         <div class="mb-3">
             <label class="form-label raytha-required" asp-for="Form.Code"></label><br />
             <div class="@Model.HasError("Code")" id="editorContainer" style="height: 600px;overflow: auto;"></div>
-            <input type="hidden" asp-for="Form.Code" />
+            <input type="hidden" asp-for="Form.Code" id="Form_Code" />
             <div class="invalid-feedback">@Model.ErrorMessageFor("Code")</div>
         </div>
     </div>
@@ -103,3 +103,5 @@
         parent: document.getElementById('editorContainer')
     });
 </script>
+
+<script type="module" defer src="~/js/pages/raytha-functions/edit.js"></script>
