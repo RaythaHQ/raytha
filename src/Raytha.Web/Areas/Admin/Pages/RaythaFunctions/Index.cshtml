@@ -74,7 +74,7 @@
                             <td>@item.LastModificationTime</td>
                             <td>@item.LastModifierUser</td>
                             <td>@item.IsActive</td>
-                            <td><a asp-page="/RaythaFunctions/Edit" asp-route-id="@item.Id">Edit</a></td>
+                            <td><a asp-page="@RouteNames.RaythaFunctions.Edit" asp-route-id="@item.Id">Edit</a></td>
                         </tr>
                     }
                 </tbody>

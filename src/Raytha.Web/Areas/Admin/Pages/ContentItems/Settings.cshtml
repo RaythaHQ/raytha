@@ -11,7 +11,7 @@
     ViewData["ActiveSubMenu"] = "Settings";
 }
 
-<form asp-page="/ContentItems/Settings" method="post" class="py-4"
+<form asp-page="@RouteNames.ContentItems.Settings" method="post" class="py-4"
     asp-route-contentTypeDeveloperName="@Model.CurrentView.ContentType.DeveloperName" asp-route-id="@Model.Id">
     <div class="col-lg-12">
         <div class="mb-3">

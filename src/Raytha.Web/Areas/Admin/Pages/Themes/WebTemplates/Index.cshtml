@@ -17,7 +17,7 @@
         <div class="collapse navbar-collapse" id="navbarSupportedContent">
             <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                 <li class="nav-item">
-                    <a class="btn btn-primary" aria-current="page" asp-page="/Themes/WebTemplates/Create"
+                    <a class="btn btn-primary" aria-current="page" asp-page="@RouteNames.Themes.WebTemplates.Create"
                         asp-route-themeId="@Model.ListView.ThemeId">
                         <svg class="icon icon-xs me-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"
                             xmlns="http://www.w3.org/2000/svg">
@@ -96,7 +96,7 @@
                             <td>
                                 @if (item.ParentTemplate != null)
                                 {
-                                    <a asp-page="/Themes/WebTemplates/Edit" asp-route-id="@item.Id"
+                                    <a asp-page="@RouteNames.Themes.WebTemplates.Edit" asp-route-id="@item.Id"
                                         asp-route-themeId="@Model.ListView.ThemeId">@item.ParentTemplate.Label</a>
                                 }
                                 else
@@ -105,7 +105,7 @@
                                 }
                             </td>
                             <td>@item.IsBuiltInTemplate</td>
-                            <td><a asp-page="/Themes/WebTemplates/Edit" asp-route-id="@item.Id"
+                            <td><a asp-page="@RouteNames.Themes.WebTemplates.Edit" asp-route-id="@item.Id"
                                     asp-route-themeId="@Model.ListView.ThemeId">Edit</a></td>
                         </tr>
                     }

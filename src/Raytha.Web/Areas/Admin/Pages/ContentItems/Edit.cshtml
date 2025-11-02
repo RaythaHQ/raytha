@@ -258,18 +258,18 @@ else
                 else if (Model.Form.FieldValues[i].FieldType == "wysiwyg")
                 {
                     <div class="col-lg-12 mt-4" id="raytha_field-@Model.Form.FieldValues[i].DeveloperName"
-                        data-controller="contentitems--wysiwyg" data-contentitems--wysiwyg-pathbase-value="@Model.Form.PathBase"
-                        data-contentitems--wysiwyg-usedirectuploadtocloud-value="@Model.Form.UseDirectUploadToCloud"
-                        data-contentitems--wysiwyg-maxfilesize-value="@Model.Form.MaxFileSize"
-                        data-contentitems--wysiwyg-allowMultipleUploads-value="true"
-                        data-contentitems--wysiwyg-autoProceed-value="true" data-contentitems--wysiwyg-maxnumberoffiles-value="5"
-                        data-contentitems--wysiwyg-imagemediaitems-value="@Model.Form.ImageMediaItemsJson"
-                        data-contentitems--wysiwyg-videomediaitems-value="@Model.Form.VideoMediaItemsJson">
+                       
+                       
+                       
+                        
+                        
+                       
+                       >
                         <div class="mb-3">
                             <label class="form-label @Model.Form.FieldValues[i].AsteriskCssIfRequired"
                                 asp-for="@Model.Form.FieldValues[i].Label">@Model.Form.FieldValues[i].Label</label>
-                            <div data-contentitems--wysiwyg-target="editorContainer"></div>
-                            <textarea data-contentitems--wysiwyg-target="editorContent"
+                            <div></div>
+                            <textarea
                                 data-developername="@Model.Form.FieldValues[i].DeveloperName"
                                 id="input-@Model.Form.FieldValues[i].DeveloperName" asp-for="@Model.Form.FieldValues[i].Value"
                                 hidden></textarea>
@@ -284,26 +284,26 @@ else
                 else if (Model.Form.FieldValues[i].FieldType == "attachment")
                 {
                     <div class="col-lg-12 col-md-12 mt-4" id="raytha_field-@Model.Form.FieldValues[i].DeveloperName"
-                        data-controller="contentitems--attachment"
-                        data-contentitems--attachment-fieldid-value="@Model.Form.FieldValues[i].DeveloperName"
-                        data-contentitems--attachment-mimetypes-value="@Model.Form.AllowedMimeTypes"
-                        data-contentitems--attachment-usedirectuploadtocloud-value="@Model.Form.UseDirectUploadToCloud"
-                        data-contentitems--attachment-maxfilesize-value="@Model.Form.MaxFileSize"
-                        data-contentitems--attachment-pathbase-value="@Model.Form.PathBase">
+                       
+                       
+                       
+                       
+                       
+                       >
                         <div class="mb-3">
                             <label class="form-label @Model.Form.FieldValues[i].AsteriskCssIfRequired"
                                 asp-for="@Model.Form.FieldValues[i].Label">@Model.Form.FieldValues[i].Label</label>
                             <div id="@(Model.Form.FieldValues[i].DeveloperName)-uppy"
-                                data-contentitems--attachment-target="uppyContainer"></div>
+                               ></div>
                             <div id="@(Model.Form.FieldValues[i].DeveloperName)-uppy-progress"
-                                data-contentitems--attachment-target="uppyProgress"></div>
-                            <div data-contentitems--attachment-target="uppyInfo" hidden>
-                                <p data-contentitems--attachment-target="uppyInfoObjectKey">@Model.Form.FieldValues[i].Value</p>
+                               ></div>
+                            <div hidden>
+                                <p>@Model.Form.FieldValues[i].Value</p>
                                 <a class="btn btn-primary" asp-route="mediaitemsredirecttofileurlbyobjectkey"
                                     asp-route-objectKey="@Model.Form.FieldValues[i].Value"
-                                    data-contentitems--attachment-target="viewFile" target="_blank">View file</a>
-                                <button data-contentitems--attachment-target="removeButton" hidden class="btn btn-sm text-danger"
-                                    type="button" data-action="click->contentitems--attachment#clear"><svg class="icon icon-xs"
+                                    target="_blank">View file</a>
+                                <button hidden class="btn btn-sm text-danger"
+                                    type="button"><svg class="icon icon-xs"
                                         fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                             d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
@@ -320,27 +320,27 @@ else
                                 <div class="form-text">@Model.Form.FieldValues[i].Description</div>
                             }
                             <input type="hidden" class="@Model.HasError(Model.Form.FieldValues[i].DeveloperName)"
-                                asp-for="@Model.Form.FieldValues[i].Value" data-contentitems--attachment-target="hidden" />
+                                asp-for="@Model.Form.FieldValues[i].Value" />
                         </div>
                     </div>
                 }
                 else if (Model.Form.FieldValues[i].FieldType == "one_to_one_relationship")
                 {
                     <div class="col-lg-12 col-md-12 mt-4" id="raytha_field-@Model.Form.FieldValues[i].DeveloperName">
-                        <div class="mb-3" data-controller="shared--autocomplete"
-                            data-shared--autocomplete-src-value="@Model.Form.PathBase/raytha/@Model.CurrentView.ContentType.DeveloperName/relationship/autocomplete"
-                            data-shared--autocomplete-contenttype-value="@Model.Form.FieldValues[i].RelatedContentTypeId">
+                        <div class="mb-3"
+                           
+                           >
                             <div>
                                 <label class="form-label @Model.Form.FieldValues[i].AsteriskCssIfRequired"
                                     asp-for="@Model.Form.FieldValues[i].Label">@Model.Form.FieldValues[i].Label</label>
                                 <div class="spinner-border spinner-border-sm mt-1 ml-2" role="status"
-                                    data-shared--autocomplete-target="customerspinner">
+                                   >
                                     <span class="visually-hidden">Loading pages...</span>
                                 </div>
                             </div>
 
-                            <button class="btn btn-primary btn-sm" type="button" data-shared--autocomplete-target="addRecordButton"
-                                data-action="click->shared--autocomplete#addRecord">
+                            <button class="btn btn-primary btn-sm" type="button"
+                               >
                                 <svg class="icon icon-xs me-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"
                                     xmlns="http://www.w3.org/2000/svg">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -348,11 +348,11 @@ else
                                 </svg> Add relationship
                             </button>
 
-                            <div class="input-group mb-3" data-shared--autocomplete-target="selectedLabelSection">
+                            <div class="input-group mb-3">
                                 <input type="text" class="form-control" value="@Model.Form.FieldValues[i].RelatedContentItemPrimaryField"
-                                    data-shared--autocomplete-target="selectedLabel" disabled>
+                                    disabled>
                                 <button class="nav-link d-inline-flex align-items-center justify-content-center text-danger"
-                                    type="button" data-action="click->shared--autocomplete#removeRecord"><svg
+                                    type="button"><svg
                                         class="icon icon-sm mx-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"
                                         xmlns="http://www.w3.org/2000/svg">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -362,16 +362,16 @@ else
                             </div>
 
                             <input type="text" class="form-control @Model.HasError(Model.Form.FieldValues[i].DeveloperName)"
-                                data-shared--autocomplete-target="input">
-                            <ul class="list-group" data-shared--autocomplete-target="results"></ul>
+                               >
+                            <ul class="list-group"></ul>
                             <div class="invalid-feedback">@Model.ErrorMessageFor(Model.Form.FieldValues[i].DeveloperName)</div>
                             @if (!string.IsNullOrEmpty(Model.Form.FieldValues[i].Description))
                             {
                                 <div class="form-text">@Model.Form.FieldValues[i].Description</div>
                             }
-                            <input type="hidden" asp-for="@Model.Form.FieldValues[i].Value" data-shared--autocomplete-target="hidden" />
+                            <input type="hidden" asp-for="@Model.Form.FieldValues[i].Value" />
                             <input type="hidden" asp-for="@Model.Form.FieldValues[i].RelatedContentItemPrimaryField"
-                                data-shared--autocomplete-target="hiddenPrimaryField" />
+                                />
                         </div>
                     </div>
                 }

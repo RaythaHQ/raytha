@@ -11,7 +11,7 @@
     ViewData["ActiveMenu"] = Model.CurrentView.ContentType.DeveloperName;
 
     var columnsAsList = Model.CurrentView.Columns.ToList();
-    var backToListUrl = Url.Page("Index", "ContentItems", new
+    var backToListUrl = Url.Page(RouteNames.ContentItems.Index, new
     {
         search = Model.ListView.Search,
         orderBy =

@@ -28,7 +28,7 @@
                 <td>@item.OpenInNewTab.YesOrNo()</td>
                 <td>@item.CssClassName</td>
                 <td>
-                    <a asp-page="/NavigationMenus/MenuItems/Edit" asp-route-id="@item.Id" asp-route-navigationMenuId="@Model.NavigationMenuId">Edit</a>
+                    <a asp-page="@RouteNames.NavigationMenus.MenuItems.Edit" asp-route-id="@item.Id" asp-route-navigationMenuId="@Model.NavigationMenuId">Edit</a>
                 </td>
             </tr>
 
@@ -49,12 +49,12 @@
     <div class="collapse navbar-collapse" id="navbarSupportedContent">
         <ul class="navbar-nav me-auto mb-2 mb-lg-0">
             <li class="nav-item">
-                <a class="btn btn-primary" aria-current="page" asp-page="/NavigationMenus/MenuItems/Create" asp-route-navigationMenuId=@Model.NavigationMenuId>
+                <a class="btn btn-primary" aria-current="page" asp-page="@RouteNames.NavigationMenus.MenuItems.Create" asp-route-navigationMenuId=@Model.NavigationMenuId>
                     <svg class="icon icon-xs me-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg> Create menu item
                 </a>
             </li>
             <li class="nav-item">
-                <a class="btn btn-secondary mx-4" aria-current="page" asp-page="/NavigationMenus/MenuItems/Reorder" asp-route-navigationMenuId=@Model.NavigationMenuId>
+                <a class="btn btn-secondary mx-4" aria-current="page" asp-page="@RouteNames.NavigationMenus.MenuItems.Reorder" asp-route-navigationMenuId=@Model.NavigationMenuId>
                     <svg class="icon icon-xs me-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16"></path></svg> Reorder menu items
                 </a>
             </li>
@@ -85,7 +85,7 @@
                             <td>@item.OpenInNewTab.YesOrNo()</td>
                             <td>@item.CssClassName</td>
                             <td>
-                                <a asp-page="/NavigationMenus/MenuItems/Edit" asp-route-id=@item.Id asp-route-navigationMenuId=@Model.NavigationMenuId>Edit</a>
+                                <a asp-page="@RouteNames.NavigationMenus.MenuItems.Edit" asp-route-id=@item.Id asp-route-navigationMenuId=@Model.NavigationMenuId>Edit</a>
                             </td>
                         </tr>
                         if (item.MenuItems.Any())

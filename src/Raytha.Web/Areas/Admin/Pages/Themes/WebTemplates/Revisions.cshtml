@@ -39,12 +39,12 @@
             @foreach (var item in Model.ListView.Items)
             {
                 <tr>
-                    <td class="align-middle" data-controller="shared--confirmaction"
-                        data-shared--confirmaction-title-value="Are you sure you want to revert to this template?">
-                        <form method="post" asp-page="/Themes/WebTemplates/Revisions" asp-page-handler="Revert"
+                    <td class="align-middle"
+                       >
+                        <form method="post" asp-page="@RouteNames.Themes.WebTemplates.Revisions" asp-page-handler="Revert"
                             asp-route-revisionId="@item.Id" asp-route-id="@Model.ListView.TemplateId"
                             asp-route-themeId="@Model.ListView.ThemeId" onsubmit="return confirm('Are you sure you want to revert to this web template?');">
-                            <button class="btn btn-sm btn-success" data-action="click->shared--confirmaction#warning">
+                            <button class="btn btn-sm btn-success">
                                 Revert
                             </button>
                         </form>

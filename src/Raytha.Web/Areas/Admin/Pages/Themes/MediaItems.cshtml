@@ -30,7 +30,7 @@
                     <td>@item.ObjectKey</td>
                     <td>
                         <div>
-                            <form method="post" asp-page="/Themes/MediaItems" asp-page-handler="Delete" asp-route-themeId="@Model.ThemeId"
+                            <form method="post" asp-page="@RouteNames.Themes.MediaItems" asp-page-handler="Delete" asp-route-themeId="@Model.ThemeId"
                                 asp-route-id="@item.Id" onsubmit="return confirm('Are you sure you want to delete this media item?');">
                                 <button class="btn btn-link text-danger p-0 m-0 border-0 bg-transparent">
                                     Delete

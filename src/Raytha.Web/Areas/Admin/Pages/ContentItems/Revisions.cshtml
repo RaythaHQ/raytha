@@ -31,13 +31,13 @@
             @foreach (var item in Model.ListView.Items)
             {
                 <tr>
-                    <td class="align-middle" data-controller="shared--confirmaction"
-                        data-shared--confirmaction-title-value="Are you sure you want to revert?">
+                    <td class="align-middle"
+                       >
                         <form method="post" asp-route="@RouteNames.ContentItems.Revisions" asp-route-revisionId="@item.Id"
                             asp-route-id="@Model.Id"
                             asp-route-contentTypeDeveloperName="@Model.CurrentView.ContentType.DeveloperName"
-                            onsubmit="return confirmRevert();" data-shared--confirmaction-target="form">
-                            <button class="btn btn-sm btn-success" data-action="click->shared--confirmaction#warning">
+                            onsubmit="return confirmRevert();">
+                            <button class="btn btn-sm btn-success">
                                 Revert
                             </button>
                         </form>

@@ -8,7 +8,7 @@
     ViewData["ActiveMenu"] = "Themes";
 }
 
-<form asp-page="/Themes/Export" method="post" class="py-2" novalidate>
+<form asp-page="@RouteNames.Themes.Export" method="post" class="py-2" novalidate>
     <input type="hidden" asp-for="Form.Id">
 
     <div class="mb-3 row">

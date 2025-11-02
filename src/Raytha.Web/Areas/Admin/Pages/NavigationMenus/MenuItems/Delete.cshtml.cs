@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Raytha.Application.NavigationMenuItems.Commands;
 using Raytha.Domain.Entities;
 using Raytha.Web.Areas.Admin.Pages.Shared.Models;
+using Raytha.Web.Areas.Admin.Pages.Shared;
 
 namespace Raytha.Web.Areas.Admin.Pages.NavigationMenus.MenuItems;
 
@@ -24,6 +25,6 @@ public class Delete : BaseAdminPageModel
         else
             SetErrorMessage("There was an error deleting this menu item", response.GetErrors());
 
-        return RedirectToPage("/NavigationMenus/MenuItems/Index", new { navigationMenuId });
+        return RedirectToPage(RouteNames.NavigationMenus.MenuItems.Index, new { navigationMenuId });
     }
 }

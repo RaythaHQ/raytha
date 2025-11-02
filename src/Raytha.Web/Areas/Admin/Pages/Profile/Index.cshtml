@@ -13,7 +13,7 @@
         @Html.Partial("_Partials/PageHeading", pageTitle)
         <div class="card border-0 shadow mb-4">
             <div class="card-body">
-                <form asp-page="/Profile/Index" method="post" novalidate>
+                <form asp-page="@RouteNames.Profile.Index" method="post" novalidate>
                     <div class="row">
                         <div class="col">
                             <div class="mb-3">

@@ -31,14 +31,14 @@
     <div class="sidebar-inner px-4 pt-3">
         <ul class="nav flex-column pt-3 pt-md-0">
             <li class="nav-item">
-                <a asp-page="/Dashboard/Index" class="nav-link d-flex align-items-center">
+                <a asp-page="@RouteNames.Dashboard.Index" class="nav-link d-flex align-items-center">
                     <span class="sidebar-icon">
                         <img src="~/raytha_admin/assets/img/white.svg" height="50" alt="logo">
                     </span>
                 </a>
             </li>
             <li class="nav-item @(IsActivePage("Dashboard"))">
-                <a asp-page="/Dashboard/Index" class="nav-link">
+                <a asp-page="@RouteNames.Dashboard.Index" class="nav-link">
                     <span class="sidebar-icon">
                         <svg class="icon icon-xs me-2" fill="currentColor" viewBox="0 0 20 20"
                             xmlns="http://www.w3.org/2000/svg">
@@ -53,7 +53,7 @@
                         BuiltInSystemPermission.MANAGE_USERS_PERMISSION)).Succeeded)
             {
                 <li class="nav-item @(IsActivePage("Users"))">
-                    <a asp-page="/Users/Index" class="nav-link d-flex justify-content-between">
+                    <a asp-page="@RouteNames.Users.Index" class="nav-link d-flex justify-content-between">
                         <span>
                             <span class="sidebar-icon">
                                 <svg class="icon icon-xs me-2" fill="currentColor" viewBox="0 0 20 20"
@@ -75,7 +75,7 @@
                 ContentItemOperations.Read)).Succeeded)
                 {
                     <li class="nav-item @(IsActivePage(contentType.DeveloperName))">
-                        <a asp-page="/ContentItems/Index" asp-route-contentTypeDeveloperName="@contentType.DeveloperName"
+                        <a asp-page="@RouteNames.ContentItems.Index" asp-route-contentTypeDeveloperName="@contentType.DeveloperName"
                             class="nav-link d-flex justify-content-between">
                             <span>
                                 <span class="sidebar-icon invisible">
@@ -97,7 +97,7 @@
             {
                 <li
                     class="nav-item nav-item d-flex align-items-center justify-content-between justify-content-md-center pt-4">
-                    <a asp-page="/ContentTypes/Create"
+                    <a asp-page="@RouteNames.ContentTypes.Create"
                         class="btn btn-secondary d-inline-flex align-items-center me-2 dropdown-toggle">
                         <svg class="icon icon-xs me-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"
                             xmlns="http://www.w3.org/2000/svg">
@@ -128,7 +128,7 @@
                         BuiltInSystemPermission.MANAGE_TEMPLATES_PERMISSION)).Succeeded)
             {
                 <li class="nav-item @(IsActivePage("Themes"))">
-                    <a asp-page="/Themes/Index" class="nav-link d-flex justify-content-between">
+                    <a asp-page="@RouteNames.Themes.Index" class="nav-link d-flex justify-content-between">
                         <span>
                             <span class="sidebar-icon">
                                 <svg class="icon icon-xs me-2" fill="currentColor" viewBox="0 0 20 20"
@@ -148,7 +148,7 @@
                         BuiltInSystemPermission.MANAGE_SYSTEM_SETTINGS_PERMISSION)).Succeeded)
             {
                 <li class="nav-item @(IsActivePage("Email Templates"))">
-                    <a asp-page="/EmailTemplates/Index" class="nav-link d-flex justify-content-between">
+                    <a asp-page="@RouteNames.EmailTemplates.Index" class="nav-link d-flex justify-content-between">
                         <span>
                             <span class="sidebar-icon">
                                 <svg class="icon icon-xs me-2" xmlns="http://www.w3.org/2000/svg" fill="none"
@@ -166,7 +166,7 @@
                         BuiltInSystemPermission.MANAGE_CONTENT_TYPES_PERMISSION)).Succeeded)
             {
                 <li class="nav-item @(IsActivePage("Menus"))">
-                    <a asp-page="/NavigationMenus/Index" class="nav-link d-flex justify-content-between">
+                    <a asp-page="@RouteNames.NavigationMenus.Index" class="nav-link d-flex justify-content-between">
                         <span>
                             <span class="sidebar-icon">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-xs me-2" fill="currentColor"
@@ -185,7 +185,7 @@
                         RaythaFunctionConfiguration.IsEnabled)
             {
                 <li class="nav-item @(IsActivePage("Functions"))">
-                    <a asp-page="/RaythaFunctions/Index" class="nav-link d-flex justify-content-between">
+                    <a asp-page="@RouteNames.RaythaFunctions.Index" class="nav-link d-flex justify-content-between">
                         <span>
                             <span class="sidebar-icon">
                                 <svg class="icon icon-xs me-2" fill="currentColor" version="1.1" id="_x32_"
@@ -213,7 +213,7 @@
                         BuiltInSystemPermission.MANAGE_AUDIT_LOGS_PERMISSION)).Succeeded)
             {
                 <li class="nav-item @(IsActivePage("Audit Logs"))">
-                    <a asp-page="/AuditLogs/Index" class="nav-link d-flex justify-content-between">
+                    <a asp-page="@RouteNames.AuditLogs.Index" class="nav-link d-flex justify-content-between">
                         <span>
                             <span class="sidebar-icon">
                                 <svg class="icon icon-xs me-2" fill="currentColor" viewBox="0 0 20 20"
@@ -267,7 +267,7 @@
                             @if (hasManageAdministrators)
                             {
                                 <li class="nav-item @(IsActivePage("Admins"))">
-                                    <a class="nav-link" asp-page="/Admins/Index">
+                                    <a class="nav-link" asp-page="@RouteNames.Admins.Index">
                                         <span class="sidebar-text">Admins</span>
                                     </a>
                                 </li>
@@ -275,17 +275,17 @@
                             @if (hasManageSystem)
                             {
                                 <li class="nav-item @(IsActivePage("Configuration"))">
-                                    <a class="nav-link" asp-page="/Configuration/Index">
+                                    <a class="nav-link" asp-page="@RouteNames.Configuration.Index">
                                         <span class="sidebar-text">Configuration</span>
                                     </a>
                                 </li>
                                 <li class="nav-item @(IsActivePage("Authentication Schemes"))">
-                                    <a class="nav-link" asp-page="/AuthenticationSchemes/Index">
+                                    <a class="nav-link" asp-page="@RouteNames.AuthenticationSchemes.Index">
                                         <span class="sidebar-text">Authentication</span>
                                     </a>
                                 </li>
                                 <li class="nav-item @(IsActivePage("SMTP"))">
-                                    <a class="nav-link" asp-page="/Smtp/Index">
+                                    <a class="nav-link" asp-page="@RouteNames.Smtp.Index">
                                         <span class="sidebar-text">SMTP</span>
                                     </a>
                                 </li>
@@ -317,20 +317,20 @@
                     id="submenu-account">
                     <ul class="flex-column nav">
                         <li class="nav-item @(IsActivePage("Profile"))">
-                            <a class="nav-link" asp-area="Admin" asp-page="/Profile/Index">
+                            <a class="nav-link" asp-area="Admin" asp-page="@RouteNames.Profile.Index">
                                 <span class="sidebar-text">My Profile</span>
                             </a>
                         </li>
                         @if (CurrentOrganization.EmailAndPasswordIsEnabledForAdmins)
                         {
                             <li class="nav-item @(IsActivePage("Change Password"))">
-                                <a class="nav-link" asp-area="Admin" asp-page="/Profile/ChangePassword">
+                                <a class="nav-link" asp-area="Admin" asp-page="@RouteNames.Profile.ChangePassword">
                                     <span class="sidebar-text">Change Password</span>
                                 </a>
                             </li>
                         }
                         <li class="nav-item">
-                            <a class="nav-link" asp-area="Admin" asp-page="/Login/Logout">
+                            <a class="nav-link" asp-area="Admin" asp-page="@RouteNames.Login.Logout">
                                 <span class="sidebar-text">Log out</span>
                             </a>
                         </li>

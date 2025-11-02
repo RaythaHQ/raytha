@@ -5,6 +5,7 @@ using Raytha.Application.ContentTypes.Queries;
 using Raytha.Application.Roles.Commands;
 using Raytha.Domain.Entities;
 using Raytha.Web.Areas.Admin.Pages.Shared.Models;
+using Raytha.Web.Areas.Admin.Pages.Shared;
 
 namespace Raytha.Web.Areas.Admin.Pages.Roles;
 
@@ -79,7 +80,7 @@ public class Create : BaseAdminPageModel
         if (response.Success)
         {
             SetSuccessMessage($"{Form.Label} was created successfully.");
-            return RedirectToPage("/Roles/Index");
+            return RedirectToPage(RouteNames.Roles.Index);
         }
         else
         {

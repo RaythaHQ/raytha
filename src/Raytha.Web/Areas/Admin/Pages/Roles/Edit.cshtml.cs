@@ -6,6 +6,7 @@ using Raytha.Application.Roles.Commands;
 using Raytha.Application.Roles.Queries;
 using Raytha.Domain.Entities;
 using Raytha.Web.Areas.Admin.Pages.Shared.Models;
+using Raytha.Web.Areas.Admin.Pages.Shared;
 
 namespace Raytha.Web.Areas.Admin.Pages.Roles;
 
@@ -90,7 +91,7 @@ public class Edit : BaseAdminPageModel
         if (response.Success)
         {
             SetSuccessMessage($"{Form.Label} was updated successfully.");
-            return RedirectToPage("/Roles/Edit", new { id });
+            return RedirectToPage(RouteNames.Roles.Edit, new { id });
         }
         {
             SetErrorMessage(

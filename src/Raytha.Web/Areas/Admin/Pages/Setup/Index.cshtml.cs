@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Raytha.Application.Common.Utils;
 using Raytha.Application.OrganizationSettings.Commands;
 using Raytha.Web.Areas.Shared.Models;
+using Raytha.Web.Areas.Admin.Pages.Shared;
 
 namespace Raytha.Web.Areas.Admin.Pages.Setup;
 
@@ -19,7 +20,7 @@ public class Index : BasePageModel
     public async Task<IActionResult> OnGet()
     {
         if (CurrentOrganization.InitialSetupComplete)
-            return RedirectToPage("/Dashboard/Index");
+            return RedirectToPage(RouteNames.Dashboard.Index);
 
         MissingSmtpEnvironmentVariables = EmailerConfiguration.IsMissingSmtpEnvVars();
         Form = new FormModel();
@@ -29,7 +30,7 @@ public class Index : BasePageModel
     public async Task<IActionResult> OnPost()
     {
         if (CurrentOrganization.InitialSetupComplete)
-            return RedirectToPage("/Dashboard/Index");
+            return RedirectToPage(RouteNames.Dashboard.Index);
 
         var input = new InitialSetup.Command
         {
@@ -51,7 +52,7 @@ public class Index : BasePageModel
         var response = await Mediator.Send(input);
         if (response.Success)
         {
-            return RedirectToPage("/Dashboard/Index");
+            return RedirectToPage(RouteNames.Dashboard.Index);
         }
 
         SetErrorMessage(response.GetErrors());

@@ -33,10 +33,10 @@
             {
                 <tr>
                     <td class="align-middle">
-                        <form method="post" asp-page="/RaythaFunctions/Revisions" asp-page-handler="Revert"
+                        <form method="post" asp-page="@RouteNames.RaythaFunctions.Revisions" asp-page-handler="Revert"
                             asp-route-revisionId="@item.Id" asp-route-id="@Model.ListView.FunctionId"
                             onsubmit="return confirmRevert();">
-                            <button class="btn btn-sm btn-success" data-action="click->shared--confirmaction#warning">
+                            <button class="btn btn-sm btn-success">
                                 Revert
                             </button>
                         </form>

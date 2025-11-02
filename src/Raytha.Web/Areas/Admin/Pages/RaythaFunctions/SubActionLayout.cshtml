@@ -39,7 +39,7 @@
                 <div class="nav-wrapper position-relative">
                     <ul class="nav nav-pills square nav-fill flex-column vertical-tab">
                         <li class="nav-item">
-                            <a class="nav-link @IsActivePage("Edit")" asp-page="/RaythaFunctions/Edit"
+                            <a class="nav-link @IsActivePage("Edit")" asp-page="@RouteNames.RaythaFunctions.Edit"
                                 asp-route-id="@Model.Id">
                                 <svg class="icon icon-sm mx-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"
                                     xmlns="http://www.w3.org/2000/svg">
@@ -51,7 +51,7 @@
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link @IsActivePage("Revisions")" asp-page="/RaythaFunctions/Revisions"
+                            <a class="nav-link @IsActivePage("Revisions")" asp-page="@RouteNames.RaythaFunctions.Revisions"
                                 asp-route-id="@Model.Id">
                                 <svg class="icon icon-sm" fill="none" stroke="currentColor" viewBox="0 0 24 24"
                                     xmlns="http://www.w3.org/2000/svg">
@@ -63,11 +63,10 @@
                             </a>
                         </li>
                         <li class="nav-item">
-                            <form method="post" asp-page="/RaythaFunctions/Delete" asp-route-id="@Model.Id"
+                            <form method="post" asp-page="@RouteNames.RaythaFunctions.Delete" asp-route-id="@Model.Id"
                                 onsubmit="return confirm('Are you sure you want to delete?');">
                                 <button
-                                    class="nav-link d-inline-flex align-items-center justify-content-center text-danger"
-                                    data-action="click->shared--confirmaction#warning">
+                                    class="nav-link d-inline-flex align-items-center justify-content-center text-danger">
                                     <svg class="icon icon-sm mx-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"
                                         xmlns="http://www.w3.org/2000/svg">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"

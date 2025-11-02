@@ -2,6 +2,7 @@ using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Mvc;
 using Raytha.Application.Login.Commands;
 using Raytha.Web.Areas.Admin.Pages.Shared.Models;
+using Raytha.Web.Areas.Admin.Pages.Shared;
 
 namespace Raytha.Web.Areas.Admin.Pages.Profile;
 
@@ -36,7 +37,7 @@ public class Index : BaseAdminPageModel
         if (response.Success)
         {
             SetSuccessMessage("Profile changed successfully.");
-            return RedirectToPage("/Profile/Index");
+            return RedirectToPage(RouteNames.Profile.Index);
         }
         else
         {

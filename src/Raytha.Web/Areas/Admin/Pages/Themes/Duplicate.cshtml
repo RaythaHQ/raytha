@@ -18,11 +18,11 @@
         <div class="card border-0 shadow mb-4">
             <div class="card-body">
                 @(await Html.PartialAsync("_Partials/BackToList", back))
-                <form asp-route="themesduplicate" method="post" class="py-4" data-controller="shared--developername themes--insertduplicate">
+                <form asp-route="themesduplicate" method="post" class="py-4">
                     <div class="col-lg-12 col-md-12">
                         <div class="mb-3">
                             <label class="form-label raytha-required" asp-for="Form.ThemeId"></label>
-                            <select class="form-select @Model.HasError("ParentTemplateId")" asp-for="Form.ThemeId" required data-action="change->themes--insertduplicate#change">
+                            <select class="form-select @Model.HasError("ParentTemplateId")" asp-for="Form.ThemeId" required>
                                 <option value="">--SELECT--</option>
                                 @foreach (var theme in Model.Form.Themes)
                                 {
@@ -36,9 +36,9 @@
                         <div class="mb-3">
                             <label class="form-label raytha-required" asp-for="Form.Title"></label>
                             <input type="text" class="form-control @Model.HasError("Title")" asp-for="Form.Title"
-                                   data-shared--developername-target="title"
-                                   data-themes--insertduplicate-target="title"
-                                   data-action="keyup->shared--developername#setDeveloperName change->shared--developername#setDeveloperName">
+                                  
+                                  
+                                  >
                             <div class="invalid-feedback">@Model.ErrorMessageFor("Title")</div>
                         </div>
                     </div>
@@ -46,8 +46,8 @@
                         <div class="mb-3">
                             <label class="form-label raytha-required" asp-for="Form.DeveloperName"></label>
                             <input type="text" class="form-control @Model.HasError("DeveloperName")" asp-for="Form.DeveloperName" 
-                                   data-shared--developername-target="developername"
-                                   data-themes--insertduplicate-target="developername">
+                                  
+                                  >
                             <div class="invalid-feedback">@Model.ErrorMessageFor("DeveloperName")</div>
                             <div class="form-text">You cannot change the developer name after it has been created.</div>
                         </div>

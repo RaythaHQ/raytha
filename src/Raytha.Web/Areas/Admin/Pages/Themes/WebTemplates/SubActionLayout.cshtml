@@ -34,7 +34,7 @@
                     <ul class="nav nav-pills square nav-fill flex-column vertical-tab">
                         <li class="nav-item">
                             <a class="nav-link d-inline-flex align-items-center justify-content-center @IsActivePage("Edit")"
-                                asp-page="/Themes/WebTemplates/Edit" asp-route-themeId="@Model.ThemeId"
+                                asp-page="@RouteNames.Themes.WebTemplates.Edit" asp-route-themeId="@Model.ThemeId"
                                 asp-route-id="@Model.Id">
                                 <svg class="icon icon-sm mx-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"
                                     xmlns="http://www.w3.org/2000/svg">
@@ -46,7 +46,7 @@
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link @IsActivePage("Revisions")" asp-page="/Themes/WebTemplates/Revisions"
+                            <a class="nav-link @IsActivePage("Revisions")" asp-page="@RouteNames.Themes.WebTemplates.Revisions"
                                 asp-route-themeId="@Model.ThemeId" asp-route-id="@Model.Id">
                                 <svg class="icon icon-xs" xmlns="http://www.w3.org/2000/svg" fill="none"
                                     viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
@@ -57,7 +57,7 @@
                             </a>
                         </li>
                         <li class="nav-item">
-                            <form method="post" asp-page="/Themes/WebTemplates/Delete"
+                            <form method="post" asp-page="@RouteNames.Themes.WebTemplates.Delete"
                                 asp-route-themeId="@Model.ThemeId" asp-route-id="@Model.Id"
                                 onsubmit="return confirm('Are you sure you want to delete?');">
                                 <button

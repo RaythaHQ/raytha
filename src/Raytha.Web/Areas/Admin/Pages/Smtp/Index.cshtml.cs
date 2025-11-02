@@ -2,6 +2,7 @@ using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Mvc;
 using Raytha.Application.OrganizationSettings.Queries;
 using Raytha.Web.Areas.Admin.Pages.Shared.Models;
+using Raytha.Web.Areas.Admin.Pages.Shared;
 
 namespace Raytha.Web.Areas.Admin.Pages.Smtp;
 
@@ -50,7 +51,7 @@ public class Index : BaseAdminPageModel
         if (response.Success)
         {
             SetSuccessMessage("SMTP has been updated successfully.");
-            return RedirectToPage("/Smtp/Index");
+            return RedirectToPage(RouteNames.Smtp.Index);
         }
         else
         {

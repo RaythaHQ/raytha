@@ -1,6 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Mvc;
 using Raytha.Web.Areas.Admin.Pages.Shared.Models;
+using Raytha.Web.Areas.Admin.Pages.Shared;
 
 namespace Raytha.Web.Areas.Admin.Pages.Profile;
 
@@ -14,7 +15,7 @@ public class ChangePassword : BaseAdminPageModel
         if (!CurrentOrganization.EmailAndPasswordIsEnabledForAdmins)
         {
             SetErrorMessage("Authentication scheme is disabled");
-            return RedirectToPage("/Profile/Index");
+            return RedirectToPage(RouteNames.Profile.Index);
         }
 
         Form = new FormModel();
@@ -26,7 +27,7 @@ public class ChangePassword : BaseAdminPageModel
         if (!CurrentOrganization.EmailAndPasswordIsEnabledForAdmins)
         {
             SetErrorMessage("Authentication scheme is disabled");
-            return RedirectToPage("/Profile/Index");
+            return RedirectToPage(RouteNames.Profile.Index);
         }
 
         var response = await Mediator.Send(
@@ -42,7 +43,7 @@ public class ChangePassword : BaseAdminPageModel
         if (response.Success)
         {
             SetSuccessMessage("Password changed successfully.");
-            return RedirectToPage("/Profile/ChangePassword");
+            return RedirectToPage(RouteNames.Profile.ChangePassword);
         }
         else
         {

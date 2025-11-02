@@ -7,6 +7,7 @@ using Raytha.Application.NavigationMenuItems.Commands;
 using Raytha.Application.NavigationMenuItems.Queries;
 using Raytha.Domain.Entities;
 using Raytha.Web.Areas.Admin.Pages.Shared.Models;
+using Raytha.Web.Areas.Admin.Pages.Shared;
 
 namespace Raytha.Web.Areas.Admin.Pages.NavigationMenus.MenuItems;
 
@@ -61,7 +62,7 @@ public class Create : BaseAdminPageModel, ISubActionViewModel
         if (response.Success)
         {
             SetSuccessMessage($"{Form.Label} was created successfully.");
-            return RedirectToPage("/NavigationMenus/MenuItems/Index", new { navigationMenuId });
+            return RedirectToPage(RouteNames.NavigationMenus.MenuItems.Index, new { navigationMenuId });
         }
         else
         {

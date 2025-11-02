@@ -8,6 +8,7 @@ using Raytha.Application.Themes.WebTemplates.Queries;
 using Raytha.Application.Views;
 using Raytha.Domain.Entities;
 using Raytha.Web.Areas.Admin.Pages.Shared.Models;
+using Raytha.Web.Areas.Admin.Pages.Shared;
 
 namespace Raytha.Web.Areas.Admin.Pages.ContentItems;
 
@@ -115,7 +116,7 @@ public class Settings : BaseHasFavoriteViewsPageModel, ISubActionViewModel
 
     public async Task<IActionResult> OnPostSetAsHomePage(string id)
     {
-        return RedirectToPage("/ContentItems/Settings", new { id });
+        return RedirectToPage(RouteNames.ContentItems.Settings, new { id });
     }
 
     public record FormModel

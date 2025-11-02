@@ -30,14 +30,14 @@
                 <div class="nav-wrapper position-relative">
                     <ul class="nav nav-pills square nav-fill flex-column vertical-tab">
                         <li class="nav-item">
-                            <a class="nav-link @IsActivePage("Edit")" asp-page="/EmailTemplates/Edit"
+                            <a class="nav-link @IsActivePage("Edit")" asp-page="@RouteNames.EmailTemplates.Edit"
                                asp-route-id="@Model.Id">
                                 <svg class="icon icon-sm mx-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
                                 Edit template
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link @IsActivePage("Revisions")" asp-page="/EmailTemplates/Revisions"
+                            <a class="nav-link @IsActivePage("Revisions")" asp-page="@RouteNames.EmailTemplates.Revisions"
                                asp-route-id="@Model.Id">
                                 <svg class="icon icon-sm" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12.066 11.2a1 1 0 000 1.6l5.334 4A1 1 0 0019 16V8a1 1 0 00-1.6-.8l-5.333 4zM4.066 11.2a1 1 0 000 1.6l5.334 4A1 1 0 0011 16V8a1 1 0 00-1.6-.8l-5.334 4z"></path></svg>
                                 Revisions

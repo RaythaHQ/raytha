@@ -32,7 +32,7 @@
                     <ul class="nav nav-pills square nav-fill flex-column vertical-tab">
                         <li class="nav-item">
                             <a class="nav-link d-inline-flex align-items-center justify-content-center @IsActivePage("Edit")"
-                                asp-page="/ContentItems/Edit" asp-route-id="@Model.Id"
+                                asp-page="@RouteNames.ContentItems.Edit" asp-route-id="@Model.Id"
                                 asp-route-contentTypeDeveloperName="@Model.CurrentView.ContentType.DeveloperName">
                                 <svg class="icon icon-sm mx-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"
                                     xmlns="http://www.w3.org/2000/svg">
@@ -48,7 +48,7 @@
                                                 ContentItemOperations.Edit)).Succeeded)
                         {
                             <li class="nav-item">
-                                <a class="nav-link @IsActivePage("Settings")" asp-page="/ContentItems/Settings"
+                                <a class="nav-link @IsActivePage("Settings")" asp-page="@RouteNames.ContentItems.Settings"
                                     asp-route-id="@Model.Id"
                                     asp-route-contentTypeDeveloperName="@Model.CurrentView.ContentType.DeveloperName">
                                     <svg class="icon icon-xs" fill="none" stroke="currentColor" viewBox="0 0 24 24"
@@ -63,7 +63,7 @@
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link @IsActivePage("Revisions")" asp-page="/ContentItems/Revisions"
+                                <a class="nav-link @IsActivePage("Revisions")" asp-page="@RouteNames.ContentItems.Revisions"
                                     asp-route-id="@Model.Id"
                                     asp-route-contentTypeDeveloperName="@Model.CurrentView.ContentType.DeveloperName">
                                     <svg class="icon icon-sm" fill="none" stroke="currentColor" viewBox="0 0 24 24"
@@ -75,15 +75,15 @@
                                     Revisions
                                 </a>
                             </li>
-                            <li class="nav-item" data-controller="shared--confirmaction"
-                                data-shared--confirmaction-title-value="Are you sure you want to delete this @Model.CurrentView.ContentType.LabelSingular.ToLower()? This action cannot be undone.">
-                                <form method="post" asp-page="/ContentItems/Delete" asp-route-id="@Model.Id"
+                            <li class="nav-item"
+                               >
+                                <form method="post" asp-page="@RouteNames.ContentItems.Delete" asp-route-id="@Model.Id"
                                     onsubmit="return confirm('Are you sure you want to delete?');"
                                     asp-route-contentTypeDeveloperName="@Model.CurrentView.ContentType.DeveloperName"
-                                    data-shared--confirmaction-target="form">
+                                   >
                                     <button
                                         class="nav-link d-inline-flex align-items-center justify-content-center text-danger"
-                                        data-action="click->shared--confirmaction#warning">
+                                       >
                                         <svg class="icon icon-sm mx-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"
                                             xmlns="http://www.w3.org/2000/svg">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"

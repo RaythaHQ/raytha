@@ -8,6 +8,7 @@ using Raytha.Application.NavigationMenuItems.Commands;
 using Raytha.Application.NavigationMenuItems.Queries;
 using Raytha.Domain.Entities;
 using Raytha.Web.Areas.Admin.Pages.Shared.Models;
+using Raytha.Web.Areas.Admin.Pages.Shared;
 
 namespace Raytha.Web.Areas.Admin.Pages.NavigationMenus.MenuItems;
 
@@ -88,7 +89,7 @@ public class Edit : BaseAdminPageModel, ISubActionViewModel
                 response.GetErrors()
             );
 
-        return RedirectToPage("/NavigationMenus/MenuItems/Edit", new { navigationMenuId, id });
+        return RedirectToPage(RouteNames.NavigationMenus.MenuItems.Edit, new { navigationMenuId, id });
     }
 
     public record FormModel

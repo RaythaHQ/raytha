@@ -36,7 +36,7 @@
                     @if (!Model.IsNavigationMenuItem) 
                     {
                                                 <li class="nav-item">
-                            <a class="nav-link @IsActivePage("Edit")" asp-page="/NavigationMenus/Edit"
+                            <a class="nav-link @IsActivePage("Edit")" asp-page="@RouteNames.NavigationMenus.Edit"
                                 asp-route-id="@Model.NavigationMenuId">
                                 <svg class="icon icon-sm mx-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"
                                     xmlns="http://www.w3.org/2000/svg">
@@ -48,7 +48,7 @@
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link @IsActivePage("Menu items")" asp-page="/NavigationMenus/MenuItems/Index"
+                            <a class="nav-link @IsActivePage("Menu items")" asp-page="@RouteNames.NavigationMenus.MenuItems.Index"
                                 asp-route-navigationMenuId="@Model.NavigationMenuId">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-sm" fill="none"
                                     stroke="currentColor" viewBox="0 0 24 24" fill="none">
@@ -63,7 +63,7 @@
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link @IsActivePage("Revisions")" asp-page="/NavigationMenus/Revisions"
+                            <a class="nav-link @IsActivePage("Revisions")" asp-page="@RouteNames.NavigationMenus.Revisions"
                                 asp-route-id="@Model.NavigationMenuId">
                                 <svg class="icon icon-sm mx-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"
                                     xmlns="http://www.w3.org/2000/svg">
@@ -75,11 +75,11 @@
                             </a>
                         </li>
                         <li class="nav-item">
-                            <form method="post" asp-page="/NavigationMenus/Delete"
+                            <form method="post" asp-page="@RouteNames.NavigationMenus.Delete"
                                 asp-route-id="@Model.NavigationMenuId" onsubmit="return confirm('Are you sure you want to delete?');">
                                 <button
                                     class="nav-link d-inline-flex align-items-center justify-content-center text-danger"
-                                    data-action="click->shared--confirmaction#warning">
+                                   >
                                     <svg class="icon icon-sm mx-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"
                                         xmlns="http://www.w3.org/2000/svg">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -94,7 +94,7 @@
                     else
                     {
                         <li class="nav-item">
-                            <form method="post" asp-page="/NavigationMenus/MenuItems/Delete"
+                            <form method="post" asp-page="@RouteNames.NavigationMenus.MenuItems.Delete"
                                 asp-route-id="@Model.NavigationMenuItemId"
                                 asp-route-navigationMenuId="@Model.NavigationMenuId" onsubmit="return confirm('Are you sure you want to delete?');">
                                 <button type="submit"
