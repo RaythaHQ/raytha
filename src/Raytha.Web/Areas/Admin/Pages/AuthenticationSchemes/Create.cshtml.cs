@@ -6,7 +6,9 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Raytha.Application.AuthenticationSchemes.Commands;
 using Raytha.Domain.Entities;
 using Raytha.Domain.ValueObjects;
+using Raytha.Web.Areas.Admin.Pages.Shared;
 using Raytha.Web.Areas.Admin.Pages.Shared.Models;
+using Raytha.Web.Areas.Shared.Models;
 
 namespace Raytha.Web.Areas.Admin.Pages.AuthenticationSchemes;
 
@@ -19,6 +21,28 @@ public class Create : BaseAdminPageModel
 
     public async Task<IActionResult> OnGet()
     {
+        // Set breadcrumbs for navigation
+        SetBreadcrumbs(
+            new BreadcrumbNode
+            {
+                Label = "Settings",
+                RouteName = RouteNames.Configuration.Index,
+                IsActive = false,
+            },
+            new BreadcrumbNode
+            {
+                Label = "Authentication Schemes",
+                RouteName = RouteNames.AuthenticationSchemes.Index,
+                IsActive = false,
+            },
+            new BreadcrumbNode
+            {
+                Label = "Create",
+                RouteName = RouteNames.AuthenticationSchemes.Create,
+                IsActive = true,
+            }
+        );
+
         var supportedAuthenticationTypes = new OrderedDictionary()
         {
             { "", "-- SELECT --" },
@@ -56,7 +80,7 @@ public class Create : BaseAdminPageModel
         if (response.Success)
         {
             SetSuccessMessage($"Authentication scheme was created successfully.");
-            return RedirectToPage("/AuthenticationSchemes/Edit", new { id = response.Result });
+            return RedirectToPage(RouteNames.AuthenticationSchemes.Edit, new { id = response.Result });
         }
         else
         {

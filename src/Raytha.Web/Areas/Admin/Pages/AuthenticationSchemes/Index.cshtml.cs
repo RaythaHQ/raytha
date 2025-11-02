@@ -5,6 +5,7 @@ using Raytha.Application.AuthenticationSchemes.Queries;
 using Raytha.Application.Common.Utils;
 using Raytha.Domain.Entities;
 using Raytha.Domain.ValueObjects;
+using Raytha.Web.Areas.Admin.Pages.Shared;
 using Raytha.Web.Areas.Admin.Pages.Shared.Models;
 using Raytha.Web.Areas.Shared.Models;
 
@@ -22,6 +23,22 @@ public class Index : BaseAdminPageModel, IHasListView<Index.AuthenticationScheme
         int pageSize = 50
     )
     {
+        // Set breadcrumbs for navigation
+        SetBreadcrumbs(
+            new BreadcrumbNode
+            {
+                Label = "Settings",
+                RouteName = RouteNames.Configuration.Index,
+                IsActive = false,
+            },
+            new BreadcrumbNode
+            {
+                Label = "Authentication Schemes",
+                RouteName = RouteNames.AuthenticationSchemes.Index,
+                IsActive = true,
+            }
+        );
+
         var input = new GetAuthenticationSchemes.Query
         {
             Search = search,

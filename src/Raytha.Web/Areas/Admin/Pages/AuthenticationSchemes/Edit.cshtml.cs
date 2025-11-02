@@ -7,7 +7,9 @@ using Raytha.Application.AuthenticationSchemes.Commands;
 using Raytha.Application.AuthenticationSchemes.Queries;
 using Raytha.Domain.Entities;
 using Raytha.Domain.ValueObjects;
+using Raytha.Web.Areas.Admin.Pages.Shared;
 using Raytha.Web.Areas.Admin.Pages.Shared.Models;
+using Raytha.Web.Areas.Shared.Models;
 
 namespace Raytha.Web.Areas.Admin.Pages.AuthenticationSchemes;
 
@@ -21,6 +23,28 @@ public class Edit : BaseAdminPageModel
 
     public async Task<IActionResult> OnGet(string id)
     {
+        // Set breadcrumbs for navigation
+        SetBreadcrumbs(
+            new BreadcrumbNode
+            {
+                Label = "Settings",
+                RouteName = RouteNames.Configuration.Index,
+                IsActive = false,
+            },
+            new BreadcrumbNode
+            {
+                Label = "Authentication Schemes",
+                RouteName = RouteNames.AuthenticationSchemes.Index,
+                IsActive = false,
+            },
+            new BreadcrumbNode
+            {
+                Label = "Edit",
+                RouteName = RouteNames.AuthenticationSchemes.Edit,
+                IsActive = true,
+            }
+        );
+
         var supportedAuthenticationTypes = new OrderedDictionary()
         {
             {
@@ -85,7 +109,7 @@ public class Edit : BaseAdminPageModel
         if (response.Success)
         {
             SetSuccessMessage($"Authentication scheme was updated successfully.");
-            return RedirectToPage("/AuthenticationSchemes/Edit", new { id });
+            return RedirectToPage(RouteNames.AuthenticationSchemes.Edit, new { id });
         }
         else
         {

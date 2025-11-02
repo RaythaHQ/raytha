@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Raytha.Application.AuthenticationSchemes.Commands;
 using Raytha.Domain.Entities;
+using Raytha.Web.Areas.Admin.Pages.Shared;
 using Raytha.Web.Areas.Admin.Pages.Shared.Models;
 
 namespace Raytha.Web.Areas.Admin.Pages.AuthenticationSchemes;
@@ -16,7 +17,7 @@ public class Delete : BaseAdminPageModel
         if (response.Success)
         {
             SetSuccessMessage($"Authentication scheme has been deleted.");
-            return RedirectToPage("/AuthenticationSchemes/Index");
+            return RedirectToPage(RouteNames.AuthenticationSchemes.Index);
         }
         else
         {
@@ -24,7 +25,7 @@ public class Delete : BaseAdminPageModel
                 "There was an error deleting this authentication scheme",
                 response.GetErrors()
             );
-            return RedirectToPage("/AuthenticationSchemes/Edit", new { id });
+            return RedirectToPage(RouteNames.AuthenticationSchemes.Edit, new { id });
         }
     }
 }
