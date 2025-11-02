@@ -2,10 +2,9 @@
 @model Raytha.Web.Areas.Admin.Pages.Users.Index
 
 @{
-    var pageTitle = "Users";
     Layout = "UsersAndUserGroups";
-    ViewData["Title"] = pageTitle;
-    ViewData["ActiveMenu"] = pageTitle;
+    ViewData["Title"] = "Users";
+    ViewData["ActiveMenu"] = "Users";
 }
 
 @(await Html.PartialAsync("_Partials/TableCreateAndSearchBar", new BaseTableCreateAndSearchBarViewModel

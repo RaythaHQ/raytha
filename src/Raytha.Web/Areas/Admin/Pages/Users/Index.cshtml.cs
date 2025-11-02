@@ -5,6 +5,7 @@ using Raytha.Application.Common.Utils;
 using Raytha.Application.Users.Queries;
 using Raytha.Domain.Entities;
 using Raytha.Domain.ValueObjects;
+using Raytha.Web.Areas.Admin.Pages.Shared;
 using Raytha.Web.Areas.Admin.Pages.Shared.Models;
 using Raytha.Web.Areas.Shared.Models;
 
@@ -38,6 +39,16 @@ public class Index : BaseAdminPageModel, IHasListView<Index.UsersListItemViewMod
         CancellationToken cancellationToken = default
     )
     {
+        // Set breadcrumbs for navigation
+        SetBreadcrumbs(
+            new BreadcrumbNode
+            {
+                Label = "Users",
+                RouteName = RouteNames.Users.Index,
+                IsActive = true
+            }
+        );
+
         var input = new GetUsers.Query
         {
             Search = search,

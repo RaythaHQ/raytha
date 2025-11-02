@@ -8,6 +8,7 @@ using Raytha.Application.Users.Queries;
 using Raytha.Domain.Entities;
 using Raytha.Web.Areas.Admin.Pages.Shared;
 using Raytha.Web.Areas.Admin.Pages.Shared.Models;
+using Raytha.Web.Areas.Shared.Models;
 
 namespace Raytha.Web.Areas.Admin.Pages.Users;
 
@@ -47,6 +48,22 @@ public class Edit : BaseAdminPageModel, ISubActionViewModel
     public async Task<IActionResult> OnGet(string id, CancellationToken cancellationToken = default)
     {
         var response = await Mediator.Send(new GetUserById.Query { Id = id }, cancellationToken);
+
+        // Set breadcrumbs for navigation
+        SetBreadcrumbs(
+            new BreadcrumbNode
+            {
+                Label = "Users",
+                RouteName = RouteNames.Users.Index
+            },
+            new BreadcrumbNode
+            {
+                Label = $"{response.Result.FirstName} {response.Result.LastName}",
+                RouteName = RouteNames.Users.Edit,
+                RouteValues = new Dictionary<string, string> { { "id", id } },
+                IsActive = true
+            }
+        );
 
         var allUserGroups = await Mediator.Send(new GetUserGroups.Query(), cancellationToken);
         var userGroups = allUserGroups.Result.Items.Select(

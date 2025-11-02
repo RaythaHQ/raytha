@@ -5,6 +5,7 @@ using Raytha.Application.Users.Queries;
 using Raytha.Domain.Entities;
 using Raytha.Web.Areas.Admin.Pages.Shared;
 using Raytha.Web.Areas.Admin.Pages.Shared.Models;
+using Raytha.Web.Areas.Shared.Models;
 
 namespace Raytha.Web.Areas.Admin.Pages.Users;
 
@@ -64,6 +65,28 @@ public class ResetPassword : BaseAdminPageModel, ISubActionViewModel
             SetErrorMessage("You cannot reset an administrator's password from this screen.");
             return RedirectToPage(RouteNames.Users.Edit, new { id });
         }
+
+        // Set breadcrumbs for navigation
+        SetBreadcrumbs(
+            new BreadcrumbNode
+            {
+                Label = "Users",
+                RouteName = RouteNames.Users.Index
+            },
+            new BreadcrumbNode
+            {
+                Label = $"{response.Result.FirstName} {response.Result.LastName}",
+                RouteName = RouteNames.Users.Edit,
+                RouteValues = new Dictionary<string, string> { { "id", id } }
+            },
+            new BreadcrumbNode
+            {
+                Label = "Reset Password",
+                RouteName = RouteNames.Users.ResetPassword,
+                RouteValues = new Dictionary<string, string> { { "id", id } },
+                IsActive = true
+            }
+        );
 
         Form = new FormModel();
         Id = id;

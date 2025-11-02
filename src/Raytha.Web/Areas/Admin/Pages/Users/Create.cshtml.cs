@@ -7,6 +7,7 @@ using Raytha.Application.Users.Commands;
 using Raytha.Domain.Entities;
 using Raytha.Web.Areas.Admin.Pages.Shared;
 using Raytha.Web.Areas.Admin.Pages.Shared.Models;
+using Raytha.Web.Areas.Shared.Models;
 
 namespace Raytha.Web.Areas.Admin.Pages.Users;
 
@@ -29,6 +30,21 @@ public class Create : BaseAdminPageModel
     /// <returns>The page result.</returns>
     public async Task<IActionResult> OnGet(CancellationToken cancellationToken = default)
     {
+        // Set breadcrumbs for navigation
+        SetBreadcrumbs(
+            new BreadcrumbNode
+            {
+                Label = "Users",
+                RouteName = RouteNames.Users.Index
+            },
+            new BreadcrumbNode
+            {
+                Label = "Create User",
+                RouteName = RouteNames.Users.Create,
+                IsActive = true
+            }
+        );
+
         var userGroupsChoicesResponse = await Mediator.Send(new GetUserGroups.Query(), cancellationToken);
         var userGroupsViewModel = userGroupsChoicesResponse
             .Result.Items.Select(p => new CheckboxItemViewModel
