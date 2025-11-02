@@ -287,8 +287,16 @@ public class Create : BaseAdminPageModel
                                 $"{InsertVariableTemplateFactory.ContentItem.VariableCategoryName}.PublishedContent.{p.DeveloperName}.Value",
                         })
                 );
+                
+                // Ensure unique key by using DeveloperName as fallback if LabelSingular already exists
+                var key = item.LabelSingular;
+                if (templateVariableDictionary.ContainsKey(key))
+                {
+                    key = $"{item.LabelSingular} ({item.DeveloperName})";
+                }
+                
                 templateVariableDictionary.Add(
-                    $"{item.LabelSingular}",
+                    key,
                     allCustomVariables.OrderBy(p => p.DeveloperName)
                 );
             }
