@@ -5,6 +5,7 @@ using Raytha.Application.EmailTemplates.Commands;
 using Raytha.Application.EmailTemplates.Queries;
 using Raytha.Domain.Entities;
 using Raytha.Domain.ValueObjects;
+using Raytha.Web.Areas.Admin.Pages.Shared;
 using Raytha.Web.Areas.Admin.Pages.Shared.Models;
 using Raytha.Web.Areas.Shared.Models;
 
@@ -26,6 +27,22 @@ public class Revisions
         int pageSize = 50
     )
     {
+        // Set breadcrumbs for navigation
+        SetBreadcrumbs(
+            new BreadcrumbNode
+            {
+                Label = "Email Templates",
+                RouteName = RouteNames.EmailTemplates.Index,
+                IsActive = false,
+            },
+            new BreadcrumbNode
+            {
+                Label = "Revisions",
+                RouteName = RouteNames.EmailTemplates.Revisions,
+                IsActive = true,
+            }
+        );
+
         var template = await Mediator.Send(new GetEmailTemplateById.Query { Id = id });
 
         var input = new GetEmailTemplateRevisionsByTemplateId.Query
@@ -69,7 +86,7 @@ public class Revisions
         {
             SetErrorMessage("There was an error reverting this template", response.GetErrors());
         }
-        return RedirectToPage("/EmailTemplates/Edit", new { id });
+        return RedirectToPage(RouteNames.EmailTemplates.Edit, new { id });
     }
 
     public record EmailTemplatesRevisionListItemViewModel

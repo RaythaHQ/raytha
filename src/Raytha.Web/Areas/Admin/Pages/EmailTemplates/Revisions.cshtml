@@ -34,7 +34,7 @@
             {
                 <tr>
                     <td class="align-middle">
-                        <form onsubmit="return confirmDelete();" method="post" asp-page="/EmailTemplates/Revisions"
+                        <form onsubmit="return confirmDelete();" method="post" asp-page="@RouteNames.EmailTemplates.Revisions"
                             asp-page-handler="Revert" asp-route-revisionId="@item.Id" asp-route-id="@Model.Id">
                             <button class="btn btn-sm btn-success">
                                 Revert

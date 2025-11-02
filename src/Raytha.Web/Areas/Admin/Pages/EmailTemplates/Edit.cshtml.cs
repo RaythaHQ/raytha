@@ -4,7 +4,9 @@ using Microsoft.AspNetCore.Mvc;
 using Raytha.Application.EmailTemplates.Commands;
 using Raytha.Application.EmailTemplates.Queries;
 using Raytha.Domain.Entities;
+using Raytha.Web.Areas.Admin.Pages.Shared;
 using Raytha.Web.Areas.Admin.Pages.Shared.Models;
+using Raytha.Web.Areas.Shared.Models;
 using Raytha.Web.Utils;
 
 namespace Raytha.Web.Areas.Admin.Pages.EmailTemplates;
@@ -23,6 +25,22 @@ public class Edit : BaseAdminPageModel, ISubActionViewModel
 
     public async Task<IActionResult> OnGet(string id)
     {
+        // Set breadcrumbs for navigation
+        SetBreadcrumbs(
+            new BreadcrumbNode
+            {
+                Label = "Email Templates",
+                RouteName = RouteNames.EmailTemplates.Index,
+                IsActive = false,
+            },
+            new BreadcrumbNode
+            {
+                Label = "Edit",
+                RouteName = RouteNames.EmailTemplates.Edit,
+                IsActive = true,
+            }
+        );
+
         var response = await Mediator.Send(new GetEmailTemplateById.Query { Id = id });
 
         TemplateVariables = GetInsertVariablesViewModel(response.Result.DeveloperName);
@@ -57,7 +75,7 @@ public class Edit : BaseAdminPageModel, ISubActionViewModel
         if (response.Success)
         {
             SetSuccessMessage($"{Form.Subject} was updated successfully.");
-            return RedirectToPage("/EmailTemplates/Edit", new { id });
+            return RedirectToPage(RouteNames.EmailTemplates.Edit, new { id });
         }
         else
         {
