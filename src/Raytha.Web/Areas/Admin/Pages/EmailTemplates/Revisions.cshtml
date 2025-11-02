@@ -34,7 +34,7 @@
             {
                 <tr>
                     <td class="align-middle">
-                        <form onsubmit="return confirmDelete();" method="post" asp-page="@RouteNames.EmailTemplates.Revisions"
+                        <form onsubmit="return confirm('Are you sure you want to delete?');" method="post" asp-page="@RouteNames.EmailTemplates.Revisions"
                             asp-page-handler="Revert" asp-route-revisionId="@item.Id" asp-route-id="@Model.Id">
                             <button class="btn btn-sm btn-success">
                                 Revert
@@ -74,8 +74,6 @@
     <partial name="_Partials/TablePagination" model="@Model.ListView" />
 </div>
 
-<script>
-    function confirmDelete() {
-        return confirm("Are you sure you want to revert to this email template?");
-    }
-</script>
+@section Scripts {
+<script type="module" defer src="~/js/pages/email-templates/revisions.js"></script>
+}

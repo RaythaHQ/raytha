@@ -45,18 +45,6 @@
     </div>
 </div>
 
-<script>
-    document.getElementById('Form_Label').addEventListener('input', function () {
-        const labelValue = this.value;
-
-        // Create developer name: remove whitespace, hyphens, and special characters
-        const developerName = labelValue
-            .toLowerCase()
-            .replace(/\s+/g, '_')      // Replace spaces with hyphens
-            .replace(/[^a-z0-9_]/g, '') // Remove special characters
-            .replace(/_+/g, '_');      // Ensure no repeated hyphens
-
-        // Set the value in the developer name input
-        document.getElementById('Form_DeveloperName').value = developerName;
-    });
-</script>
+@section Scripts {
+<script type="module" defer src="~/js/pages/user-groups/create.js"></script>
+}

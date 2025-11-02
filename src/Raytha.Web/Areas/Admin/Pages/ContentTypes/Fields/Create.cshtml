@@ -125,27 +125,5 @@
 </form>
 
 @section Scripts {
-<script>
-// Auto-generate developer name from label
-document.addEventListener('DOMContentLoaded', function() {
-    const labelInput = document.getElementById('Form_Label');
-    const devNameInput = document.getElementById('Form_DeveloperName');
-    
-    if (labelInput && devNameInput && !devNameInput.value) {
-        labelInput.addEventListener('input', function() {
-            devNameInput.value = labelInput.value
-                .toLowerCase()
-                .replace(/[^a-z0-9]+/g, '_')
-                .replace(/^_|_$/g, '');
-        });
-        
-        labelInput.addEventListener('change', function() {
-            devNameInput.value = labelInput.value
-                .toLowerCase()
-                .replace(/[^a-z0-9]+/g, '_')
-                .replace(/^_|_$/g, '');
-        });
-    }
-});
-</script>
+<script type="module" defer src="~/js/pages/content-types/fields-create.js"></script>
 }

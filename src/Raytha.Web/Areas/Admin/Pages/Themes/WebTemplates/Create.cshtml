@@ -184,49 +184,6 @@
     import { indentWithTab } from '@@codemirror/commands';
     import { keymap } from '@@codemirror/view';
 
-    // --- Developer name sync (vanilla JS) ---
-    function slugifyDeveloperName(text) {
-        // lower, replace whitespace with underscores, remove invalid chars, collapse underscores
-        return (text || '')
-            .toLowerCase()
-            .normalize('NFKD')                // handle accents
-            .replace(/[\u0300-\u036f]/g, '')  // strip diacritics
-            .replace(/[^a-z0-9\s_-]/g, '')    // keep alnum, space, underscore, hyphen
-            .trim()
-            .replace(/\s+/g, '_')
-            .replace(/_+/g, '_')
-            .substring(0, 128);               // reasonable max length
-    }
-
-    function bindDeveloperNameSync(labelId, devNameId) {
-        const labelEl = document.getElementById(labelId);
-        const devEl = document.getElementById(devNameId);
-        if (!labelEl || !devEl) return;
-
-        let userOverrode = false;
-
-        // If dev name already has a value different from slug(label), consider it overridden
-        const initialSlug = slugifyDeveloperName(labelEl.value);
-        if (devEl.value && devEl.value !== initialSlug) {
-            userOverrode = true;
-        }
-
-        // If user types in dev name, stop auto-sync
-        ['input', 'change'].forEach(evt =>
-            devEl.addEventListener(evt, () => { userOverrode = true; }, { passive: true })
-        );
-
-        const sync = () => {
-            if (!userOverrode) {
-                devEl.value = slugifyDeveloperName(labelEl.value);
-            }
-        };
-
-        ['input', 'keyup', 'change'].forEach(evt =>
-            labelEl.addEventListener(evt, sync, { passive: true })
-        );
-    }
-
     // --- Base layout toggle (vanilla JS) ---
     function setupBaseLayoutToggle() {
         const checkbox = document.getElementById('Form_IsBaseLayout');
@@ -277,10 +234,12 @@
 
     // Initialize vanilla hooks
     document.addEventListener('DOMContentLoaded', function () {
-        bindDeveloperNameSync('Form_Label', 'Form_DeveloperName');
+        // Developer name sync is handled by /js/pages/themes/web-templates-create.js
         setupBaseLayoutToggle();
         setupCopyAssetLinks();
     });
 </script>
+
+<script type="module" defer src="~/js/pages/themes/web-templates-create.js"></script>
 
 @Html.Partial("_Partials/FileUpload", uploadOptions)

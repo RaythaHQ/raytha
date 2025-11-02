@@ -24,7 +24,7 @@
     List<Reorder.NavigationMenuItemsListItemViewModel>
     navigationMenuItems)
     {
-        <ul id="menuList" class="list-group mt-4">
+        <ul id="menuList" class="list-group mt-4" data-ajax-url="@Url.Page(null, new { handler = "Ajax" })">
             @foreach (var item in navigationMenuItems)
             {
                 <li class="list-group-item border raytha-draggable d-flex justify-content-between align-items-center"
@@ -50,9 +50,11 @@
     <div class="col-lg-12">
         <div class="mb-3">
             <label class="form-label">Parent menu item</label>
-            <select id="keySelect" data-action="change->navigationmenuitems--items#handleChange" class="form-select"
+            <select id="keySelect" class="form-select"
                 asp-for="@Model.ParentNavigationMenuId"
-                asp-items="@(new SelectList(Model.NavigationMenuItemsForSelect, "Id", "Label"))">
+                asp-items="@(new SelectList(Model.NavigationMenuItemsForSelect, "Id", "Label"))"
+                data-root-url="@rootUrl"
+                data-parent-template="@parentUrlTemplate">
                 <option value="">(root)</option>
             </select>
             <hr />
@@ -64,71 +66,7 @@
     }
 </div>
 
+@section Scripts {
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
-<script>
-    (function () {
-        const listEl = document.getElementById('menuList');
-        if (!listEl) return;
-
-        const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
-
-        function showNotification(message, ok = true) {
-            const n = document.createElement('div');
-            n.textContent = message;
-            Object.assign(n.style, {
-                position: 'fixed', bottom: '20px', right: '20px',
-                padding: '10px 16px', borderRadius: '6px', color: '#fff',
-                fontWeight: '500', background: ok ? '#28a745' : '#dc3545',
-                boxShadow: '0 2px 6px rgba(0,0,0,.2)', zIndex: 9999
-            });
-            document.body.appendChild(n); setTimeout(() => n.remove(), 2500);
-        }
-
-        async function onReordered(evt) {
-            const id = evt.item.dataset.id;          // ID of dragged item
-            const newPosition = evt.newIndex + 1;    // zero-based -> human-friendly
-
-            // Send data to server
-            fetch('@Url.Page(null, new { handler = "Ajax" })', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                body: new URLSearchParams({ id, position: newPosition, __RequestVerificationToken: token })
-            })
-                .then(res => {
-                    if (!res.ok) {
-
-                        showNotification('Failed to save order ❌', false);
-                    }
-                    else {
-
-                        showNotification('Menu order saved ✅', true);
-                    }
-                    return res.text();
-                })
-                .then(console.log)
-                .catch(console.error);
-        }
-
-        new Sortable(listEl, {
-            animation: 150,
-            ghostClass: 'bg-light',
-            onEnd: onReordered
-        });
-    })();
-    (function () {
-        const sel = document.getElementById('keySelect');
-        if (!sel) return;
-
-        const rootUrl = '@rootUrl';
-        const parentTpl = '@parentUrlTemplate';
-
-        sel.addEventListener('change', (e) => {
-            const v = e.target.value;
-            const url = v
-                ? parentTpl.replace('__PARENT__', encodeURIComponent(v))
-                : rootUrl;
-
-            window.location.assign(url); // or .href = url
-        });
-    })();
-</script>
+<script type="module" defer src="~/js/pages/navigation-menus/menu-items-reorder.js"></script>
+}

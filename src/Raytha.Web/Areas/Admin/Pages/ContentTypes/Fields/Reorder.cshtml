@@ -16,8 +16,7 @@
             <div class="card-body">
                 @(await Html.PartialAsync("_BackToList", Model.CurrentView.ContentType.DeveloperName))
 
-                <ul data-controller="shared--reorderlist" data-shared--reorderlist-animation-value="150"
-                    class="list-group mt-4">
+                <ul data-sortable-list class="list-group mt-4">
                     @foreach (var item in Model.ListView.Items)
                     {
                         <li data-sortable-update-url="@Url.Action("FieldsReorderAjax", new { contentTypeDeveloperName = Model.CurrentView.ContentType.DeveloperName, id = item.Id })"
@@ -31,8 +30,13 @@
                             </svg>
                         </li>
                     }
+                    @Html.AntiForgeryToken()
                 </ul>
             </div>
         </div>
     </div>
 </div>
+
+@section Scripts {
+<script type="module" defer src="~/js/pages/content-types/fields-reorder.js"></script>
+}

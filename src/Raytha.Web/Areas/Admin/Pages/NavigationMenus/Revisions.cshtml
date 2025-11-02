@@ -67,8 +67,6 @@
     <partial name="_Partials/TablePagination" model="@Model.ListView" />
 </div>
 
-<script>
-    function confirmRevert() {
-        return confirm("Are you sure you want to revert?");
-    }
-</script>
+@section Scripts {
+<script type="module" defer src="~/js/pages/navigation-menus/revisions.js"></script>
+}

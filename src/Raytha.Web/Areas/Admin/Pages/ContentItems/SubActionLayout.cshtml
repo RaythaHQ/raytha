@@ -78,7 +78,7 @@
                             <li class="nav-item" data-controller="shared--confirmaction"
                                 data-shared--confirmaction-title-value="Are you sure you want to delete this @Model.CurrentView.ContentType.LabelSingular.ToLower()? This action cannot be undone.">
                                 <form method="post" asp-page="/ContentItems/Delete" asp-route-id="@Model.Id"
-                                    onsubmit="return confirmDelete();"
+                                    onsubmit="return confirm('Are you sure you want to delete?');"
                                     asp-route-contentTypeDeveloperName="@Model.CurrentView.ContentType.DeveloperName"
                                     data-shared--confirmaction-target="form">
                                     <button
@@ -101,8 +101,6 @@
         </div>
     </div>
 </div>
-<script>
-    function confirmDelete() {
-        return confirm("Are you sure you want to delete this item?");
-    }
-</script>
+
+@* Render Scripts section from child pages *@
+@await RenderSectionAsync("Scripts", required: false)

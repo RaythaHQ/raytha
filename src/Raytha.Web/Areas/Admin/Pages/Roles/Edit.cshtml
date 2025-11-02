@@ -115,7 +115,7 @@
                     <ul class="nav nav-pills square nav-fill flex-column vertical-tab">
                         <li class="nav-item">
                             <form method="post" asp-page="@RouteNames.Roles.Delete" asp-route-id="@Model.Form.Id"
-                                onsubmit="return confirmDelete();">
+                                onsubmit="return confirm('Are you sure you want to delete?');">
                                 <button
                                     class="nav-link d-inline-flex align-items-center justify-content-center text-danger"
                                     @DisableIfSuperAdminRole()>
@@ -136,9 +136,6 @@
     </div>
 </div>
 
-<script>
-    function confirmDelete() {
-        return confirm("Are you sure you want to delete this role?");
-    }
-</script>
-<script src="~/raytha_admin/js/src/shared/role-permissions.js"></script>
+@section Scripts {
+<script type="module" defer src="~/js/pages/roles/edit.js"></script>
+}

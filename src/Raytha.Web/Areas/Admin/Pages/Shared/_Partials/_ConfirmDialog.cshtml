@@ -38,15 +38,4 @@
     </div>
 </div>
 
-<script>
-    // Set form action dynamically when modal is shown
-    document.getElementById('@Model.Id').addEventListener('show.bs.modal', function (event) {
-        var button = event.relatedTarget;
-        if (button) {
-            var actionUrl = button.getAttribute('data-action-url');
-            if (actionUrl) {
-                document.getElementById('@(Model.Id)-form').action = actionUrl;
-            }
-        }
-    });
-</script>
+@* Confirm dialog logic handled by /js/shared/confirm-dialog.js *@

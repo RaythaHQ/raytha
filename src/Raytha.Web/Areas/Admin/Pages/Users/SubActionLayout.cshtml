@@ -97,7 +97,7 @@
                         }
 
                         <li class="nav-item">
-                            <form method="post" asp-page="@RouteNames.Users.Delete" asp-route-id="@Model.Id" onsubmit="return confirmDelete();">
+                            <form method="post" asp-page="@RouteNames.Users.Delete" asp-route-id="@Model.Id" onsubmit="return confirm('Are you sure you want to delete?');">
                                 <button type="submit" class="nav-link d-inline-flex align-items-center justify-content-center text-danger" 
                                         @DisableIfEditingMyselfOrAdmin()
                                         aria-label="Delete user"
@@ -114,8 +114,5 @@
     </div>
 </div>
 
-<script>
-    function confirmDelete() {
-        return confirm("Are you sure you want to delete this user?");
-    }
-</script>
+@* Render Scripts section from child pages *@
+@await RenderSectionAsync("Scripts", required: false)

@@ -126,59 +126,6 @@
     </div>
     </div>
 </div>
-<script>
-    document.addEventListener("DOMContentLoaded", function () {
-        //Apply developer name functionality
-        bindDeveloperNameSync('Form_Label', 'Form_DeveloperName');
-        
-        //Conditional logic for UI of auth scheme
-        const authSchemeType = document.getElementById("Form_AuthenticationSchemeType");
-        const jwtFields = [
-            document.getElementById("Form_JwtSecretKey"),
-            document.getElementById("Form_JwtUseHighSecurity")
-        ];
-        const samlFields = [
-            document.getElementById("Form_SamlCertificate"),
-            document.getElementById("Form_SamlIdpEntityId")
-        ];
-
-        function toggleFields() {
-            const value = authSchemeType.value;
-
-            if (!value) {
-                // Hide all fields if authentication scheme type is empty
-                hideFields([...jwtFields, ...samlFields]);
-            } else if (value.toLowerCase() === "jwt") {
-                // Show only JWT fields
-                showFields(jwtFields);
-                hideFields(samlFields);
-            } else if (value.toLowerCase() === "saml") {
-                // Show only SAML fields
-                showFields(samlFields);
-                hideFields(jwtFields);
-            } else {
-                // Hide all fields for unknown types
-                hideFields([...jwtFields, ...samlFields]);
-            }
-        }
-
-        function hideFields(fields) {
-            fields.forEach(field => {
-                if (field) field.closest(".col-lg-12").style.display = "none";
-            });
-        }
-
-        function showFields(fields) {
-            fields.forEach(field => {
-                if (field) field.closest(".col-lg-12").style.display = "block";
-            });
-        }
-
-        // Initial check on page load
-        toggleFields();
-
-        // Add event listener for changes
-        authSchemeType.addEventListener("change", toggleFields);
-    });
-
-</script>
+@section Scripts {
+<script type="module" defer src="~/js/pages/authentication-schemes/create.js"></script>
+}

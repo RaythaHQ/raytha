@@ -10,13 +10,20 @@
     <link rel="stylesheet" href="~/raytha_admin/css/site.css" asp-append-version="true" />
     <link rel="icon" type="image/x-icon" href="~/favicon.ico">
 
-    <script src="~/raytha_admin/js/app.js"></script>
     @RenderSection("headstyles", false)
 </head>
 
-<body>
+<body data-active-menu="@ViewData["ActiveMenu"]">
     @RenderBody()
     <script src="~/raytha_admin/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    
+    @* Load shared modules that auto-initialize *@
+    <script type="module">
+        import '/js/shared/role-permissions.js';
+        import '/js/shared/confirm-dialog.js';
+        import { initNavigation } from '/js/core/nav.js';
+        initNavigation();
+    </script>
 
     @await RenderSectionAsync("Scripts", required: false)
 </body>
