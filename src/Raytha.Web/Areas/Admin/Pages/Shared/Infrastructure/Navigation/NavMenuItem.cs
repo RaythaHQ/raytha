@@ -59,4 +59,3 @@ public class NavMenuItem
     /// </summary>
     public bool OpenInNewTab { get; init; }
 }
-

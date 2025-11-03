@@ -34,13 +34,13 @@ public class Revisions
                 Label = "Email Templates",
                 RouteName = RouteNames.EmailTemplates.Index,
                 IsActive = false,
-                Icon = SidebarIcons.EmailTemplates
+                Icon = SidebarIcons.EmailTemplates,
             },
             new BreadcrumbNode
             {
                 Label = "Revisions",
                 RouteName = RouteNames.EmailTemplates.Revisions,
-                IsActive = true
+                IsActive = true,
             }
         );
 

@@ -1,13 +1,13 @@
 #nullable enable
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Domain.Entities;
 using Raytha.Web.Areas.Admin.Pages.Shared.Infrastructure.Navigation;
 using Raytha.Web.Authentication;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace Raytha.Web.Areas.Admin.Pages.Shared.Components.Sidebar;
 
@@ -25,7 +25,8 @@ public class SidebarViewComponent : ViewComponent
     public SidebarViewComponent(
         IAuthorizationService authorizationService,
         ICurrentUser currentUser,
-        ICurrentOrganization currentOrganization)
+        ICurrentOrganization currentOrganization
+    )
     {
         _authorizationService = authorizationService;
         _currentUser = currentUser;
@@ -36,12 +37,8 @@ public class SidebarViewComponent : ViewComponent
     {
         var activeMenu = ViewContext.ViewData["ActiveMenu"]?.ToString();
         var menuItems = await BuildMenuAsync(activeMenu);
-        
-        return View(new SidebarViewModel
-        {
-            MenuItems = menuItems,
-            ActiveMenu = activeMenu
-        });
+
+        return View(new SidebarViewModel { MenuItems = menuItems, ActiveMenu = activeMenu });
     }
 
     /// <summary>
@@ -61,7 +58,8 @@ public class SidebarViewComponent : ViewComponent
         // Add profile menu with user info
         var profileMenu = NavMap.GetProfileMenu(
             _currentUser.FullName ?? "User",
-            _currentOrganization.EmailAndPasswordIsEnabledForAdmins);
+            _currentOrganization.EmailAndPasswordIsEnabledForAdmins
+        );
         staticItems.Add(profileMenu);
 
         // Filter by permissions
@@ -90,19 +88,22 @@ public class SidebarViewComponent : ViewComponent
             var authResult = await _authorizationService.AuthorizeAsync(
                 HttpContext.User,
                 contentType.DeveloperName,
-                ContentItemOperations.Read);
+                ContentItemOperations.Read
+            );
 
             if (authResult.Succeeded)
             {
-                items.Add(new NavMenuItem
-                {
-                    Id = contentType.DeveloperName,
-                    Label = contentType.LabelPlural,
-                    RouteName = RouteNames.ContentItems.Index,
-                    Icon = null, // Content types don't have icons in the old design
-                    Permission = null, // Already checked authorization
-                    Order = order++
-                });
+                items.Add(
+                    new NavMenuItem
+                    {
+                        Id = contentType.DeveloperName,
+                        Label = contentType.LabelPlural,
+                        RouteName = RouteNames.ContentItems.Index,
+                        Icon = null, // Content types don't have icons in the old design
+                        Permission = null, // Already checked authorization
+                        Order = order++,
+                    }
+                );
             }
         }
 
@@ -120,7 +121,8 @@ public class SidebarViewComponent : ViewComponent
         {
             var authResult = await _authorizationService.AuthorizeAsync(
                 HttpContext.User,
-                item.Permission);
+                item.Permission
+            );
 
             if (!authResult.Succeeded)
             {
@@ -161,7 +163,7 @@ public class SidebarViewComponent : ViewComponent
             Children = processedChildren,
             IsDivider = item.IsDivider,
             CssClass = item.CssClass,
-            OpenInNewTab = item.OpenInNewTab
+            OpenInNewTab = item.OpenInNewTab,
         };
     }
 }

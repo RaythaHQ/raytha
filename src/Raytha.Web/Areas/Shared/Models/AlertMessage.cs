@@ -50,6 +50,5 @@ public enum AlertType
     /// <summary>
     /// Informational message (blue).
     /// </summary>
-    Info
+    Info,
 }
-

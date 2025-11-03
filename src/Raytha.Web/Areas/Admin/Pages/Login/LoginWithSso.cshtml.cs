@@ -55,7 +55,10 @@ public class LoginWithSso : BaseAdminLoginPageModel
         }
         catch (Exception e)
         {
-            return RedirectToPage(RouteNames.Login.LoginWithEmailAndPassword, new { area = "Admin" });
+            return RedirectToPage(
+                RouteNames.Login.LoginWithEmailAndPassword,
+                new { area = "Admin" }
+            );
         }
     }
 }

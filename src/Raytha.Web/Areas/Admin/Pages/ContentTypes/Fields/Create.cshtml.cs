@@ -31,7 +31,7 @@ public class Create : BaseContentTypeContextPageModel
                 RouteName = RouteNames.ContentItems.Index,
                 RouteValues = new Dictionary<string, string>
                 {
-                    { "contentTypeDeveloperName", CurrentView.ContentType.DeveloperName }
+                    { "contentTypeDeveloperName", CurrentView.ContentType.DeveloperName },
                 },
                 IsActive = false,
             },

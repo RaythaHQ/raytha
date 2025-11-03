@@ -72,20 +72,20 @@ public class ResetPassword : BaseAdminPageModel, ISubActionViewModel
             {
                 Label = "Users",
                 RouteName = RouteNames.Users.Index,
-                Icon = SidebarIcons.Users
+                Icon = SidebarIcons.Users,
             },
             new BreadcrumbNode
             {
                 Label = $"{response.Result.FirstName} {response.Result.LastName}",
                 RouteName = RouteNames.Users.Edit,
-                RouteValues = new Dictionary<string, string> { { "id", id } }
+                RouteValues = new Dictionary<string, string> { { "id", id } },
             },
             new BreadcrumbNode
             {
                 Label = "Reset Password",
                 RouteName = RouteNames.Users.ResetPassword,
                 RouteValues = new Dictionary<string, string> { { "id", id } },
-                IsActive = true
+                IsActive = true,
             }
         );
 
@@ -105,7 +105,10 @@ public class ResetPassword : BaseAdminPageModel, ISubActionViewModel
     /// <param name="id">The user's unique identifier.</param>
     /// <param name="cancellationToken">Cancellation token for the async operation.</param>
     /// <returns>Redirect to user edit page on success, or page with errors on failure.</returns>
-    public async Task<IActionResult> OnPost(string id, CancellationToken cancellationToken = default)
+    public async Task<IActionResult> OnPost(
+        string id,
+        CancellationToken cancellationToken = default
+    )
     {
         var input = new Raytha.Application.Users.Commands.ResetPassword.Command
         {

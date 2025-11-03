@@ -29,7 +29,7 @@ public class Index : BaseAdminPageModel, IHasListView<Index.RaythaFunctionsListI
                 Label = "Functions",
                 RouteName = RouteNames.RaythaFunctions.Index,
                 IsActive = true,
-                Icon = SidebarIcons.Functions
+                Icon = SidebarIcons.Functions,
             }
         );
 

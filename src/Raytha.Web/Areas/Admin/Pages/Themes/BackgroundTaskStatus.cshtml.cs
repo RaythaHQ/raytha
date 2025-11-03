@@ -16,8 +16,19 @@ public class BackgroundTaskStatus : BaseAdminPageModel
     public async Task<IActionResult> OnGet(string id, bool json = false)
     {
         SetBreadcrumbs(
-            new BreadcrumbNode { Label = "Themes", RouteName = RouteNames.Themes.Index, IsActive = false, Icon = SidebarIcons.Themes },
-            new BreadcrumbNode { Label = "Background Task", RouteName = RouteNames.Themes.BackgroundTaskStatus, IsActive = true }
+            new BreadcrumbNode
+            {
+                Label = "Themes",
+                RouteName = RouteNames.Themes.Index,
+                IsActive = false,
+                Icon = SidebarIcons.Themes,
+            },
+            new BreadcrumbNode
+            {
+                Label = "Background Task",
+                RouteName = RouteNames.Themes.BackgroundTaskStatus,
+                IsActive = true,
+            }
         );
 
         var response = await Mediator.Send(new GetBackgroundTaskById.Query { Id = id });

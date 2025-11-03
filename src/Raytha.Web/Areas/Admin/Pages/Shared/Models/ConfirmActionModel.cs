@@ -51,4 +51,3 @@ public class ConfirmActionModel
     /// </summary>
     public Dictionary<string, string>? RouteValues { get; init; }
 }
-

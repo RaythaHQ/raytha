@@ -24,7 +24,7 @@ public class Edit : BaseAdminPageModel, ISubActionViewModel
         var input = new GetThemeById.Query { Id = id };
 
         var response = await Mediator.Send(input);
-        
+
         // Set breadcrumbs for navigation
         SetBreadcrumbs(
             new BreadcrumbNode
@@ -32,13 +32,13 @@ public class Edit : BaseAdminPageModel, ISubActionViewModel
                 Label = "Themes",
                 RouteName = RouteNames.Themes.Index,
                 IsActive = false,
-                Icon = SidebarIcons.Themes
+                Icon = SidebarIcons.Themes,
             },
             new BreadcrumbNode
             {
                 Label = "Edit",
                 RouteName = RouteNames.Themes.Edit,
-                IsActive = true
+                IsActive = true,
             }
         );
 

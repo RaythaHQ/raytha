@@ -24,7 +24,7 @@ public class Edit : BaseContentTypeContextPageModel
     public async Task<IActionResult> OnGet(string id)
     {
         var response = await Mediator.Send(new GetContentTypeFieldById.Query { Id = id });
-        
+
         // Set breadcrumbs for navigation
         SetBreadcrumbs(
             new BreadcrumbNode
@@ -33,7 +33,7 @@ public class Edit : BaseContentTypeContextPageModel
                 RouteName = RouteNames.ContentItems.Index,
                 RouteValues = new Dictionary<string, string>
                 {
-                    { "contentTypeDeveloperName", CurrentView.ContentType.DeveloperName }
+                    { "contentTypeDeveloperName", CurrentView.ContentType.DeveloperName },
                 },
                 IsActive = false,
             },

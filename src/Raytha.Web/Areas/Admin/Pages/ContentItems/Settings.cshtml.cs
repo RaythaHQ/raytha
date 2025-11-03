@@ -7,8 +7,8 @@ using Raytha.Application.ContentItems.Queries;
 using Raytha.Application.Themes.WebTemplates.Queries;
 using Raytha.Application.Views;
 using Raytha.Domain.Entities;
-using Raytha.Web.Areas.Admin.Pages.Shared.Models;
 using Raytha.Web.Areas.Admin.Pages.Shared;
+using Raytha.Web.Areas.Admin.Pages.Shared.Models;
 
 namespace Raytha.Web.Areas.Admin.Pages.ContentItems;
 

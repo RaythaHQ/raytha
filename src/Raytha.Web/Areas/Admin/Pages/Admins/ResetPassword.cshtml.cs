@@ -32,28 +32,25 @@ public class ResetPassword : BaseAdminPageModel, ISubActionViewModel
             {
                 Label = "Settings",
                 RouteName = RouteNames.Configuration.Index,
-                IsActive = false
+                IsActive = false,
             },
             new BreadcrumbNode
             {
                 Label = "Admins",
                 RouteName = RouteNames.Admins.Index,
-                IsActive = false
+                IsActive = false,
             },
             new BreadcrumbNode
             {
                 Label = "Reset Password",
                 RouteName = RouteNames.Admins.ResetPassword,
-                IsActive = true
+                IsActive = true,
             }
         );
 
         var response = await Mediator.Send(new GetAdminById.Query { Id = id });
 
-        Form = new FormModel
-        {
-            Id = id
-        };
+        Form = new FormModel { Id = id };
 
         Id = id;
         IsActive = response.Result.IsActive;

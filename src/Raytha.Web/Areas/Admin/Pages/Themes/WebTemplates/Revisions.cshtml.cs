@@ -28,9 +28,25 @@ public class Revisions : BaseAdminPageModel, ISubActionViewModel
     )
     {
         SetBreadcrumbs(
-            new BreadcrumbNode { Label = "Themes", RouteName = RouteNames.Themes.Index, IsActive = false, Icon = SidebarIcons.Themes },
-            new BreadcrumbNode { Label = "Web Templates", RouteName = RouteNames.Themes.WebTemplates.Index, IsActive = false },
-            new BreadcrumbNode { Label = "Revisions", RouteName = RouteNames.Themes.WebTemplates.Revisions, IsActive = true }
+            new BreadcrumbNode
+            {
+                Label = "Themes",
+                RouteName = RouteNames.Themes.Index,
+                IsActive = false,
+                Icon = SidebarIcons.Themes,
+            },
+            new BreadcrumbNode
+            {
+                Label = "Web Templates",
+                RouteName = RouteNames.Themes.WebTemplates.Index,
+                IsActive = false,
+            },
+            new BreadcrumbNode
+            {
+                Label = "Revisions",
+                RouteName = RouteNames.Themes.WebTemplates.Revisions,
+                IsActive = true,
+            }
         );
 
         var template = await Mediator.Send(new GetWebTemplateById.Query { Id = id });

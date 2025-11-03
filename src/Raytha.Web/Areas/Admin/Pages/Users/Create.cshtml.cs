@@ -36,17 +36,20 @@ public class Create : BaseAdminPageModel
             {
                 Label = "Users",
                 RouteName = RouteNames.Users.Index,
-                Icon = SidebarIcons.Users
+                Icon = SidebarIcons.Users,
             },
             new BreadcrumbNode
             {
                 Label = "Create User",
                 RouteName = RouteNames.Users.Create,
-                IsActive = true
+                IsActive = true,
             }
         );
 
-        var userGroupsChoicesResponse = await Mediator.Send(new GetUserGroups.Query(), cancellationToken);
+        var userGroupsChoicesResponse = await Mediator.Send(
+            new GetUserGroups.Query(),
+            cancellationToken
+        );
         var userGroupsViewModel = userGroupsChoicesResponse
             .Result.Items.Select(p => new CheckboxItemViewModel
             {

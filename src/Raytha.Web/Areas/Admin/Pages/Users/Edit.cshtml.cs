@@ -55,26 +55,24 @@ public class Edit : BaseAdminPageModel, ISubActionViewModel
             {
                 Label = "Users",
                 RouteName = RouteNames.Users.Index,
-                Icon = SidebarIcons.Users
+                Icon = SidebarIcons.Users,
             },
             new BreadcrumbNode
             {
                 Label = $"{response.Result.FirstName} {response.Result.LastName}",
                 RouteName = RouteNames.Users.Edit,
                 RouteValues = new Dictionary<string, string> { { "id", id } },
-                IsActive = true
+                IsActive = true,
             }
         );
 
         var allUserGroups = await Mediator.Send(new GetUserGroups.Query(), cancellationToken);
-        var userGroups = allUserGroups.Result.Items.Select(
-            p => new CheckboxItemViewModel
-            {
-                Id = p.Id,
-                Label = p.Label,
-                Selected = response.Result.UserGroups.Select(u => u.Id).Contains(p.Id),
-            }
-        );
+        var userGroups = allUserGroups.Result.Items.Select(p => new CheckboxItemViewModel
+        {
+            Id = p.Id,
+            Label = p.Label,
+            Selected = response.Result.UserGroups.Select(u => u.Id).Contains(p.Id),
+        });
 
         Form = new FormModel
         {
@@ -89,7 +87,11 @@ public class Edit : BaseAdminPageModel, ISubActionViewModel
         IsActive = response.Result.IsActive;
         IsAdmin = response.Result.IsAdmin;
 
-        Logger.LogInformation("Displaying user edit form for user {UserId} ({EmailAddress})", id, response.Result.EmailAddress);
+        Logger.LogInformation(
+            "Displaying user edit form for user {UserId} ({EmailAddress})",
+            id,
+            response.Result.EmailAddress
+        );
 
         return Page();
     }
@@ -100,7 +102,10 @@ public class Edit : BaseAdminPageModel, ISubActionViewModel
     /// <param name="id">The user's unique identifier.</param>
     /// <param name="cancellationToken">Cancellation token for the async operation.</param>
     /// <returns>Redirect to user edit page on success, or page with errors on failure.</returns>
-    public async Task<IActionResult> OnPost(string id, CancellationToken cancellationToken = default)
+    public async Task<IActionResult> OnPost(
+        string id,
+        CancellationToken cancellationToken = default
+    )
     {
         var input = new EditUser.Command
         {

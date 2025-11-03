@@ -30,7 +30,7 @@ public class Index : BaseAdminPageModel
                 Label = "Menus",
                 RouteName = RouteNames.NavigationMenus.Index,
                 IsActive = true,
-                Icon = SidebarIcons.Menus
+                Icon = SidebarIcons.Menus,
             }
         );
 

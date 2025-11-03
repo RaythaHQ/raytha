@@ -27,7 +27,10 @@ public class Configuration : BaseContentTypeContextPageModel
             {
                 Label = CurrentView.ContentType.LabelPlural,
                 RouteName = RouteNames.ContentItems.Index,
-                RouteValues = new Dictionary<string, string> { { "contentTypeDeveloperName", CurrentView.ContentType.DeveloperName } },
+                RouteValues = new Dictionary<string, string>
+                {
+                    { "contentTypeDeveloperName", CurrentView.ContentType.DeveloperName },
+                },
                 IsActive = false,
             },
             new BreadcrumbNode

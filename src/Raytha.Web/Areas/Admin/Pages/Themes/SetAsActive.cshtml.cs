@@ -22,8 +22,19 @@ public class SetAsActive : BaseAdminPageModel, ISubActionViewModel
     public async Task<IActionResult> OnGet(string id)
     {
         SetBreadcrumbs(
-            new BreadcrumbNode { Label = "Themes", RouteName = RouteNames.Themes.Index, IsActive = false, Icon = SidebarIcons.Themes },
-            new BreadcrumbNode { Label = "Set as Active", RouteName = RouteNames.Themes.SetAsActive, IsActive = true }
+            new BreadcrumbNode
+            {
+                Label = "Themes",
+                RouteName = RouteNames.Themes.Index,
+                IsActive = false,
+                Icon = SidebarIcons.Themes,
+            },
+            new BreadcrumbNode
+            {
+                Label = "Set as Active",
+                RouteName = RouteNames.Themes.SetAsActive,
+                IsActive = true,
+            }
         );
 
         var webTemplateDeveloperNamesWithoutRelationResponse = await Mediator.Send(
@@ -90,7 +101,10 @@ public class SetAsActive : BaseAdminPageModel, ISubActionViewModel
         if (response.Success)
         {
             SetSuccessMessage("Set as the active theme in progress.");
-            return RedirectToPage(RouteNames.Themes.BackgroundTaskStatus, new { id = response.Result });
+            return RedirectToPage(
+                RouteNames.Themes.BackgroundTaskStatus,
+                new { id = response.Result }
+            );
         }
         else
         {

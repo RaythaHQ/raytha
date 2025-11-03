@@ -29,13 +29,13 @@ public class Edit : BaseAdminPageModel, ISubActionViewModel
                 Label = "Menus",
                 RouteName = RouteNames.NavigationMenus.Index,
                 IsActive = false,
-                Icon = SidebarIcons.Menus
+                Icon = SidebarIcons.Menus,
             },
             new BreadcrumbNode
             {
                 Label = "Edit",
                 RouteName = RouteNames.NavigationMenus.Edit,
-                IsActive = true
+                IsActive = true,
             }
         );
 

@@ -43,13 +43,13 @@ public class Index : BaseAdminPageModel
                 Label = "Settings",
                 RouteName = RouteNames.Configuration.Index,
                 IsActive = false,
-                Icon = SidebarIcons.Settings
+                Icon = SidebarIcons.Settings,
             },
             new BreadcrumbNode
             {
                 Label = "Configuration",
                 RouteName = RouteNames.Configuration.Index,
-                IsActive = true
+                IsActive = true,
             }
         );
 

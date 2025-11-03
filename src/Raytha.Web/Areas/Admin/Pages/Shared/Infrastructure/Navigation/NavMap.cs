@@ -26,9 +26,8 @@ public static class NavMap
                 RouteName = RouteNames.Dashboard.Index,
                 Icon = IconLibrary.Dashboard,
                 Permission = null, // Available to all authenticated admins
-                Order = 0
+                Order = 0,
             },
-            
             // Users (order 10)
             new NavMenuItem
             {
@@ -37,9 +36,8 @@ public static class NavMap
                 RouteName = RouteNames.Users.Index,
                 Icon = IconLibrary.Users,
                 Permission = BuiltInSystemPermission.MANAGE_USERS_PERMISSION,
-                Order = 10
+                Order = 10,
             },
-
             // Content Types will be inserted dynamically at order 50
             // by the Sidebar ViewComponent based on ICurrentOrganization.ContentTypes
 
@@ -49,9 +47,8 @@ public static class NavMap
                 Id = "DividerBeforeSystem",
                 Label = string.Empty,
                 IsDivider = true,
-                Order = 90
+                Order = 90,
             },
-
             // Website link
             new NavMenuItem
             {
@@ -60,9 +57,8 @@ public static class NavMap
                 RouteName = null, // Set dynamically to empty route
                 Icon = IconLibrary.Website,
                 OpenInNewTab = true,
-                Order = 95
+                Order = 95,
             },
-
             // Themes
             new NavMenuItem
             {
@@ -71,9 +67,8 @@ public static class NavMap
                 RouteName = RouteNames.Themes.Index,
                 Icon = IconLibrary.Themes,
                 Permission = BuiltInSystemPermission.MANAGE_TEMPLATES_PERMISSION,
-                Order = 100
+                Order = 100,
             },
-
             // Email Templates
             new NavMenuItem
             {
@@ -82,9 +77,8 @@ public static class NavMap
                 RouteName = RouteNames.EmailTemplates.Index,
                 Icon = IconLibrary.EmailTemplates,
                 Permission = BuiltInSystemPermission.MANAGE_SYSTEM_SETTINGS_PERMISSION,
-                Order = 110
+                Order = 110,
             },
-
             // Navigation Menus
             new NavMenuItem
             {
@@ -93,9 +87,8 @@ public static class NavMap
                 RouteName = RouteNames.NavigationMenus.Index,
                 Icon = IconLibrary.Menus,
                 Permission = BuiltInSystemPermission.MANAGE_CONTENT_TYPES_PERMISSION,
-                Order = 120
+                Order = 120,
             },
-
             // Raytha Functions
             new NavMenuItem
             {
@@ -104,9 +97,8 @@ public static class NavMap
                 RouteName = RouteNames.RaythaFunctions.Index,
                 Icon = IconLibrary.Functions,
                 Permission = BuiltInSystemPermission.MANAGE_SYSTEM_SETTINGS_PERMISSION,
-                Order = 130
+                Order = 130,
             },
-
             // Audit Log
             new NavMenuItem
             {
@@ -115,9 +107,8 @@ public static class NavMap
                 RouteName = RouteNames.AuditLogs.Index,
                 Icon = IconLibrary.AuditLog,
                 Permission = BuiltInSystemPermission.MANAGE_AUDIT_LOGS_PERMISSION,
-                Order = 140
+                Order = 140,
             },
-
             // Settings (with submenu)
             new NavMenuItem
             {
@@ -134,7 +125,7 @@ public static class NavMap
                         Label = "Admins",
                         RouteName = RouteNames.Admins.Index,
                         Permission = BuiltInSystemPermission.MANAGE_ADMINISTRATORS_PERMISSION,
-                        Order = 0
+                        Order = 0,
                     },
                     new NavMenuItem
                     {
@@ -142,7 +133,7 @@ public static class NavMap
                         Label = "Configuration",
                         RouteName = RouteNames.Configuration.Index,
                         Permission = BuiltInSystemPermission.MANAGE_SYSTEM_SETTINGS_PERMISSION,
-                        Order = 10
+                        Order = 10,
                     },
                     new NavMenuItem
                     {
@@ -150,7 +141,7 @@ public static class NavMap
                         Label = "Authentication",
                         RouteName = RouteNames.AuthenticationSchemes.Index,
                         Permission = BuiltInSystemPermission.MANAGE_SYSTEM_SETTINGS_PERMISSION,
-                        Order = 20
+                        Order = 20,
                     },
                     new NavMenuItem
                     {
@@ -158,9 +149,9 @@ public static class NavMap
                         Label = "SMTP",
                         RouteName = RouteNames.Smtp.Index,
                         Permission = BuiltInSystemPermission.MANAGE_SYSTEM_SETTINGS_PERMISSION,
-                        Order = 30
-                    }
-                }
+                        Order = 30,
+                    },
+                },
             },
 
             // Profile menu will be added separately at the bottom with user info
@@ -182,36 +173,39 @@ public static class NavMap
                 Id = "Profile",
                 Label = "My Profile",
                 RouteName = RouteNames.Profile.Index,
-                Order = 0
-            }
+                Order = 0,
+            },
         };
 
         if (emailAndPasswordEnabled)
         {
-            children.Add(new NavMenuItem
-            {
-                Id = "Change Password",
-                Label = "Change Password",
-                RouteName = RouteNames.Profile.ChangePassword,
-                Order = 10
-            });
+            children.Add(
+                new NavMenuItem
+                {
+                    Id = "Change Password",
+                    Label = "Change Password",
+                    RouteName = RouteNames.Profile.ChangePassword,
+                    Order = 10,
+                }
+            );
         }
 
-        children.Add(new NavMenuItem
-        {
-            Id = "Logout",
-            Label = "Log out",
-            RouteName = RouteNames.Login.Logout,
-            Order = 20
-        });
+        children.Add(
+            new NavMenuItem
+            {
+                Id = "Logout",
+                Label = "Log out",
+                RouteName = RouteNames.Login.Logout,
+                Order = 20,
+            }
+        );
 
         return new NavMenuItem
         {
             Id = "ProfileMenu",
             Label = fullName,
             Order = 1000, // Always at the bottom
-            Children = children
+            Children = children,
         };
     }
 }
-

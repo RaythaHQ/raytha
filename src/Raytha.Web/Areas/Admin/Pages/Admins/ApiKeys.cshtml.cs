@@ -36,19 +36,19 @@ public class ApiKeys
             {
                 Label = "Settings",
                 RouteName = RouteNames.Configuration.Index,
-                IsActive = false
+                IsActive = false,
             },
             new BreadcrumbNode
             {
                 Label = "Admins",
                 RouteName = RouteNames.Admins.Index,
-                IsActive = false
+                IsActive = false,
             },
             new BreadcrumbNode
             {
                 Label = "API Keys",
                 RouteName = RouteNames.Admins.ApiKeys,
-                IsActive = true
+                IsActive = true,
             }
         );
 

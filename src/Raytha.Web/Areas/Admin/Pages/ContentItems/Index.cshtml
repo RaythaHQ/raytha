@@ -1,4 +1,4 @@
-@page "/raytha/{contentTypeDeveloperName}/"
+@page "/raytha/{contentTypeDeveloperName}/{viewId?}"
 @using Raytha.Web.Services
 @inject IAuthorizationService AuthorizationService
 @inject ICurrentOrganization CurrentOrganization
@@ -77,7 +77,7 @@
             {
                 <li>
                     <form method="post" asp-route="viewsfavorite" asp-route-contentTypeDeveloperName="@Model.CurrentView.ContentType.DeveloperName
-                                                                        " asp-route-viewId="@Model.CurrentView.Id">
+                                                                            " asp-route-viewId="@Model.CurrentView.Id">
                         <button class="dropdown-item">
                             <svg class="icon icon-xs" fill="none" stroke="currentColor" viewBox="0 0 24 24"
                                 xmlns="http://www.w3.org/2000/svg">

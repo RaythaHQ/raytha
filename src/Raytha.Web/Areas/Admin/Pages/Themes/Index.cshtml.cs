@@ -29,7 +29,7 @@ public class Index : BaseAdminPageModel, IHasListView<Index.ThemesListItemViewMo
                 Label = "Themes",
                 RouteName = RouteNames.Themes.Index,
                 IsActive = true,
-                Icon = SidebarIcons.Themes
+                Icon = SidebarIcons.Themes,
             }
         );
 

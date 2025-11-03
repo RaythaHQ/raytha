@@ -34,11 +34,7 @@ public record SortSpec
         if (direction != "asc" && direction != "desc")
             return null;
 
-        return new SortSpec
-        {
-            PropertyName = parts[0],
-            Direction = direction
-        };
+        return new SortSpec { PropertyName = parts[0], Direction = direction };
     }
 
     /// <summary>
@@ -46,4 +42,3 @@ public record SortSpec
     /// </summary>
     public override string ToString() => $"{PropertyName} {Direction}";
 }
-

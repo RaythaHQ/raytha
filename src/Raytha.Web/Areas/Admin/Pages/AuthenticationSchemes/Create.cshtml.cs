@@ -80,7 +80,10 @@ public class Create : BaseAdminPageModel
         if (response.Success)
         {
             SetSuccessMessage($"Authentication scheme was created successfully.");
-            return RedirectToPage(RouteNames.AuthenticationSchemes.Edit, new { id = response.Result });
+            return RedirectToPage(
+                RouteNames.AuthenticationSchemes.Edit,
+                new { id = response.Result }
+            );
         }
         else
         {

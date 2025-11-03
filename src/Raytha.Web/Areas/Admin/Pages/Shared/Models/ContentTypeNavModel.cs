@@ -47,6 +47,5 @@ public enum ContentTypeNavTab
     /// <summary>
     /// Views management page.
     /// </summary>
-    Views
+    Views,
 }
-

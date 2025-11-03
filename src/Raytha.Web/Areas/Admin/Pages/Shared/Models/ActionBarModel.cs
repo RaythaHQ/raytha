@@ -70,4 +70,3 @@ public record SearchBarConfig
     /// </summary>
     public string Placeholder { get; init; } = "Search";
 }
-

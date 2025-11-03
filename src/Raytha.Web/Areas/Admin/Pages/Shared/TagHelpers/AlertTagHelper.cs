@@ -1,8 +1,8 @@
 #nullable enable
+using System.Text;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Microsoft.AspNetCore.Razor.TagHelpers;
-using System.Text;
 
 namespace Raytha.Web.Areas.Admin.Pages.Shared.TagHelpers;
 
@@ -58,15 +58,19 @@ public class AlertTagHelper : TagHelper
             {
                 var alertType = GetAlertType(key);
                 var dismissibleClass = Dismissible ? " alert-dismissible fade show" : "";
-                
-                html.AppendLine($"<div class=\"alert alert-{alertType}{dismissibleClass} mt-2\" role=\"alert\">");
+
+                html.AppendLine(
+                    $"<div class=\"alert alert-{alertType}{dismissibleClass} mt-2\" role=\"alert\">"
+                );
                 html.AppendLine($"    {message}");
-                
+
                 if (Dismissible)
                 {
-                    html.AppendLine("    <button type=\"button\" class=\"btn-close\" data-bs-dismiss=\"alert\" aria-label=\"Close\"></button>");
+                    html.AppendLine(
+                        "    <button type=\"button\" class=\"btn-close\" data-bs-dismiss=\"alert\" aria-label=\"Close\"></button>"
+                    );
                 }
-                
+
                 html.AppendLine("</div>");
             }
         }
@@ -92,8 +96,7 @@ public class AlertTagHelper : TagHelper
             "SuccessMessage" => "success",
             "WarningMessage" => "warning",
             "InfoMessage" => "info",
-            _ => "info"
+            _ => "info",
         };
     }
 }
-

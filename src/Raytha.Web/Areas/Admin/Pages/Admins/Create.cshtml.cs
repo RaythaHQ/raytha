@@ -26,19 +26,19 @@ public class Create : BaseAdminPageModel
                 Label = "Settings",
                 RouteName = RouteNames.Configuration.Index,
                 IsActive = false,
-                Icon = SidebarIcons.Settings
+                Icon = SidebarIcons.Settings,
             },
             new BreadcrumbNode
             {
                 Label = "Admins",
                 RouteName = RouteNames.Admins.Index,
-                IsActive = false
+                IsActive = false,
             },
             new BreadcrumbNode
             {
                 Label = "Create",
                 RouteName = RouteNames.Admins.Create,
-                IsActive = true
+                IsActive = true,
             }
         );
 

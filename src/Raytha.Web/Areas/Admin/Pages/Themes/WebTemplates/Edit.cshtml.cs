@@ -32,9 +32,25 @@ public class Edit : BaseAdminPageModel, ISubActionViewModel
     public async Task<IActionResult> OnGet(string themeId, string id)
     {
         SetBreadcrumbs(
-            new BreadcrumbNode { Label = "Themes", RouteName = RouteNames.Themes.Index, IsActive = false, Icon = SidebarIcons.Themes },
-            new BreadcrumbNode { Label = "Web Templates", RouteName = RouteNames.Themes.WebTemplates.Index, IsActive = false },
-            new BreadcrumbNode { Label = "Edit", RouteName = RouteNames.Themes.WebTemplates.Edit, IsActive = true }
+            new BreadcrumbNode
+            {
+                Label = "Themes",
+                RouteName = RouteNames.Themes.Index,
+                IsActive = false,
+                Icon = SidebarIcons.Themes,
+            },
+            new BreadcrumbNode
+            {
+                Label = "Web Templates",
+                RouteName = RouteNames.Themes.WebTemplates.Index,
+                IsActive = false,
+            },
+            new BreadcrumbNode
+            {
+                Label = "Edit",
+                RouteName = RouteNames.Themes.WebTemplates.Edit,
+                IsActive = true,
+            }
         );
 
         ThemeId = themeId;
@@ -319,14 +335,14 @@ public class Edit : BaseAdminPageModel, ISubActionViewModel
                                 $"{InsertVariableTemplateFactory.ContentItem.VariableCategoryName}.PublishedContent.{p.DeveloperName}.Value",
                         })
                 );
-                
+
                 // Ensure unique key by using DeveloperName as fallback if LabelSingular already exists
                 var key = item.LabelSingular;
                 if (templateVariableDictionary.ContainsKey(key))
                 {
                     key = $"{item.LabelSingular} ({item.DeveloperName})";
                 }
-                
+
                 templateVariableDictionary.Add(
                     key,
                     allCustomVariables.OrderBy(p => p.DeveloperName)

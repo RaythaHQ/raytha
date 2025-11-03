@@ -18,8 +18,19 @@ public class Import : BaseAdminPageModel
     public IActionResult OnGet()
     {
         SetBreadcrumbs(
-            new BreadcrumbNode { Label = "Themes", RouteName = RouteNames.Themes.Index, IsActive = false, Icon = SidebarIcons.Themes },
-            new BreadcrumbNode { Label = "Import", RouteName = RouteNames.Themes.Import, IsActive = true }
+            new BreadcrumbNode
+            {
+                Label = "Themes",
+                RouteName = RouteNames.Themes.Index,
+                IsActive = false,
+                Icon = SidebarIcons.Themes,
+            },
+            new BreadcrumbNode
+            {
+                Label = "Import",
+                RouteName = RouteNames.Themes.Import,
+                IsActive = true,
+            }
         );
 
         Form = new FormModel();
@@ -41,7 +52,10 @@ public class Import : BaseAdminPageModel
         if (response.Success)
         {
             SetSuccessMessage("Import in progress.");
-            return RedirectToPage(RouteNames.Themes.BackgroundTaskStatus, new { id = response.Result });
+            return RedirectToPage(
+                RouteNames.Themes.BackgroundTaskStatus,
+                new { id = response.Result }
+            );
         }
         else
         {

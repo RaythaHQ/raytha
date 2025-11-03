@@ -48,4 +48,3 @@ public record EmptyStateAction
     /// </summary>
     public System.Collections.Generic.Dictionary<string, string>? RouteValues { get; init; }
 }
-

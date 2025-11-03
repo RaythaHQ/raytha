@@ -22,8 +22,19 @@ public class Duplicate : BaseAdminPageModel
     public async Task<IActionResult> OnGet()
     {
         SetBreadcrumbs(
-            new BreadcrumbNode { Label = "Themes", RouteName = RouteNames.Themes.Index, IsActive = false, Icon = SidebarIcons.Themes },
-            new BreadcrumbNode { Label = "Duplicate", RouteName = RouteNames.Themes.Duplicate, IsActive = true }
+            new BreadcrumbNode
+            {
+                Label = "Themes",
+                RouteName = RouteNames.Themes.Index,
+                IsActive = false,
+                Icon = SidebarIcons.Themes,
+            },
+            new BreadcrumbNode
+            {
+                Label = "Duplicate",
+                RouteName = RouteNames.Themes.Duplicate,
+                IsActive = true,
+            }
         );
 
         var themesResponse = await Mediator.Send(
@@ -50,7 +61,10 @@ public class Duplicate : BaseAdminPageModel
         if (response.Success)
         {
             SetSuccessMessage("Creating a duplicate theme in progress.");
-            return RedirectToPage(RouteNames.Themes.BackgroundTaskStatus, new { id = response.Result });
+            return RedirectToPage(
+                RouteNames.Themes.BackgroundTaskStatus,
+                new { id = response.Result }
+            );
         }
         else
         {

@@ -19,9 +19,15 @@ public class Restore : BaseAdminPageModel
     /// <param name="id">The user's unique identifier.</param>
     /// <param name="cancellationToken">Cancellation token for the async operation.</param>
     /// <returns>Redirect to user edit page with success or error message.</returns>
-    public async Task<IActionResult> OnPost(string id, CancellationToken cancellationToken = default)
+    public async Task<IActionResult> OnPost(
+        string id,
+        CancellationToken cancellationToken = default
+    )
     {
-        var response = await Mediator.Send(new SetIsActive.Command { Id = id, IsActive = true }, cancellationToken);
+        var response = await Mediator.Send(
+            new SetIsActive.Command { Id = id, IsActive = true },
+            cancellationToken
+        );
 
         if (response.Success)
         {
@@ -30,11 +36,7 @@ public class Restore : BaseAdminPageModel
         }
         else
         {
-            Logger.LogWarning(
-                "Failed to restore user {UserId}: {Error}",
-                id,
-                response.Error
-            );
+            Logger.LogWarning("Failed to restore user {UserId}: {Error}", id, response.Error);
             SetErrorMessage(response.Error);
         }
 

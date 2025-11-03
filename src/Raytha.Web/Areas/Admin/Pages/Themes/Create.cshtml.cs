@@ -24,13 +24,13 @@ public class Create : BaseAdminPageModel
                 Label = "Themes",
                 RouteName = RouteNames.Themes.Index,
                 IsActive = false,
-                Icon = SidebarIcons.Themes
+                Icon = SidebarIcons.Themes,
             },
             new BreadcrumbNode
             {
                 Label = "Create",
                 RouteName = RouteNames.Themes.Create,
-                IsActive = true
+                IsActive = true,
             }
         );
 

@@ -26,8 +26,11 @@ public static class HtmlHelpers
         string propertyName
     )
     {
-        if (errors != null && !string.IsNullOrWhiteSpace(propertyName) 
-            && errors.Any(p => p.PropertyName == propertyName))
+        if (
+            errors != null
+            && !string.IsNullOrWhiteSpace(propertyName)
+            && errors.Any(p => p.PropertyName == propertyName)
+        )
         {
             return new HtmlString("is-invalid");
         }

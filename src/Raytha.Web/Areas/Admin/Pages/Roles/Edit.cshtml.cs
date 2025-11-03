@@ -5,8 +5,8 @@ using Raytha.Application.ContentTypes.Queries;
 using Raytha.Application.Roles.Commands;
 using Raytha.Application.Roles.Queries;
 using Raytha.Domain.Entities;
-using Raytha.Web.Areas.Admin.Pages.Shared.Models;
 using Raytha.Web.Areas.Admin.Pages.Shared;
+using Raytha.Web.Areas.Admin.Pages.Shared.Models;
 
 namespace Raytha.Web.Areas.Admin.Pages.Roles;
 

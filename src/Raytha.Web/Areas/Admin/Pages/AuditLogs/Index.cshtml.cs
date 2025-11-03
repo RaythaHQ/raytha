@@ -108,7 +108,7 @@ public class Index : BaseAdminPageModel
                 Label = "Audit Log",
                 RouteName = RouteNames.AuditLogs.Index,
                 IsActive = true,
-                Icon = SidebarIcons.AuditLogs
+                Icon = SidebarIcons.AuditLogs,
             }
         );
 

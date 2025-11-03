@@ -42,4 +42,3 @@ public record PaginationQuery
     /// </summary>
     public int ValidatedPageSize => Math.Clamp(PageSize == 0 ? 50 : PageSize, 1, 200);
 }
-

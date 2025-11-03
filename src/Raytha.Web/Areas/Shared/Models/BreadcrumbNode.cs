@@ -33,4 +33,3 @@ public record BreadcrumbNode
     /// </summary>
     public string? Icon { get; init; }
 }
-

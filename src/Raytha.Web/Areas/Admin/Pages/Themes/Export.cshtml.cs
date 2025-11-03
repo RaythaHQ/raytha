@@ -22,8 +22,19 @@ public class Export : BaseAdminPageModel, ISubActionViewModel
     public async Task<IActionResult> OnGet(string id)
     {
         SetBreadcrumbs(
-            new BreadcrumbNode { Label = "Themes", RouteName = RouteNames.Themes.Index, IsActive = false, Icon = SidebarIcons.Themes },
-            new BreadcrumbNode { Label = "Export", RouteName = RouteNames.Themes.Export, IsActive = true }
+            new BreadcrumbNode
+            {
+                Label = "Themes",
+                RouteName = RouteNames.Themes.Index,
+                IsActive = false,
+                Icon = SidebarIcons.Themes,
+            },
+            new BreadcrumbNode
+            {
+                Label = "Export",
+                RouteName = RouteNames.Themes.Export,
+                IsActive = true,
+            }
         );
 
         var response = await Mediator.Send(new GetThemeById.Query { Id = id });

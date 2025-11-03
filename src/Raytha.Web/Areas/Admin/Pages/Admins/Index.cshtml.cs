@@ -30,13 +30,13 @@ public class Index : BaseAdminPageModel, IHasListView<Index.AdminsListItemViewMo
                 Label = "Settings",
                 RouteName = RouteNames.Configuration.Index,
                 IsActive = false,
-                Icon = SidebarIcons.Settings
+                Icon = SidebarIcons.Settings,
             },
             new BreadcrumbNode
             {
                 Label = "Admins",
                 RouteName = RouteNames.Admins.Index,
-                IsActive = true
+                IsActive = true,
             }
         );
 

@@ -1,7 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Mvc;
-using Raytha.Web.Areas.Admin.Pages.Shared.Models;
 using Raytha.Web.Areas.Admin.Pages.Shared;
+using Raytha.Web.Areas.Admin.Pages.Shared.Models;
 
 namespace Raytha.Web.Areas.Admin.Pages.Profile;
 

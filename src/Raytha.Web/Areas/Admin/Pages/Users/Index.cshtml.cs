@@ -20,7 +20,8 @@ public class Index : BaseAdminPageModel, IHasListView<Index.UsersListItemViewMod
     /// <summary>
     /// Gets or sets the list view model containing paginated user data.
     /// </summary>
-    public ListViewModel<UsersListItemViewModel> ListView { get; set; } = new(Enumerable.Empty<UsersListItemViewModel>(), 0);
+    public ListViewModel<UsersListItemViewModel> ListView { get; set; } =
+        new(Enumerable.Empty<UsersListItemViewModel>(), 0);
 
     /// <summary>
     /// Handles GET requests to display the paginated list of users.
@@ -46,7 +47,7 @@ public class Index : BaseAdminPageModel, IHasListView<Index.UsersListItemViewMod
                 Label = "Users",
                 RouteName = RouteNames.Users.Index,
                 IsActive = true,
-                Icon = SidebarIcons.Users
+                Icon = SidebarIcons.Users,
             }
         );
 
