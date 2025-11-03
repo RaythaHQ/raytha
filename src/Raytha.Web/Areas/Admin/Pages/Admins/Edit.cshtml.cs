@@ -29,7 +29,8 @@ public class Edit : BaseAdminPageModel, ISubActionViewModel
             {
                 Label = "Settings",
                 RouteName = RouteNames.Configuration.Index,
-                IsActive = false
+                IsActive = false,
+                Icon = SidebarIcons.Settings
             },
             new BreadcrumbNode
             {

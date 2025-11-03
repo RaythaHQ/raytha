@@ -75,7 +75,8 @@
                 ContentItemOperations.Read)).Succeeded)
                 {
                     <li class="nav-item @(IsActivePage(contentType.DeveloperName))">
-                        <a asp-page="@RouteNames.ContentItems.Index" asp-route-contentTypeDeveloperName="@contentType.DeveloperName"
+                        <a asp-page="@RouteNames.ContentItems.Index"
+                            asp-route-contentTypeDeveloperName="@contentType.DeveloperName"
                             class="nav-link d-flex justify-content-between">
                             <span>
                                 <span class="sidebar-icon invisible">
@@ -342,7 +343,7 @@
 </nav>
 
 <main role="main" class="pb-3 content">
-    <breadcrumbs />
+    <breadcrumbs class="pt-4" />
     <alert />
     @RenderBody()
     <partial name="_Partials/Footer" />

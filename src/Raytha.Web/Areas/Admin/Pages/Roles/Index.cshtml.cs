@@ -29,12 +29,13 @@ public class Index : BaseAdminPageModel, IHasListView<Index.RolesListItemViewMod
                 Label = "Settings",
                 RouteName = RouteNames.Configuration.Index,
                 IsActive = false,
+                Icon = SidebarIcons.Settings
             },
             new BreadcrumbNode
             {
                 Label = "Roles",
                 RouteName = RouteNames.Roles.Index,
-                IsActive = true,
+                IsActive = true
             }
         );
 

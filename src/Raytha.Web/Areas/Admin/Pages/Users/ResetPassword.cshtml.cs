@@ -71,7 +71,8 @@ public class ResetPassword : BaseAdminPageModel, ISubActionViewModel
             new BreadcrumbNode
             {
                 Label = "Users",
-                RouteName = RouteNames.Users.Index
+                RouteName = RouteNames.Users.Index,
+                Icon = SidebarIcons.Users
             },
             new BreadcrumbNode
             {

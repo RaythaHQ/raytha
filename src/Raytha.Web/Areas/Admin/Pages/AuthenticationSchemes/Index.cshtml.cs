@@ -30,6 +30,7 @@ public class Index : BaseAdminPageModel, IHasListView<Index.AuthenticationScheme
                 Label = "Settings",
                 RouteName = RouteNames.Configuration.Index,
                 IsActive = false,
+                Icon = SidebarIcons.Settings,
             },
             new BreadcrumbNode
             {

@@ -32,12 +32,13 @@ public class Edit : BaseAdminPageModel, ISubActionViewModel
                 Label = "Themes",
                 RouteName = RouteNames.Themes.Index,
                 IsActive = false,
+                Icon = SidebarIcons.Themes
             },
             new BreadcrumbNode
             {
                 Label = "Edit",
                 RouteName = RouteNames.Themes.Edit,
-                IsActive = true,
+                IsActive = true
             }
         );
 

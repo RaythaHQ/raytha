@@ -29,12 +29,13 @@ public class Index : BaseAdminPageModel, IHasListView<Index.UserGroupsListItemVi
                 Label = "Users",
                 RouteName = RouteNames.Users.Index,
                 IsActive = false,
+                Icon = SidebarIcons.Users
             },
             new BreadcrumbNode
             {
                 Label = "User Groups",
                 RouteName = RouteNames.UserGroups.Index,
-                IsActive = true,
+                IsActive = true
             }
         );
 

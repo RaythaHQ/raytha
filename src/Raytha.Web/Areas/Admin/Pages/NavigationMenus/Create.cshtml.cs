@@ -27,12 +27,13 @@ public class Create : BaseAdminPageModel
                 Label = "Menus",
                 RouteName = RouteNames.NavigationMenus.Index,
                 IsActive = false,
+                Icon = SidebarIcons.Menus
             },
             new BreadcrumbNode
             {
                 Label = "Create",
                 RouteName = RouteNames.NavigationMenus.Create,
-                IsActive = true,
+                IsActive = true
             }
         );
 

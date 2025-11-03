@@ -45,7 +45,8 @@ public class Index : BaseAdminPageModel, IHasListView<Index.UsersListItemViewMod
             {
                 Label = "Users",
                 RouteName = RouteNames.Users.Index,
-                IsActive = true
+                IsActive = true,
+                Icon = SidebarIcons.Users
             }
         );
 

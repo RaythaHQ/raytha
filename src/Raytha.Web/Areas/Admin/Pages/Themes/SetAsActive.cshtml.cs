@@ -22,7 +22,7 @@ public class SetAsActive : BaseAdminPageModel, ISubActionViewModel
     public async Task<IActionResult> OnGet(string id)
     {
         SetBreadcrumbs(
-            new BreadcrumbNode { Label = "Themes", RouteName = RouteNames.Themes.Index, IsActive = false },
+            new BreadcrumbNode { Label = "Themes", RouteName = RouteNames.Themes.Index, IsActive = false, Icon = SidebarIcons.Themes },
             new BreadcrumbNode { Label = "Set as Active", RouteName = RouteNames.Themes.SetAsActive, IsActive = true }
         );
 

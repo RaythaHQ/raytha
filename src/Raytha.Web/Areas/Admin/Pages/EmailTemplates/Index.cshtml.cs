@@ -29,6 +29,7 @@ public class Index : BaseAdminPageModel, IHasListView<Index.EmailTemplatesListIt
                 Label = "Email Templates",
                 RouteName = RouteNames.EmailTemplates.Index,
                 IsActive = true,
+                Icon = SidebarIcons.EmailTemplates
             }
         );
 

@@ -28,7 +28,7 @@ public class Revisions : BaseAdminPageModel, ISubActionViewModel
     )
     {
         SetBreadcrumbs(
-            new BreadcrumbNode { Label = "Raytha Functions", RouteName = RouteNames.RaythaFunctions.Index, IsActive = false },
+            new BreadcrumbNode { Label = "Functions", RouteName = RouteNames.RaythaFunctions.Index, IsActive = false, Icon = SidebarIcons.Functions },
             new BreadcrumbNode { Label = "Revisions", RouteName = RouteNames.RaythaFunctions.Revisions, IsActive = true }
         );
 

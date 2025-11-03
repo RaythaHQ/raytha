@@ -18,7 +18,7 @@ public class Import : BaseAdminPageModel
     public IActionResult OnGet()
     {
         SetBreadcrumbs(
-            new BreadcrumbNode { Label = "Themes", RouteName = RouteNames.Themes.Index, IsActive = false },
+            new BreadcrumbNode { Label = "Themes", RouteName = RouteNames.Themes.Index, IsActive = false, Icon = SidebarIcons.Themes },
             new BreadcrumbNode { Label = "Import", RouteName = RouteNames.Themes.Import, IsActive = true }
         );
 

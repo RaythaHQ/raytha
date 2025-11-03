@@ -18,7 +18,7 @@ public class Create : BaseAdminPageModel
     public async Task<IActionResult> OnGet()
     {
         SetBreadcrumbs(
-            new BreadcrumbNode { Label = "Raytha Functions", RouteName = RouteNames.RaythaFunctions.Index, IsActive = false },
+            new BreadcrumbNode { Label = "Functions", RouteName = RouteNames.RaythaFunctions.Index, IsActive = false, Icon = SidebarIcons.Functions },
             new BreadcrumbNode { Label = "Create", RouteName = RouteNames.RaythaFunctions.Create, IsActive = true }
         );
 

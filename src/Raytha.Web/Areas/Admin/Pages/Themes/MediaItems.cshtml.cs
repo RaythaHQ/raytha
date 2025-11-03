@@ -20,7 +20,7 @@ public class MediaItems : BaseAdminPageModel, ISubActionViewModel
     public async Task<IActionResult> OnGet(string themeId)
     {
         SetBreadcrumbs(
-            new BreadcrumbNode { Label = "Themes", RouteName = RouteNames.Themes.Index, IsActive = false },
+            new BreadcrumbNode { Label = "Themes", RouteName = RouteNames.Themes.Index, IsActive = false, Icon = SidebarIcons.Themes },
             new BreadcrumbNode { Label = "Media Items", RouteName = RouteNames.Themes.MediaItems, IsActive = true }
         );
 

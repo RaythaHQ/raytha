@@ -22,7 +22,7 @@ public class Duplicate : BaseAdminPageModel
     public async Task<IActionResult> OnGet()
     {
         SetBreadcrumbs(
-            new BreadcrumbNode { Label = "Themes", RouteName = RouteNames.Themes.Index, IsActive = false },
+            new BreadcrumbNode { Label = "Themes", RouteName = RouteNames.Themes.Index, IsActive = false, Icon = SidebarIcons.Themes },
             new BreadcrumbNode { Label = "Duplicate", RouteName = RouteNames.Themes.Duplicate, IsActive = true }
         );
 

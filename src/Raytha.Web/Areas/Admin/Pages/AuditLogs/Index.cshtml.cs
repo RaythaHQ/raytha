@@ -105,9 +105,10 @@ public class Index : BaseAdminPageModel
         SetBreadcrumbs(
             new BreadcrumbNode
             {
-                Label = "Audit Logs",
+                Label = "Audit Log",
                 RouteName = RouteNames.AuditLogs.Index,
                 IsActive = true,
+                Icon = SidebarIcons.AuditLogs
             }
         );
 

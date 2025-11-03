@@ -25,7 +25,7 @@ public class Index : BaseAdminPageModel
     )
     {
         SetBreadcrumbs(
-            new BreadcrumbNode { Label = "Themes", RouteName = RouteNames.Themes.Index, IsActive = false },
+            new BreadcrumbNode { Label = "Themes", RouteName = RouteNames.Themes.Index, IsActive = false, Icon = SidebarIcons.Themes },
             new BreadcrumbNode { Label = "Web Templates", RouteName = RouteNames.Themes.WebTemplates.Index, IsActive = true }
         );
 

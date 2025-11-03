@@ -24,7 +24,7 @@ public class Edit : BaseAdminPageModel, ISubActionViewModel
     public async Task<IActionResult> OnGet(string id)
     {
         SetBreadcrumbs(
-            new BreadcrumbNode { Label = "Raytha Functions", RouteName = RouteNames.RaythaFunctions.Index, IsActive = false },
+            new BreadcrumbNode { Label = "Functions", RouteName = RouteNames.RaythaFunctions.Index, IsActive = false, Icon = SidebarIcons.Functions },
             new BreadcrumbNode { Label = "Edit", RouteName = RouteNames.RaythaFunctions.Edit, IsActive = true }
         );
 

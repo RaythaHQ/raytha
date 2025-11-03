@@ -32,12 +32,13 @@ public class Edit : BaseAdminPageModel, ISubActionViewModel
                 Label = "Email Templates",
                 RouteName = RouteNames.EmailTemplates.Index,
                 IsActive = false,
+                Icon = SidebarIcons.EmailTemplates
             },
             new BreadcrumbNode
             {
                 Label = "Edit",
                 RouteName = RouteNames.EmailTemplates.Edit,
-                IsActive = true,
+                IsActive = true
             }
         );
 

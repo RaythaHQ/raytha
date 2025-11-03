@@ -34,12 +34,13 @@ public class Revisions : BaseAdminPageModel, ISubActionViewModel
                 Label = "Menus",
                 RouteName = RouteNames.NavigationMenus.Index,
                 IsActive = false,
+                Icon = SidebarIcons.Menus
             },
             new BreadcrumbNode
             {
                 Label = "Revisions",
                 RouteName = RouteNames.NavigationMenus.Revisions,
-                IsActive = true,
+                IsActive = true
             }
         );
 

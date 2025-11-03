@@ -26,9 +26,10 @@ public class Index : BaseAdminPageModel, IHasListView<Index.RaythaFunctionsListI
         SetBreadcrumbs(
             new BreadcrumbNode
             {
-                Label = "Raytha Functions",
+                Label = "Functions",
                 RouteName = RouteNames.RaythaFunctions.Index,
                 IsActive = true,
+                Icon = SidebarIcons.Functions
             }
         );
 
