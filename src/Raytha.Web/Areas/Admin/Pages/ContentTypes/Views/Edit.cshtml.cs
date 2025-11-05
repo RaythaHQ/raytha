@@ -11,14 +11,14 @@ using Raytha.Web.Areas.Shared.Models;
 namespace Raytha.Web.Areas.Admin.Pages.ContentTypes.Views;
 
 [Authorize(Policy = BuiltInContentTypePermission.CONTENT_TYPE_EDIT_PERMISSION)]
-public class Create : BaseContentTypeContextPageModel
+public class Edit : BaseContentTypeContextPageModel
 {
     public string BackToListUrl { get; set; } = string.Empty;
 
     [BindProperty]
     public FormModel Form { get; set; }
 
-    public async Task<IActionResult> OnGet(string duplicateFromId = null, string backToListUrl = "")
+    public async Task<IActionResult> OnGet(string id, string backToListUrl = "")
     {
         // Set breadcrumbs for navigation
         SetBreadcrumbs(
@@ -40,52 +40,41 @@ public class Create : BaseContentTypeContextPageModel
             },
             new BreadcrumbNode
             {
-                Label = "Create",
-                RouteName = RouteNames.ContentTypes.Views.Create,
+                Label = "Edit",
+                RouteName = RouteNames.ContentTypes.Views.Edit,
                 IsActive = true,
             }
         );
 
-        if (duplicateFromId != null)
+        var view = await Mediator.Send(new GetViewById.Query { Id = id });
+        Form = new FormModel
         {
-            var view = await Mediator.Send(new GetViewById.Query { Id = duplicateFromId });
-            Form = new FormModel
-            {
-                Label = view.Result.Label,
-                DeveloperName = view.Result.DeveloperName,
-                Description = view.Result.Description,
-                ContentTypeId = view.Result.ContentTypeId,
-                DuplicateFromId = duplicateFromId,
-            };
-        }
-        else
-        {
-            Form = new FormModel { ContentTypeId = CurrentView.ContentTypeId };
-        }
+            Label = view.Result.Label,
+            DeveloperName = view.Result.DeveloperName,
+            Description = view.Result.Description,
+        };
         BackToListUrl = backToListUrl;
         return Page();
     }
 
-    public async Task<IActionResult> OnPost()
+    public async Task<IActionResult> OnPost(string id)
     {
-        var input = new CreateView.Command
+        var input = new EditView.Command
         {
+            Id = id,
             Label = Form.Label,
-            DeveloperName = Form.DeveloperName,
-            ContentTypeId = Form.ContentTypeId,
-            DuplicateFromId = Form.DuplicateFromId,
             Description = Form.Description,
         };
         var response = await Mediator.Send(input);
         if (response.Success)
         {
-            SetSuccessMessage($"{Form.Label} was created successfully.");
+            SetSuccessMessage($"{Form.Label} was editedsuccessfully.");
             return RedirectToPage(
                 RouteNames.ContentItems.Index,
                 new
                 {
                     contentTypeDeveloperName = CurrentView.ContentType.DeveloperName,
-                    viewId = response.Result,
+                    viewId = id,
                 }
             );
         }
@@ -108,9 +97,5 @@ public class Create : BaseContentTypeContextPageModel
         public string DeveloperName { get; set; }
 
         public string Description { get; set; }
-
-        public string ContentTypeId { get; set; }
-
-        public string DuplicateFromId { get; set; }
     }
 }

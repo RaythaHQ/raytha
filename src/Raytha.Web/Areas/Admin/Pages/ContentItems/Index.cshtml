@@ -77,7 +77,8 @@
             {
                 <li>
                     <form method="post" asp-route="viewsfavorite" asp-route-contentTypeDeveloperName="@Model.CurrentView.ContentType.DeveloperName
-                                                                            " asp-route-viewId="@Model.CurrentView.Id">
+                                                                                                                    "
+                        asp-route-viewId="@Model.CurrentView.Id">
                         <button class="dropdown-item">
                             <svg class="icon icon-xs" fill="none" stroke="currentColor" viewBox="0 0 24 24"
                                 xmlns="http://www.w3.org/2000/svg">
@@ -94,9 +95,10 @@
             @if ((await AuthorizationService.AuthorizeAsync(User, Model.CurrentView.ContentType.DeveloperName,
                         ContentItemOperations.Edit)).Succeeded)
             {
-                <li><a class="dropdown-item" asp-route="viewsedit"
+                <li><a class="dropdown-item" asp-page="@RouteNames.ContentTypes.Views.Edit"
+                        asp-route-backToListUrl="@backToListUrl"
                         asp-route-contentTypeDeveloperName="@Model.CurrentView.ContentType.DeveloperName"
-                        asp-route-viewId="@Model.CurrentView.Id"><svg class="icon icon-xs" fill="none" stroke="currentColor"
+                        asp-route-id="@Model.CurrentView.Id"><svg class="icon icon-xs" fill="none" stroke="currentColor"
                             viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z">
@@ -129,7 +131,8 @@
             @if ((await AuthorizationService.AuthorizeAsync(User, Model.CurrentView.ContentType.DeveloperName,
                         ContentItemOperations.Edit)).Succeeded)
             {
-                <li><a class="dropdown-item" asp-route="viewscreate"
+                <li><a class="dropdown-item" asp-page="@RouteNames.ContentTypes.Views.Create"
+                        asp-route-backToListUrl="@backToListUrl"
                         asp-route-contentTypeDeveloperName="@Model.CurrentView.ContentType.DeveloperName"
                         asp-route-duplicateFromId="@Model.CurrentView.Id"><svg class="icon icon-xs" fill="none"
                             stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -137,7 +140,8 @@
                                 d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z">
                             </path>
                         </svg> Duplicate view</a></li>
-                <li><a class="dropdown-item" asp-route="viewscreate"
+                <li><a class="dropdown-item" asp-page="@RouteNames.ContentTypes.Views.Create"
+                        asp-route-backToListUrl="@backToListUrl"
                         asp-route-contentTypeDeveloperName="@Model.CurrentView.ContentType.DeveloperName"><svg
                             class="icon icon-xs" fill="none" stroke="currentColor" viewBox="0 0 24 24"
                             xmlns="http://www.w3.org/2000/svg">
@@ -147,7 +151,7 @@
                         </svg> Create view</a></li>
             }
 
-            <li><a class="dropdown-item" asp-route="viewsindex"
+            <li><a class="dropdown-item" asp-page="@RouteNames.ContentTypes.Views.Index"
                     asp-route-contentTypeDeveloperName="@Model.CurrentView.ContentType.DeveloperName"><svg
                         class="icon icon-xs" fill="none" stroke="currentColor" viewBox="0 0 24 24"
                         xmlns="http://www.w3.org/2000/svg">
@@ -163,7 +167,7 @@
                 foreach (var favorite in Model.FavoriteViews)
                 {
                     <li>
-                        <a class="dropdown-item" asp-route="contentitemsindex"
+                        <a class="dropdown-item" asp-page="@RouteNames.ContentItems.Index"
                             asp-route-contentTypeDeveloperName="@Model.CurrentView.ContentType.DeveloperName"
                             asp-route-viewId="@favorite.Id">
                             @if (favorite.Id == Model.CurrentView.Id)
