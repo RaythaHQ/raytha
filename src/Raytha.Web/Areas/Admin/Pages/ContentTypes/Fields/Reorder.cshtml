@@ -1,4 +1,6 @@
 @page "/raytha/{contentTypeDeveloperName}/fields/reorder"
+@using Microsoft.AspNetCore.Routing
+@using Raytha.Web.Areas.Admin.Pages.Shared.Models
 @model Raytha.Web.Areas.Admin.Pages.ContentTypes.Fields.Reorder
 
 @{
@@ -6,6 +8,16 @@
     Layout = "SidebarLayout";
     ViewData["Title"] = pageTitle;
     ViewData["ActiveMenu"] = Model.CurrentView.ContentType.DeveloperName;
+
+    var back = new BackLinkOptions
+    {
+        Page = RouteNames.ContentTypes.Fields.Index,
+        RouteValues = new RouteValueDictionary
+        {
+            ["contentTypeDeveloperName"] = Model.CurrentView.ContentType.DeveloperName
+        },
+        Text = "Back to fields"
+    };
 }
 
 <partial name="_Partials/PageHeading" model='ViewData["Title"]' />
@@ -14,12 +26,12 @@
     <div class="col-xxl-7 col-xl-8 col-lg-9 col-md-12">
         <div class="card border-0 shadow mb-4">
             <div class="card-body">
-                @(await Html.PartialAsync("_BackToList", Model.CurrentView.ContentType.DeveloperName))
+                @(await Html.PartialAsync("_Partials/BackToList", back))
 
                 <ul data-sortable-list class="list-group mt-4">
                     @foreach (var item in Model.ListView.Items)
                     {
-                        <li data-sortable-update-url="@Url.Action("FieldsReorderAjax", new { contentTypeDeveloperName = Model.CurrentView.ContentType.DeveloperName, id = item.Id })"
+                        <li data-sortable-update-url="@Url.Page(RouteNames.ContentTypes.Fields.Reorder, "Ajax", new { contentTypeDeveloperName = Model.CurrentView.ContentType.DeveloperName, id = item.Id })"
                             class="list-group-item border raytha-draggable d-flex justify-content-between">
                             <div>
                                 @item.Label <small>@item.DeveloperName</small>
@@ -38,5 +50,6 @@
 </div>
 
 @section Scripts {
-<script type="module" defer src="~/js/pages/content-types/fields-reorder.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+    <script type="module" defer src="~/js/pages/content-types/fields-reorder.js"></script>
 }

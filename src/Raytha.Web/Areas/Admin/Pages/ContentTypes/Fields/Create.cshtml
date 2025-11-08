@@ -1,129 +1,141 @@
 @page "/raytha/{contentTypeDeveloperName}/fields/create"
 @using Microsoft.AspNetCore.Routing
+@using Raytha.Web.Areas.Admin.Pages.Shared.Models
 @using Raytha.Web.Areas.Shared.Models
 @model Raytha.Web.Areas.Admin.Pages.ContentTypes.Fields.Create
 
 @{
     var pageTitle = $"{Model.CurrentView.ContentType.LabelPlural} > Fields > Create field";
-    Layout = "_Layouts/SubActionLayout";
+    Layout = "SidebarLayout";
     ViewData["Title"] = pageTitle;
     ViewData["ActiveMenu"] = Model.CurrentView.ContentType.DeveloperName;
-    ViewData["BackLinkRoute"] = RouteNames.ContentTypes.Fields.Index;
-    ViewData["BackLinkRouteValues"] = new RouteValueDictionary
+
+    BackLinkOptions back = new BackLinkOptions
     {
-        { "contentTypeDeveloperName", Model.CurrentView.ContentType.DeveloperName }
+        Page = RouteNames.ContentTypes.Fields.Index,
+        RouteValues = new RouteValueDictionary
+{
+{ "contentTypeDeveloperName", Model.CurrentView.ContentType.DeveloperName }
+},
+        Text = "Back to fields"
     };
-    ViewData["BackLinkLabel"] = "Back to fields";
 }
 
-<form asp-page="@RouteNames.ContentTypes.Fields.Create" method="post" class="py-4" id="field-create-form">
-    <div class="col-lg-12 col-md-12">
-        <div class="mb-3">
-            <label class="form-label raytha-required" asp-for="Form.Label"></label>
-            <input type="text" class="form-control @Model.HasError("Label")" asp-for="Form.Label"
-                required id="Form_Label">
-            <div class="invalid-feedback">@Model.ErrorMessageFor("Label")</div>
-        </div>
-    </div>
-    <div class="col-lg-12 col-md-12">
-        <div class="mb-3">
-            <label class="form-label raytha-required" asp-for="Form.DeveloperName"></label>
-            <input type="text" class="form-control @Model.HasError("DeveloperName")"
-                asp-for="Form.DeveloperName" required id="Form_DeveloperName">
-            <div class="invalid-feedback">@Model.ErrorMessageFor("DeveloperName")</div>
-            <div class="form-text">You cannot change the developer name after it has been created.</div>
-        </div>
-    </div>
-    <div class="col-lg-12">
-        <div class="mb-3">
-            <label class="form-label raytha-required" asp-for="Form.FieldType"></label>
-            <select class="form-select @Model.HasError("FieldType")" asp-for="Form.FieldType"
-                asp-items="@(new SelectList(Model.AvailableFieldTypes, "Key", "Value"))"
-                id="Form_FieldType"
-                required>
-                <option value="">-- SELECT --</option>
-            </select>
-            <div class="invalid-feedback">@Model.ErrorMessageFor("FieldType")</div>
-            <div class="form-text">You cannot change the field type after it has been created.</div>
-        </div>
-    </div>
-    @* TODO: Add vanilla JS to show/hide this section based on field type selection *@
-    <div class="col-lg-12" id="related-content-type-section" style="display: none;">
-        <div class="mb-3">
-            <label class="form-label raytha-required" asp-for="Form.RelatedContentTypeId"></label>
-            <select class="form-select @Model.HasError("RelatedContentType")"
-                asp-for="Form.RelatedContentTypeId"
-                asp-items="@(new SelectList(Model.AvailableContentTypes, "Key", "Value"))">
-                <option value="">-- SELECT --</option>
-            </select>
-            <div class="invalid-feedback">@Model.ErrorMessageFor("RelatedContentTypeId")</div>
-            <div class="form-text">You cannot change this value after it has been created.</div>
-        </div>
-    </div>
-    @* TODO: Add vanilla JS to show/hide this section based on field type selection and implement add/remove/reorder functionality *@
-    <div class="col-lg-12" id="choices-section" style="display: none;">
-        <div class="mb-3">
-            <label class="form-label raytha-required" asp-for="Form.Choices">Choices</label>
-            <div class="form-text mb-2">Define the choices for select fields (e.g., dropdown, radio buttons, checkboxes)</div>
-            <div id="choicesList">
-                @for (int i = 0; i < Model.Form.Choices.Count(); i++)
-                {
-                    <div class="row mb-2">
-                        <div class="col-5">
-                            <input type="text" name="Choices[@i].Label"
-                                class="form-control @Model.HasError("Choices")"
-                                placeholder="Label"
-                                value="@(Model.Form.Choices[i].Label)"
-                                required>
-                            @if (i == Model.Form.Choices.Count() - 1)
-                            {
-                                <div class="invalid-feedback">@Model.ErrorMessageFor("Choices")</div>
-                            }
-                        </div>
-                        <div class="col-5">
-                            <input type="text" name="Choices[@i].DeveloperName"
-                                class="form-control @Model.HasError("Choices")"
-                                placeholder="Developer Name"
-                                value="@(Model.Form.Choices[i].DeveloperName)"
-                                required>
-                        </div>
-                        <div class="col-2">
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox"
-                                    name="Choices[@i].Disabled"
-                                    value="@(Model.Form.Choices[i].Disabled ? "true" : "false")"
-                                    @(Model.Form.Choices[i].Disabled ? "checked" : "")>
-                                <label class="form-check-label">Disabled</label>
-                            </div>
+<div class="row mb-4">
+    <partial name="_Partials/PageHeading" model='ViewData["Title"]' />
+    <div class="col-xxl-7 col-xl-8 col-lg-9 col-md-12">
+        <div class="card border-0 shadow mb-4">
+            <div class="card-body">
+                @(await Html.PartialAsync("_Partials/BackToList", back))
+                <form asp-page="@RouteNames.ContentTypes.Fields.Create" method="post" class="py-4"
+                    id="field-create-form">
+                    <div class="col-lg-12 col-md-12">
+                        <div class="mb-3">
+                            <label class="form-label raytha-required" asp-for="Form.Label"></label>
+                            <input type="text" class="form-control @Model.HasError("Label")" asp-for="Form.Label"
+                                required id="Form_Label">
+                            <div class="invalid-feedback">@Model.ErrorMessageFor("Label")</div>
                         </div>
                     </div>
-                }
-            </div>
-            <div class="form-text text-muted mt-2">Note: Dynamic add/remove/reorder functionality pending implementation</div>
-        </div>
-    </div>
-    <div class="col-lg-12 mt-4">
-        <div class="mb-3">
-            <label class="form-label" asp-for="@Model.Form.IsRequired"></label>
-            <div class="form-check form-switch">
-                <input class="form-check-input" type="checkbox" asp-for="@Model.Form.IsRequired">
-            </div>
-            <div class="invalid-feedback">@Model.ErrorMessageFor("IsRequired")</div>
-        </div>
-    </div>
+                    <div class="col-lg-12 col-md-12">
+                        <div class="mb-3">
+                            <label class="form-label raytha-required" asp-for="Form.DeveloperName"></label>
+                            <input type="text" class="form-control @Model.HasError("DeveloperName")"
+                                asp-for="Form.DeveloperName" required id="Form_DeveloperName">
+                            <div class="invalid-feedback">@Model.ErrorMessageFor("DeveloperName")</div>
+                            <div class="form-text">You cannot change the developer name after it has been created.</div>
+                        </div>
+                    </div>
+                    <div class="col-lg-12">
+                        <div class="mb-3">
+                            <label class="form-label raytha-required" asp-for="Form.FieldType"></label>
+                            <select class="form-select @Model.HasError("FieldType")" asp-for="Form.FieldType"
+                                asp-items="@(new SelectList(Model.AvailableFieldTypes, "Key", "Value"))"
+                                id="Form_FieldType" required>
+                                <option value="">-- SELECT --</option>
+                            </select>
+                            <div class="invalid-feedback">@Model.ErrorMessageFor("FieldType")</div>
+                            <div class="form-text">You cannot change the field type after it has been created.</div>
+                        </div>
+                    </div>
+                    @* TODO: Add vanilla JS to show/hide this section based on field type selection *@
+                    <div class="col-lg-12" id="related-content-type-section" style="display: none;">
+                        <div class="mb-3">
+                            <label class="form-label raytha-required" asp-for="Form.RelatedContentTypeId"></label>
+                            <select class="form-select @Model.HasError("RelatedContentType")"
+                                asp-for="Form.RelatedContentTypeId"
+                                asp-items="@(new SelectList(Model.AvailableContentTypes, "Key", "Value"))">
+                                <option value="">-- SELECT --</option>
+                            </select>
+                            <div class="invalid-feedback">@Model.ErrorMessageFor("RelatedContentTypeId")</div>
+                            <div class="form-text">You cannot change this value after it has been created.</div>
+                        </div>
+                    </div>
+                    @* TODO: Add vanilla JS to show/hide this section based on field type selection and implement add/remove/reorder functionality *@
+                    <div class="col-lg-12" id="choices-section" style="display: none;">
+                        <div class="mb-3">
+                            <label class="form-label raytha-required" asp-for="Form.Choices">Choices</label>
+                            <div class="form-text mb-2">Define the choices for select fields (e.g., dropdown, radio
+                                buttons, checkboxes)</div>
+                            <div id="choicesList">
+                                @for (int i = 0; i < Model.Form.Choices.Count(); i++)
+                                {
+                                    <div class="row mb-2">
+                                        <div class="col-5">
+                                            <input type="text" name="Choices[@i].Label"
+                                                class="form-control @Model.HasError("Choices")" placeholder="Label"
+                                                value="@(Model.Form.Choices[i].Label)" required>
+                                            @if (i == Model.Form.Choices.Count() - 1)
+                                            {
+                                                <div class="invalid-feedback">@Model.ErrorMessageFor("Choices")</div>
+                                            }
+                                        </div>
+                                        <div class="col-5">
+                                            <input type="text" name="Choices[@i].DeveloperName"
+                                                class="form-control @Model.HasError("Choices")" placeholder="Developer Name"
+                                                value="@(Model.Form.Choices[i].DeveloperName)" required>
+                                        </div>
+                                        <div class="col-2">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" name="Choices[@i].Disabled"
+                                                    value="@(Model.Form.Choices[i].Disabled ? "true" : "false")"
+                                                    @(Model.Form.Choices[i].Disabled ? "checked" : "")>
+                                                <label class="form-check-label">Disabled</label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                            <div class="form-text text-muted mt-2">Note: Dynamic add/remove/reorder functionality
+                                pending implementation</div>
+                        </div>
+                    </div>
+                    <div class="col-lg-12 mt-4">
+                        <div class="mb-3">
+                            <label class="form-label" asp-for="@Model.Form.IsRequired"></label>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" asp-for="@Model.Form.IsRequired">
+                            </div>
+                            <div class="invalid-feedback">@Model.ErrorMessageFor("IsRequired")</div>
+                        </div>
+                    </div>
 
-    <div class="col-lg-12 mt-4">
-        <div class="mb-3">
-            <label class="form-label" asp-for="@Model.Form.Description"></label>
-            <textarea class="form-control @Model.HasError("Description")"
-                asp-for="@Model.Form.Description"></textarea>
-            <div class="invalid-feedback">@Model.ErrorMessageFor("Description")</div>
+                    <div class="col-lg-12 mt-4">
+                        <div class="mb-3">
+                            <label class="form-label" asp-for="@Model.Form.Description"></label>
+                            <textarea class="form-control @Model.HasError("Description")"
+                                asp-for="@Model.Form.Description"></textarea>
+                            <div class="invalid-feedback">@Model.ErrorMessageFor("Description")</div>
+                        </div>
+                    </div>
+                    <input type="hidden" asp-for="@Model.Form.ContentTypeId">
+                    <button type="submit" class="btn btn-success mt-4">Save</button>
+                </form>
+            </div>
         </div>
     </div>
-    <input type="hidden" asp-for="@Model.Form.ContentTypeId">
-    <button type="submit" class="btn btn-success mt-4">Save</button>
-</form>
+</div>
 
 @section Scripts {
-<script type="module" defer src="~/js/pages/content-types/fields-create.js"></script>
+    <script type="module" defer src="~/js/pages/content-types/fields-create.js"></script>
 }

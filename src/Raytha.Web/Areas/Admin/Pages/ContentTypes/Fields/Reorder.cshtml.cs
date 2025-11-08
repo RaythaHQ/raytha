@@ -68,7 +68,7 @@ public class Reorder : BaseContentTypeContextPageModel
         return Page();
     }
 
-    public async Task<IActionResult> Ajax(string id)
+    public async Task<IActionResult> OnPostAjaxAsync(string id)
     {
         var position = Request.Form["position"];
         var input = new ReorderContentTypeField.Command
@@ -77,11 +77,13 @@ public class Reorder : BaseContentTypeContextPageModel
             NewFieldOrder = Convert.ToInt32(position),
         };
 
-        var result = await Mediator.Send(input);
-        if (result.Success)
-            return new JsonResult(result);
-        else
-            return new JsonResult(result, new { StatusCode = 400 });
+        var response = await Mediator.Send(input);
+        if (!response.Success)
+        {
+            return BadRequest(response);
+        }
+
+        return new JsonResult(response);
     }
 
     public record FieldsPaginationViewModel : PaginationViewModel
