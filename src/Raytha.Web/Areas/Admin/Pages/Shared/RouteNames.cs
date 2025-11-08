@@ -71,6 +71,7 @@ public static class RouteNames
         public const string DeletedContentItemsList = "/ContentTypes/DeletedContentItemsList";
         public const string DeletedContentItemsRestore = "/ContentTypes/DeletedContentItemsRestore";
         public const string DeletedContentItemsClear = "/ContentTypes/DeletedContentItemsClear";
+        public const string BeginImportFromCsv = "/ContentTypes/BeginImportFromCsv";
 
         /// <summary>
         /// Route constants for content type field management pages.
@@ -93,6 +94,11 @@ public static class RouteNames
             public const string Create = "/ContentTypes/Views/Create";
             public const string Edit = "/ContentTypes/Views/Edit";
             public const string Delete = "/ContentTypes/Views/Delete";
+            public const string Sort = "/ContentTypes/Views/Sort";
+            public const string Filter = "/ContentTypes/Views/Filter";
+            public const string Columns = "/ContentTypes/Views/Columns";
+            public const string PublicSettings = "/ContentTypes/Views/PublicSettings";
+            public const string BeginExportToCsv = "/ContentTypes/Views/BeginExportToCsv";
         }
     }
 

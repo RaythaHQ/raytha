@@ -1,0 +1,113 @@
+@page "/raytha/{contentTypeDeveloperName}/views/sort/{viewId}"
+@model Raytha.Web.Areas.Admin.Pages.ContentTypes.Views.Sort
+
+@{
+    var pageTitle = $"{Model.CurrentView!.ContentType.LabelPlural} > Views > Sort";
+    Layout = "SidebarLayout";
+    ViewData["Title"] = pageTitle;
+    ViewData["ActiveMenu"] = Model.CurrentView.ContentType.DeveloperName;
+    var back = new BackLinkOptions
+    {
+        Href = Model.BackToListUrl,
+        Page = RouteNames.ContentTypes.Views.Index,
+        RouteValues = new RouteValueDictionary
+        {
+            ["contentTypeDeveloperName"] = Model.CurrentView.ContentType.DeveloperName,
+            ["id"] = Model.CurrentView.Id
+        }
+    };
+}
+
+<div>
+    <div class="row mb-4">
+        @await Html.PartialAsync("_Partials/PageHeading", ViewData["Title"])
+        <div class="col-xxl-7 col-xl-8 col-lg-9 col-md-12">
+            <div class="card border-0 shadow mb-4">
+                <div class="card-body">
+                    @(await Html.PartialAsync("_Partials/BackToList", back))
+                    
+                    <div class="row">
+                        <div class="col-md-12">
+                            <h4 class="pt-2">Sorted columns</h4>
+
+                            @if (Model.SelectedColumns?.Any() == true)
+                            {
+                                <ul data-sortable-list class="list-group mt-2">
+                                    @foreach (var item in Model.SelectedColumns)
+                                    {
+                                        <li data-sortable-update-url="@Url.Page(RouteNames.ContentTypes.Views.Sort, "Ajax",
+                                            new { contentTypeDeveloperName = Model.CurrentView.ContentType.DeveloperName,
+                                                  id = Model.CurrentView.Id,
+                                                  developerName = item.DeveloperName })"
+                                            class="list-group-item border raytha-draggable d-flex justify-content-between">
+                                            <div class="col-10">
+                                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="icon icon-xs me-2">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 9h16.5m-16.5 6.75h16.5" />
+                                                </svg>
+                                                @item.Label <small>@item.DeveloperName</small>
+                                            </div>
+                                            <div class="col-1">
+                                                @item.OrderByDirection
+                                            </div>
+                                            <form method="post"
+                                                  asp-page="@RouteNames.ContentTypes.Views.Sort" asp-page-handler="Remove"
+                                                  asp-route-contentTypeDeveloperName="@Model.CurrentView.ContentType.DeveloperName"
+                                                  asp-route-viewId="@Model.CurrentView.Id" asp-route-backToListUrl="@Model.BackToListUrl"
+                                                  asp-route-developerName="@item.DeveloperName">
+                                                <button class="text-danger btn btn-link btn-xs">
+                                                    <svg class="icon icon-sm mx-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-3a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                                </button>
+                                            </form>
+                                        </li>
+                                    }
+                                </ul>
+                            }
+
+                            <div class="col-lg-12">
+                                <div class="mb-3">
+                                    <form method="post"
+                                          asp-page="@RouteNames.ContentTypes.Views.Sort" asp-page-handler="Add"
+                                          asp-route-contentTypeDeveloperName="@Model.CurrentView.ContentType.DeveloperName"
+                                          asp-route-viewId="@Model.CurrentView.Id" asp-route-backToListUrl="@Model.BackToListUrl"
+                                          class="py-4">
+                                        <div class="col-lg-12 col-md-6">
+                                            <label class="form-label">Add a column to sort by</label>
+                                            <div class="row">
+                                                <div class="col-6">
+                                                    <select class="form-select" asp-for="DeveloperName" name="DeveloperName" required>
+                                                        <option value="">-- SELECT --</option>
+                                                        @foreach (var field in Model.NotSelectedColumns)
+                                                        {
+                                                            <option value="@field.Key">@field.Value</option>
+                                                        }
+                                                    </select>
+                                                </div>
+                                                <div class="col-6">
+                                                    <select class="form-select" asp-for="OrderByDirection" name="OrderByDirection">
+                                                        <option value="asc">Ascending</option>
+                                                        <option value="desc">Descending</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <button type="submit" class="btn btn-success mt-4">
+                                            <svg class="icon icon-xs" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+                                            Add column
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
+<script type="module" defer src="~/js/pages/content-types/views-sort.js"></script>
+}

@@ -4,7 +4,7 @@ using Raytha.Application.BackgroundTasks.Queries;
 using Raytha.Domain.Entities;
 using Raytha.Web.Areas.Admin.Pages.Shared.Models;
 
-namespace Raytha.Web.Areas.Admin.Pages.ContentItems;
+namespace Raytha.Web.Areas.Admin.Pages.ContentTypes;
 
 [Authorize(Policy = BuiltInSystemPermission.MANAGE_TEMPLATES_PERMISSION)]
 public class BackgroundTaskStatus : BaseAdminPageModel

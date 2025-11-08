@@ -1,0 +1,138 @@
+@page "/raytha/{contentTypeDeveloperName}/views/filter/{viewId}"
+@model Raytha.Web.Areas.Admin.Pages.ContentTypes.Views.Filter
+
+@{
+    var pageTitle = $"{Model.CurrentView!.ContentType.LabelPlural} > Views > Filter";
+    Layout = "SidebarLayout";
+    ViewData["Title"] = pageTitle;
+    ViewData["ActiveMenu"] = Model.CurrentView.ContentType.DeveloperName;
+    var back = new BackLinkOptions
+    {
+        Href = Model.BackToListUrl,
+        Page = RouteNames.ContentTypes.Views.Index,
+        RouteValues = new RouteValueDictionary
+        {
+            ["contentTypeDeveloperName"] = Model.CurrentView.ContentType.DeveloperName,
+            ["id"] = Model.CurrentView.Id
+        }
+    };
+    var initialParentId = Guid.NewGuid().ToString();
+}
+
+<style>
+    .tree {
+        min-height: 20px;
+    }
+
+    .tree li {
+        list-style-type: none;
+        margin: 0;
+        padding: 10px 5px 0 5px;
+        position: relative
+    }
+
+    .tree li::before,
+    .tree li::after {
+        content: '';
+        left: -20px;
+        position: absolute;
+        right: auto
+    }
+
+    .tree li::before {
+        border-left: 1px solid #999;
+        bottom: 50px;
+        height: 100%;
+        top: 0;
+        width: 1px
+    }
+
+    .tree li::after {
+        border-top: 1px solid #999;
+        height: 20px;
+        top: 25px;
+        width: 25px
+    }
+
+    .tree>ul>li::before,
+    .tree>ul>li::after {
+        border: 0
+    }
+
+    .tree li:last-child::before {
+        height: 30px
+    }
+</style>
+
+<div>
+    <div class="row mb-4">
+        @await Html.PartialAsync("_Partials/PageHeading", ViewData["Title"])
+        <div class="col-lg-12 col-md-12">
+            <div class="card border-0 shadow mb-4">
+                <div class="card-body">
+                    @(await Html.PartialAsync("_Partials/BackToList", back))
+
+                    <!-- Antiforgery token host; JS will read it and send in a header -->
+                    <form id="filter-af-token-host" class="d-none">
+                        @Html.AntiForgeryToken()
+                    </form>
+
+                    <div id="filter-root" class="tree mt-4" data-customfields='@Model.ContentTypeFieldsJson'
+                        data-updateurl="@Url.Page(RouteNames.ContentTypes.Views.Filter, "Save", new { contentTypeDeveloperName = Model.CurrentView.ContentType.DeveloperName, viewId = Model.CurrentView.Id })">
+
+                        @if (Model.HasExistingFilter)
+                        {
+                            <ul>
+                                @await Html.PartialAsync("_FilterSubtree", new
+                                Raytha.Web.Areas.Admin.Pages.ContentTypes.Views.Filter.FilterSubtree_ViewModel {
+                                    ContentTypeFields = Model.ContentTypeFields,
+                                                        FilterCondition = Model.RootFilterCondition!,
+                                                        AllFilterConditions = Model.CurrentView!.Filter
+                                                        })
+                        </ul>
+                                                }
+                        else
+                        {
+                            <ul>
+                                <li class="parent_li" data-type="filter_condition_group" data-id="@initialParentId"
+                                    data-parentid="">
+                                    <div class="card">
+                                        <div class="card-body">
+                                            <div class="form-check form-check-inline">
+                                                <input class="form-check-input" name="groupOperator-@initialParentId"
+                                                    id="andChoice-@initialParentId" type="radio" value="and"
+                                                    data-forid="@initialParentId" checked>
+                                                <label class="form-check-label" for="andChoice-@initialParentId">AND</label>
+                                            </div>
+                                            <div class="form-check form-check-inline">
+                                                <input class="form-check-input" name="groupOperator-@initialParentId"
+                                                    id="orChoice-@initialParentId" type="radio" value="or"
+                                                    data-forid="@initialParentId">
+                                                <label class="form-check-label" for="orChoice-@initialParentId">OR</label>
+                                            </div>
+                                            <div class="float-end">
+                                                <button type="button" class="btn btn-sm btn-outline-primary"
+                                                    data-action="add-filter" data-forid="@initialParentId">Add
+                                                    filter</button>
+                                                <button type="button" class="btn btn-sm btn-outline-primary"
+                                                    data-action="add-filter-group" data-forid="@initialParentId">Add filter
+                                                    group</button>
+                                            </div>
+                                            <ul data-forid="@initialParentId"></ul>
+                                        </div>
+                                    </div>
+                                </li>
+                            </ul>
+                        }
+
+                        <button type="button" id="filter-save" class="btn btn-success mt-3">Save</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script type="module" src="~/js/pages/content-types/views-filter.js"></script>
+}

@@ -68,9 +68,10 @@
                                 Pagination = Model.ListView,
                                 PropertyName = "Label",
                                 IsFirst = true,
-                                DisplayName = ViewModelExtensions.GetDisplayName<Index.ContentTypeViewListItemViewModel>(p
-                                =>
-                                p.Label)
+                                DisplayName = ViewModelExtensions.GetDisplayName
+                                                        <ContentTypes.Views.Index.ContentTypeViewListItemViewModel>(p
+                                                        =>
+                                                        p.Label)
                             }))
                             @(await Html.PartialAsync("_Partials/TableColumnHeader", new
                                                         BaseTableColumnHeaderViewModel()
@@ -78,9 +79,10 @@
                                 Pagination = Model.ListView,
                                 PropertyName = "DeveloperName",
                                 IsFirst = false,
-                                DisplayName = ViewModelExtensions.GetDisplayName<Index.ContentTypeViewListItemViewModel>(p
-                                =>
-                                p.DeveloperName)
+                                DisplayName =
+                                                        ViewModelExtensions.GetDisplayName<ContentTypes.Views.Index.ContentTypeViewListItemViewModel>(p
+                                                        =>
+                                                        p.DeveloperName)
                             }))
                             @(await Html.PartialAsync("_Partials/TableColumnHeader", new
                                                         BaseTableColumnHeaderViewModel()
@@ -88,9 +90,10 @@
                                 Pagination = Model.ListView,
                                 PropertyName = "IsPublished",
                                 IsFirst = false,
-                                DisplayName = ViewModelExtensions.GetDisplayName<Index.ContentTypeViewListItemViewModel>(p
-                                =>
-                                p.IsPublished)
+                                DisplayName =
+                                                        ViewModelExtensions.GetDisplayName<ContentTypes.Views.Index.ContentTypeViewListItemViewModel>(p
+                                                        =>
+                                                        p.IsPublished)
                             }))
                             @(await Html.PartialAsync("_Partials/TableColumnHeader", new
                                                         BaseTableColumnHeaderViewModel()
@@ -98,9 +101,10 @@
                                 Pagination = Model.ListView,
                                 PropertyName = "RoutePath",
                                 IsFirst = false,
-                                DisplayName = ViewModelExtensions.GetDisplayName<Index.ContentTypeViewListItemViewModel>(p
-                                =>
-                                p.RoutePath)
+                                DisplayName =
+                                                        ViewModelExtensions.GetDisplayName<ContentTypes.Views.Index.ContentTypeViewListItemViewModel>(p
+                                                        =>
+                                                        p.RoutePath)
                             }))
                             @(await Html.PartialAsync("_Partials/TableColumnHeader", new
                                                         BaseTableColumnHeaderViewModel()
@@ -108,9 +112,10 @@
                                 Pagination = Model.ListView,
                                 PropertyName = "LastModificationTime",
                                 IsFirst = false,
-                                DisplayName = ViewModelExtensions.GetDisplayName<Index.ContentTypeViewListItemViewModel>(p
-                                =>
-                                p.LastModificationTime)
+                                DisplayName =
+                                                        ViewModelExtensions.GetDisplayName<ContentTypes.Views.Index.ContentTypeViewListItemViewModel>(p
+                                                        =>
+                                                        p.LastModificationTime)
                             }))
                             <th class="border-0">
                                 Last modified by

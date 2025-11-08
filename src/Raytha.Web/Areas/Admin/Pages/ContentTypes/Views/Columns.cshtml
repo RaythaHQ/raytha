@@ -1,0 +1,124 @@
+@page "/raytha/{contentTypeDeveloperName}/views/columns/{viewId}"
+@model Raytha.Web.Areas.Admin.Pages.ContentTypes.Views.Columns
+
+@{
+    var pageTitle = $"{Model.CurrentView!.ContentType.LabelPlural} > Views > Columns";
+    Layout = "SidebarLayout";
+    ViewData["Title"] = pageTitle;
+    ViewData["ActiveMenu"] = Model.CurrentView.ContentType.DeveloperName;
+    var back = new BackLinkOptions
+    {
+        Href = Model.BackToListUrl,
+        Page = RouteNames.ContentTypes.Views.Index,
+        RouteValues = new RouteValueDictionary
+        {
+            ["contentTypeDeveloperName"] = Model.CurrentView.ContentType.DeveloperName,
+            ["id"] = Model.CurrentView.Id
+        }
+    };
+}
+
+<div>
+    <div class="row mb-4">
+        @await Html.PartialAsync("_Partials/PageHeading", ViewData["Title"])
+        <div class="col-xxl-10 col-xl-11 col-lg-12 col-md-12">
+            <div class="card border-0 shadow mb-4">
+                <div class="card-body">
+                    @(await Html.PartialAsync("_Partials/BackToList", back))
+
+                    <div class="row mt-4">
+                        <div class="col-md-5">
+                            <h4 class="pt-2 mb-3">Selected columns</h4>
+
+                            @if (Model.SelectedColumns?.Any() == true)
+                            {
+                                <ul data-sortable-list class="list-group">
+                                    @foreach (var column in Model.SelectedColumns)
+                                    {
+                                        <li class="list-group-item border raytha-draggable d-flex justify-content-between align-items-center"
+                                            data-sortable-update-url="@Url.Page(RouteNames.ContentTypes.Views.Columns, "Ajax", new { contentTypeDeveloperName = Model.CurrentView.ContentType.DeveloperName, viewId = Model.CurrentView.Id, developerName = column.DeveloperName })">
+                                            <div class="d-flex align-items-center">
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-sm me-2 text-muted"
+                                                    style="cursor: grab;" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                                                    stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                                    stroke-linejoin="round">
+                                                    <circle cx="9" cy="12" r="1" />
+                                                    <circle cx="9" cy="5" r="1" />
+                                                    <circle cx="9" cy="19" r="1" />
+                                                    <circle cx="15" cy="12" r="1" />
+                                                    <circle cx="15" cy="5" r="1" />
+                                                    <circle cx="15" cy="19" r="1" />
+                                                </svg>
+                                                <span>@column.Label</span>
+                                            </div>
+                                            <form method="post" asp-page-handler="Toggle" class="d-inline">
+                                                <input type="hidden" name="viewId" value="@Model.CurrentView.Id" />
+                                                <input type="hidden" name="developerName" value="@column.DeveloperName" />
+                                                <input type="hidden" name="action" value="remove" />
+                                                <input type="hidden" name="backToListUrl" value="@Model.BackToListUrl" />
+                                                <button type="submit" title="Remove this column from list view"
+                                                    class="btn btn-sm btn-link text-danger p-0">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-sm" width="24"
+                                                        height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                        <circle cx="12" cy="12" r="10" />
+                                                        <path d="M8 12h8" />
+                                                    </svg>
+                                                </button>
+                                            </form>
+                                        </li>
+                                    }
+                                </ul>
+                            }
+                            else
+                            {
+                                <p class="text-muted">No columns selected.</p>
+                            }
+                        </div>
+
+                        <div class="col-md-7">
+                            <h4 class="pt-2 mb-3">Available columns</h4>
+
+                            @if (Model.NotSelectedColumns?.Any() == true)
+                            {
+                                <ul class="list-group">
+                                    @foreach (var column in Model.NotSelectedColumns)
+                                    {
+                                        <li class="list-group-item border d-flex justify-content-between align-items-center">
+                                            <span>@column.Label</span>
+                                            <form method="post" asp-page-handler="Toggle" class="d-inline">
+                                                <input type="hidden" name="viewId" value="@Model.CurrentView.Id" />
+                                                <input type="hidden" name="developerName" value="@column.DeveloperName" />
+                                                <input type="hidden" name="action" value="add" />
+                                                <input type="hidden" name="backToListUrl" value="@Model.BackToListUrl" />
+                                                <button type="submit" title="Add this column to list view"
+                                                    class="btn btn-sm btn-link text-success p-0">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-sm" width="24"
+                                                        height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                        <circle cx="12" cy="12" r="10" />
+                                                        <path d="M8 12h8" />
+                                                        <path d="M12 8v8" />
+                                                    </svg>
+                                                </button>
+                                            </form>
+                                        </li>
+                                    }
+                                </ul>
+                            }
+                            else
+                            {
+                                <p class="text-muted">All columns have been added.</p>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+    <script type="module" src="~/js/pages/content-types/views-columns.js"></script>
+}

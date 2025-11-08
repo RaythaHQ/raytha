@@ -1,0 +1,135 @@
+@using Raytha.Domain.ValueObjects.FieldTypes
+@using Raytha.Domain.ValueObjects
+@model Raytha.Web.Areas.Admin.Pages.ContentTypes.Views.Filter.FilterSubtree_ViewModel
+@{
+    Layout = null;
+}
+@if (Model != null)
+{
+<li class="parent_li"
+    data-type="@Model.FilterCondition.Type!.DeveloperName"
+    data-id="@Model.FilterCondition.Id"
+    data-parentid="@Model.FilterCondition.ParentId">
+  <div class="card">
+    <div class="card-body">
+
+      @if (Model.FilterCondition.Type.DeveloperName == FilterConditionType.FilterConditionGroup)
+      {
+        <div class="form-check form-check-inline">
+          <input class="form-check-input" name="groupOperator-@Model.FilterCondition.Id" id="andChoice-@Model.FilterCondition.Id" type="radio" value="and" data-forid="@Model.FilterCondition.Id" @(Model.FilterCondition.GroupOperator!.DeveloperName == BooleanOperator.AND ? "checked" : "")>
+          <label class="form-check-label" for="andChoice-@Model.FilterCondition.Id">AND</label>
+        </div>
+        <div class="form-check form-check-inline">
+          <input class="form-check-input" name="groupOperator-@Model.FilterCondition.Id" id="orChoice-@Model.FilterCondition.Id" type="radio" value="or" data-forid="@Model.FilterCondition.Id" @(Model.FilterCondition.GroupOperator!.DeveloperName == BooleanOperator.OR ? "checked" : "")>
+          <label class="form-check-label" for="orChoice-@Model.FilterCondition.Id">OR</label>
+        </div>
+        <div class="float-end">
+          <button type="button" class="btn btn-sm btn-outline-primary" data-action="add-filter" data-forid="@Model.FilterCondition.Id">Add filter</button>
+          <button type="button" class="btn btn-sm btn-outline-primary" data-action="add-filter-group" data-forid="@Model.FilterCondition.Id">Add filter group</button>
+          @if (Model.FilterCondition.ParentId.HasValue)
+          {
+            <button type="button" class="btn btn-sm btn-outline-danger" data-action="remove" data-forid="@Model.FilterCondition.Id">
+              <svg class="icon icon-xs mx-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+            </button>
+          }
+        </div>
+      }
+      else
+      {
+        var field = Model.ContentTypeFields.First(p => p.DeveloperName == Model.FilterCondition.Field);
+
+        <form class="row gy-2 gx-3 align-items-center">
+          <div class="col-md-3">
+            <label class="visually-hidden" for="field">Field</label>
+            <select class="form-select" id="field-@Model.FilterCondition.Id" data-forid="@Model.FilterCondition.Id" data-role="choose-field">
+              <option value="">Choose field...</option>
+              @foreach (var option in Model.ContentTypeFields)
+              {
+                @if (Model.FilterCondition.Field == option.DeveloperName)
+                {
+                  <option value="@option.DeveloperName" selected>@option.DeveloperName</option>
+                }
+                else
+                {
+                  <option value="@option.DeveloperName">@option.DeveloperName</option>
+                }
+              }
+            </select>
+          </div>
+          <div class="col-md-3">
+            <label class="visually-hidden" for="operator">Operator</label>
+            <select class="form-select" id="operator-@Model.FilterCondition.Id" data-forid="@Model.FilterCondition.Id" data-role="choose-operator">
+              <option value="">Choose operator...</option>
+              @foreach (var option in field.FieldType!.SupportedConditionOperators)
+              {
+                @if (Model.FilterCondition.ConditionOperator!.DeveloperName == option.DeveloperName)
+                {
+                  <option value="@option.DeveloperName" selected>@option.Label</option>
+                }
+                else
+                {
+                  <option value="@option.DeveloperName">@option.Label</option>
+                }
+              }
+            </select>
+          </div>
+          <div class="col-md-5">
+            <label class="visually-hidden">Value</label>
+            <div data-role="filter-value-container" data-forid="@Model.FilterCondition.Id">
+              @if (Model.FilterCondition.ConditionOperator!.HasFieldValue)
+              {
+                if (field.FieldType.HasChoices)
+                {
+                  <select class="form-select" id="filter-value-@Model.FilterCondition.Id" data-forid="@Model.FilterCondition.Id" data-role="filter-value">
+                    <option value="" selected>Choose value...</option>
+                    @foreach (var choice in field.Choices)
+                    {
+                      @if (choice == Model.FilterCondition.Value)
+                      {
+                        <option value="@choice" selected>@choice</option>
+                      }
+                      else
+                      {
+                        <option value="@choice">@choice</option>
+                      }
+                    }
+                  </select>
+                }
+                else if (field.FieldType.DeveloperName == BaseFieldType.Date)
+                {
+                  <input type="date" class="form-control" data-role="filter-value" data-forid="@Model.FilterCondition.Id" id="filter-value-@Model.FilterCondition.Id" value="@Model.FilterCondition.Value">
+                }
+                else if (field.FieldType.DeveloperName == BaseFieldType.Number)
+                {
+                  <input type="number" class="form-control" data-role="filter-value" data-forid="@Model.FilterCondition.Id" id="filter-value-@Model.FilterCondition.Id" value="@Model.FilterCondition.Value">
+                }
+                else
+                {
+                  <input type="text" class="form-control" data-role="filter-value" data-forid="@Model.FilterCondition.Id" id="filter-value-@Model.FilterCondition.Id" value="@Model.FilterCondition.Value">
+                }
+              }
+            </div>
+          </div>
+          <div class="col-md-1 ms-auto">
+            <button data-forid="@Model.FilterCondition.Id" data-action="remove" type="button" class="btn btn-sm btn-outline-danger">
+              <svg class="icon icon-xs mx-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+            </button>
+          </div>
+        </form>
+      }
+
+      <ul data-forid="@Model.FilterCondition.Id">
+        @foreach (var child in Model.AllFilterConditions.Where(p => p.ParentId == Model.FilterCondition.Id))
+        {
+          @await Html.PartialAsync("_FilterSubtree", new Raytha.Web.Areas.Admin.Pages.ContentTypes.Views.Filter.FilterSubtree_ViewModel {
+              FilterCondition = child,
+              ContentTypeFields = Model.ContentTypeFields,
+              AllFilterConditions = Model.AllFilterConditions
+          })
+        }
+      </ul>
+    </div>
+  </div>
+</li>
+}
+

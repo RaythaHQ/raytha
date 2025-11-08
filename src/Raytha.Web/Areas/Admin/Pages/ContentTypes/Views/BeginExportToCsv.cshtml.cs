@@ -13,7 +13,7 @@ using Raytha.Domain.Entities;
 using Raytha.Domain.ValueObjects.FieldTypes;
 using Raytha.Web.Areas.Admin.Pages.Shared.Models;
 
-namespace Raytha.Web.Areas.Admin.Pages.ContentItems;
+namespace Raytha.Web.Areas.Admin.Pages.ContentTypes.Views;
 
 [Authorize(Policy = BuiltInContentTypePermission.CONTENT_TYPE_EDIT_PERMISSION)]
 public class BeginExportToCsv : BaseHasFavoriteViewsPageModel
