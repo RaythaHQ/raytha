@@ -99,6 +99,7 @@ public static class RouteNames
             public const string Columns = "/ContentTypes/Views/Columns";
             public const string PublicSettings = "/ContentTypes/Views/PublicSettings";
             public const string BeginExportToCsv = "/ContentTypes/Views/BeginExportToCsv";
+            public const string ToggleFavorite = "/ContentTypes/Views/ToggleFavorite";
         }
     }
 

@@ -58,7 +58,8 @@
             @if (Model.CurrentViewIsFavorite)
             {
                 <li>
-                    <form method="post" asp-route="viewsunfavorite"
+                    <form method="post" asp-page="@RouteNames.ContentTypes.Views.ToggleFavorite"
+                        asp-page-handler="Unfavorite"
                         asp-route-contentTypeDeveloperName="@Model.CurrentView.ContentType.DeveloperName"
                         asp-route-viewId="@Model.CurrentView.Id">
                         <button class="dropdown-item">
@@ -76,9 +77,8 @@
             else
             {
                 <li>
-                    <form method="post" asp-route="viewsfavorite"
-                        asp-route-contentTypeDeveloperName="@Model.CurrentView.ContentType.DeveloperName
-                                                                                                                                                                            "
+                    <form method="post" asp-page="@RouteNames.ContentTypes.Views.ToggleFavorite" asp-page-handler="Favorite"
+                        asp-route-contentTypeDeveloperName="@Model.CurrentView.ContentType.DeveloperName"
                         asp-route-viewId="@Model.CurrentView.Id">
                         <button class="dropdown-item">
                             <svg class="icon icon-xs" fill="none" stroke="currentColor" viewBox="0 0 24 24"

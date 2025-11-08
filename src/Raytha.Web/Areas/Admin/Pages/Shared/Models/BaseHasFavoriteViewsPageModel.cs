@@ -5,7 +5,7 @@ namespace Raytha.Web.Areas.Admin.Pages.Shared.Models;
 
 public abstract class BaseHasFavoriteViewsPageModel : BaseContentTypeContextPageModel
 {
-    public List<FavoriteViewsListItemViewModel> FavoriteViews { get; set; }
+    public List<FavoriteViewsListItemViewModel> FavoriteViews { get; set; } = new();
 
     public bool HasFavorites
     {
@@ -27,15 +27,22 @@ public abstract class BaseHasFavoriteViewsPageModel : BaseContentTypeContextPage
             new GetFavoriteViewsForAdmin.Query
             {
                 ContentTypeId = currentView.ContentTypeId,
-                UserId = CurrentUser.UserId.Value,
+                UserId = CurrentUser.UserId!.Value,
             }
         );
+
+        FavoriteViews = favoriteViews.Result.Items.Select(p => new FavoriteViewsListItemViewModel
+        {
+            Id = p.Id,
+            Label = p.Label,
+        }).ToList();
+
         await base.OnPageHandlerExecutionAsync(context, next);
     }
 
     public record FavoriteViewsListItemViewModel
     {
-        public string Id { get; set; }
-        public string Label { get; set; }
+        public required string Id { get; set; }
+        public required string Label { get; set; }
     }
 }
