@@ -2,19 +2,14 @@
 @model Raytha.Web.Areas.Admin.Pages.Dashboard.Index
 
 @{
+    var pageTitle = "Dashboard";
     Layout = "SidebarLayout";
-    ViewData["Title"] = "Dashboard";
-    ViewData["ActiveMenu"] = "Dashboard";
+    ViewData["Title"] = pageTitle;
+    ViewData["ActiveMenu"] = pageTitle;
 }
 
 <div>
-    <div class="py-4">
-        <div class="d-flex justify-content-between w-100 flex-wrap">
-            <div class="mb-3 mb-lg-0">
-                <h1 class="h4">@ViewData["Title"]</h1>
-            </div>
-        </div>
-    </div>
+    <partial name="_Partials/PageHeading" model="pageTitle" />
     <div class="row">
         <div class="col-12 col-sm-6 col-xl-4 mb-4">
             <div class="card border-0 shadow">

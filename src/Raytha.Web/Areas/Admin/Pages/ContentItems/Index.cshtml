@@ -109,10 +109,11 @@
                     <hr class="dropdown-divider">
                 </li>
                 <li>
-                    <form method="post" asp-route="viewsdelete"
+                    <form method="post" asp-page="@RouteNames.ContentTypes.Views.Delete"
                         asp-route-contentTypeDeveloperName="@Model.CurrentView.ContentType.DeveloperName"
                         asp-route-viewId="@Model.CurrentView.Id">
-                        <button class="dropdown-item text-danger">
+                        <button class="dropdown-item text-danger"
+                            onclick="return confirm('Delete this view? This cannot be undone.');">
                             <svg class="icon icon-xs" fill="none" stroke="currentColor" viewBox="0 0 24 24"
                                 xmlns="http://www.w3.org/2000/svg">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -206,7 +207,7 @@
                 </svg>
             </a>
             <ul class="dropdown-menu">
-                <li><a class="dropdown-item" asp-route="@RouteNames.ContentTypes.Configuration"
+                <li><a class="dropdown-item" asp-page="@RouteNames.ContentTypes.Configuration"
                         asp-route-contentTypeDeveloperName="@Model.CurrentView.ContentType.DeveloperName"><svg
                             class="icon icon-xs" fill="none" stroke="currentColor" viewBox="0 0 24 24"
                             xmlns="http://www.w3.org/2000/svg">
@@ -214,7 +215,7 @@
                                 d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z">
                             </path>
                         </svg> Configuration</a></li>
-                <li><a class="dropdown-item" asp-route="@RouteNames.ContentTypes.Fields.Index"
+                <li><a class="dropdown-item" asp-page="@RouteNames.ContentTypes.Fields.Index"
                         asp-route-contentTypeDeveloperName="@Model.CurrentView.ContentType.DeveloperName"><svg
                             class="icon icon-xs" fill="none" stroke="currentColor" viewBox="0 0 24 24"
                             xmlns="http://www.w3.org/2000/svg">
@@ -222,7 +223,7 @@
                                 d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z">
                             </path>
                         </svg> Fields</a></li>
-                <li><a class="dropdown-item" asp-route="@RouteNames.ContentTypes.DeletedContentItemsList"
+                <li><a class="dropdown-item" asp-page="@RouteNames.ContentTypes.DeletedContentItemsList"
                         asp-route-contentTypeDeveloperName="@Model.CurrentView.ContentType.DeveloperName"><svg
                             class="icon icon-xs" fill="none" stroke="currentColor" viewBox="0 0 24 24"
                             xmlns="http://www.w3.org/2000/svg">
