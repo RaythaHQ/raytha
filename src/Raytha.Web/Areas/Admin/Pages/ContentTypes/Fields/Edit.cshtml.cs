@@ -89,12 +89,13 @@ public class Edit : BaseContentTypeContextPageModel, ISubActionViewModel
         {
             Id = id,
             Label = Form.Label,
-            Choices = Form.Choices?.Select(p => new ContentTypeFieldChoiceInputDto
-            {
-                Label = p.Label,
-                DeveloperName = p.DeveloperName,
-                Disabled = p.Disabled,
-            }),
+            Choices =
+                Form.Choices?.Select(p => new ContentTypeFieldChoiceInputDto
+                {
+                    Label = p.Label,
+                    DeveloperName = p.DeveloperName,
+                    Disabled = p.Disabled,
+                }) ?? Enumerable.Empty<ContentTypeFieldChoiceInputDto>(),
             IsRequired = Form.IsRequired,
             Description = Form.Description,
         };

@@ -71,12 +71,12 @@ public class Create : BaseContentTypeContextPageModel
             DeveloperName = Form.DeveloperName,
             ContentTypeId = Form.ContentTypeId,
             FieldType = Form.FieldType,
-            Choices = Form.Choices.Select(p => new ContentTypeFieldChoiceInputDto
+            Choices = Form.Choices?.Select(p => new ContentTypeFieldChoiceInputDto
             {
                 Label = p.Label,
                 DeveloperName = p.DeveloperName,
                 Disabled = p.Disabled,
-            }),
+            }) ?? Enumerable.Empty<ContentTypeFieldChoiceInputDto>(),
             IsRequired = Form.IsRequired,
             Description = Form.Description,
             RelatedContentTypeId = Form.RelatedContentTypeId,

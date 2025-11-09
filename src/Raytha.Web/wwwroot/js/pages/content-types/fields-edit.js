@@ -1,25 +1,14 @@
 /**
- * Content Type Fields - Create Page
- * Handles field creation form logic including developer name sync and choices management
+ * Content Type Fields - Edit Page
+ * Handles field edit form logic including choices management
  */
 
-import { bindDeveloperNameSync } from '/js/shared/developer-name-sync.js';
 import { FieldChoicesController } from '/js/shared/field-choices.js';
 import { initRelatedContentTypeToggle } from '/js/shared/related-content-type.js';
 import { ready } from '/js/core/events.js';
 import { $ } from '/js/core/dom.js';
 
 function init() {
-  // Developer name sync
-  const labelInput = $('#Form_Label');
-  const devNameInput = $('#Form_DeveloperName');
-
-  if (labelInput && devNameInput) {
-    bindDeveloperNameSync(labelInput, devNameInput, {
-      onlyIfEmpty: true
-    });
-  }
-
   // Field choices controller
   const fieldTypeSelect = $('#Form_FieldType');
   const choicesSection = $('#choices-section');

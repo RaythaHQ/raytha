@@ -42,7 +42,7 @@
         <div class="mb-3">
             <label class="form-label" asp-for="Form.FieldType"></label>
             <select class="form-select @Model.HasError("FieldType")" asp-for="Form.FieldType"
-                asp-items="@(new SelectList(Model.AvailableFieldTypes, "Key", "Value"))" disabled>
+                asp-items="@(new SelectList(Model.AvailableFieldTypes, "Key", "Value"))" disabled id="Form_FieldType">
                 <option value="">-- SELECT --</option>
             </select>
             <div class="invalid-feedback">@Model.ErrorMessageFor("FieldType")</div>
@@ -63,46 +63,12 @@
             </div>
         </div>
     }
-    @* TODO: Add vanilla JS to show/hide this section based on field type and implement add/remove/reorder functionality *@
-    @if (Model.Form.Choices != null && Model.Form.Choices.Any())
-    {
-        <div class="col-lg-12">
-            <div class="mb-3">
-                <label class="form-label raytha-required" asp-for="Form.Choices">Choices</label>
-                <div class="form-text mb-2">Modify the choices for this select field</div>
-                <div id="choicesList">
-                    @for (int i = 0; i < Model.Form.Choices.Count(); i++)
-                    {
-                        <div class="row mb-2">
-                            <div class="col-5">
-                                <input type="text" name="Choices[@i].Label" class="form-control @Model.HasError("Choices")"
-                                    placeholder="Label" value="@(Model.Form.Choices[i].Label)" required>
-                                @if (i == Model.Form.Choices.Count() - 1)
-                                {
-                                    <div class="invalid-feedback">@Model.ErrorMessageFor("Choices")</div>
-                                }
-                            </div>
-                            <div class="col-5">
-                                <input type="text" name="Choices[@i].DeveloperName"
-                                    class="form-control @Model.HasError("Choices")" placeholder="Developer Name"
-                                    value="@(Model.Form.Choices[i].DeveloperName)" required>
-                            </div>
-                            <div class="col-2">
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" name="Choices[@i].Disabled"
-                                        value="@(Model.Form.Choices[i].Disabled ? "true" : "false")"
-                                        @(Model.Form.Choices[i].Disabled ? "checked" : "")>
-                                    <label class="form-check-label">Disabled</label>
-                                </div>
-                            </div>
-                        </div>
-                    }
-                </div>
-                <div class="form-text text-muted mt-2">Note: Dynamic add/remove/reorder functionality pending implementation
-                </div>
-            </div>
-        </div>
-    }
+    @(await Html.PartialAsync("_Partials/_ChoicesEditor", new {
+        Choices = Model.Form.Choices ?? Enumerable.Empty<dynamic>(),
+        ChoicesSectionId = "choices-section",
+        HasError = (Func<string, string>)Model.HasError,
+        ErrorMessageFor = (Func<string, string?>)Model.ErrorMessageFor
+    }))
     <div class="col-lg-12 mt-4">
         <div class="mb-3">
             <label class="form-label" asp-for="@Model.Form.IsRequired"></label>
@@ -125,3 +91,7 @@
     <input type="hidden" asp-for="@Model.Form.ContentTypeId">
     <button type="submit" class="btn btn-success mt-4">Save</button>
 </form>
+
+@section Scripts {
+    <script type="module" defer src="~/js/pages/content-types/fields-edit.js"></script>
+}
