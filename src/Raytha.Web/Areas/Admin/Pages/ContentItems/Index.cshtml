@@ -272,7 +272,7 @@
                             </li>
                         }
                         <li>
-                            <a class="dropdown-item" asp-route="@RouteNames.ContentTypes.Views.BeginExportToCsv"
+                            <a class="dropdown-item" asp-page="@RouteNames.ContentTypes.Views.BeginExportToCsv"
                                 asp-route-contentTypeDeveloperName="@Model.CurrentView.ContentType.DeveloperName"
                                 asp-route-viewId="@Model.CurrentView.Id" asp-route-backToListUrl="@backToListUrl">
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
@@ -284,7 +284,7 @@
                             </a>
                         </li>
                         <li>
-                            <a class="dropdown-item" asp-route="@RouteNames.ContentTypes.BeginImportFromCsv"
+                            <a class="dropdown-item" asp-page="@RouteNames.ContentTypes.BeginImportFromCsv"
                                 asp-route-contentTypeDeveloperName="@Model.CurrentView.ContentType.DeveloperName"
                                 asp-route-backToListUrl="@backToListUrl">
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
