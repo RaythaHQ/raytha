@@ -1,0 +1,37 @@
+@using Raytha.Web.Areas.Admin.Pages.Shared.Models
+@inject IRelativeUrlBuilder RelativeUrlBuilder
+@{
+    var index = ViewData["Index"] as int? ?? 0;
+    var parentModel = ViewData["ParentModel"] as BasePageModel;
+}
+
+<div class="col-lg-12 col-md-12 mt-4" id="raytha_field-@Model.DeveloperName" data-field-type="attachment"
+    data-developername="@Model.DeveloperName">
+    <div class="mb-3">
+        <label class="form-label @Model.AsteriskCssIfRequired"
+            for="Form_FieldValues_@(index)__Value">@Model.Label</label>
+        <div id="@(Model.DeveloperName)-uppy"></div>
+        <div id="@(Model.DeveloperName)-uppy-progress"></div>
+        <div hidden>
+            <p>@Model.Value</p>
+            <a class="btn btn-primary" href="@RelativeUrlBuilder.MediaRedirectToFileUrl(Model.Value)"
+                target="_blank">View file</a>
+            <button hidden class="btn btn-sm text-danger" type="button"><svg class="icon icon-xs" fill="none"
+                    stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
+                    </path>
+                </svg> Remove</button>
+        </div>
+        @if (!string.IsNullOrEmpty(parentModel?.HasError(Model.DeveloperName) ?? ""))
+        {
+            <div class="text-danger">@(parentModel?.ErrorMessageFor(Model.DeveloperName))</div>
+        }
+        @if (!string.IsNullOrEmpty(Model.Description))
+        {
+            <div class="form-text">@Model.Description</div>
+        }
+        <input type="hidden" class="@(parentModel?.HasError(Model.DeveloperName) ?? "")"
+            id="Form_FieldValues_@(index)__Value" name="Form.FieldValues[@(index)].Value" value="@Model.Value" />
+    </div>
+</div>

@@ -1,0 +1,44 @@
+@using Raytha.Web.Areas.Admin.Pages.Shared.Models
+@{
+    var index = ViewData["Index"] as int? ?? 0;
+    var parentModel = ViewData["ParentModel"] as BasePageModel;
+}
+
+<div class="col-lg-12 col-md-12 mt-4" id="raytha_field-@Model.DeveloperName"
+     data-field-type="one_to_one_relationship"
+     data-developername="@Model.DeveloperName"
+     data-related-content-type-id="@Model.RelatedContentTypeId">
+    <div class="mb-3">
+        <div>
+            <label class="form-label @Model.AsteriskCssIfRequired" for="Form_FieldValues_@(index)__Value">@Model.Label</label>
+            <div class="spinner-border spinner-border-sm mt-1 ml-2" role="status">
+                <span class="visually-hidden">Loading pages...</span>
+            </div>
+        </div>
+
+        <button class="btn btn-primary btn-sm" type="button">
+            <svg class="icon icon-xs me-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg> Add relationship
+        </button>
+
+        <div class="input-group mb-3">
+            <input type="text" class="form-control" value="@Model.RelatedContentItemPrimaryField" disabled>
+            <button class="nav-link d-inline-flex align-items-center justify-content-center text-danger" type="button"><svg class="icon icon-sm mx-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg> Remove</button>
+        </div>
+
+        <input type="text" class="form-control @(parentModel?.HasError(Model.DeveloperName) ?? "")">
+        <ul class="list-group"></ul>
+        <div class="invalid-feedback">@(parentModel?.ErrorMessageFor(Model.DeveloperName))</div>
+        @if (!string.IsNullOrEmpty(Model.Description))
+        {
+            <div class="form-text">@Model.Description</div>
+        }
+        <input type="hidden" 
+               id="Form_FieldValues_@(index)__Value" 
+               name="Form.FieldValues[@(index)].Value" 
+               value="@Model.Value" />
+        <input type="hidden" 
+               name="Form.FieldValues[@(index)].RelatedContentItemPrimaryField" 
+               value="@Model.RelatedContentItemPrimaryField" />
+    </div>
+</div>
+

@@ -1,6 +1,6 @@
 /**
- * Content Items - Edit Page
- * Initializes all field types for content item editing
+ * Content Items - Create Page
+ * Initializes all field types for content item creation
  */
 
 import { ready } from '/js/core/events.js';
@@ -15,7 +15,7 @@ function init() {
     // Get global configuration from window object
     const config = window.RaythaContentItemsConfig || {};
 
-    console.log('Initializing content items edit page...', config);
+    console.log('Initializing content items create page...', config);
 
     // Initialize WYSIWYG fields
     const wysiwygFields = document.querySelectorAll('[data-field-type="wysiwyg"]');
@@ -38,7 +38,7 @@ function init() {
         initAllRelationshipFields(config);
     }
 
-    console.log('Content items edit page initialized.');
+    console.log('Content items create page initialized.');
 }
 
 // Run on DOM ready

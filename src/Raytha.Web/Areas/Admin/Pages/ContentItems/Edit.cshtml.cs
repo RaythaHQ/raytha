@@ -6,6 +6,7 @@ using Raytha.Application.Common.Utils;
 using Raytha.Application.ContentItems;
 using Raytha.Application.ContentItems.Commands;
 using Raytha.Application.ContentItems.Queries;
+using Raytha.Application.ContentTypes;
 using Raytha.Application.MediaItems.Queries;
 using Raytha.Application.Views;
 using Raytha.Domain.Entities;
@@ -32,13 +33,10 @@ public class Edit : BaseHasFavoriteViewsPageModel, ISubActionViewModel
     public async Task<IActionResult> OnGet(string id, string backToListUrl = "")
     {
         var response = await Mediator.Send(new GetContentItemById.Query { Id = id });
-
-        var imageMediaItemsResponse = await Mediator.Send(
-            new GetMediaItems.Query { ContentType = "image" }
-        );
-
-        var videoMediaItemsResponse = await Mediator.Send(
-            new GetMediaItems.Query { ContentType = "video" }
+        var (imageJson, videoJson) = await GetMediaItemsJsonAsync();
+        var fieldValues = BuildFieldValuesForEdit(
+            CurrentView.ContentType.ContentTypeFields,
+            response.Result.DraftContent
         );
 
         Form = new FormModel
@@ -50,56 +48,9 @@ public class Edit : BaseHasFavoriteViewsPageModel, ISubActionViewModel
             MaxFileSize = FileStorageProviderSettings.MaxFileSize,
             UseDirectUploadToCloud = FileStorageProviderSettings.UseDirectUploadToCloud,
             PathBase = CurrentOrganization.PathBase,
-            ImageMediaItemsJson = JsonSerializer.Serialize(
-                imageMediaItemsResponse.Result.Items.Select(mi => new
-                {
-                    fileName = mi.FileName,
-                    url = RelativeUrlBuilder.MediaRedirectToFileUrl(mi.ObjectKey),
-                })
-            ),
-            VideoMediaItemsJson = JsonSerializer.Serialize(
-                videoMediaItemsResponse.Result.Items.Select(mi => new
-                {
-                    fileName = mi.FileName,
-                    url = RelativeUrlBuilder.MediaRedirectToFileUrl(mi.ObjectKey),
-                })
-            ),
-            FieldValues = CurrentView
-                .ContentType.ContentTypeFields.Select(p => new FieldValueViewModel
-                {
-                    Label = p.Label,
-                    DeveloperName = p.DeveloperName,
-                    AvailableChoices = p
-                        .Choices?.Select(b => new FieldValueChoiceItemViewModel
-                        {
-                            Label = b.Label,
-                            DeveloperName = b.DeveloperName,
-                            Disabled = b.Disabled,
-                            Value = FieldValueConverter.MapValueForChoiceField(
-                                p.FieldType,
-                                response.Result.DraftContent,
-                                p,
-                                b
-                            ),
-                        })
-                        .ToArray(),
-                    FieldType = p.FieldType,
-                    IsRequired = p.IsRequired,
-                    Description = p.Description,
-                    Value = FieldValueConverter.MapValueForField(
-                        p.FieldType,
-                        response.Result.DraftContent,
-                        p
-                    ),
-                    RelatedContentItemPrimaryField =
-                        FieldValueConverter.MapRelatedContentItemValueForField(
-                            p.FieldType,
-                            response.Result.DraftContent,
-                            p
-                        ),
-                    RelatedContentTypeId = p.RelatedContentTypeId,
-                })
-                .ToArray(),
+            ImageMediaItemsJson = imageJson,
+            VideoMediaItemsJson = videoJson,
+            FieldValues = fieldValues,
         };
 
         Id = id;
@@ -120,13 +71,14 @@ public class Edit : BaseHasFavoriteViewsPageModel, ISubActionViewModel
 
         if (editResponse.Success)
         {
-            SetSuccessMessage($"{CurrentView.ContentType.LabelSingular} was created successfully.");
-            return RedirectToAction(
+            SetSuccessMessage($"{CurrentView.ContentType.LabelSingular} was updated successfully.");
+            return RedirectToPage(
                 "Edit",
                 new
                 {
                     contentTypeDeveloperName = CurrentView.ContentType.DeveloperName,
                     id = editResponse.Result,
+                    backToListUrl,
                 }
             );
         }
@@ -137,53 +89,7 @@ public class Edit : BaseHasFavoriteViewsPageModel, ISubActionViewModel
                 editResponse.GetErrors()
             );
 
-            var response = await Mediator.Send(new GetContentItemById.Query { Id = id });
-            Form = new FormModel
-            {
-                Id = Form.Id,
-                IsDraft = response.Result.IsDraft,
-                IsPublished = response.Result.IsPublished,
-                AllowedMimeTypes = FileStorageProviderSettings.AllowedMimeTypes,
-                MaxFileSize = FileStorageProviderSettings.MaxFileSize,
-                UseDirectUploadToCloud = FileStorageProviderSettings.UseDirectUploadToCloud,
-                PathBase = CurrentOrganization.PathBase,
-                FieldValues = CurrentView
-                    .ContentType.ContentTypeFields.Select(p => new FieldValueViewModel
-                    {
-                        Label = p.Label,
-                        DeveloperName = p.DeveloperName,
-                        AvailableChoices = p
-                            .Choices?.Select(b => new FieldValueChoiceItemViewModel
-                            {
-                                Label = b.Label,
-                                DeveloperName = b.DeveloperName,
-                                Disabled = b.Disabled,
-                                Value = FieldValueConverter.MapValueForChoiceField(
-                                    p.FieldType,
-                                    response.Result.DraftContent,
-                                    p,
-                                    b
-                                ),
-                            })
-                            .ToArray(),
-                        FieldType = p.FieldType,
-                        IsRequired = p.IsRequired,
-                        Description = p.Description,
-                        Value = FieldValueConverter.MapValueForField(
-                            p.FieldType,
-                            response.Result.DraftContent,
-                            p
-                        ),
-                        RelatedContentItemPrimaryField =
-                            FieldValueConverter.MapRelatedContentItemValueForField(
-                                p.FieldType,
-                                response.Result.DraftContent,
-                                p
-                            ),
-                        RelatedContentTypeId = p.RelatedContentTypeId,
-                    })
-                    .ToArray(),
-            };
+            await RepopulateFormOnError(id);
         }
 
         Id = id;
@@ -207,10 +113,11 @@ public class Edit : BaseHasFavoriteViewsPageModel, ISubActionViewModel
             }
             else if (contentTypeField.FieldType.DeveloperName == BaseFieldType.MultipleSelect)
             {
-                var selectedChoices = fieldValue
-                    .AvailableChoices.Where(p => p.Value == "true")
-                    .Select(p => p.DeveloperName)
-                    .ToArray();
+                var selectedChoices =
+                    fieldValue
+                        .AvailableChoices?.Where(p => p.Value == "true")
+                        .Select(p => p.DeveloperName)
+                        .ToArray() ?? Array.Empty<string>();
                 mappedFieldValues.Add(
                     fieldValue.DeveloperName,
                     contentTypeField.FieldType.FieldValueFrom(selectedChoices).Value
@@ -223,6 +130,83 @@ public class Edit : BaseHasFavoriteViewsPageModel, ISubActionViewModel
         }
 
         return mappedFieldValues;
+    }
+
+    private async Task<(string ImageJson, string VideoJson)> GetMediaItemsJsonAsync()
+    {
+        var imageMediaItemsResponse = await Mediator.Send(
+            new GetMediaItems.Query { ContentType = "image" }
+        );
+
+        var videoMediaItemsResponse = await Mediator.Send(
+            new GetMediaItems.Query { ContentType = "video" }
+        );
+
+        var imageJson = JsonSerializer.Serialize(
+            imageMediaItemsResponse.Result.Items.Select(mi => new
+            {
+                fileName = mi.FileName,
+                url = RelativeUrlBuilder.MediaRedirectToFileUrl(mi.ObjectKey),
+            })
+        );
+
+        var videoJson = JsonSerializer.Serialize(
+            videoMediaItemsResponse.Result.Items.Select(mi => new
+            {
+                fileName = mi.FileName,
+                url = RelativeUrlBuilder.MediaRedirectToFileUrl(mi.ObjectKey),
+            })
+        );
+
+        return (imageJson, videoJson);
+    }
+
+    private FieldValueViewModel[] BuildFieldValuesForEdit(
+        IEnumerable<ContentTypeFieldDto> contentTypeFields,
+        dynamic content
+    )
+    {
+        return contentTypeFields
+            .Select(p => new FieldValueViewModel
+            {
+                Label = p.Label,
+                DeveloperName = p.DeveloperName,
+                AvailableChoices = p
+                    .Choices?.Select(b => new FieldValueChoiceItemViewModel
+                    {
+                        Label = b.Label,
+                        DeveloperName = b.DeveloperName,
+                        Disabled = b.Disabled,
+                        Value = FieldValueConverter.MapValueForChoiceField(
+                            p.FieldType,
+                            content,
+                            p,
+                            b
+                        ),
+                    })
+                    .ToArray(),
+                FieldType = p.FieldType,
+                IsRequired = p.IsRequired,
+                Description = p.Description,
+                Value = FieldValueConverter.MapValueForField(p.FieldType, content, p),
+                RelatedContentItemPrimaryField =
+                    FieldValueConverter.MapRelatedContentItemValueForField(p.FieldType, content, p),
+                RelatedContentTypeId = p.RelatedContentTypeId,
+            })
+            .ToArray();
+    }
+
+    private async Task RepopulateFormOnError(string id)
+    {
+        var response = await Mediator.Send(new GetContentItemById.Query { Id = id });
+        var fieldValues = BuildFieldValuesForEdit(
+            CurrentView.ContentType.ContentTypeFields,
+            response.Result.DraftContent
+        );
+
+        Form.IsDraft = response.Result.IsDraft;
+        Form.IsPublished = response.Result.IsPublished;
+        Form.FieldValues = fieldValues;
     }
 
     public record FormModel

@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using Raytha.Application.Common.Utils;
 using Raytha.Application.ContentItems;
 using Raytha.Application.ContentItems.Commands;
+using Raytha.Application.ContentTypes;
 using Raytha.Application.ContentTypes.Commands;
 using Raytha.Application.MediaItems.Queries;
 using Raytha.Application.Themes.WebTemplates.Queries;
@@ -30,69 +31,20 @@ public class Create : BaseHasFavoriteViewsPageModel
 
     public async Task<IActionResult> OnGet(string backToListUrl = "")
     {
-        var webTemplates = await Mediator.Send(
-            new GetWebTemplates.Query
-            {
-                ThemeId = CurrentOrganization.ActiveThemeId,
-                ContentTypeId = CurrentView.ContentTypeId,
-                PageSize = int.MaxValue,
-            }
-        );
-
-        var imageMediaItemsResponse = await Mediator.Send(
-            new GetMediaItems.Query { ContentType = "image" }
-        );
-
-        var videoMediaItemsResponse = await Mediator.Send(
-            new GetMediaItems.Query { ContentType = "video" }
-        );
-
-        var fieldValues = CurrentView
-            .ContentType.ContentTypeFields.Select(p => new FieldValueViewModel
-            {
-                Label = p.Label,
-                DeveloperName = p.DeveloperName,
-                AvailableChoices = p
-                    .Choices?.Select(b => new FieldValueChoiceItemViewModel
-                    {
-                        Label = b.Label,
-                        DeveloperName = b.DeveloperName,
-                        Disabled = b.Disabled,
-                        Value =
-                            p.FieldType.DeveloperName == BaseFieldType.MultipleSelect
-                                ? "false"
-                                : b.DeveloperName,
-                    })
-                    .ToArray(),
-                FieldType = p.FieldType,
-                IsRequired = p.IsRequired,
-                Description = p.Description,
-                RelatedContentTypeId = p.RelatedContentTypeId,
-            })
-            .ToArray();
+        var webTemplates = await GetWebTemplatesAsync();
+        var (imageJson, videoJson) = await GetMediaItemsJsonAsync();
+        var fieldValues = BuildFieldValuesForCreate(CurrentView.ContentType.ContentTypeFields);
 
         Form = new FormModel
         {
-            AvailableTemplates = webTemplates.Result?.Items.ToDictionary(p => p.Id, p => p.Label),
+            AvailableTemplates = webTemplates,
             FieldValues = fieldValues,
             AllowedMimeTypes = FileStorageProviderSettings.AllowedMimeTypes,
             MaxFileSize = FileStorageProviderSettings.MaxFileSize,
             UseDirectUploadToCloud = FileStorageProviderSettings.UseDirectUploadToCloud,
             PathBase = CurrentOrganization.PathBase,
-            ImageMediaItemsJson = JsonSerializer.Serialize(
-                imageMediaItemsResponse.Result.Items.Select(mi => new
-                {
-                    fileName = mi.FileName,
-                    url = RelativeUrlBuilder.MediaRedirectToFileUrl(mi.ObjectKey),
-                })
-            ),
-            VideoMediaItemsJson = JsonSerializer.Serialize(
-                videoMediaItemsResponse.Result.Items.Select(mi => new
-                {
-                    fileName = mi.FileName,
-                    url = RelativeUrlBuilder.MediaRedirectToFileUrl(mi.ObjectKey),
-                })
-            ),
+            ImageMediaItemsJson = imageJson,
+            VideoMediaItemsJson = videoJson,
         };
 
         BackToListUrl = backToListUrl;
@@ -114,12 +66,13 @@ public class Create : BaseHasFavoriteViewsPageModel
         if (response.Success)
         {
             SetSuccessMessage($"{CurrentView.ContentType.LabelSingular} was created successfully.");
-            return RedirectToAction(
+            return RedirectToPage(
                 "Edit",
                 new
                 {
                     contentTypeDeveloperName = CurrentView.ContentType.DeveloperName,
                     id = response.Result,
+                    backToListUrl,
                 }
             );
         }
@@ -130,68 +83,7 @@ public class Create : BaseHasFavoriteViewsPageModel
                 response.GetErrors()
             );
 
-            var webTemplates = await Mediator.Send(
-                new GetWebTemplates.Query
-                {
-                    ThemeId = CurrentOrganization.ActiveThemeId,
-                    ContentTypeId = CurrentView.ContentTypeId,
-                    PageSize = int.MaxValue,
-                }
-            );
-
-            var fieldValues = CurrentView
-                .ContentType.ContentTypeFields.Select(p => new FieldValueViewModel
-                {
-                    Label = p.Label,
-                    DeveloperName = p.DeveloperName,
-                    AvailableChoices = p
-                        .Choices?.Select(b => new FieldValueChoiceItemViewModel
-                        {
-                            Label = b.Label,
-                            DeveloperName = b.DeveloperName,
-                            Disabled = b.Disabled,
-                            Value =
-                                p.FieldType.DeveloperName == BaseFieldType.MultipleSelect
-                                    ? Form
-                                        .FieldValues.First(c =>
-                                            c.DeveloperName.ToDeveloperName() == p.DeveloperName
-                                        )
-                                        .AvailableChoices.Where(a => a.Value == "true")
-                                        .Select(z => z.DeveloperName.ToDeveloperName())
-                                        .Contains(b.DeveloperName)
-                                        .ToString()
-                                    : b.DeveloperName,
-                        })
-                        .ToArray(),
-                    FieldType = p.FieldType,
-                    IsRequired = p.IsRequired,
-                    Description = p.Description,
-                    RelatedContentItemPrimaryField = Form
-                        .FieldValues.First(c =>
-                            c.DeveloperName.ToDeveloperName() == p.DeveloperName
-                        )
-                        .RelatedContentItemPrimaryField,
-                    RelatedContentTypeId = p.RelatedContentTypeId,
-                    Value = Form
-                        .FieldValues.First(c =>
-                            c.DeveloperName.ToDeveloperName() == p.DeveloperName
-                        )
-                        .Value,
-                })
-                .ToArray();
-
-            Form = new FormModel
-            {
-                AvailableTemplates = webTemplates.Result?.Items.ToDictionary(
-                    p => p.Id,
-                    p => p.Label
-                ),
-                FieldValues = fieldValues,
-                AllowedMimeTypes = FileStorageProviderSettings.AllowedMimeTypes,
-                MaxFileSize = FileStorageProviderSettings.MaxFileSize,
-                UseDirectUploadToCloud = FileStorageProviderSettings.UseDirectUploadToCloud,
-                PathBase = CurrentOrganization.PathBase,
-            };
+            await RepopulateFormOnError();
         }
 
         BackToListUrl = backToListUrl;
@@ -214,10 +106,11 @@ public class Create : BaseHasFavoriteViewsPageModel
             }
             else if (contentTypeField.FieldType.DeveloperName == BaseFieldType.MultipleSelect)
             {
-                var selectedChoices = fieldValue
-                    .AvailableChoices.Where(p => p.Value == "true")
-                    .Select(p => p.DeveloperName)
-                    .ToArray();
+                var selectedChoices =
+                    fieldValue
+                        .AvailableChoices?.Where(p => p.Value == "true")
+                        .Select(p => p.DeveloperName)
+                        .ToArray() ?? Array.Empty<string>();
                 mappedFieldValues.Add(
                     fieldValue.DeveloperName,
                     contentTypeField.FieldType.FieldValueFrom(selectedChoices).Value
@@ -230,6 +123,123 @@ public class Create : BaseHasFavoriteViewsPageModel
         }
 
         return mappedFieldValues;
+    }
+
+    private async Task<Dictionary<ShortGuid, string>> GetWebTemplatesAsync()
+    {
+        var webTemplates = await Mediator.Send(
+            new GetWebTemplates.Query
+            {
+                ThemeId = CurrentOrganization.ActiveThemeId,
+                ContentTypeId = CurrentView.ContentTypeId,
+                PageSize = int.MaxValue,
+            }
+        );
+        return webTemplates.Result?.Items.ToDictionary(p => p.Id, p => p.Label)
+            ?? new Dictionary<ShortGuid, string>();
+    }
+
+    private async Task<(string ImageJson, string VideoJson)> GetMediaItemsJsonAsync()
+    {
+        var imageMediaItemsResponse = await Mediator.Send(
+            new GetMediaItems.Query { ContentType = "image" }
+        );
+
+        var videoMediaItemsResponse = await Mediator.Send(
+            new GetMediaItems.Query { ContentType = "video" }
+        );
+
+        var imageJson = JsonSerializer.Serialize(
+            imageMediaItemsResponse.Result.Items.Select(mi => new
+            {
+                fileName = mi.FileName,
+                url = RelativeUrlBuilder.MediaRedirectToFileUrl(mi.ObjectKey),
+            })
+        );
+
+        var videoJson = JsonSerializer.Serialize(
+            videoMediaItemsResponse.Result.Items.Select(mi => new
+            {
+                fileName = mi.FileName,
+                url = RelativeUrlBuilder.MediaRedirectToFileUrl(mi.ObjectKey),
+            })
+        );
+
+        return (imageJson, videoJson);
+    }
+
+    private FieldValueViewModel[] BuildFieldValuesForCreate(
+        IEnumerable<ContentTypeFieldDto> contentTypeFields
+    )
+    {
+        return contentTypeFields
+            .Select(p => new FieldValueViewModel
+            {
+                Label = p.Label,
+                DeveloperName = p.DeveloperName,
+                AvailableChoices = p
+                    .Choices?.Select(b => new FieldValueChoiceItemViewModel
+                    {
+                        Label = b.Label,
+                        DeveloperName = b.DeveloperName,
+                        Disabled = b.Disabled,
+                        Value =
+                            p.FieldType.DeveloperName == BaseFieldType.MultipleSelect
+                                ? "false"
+                                : b.DeveloperName,
+                    })
+                    .ToArray(),
+                FieldType = p.FieldType,
+                IsRequired = p.IsRequired,
+                Description = p.Description,
+                RelatedContentTypeId = p.RelatedContentTypeId,
+            })
+            .ToArray();
+    }
+
+    private async Task RepopulateFormOnError()
+    {
+        var webTemplates = await GetWebTemplatesAsync();
+
+        var fieldValues = CurrentView
+            .ContentType.ContentTypeFields.Select(p => new FieldValueViewModel
+            {
+                Label = p.Label,
+                DeveloperName = p.DeveloperName,
+                AvailableChoices = p
+                    .Choices?.Select(b => new FieldValueChoiceItemViewModel
+                    {
+                        Label = b.Label,
+                        DeveloperName = b.DeveloperName,
+                        Disabled = b.Disabled,
+                        Value =
+                            p.FieldType.DeveloperName == BaseFieldType.MultipleSelect
+                                ? (Form
+                                    .FieldValues.First(c =>
+                                        c.DeveloperName.ToDeveloperName() == p.DeveloperName
+                                    )
+                                    .AvailableChoices?.Where(a => a.Value == "true")
+                                    .Select(z => z.DeveloperName.ToDeveloperName())
+                                    .Contains(b.DeveloperName) ?? false)
+                                    .ToString()
+                                : b.DeveloperName,
+                    })
+                    .ToArray(),
+                FieldType = p.FieldType,
+                IsRequired = p.IsRequired,
+                Description = p.Description,
+                RelatedContentItemPrimaryField = Form
+                    .FieldValues.First(c => c.DeveloperName.ToDeveloperName() == p.DeveloperName)
+                    .RelatedContentItemPrimaryField,
+                RelatedContentTypeId = p.RelatedContentTypeId,
+                Value = Form
+                    .FieldValues.First(c => c.DeveloperName.ToDeveloperName() == p.DeveloperName)
+                    .Value,
+            })
+            .ToArray();
+
+        Form.AvailableTemplates = webTemplates;
+        Form.FieldValues = fieldValues;
     }
 
     public record FormModel

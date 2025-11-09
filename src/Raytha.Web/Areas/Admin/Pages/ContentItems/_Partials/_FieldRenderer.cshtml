@@ -1,0 +1,44 @@
+@{
+    var index = ViewData["Index"] as int? ?? 0;
+    var parentModel = ViewData["ParentModel"];
+}
+
+@switch (Model.FieldType)
+{
+    case "single_line_text":
+        <partial name="_Partials/_SimpleTextField" model="Model" view-data="ViewData" />
+        break;
+    case "number":
+        <partial name="_Partials/_NumberField" model="Model" view-data="ViewData" />
+        break;
+    case "date":
+        <partial name="_Partials/_DateField" model="Model" view-data="ViewData" />
+        break;
+    case "long_text":
+        <partial name="_Partials/_LongTextField" model="Model" view-data="ViewData" />
+        break;
+    case "dropdown":
+        <partial name="_Partials/_DropdownField" model="Model" view-data="ViewData" />
+        break;
+    case "radio":
+        <partial name="_Partials/_RadioField" model="Model" view-data="ViewData" />
+        break;
+    case "checkbox":
+        <partial name="_Partials/_CheckboxField" model="Model" view-data="ViewData" />
+        break;
+    case "multiple_select":
+        <partial name="_Partials/_MultipleSelectField" model="Model" view-data="ViewData" />
+        break;
+    case "wysiwyg":
+        <partial name="_Partials/_WysiwygField" model="Model" view-data="ViewData" />
+        break;
+    case "attachment":
+        <partial name="_Partials/_AttachmentField" model="Model" view-data="ViewData" />
+        break;
+    case "one_to_one_relationship":
+        <partial name="_Partials/_RelationshipField" model="Model" view-data="ViewData" />
+        break;
+    default:
+        <div class="alert alert-warning">Unknown field type: @Model.FieldType</div>
+        break;
+}

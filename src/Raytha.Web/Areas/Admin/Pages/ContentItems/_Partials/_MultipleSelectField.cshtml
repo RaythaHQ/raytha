@@ -1,0 +1,50 @@
+@using Raytha.Web.Areas.Admin.Pages.Shared.Models
+@{
+    var index = ViewData["Index"] as int? ?? 0;
+    var parentModel = ViewData["ParentModel"] as BasePageModel;
+}
+
+<div class="col-lg-12 mt-4" id="raytha_field-@Model.DeveloperName">
+    <div class="mb-3">
+        <label class="form-label @Model.AsteriskCssIfRequired">@Model.Label</label>
+        @if (Model.AvailableChoices != null)
+        {
+            @for (var j = 0; j < Model.AvailableChoices.Length; j++)
+            {
+                <div class="form-check">
+                    @if (Model.AvailableChoices[j].Disabled)
+                    {
+                        <input class="form-check-input @(parentModel?.HasError(Model.DeveloperName) ?? "")" 
+                               type="checkbox" 
+                               name="Form.FieldValues[@(index)].AvailableChoices[@(j)].Value" 
+                               value="true" 
+                               checked="@(Model.AvailableChoices[j].Value == "true")" 
+                               disabled="">
+                    }
+                    else
+                    {
+                        <input class="form-check-input @(parentModel?.HasError(Model.DeveloperName) ?? "")" 
+                               type="checkbox" 
+                               name="Form.FieldValues[@(index)].AvailableChoices[@(j)].Value" 
+                               value="true" 
+                               checked="@(Model.AvailableChoices[j].Value == "true")">
+                    }
+                    <label class="form-check-label">@Model.AvailableChoices[j].Label</label>
+                    @if (j == Model.AvailableChoices.Length - 1)
+                    {
+                        <div class="invalid-feedback">@(parentModel?.ErrorMessageFor(Model.DeveloperName))</div>
+                    }
+                </div>
+                <input type="hidden" 
+                       name="Form.FieldValues[@(index)].AvailableChoices[@(j)].DeveloperName" 
+                       value="@Model.AvailableChoices[j].DeveloperName" />
+            }
+        }
+        <div class="invalid-feedback">@(parentModel?.ErrorMessageFor(Model.DeveloperName))</div>
+        @if (!string.IsNullOrEmpty(Model.Description))
+        {
+            <div class="form-text">@Model.Description</div>
+        }
+    </div>
+</div>
+

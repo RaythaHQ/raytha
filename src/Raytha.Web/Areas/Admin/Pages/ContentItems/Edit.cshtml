@@ -55,6 +55,20 @@ else
         <div>
             @for (int i = 0; i < Model.Form.FieldValues.Count(); i++)
             {
+                <partial name="_Partials/_FieldRenderer" model="Model.Form.FieldValues[i]" 
+                         view-data="@(new ViewDataDictionary(ViewData) { 
+                             { "Index", i }, 
+                             { "ParentModel", Model } 
+                         })" />
+                <input type="hidden" asp-for="Form.FieldValues[i].DeveloperName" />
+                <input type="hidden" asp-for="Form.FieldValues[i].FieldType" />
+            }
+        </div>
+        @* Keep this block hidden for legacy reference *@
+        @if (false)
+        {
+            @for (int i = 0; i < Model.Form.FieldValues.Count(); i++)
+            {
                 @if (Model.Form.FieldValues[i].FieldType == "single_line_text")
                 {
                     <div class="col-lg-12 col-md-12 mt-4" id="raytha_field-@Model.Form.FieldValues[i].DeveloperName">
@@ -378,7 +392,7 @@ else
                 <input type="hidden" asp-for="@Model.Form.FieldValues[i].DeveloperName" />
                 <input type="hidden" asp-for="@Model.Form.FieldValues[i].FieldType" />
             }
-        </div>
+        }
         <input type="hidden" asp-for="@Model.Form.Id">
         <div class="col-lg-12">
             <button type="submit" class="btn btn-secondary" name="SaveAsDraft" value="true">Save as draft</button>
@@ -406,4 +420,24 @@ else
             </button>
         </form>
     }
+}
+
+@section Scripts {
+    <!-- Load Uppy CSS -->
+    <link href="https://releases.transloadit.com/uppy/v4.13.3/uppy.min.css" rel="stylesheet">
+    
+    <!-- Global configuration for content items -->
+    <script>
+        window.RaythaContentItemsConfig = {
+            pathBase: '@Model.Form.PathBase',
+            maxFileSize: @Model.Form.MaxFileSize,
+            allowedMimeTypes: '@Model.Form.AllowedMimeTypes',
+            useDirectUploadToCloud: @Model.Form.UseDirectUploadToCloud.ToString().ToLower(),
+            imageMediaItems: @Html.Raw(Model.Form.ImageMediaItemsJson ?? "[]"),
+            videoMediaItems: @Html.Raw(Model.Form.VideoMediaItemsJson ?? "[]")
+        };
+    </script>
+
+    <!-- Load content items page controller -->
+    <script type="module" src="~/js/pages/content-items/edit.js"></script>
 }
