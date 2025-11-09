@@ -7,107 +7,152 @@
     Layout = "SidebarLayout";
     ViewData["Title"] = pageTitle;
     ViewData["ActiveMenu"] = Model.CurrentView.ContentType.DeveloperName;
-    
+
     var navModel = new ContentTypeNavModel
     {
         CurrentView = Model.CurrentView,
         ActiveTab = ContentTypeNavTab.Fields
     };
+
+    var back = new BackLinkOptions
+    {
+        Page = RouteNames.ContentTypes.Fields.Index,
+        RouteValues = new RouteValueDictionary
+        {
+            ["contentTypeDeveloperName"] = Model.CurrentView.ContentType.DeveloperName
+        },
+        Text = "Back to active fields"
+    };
 }
 
 <div>
-@await Html.PartialAsync("_Partials/PageHeading", ViewData["Title"])
+    @await Html.PartialAsync("_Partials/PageHeading", ViewData["Title"])
 
-@await Html.PartialAsync("_Partials/_ContentTypeNavTabs", navModel)
+    @await Html.PartialAsync("_Partials/_ContentTypeNavTabs", navModel)
 
-<nav class="navbar navbar-expand-lg navbar-light raytha-view-nav">
-    <div class="container-fluid mx-2">
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent"
-            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarSupportedContent">
-            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                <li class="nav-item">
-                    <a class="btn btn-primary" aria-current="page" asp-page="@RouteNames.ContentTypes.Fields.Create"
-                        asp-route-contentTypeDeveloperName="@Model.CurrentView.ContentType.DeveloperName">
-                        <svg class="icon icon-xs me-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                            xmlns="http://www.w3.org/2000/svg">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-                        </svg> Create field</a>
-                </li>
-                <li class="nav-item">
-                    <a class="btn btn-secondary mx-4" aria-current="page" asp-page="@RouteNames.ContentTypes.Fields.Reorder"
-                        asp-route-contentTypeDeveloperName="@Model.CurrentView.ContentType.DeveloperName">
-                        <svg class="icon icon-xs me-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                            xmlns="http://www.w3.org/2000/svg">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16">
-                            </path>
-                        </svg> Reorder fields</a>
-                </li>
-            </ul>
-            <form class="d-flex" asp-page="@RouteNames.ContentTypes.Fields.Index" method="get">
-                <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search" name="search"
-                    value="@Model.ListView.Search">
-                <button class="btn btn-outline-success" type="submit">Search</button>
-            </form>
-        </div>
-    </div>
-</nav>
+    @if (!Model.ListView.ShowDeletedOnly)
+    {
+        <nav class="navbar navbar-expand-lg navbar-light raytha-view-nav">
+            <div class="container-fluid mx-2">
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+                    data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false"
+                    aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                    <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                        <li class="nav-item">
+                            <a class="btn btn-primary" aria-current="page" asp-page="@RouteNames.ContentTypes.Fields.Create"
+                                asp-route-contentTypeDeveloperName="@Model.CurrentView.ContentType.DeveloperName">
+                                <svg class="icon icon-xs me-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                                    xmlns="http://www.w3.org/2000/svg">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                                </svg> Create field</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="btn btn-secondary mx-4" aria-current="page"
+                                asp-page="@RouteNames.ContentTypes.Fields.Reorder"
+                                asp-route-contentTypeDeveloperName="@Model.CurrentView.ContentType.DeveloperName">
+                                <svg class="icon icon-xs me-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                                    xmlns="http://www.w3.org/2000/svg">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M4 8h16M4 16h16">
+                                    </path>
+                                </svg> Reorder fields</a>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" data-bs-toggle="dropdown" href="#" role="button"
+                                aria-expanded="false"><svg class="icon icon-sm" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M5 12h.01M12 12h.01M19 12h.01M6 12a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0z">
+                                    </path>
+                                </svg></a>
+                            <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+                                <li><a class="dropdown-item" asp-page="@RouteNames.ContentTypes.Fields.Index"
+                                        asp-route-contentTypeDeveloperName="@Model.CurrentView.ContentType.DeveloperName"
+                                        asp-route-viewId="@Model.CurrentView.Id" asp-route-showDeletedOnly="true"><svg
+                                            class="icon icon-xs" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                                            xmlns="http://www.w3.org/2000/svg">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
+                                            </path>
+                                        </svg> Deleted fields</a></li>
+                            </ul>
+                        </li>
+                    </ul>
+                    <form class="d-flex" asp-page="@RouteNames.ContentTypes.Fields.Index"
+                        asp-route-contentTypeDeveloperName="@Model.CurrentView.ContentType.DeveloperName"
+                        asp-route-viewId="@Model.CurrentView.Id" method="get">
+                        <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search"
+                            name="search" value="@Model.ListView.Search">
+                        <button class="btn btn-outline-success" type="submit">Search</button>
+                    </form>
+                </div>
+            </div>
+        </nav>
 
+    }
 
-<div class="raytha-data-card mb-4">
-    <div class="card-body">
-        <div class="table-responsive">
-            <table class="table table-centered table-nowrap mb-0 rounded">
-                <thead class="thead-light">
-                    <tr>
-                        @(await Html.PartialAsync("_Partials/TableColumnHeader", new BaseTableColumnHeaderViewModel()
-                        {
-                            Pagination = Model.ListView,
-                            PropertyName = "Label",
-                            IsFirst = true,
-                            DisplayName = ViewModelExtensions.GetDisplayName<Index.FieldsListItemViewModel>(p => p.Label)
-                        }))
-                        @(await Html.PartialAsync("_Partials/TableColumnHeader", new BaseTableColumnHeaderViewModel()
-                        {
-                            Pagination = Model.ListView,
-                            PropertyName = "DeveloperName",
-                            DisplayName = ViewModelExtensions.GetDisplayName<Index.FieldsListItemViewModel>(p =>
-                            p.DeveloperName)
-                        }))
-                        <th class="border-0">Field type</th>
-
-                        @if (!Model.ListView.ShowDeletedOnly)
-                        {
-                            <th class="border-0">Is required</th>
-                            <th class="border-0 rounded-end">Action</th>
-                        }
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var item in Model.ListView.Items)
-                    {
+    <div class="raytha-data-card mb-4">
+        <div class="card-body">
+            @if (Model.ListView.ShowDeletedOnly)
+            {
+                @(await Html.PartialAsync("_Partials/BackToList", back))
+            }
+            <div class="table-responsive @(Model.ListView.ShowDeletedOnly ? "pt-2" : string.Empty)">
+                <table class="table table-centered table-nowrap mb-0 rounded">
+                    <thead class="thead-light">
                         <tr>
-                            <td>@item.Label</td>
-                            <td>@item.DeveloperName</td>
-                            <td>@item.FieldType</td>
+                            @(await Html.PartialAsync("_Partials/TableColumnHeader", new
+                                                        BaseTableColumnHeaderViewModel()
+                            {
+                                Pagination = Model.ListView,
+                                PropertyName = "Label",
+                                IsFirst = true,
+                                DisplayName = ViewModelExtensions.GetDisplayName<Index.FieldsListItemViewModel>(p =>
+                                p.Label)
+                            }))
+                            @(await Html.PartialAsync("_Partials/TableColumnHeader", new
+                                                        BaseTableColumnHeaderViewModel()
+                            {
+                                Pagination = Model.ListView,
+                                PropertyName = "DeveloperName",
+                                DisplayName = ViewModelExtensions.GetDisplayName<Index.FieldsListItemViewModel>(p =>
+                                p.DeveloperName)
+                            }))
+                            <th class="border-0">Field type</th>
 
                             @if (!Model.ListView.ShowDeletedOnly)
                             {
-                                <td>@item.IsRequired</td>
-                                <td><a asp-page="@RouteNames.ContentTypes.Fields.Edit" asp-route-id="@item.Id"
-                                        asp-route-contentTypeDeveloperName="@Model.CurrentView.ContentType.DeveloperName">Edit</a>
-                                </td>
+                                <th class="border-0">Is required</th>
+                                <th class="border-0 rounded-end">Action</th>
                             }
-
                         </tr>
-                    }
-                </tbody>
-            </table>
-            <partial name="_Partials/TablePagination" model="Model.ListView" />
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model.ListView.Items)
+                        {
+                            <tr>
+                                <td>@item.Label</td>
+                                <td>@item.DeveloperName</td>
+                                <td>@item.FieldType</td>
+
+                                @if (!Model.ListView.ShowDeletedOnly)
+                                {
+                                    <td>@item.IsRequired</td>
+                                    <td><a asp-page="@RouteNames.ContentTypes.Fields.Edit" asp-route-id="@item.Id"
+                                            asp-route-contentTypeDeveloperName="@Model.CurrentView.ContentType.DeveloperName">Edit</a>
+                                    </td>
+                                }
+
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+                <partial name="_Partials/TablePagination" model="Model.ListView" />
+            </div>
         </div>
     </div>
-</div>
 </div>

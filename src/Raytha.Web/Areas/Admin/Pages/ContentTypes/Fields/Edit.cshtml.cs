@@ -13,8 +13,9 @@ using Raytha.Web.Areas.Shared.Models;
 namespace Raytha.Web.Areas.Admin.Pages.ContentTypes.Fields;
 
 [Authorize(Policy = BuiltInContentTypePermission.CONTENT_TYPE_CONFIG_PERMISSION)]
-public class Edit : BaseContentTypeContextPageModel
+public class Edit : BaseContentTypeContextPageModel, ISubActionViewModel
 {
+    public string Id { get; set; }
     public Dictionary<string, string> AvailableContentTypes { get; set; }
     public Dictionary<string, string> AvailableFieldTypes { get; set; }
 
@@ -78,6 +79,7 @@ public class Edit : BaseContentTypeContextPageModel
             Description = response.Result.Description,
             RelatedContentTypeId = response.Result.RelatedContentTypeId,
         };
+        Id = id;
         return Page();
     }
 
@@ -122,6 +124,7 @@ public class Edit : BaseContentTypeContextPageModel
                 p => p.DeveloperName,
                 p => p.Label
             );
+            Id = id;
             return Page();
         }
     }
