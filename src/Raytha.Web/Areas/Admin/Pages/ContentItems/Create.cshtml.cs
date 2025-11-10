@@ -12,6 +12,7 @@ using Raytha.Application.MediaItems.Queries;
 using Raytha.Application.Themes.WebTemplates.Queries;
 using Raytha.Domain.Entities;
 using Raytha.Domain.ValueObjects.FieldTypes;
+using Raytha.Web.Areas.Admin.Pages.Shared;
 using Raytha.Web.Areas.Admin.Pages.Shared.Models;
 
 namespace Raytha.Web.Areas.Admin.Pages.ContentItems;
@@ -45,6 +46,7 @@ public class Create : BaseHasFavoriteViewsPageModel
             PathBase = CurrentOrganization.PathBase,
             ImageMediaItemsJson = imageJson,
             VideoMediaItemsJson = videoJson,
+            RelationshipAutocompleteUrl = Url.Page(RouteNames.ContentItems.RelationshipAutocomplete),
         };
 
         BackToListUrl = backToListUrl;
@@ -254,6 +256,7 @@ public class Create : BaseHasFavoriteViewsPageModel
         public string PathBase { get; set; }
         public string ImageMediaItemsJson { get; set; }
         public string VideoMediaItemsJson { get; set; }
+        public string RelationshipAutocompleteUrl { get; set; }
 
         //helpers
         public Dictionary<ShortGuid, string> AvailableTemplates { get; set; }

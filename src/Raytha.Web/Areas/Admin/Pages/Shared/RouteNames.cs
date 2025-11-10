@@ -112,6 +112,7 @@ public static class RouteNames
         public const string Delete = "/ContentItems/Delete";
         public const string Revisions = "/ContentItems/Revisions";
         public const string Settings = "/ContentItems/Settings";
+        public const string RelationshipAutocomplete = "/ContentItems/RelationshipAutocomplete";
     }
 
     /// <summary>

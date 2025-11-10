@@ -13,13 +13,13 @@ import { debounce } from '/js/core/events.js';
  * @param {Object} config - Configuration object
  * @param {string} config.developername - Field developer name
  * @param {string} config.relatedContentTypeId - Related content type ID
- * @param {string} config.pathBase - URL base path
+ * @param {string} config.relationshipAutocompleteUrl - URL for autocomplete endpoint
  * @returns {Object} Field controller
  */
 export function initRelationshipField(fieldElement, config) {
     const developername = config.developername || fieldElement.dataset.developername;
     const relatedContentTypeId = config.relatedContentTypeId || fieldElement.dataset.relatedContentTypeId;
-    const pathBase = config.pathBase || '';
+    const relationshipAutocompleteUrl = config.relationshipAutocompleteUrl;
 
     const hiddenInput = fieldElement.querySelector('input[type="hidden"][name*="Value"]');
     const primaryFieldInput = fieldElement.querySelector('input[type="hidden"][name*="RelatedContentItemPrimaryField"]');
@@ -87,10 +87,9 @@ export function initRelationshipField(fieldElement, config) {
 
         try {
             if (spinner) spinner.style.display = 'inline-block';
-            
-            // Construct the autocomplete endpoint URL
-            // The endpoint should return a list of items with id and label
-            const url = `${pathBase}/raytha/relationship/autocomplete?relatedContentTypeId=${encodeURIComponent(relatedContentTypeId)}&q=${encodeURIComponent(query)}`;
+
+            // Construct the autocomplete endpoint URL with query parameters
+            const url = `${relationshipAutocompleteUrl}?relatedContentTypeId=${encodeURIComponent(relatedContentTypeId)}&q=${encodeURIComponent(query)}`;
             const response = await get(url);
 
             if (spinner) spinner.style.display = 'none';
@@ -126,7 +125,7 @@ export function initRelationshipField(fieldElement, config) {
         } catch (error) {
             console.error('Error fetching autocomplete results:', error);
             if (spinner) spinner.style.display = 'none';
-            
+
             resultsList.innerHTML = '<li class="list-group-item text-danger">Error loading results</li>';
             resultsList.style.display = 'block';
         }
@@ -180,7 +179,7 @@ export function initAllRelationshipFields(config) {
         const fieldConfig = {
             developername: field.dataset.developername,
             relatedContentTypeId: field.dataset.relatedContentTypeId,
-            pathBase: config.pathBase || '',
+            relationshipAutocompleteUrl: config.relationshipAutocompleteUrl,
         };
 
         const controller = initRelationshipField(field, fieldConfig);

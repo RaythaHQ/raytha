@@ -11,6 +11,7 @@ using Raytha.Application.MediaItems.Queries;
 using Raytha.Application.Views;
 using Raytha.Domain.Entities;
 using Raytha.Domain.ValueObjects.FieldTypes;
+using Raytha.Web.Areas.Admin.Pages.Shared;
 using Raytha.Web.Areas.Admin.Pages.Shared.Models;
 
 namespace Raytha.Web.Areas.Admin.Pages.ContentItems;
@@ -51,6 +52,9 @@ public class Edit : BaseHasFavoriteViewsPageModel, ISubActionViewModel
             ImageMediaItemsJson = imageJson,
             VideoMediaItemsJson = videoJson,
             FieldValues = fieldValues,
+            RelationshipAutocompleteUrl = Url.Page(
+                RouteNames.ContentItems.RelationshipAutocomplete
+            ),
         };
 
         Id = id;
@@ -220,6 +224,7 @@ public class Edit : BaseHasFavoriteViewsPageModel, ISubActionViewModel
         public string PathBase { get; set; }
         public string ImageMediaItemsJson { get; set; }
         public string VideoMediaItemsJson { get; set; }
+        public string RelationshipAutocompleteUrl { get; set; }
 
         public bool IsDraft { get; set; }
         public bool IsPublished { get; set; }

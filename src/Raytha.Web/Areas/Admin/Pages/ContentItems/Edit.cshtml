@@ -434,7 +434,8 @@ else
             allowedMimeTypes: '@Model.Form.AllowedMimeTypes',
             useDirectUploadToCloud: @Model.Form.UseDirectUploadToCloud.ToString().ToLower(),
             imageMediaItems: @Html.Raw(Model.Form.ImageMediaItemsJson ?? "[]"),
-            videoMediaItems: @Html.Raw(Model.Form.VideoMediaItemsJson ?? "[]")
+            videoMediaItems: @Html.Raw(Model.Form.VideoMediaItemsJson ?? "[]"),
+            relationshipAutocompleteUrl: '@Model.Form.RelationshipAutocompleteUrl'
         };
     </script>
 
