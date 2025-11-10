@@ -29,6 +29,9 @@ export async function initAttachmentField(fieldElement, config) {
         return null;
     }
 
+    // Setup remove button handler function that will be used throughout
+    let setupRemoveButton;
+
     // Import Uppy from CDN
     const { Uppy, Dashboard, XHRUpload, AwsS3 } = await import('https://releases.transloadit.com/uppy/v4.13.3/uppy.min.mjs');
 
@@ -39,7 +42,7 @@ export async function initAttachmentField(fieldElement, config) {
 
     // Initialize Uppy
     const uppy = new Uppy({
-        autoProceed: false,
+        autoProceed: true,
         allowMultipleUploads: false,
         restrictions: {
             maxFileSize: config.maxFileSize || null,
@@ -63,7 +66,7 @@ export async function initAttachmentField(fieldElement, config) {
     if (!config.useDirectUploadToCloud) {
         // Direct upload to application server
         uppy.use(XHRUpload, {
-            endpoint: `${config.pathBase}/raytha/media-items/direct-upload`,
+            endpoint: `${config.pathBase}/raytha/media-items/upload`,
             fieldName: 'file',
         });
 
@@ -74,7 +77,7 @@ export async function initAttachmentField(fieldElement, config) {
 
             if (objectKey) {
                 hiddenInput.value = objectKey;
-                showFileInfo(fileInfoDiv, file.name, objectKey, config.pathBase);
+                showFileInfo(fileInfoDiv, file.name, objectKey, config.pathBase, setupRemoveButton);
                 uppyContainer.style.display = 'none';
             }
         });
@@ -82,7 +85,7 @@ export async function initAttachmentField(fieldElement, config) {
         // Cloud upload via presigned URL
         uppy.use(AwsS3, {
             getUploadParameters: async (file) => {
-                const presignUrl = `${config.pathBase}/raytha/media-items/cloud-upload/presign`;
+                const presignUrl = `${config.pathBase}/raytha/media-items/presign`;
                 const ext = getFileExtension(file.name);
 
                 const res = await fetch(presignUrl, {
@@ -117,7 +120,7 @@ export async function initAttachmentField(fieldElement, config) {
 
         uppy.on('upload-success', async (file, _response) => {
             try {
-                const createUrl = `${config.pathBase}/raytha/media-items/cloud-upload/create-after-upload`;
+                const createUrl = `${config.pathBase}/raytha/media-items/create-after-upload`;
                 const ext = getFileExtension(file.name);
 
                 const payload = {
@@ -142,7 +145,7 @@ export async function initAttachmentField(fieldElement, config) {
 
                 if (file.meta.objectKey) {
                     hiddenInput.value = file.meta.objectKey;
-                    showFileInfo(fileInfoDiv, file.name, file.meta.objectKey, config.pathBase);
+                    showFileInfo(fileInfoDiv, file.name, file.meta.objectKey, config.pathBase, setupRemoveButton);
                     uppyContainer.style.display = 'none';
                 }
             } catch (err) {
@@ -162,13 +165,18 @@ export async function initAttachmentField(fieldElement, config) {
         showError(fieldElement, 'Upload failed. Please try again.');
     });
 
-    // Setup remove button if file exists
-    if (hiddenInput.value && fileInfoDiv) {
-        fileInfoDiv.hidden = false;
+    // Define remove button handler
+    setupRemoveButton = () => {
+        if (!fileInfoDiv) return;
+
         const removeBtn = fileInfoDiv.querySelector('button');
         if (removeBtn) {
             removeBtn.hidden = false;
-            removeBtn.addEventListener('click', (e) => {
+            // Remove any existing event listeners by cloning the button
+            const newRemoveBtn = removeBtn.cloneNode(true);
+            removeBtn.parentNode.replaceChild(newRemoveBtn, removeBtn);
+
+            newRemoveBtn.addEventListener('click', (e) => {
                 e.preventDefault();
                 hiddenInput.value = '';
                 fileInfoDiv.hidden = true;
@@ -176,6 +184,13 @@ export async function initAttachmentField(fieldElement, config) {
                 uppy.reset();
             });
         }
+    };
+
+    // If file exists on page load, show file info and hide uppy
+    if (hiddenInput.value && fileInfoDiv) {
+        fileInfoDiv.hidden = false;
+        uppyContainer.style.display = 'none';
+        setupRemoveButton();
     }
 
     return uppy;
@@ -187,18 +202,22 @@ export async function initAttachmentField(fieldElement, config) {
  * @param {string} fileName - Name of uploaded file
  * @param {string} objectKey - Storage object key
  * @param {string} pathBase - URL base path
+ * @param {Function} setupRemoveButton - Function to setup remove button
  */
-function showFileInfo(fileInfoDiv, fileName, objectKey, pathBase) {
+function showFileInfo(fileInfoDiv, fileName, objectKey, pathBase, setupRemoveButton) {
     if (!fileInfoDiv) return;
 
     fileInfoDiv.hidden = false;
     const para = fileInfoDiv.querySelector('p');
     const link = fileInfoDiv.querySelector('a');
-    const removeBtn = fileInfoDiv.querySelector('button');
 
     if (para) para.textContent = fileName;
-    if (link) link.href = `${pathBase}/raytha/media-items/redirect/${objectKey}`;
-    if (removeBtn) removeBtn.hidden = false;
+    if (link) link.href = `${pathBase}/raytha/media-items/objectkey/${objectKey}`;
+
+    // Setup remove button with event listener
+    if (setupRemoveButton) {
+        setupRemoveButton();
+    }
 }
 
 /**
