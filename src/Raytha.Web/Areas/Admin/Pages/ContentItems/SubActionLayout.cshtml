@@ -1,4 +1,5 @@
 @using Microsoft.AspNetCore.Mvc.TagHelpers
+@using Raytha.Web.Areas.Admin.Pages.ContentItems
 @inject IAuthorizationService AuthorizationService
 @model ISubActionViewModel
 @{
@@ -75,15 +76,12 @@
                                     Revisions
                                 </a>
                             </li>
-                            <li class="nav-item"
-                               >
+                            <li class="nav-item">
                                 <form method="post" asp-page="@RouteNames.ContentItems.Delete" asp-route-id="@Model.Id"
                                     onsubmit="return confirm('Are you sure you want to delete?');"
-                                    asp-route-contentTypeDeveloperName="@Model.CurrentView.ContentType.DeveloperName"
-                                   >
+                                    asp-route-contentTypeDeveloperName="@Model.CurrentView.ContentType.DeveloperName">
                                     <button
-                                        class="nav-link d-inline-flex align-items-center justify-content-center text-danger"
-                                       >
+                                        class="nav-link d-inline-flex align-items-center justify-content-center text-danger">
                                         <svg class="icon icon-sm mx-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"
                                             xmlns="http://www.w3.org/2000/svg">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"

@@ -31,10 +31,9 @@
             @foreach (var item in Model.ListView.Items)
             {
                 <tr>
-                    <td class="align-middle"
-                       >
-                        <form method="post" asp-route="@RouteNames.ContentItems.Revisions" asp-route-revisionId="@item.Id"
-                            asp-route-id="@Model.Id"
+                    <td class="align-middle">
+                        <form method="post" asp-page="@RouteNames.ContentItems.Revisions" asp-route-revisionId="@item.Id"
+                            asp-page-handler="Revert" asp-route-id="@Model.Id"
                             asp-route-contentTypeDeveloperName="@Model.CurrentView.ContentType.DeveloperName"
                             onsubmit="return confirmRevert();">
                             <button class="btn btn-sm btn-success">
@@ -76,6 +75,6 @@
 
 <script>
     function confirmRevert() {
-        return confirm(@($"Are you sure you want to revert to this {@Model.CurrentView.ContentType.LabelSingular.ToLower()})?");
+        return confirm("Are you sure you want to revert to this @Model.CurrentView.ContentType.LabelSingular.ToLower()?");
     }
 </script>

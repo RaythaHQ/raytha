@@ -4,7 +4,7 @@
 @model Raytha.Web.Areas.Admin.Pages.ContentItems.Settings
 
 @{
-    var pageTitle = $"{Model.CurrentView.ContentType.LabelPlural} > Create";
+    var pageTitle = $"{Model.CurrentView.ContentType.LabelPlural} > Settings";
     Layout = "SubActionLayout";
     ViewData["Title"] = pageTitle;
     ViewData["ActiveMenu"] = Model.CurrentView.ContentType.DeveloperName;
@@ -29,7 +29,7 @@
     <div class="col-lg-12">
         <label class="form-label raytha-required" asp-for="Form.RoutePath"></label>
         <div class="input-group mb-3">
-            <span class="input-group-text">@Model.WebsiteUrl</span>
+            <span class="input-group-text">@Model.Form.WebsiteUrl</span>
             <input type="text" class="form-control @Model.HasError("RoutePath")" asp-for="Form.RoutePath" required>
             <div class="invalid-feedback">@Model.ErrorMessageFor("RoutePath")</div>
         </div>

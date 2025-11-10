@@ -1,6 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Raytha.Application.ContentItems.Commands;
 using Raytha.Application.ContentItems.Queries;
 using Raytha.Domain.Entities;
 using Raytha.Domain.ValueObjects;
@@ -71,6 +72,58 @@ public class DeletedContentItemsList
         );
 
         return Page();
+    }
+
+    public async Task<IActionResult> OnPostRestore(string id)
+    {
+        var input = new RestoreContentItem.Command { Id = id };
+        var response = await Mediator.Send(input);
+        if (response.Success)
+        {
+            SetSuccessMessage($"{CurrentView.ContentType.LabelSingular} has been restored.");
+            return RedirectToPage(
+                RouteNames.ContentItems.Edit,
+                new
+                {
+                    id = response.Result.ToString(),
+                    contentTypeDeveloperName = CurrentView.ContentType.DeveloperName,
+                }
+            );
+        }
+        else
+        {
+            SetErrorMessage(
+                $"There was an error restoring this {CurrentView.ContentType.LabelSingular.ToLower()}",
+                response.GetErrors()
+            );
+            return RedirectToPage(
+                RouteNames.ContentTypes.DeletedContentItemsList,
+                new { contentTypeDeveloperName = CurrentView.ContentType.DeveloperName }
+            );
+        }
+    }
+
+    public async Task<IActionResult> OnPostClear(string id)
+    {
+        var input = new DeleteAlreadyDeletedContentItem.Command { Id = id };
+        var response = await Mediator.Send(input);
+        if (response.Success)
+        {
+            SetSuccessMessage(
+                $"{CurrentView.ContentType.LabelSingular} has been permanently removed."
+            );
+        }
+        else
+        {
+            SetErrorMessage(
+                $"There was an error permanently removing this {CurrentView.ContentType.LabelSingular.ToLower()}",
+                response.GetErrors()
+            );
+        }
+        return RedirectToPage(
+            RouteNames.ContentTypes.DeletedContentItemsList,
+            new { contentTypeDeveloperName = CurrentView.ContentType.DeveloperName }
+        );
     }
 
     public class DeletedContentItemsListItemViewModel

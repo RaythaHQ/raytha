@@ -116,7 +116,39 @@ public class Settings : BaseHasFavoriteViewsPageModel, ISubActionViewModel
 
     public async Task<IActionResult> OnPostSetAsHomePage(string id)
     {
-        return RedirectToPage(RouteNames.ContentItems.Settings, new { id });
+        var authorizationService =
+            HttpContext.RequestServices.GetRequiredService<IAuthorizationService>();
+        var authResult = await authorizationService.AuthorizeAsync(
+            User,
+            BuiltInSystemPermission.MANAGE_SYSTEM_SETTINGS_PERMISSION
+        );
+
+        if (!authResult.Succeeded)
+        {
+            return Forbid();
+        }
+
+        var input = new SetAsHomePage.Command { Id = id };
+        var response = await Mediator.Send(input);
+
+        if (response.Success)
+        {
+            SetSuccessMessage(
+                $"{CurrentView.ContentType.LabelSingular} set as home page successfully."
+            );
+            return RedirectToPage(
+                RouteNames.ContentItems.Settings,
+                new { id, contentTypeDeveloperName = CurrentView.ContentType.DeveloperName }
+            );
+        }
+        else
+        {
+            SetErrorMessage(response.Error, response.GetErrors());
+            return RedirectToPage(
+                RouteNames.ContentItems.Settings,
+                new { id, contentTypeDeveloperName = CurrentView.ContentType.DeveloperName }
+            );
+        }
     }
 
     public record FormModel

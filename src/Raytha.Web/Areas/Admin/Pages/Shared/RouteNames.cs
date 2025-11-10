@@ -69,8 +69,6 @@ public static class RouteNames
         public const string Delete = "/ContentTypes/Delete";
         public const string Configuration = "/ContentTypes/Configuration";
         public const string DeletedContentItemsList = "/ContentTypes/DeletedContentItemsList";
-        public const string DeletedContentItemsRestore = "/ContentTypes/DeletedContentItemsRestore";
-        public const string DeletedContentItemsClear = "/ContentTypes/DeletedContentItemsClear";
         public const string BeginImportFromCsv = "/ContentTypes/BeginImportFromCsv";
 
         /// <summary>

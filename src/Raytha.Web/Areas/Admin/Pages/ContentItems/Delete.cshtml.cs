@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Raytha.Application.ContentItems.Commands;
 using Raytha.Domain.Entities;
+using Raytha.Web.Areas.Admin.Pages.Shared;
 using Raytha.Web.Areas.Admin.Pages.Shared.Models;
 
 namespace Raytha.Web.Areas.Admin.Pages.ContentItems;
@@ -22,7 +23,7 @@ public class Delete : BaseHasFavoriteViewsPageModel
         }
 
         return RedirectToPage(
-            "/ContentItems/Index",
+            RouteNames.ContentItems.Index,
             new { contentTypeDeveloperName = CurrentView.ContentType.DeveloperName }
         );
     }

@@ -39,8 +39,8 @@
 
 ### **Feature Folders Refactored**
 
-#### **PR1: ContentTypes** (10 pages)
-- Index, Create, Edit, Delete, Configuration, DeletedContentItemsList, DeletedContentItemsRestore, DeletedContentItemsClear
+#### **PR1: ContentTypes** (8 pages)
+- Index, Create, Edit, Delete, Configuration, DeletedContentItemsList (with Restore and Clear handlers)
 - Views/Index
 - Fields/Index, Create, Edit, Delete, Reorder
 
