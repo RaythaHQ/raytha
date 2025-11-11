@@ -37,6 +37,7 @@ public class Edit : BaseContentTypeContextPageModel, ISubActionViewModel
                     { "contentTypeDeveloperName", CurrentView.ContentType.DeveloperName },
                 },
                 IsActive = false,
+                Icon = SidebarIcons.ContentItems,
             },
             new BreadcrumbNode
             {

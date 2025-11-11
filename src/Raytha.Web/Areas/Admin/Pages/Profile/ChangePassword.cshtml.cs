@@ -25,6 +25,7 @@ public class ChangePassword : BaseAdminPageModel
                 Label = "Profile",
                 RouteName = RouteNames.Profile.Index,
                 IsActive = false,
+                Icon = SidebarIcons.Users,
             },
             new BreadcrumbNode
             {

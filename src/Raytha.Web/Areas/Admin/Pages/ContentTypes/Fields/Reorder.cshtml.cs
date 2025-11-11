@@ -30,6 +30,7 @@ public class Reorder : BaseContentTypeContextPageModel
                     { "contentTypeDeveloperName", CurrentView.ContentType.DeveloperName },
                 },
                 IsActive = false,
+                Icon = SidebarIcons.ContentItems,
             },
             new BreadcrumbNode
             {

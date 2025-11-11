@@ -41,6 +41,7 @@ public class Settings : BaseHasFavoriteViewsPageModel, ISubActionViewModel
                     { "contentTypeDeveloperName", CurrentView.ContentType.DeveloperName },
                 },
                 IsActive = false,
+                Icon = SidebarIcons.ContentItems,
             },
             new BreadcrumbNode
             {

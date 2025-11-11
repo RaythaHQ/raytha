@@ -20,6 +20,7 @@ public class Index : BaseAdminPageModel
                 Label = "Profile",
                 RouteName = RouteNames.Profile.Index,
                 IsActive = true,
+                Icon = SidebarIcons.Users,
             }
         );
 

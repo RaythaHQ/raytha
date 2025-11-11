@@ -37,6 +37,7 @@ public class ApiKeys
                 Label = "Settings",
                 RouteName = RouteNames.Configuration.Index,
                 IsActive = false,
+                Icon = SidebarIcons.Settings,
             },
             new BreadcrumbNode
             {

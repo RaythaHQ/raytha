@@ -39,6 +39,7 @@ public class Sort : BaseContentTypeContextPageModel
                     { "contentTypeDeveloperName", CurrentView.ContentType.DeveloperName },
                 },
                 IsActive = false,
+                Icon = SidebarIcons.ContentItems,
             },
             new BreadcrumbNode
             {

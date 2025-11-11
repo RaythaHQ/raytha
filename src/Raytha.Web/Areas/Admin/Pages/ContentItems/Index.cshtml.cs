@@ -40,6 +40,7 @@ public class Index
                     { "contentTypeDeveloperName", CurrentView.ContentType.DeveloperName },
                 },
                 IsActive = false,
+                Icon = SidebarIcons.ContentItems,
             },
             new BreadcrumbNode
             {

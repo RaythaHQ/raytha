@@ -43,6 +43,7 @@ public class Create : BaseHasFavoriteViewsPageModel
                     { "contentTypeDeveloperName", CurrentView.ContentType.DeveloperName },
                 },
                 IsActive = false,
+                Icon = SidebarIcons.ContentItems,
             },
             new BreadcrumbNode
             {
