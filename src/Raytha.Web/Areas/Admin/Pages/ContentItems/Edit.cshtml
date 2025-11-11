@@ -51,18 +51,19 @@ ContentItemOperations.Edit)).Succeeded)
 }
 else
 {
-    <form asp-page="@RouteNames.ContentItems.Edit" asp-route-id="@Model.Form.Id" method="post" asp-route-backToListUrl="@Model.BackToListUrl">
+    <form asp-page="@RouteNames.ContentItems.Edit" asp-route-id="@Model.Form.Id" method="post"
+        asp-route-backToListUrl="@Model.BackToListUrl">
         <div>
             @for (int i = 0; i < Model.Form.FieldValues.Count(); i++)
             {
-                <partial name="_Partials/_FieldRenderer" model="Model.Form.FieldValues[i]" 
-                         view-data="@(new ViewDataDictionary(ViewData) { 
-                             { "Index", i }, 
-                             { "ParentModel", Model } 
-                         })" />
-                <input type="hidden" asp-for="Form.FieldValues[i].DeveloperName" />
-                <input type="hidden" asp-for="Form.FieldValues[i].FieldType" />
-            }
+                <partial name="_Partials/_FieldRenderer" model="Model.Form.FieldValues[i]"
+                    view-data="@(new ViewDataDictionary(ViewData) { 
+                                                                                                                                                                                                                           { "Index", i }, 
+                                                                                                                                                                                                                           { "ParentModel", Model } 
+                                                                                                                                                                                                                       })" />
+        <input type="hidden" asp-for="Form.FieldValues[i].DeveloperName" />
+        <input type="hidden" asp-for="Form.FieldValues[i].FieldType" />
+                }
         </div>
         @* Keep this block hidden for legacy reference *@
         @if (false)
@@ -136,7 +137,8 @@ else
                                         <input class="form-check-input @Model.HasError(Model.Form.FieldValues[i].DeveloperName)" type="radio"
                                             asp-for="@Model.Form.FieldValues[i].Value" value="@availableChoice.DeveloperName">
                                     }
-                                    <label class="form-check-label" asp-for="@Model.Form.FieldValues[i].Value">@availableChoice.Label</label>
+                                    <label class="form-check-label"
+                                        asp-for="@Model.Form.FieldValues[i].Value">@availableChoice.Label</label>
                                     @if (availableChoice == lastItem)
                                     {
                                         <div class="invalid-feedback">@Model.ErrorMessageFor(Model.Form.FieldValues[i].DeveloperName)</div>
@@ -198,13 +200,13 @@ else
                                 <div class="form-check">
                                     @if (Model.Form.FieldValues[i].AvailableChoices[j].Disabled)
                                     {
-                                        <input class="form-check-input  @Model.HasError(Model.Form.FieldValues[i].DeveloperName)" type="checkbox"
-                                            asp-for="@Model.Form.FieldValues[i].AvailableChoices[j].Value" disabled="">
+                                        <input class="form-check-input  @Model.HasError(Model.Form.FieldValues[i].DeveloperName)"
+                                            type="checkbox" asp-for="@Model.Form.FieldValues[i].AvailableChoices[j].Value" disabled="">
                                     }
                                     else
                                     {
-                                        <input class="form-check-input  @Model.HasError(Model.Form.FieldValues[i].DeveloperName)" type="checkbox"
-                                            asp-for="@Model.Form.FieldValues[i].AvailableChoices[j].Value">
+                                        <input class="form-check-input  @Model.HasError(Model.Form.FieldValues[i].DeveloperName)"
+                                            type="checkbox" asp-for="@Model.Form.FieldValues[i].AvailableChoices[j].Value">
                                     }
 
                                     <label class="form-check-label"
@@ -271,20 +273,12 @@ else
                 }
                 else if (Model.Form.FieldValues[i].FieldType == "wysiwyg")
                 {
-                    <div class="col-lg-12 mt-4" id="raytha_field-@Model.Form.FieldValues[i].DeveloperName"
-                       
-                       
-                       
-                        
-                        
-                       
-                       >
+                    <div class="col-lg-12 mt-4" id="raytha_field-@Model.Form.FieldValues[i].DeveloperName">
                         <div class="mb-3">
                             <label class="form-label @Model.Form.FieldValues[i].AsteriskCssIfRequired"
                                 asp-for="@Model.Form.FieldValues[i].Label">@Model.Form.FieldValues[i].Label</label>
                             <div></div>
-                            <textarea
-                                data-developername="@Model.Form.FieldValues[i].DeveloperName"
+                            <textarea data-developername="@Model.Form.FieldValues[i].DeveloperName"
                                 id="input-@Model.Form.FieldValues[i].DeveloperName" asp-for="@Model.Form.FieldValues[i].Value"
                                 hidden></textarea>
                             <div class="invalid-feedback">@Model.ErrorMessageFor(Model.Form.FieldValues[i].DeveloperName)</div>
@@ -297,28 +291,18 @@ else
                 }
                 else if (Model.Form.FieldValues[i].FieldType == "attachment")
                 {
-                    <div class="col-lg-12 col-md-12 mt-4" id="raytha_field-@Model.Form.FieldValues[i].DeveloperName"
-                       
-                       
-                       
-                       
-                       
-                       >
+                    <div class="col-lg-12 col-md-12 mt-4" id="raytha_field-@Model.Form.FieldValues[i].DeveloperName">
                         <div class="mb-3">
                             <label class="form-label @Model.Form.FieldValues[i].AsteriskCssIfRequired"
                                 asp-for="@Model.Form.FieldValues[i].Label">@Model.Form.FieldValues[i].Label</label>
-                            <div id="@(Model.Form.FieldValues[i].DeveloperName)-uppy"
-                               ></div>
-                            <div id="@(Model.Form.FieldValues[i].DeveloperName)-uppy-progress"
-                               ></div>
+                            <div id="@(Model.Form.FieldValues[i].DeveloperName)-uppy"></div>
+                            <div id="@(Model.Form.FieldValues[i].DeveloperName)-uppy-progress"></div>
                             <div hidden>
                                 <p>@Model.Form.FieldValues[i].Value</p>
                                 <a class="btn btn-primary" asp-route="mediaitemsredirecttofileurlbyobjectkey"
-                                    asp-route-objectKey="@Model.Form.FieldValues[i].Value"
-                                    target="_blank">View file</a>
-                                <button hidden class="btn btn-sm text-danger"
-                                    type="button"><svg class="icon icon-xs"
-                                        fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    asp-route-objectKey="@Model.Form.FieldValues[i].Value" target="_blank">View file</a>
+                                <button hidden class="btn btn-sm text-danger" type="button"><svg class="icon icon-xs" fill="none"
+                                        stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                             d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
                                         </path>
@@ -341,20 +325,16 @@ else
                 else if (Model.Form.FieldValues[i].FieldType == "one_to_one_relationship")
                 {
                     <div class="col-lg-12 col-md-12 mt-4" id="raytha_field-@Model.Form.FieldValues[i].DeveloperName">
-                        <div class="mb-3"
-                           
-                           >
+                        <div class="mb-3">
                             <div>
                                 <label class="form-label @Model.Form.FieldValues[i].AsteriskCssIfRequired"
                                     asp-for="@Model.Form.FieldValues[i].Label">@Model.Form.FieldValues[i].Label</label>
-                                <div class="spinner-border spinner-border-sm mt-1 ml-2" role="status"
-                                   >
+                                <div class="spinner-border spinner-border-sm mt-1 ml-2" role="status">
                                     <span class="visually-hidden">Loading pages...</span>
                                 </div>
                             </div>
 
-                            <button class="btn btn-primary btn-sm" type="button"
-                               >
+                            <button class="btn btn-primary btn-sm" type="button">
                                 <svg class="icon icon-xs me-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"
                                     xmlns="http://www.w3.org/2000/svg">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -363,11 +343,10 @@ else
                             </button>
 
                             <div class="input-group mb-3">
-                                <input type="text" class="form-control" value="@Model.Form.FieldValues[i].RelatedContentItemPrimaryField"
-                                    disabled>
+                                <input type="text" class="form-control"
+                                    value="@Model.Form.FieldValues[i].RelatedContentItemPrimaryField" disabled>
                                 <button class="nav-link d-inline-flex align-items-center justify-content-center text-danger"
-                                    type="button"><svg
-                                        class="icon icon-sm mx-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                                    type="button"><svg class="icon icon-sm mx-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"
                                         xmlns="http://www.w3.org/2000/svg">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                             d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
@@ -375,8 +354,7 @@ else
                                     </svg> Remove</button>
                             </div>
 
-                            <input type="text" class="form-control @Model.HasError(Model.Form.FieldValues[i].DeveloperName)"
-                               >
+                            <input type="text" class="form-control @Model.HasError(Model.Form.FieldValues[i].DeveloperName)">
                             <ul class="list-group"></ul>
                             <div class="invalid-feedback">@Model.ErrorMessageFor(Model.Form.FieldValues[i].DeveloperName)</div>
                             @if (!string.IsNullOrEmpty(Model.Form.FieldValues[i].Description))
@@ -384,8 +362,7 @@ else
                                 <div class="form-text">@Model.Form.FieldValues[i].Description</div>
                             }
                             <input type="hidden" asp-for="@Model.Form.FieldValues[i].Value" />
-                            <input type="hidden" asp-for="@Model.Form.FieldValues[i].RelatedContentItemPrimaryField"
-                                />
+                            <input type="hidden" asp-for="@Model.Form.FieldValues[i].RelatedContentItemPrimaryField" />
                         </div>
                     </div>
                 }
@@ -395,8 +372,9 @@ else
         }
         <input type="hidden" asp-for="@Model.Form.Id">
         <div class="col-lg-12">
-            <button type="submit" class="btn btn-secondary" name="SaveAsDraft" value="true">Save as draft</button>
-            <button type="submit" class="btn btn-success mx-2" name="SaveAsDraft" value="false">Save and publish</button>
+            <button type="submit" class="btn btn-secondary" name="Form.SaveAsDraft" value="true">Save as draft</button>
+            <button type="submit" class="btn btn-success mx-2" name="Form.SaveAsDraft" value="false">Save and
+                publish</button>
         </div>
     </form>
     <br />
@@ -404,8 +382,8 @@ else
     <br />
     @if (Model.Form.IsPublished)
     {
-        <form method="post" asp-route="contentitemsunpublish" asp-route-id="@Model.Form.Id"
-            asp-route-contentTypeDeveloperName="@Model.CurrentView.ContentType.DeveloperName">
+        <form method="post" asp-page-handler="Unpublish" asp-route-id="@Model.Form.Id"
+            asp-route-backToListUrl="@Model.BackToListUrl">
             <button class="btn btn-sm btn-link text-danger">
                 Unpublish @Model.CurrentView.ContentType.LabelSingular.ToLower()
             </button>
@@ -413,8 +391,8 @@ else
     }
     @if (Model.Form.IsDraft)
     {
-        <form method="post" asp-route="contentitemsdiscarddraft" asp-route-id="@Model.Form.Id"
-            asp-route-contentTypeDeveloperName="@Model.CurrentView.ContentType.DeveloperName">
+        <form method="post" asp-page-handler="DiscardDraft" asp-route-id="@Model.Form.Id"
+            asp-route-backToListUrl="@Model.BackToListUrl">
             <button class="btn btn-sm btn-link text-danger">
                 Discard draft
             </button>
@@ -425,10 +403,10 @@ else
 @section Scripts {
     <!-- Load Uppy CSS -->
     <link href="https://releases.transloadit.com/uppy/v4.13.3/uppy.min.css" rel="stylesheet">
-    
+
     <!-- Load TipTap WYSIWYG CSS -->
     <link href="~/css/pages/content-items/wysiwyg.css" rel="stylesheet">
-    
+
     <!-- Global configuration for content items -->
     <script>
         window.RaythaContentItemsConfig = {

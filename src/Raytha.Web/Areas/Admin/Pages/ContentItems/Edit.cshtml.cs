@@ -101,6 +101,64 @@ public class Edit : BaseHasFavoriteViewsPageModel, ISubActionViewModel
         return Page();
     }
 
+    [Authorize(Policy = BuiltInContentTypePermission.CONTENT_TYPE_EDIT_PERMISSION)]
+    public async Task<IActionResult> OnPostUnpublish(string id, string backToListUrl = "")
+    {
+        var input = new UnpublishContentItem.Command { Id = id };
+        var response = await Mediator.Send(input);
+
+        if (response.Success)
+        {
+            SetSuccessMessage($"{CurrentView.ContentType.LabelSingular} has been unpublished.");
+        }
+        else
+        {
+            SetErrorMessage(
+                "There was an error unpublishing this content item.",
+                response.GetErrors()
+            );
+        }
+
+        return RedirectToPage(
+            "Edit",
+            new
+            {
+                contentTypeDeveloperName = CurrentView.ContentType.DeveloperName,
+                id,
+                backToListUrl,
+            }
+        );
+    }
+
+    [Authorize(Policy = BuiltInContentTypePermission.CONTENT_TYPE_EDIT_PERMISSION)]
+    public async Task<IActionResult> OnPostDiscardDraft(string id, string backToListUrl = "")
+    {
+        var input = new DiscardDraftContentItem.Command { Id = id };
+        var response = await Mediator.Send(input);
+
+        if (response.Success)
+        {
+            SetSuccessMessage($"{CurrentView.ContentType.LabelSingular} draft has been discarded.");
+        }
+        else
+        {
+            SetErrorMessage(
+                "There was an error discarding the draft of this content item.",
+                response.GetErrors()
+            );
+        }
+
+        return RedirectToPage(
+            "Edit",
+            new
+            {
+                contentTypeDeveloperName = CurrentView.ContentType.DeveloperName,
+                id,
+                backToListUrl,
+            }
+        );
+    }
+
     private dynamic MapFromFieldValueModel(FieldValueViewModel[] fieldValues)
     {
         var mappedFieldValues = new Dictionary<string, dynamic>();
