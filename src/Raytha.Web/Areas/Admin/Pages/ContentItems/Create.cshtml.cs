@@ -46,7 +46,9 @@ public class Create : BaseHasFavoriteViewsPageModel
             PathBase = CurrentOrganization.PathBase,
             ImageMediaItemsJson = imageJson,
             VideoMediaItemsJson = videoJson,
-            RelationshipAutocompleteUrl = Url.Page(RouteNames.ContentItems.RelationshipAutocomplete),
+            RelationshipAutocompleteUrl = Url.Page(
+                RouteNames.ContentItems.RelationshipAutocomplete
+            ),
         };
 
         BackToListUrl = backToListUrl;
@@ -216,14 +218,14 @@ public class Create : BaseHasFavoriteViewsPageModel
                         Disabled = b.Disabled,
                         Value =
                             p.FieldType.DeveloperName == BaseFieldType.MultipleSelect
-                                ? (Form
-                                    .FieldValues.First(c =>
-                                        c.DeveloperName.ToDeveloperName() == p.DeveloperName
-                                    )
-                                    .AvailableChoices?.Where(a => a.Value == "true")
-                                    .Select(z => z.DeveloperName.ToDeveloperName())
-                                    .Contains(b.DeveloperName) ?? false)
-                                    .ToString()
+                                ? (
+                                    Form.FieldValues.First(c =>
+                                            c.DeveloperName.ToDeveloperName() == p.DeveloperName
+                                        )
+                                        .AvailableChoices?.Where(a => a.Value == "true")
+                                        .Select(z => z.DeveloperName.ToDeveloperName())
+                                        .Contains(b.DeveloperName) ?? false
+                                ).ToString()
                                 : b.DeveloperName,
                     })
                     .ToArray(),

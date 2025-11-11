@@ -10,7 +10,7 @@
 
 <div class="raytha-data-card mb-4 raytha-border-top">
     <div class="card-body">
-        <form method="post" asp-page="@RouteNames.Themes.SetAsActive" asp-route-id="@Model.Form.ThemeId" class="py-4">
+        <form method="post" asp-page-handler="Match" asp-route-id="@Model.Form.ThemeId" class="py-4">
             <div class="table-responsive">
                 <table class="table mb-0 rounded">
                     <thead class="thead-light">

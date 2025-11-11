@@ -31,11 +31,13 @@ public abstract class BaseHasFavoriteViewsPageModel : BaseContentTypeContextPage
             }
         );
 
-        FavoriteViews = favoriteViews.Result.Items.Select(p => new FavoriteViewsListItemViewModel
-        {
-            Id = p.Id,
-            Label = p.Label,
-        }).ToList();
+        FavoriteViews = favoriteViews
+            .Result.Items.Select(p => new FavoriteViewsListItemViewModel
+            {
+                Id = p.Id,
+                Label = p.Label,
+            })
+            .ToList();
 
         await base.OnPageHandlerExecutionAsync(context, next);
     }

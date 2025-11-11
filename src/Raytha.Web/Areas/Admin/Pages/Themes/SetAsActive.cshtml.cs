@@ -14,12 +14,18 @@ namespace Raytha.Web.Areas.Admin.Pages.Themes;
 public class SetAsActive : BaseAdminPageModel, ISubActionViewModel
 {
     [BindProperty]
-    public FormModel Form { get; set; }
+    public FormModel Form { get; set; } = default!;
 
-    public string Id { get; set; }
+    public string Id { get; set; } = string.Empty;
     public bool IsActive { get; set; }
 
-    public async Task<IActionResult> OnGet(string id)
+    public IActionResult OnGet(string id)
+    {
+        // This page is POST-only. Redirect to themes list if accessed via GET.
+        return RedirectToPage(RouteNames.Themes.Index);
+    }
+
+    public async Task<IActionResult> OnPost(string id)
     {
         SetBreadcrumbs(
             new BreadcrumbNode
@@ -47,7 +53,7 @@ public class SetAsActive : BaseAdminPageModel, ISubActionViewModel
                 new GetWebTemplateDeveloperNamesByThemeId.Query { ThemeId = id }
             );
 
-            var model = new FormModel
+            Form = new FormModel
             {
                 ThemeId = id,
                 ActiveThemeWebTemplateDeveloperNames =
@@ -88,7 +94,7 @@ public class SetAsActive : BaseAdminPageModel, ISubActionViewModel
         return RedirectToPage(RouteNames.Themes.Edit, new { id });
     }
 
-    public async Task<IActionResult> OnPost(string id)
+    public async Task<IActionResult> OnPostMatch(string id)
     {
         var input = new BeginMatchWebTemplates.Command
         {
@@ -118,9 +124,11 @@ public class SetAsActive : BaseAdminPageModel, ISubActionViewModel
 
     public record FormModel
     {
-        public string ThemeId { get; set; }
-        public IEnumerable<string> ActiveThemeWebTemplateDeveloperNames { get; set; }
-        public IEnumerable<string> NewActiveThemeWebTemplateDeveloperNames { get; set; }
+        public string ThemeId { get; set; } = string.Empty;
+        public IEnumerable<string> ActiveThemeWebTemplateDeveloperNames { get; set; } =
+            Array.Empty<string>();
+        public IEnumerable<string> NewActiveThemeWebTemplateDeveloperNames { get; set; } =
+            Array.Empty<string>();
         public IDictionary<string, string> WebTemplateMappings { get; set; } =
             new Dictionary<string, string>();
     }
