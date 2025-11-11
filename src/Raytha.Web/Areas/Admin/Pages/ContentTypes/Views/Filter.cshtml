@@ -66,7 +66,7 @@
 
 <div>
     <div class="row mb-4">
-        @await Html.PartialAsync("_Partials/PageHeading", ViewData["Title"])
+        <partial name="_Partials/PageHeading" model='ViewData["Title"]' />
         <div class="col-lg-12 col-md-12">
             <div class="card border-0 shadow mb-4">
                 <div class="card-body">
@@ -83,14 +83,13 @@
                         @if (Model.HasExistingFilter)
                         {
                             <ul>
-                                @await Html.PartialAsync("_FilterSubtree", new
-                                Raytha.Web.Areas.Admin.Pages.ContentTypes.Views.Filter.FilterSubtree_ViewModel {
+                                <partial name="_FilterSubtree" model='new Raytha.Web.Areas.Admin.Pages.ContentTypes.Views.Filter.FilterSubtree_ViewModel {
                                     ContentTypeFields = Model.ContentTypeFields,
-                                                        FilterCondition = Model.RootFilterCondition!,
-                                                        AllFilterConditions = Model.CurrentView!.Filter
-                                                        })
-                        </ul>
-                                                }
+                                    FilterCondition = Model.RootFilterCondition!,
+                                    AllFilterConditions = Model.CurrentView!.Filter
+                                }' />
+                            </ul>
+                        }
                         else
                         {
                             <ul>

@@ -26,9 +26,9 @@
 }
 
 <div>
-    @await Html.PartialAsync("_Partials/PageHeading", ViewData["Title"])
+    <partial name="_Partials/PageHeading" model='ViewData["Title"]' />
 
-    @await Html.PartialAsync("_Partials/_ContentTypeNavTabs", navModel)
+    <partial name="_Partials/_ContentTypeNavTabs" model="navModel" />
 
     @if (!Model.ListView.ShowDeletedOnly)
     {

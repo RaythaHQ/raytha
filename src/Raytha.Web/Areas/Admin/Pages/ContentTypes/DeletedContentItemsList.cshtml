@@ -23,11 +23,11 @@
 }
 
 <div>
-    @await Html.PartialAsync("_Partials/PageHeading", ViewData["Title"])
+    <partial name="_Partials/PageHeading" model='ViewData["Title"]' />
 
-    @await Html.PartialAsync("_Partials/_ContentTypeNavTabs", navModel)
+    <partial name="_Partials/_ContentTypeNavTabs" model="navModel" />
 
-    @await Html.PartialAsync("_Partials/_SearchBar", searchConfig)
+    <partial name="_Partials/_SearchBar" model="searchConfig" />
 
     <div class="raytha-data-card mb-4">
         <div class="card-body">

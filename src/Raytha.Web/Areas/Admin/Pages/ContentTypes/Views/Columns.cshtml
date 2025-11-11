@@ -20,7 +20,7 @@
 
 <div>
     <div class="row mb-4">
-        @await Html.PartialAsync("_Partials/PageHeading", ViewData["Title"])
+        <partial name="_Partials/PageHeading" model='ViewData["Title"]' />
         <div class="col-xxl-10 col-xl-11 col-lg-12 col-md-12">
             <div class="card border-0 shadow mb-4">
                 <div class="card-body">

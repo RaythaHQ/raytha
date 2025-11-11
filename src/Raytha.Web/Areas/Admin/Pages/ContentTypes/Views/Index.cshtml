@@ -18,9 +18,9 @@
 }
 
 <div>
-    @await Html.PartialAsync("_Partials/PageHeading", pageTitle)
+    <partial name="_Partials/PageHeading" model="pageTitle" />
 
-    @await Html.PartialAsync("_Partials/_ContentTypeNavTabs", navModel)
+    <partial name="_Partials/_ContentTypeNavTabs" model="navModel" />
 
     <nav class="navbar navbar-expand-lg navbar-light raytha-view-nav">
         <div class="container-fluid mx-2">

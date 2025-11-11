@@ -121,11 +121,11 @@
       <ul data-forid="@Model.FilterCondition.Id">
         @foreach (var child in Model.AllFilterConditions.Where(p => p.ParentId == Model.FilterCondition.Id))
         {
-          @await Html.PartialAsync("_FilterSubtree", new Raytha.Web.Areas.Admin.Pages.ContentTypes.Views.Filter.FilterSubtree_ViewModel {
+          <partial name="_FilterSubtree" model='new Raytha.Web.Areas.Admin.Pages.ContentTypes.Views.Filter.FilterSubtree_ViewModel {
               FilterCondition = child,
               ContentTypeFields = Model.ContentTypeFields,
               AllFilterConditions = Model.AllFilterConditions
-          })
+          }' />
         }
       </ul>
     </div>
