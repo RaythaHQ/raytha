@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Raytha.Application.OrganizationSettings.Queries;
 using Raytha.Web.Areas.Admin.Pages.Shared;
 using Raytha.Web.Areas.Admin.Pages.Shared.Models;
+using Raytha.Web.Areas.Shared.Models;
 
 namespace Raytha.Web.Areas.Admin.Pages.Smtp;
 
@@ -14,6 +15,22 @@ public class Index : BaseAdminPageModel
 
     public async Task<IActionResult> OnGet()
     {
+        SetBreadcrumbs(
+            new BreadcrumbNode
+            {
+                Label = "Settings",
+                RouteName = RouteNames.Configuration.Index,
+                IsActive = false,
+                Icon = SidebarIcons.Settings,
+            },
+            new BreadcrumbNode
+            {
+                Label = "SMTP",
+                RouteName = RouteNames.Smtp.Index,
+                IsActive = true,
+            }
+        );
+
         var input = new GetOrganizationSettings.Query();
         var response = await Mediator.Send(input);
         MissingSmtpEnvironmentVariables = EmailerConfiguration.IsMissingSmtpEnvVars();

@@ -4,6 +4,7 @@ using Raytha.Application.ContentItems;
 using Raytha.Application.ContentItems.Queries;
 using Raytha.Application.Themes.Queries;
 using Raytha.Domain.Entities;
+using Raytha.Web.Areas.Admin.Pages.Shared;
 using Raytha.Web.Areas.Admin.Pages.Shared.Models;
 using Raytha.Web.Areas.Shared.Models;
 
@@ -29,6 +30,25 @@ public class Index
         int pageSize = 50
     )
     {
+        SetBreadcrumbs(
+            new BreadcrumbNode
+            {
+                Label = CurrentView.ContentType.LabelPlural,
+                RouteName = RouteNames.ContentItems.Index,
+                RouteValues = new Dictionary<string, string>
+                {
+                    { "contentTypeDeveloperName", CurrentView.ContentType.DeveloperName },
+                },
+                IsActive = false,
+            },
+            new BreadcrumbNode
+            {
+                Label = CurrentView.Label,
+                RouteName = RouteNames.ContentItems.Index,
+                IsActive = true,
+            }
+        );
+
         var input = new GetContentItems.Query
         {
             Search = search,

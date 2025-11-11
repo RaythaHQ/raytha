@@ -2,6 +2,7 @@ using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Mvc;
 using Raytha.Web.Areas.Admin.Pages.Shared;
 using Raytha.Web.Areas.Admin.Pages.Shared.Models;
+using Raytha.Web.Areas.Shared.Models;
 
 namespace Raytha.Web.Areas.Admin.Pages.Profile;
 
@@ -17,6 +18,21 @@ public class ChangePassword : BaseAdminPageModel
             SetErrorMessage("Authentication scheme is disabled");
             return RedirectToPage(RouteNames.Profile.Index);
         }
+
+        SetBreadcrumbs(
+            new BreadcrumbNode
+            {
+                Label = "Profile",
+                RouteName = RouteNames.Profile.Index,
+                IsActive = false,
+            },
+            new BreadcrumbNode
+            {
+                Label = "Change password",
+                RouteName = RouteNames.Profile.ChangePassword,
+                IsActive = true,
+            }
+        );
 
         Form = new FormModel();
         return Page();

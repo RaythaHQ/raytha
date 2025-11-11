@@ -5,9 +5,11 @@ using Microsoft.AspNetCore.Mvc;
 using Raytha.Application.NavigationMenuItems;
 using Raytha.Application.NavigationMenuItems.Commands;
 using Raytha.Application.NavigationMenuItems.Queries;
+using Raytha.Application.NavigationMenus.Queries;
 using Raytha.Domain.Entities;
 using Raytha.Web.Areas.Admin.Pages.Shared;
 using Raytha.Web.Areas.Admin.Pages.Shared.Models;
+using Raytha.Web.Areas.Shared.Models;
 
 namespace Raytha.Web.Areas.Admin.Pages.NavigationMenus.MenuItems;
 
@@ -23,6 +25,44 @@ public class Create : BaseAdminPageModel, ISubActionViewModel
 
     public async Task<IActionResult> OnGet(string navigationMenuId)
     {
+        var menuResponse = await Mediator.Send(new GetNavigationMenuById.Query { Id = navigationMenuId });
+
+        SetBreadcrumbs(
+            new BreadcrumbNode
+            {
+                Label = "Menus",
+                RouteName = RouteNames.NavigationMenus.Index,
+                IsActive = false,
+                Icon = SidebarIcons.Menus,
+            },
+            new BreadcrumbNode
+            {
+                Label = menuResponse.Result.Label,
+                RouteName = RouteNames.NavigationMenus.Edit,
+                RouteValues = new Dictionary<string, string>
+                {
+                    { "id", navigationMenuId },
+                },
+                IsActive = false,
+            },
+            new BreadcrumbNode
+            {
+                Label = "Menu items",
+                RouteName = RouteNames.NavigationMenus.MenuItems.Index,
+                RouteValues = new Dictionary<string, string>
+                {
+                    { "navigationMenuId", navigationMenuId },
+                },
+                IsActive = false,
+            },
+            new BreadcrumbNode
+            {
+                Label = "Create",
+                RouteName = RouteNames.NavigationMenus.MenuItems.Create,
+                IsActive = true,
+            }
+        );
+
         NavigationMenuId = navigationMenuId;
         IsNavigationMenuItem = false;
         var input = new GetNavigationMenuItemsByNavigationMenuId.Query

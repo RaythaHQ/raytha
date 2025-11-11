@@ -30,6 +30,31 @@ public class Revisions
         int pageSize = 50
     )
     {
+        SetBreadcrumbs(
+            new BreadcrumbNode
+            {
+                Label = CurrentView.ContentType.LabelPlural,
+                RouteName = RouteNames.ContentItems.Index,
+                RouteValues = new Dictionary<string, string>
+                {
+                    { "contentTypeDeveloperName", CurrentView.ContentType.DeveloperName },
+                },
+                IsActive = false,
+            },
+            new BreadcrumbNode
+            {
+                Label = CurrentView.Label,
+                RouteName = RouteNames.ContentItems.Index,
+                IsActive = false,
+            },
+            new BreadcrumbNode
+            {
+                Label = "Revisions",
+                RouteName = RouteNames.ContentItems.Revisions,
+                IsActive = true,
+            }
+        );
+
         var input = new GetContentItemRevisionsByContentItemId.Query
         {
             Id = id,

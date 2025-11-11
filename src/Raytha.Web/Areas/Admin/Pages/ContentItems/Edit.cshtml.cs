@@ -13,6 +13,7 @@ using Raytha.Domain.Entities;
 using Raytha.Domain.ValueObjects.FieldTypes;
 using Raytha.Web.Areas.Admin.Pages.Shared;
 using Raytha.Web.Areas.Admin.Pages.Shared.Models;
+using Raytha.Web.Areas.Shared.Models;
 
 namespace Raytha.Web.Areas.Admin.Pages.ContentItems;
 
@@ -33,6 +34,31 @@ public class Edit : BaseHasFavoriteViewsPageModel, ISubActionViewModel
 
     public async Task<IActionResult> OnGet(string id, string backToListUrl = "")
     {
+        SetBreadcrumbs(
+            new BreadcrumbNode
+            {
+                Label = CurrentView.ContentType.LabelPlural,
+                RouteName = RouteNames.ContentItems.Index,
+                RouteValues = new Dictionary<string, string>
+                {
+                    { "contentTypeDeveloperName", CurrentView.ContentType.DeveloperName },
+                },
+                IsActive = false,
+            },
+            new BreadcrumbNode
+            {
+                Label = CurrentView.Label,
+                RouteName = RouteNames.ContentItems.Index,
+                IsActive = false,
+            },
+            new BreadcrumbNode
+            {
+                Label = "Edit",
+                RouteName = RouteNames.ContentItems.Edit,
+                IsActive = true,
+            }
+        );
+
         var response = await Mediator.Send(new GetContentItemById.Query { Id = id });
         var (imageJson, videoJson) = await GetMediaItemsJsonAsync();
         var fieldValues = BuildFieldValuesForEdit(

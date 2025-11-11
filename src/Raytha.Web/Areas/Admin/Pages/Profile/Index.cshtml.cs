@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Raytha.Application.Login.Commands;
 using Raytha.Web.Areas.Admin.Pages.Shared;
 using Raytha.Web.Areas.Admin.Pages.Shared.Models;
+using Raytha.Web.Areas.Shared.Models;
 
 namespace Raytha.Web.Areas.Admin.Pages.Profile;
 
@@ -13,6 +14,15 @@ public class Index : BaseAdminPageModel
 
     public async Task<IActionResult> OnGet()
     {
+        SetBreadcrumbs(
+            new BreadcrumbNode
+            {
+                Label = "Profile",
+                RouteName = RouteNames.Profile.Index,
+                IsActive = true,
+            }
+        );
+
         Form = new FormModel()
         {
             FirstName = CurrentUser.FirstName,

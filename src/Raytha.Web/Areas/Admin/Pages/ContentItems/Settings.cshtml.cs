@@ -9,6 +9,7 @@ using Raytha.Application.Views;
 using Raytha.Domain.Entities;
 using Raytha.Web.Areas.Admin.Pages.Shared;
 using Raytha.Web.Areas.Admin.Pages.Shared.Models;
+using Raytha.Web.Areas.Shared.Models;
 
 namespace Raytha.Web.Areas.Admin.Pages.ContentItems;
 
@@ -30,6 +31,31 @@ public class Settings : BaseHasFavoriteViewsPageModel, ISubActionViewModel
 
     public async Task<IActionResult> OnGet(string id)
     {
+        SetBreadcrumbs(
+            new BreadcrumbNode
+            {
+                Label = CurrentView.ContentType.LabelPlural,
+                RouteName = RouteNames.ContentItems.Index,
+                RouteValues = new Dictionary<string, string>
+                {
+                    { "contentTypeDeveloperName", CurrentView.ContentType.DeveloperName },
+                },
+                IsActive = false,
+            },
+            new BreadcrumbNode
+            {
+                Label = CurrentView.Label,
+                RouteName = RouteNames.ContentItems.Index,
+                IsActive = false,
+            },
+            new BreadcrumbNode
+            {
+                Label = "Settings",
+                RouteName = RouteNames.ContentItems.Settings,
+                IsActive = true,
+            }
+        );
+
         var response = await Mediator.Send(new GetContentItemById.Query { Id = id });
 
         var webTemplates = await Mediator.Send(

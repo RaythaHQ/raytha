@@ -14,6 +14,7 @@ using Raytha.Domain.Entities;
 using Raytha.Domain.ValueObjects.FieldTypes;
 using Raytha.Web.Areas.Admin.Pages.Shared;
 using Raytha.Web.Areas.Admin.Pages.Shared.Models;
+using Raytha.Web.Areas.Shared.Models;
 
 namespace Raytha.Web.Areas.Admin.Pages.ContentItems;
 
@@ -32,6 +33,31 @@ public class Create : BaseHasFavoriteViewsPageModel
 
     public async Task<IActionResult> OnGet(string backToListUrl = "")
     {
+        SetBreadcrumbs(
+            new BreadcrumbNode
+            {
+                Label = CurrentView.ContentType.LabelPlural,
+                RouteName = RouteNames.ContentItems.Index,
+                RouteValues = new Dictionary<string, string>
+                {
+                    { "contentTypeDeveloperName", CurrentView.ContentType.DeveloperName },
+                },
+                IsActive = false,
+            },
+            new BreadcrumbNode
+            {
+                Label = CurrentView.Label,
+                RouteName = RouteNames.ContentItems.Index,
+                IsActive = false,
+            },
+            new BreadcrumbNode
+            {
+                Label = "Create",
+                RouteName = RouteNames.ContentItems.Create,
+                IsActive = true,
+            }
+        );
+
         var webTemplates = await GetWebTemplatesAsync();
         var (imageJson, videoJson) = await GetMediaItemsJsonAsync();
         var fieldValues = BuildFieldValuesForCreate(CurrentView.ContentType.ContentTypeFields);
