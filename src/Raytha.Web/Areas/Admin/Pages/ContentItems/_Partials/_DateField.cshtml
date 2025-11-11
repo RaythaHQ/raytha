@@ -6,17 +6,21 @@
 
 <div class="col-lg-3 col-md-4 col-sm-12 mt-4" id="raytha_field-@Model.DeveloperName">
     <div class="mb-3">
-        <label class="form-label @Model.AsteriskCssIfRequired" for="Form_FieldValues_@(index)__Value">@Model.Label</label>
-        <div class="input-group">
+        <label class="form-label @Model.AsteriskCssIfRequired"
+            for="Form_FieldValues_@(index)__Value">@Model.Label</label>
+        <div class="input-group has-validation">
             <span class="input-group-text">
-                <svg class="icon icon-xs text-gray-600" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"></path></svg> 
+                <svg class="icon icon-xs text-gray-600" fill="currentColor" viewBox="0 0 20 20"
+                    xmlns="http://www.w3.org/2000/svg">
+                    <path fill-rule="evenodd"
+                        d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z"
+                        clip-rule="evenodd"></path>
+                </svg>
             </span>
-            <input data-datepicker="" 
-                   class="form-control datepicker-input @(parentModel?.HasError(Model.DeveloperName) ?? "")" 
-                   id="Form_FieldValues_@(index)__Value" 
-                   name="Form.FieldValues[@(index)].Value" 
-                   value="@Model.Value" 
-                   type="text">
+            <input data-datepicker=""
+                class="form-control datepicker-input @(parentModel?.HasError(Model.DeveloperName) ?? "")"
+                id="Form_FieldValues_@(index)__Value" name="Form.FieldValues[@(index)].Value" value="@Model.Value"
+                type="text">
             <div class="invalid-feedback">@(parentModel?.ErrorMessageFor(Model.DeveloperName))</div>
         </div>
         @if (!string.IsNullOrEmpty(Model.Description))
@@ -25,4 +29,3 @@
         }
     </div>
 </div>
-
