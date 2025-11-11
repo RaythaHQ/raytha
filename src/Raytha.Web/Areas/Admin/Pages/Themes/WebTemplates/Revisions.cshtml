@@ -6,12 +6,7 @@
     Layout = "SubActionLayout";
     ViewData["Title"] = pageTitle;
     ViewData["ActiveMenu"] = "Themes";
-
-    var back = new BackLinkOptions
-    {
-        Page = $"/Themes/WebTemplates/Index",
-        RouteValues = new RouteValueDictionary { ["themeId"] = Model.ListView.ThemeId }
-    };
+    ViewData["ActiveSubMenu"] = "Revisions";
 }
 <div class="table-responsive">
     <table class="table table-centered table-nowrap mb-0 rounded">
@@ -30,7 +25,7 @@
                 <th class="border-0">
                     Label
                 </th>
-                <th class="border-0 rounded-start">
+                <th class="border-0 rounded-end">
                     Created by
                 </th>
             </tr>
@@ -39,11 +34,11 @@
             @foreach (var item in Model.ListView.Items)
             {
                 <tr>
-                    <td class="align-middle"
-                       >
+                    <td class="align-middle">
                         <form method="post" asp-page="@RouteNames.Themes.WebTemplates.Revisions" asp-page-handler="Revert"
                             asp-route-revisionId="@item.Id" asp-route-id="@Model.ListView.TemplateId"
-                            asp-route-themeId="@Model.ListView.ThemeId" onsubmit="return confirm('Are you sure you want to revert to this web template?');">
+                            asp-route-themeId="@Model.ListView.ThemeId"
+                            onsubmit="return confirm('Are you sure you want to revert to this web template?');">
                             <button class="btn btn-sm btn-success">
                                 Revert
                             </button>

@@ -7,10 +7,10 @@
     Layout = "SubActionLayout";
     ViewData["Title"] = pageTitle;
     ViewData["ActiveMenu"] = "Themes";
-
+    ViewData["ActiveSubMenu"] = "Edit";
     var back = new BackLinkOptions
     {
-        Page = $"/Themes/WebTemplates/Index",
+        Page = RouteNames.Themes.WebTemplates.Index,
         RouteValues = new RouteValueDictionary { ["themeId"] = Model.Form.ThemeId }
     };
 
@@ -53,9 +53,7 @@
     {
         <div class="col-lg-12 my-4">
             <div class="form-check">
-                <input
-                    class="form-check-input @Model.HasError("IsBaseLayout")" type="checkbox" asp-for="Form.IsBaseLayout"
-                   >
+                <input class="form-check-input @Model.HasError("IsBaseLayout")" type="checkbox" asp-for="Form.IsBaseLayout">
                 <label class="form-check-label" asp-for="Form.IsBaseLayout"></label>
                 <div class="invalid-feedback">@Model.ErrorMessageFor("IsBaseLayout")</div>
             </div>
@@ -68,8 +66,7 @@
     {
         <div class="col-lg-12 my-4">
             <div class="form-check">
-                <input class="form-check-input" type="checkbox"
-                    asp-for="Form.IsBaseLayout" disabled>
+                <input class="form-check-input" type="checkbox" asp-for="Form.IsBaseLayout" disabled>
                 <input type="hidden" asp-for="Form.IsBaseLayout">
                 <label class="form-check-label" asp-for="Form.IsBaseLayout"></label>
             </div>

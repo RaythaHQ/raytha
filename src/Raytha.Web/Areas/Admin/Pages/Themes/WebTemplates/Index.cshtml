@@ -6,29 +6,29 @@
     Layout = "SidebarLayout";
     ViewData["Title"] = pageTitle;
     ViewData["ActiveMenu"] = "Themes";
+    var back = new BackLinkOptions
+    {
+        Page = RouteNames.Themes.Edit,
+        RouteValues = new RouteValueDictionary { ["id"] = Model.ListView.ThemeId },
+        Text = "Back to theme",
+    };
 }
 <partial name="_Partials/PageHeading" model="pageTitle" />
 <nav class="navbar navbar-expand-lg navbar-light raytha-view-nav raytha-border-top">
-    <div class="container-fluid mx-2">
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent"
-            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarSupportedContent">
-            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                <li class="nav-item">
-                    <a class="btn btn-primary" aria-current="page" asp-page="@RouteNames.Themes.WebTemplates.Create"
-                        asp-route-themeId="@Model.ListView.ThemeId">
-                        <svg class="icon icon-xs me-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                            xmlns="http://www.w3.org/2000/svg">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-                        </svg>
-                        Create web template
-                    </a>
-                </li>
-            </ul>
-            <form class="d-flex" asp-route="webtemplatesindex" asp-route-themeId="@Model.ListView.ThemeId" method="get">
+    <div class="container-fluid d-flex justify-content-between align-items-center">
+        @(await Html.PartialAsync("_Partials/BackToList", back))
+        <div class="d-flex align-items-center">
+            <a class="btn btn-primary me-2" aria-current="page" asp-page="@RouteNames.Themes.WebTemplates.Create"
+                asp-route-themeId="@Model.ListView.ThemeId">
+                <svg class="icon icon-xs me-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                </svg>
+                Create web template
+            </a>
+            <form class="d-flex" asp-page="@RouteNames.Themes.WebTemplates.Index"
+                asp-route-themeId="@Model.ListView.ThemeId" method="get">
                 <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search" name="search"
                     value="@Model.ListView.Search">
                 <button class="btn btn-outline-success" type="submit">Search</button>
