@@ -303,25 +303,4 @@ public class MainController : BaseController
             );
         }
     }
-
-    [Route($"raytha/500", Name = "errorroute")]
-    public IActionResult Error()
-    {
-        var errorModel = new GenericError_RenderModel { ErrorId = ShortGuid.NewGuid() };
-        return new ErrorActionViewResult(BuiltInWebTemplate.Error500, 500, errorModel, ViewData);
-    }
-
-    [Route("raytha/403", Name = "forbidden")]
-    public IActionResult Forbidden()
-    {
-        var errorModel = new GenericError_RenderModel { ErrorId = ShortGuid.NewGuid() };
-        return new ErrorActionViewResult(BuiltInWebTemplate.Error403, 403, errorModel, ViewData);
-    }
-
-    [Route("raytha/404", Name = "notfound")]
-    public IActionResult EntityNotFound()
-    {
-        var errorModel = new GenericError_RenderModel { ErrorId = ShortGuid.NewGuid() };
-        return new ErrorActionViewResult(BuiltInWebTemplate.Error404, 403, errorModel, ViewData);
-    }
 }

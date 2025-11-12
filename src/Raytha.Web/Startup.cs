@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.HttpOverrides;
@@ -44,7 +45,12 @@ public class Startup
         string pathBase = Configuration["PATHBASE"] ?? string.Empty;
         app.UsePathBase(new PathString(pathBase));
         app.UseForwardedHeaders();
-        app.UseExceptionHandler(ExceptionsMiddleware.ErrorHandler(pathBase));
+        app.UseExceptionHandler(new ExceptionHandlerOptions
+        {
+            ExceptionHandler = ExceptionsMiddleware.ErrorHandlerDelegate(pathBase, env),
+            AllowStatusCode404Response = true
+        });
+        app.UseStatusCodePagesWithReExecute($"{pathBase}/raytha/error/{{0}}");
 
         if (!env.IsDevelopment())
         {
