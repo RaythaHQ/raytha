@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <RootNamespace>Raytha.Infrastructure</RootNamespace>
     <AssemblyName>Raytha.Infrastructure</AssemblyName>
     <ImplicitUsings>enable</ImplicitUsings>
@@ -16,20 +16,20 @@
     <PackageReference Include="Dapper.SqlBuilder" Version="2.1.66" />
     <PackageReference
       Include="Microsoft.AspNetCore.DataProtection.EntityFrameworkCore"
-      Version="8.0.8"
+      Version="10.0.0"
     />
     <PackageReference Include="Microsoft.ClearScript.V8" Version="7.5.0" />
     <PackageReference Include="Microsoft.ClearScript.V8.Native.linux-x64" Version="7.5.0" />
     <PackageReference Include="Microsoft.ClearScript.V8.Native.win-x64" Version="7.5.0" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="9.0.4" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.4">
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="10.0.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.0">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
-    <PackageReference Include="Microsoft.Extensions.Http" Version="9.0.4" />
+    <PackageReference Include="Microsoft.Extensions.Http" Version="10.0.0" />
     <PackageReference Include="Microsoft.OData.Core" Version="8.2.3" />
     <PackageReference Include="Microsoft.AspNetCore.OData" Version="9.3.0" />
-    <PackageReference Include="Npgsql" Version="9.0.3" />
-    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.0.4" />
+    <PackageReference Include="Npgsql" Version="10.0.0-rc.1" />
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.0-rc.1" />
   </ItemGroup>
 </Project>

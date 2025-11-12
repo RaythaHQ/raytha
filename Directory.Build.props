@@ -1,0 +1,7 @@
+<Project>
+  <PropertyGroup>
+    <!-- Suppress all warnings, only show errors -->
+    <WarningLevel>0</WarningLevel>
+  </PropertyGroup>
+</Project>
+

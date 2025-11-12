@@ -73,22 +73,21 @@ public class ExportTheme
                     cancellationToken
                 );
 
+            var mediaItems = theme.ThemeAccessToMediaItems.Select(tm => tm.MediaItem!).ToList();
+            var mediaItemJsonTasks = mediaItems.Select(async mi =>
+                MediaItemJson.GetProjection(
+                    mi.FileName,
+                    await _fileStorageProvider.GetDownloadUrlAsync(
+                        mi.ObjectKey,
+                        FileStorageUtility.GetDefaultExpiry()
+                    )
+                )
+            );
+
             var themePackage = new ThemeJson
             {
                 WebTemplates = theme.WebTemplates.Select(WebTemplateJson.GetProjection),
-                MediaItems = await theme
-                    .ThemeAccessToMediaItems.Select(tm => tm.MediaItem!)
-                    .ToAsyncEnumerable()
-                    .SelectAwait(async mi =>
-                        MediaItemJson.GetProjection(
-                            mi.FileName,
-                            await _fileStorageProvider.GetDownloadUrlAsync(
-                                mi.ObjectKey,
-                                FileStorageUtility.GetDefaultExpiry()
-                            )
-                        )
-                    )
-                    .ToArrayAsync(cancellationToken),
+                MediaItems = await Task.WhenAll(mediaItemJsonTasks),
             };
 
             return new CommandResponseDto<ThemeJson>(themePackage);
