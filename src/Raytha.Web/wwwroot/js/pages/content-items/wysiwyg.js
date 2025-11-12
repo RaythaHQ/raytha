@@ -1343,25 +1343,6 @@ export async function initWysiwygField(fieldElement, config) {
         return null;
     }
 
-    // TipTap imports - these will be available via the importmap defined in the page
-    /*
-    const { Editor, Node, Extension } = await import('https://esm.sh/@tiptap/core@2.1.13');
-    const StarterKit = await import('https://esm.sh/@tiptap/starter-kit@2.1.13');
-    const Link = await import('https://esm.sh/@tiptap/extension-link@2.1.13');
-    const Image = await import('https://esm.sh/@tiptap/extension-image@2.1.13');
-    const Table = await import('https://esm.sh/@tiptap/extension-table@2.1.13');
-    const TableRow = await import('https://esm.sh/@tiptap/extension-table-row@2.1.13');
-    const TableCell = await import('https://esm.sh/@tiptap/extension-table-cell@2.1.13');
-    const TableHeader = await import('https://esm.sh/@tiptap/extension-table-header@2.1.13');
-    const Underline = await import('https://esm.sh/@tiptap/extension-underline@2.1.13');
-    const Subscript = await import('https://esm.sh/@tiptap/extension-subscript@2.1.13');
-    const Superscript = await import('https://esm.sh/@tiptap/extension-superscript@2.1.13');
-    const TextStyle = await import('https://esm.sh/@tiptap/extension-text-style@2.1.13');
-    const FontFamily = await import('https://esm.sh/@tiptap/extension-font-family@2.1.13');
-    const TextAlign = await import('https://esm.sh/@tiptap/extension-text-align@2.1.13');
-    const Color = await import('https://esm.sh/@tiptap/extension-color@2.1.13');
-    const Highlight = await import('https://esm.sh/@tiptap/extension-highlight@2.1.13');
-    */
     const {
         Editor,
         Node,
