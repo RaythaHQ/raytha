@@ -1,9 +1,0 @@
-@model IEnumerable<KeyValuePair<string, string>>
-@{ 
-    Layout = null;
-}
-
-@foreach (var item in Model)
-{
-    <li class="list-group-item raytha-autocomplete-item" role="option" data-autocomplete-value="@item.Key">@item.Value</li>
-}

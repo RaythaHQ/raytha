@@ -1,0 +1,45 @@
+@page "/raytha/themes/edit/{themeId}/media-items"
+@model Raytha.Web.Areas.Admin.Pages.Themes.MediaItems
+
+@{
+    var pageTitle = "Themes > Media items";
+    Layout = "SubActionLayout";
+    ViewData["Title"] = pageTitle;
+    ViewData["ActiveMenu"] = "Themes";
+    ViewData["ActiveSubMenu"] = "Media items";
+}
+
+<div class="table-responsive">
+    <table class="table mb-0 rounded">
+        <thead class="thead-light">
+            <tr>
+                <th class="border-0 rounded-start">File name</th>
+                <th class="border-0">Content type</th>
+                <th class="border-0">File storage provider</th>
+                <th class="border-0">Object key</th>
+                <th class="border-0 rounded-end">Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model.ListView.Items)
+            {
+                <tr>
+                    <td>@item.FileName</td>
+                    <td>@item.ContentType</td>
+                    <td>@item.FileStorageProvider</td>
+                    <td>@item.ObjectKey</td>
+                    <td>
+                        <div>
+                            <form method="post" asp-page="@RouteNames.Themes.MediaItems" asp-page-handler="Delete" asp-route-themeId="@Model.ThemeId"
+                                asp-route-id="@item.Id" onsubmit="return confirm('Are you sure you want to delete this media item?');">
+                                <button class="btn btn-link text-danger p-0 m-0 border-0 bg-transparent">
+                                    Delete
+                                </button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

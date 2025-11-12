@@ -10,7 +10,8 @@ public class GetNavigationMenuItemById
 {
     public record Query
         : GetEntityByIdInputDto,
-            IRequest<IQueryResponseDto<NavigationMenuItemDto>> { }
+            IRequest<IQueryResponseDto<NavigationMenuItemDto>>
+    { }
 
     public class Handler : IRequestHandler<Query, IQueryResponseDto<NavigationMenuItemDto>>
     {

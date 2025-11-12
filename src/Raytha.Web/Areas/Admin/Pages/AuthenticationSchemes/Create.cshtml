@@ -1,0 +1,131 @@
+@page "/raytha/settings/authentication-schemes/create"
+@model Raytha.Web.Areas.Admin.Pages.AuthenticationSchemes.Create
+
+@{
+    var pageTitle = "Create authentication scheme";
+    Layout = "SidebarLayout";
+    ViewData["Title"] = pageTitle;
+    ViewData["ActiveMenu"] = "Authentication Schemes";
+    ViewData["ExpandSettingsMenu"] = true;
+
+    BackLinkOptions back = new BackLinkOptions
+    {
+        Page = RouteNames.AuthenticationSchemes.Index
+    };
+}
+
+<div>
+    <div class="row mb-4">
+        <partial name="_Partials/PageHeading" model='ViewData["Title"]' />
+        <div class="col-xxl-7 col-xl-8 col-lg-9 col-md-12">
+            <div class="card border-0 shadow mb-4">
+                <div class="card-body">
+                    @(await Html.PartialAsync("_Partials/BackToList", back))
+                    <form asp-page="@RouteNames.AuthenticationSchemes.Create" method="post" class="py-4" novalidate>
+                    <div class="col-lg-12">
+                        <div class="mb-3">
+                            <label class="form-label raytha-required" asp-for="Form.Label"></label>
+                            <input type="text" class="form-control @Model.HasError("Label")" asp-for="Form.Label" id="Form_Label" required>
+                            <div class="invalid-feedback">@Model.ErrorMessageFor("Label")</div>
+                        </div>
+                    </div>
+                    <div class="col-lg-12">
+                        <div class="mb-3">
+                            <label class="form-label raytha-required" asp-for="Form.DeveloperName"></label>
+                            <input type="text" class="form-control @Model.HasError("DeveloperName")"
+                                   asp-for="Form.DeveloperName" id="Form_DeveloperName" required>
+                            <div class="invalid-feedback">@Model.ErrorMessageFor("DeveloperName")</div>
+                        </div>
+                    </div>
+                    <div class="col-lg-12">
+                        <div class="form-check">
+                            <input class="form-check-input @Model.HasError("IsEnabledForUsers")" type="checkbox" asp-for="Form.IsEnabledForUsers">
+                            <label class="form-check-label" asp-for="Form.IsEnabledForUsers"></label>
+                            <div class="invalid-feedback">@Model.ErrorMessageFor("IsEnabledForUsers")</div>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input @Model.HasError("IsEnabledForAdmins")" type="checkbox" asp-for="Form.IsEnabledForAdmins">
+                            <label class="form-check-label" asp-for="Form.IsEnabledForAdmins"></label>
+                            <div class="invalid-feedback">@Model.ErrorMessageFor("IsEnabledForAdmins")</div>
+                        </div>
+                    </div>
+                    <div class="col-lg-12">
+                        <div class="mb-3">
+                            <label class="form-label raytha-required" asp-for="Form.AuthenticationSchemeType"></label>
+                            <select class="form-select @Model.HasError("AuthenticationSchemeType")"
+                                    asp-for="Form.AuthenticationSchemeType" asp-items="Model.SupportedAuthenticationSchemeTypes" required>
+                            </select>
+                            <div class="invalid-feedback">@Model.ErrorMessageFor("AuthenticationSchemeType")</div>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-12">
+                        <div class="mb-3">
+                            <label class="form-label raytha-required" asp-for="Form.JwtSecretKey"></label>
+                            <input type="text" class="form-control @Model.HasError("JwtSecretKey")"
+                                   asp-for="Form.JwtSecretKey">
+                            <div class="invalid-feedback">@Model.ErrorMessageFor("JwtSecretKey")</div>
+                        </div>
+                    </div>
+                    <div class="col-lg-12 my-4">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" asp-for="Form.JwtUseHighSecurity">
+                            <label class="form-check-label @Model.HasError("JwtUseHighSecurity")"
+                                   asp-for="Form.JwtUseHighSecurity"></label>
+                            <div class="invalid-feedback">@Model.ErrorMessageFor("JwtUseHighSecurity")</div>
+                            <div class="form-text">Only enable this if you are able to implement the <code>jti</code> claim as part of the JWT payloads.</div>
+                        </div>
+                    </div>
+                    <div class="col-lg-12">
+                        <div class="mb-3">
+                            <label class="form-label raytha-required" asp-for="Form.SamlCertificate"></label>
+                            <textarea class="form-control @Model.HasError("SamlCertificate")" asp-for="Form.SamlCertificate"
+                                      rows="20"></textarea>
+                            <div class="invalid-feedback">@Model.ErrorMessageFor("SamlCertificate")</div>
+                        </div>
+                    </div>
+                    <div class="col-lg-12">
+                        <div class="mb-3">
+                            <label class="form-label raytha-required" asp-for="Form.SamlIdpEntityId"></label>
+                            <input type="text" class="form-control @Model.HasError("SamlIdpEntityId")"
+                                   asp-for="Form.SamlIdpEntityId">
+                            <div class="invalid-feedback">@Model.ErrorMessageFor("SamlIdpEntityId")</div>
+                        </div>
+                    </div>
+                    <div class="col-lg-12">
+                        <div class="mb-3">
+                            <label class="form-label raytha-required" asp-for="Form.SignInUrl"></label>
+                            <input type="url" class="form-control @Model.HasError("SignInUrl")" asp-for="Form.SignInUrl" required>
+                            <div class="invalid-feedback">@Model.ErrorMessageFor("SignInUrl")</div>
+                            <div class="form-text">Redirect users to this url to login on your authentication platform.
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-12">
+                        <div class="mb-3">
+                            <label class="form-label" asp-for="Form.SignOutUrl"></label>
+                            <input type="url" class="form-control @Model.HasError("SignOutUrl")" asp-for="Form.SignOutUrl">
+                            <div class="invalid-feedback">@Model.ErrorMessageFor("SignOutUrl")</div>
+                            <div class="form-text">Users will be redirected to this url after being logged out here.
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-12">
+                        <div class="mb-3">
+                            <label class="form-label raytha-required" asp-for="Form.LoginButtonText"></label>
+                            <input type="text" class="form-control @Model.HasError("LoginButtonText")"
+                                   asp-for="Form.LoginButtonText" required>
+                            <div class="invalid-feedback">@Model.ErrorMessageFor("LoginButtonText")</div>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-success mt-4">Save changes</button> 
+                </form>
+            </div>
+        </div>
+    </div>
+    </div>
+</div>
+@section Scripts {
+<script type="module" defer src="~/js/pages/authentication-schemes/create.js"></script>
+}

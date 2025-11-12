@@ -1,11 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text.Json;
+﻿using System.Text.Json;
 using CSharpVitamins;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.DataProtection;
-using Microsoft.AspNetCore.Http;
 using Microsoft.OpenApi.Models;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Security;
@@ -15,6 +12,7 @@ using Raytha.Web.Authentication;
 using Raytha.Web.Filters;
 using Raytha.Web.Middlewares;
 using Raytha.Web.Services;
+using RaythaZero.Web.Services;
 
 namespace Microsoft.Extensions.DependencyInjection;
 
@@ -164,10 +162,7 @@ public static class ConfigureServices
 
         services.AddScoped<CustomCookieAuthenticationEvents>();
         services
-            .AddControllersWithViews(options =>
-            {
-                options.Filters.Add<SetFormValidationErrorsFilterAttribute>();
-            })
+            .AddControllersWithViews(options => { })
             .AddJsonOptions(o =>
             {
                 o.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
@@ -186,8 +181,6 @@ public static class ConfigureServices
         services.AddSingleton<ICurrentVersion, CurrentVersion>();
 
         services.AddScoped<ForbidAccessIfRaythaFunctionsAreDisabledFilterAttribute>();
-        services.AddScoped<GetOrSetRecentlyAccessedViewFilterAttribute>();
-        services.AddScoped<SetPaginationInformationFilterAttribute>();
         services.AddScoped<IAuthorizationHandler, RaythaAdminAuthorizationHandler>();
         services.AddScoped<IAuthorizationHandler, RaythaAdminContentTypeAuthorizationHandler>();
         services.AddScoped<IAuthorizationHandler, RaythaApiAuthorizationHandler>();

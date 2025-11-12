@@ -1,0 +1,317 @@
+@inject ICurrentOrganization CurrentOrganization
+@inject IFileStorageProviderSettings FileStorageProviderSettings
+@inject IFileStorageProvider FileStorageProvider
+@inject IRelativeUrlBuilder RelativeUrlBuilder
+@model FileUploadOptions
+@{
+    Layout = null;
+}
+
+@if (!FileStorageProviderSettings.UseDirectUploadToCloud)
+{
+    <!-- DIRECT upload to your app with XHRUpload -->
+    <script type="module">
+        import { Uppy, Dashboard, XHRUpload } from "/raytha_admin/lib/uppy/dist/uppy.min.mjs"
+
+        const dragDropSelector = '@Model.DragDropZoneTarget';
+        const listSelector = '@Model.CopyUrlsTarget';
+        const themeId = '@Model.ThemeId';
+
+        const dashboardTarget = document.querySelector(dragDropSelector);
+        const listEl = document.querySelector(listSelector);
+
+        function appendListItem(fileName, objectKey) {
+            if (!listEl) return;
+            const li = document.createElement('li');
+            li.className = 'list-group-item';
+
+            // truncate to match existing UI pattern
+            const truncated = fileName.replace(/(.{20})..+/, '$1&hellip;');
+
+            li.innerHTML = `
+                                                                            <a target="_blank" class="text-secondary"
+                                                                               href="@RelativeUrlBuilder.MediaRedirectToFileUrl("REPLACE_ME").Replace("REPLACE_ME", "${objectKey}")">
+                                                                               ${truncated}
+                                                                            </a>
+                                                                            |
+                                                                            <a href="javascript:void(0);" class="text-primary"
+                                                                               data-id="${objectKey}" data-copyas="public">Copy as public</a>
+                                                                            |
+                                                                            <a href="javascript:void(0);" class="text-primary"
+                                                                               data-id="${objectKey}" data-copyas="redirect">Copy as redirect</a>
+                                                                        `;
+            listEl.appendChild(li);
+        }
+
+        if (dashboardTarget) {
+            const uppy = new Uppy({
+                autoProceed: true,
+                allowMultipleUploads: true
+            });
+
+            uppy.use(Dashboard, {
+                inline: true,
+                target: dashboardTarget,
+                height: 320
+            });
+
+            uppy.use(XHRUpload, {
+                endpoint: '@RelativeUrlBuilder.MediaDirectUploadUrl()?themeId=@Model.ThemeId'
+            });
+
+            // After successful direct upload to app, response should include file info
+            uppy.on('upload-success', (file, response) => {
+                // Try to accommodate different response shapes:
+                // - { body: { fields: { fileName, objectKey } } }
+                // - { body: { fileName, objectKey } }
+                const body = response && response.body ? response.body : {};
+                const fields = body.fields || body;
+
+                const fileName = fields.fileName || file.name;
+                const objectKey = fields.objectKey || (file.meta && file.meta.objectKey) || '';
+
+                if (objectKey) {
+                    appendListItem(fileName, objectKey);
+                } else {
+                    // As a fallback, try to parse from response text if necessary
+                    // (left intentionally minimal)
+                    console.warn('Upload success but no objectKey found in response.', response);
+                }
+            });
+
+            uppy.on('restriction-failed', (_file, error) => {
+                console.error('File restriction:', error);
+            });
+
+            uppy.on('upload-error', (file, error, _response) => {
+                console.error('Upload error:', file && file.id, error);
+            });
+        }
+    </script>
+}
+else
+{
+    <!-- CLOUD upload via AwsS3, then POST to create-after-upload -->
+    <script type="module">
+        import { Uppy, Dashboard, AwsS3 } from "/raytha_admin/lib/uppy/dist/uppy.min.mjs"
+
+        const dragDropSelector = '@Model.DragDropZoneTarget';
+        const listSelector = '@Model.CopyUrlsTarget';
+        const themeId = '@Model.ThemeId';
+
+        const PRESIGN_URL = '@RelativeUrlBuilder.MediaCloudUploadPresignUrl()';
+        const CREATE_AFTER_UPLOAD_URL = '@RelativeUrlBuilder.MediaCloudUploadCreateAfterUploadUrl()';
+
+        const dashboardTarget = document.querySelector(dragDropSelector);
+        const listEl = document.querySelector(listSelector);
+
+        function fileExtension(name) {
+            const i = (name || '').lastIndexOf('.');
+            return i >= 0 ? name.substring(i + 1) : '';
+        }
+
+        function appendListItem(fileName, objectKey) {
+            if (!listEl) return;
+            const li = document.createElement('li');
+            li.className = 'list-group-item';
+
+            const truncated = fileName.replace(/(.{20})..+/, '$1&hellip;');
+
+            li.innerHTML = `
+                                                                            <a target="_blank" class="text-secondary"
+                                                                               href="@RelativeUrlBuilder.MediaRedirectToFileUrl("REPLACE_ME").Replace("REPLACE_ME", "${objectKey}")">
+                                                                               ${truncated}
+                                                                            </a>
+                                                                            |
+                                                                            <a href="javascript:void(0);" class="text-primary"
+                                                                               data-id="${objectKey}" data-copyas="public">Copy as public</a>
+                                                                            |
+                                                                            <a href="javascript:void(0);" class="text-primary"
+                                                                               data-id="${objectKey}" data-copyas="redirect">Copy as redirect</a>
+                                                                        `;
+            listEl.appendChild(li);
+        }
+
+        if (dashboardTarget) {
+            const uppy = new Uppy({
+                autoProceed: true,
+                allowMultipleUploads: true
+            });
+
+            uppy.use(Dashboard, {
+                inline: true,
+                target: dashboardTarget,
+                height: 320
+            });
+
+            // Presign for cloud upload
+            uppy.use(AwsS3, {
+                getUploadParameters: async (file) => {
+                    // Match old Stimulus payload
+                    const res = await fetch(`${PRESIGN_URL}?themeId=${encodeURIComponent(themeId)}`, {
+                        method: 'POST',
+                        headers: {
+                            'Accept': 'application/json',
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            filename: file.name,
+                            contentType: file.type,
+                            extension: fileExtension(file.name)
+                        })
+                    });
+
+                    const data = await res.json();
+                    // Expect: { url, fields: { id, objectKey, ... } }
+                    // Store for later create-after-upload call
+                    if (data && data.fields) {
+                        uppy.setFileMeta(file.id, {
+                            id: data.fields.id,
+                            objectKey: data.fields.objectKey
+                        });
+                    }
+
+                    return {
+                        method: 'PUT',
+                        url: data.url,
+                        fields: data.fields,
+                        headers: { 'x-ms-blob-type': 'BlockBlob' }
+                    };
+                }
+            });
+
+            // After cloud upload, POST create-after-upload; then append list item
+            uppy.on('upload-success', async (file, _response) => {
+                try {
+                    const id = file.meta && file.meta.id;
+                    const objectKey = file.meta && file.meta.objectKey;
+
+                    const payload = {
+                        filename: file.name,
+                        contentType: file.type,
+                        extension: fileExtension(file.name),
+                        id,
+                        objectKey,
+                        length: file.size
+                    };
+
+                    const res = await fetch(`${CREATE_AFTER_UPLOAD_URL}?themeId=${encodeURIComponent(themeId)}`, {
+                        method: 'POST',
+                        headers: {
+                            'Accept': 'application/json',
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(payload)
+                    });
+
+                    // We don’t strictly need the response body to render the item.
+                    // If your API returns canonical name/key, you can prefer that.
+                    await res.json().catch(() => null);
+
+                    if (objectKey) {
+                        appendListItem(file.name, objectKey);
+                    } else {
+                        console.warn('Create-after-upload done, but no objectKey in file.meta');
+                    }
+                } catch (err) {
+                    console.error('Error in create-after-upload:', err);
+                }
+            });
+
+            uppy.on('restriction-failed', (_file, error) => {
+                console.error('File restriction:', error);
+            });
+
+            uppy.on('upload-error', (file, error, _response) => {
+                console.error('Upload error:', file && file.id, error);
+            });
+        }
+    </script>
+}
+
+<link href="~/raytha_admin/lib/uppy/dist/uppy.min.css" rel="stylesheet">
+
+
+<script type="module">
+    // SELECTOR: must match your UL element
+    const listSelector = '@Model.CopyUrlsTarget';
+
+    // Create or reuse a toast element
+    function ensureToast() {
+        let toast = document.getElementById('uploadCopyToast');
+        if (!toast) {
+            toast = document.createElement('div');
+            toast.id = 'uploadCopyToast';
+            toast.className = 'toast align-items-center text-white bg-success border-0 position-fixed top-0 end-0 m-3';
+            toast.setAttribute('role', 'alert');
+            toast.setAttribute('aria-live', 'assertive');
+            toast.setAttribute('aria-atomic', 'true');
+            toast.innerHTML = `
+        <div class="d-flex">
+          <div class="toast-body">Copied to clipboard!</div>
+          <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>`;
+            document.body.appendChild(toast);
+        }
+        return toast;
+    }
+
+    function showSuccess() {
+        const toastEl = ensureToast();
+        const bootstrapRef = window.bootstrap && window.bootstrap.Toast;
+        if (bootstrapRef) {
+            new bootstrapRef(toastEl).show();
+        } else {
+            // Fallback: simple fade in/out
+            toastEl.style.display = 'block';
+            toastEl.style.opacity = '1';
+            setTimeout(() => {
+                toastEl.style.transition = 'opacity 300ms';
+                toastEl.style.opacity = '0';
+                setTimeout(() => { toastEl.style.display = 'none'; toastEl.style.transition = ''; }, 300);
+            }, 1200);
+        }
+    }
+
+    async function copy(text) {
+        try {
+            await navigator.clipboard.writeText(text);
+            showSuccess();
+        } catch {
+            // Fallback
+            const ta = document.createElement('textarea');
+            ta.value = text;
+            ta.style.position = 'fixed';
+            ta.style.opacity = '0';
+            document.body.appendChild(ta);
+            ta.select();
+            try { document.execCommand('copy'); } catch { }
+            document.body.removeChild(ta);
+            showSuccess();
+        }
+    }
+
+    function buildCopyAs(copyAs, objectKey) {
+        return copyAs == 'public' ?
+            `{{ ${objectKey} | attachment_public_url }}` : `{{ ${objectKey} | attachment_redirect_url }}`;
+    }
+
+    // Delegate clicks on the UL
+    const listEl = document.querySelector(listSelector);
+    if (listEl) {
+        listEl.addEventListener('click', (e) => {
+            const target = e.target;
+            if (!(target instanceof Element)) return;
+
+            const copyAs = target.getAttribute('data-copyas');
+            if (!copyAs) return;
+
+            e.preventDefault();
+
+            const objectKey = target.getAttribute('data-id') || '';
+            const li = target.closest('li');
+
+            copy(buildCopyAs(copyAs, objectKey));
+        });
+    }
+</script>

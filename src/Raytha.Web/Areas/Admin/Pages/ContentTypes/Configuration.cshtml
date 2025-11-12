@@ -1,0 +1,90 @@
+@page "/raytha/{contentTypeDeveloperName}/configuration"
+@using Raytha.Web.Areas.Admin.Pages.Shared.Models
+@model Raytha.Web.Areas.Admin.Pages.ContentTypes.Configuration
+
+@{
+    var pageTitle = $"{Model.CurrentView.ContentType.LabelPlural} > Configuration";
+    Layout = "SidebarLayout";
+    ViewData["Title"] = pageTitle;
+    ViewData["ActiveMenu"] = Model.CurrentView.ContentType.DeveloperName;
+    
+    var navModel = new ContentTypeNavModel
+    {
+        CurrentView = Model.CurrentView,
+        ActiveTab = ContentTypeNavTab.Configuration
+    };
+}
+
+<div>
+    <partial name="_Partials/PageHeading" model='ViewData["Title"]' />
+
+    <partial name="_Partials/_ContentTypeNavTabs" model="navModel" />
+
+    <div class="row mb-4">
+    <div class="col-xxl-7 col-xl-8 col-lg-9 col-md-12">
+        <div class="card border-0 shadow mb-4">
+            <div class="card-body">
+                <form asp-page="@RouteNames.ContentTypes.Configuration" asp-route-contentTypeDeveloperName="@Model.CurrentView.ContentType.DeveloperName" method="post" class="py-4" novalidate>
+                    <div class="col-lg-12 col-md-12">
+                        <div class="mb-3">
+                            <label class="form-label raytha-required" asp-for="Form.LabelPlural"></label>
+                            <input type="text" class="form-control @Model.HasError("LabelPlural")" asp-for="Form.LabelPlural"
+                                required>
+                            <div class="invalid-feedback">@Model.ErrorMessageFor("LabelPlural")</div>
+                        </div>
+                    </div>
+                    <div class="col-lg-12 col-md-12">
+                        <div class="mb-3">
+                            <label class="form-label raytha-required" asp-for="Form.LabelSingular"></label>
+                            <input type="text" class="form-control @Model.HasError("LabelSingular")"
+                                asp-for="Form.LabelSingular" required>
+                            <div class="invalid-feedback">@Model.ErrorMessageFor("LabelSingular")</div>
+                        </div>
+                    </div>
+                    <div class="col-lg-12 col-md-12">
+                        <div class="mb-3">
+                            <label class="form-label raytha-required" asp-for="Form.DeveloperName"></label>
+                            <input type="text" class="form-control" asp-for="Form.DeveloperName" readonly>
+                        </div>
+                    </div>
+                    <div class="col-lg-12 mt-4">
+                        <label class="form-label raytha-required" asp-for="Form.DefaultRouteTemplate"></label>
+                        <div class="input-group mb-3">
+                            <span class="input-group-text">@Model.WebsiteUrl</span>
+                            <input type="text" class="form-control @Model.HasError("DefaultRouteTemplate")"
+                                asp-for="Form.DefaultRouteTemplate" required>
+                            <div class="invalid-feedback">@Model.ErrorMessageFor("DefaultRouteTemplate")</div>
+                        </div>
+                        <div class="form-text">Available variables: {PrimaryField}, {ContentTypeDeveloperName}, {Id},
+                            {CurrentYear}, {CurrentMonth}</div>
+                    </div>
+                    <div class="col-lg-12 mt-4">
+                        <div class="mb-3">
+                            <label class="form-label" asp-for="Form.Description"></label>
+                            <textarea class="form-control @Model.HasError("Description")"
+                                asp-for="Form.Description"></textarea>
+                            <div class="invalid-feedback">@Model.ErrorMessageFor("Description")</div>
+                        </div>
+                    </div>
+                    <div class="col-lg-12">
+                        <div class="mb-3">
+                            <label class="form-label raytha-required" asp-for="Form.PrimaryFieldId"></label>
+                            <select class="form-select @Model.HasError("PrimaryFieldId")"
+                                asp-for="Form.PrimaryFieldId">
+                                <option value="">-- SELECT --</option>
+                                @foreach (var field in Model.ContentTypeFields)
+                                {
+                                    <option value="@field.Key">@field.Value</option>
+                                }
+                            </select>
+                            <div class="invalid-feedback">@Model.ErrorMessageFor("PrimaryFieldId")</div>
+                        </div>
+                    </div>
+                    <input type="hidden" asp-for="Form.Id">
+                    <button type="submit" class="btn btn-success">Save changes</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    </div>
+</div>

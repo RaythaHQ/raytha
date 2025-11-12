@@ -63,7 +63,7 @@ public class LoginController : BaseController
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> LoginWithEmailAndPassword(
-        LoginWithEmailAndPassword_ViewModel model,
+        LoginWithEmailAndPasswordViewModel model,
         string returnUrl = ""
     )
     {
@@ -147,7 +147,7 @@ public class LoginController : BaseController
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> LoginWithMagicLink(
-        LoginWithMagicLink_ViewModel model,
+        LoginWithMagicLinkViewModel model,
         string returnUrl = null
     )
     {
@@ -318,7 +318,7 @@ public class LoginController : BaseController
     [Route("account/login/forgot-password/begin", Name = "userforgotpasswordbegin")]
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> ForgotPassword(BeginForgotPassword_ViewModel model)
+    public async Task<IActionResult> ForgotPassword(BeginForgotPasswordViewModel model)
     {
         if (!CurrentOrganization.EmailAndPasswordIsEnabledForUsers)
         {
@@ -423,7 +423,7 @@ public class LoginController : BaseController
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> ForgotPasswordComplete(
-        CompleteForgotPassword_ViewModel model,
+        CompleteForgotPasswordViewModel model,
         string token
     )
     {
@@ -512,7 +512,7 @@ public class LoginController : BaseController
     [Route("account/create", Name = "usercreate")]
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> CreateUser(CreateUser_ViewModel model)
+    public async Task<IActionResult> CreateUser(CreateUserViewModel model)
     {
         if (!CurrentOrganization.EmailAndPasswordIsEnabledForUsers)
         {

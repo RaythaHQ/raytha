@@ -1,0 +1,82 @@
+@page "/raytha/settings/admins/create"
+@model Raytha.Web.Areas.Admin.Pages.Admins.Create
+
+@{
+    Layout = "SidebarLayout";
+    ViewData["Title"] = "Create admin";
+    ViewData["ActiveMenu"] = "Admins";
+    ViewData["ExpandSettingsMenu"] = true;
+
+    BackLinkOptions back = new BackLinkOptions
+    {
+        Page = RouteNames.Admins.Index
+    };
+}
+
+<div class="row mb-4">
+        <partial name="_Partials/PageHeading" model='ViewData["Title"]' />
+        <div class="col-xxl-7 col-xl-8 col-lg-9 col-md-12">
+            <div class="card border-0 shadow mb-4">
+                <div class="card-body">
+                    @(await Html.PartialAsync("_Partials/BackToList", back))
+                    <form asp-page="@RouteNames.Admins.Create" method="post" class="py-4" novalidate>
+                    <div class="row">
+                        <div class="col">
+                            <div class="mb-3">
+                                <label class="form-label raytha-required" asp-for="Form.FirstName"></label>
+                                <input type="text" class="form-control @Model.HasError("FirstName")"
+                                    asp-for="Form.FirstName" required>
+                                <div class="invalid-feedback">@Model.ErrorMessageFor("FirstName")</div>
+                            </div>
+                        </div>
+                        <div class="col">
+                            <div class="mb-3">
+                                <label class="form-label raytha-required" asp-for="Form.LastName"></label>
+                                <input type="text" class="form-control @Model.HasError("LastName")"
+                                    asp-for="Form.LastName" required>
+                                <div class="invalid-feedback">@Model.ErrorMessageFor("LastName")</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-12">
+                        <div class="mb-3">
+                            <label class="form-label raytha-required" asp-for="Form.EmailAddress"></label>
+                            <input type="email" class="form-control @Model.HasError("EmailAddress")"
+                                asp-for="Form.EmailAddress" required>
+                            <div class="invalid-feedback">@Model.ErrorMessageFor("EmailAddress")</div>
+                        </div>
+                    </div>
+                    <div class="col-lg-12">
+                        <div class="mb-3">
+                            <span class="h6 fw-bold raytha-required">Roles</span>
+                        </div>
+
+                        @for (int i = 0; i < Model.Form.Roles.Length; i++)
+                        {
+                            <div class="form-check">
+                                <input class="form-check-input @Model.HasError("Roles")" type="checkbox"
+                                    asp-for="Form.Roles[i].Selected">
+                                <label class="form-check-label"
+                                    asp-for="Form.Roles[i].Selected">@Model.Form.Roles[i].Label</label>
+                                <input type="hidden" asp-for="Form.Roles[i].Id" />
+                                <input type="hidden" asp-for="Form.Roles[i].Label" />
+                                @if (i == Model.Form.Roles.Length - 1)
+                                {
+                                    <div class="invalid-feedback">@Model.ErrorMessageFor("Roles")</div>
+                                }
+                            </div>
+                        }
+                    </div>
+                    <hr />
+                    <div class="col-lg-12 my-4">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" asp-for="Form.SendEmail">
+                            <label class="form-check-label" asp-for="Form.SendEmail">Send admin welcome email</label>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-success mt-4">Save changes</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

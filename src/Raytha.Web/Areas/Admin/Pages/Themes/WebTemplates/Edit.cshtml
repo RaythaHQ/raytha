@@ -1,0 +1,224 @@
+@page "/raytha/themes/edit/{themeId}/web-templates/edit/{id}"
+@model Raytha.Web.Areas.Admin.Pages.Themes.WebTemplates.Edit
+@inject IRelativeUrlBuilder RelativeUrlBuilder
+
+@{
+    var pageTitle = "Themes > Web templates > Edit";
+    Layout = "SubActionLayout";
+    ViewData["Title"] = pageTitle;
+    ViewData["ActiveMenu"] = "Themes";
+    ViewData["ActiveSubMenu"] = "Edit";
+    var back = new BackLinkOptions
+    {
+        Page = RouteNames.Themes.WebTemplates.Index,
+        RouteValues = new RouteValueDictionary { ["themeId"] = Model.Form.ThemeId }
+    };
+
+    var uploadOptions = new FileUploadOptions
+    {
+        DragDropZoneTarget = "#uploadassets-dragdrop",
+        CopyUrlsTarget = "#uploadassets-urls",
+        ThemeId = Model.Form.ThemeId
+    };
+}
+
+@(await Html.PartialAsync("_Partials/BackToList", back))
+<form asp-page="@RouteNames.Themes.WebTemplates.Edit" asp-page-route-id="@Model.Form.Id" method="post" class="py-4">
+    <div class="col-lg-12">
+        <div class="mb-3">
+            <label class="form-label raytha-required" asp-for="Form.Label"></label>
+            <input type="text" class="form-control @Model.HasError("Label")" asp-for="Form.Label" required>
+            <div class="invalid-feedback">@Model.ErrorMessageFor("Label")</div>
+        </div>
+    </div>
+    <div class="col-lg-12">
+        <div class="mb-3">
+            <label class="form-label" asp-for="Form.DeveloperName"></label>
+            <input type="text" class="form-control @Model.HasError("DeveloperName")" asp-for="Form.DeveloperName"
+                readonly>
+            <div class="invalid-feedback">@Model.ErrorMessageFor("DeveloperName")</div>
+        </div>
+    </div>
+    <div class="col-lg-12 col-md-12">
+        <div class="mb-3">
+            <label class="form-label" asp-for="Form.ParentTemplateId"></label>
+            <select class="form-select @Model.HasError("ParentTemplateId")" asp-for="Form.ParentTemplateId"
+                asp-items="@(new SelectList(Model.Form.ParentTemplates, "Id", "Label"))">
+                <option value="">(none)</option>
+            </select>
+            <div class="invalid-feedback">@Model.ErrorMessageFor("ParentTemplateId")</div>
+        </div>
+    </div>
+    @if (!Model.Form.IsBuiltInTemplate)
+    {
+        <div class="col-lg-12 my-4">
+            <div class="form-check">
+                <input class="form-check-input @Model.HasError("IsBaseLayout")" type="checkbox" asp-for="Form.IsBaseLayout">
+                <label class="form-check-label" asp-for="Form.IsBaseLayout"></label>
+                <div class="invalid-feedback">@Model.ErrorMessageFor("IsBaseLayout")</div>
+            </div>
+            <div class="form-text">Base
+                layouts require the use of <code>{% renderbody %}</code> in the template. This tag will be
+                replaced by the content in child templates.</div>
+        </div>
+    }
+    else
+    {
+        <div class="col-lg-12 my-4">
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" asp-for="Form.IsBaseLayout" disabled>
+                <input type="hidden" asp-for="Form.IsBaseLayout">
+                <label class="form-check-label" asp-for="Form.IsBaseLayout"></label>
+            </div>
+            <div class="form-text">This option is not editable for built-in default templates.</div>
+            <div class="form-text">Base
+                layouts require the use of <code>{% renderbody %}</code> in the template. This tag will be
+                replaced by the content in child templates.</div>
+        </div>
+    }
+    <div class="col-lg-12 col-md-12 my-4">
+        <div class="mb-3">
+            <label class="form-label" asp-for="@Model.Form.TemplateAccessToModelDefinitions"></label>
+            @for (int i = 0; i < Model.Form.TemplateAccessToModelDefinitions.Count(); i++)
+            {
+                <div class="form-check">
+                    <input class="form-check-input @Model.HasError("TemplateAccessToModelDefinitions")" type="checkbox"
+                        asp-for="@Model.Form.TemplateAccessToModelDefinitions[i].Value">
+                    <input type="hidden" asp-for="@Model.Form.TemplateAccessToModelDefinitions[i].Id" />
+                    <input type="hidden" asp-for="@Model.Form.TemplateAccessToModelDefinitions[i].Key" />
+                    <label class="form-check-label"
+                        asp-for="@Model.Form.TemplateAccessToModelDefinitions[i].Value">@Model.Form.TemplateAccessToModelDefinitions[i].Key</label>
+                    @if (i == Model.Form.TemplateAccessToModelDefinitions.Length - 1)
+                    {
+                        <div class="invalid-feedback">@Model.ErrorMessageFor("TemplateAccessToModelDefinitions")
+                        </div>
+                    }
+                </div>
+            }
+
+        </div>
+    </div>
+    <div class="col-lg-12 col-md-12 my-4">
+        <div class="form-check">
+            <input class="form-check-input @Model.HasError("AllowAccessForNewContentTypes")" type="checkbox"
+                asp-for="Form.AllowAccessForNewContentTypes">
+            <label class="form-check-label" asp-for="Form.AllowAccessForNewContentTypes"></label>
+            <div class="invalid-feedback">@Model.ErrorMessageFor("AllowAccessForNewContentTypes")</div>
+        </div>
+        <div class="form-text">At least 1 non base layout template must be available for new content
+            types.</div>
+    </div>
+    <div class="col-lg-12">
+        <div class="mb-3">
+            <label class="form-label raytha-required" asp-for="Form.Content"></label><br />
+            <button class="btn btn-sm btn-secondary mb-2" type="button" data-bs-toggle="offcanvas"
+                data-bs-target="#insertvariablemenu" aria-controls="insertvariablemenu">Insert
+                variable</button>
+
+            <div id="editorContainer" style="height:600px;overflow: auto;"></div>
+            <input type="hidden" asp-for="Form.Content" id="Form_Content">
+            <div class="invalid-feedback">@Model.ErrorMessageFor("Code")</div>
+
+            <!-- Upload assets / copy URLs -->
+            <div id="uploadassets">
+                <div id="uploadassets-dragdrop"></div>
+                <div>
+                    <ul id="uploadassets-urls" class="list-group">
+                        @foreach (var mediaItem in Model.Form.MediaItems)
+                        {
+                            <li class="list-group-item">
+                                <a target="_blank" class="text-secondary"
+                                    href="@RelativeUrlBuilder.MediaRedirectToFileUrl(@mediaItem.ObjectKey)">
+                                    @mediaItem.FileName
+                                </a>
+                                |
+                                <a href="javascript:void(0);" class="text-primary" data-id="@mediaItem.ObjectKey"
+                                    data-copyas="public">
+                                    Copy as public
+                                </a>
+                                |
+                                <a href="javascript:void(0);" class="text-primary" data-id="@mediaItem.ObjectKey"
+                                    data-copyas="redirect">
+                                    Copy as redirect
+                                </a>
+                            </li>
+                        }
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    <input type="hidden" asp-for="Form.Id">
+    <input type="hidden" asp-for="Form.IsBuiltInTemplate">
+    <button type="submit" class="btn btn-success mt-4">Publish changes</button>
+</form>
+<partial name="_InsertVariableMenu.cshtml" model="Model.Form.TemplateVariables" />
+
+<script type="module">
+    import { 
+        EditorState,
+        EditorView,
+        basicSetup,
+        html,
+        javascript,
+        css,
+        indentWithTab,
+        keymap
+    } from '/raytha_admin/lib/codemirror/codemirror-bundle.js';
+
+    // --- Base layout toggle (vanilla JS) ---
+    function setupBaseLayoutToggle() {
+        const checkbox = document.getElementById('Form_IsBaseLayout');
+        const instructions = document.getElementById('isBaseLayoutInstructions');
+        const accessList = document.getElementById('templateAccessList');
+        const allowNewTypes = document.getElementById('allowAccessForNewContentTypes');
+        if (!checkbox || !instructions || !accessList || !allowNewTypes) return;
+
+        const applyState = () => {
+            const isChecked = !!checkbox.checked;
+            // mimic old Stimulus logic
+            instructions.hidden = !isChecked ? true : false;
+            accessList.hidden = isChecked ? true : false;
+            allowNewTypes.hidden = isChecked ? true : false;
+            // ensure form value is "true"/"false" as strings
+            checkbox.value = isChecked ? 'true' : 'false';
+        };
+
+        checkbox.addEventListener('change', applyState, { passive: true });
+        // run on load
+        applyState();
+    }
+
+    // --- CodeMirror editor (already vanilla) ---
+    const startState = EditorState.create({
+        doc: @Html.Raw(Json.Serialize(Model.Form.Content ?? string.Empty)),
+        extensions: [
+            basicSetup,
+            html({
+                matchClosingTags: true,
+                autoCloseTags: true,
+                codeLanguages: [javascript(), css()]
+            }),
+            keymap.of([indentWithTab]),
+            EditorView.updateListener.of((update) => {
+                if (update.docChanged) {
+                    const el = document.getElementById('Form_Content');
+                    if (el) el.value = view.state.doc.toString();
+                }
+            })
+        ],
+    });
+
+    const view = new EditorView({
+        state: startState,
+        parent: document.getElementById('editorContainer')
+    });
+
+    // Initialize vanilla hooks
+    document.addEventListener('DOMContentLoaded', function () {
+        setupBaseLayoutToggle();
+        // Note: Copy asset links functionality is handled by FileUpload partial
+    });
+</script>
+
+<partial name="_Partials/FileUpload" model="uploadOptions" />

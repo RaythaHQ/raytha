@@ -1,0 +1,444 @@
+@page "/raytha/{contentTypeDeveloperName}/{viewId?}"
+@using Raytha.Web.Services
+@inject IAuthorizationService AuthorizationService
+@inject ICurrentOrganization CurrentOrganization
+@model Raytha.Web.Areas.Admin.Pages.ContentItems.Index
+
+@{
+    var pageTitle = $"{Model.CurrentView.ContentType.LabelPlural} > {Model.CurrentView.Label}";
+    Layout = "SidebarLayout";
+    ViewData["Title"] = pageTitle;
+    ViewData["ActiveMenu"] = Model.CurrentView.ContentType.DeveloperName;
+
+    var columnsAsList = Model.CurrentView.Columns.ToList();
+    var backToListUrl = Url.Page(RouteNames.ContentItems.Index, new
+    {
+        search = Model.ListView.Search,
+        orderBy =
+    Model.ListView.OrderByAsString,
+        pageNumber = Model.ListView.PageNumber,
+        pageSize = Model.ListView.PageSize
+    });
+}
+
+<style>
+    table thead th:last-child {
+        position: sticky;
+        right: 0;
+        z-index: 2;
+        background-color: white;
+    }
+
+    table tbody td:last-child {
+        position: sticky;
+        right: 0;
+        z-index: 2;
+        background-color: white;
+    }
+</style>
+
+<partial name="_Partials/PageHeading" model='ViewData["Title"]' />
+
+<ul class="nav nav-tabs">
+    <li class="nav-item dropdown">
+        <a class="nav-link active dropdown-toggle" data-bs-toggle="dropdown" href="#" role="button"
+            aria-expanded="false">
+            <svg class="icon icon-xs" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+            </svg> @Model.CurrentView.Label
+            <svg class="icon icon-xs" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                <path fill-rule="evenodd"
+                    d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                    clip-rule="evenodd"></path>
+            </svg>
+        </a>
+        <ul class="dropdown-menu">
+            @if (Model.CurrentViewIsFavorite)
+            {
+                <li>
+                    <form method="post" asp-page="@RouteNames.ContentTypes.Views.ToggleFavorite"
+                        asp-page-handler="Unfavorite"
+                        asp-route-contentTypeDeveloperName="@Model.CurrentView.ContentType.DeveloperName"
+                        asp-route-viewId="@Model.CurrentView.Id">
+                        <button class="dropdown-item">
+                            <svg class="icon icon-xs" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                                xmlns="http://www.w3.org/2000/svg">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z">
+                                </path>
+                            </svg>
+                            Unfavorite view
+                        </button>
+                    </form>
+                </li>
+            }
+            else
+            {
+                <li>
+                    <form method="post" asp-page="@RouteNames.ContentTypes.Views.ToggleFavorite" asp-page-handler="Favorite"
+                        asp-route-contentTypeDeveloperName="@Model.CurrentView.ContentType.DeveloperName"
+                        asp-route-viewId="@Model.CurrentView.Id">
+                        <button class="dropdown-item">
+                            <svg class="icon icon-xs" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                                xmlns="http://www.w3.org/2000/svg">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z">
+                                </path>
+                            </svg>
+                            Favorite view
+                        </button>
+                    </form>
+                </li>
+            }
+
+            @if ((await AuthorizationService.AuthorizeAsync(User, Model.CurrentView.ContentType.DeveloperName,
+                        ContentItemOperations.Edit)).Succeeded)
+            {
+                <li><a class="dropdown-item" asp-page="@RouteNames.ContentTypes.Views.Edit"
+                        asp-route-backToListUrl="@backToListUrl"
+                        asp-route-contentTypeDeveloperName="@Model.CurrentView.ContentType.DeveloperName"
+                        asp-route-id="@Model.CurrentView.Id"><svg class="icon icon-xs" fill="none" stroke="currentColor"
+                            viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z">
+                            </path>
+                        </svg> Change name and description</a></li>
+                <li>
+                    <hr class="dropdown-divider">
+                </li>
+                <li>
+                    <form method="post" asp-page="@RouteNames.ContentTypes.Views.Delete"
+                        asp-route-contentTypeDeveloperName="@Model.CurrentView.ContentType.DeveloperName"
+                        asp-route-viewId="@Model.CurrentView.Id">
+                        <button class="dropdown-item text-danger"
+                            onclick="return confirm('Delete this view? This cannot be undone.');">
+                            <svg class="icon icon-xs" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                                xmlns="http://www.w3.org/2000/svg">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
+                                </path>
+                            </svg>
+                            Remove view
+                        </button>
+                    </form>
+                </li>
+            }
+
+            <li>
+                <hr class="dropdown-divider">
+            </li>
+
+            @if ((await AuthorizationService.AuthorizeAsync(User, Model.CurrentView.ContentType.DeveloperName,
+                        ContentItemOperations.Edit)).Succeeded)
+            {
+                <li><a class="dropdown-item" asp-page="@RouteNames.ContentTypes.Views.Create"
+                        asp-route-backToListUrl="@backToListUrl"
+                        asp-route-contentTypeDeveloperName="@Model.CurrentView.ContentType.DeveloperName"
+                        asp-route-duplicateFromId="@Model.CurrentView.Id"><svg class="icon icon-xs" fill="none"
+                            stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z">
+                            </path>
+                        </svg> Duplicate view</a></li>
+                <li><a class="dropdown-item" asp-page="@RouteNames.ContentTypes.Views.Create"
+                        asp-route-backToListUrl="@backToListUrl"
+                        asp-route-contentTypeDeveloperName="@Model.CurrentView.ContentType.DeveloperName"><svg
+                            class="icon icon-xs" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                            xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M9 13h6m-3-3v6m-9 1V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z">
+                            </path>
+                        </svg> Create view</a></li>
+            }
+
+            <li><a class="dropdown-item" asp-page="@RouteNames.ContentTypes.Views.Index"
+                    asp-route-contentTypeDeveloperName="@Model.CurrentView.ContentType.DeveloperName"><svg
+                        class="icon icon-xs" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                        xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M4 6h16M4 10h16M4 14h16M4 18h16"></path>
+                    </svg> All views</a></li>
+            @if (Model.HasFavorites)
+            {
+                <li>
+                    <hr class="dropdown-divider">
+                </li>
+                <li><span class="dropdown-item-text raytha-dropdown-text">Favorite views</span></li>
+                foreach (var favorite in Model.FavoriteViews)
+                {
+                    <li>
+                        <a class="dropdown-item" asp-page="@RouteNames.ContentItems.Index"
+                            asp-route-contentTypeDeveloperName="@Model.CurrentView.ContentType.DeveloperName"
+                            asp-route-viewId="@favorite.Id">
+                            @if (favorite.Id == Model.CurrentView.Id)
+                            {
+                                <strong>@favorite.Label</strong>
+                            }
+                            else
+                            {
+                                @favorite.Label
+                            }
+                        </a>
+                    </li>
+                }
+            }
+        </ul>
+    </li>
+
+    @if ((await AuthorizationService.AuthorizeAsync(User, Model.CurrentView.ContentType.DeveloperName,
+        ContentItemOperations.Config)).Succeeded)
+    {
+        <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" data-bs-toggle="dropdown" href="#" role="button" aria-expanded="false">
+                <svg class="icon icon-xs" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z">
+                    </path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                </svg> Settings
+                <svg class="icon icon-xs" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                    <path fill-rule="evenodd"
+                        d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                        clip-rule="evenodd"></path>
+                </svg>
+            </a>
+            <ul class="dropdown-menu">
+                <li><a class="dropdown-item" asp-page="@RouteNames.ContentTypes.Configuration"
+                        asp-route-contentTypeDeveloperName="@Model.CurrentView.ContentType.DeveloperName"><svg
+                            class="icon icon-xs" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                            xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z">
+                            </path>
+                        </svg> Configuration</a></li>
+                <li><a class="dropdown-item" asp-page="@RouteNames.ContentTypes.Fields.Index"
+                        asp-route-contentTypeDeveloperName="@Model.CurrentView.ContentType.DeveloperName"><svg
+                            class="icon icon-xs" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                            xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z">
+                            </path>
+                        </svg> Fields</a></li>
+                <li><a class="dropdown-item" asp-page="@RouteNames.ContentTypes.DeletedContentItemsList"
+                        asp-route-contentTypeDeveloperName="@Model.CurrentView.ContentType.DeveloperName"><svg
+                            class="icon icon-xs" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                            xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
+                            </path>
+                        </svg> Deleted @Model.CurrentView.ContentType.LabelPlural.ToLower()</a></li>
+            </ul>
+        </li>
+    }
+
+</ul>
+
+<nav class="navbar navbar-expand-lg navbar-light raytha-view-nav">
+    <div class="container-fluid">
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                <li class="nav-item dropdown">
+                    <button class="btn btn-gray-800 d-inline-flex align-items-center me-2 dropdown-toggle"
+                        data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        <svg class="icon icon-xs me-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                            xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                        </svg>
+                        New task
+                    </button>
+                    <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+                        @if ((await AuthorizationService.AuthorizeAsync(User,
+                                                Model.CurrentView.ContentType.DeveloperName, ContentItemOperations.Edit)).Succeeded)
+                        {
+                            <li>
+                                <a class="dropdown-item" asp-page="@RouteNames.ContentItems.Create"
+                                    asp-route-contentTypeDeveloperName="@Model.CurrentView.ContentType.DeveloperName"
+                                    asp-route-backToListUrl="@backToListUrl">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                        stroke-width="1.5" stroke="currentColor" class="icon icon-xs">
+                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                            d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25zM6.75 12h.008v.008H6.75V12zm0 3h.008v.008H6.75V15zm0 3h.008v.008H6.75V18z" />
+                                    </svg>
+                                    Create @Model.CurrentView.ContentType.LabelSingular.ToLower()</a>
+                            </li>
+                        }
+                        <li>
+                            <a class="dropdown-item" asp-page="@RouteNames.ContentTypes.Views.BeginExportToCsv"
+                                asp-route-contentTypeDeveloperName="@Model.CurrentView.ContentType.DeveloperName"
+                                asp-route-viewId="@Model.CurrentView.Id" asp-route-backToListUrl="@backToListUrl">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                    stroke-width="1.5" stroke="currentColor" class="icon icon-xs">
+                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                        d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
+                                </svg>
+                                Export to CSV
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" asp-page="@RouteNames.ContentTypes.BeginImportFromCsv"
+                                asp-route-contentTypeDeveloperName="@Model.CurrentView.ContentType.DeveloperName"
+                                asp-route-backToListUrl="@backToListUrl">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                    stroke-width="1.5" stroke="currentColor" class="icon icon-xs">
+                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                        d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+                                </svg>
+                                Import from CSV
+                            </a>
+                        </li>
+                    </ul>
+                </li>
+                @if ((await AuthorizationService.AuthorizeAsync(User, Model.CurrentView.ContentType.DeveloperName,
+                                ContentItemOperations.Edit)).Succeeded)
+                {
+                    <li class="nav-item">
+                        @if (Model.CurrentView.IsPublished)
+                        {
+                            @if (Model.CurrentView.Id == CurrentOrganization.HomePageId)
+                            {
+                                <a class="nav-link" asp-page="@RouteNames.ContentTypes.Views.PublicSettings"
+                                    asp-route-contentTypeDeveloperName="@Model.CurrentView.ContentType.DeveloperName"
+                                    asp-route-viewId="@Model.CurrentView.Id" asp-route-backToListUrl="@backToListUrl">
+                                    <svg class="icon icon-xs" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                        stroke-width="1.5" stroke="green" class="w-6 h-6">
+                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                            d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" />
+                                    </svg>
+                                    Published
+                                </a>
+                            }
+                            else
+                            {
+                                <a class="nav-link" asp-page="@RouteNames.ContentTypes.Views.PublicSettings"
+                                    asp-route-contentTypeDeveloperName="@Model.CurrentView.ContentType.DeveloperName"
+                                    asp-route-viewId="@Model.CurrentView.Id" asp-route-backToListUrl="@backToListUrl"><svg
+                                        class="icon icon-sm" fill="none" stroke="green" viewBox="0 0 24 24"
+                                        xmlns="http://www.w3.org/2000/svg">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M5.636 18.364a9 9 0 010-12.728m12.728 0a9 9 0 010 12.728m-9.9-2.829a5 5 0 010-7.07m7.072 0a5 5 0 010 7.07M13 12a1 1 0 11-2 0 1 1 0 012 0z">
+                                        </path>
+                                    </svg>Published </a>
+                            }
+                        }
+                        else
+                        {
+                            <a class="nav-link" asp-page="@RouteNames.ContentTypes.Views.PublicSettings"
+                                asp-route-contentTypeDeveloperName="@Model.CurrentView.ContentType.DeveloperName"
+                                asp-route-viewId="@Model.CurrentView.Id" asp-route-backToListUrl="@backToListUrl"><svg
+                                    class="icon icon-sm" fill="none" stroke="red" viewBox="0 0 24 24"
+                                    xmlns="http://www.w3.org/2000/svg">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M5.636 18.364a9 9 0 010-12.728m12.728 0a9 9 0 010 12.728m-9.9-2.829a5 5 0 010-7.07m7.072 0a5 5 0 010 7.07M13 12a1 1 0 11-2 0 1 1 0 012 0z">
+                                    </path>
+                                </svg>Unpublished </a>
+                        }
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" data-bs-toggle="dropdown" href="#" role="button"
+                            aria-expanded="false"><svg class="icon icon-sm" fill="none" stroke="currentColor"
+                                viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M5 12h.01M12 12h.01M19 12h.01M6 12a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0z">
+                                </path>
+                            </svg></a>
+                        <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+                            <li><a class="dropdown-item" asp-page="@RouteNames.ContentTypes.Views.Columns"
+                                    asp-route-contentTypeDeveloperName="@Model.CurrentView.ContentType.DeveloperName"
+                                    asp-route-viewId="@Model.CurrentView.Id" asp-route-backToListUrl="@backToListUrl"><svg
+                                        class="icon icon-xs" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                                        xmlns="http://www.w3.org/2000/svg">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4">
+                                        </path>
+                                    </svg> Columns</a></li>
+                            <li><a class="dropdown-item" asp-page="@RouteNames.ContentTypes.Views.Filter"
+                                    asp-route-contentTypeDeveloperName="@Model.CurrentView.ContentType.DeveloperName"
+                                    asp-route-viewId="@Model.CurrentView.Id" asp-route-backToListUrl="@backToListUrl"><svg
+                                        class="icon icon-xs" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                                        xmlns="http://www.w3.org/2000/svg">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z">
+                                        </path>
+                                    </svg> Filter</a></li>
+                            <li><a class="dropdown-item" asp-page="@RouteNames.ContentTypes.Views.Sort"
+                                    asp-route-contentTypeDeveloperName="@Model.CurrentView.ContentType.DeveloperName"
+                                    asp-route-viewId="@Model.CurrentView.Id" asp-route-backToListUrl="@backToListUrl"><svg
+                                        class="icon icon-xs" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                                        xmlns="http://www.w3.org/2000/svg">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M3 4h13M3 8h9m-9 4h9m5-4v12m0 0l-4-4m4 4l4-4"></path>
+                                    </svg> Sort</a></li>
+                        </ul>
+                    </li>
+                }
+
+            </ul>
+            <form class="d-flex">
+                <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search" name="search"
+                    value="@Model.ListView.Search">
+                <button class="btn btn-outline-success" type="submit">Search</button>
+            </form>
+        </div>
+    </div>
+</nav>
+
+<div class="raytha-data-card mb-4">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-centered table-nowrap mb-0 rounded">
+                <thead class="thead-light">
+                    <tr>
+                        @foreach (var column in columnsAsList)
+                        {
+                            <th class="border-0 @(columnsAsList.IndexOf(column) == 0 ? "rounded-start" : string.Empty)">
+                                @column
+                            </th>
+                        }
+                        <th class="border-0 rounded-end">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model.ListView.Items)
+                    {
+                        <tr>
+                            @foreach (var column in columnsAsList)
+                            {
+                                if (item.FieldValues.ContainsKey(column))
+                                {
+                                    <td>@item.FieldValues[column]</td>
+                                }
+                                else
+                                {
+                                    <td></td>
+                                }
+                            }
+                            <td class="sticky-table-headers__sticky"><a asp-page="@RouteNames.ContentItems.Edit"
+                                    asp-route-contentTypeDeveloperName="@Model.CurrentView.ContentType.DeveloperName"
+                                    asp-route-id="@item.Id" asp-route-backToListUrl="@backToListUrl">
+                                    Edit</a>
+                                @if (item.IsHomePage)
+                                {
+                                    <svg class="icon icon-xs" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                        stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                            d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" />
+                                    </svg>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+            <partial name="_Partials/TablePagination" model="Model.ListView" />
+        </div>
+    </div>
+</div>

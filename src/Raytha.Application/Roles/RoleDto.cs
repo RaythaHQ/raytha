@@ -14,7 +14,8 @@ public record RoleDto : BaseAuditableEntityDto
     public Dictionary<
         string,
         IEnumerable<string>
-    > ContentTypePermissionsFriendlyNames { get; init; } = null!;
+    > ContentTypePermissionsFriendlyNames
+    { get; init; } = null!;
 
     public static Expression<Func<Role, RoleDto>> GetProjection()
     {

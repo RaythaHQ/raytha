@@ -10,7 +10,8 @@ public class GetThemes
 {
     public record Query
         : GetPagedEntitiesInputDto,
-            IRequest<IQueryResponseDto<ListResultDto<ThemeDto>>> { }
+            IRequest<IQueryResponseDto<ListResultDto<ThemeDto>>>
+    { }
 
     public class Handler : IRequestHandler<Query, IQueryResponseDto<ListResultDto<ThemeDto>>>
     {

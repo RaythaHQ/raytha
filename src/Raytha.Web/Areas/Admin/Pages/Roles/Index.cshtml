@@ -1,0 +1,56 @@
+@page "/raytha/settings/roles"
+@model Raytha.Web.Areas.Admin.Pages.Roles.Index
+
+@{
+    var pageTitle = "Roles";
+    Layout = "AdminsAndRolesLayout";
+    ViewData["Title"] = pageTitle;
+    ViewData["ActiveMenu"] = pageTitle;
+    ViewData["ExpandSettingsMenu"] = true;
+}
+
+@(await Html.PartialAsync("_Partials/TableCreateAndSearchBar", new BaseTableCreateAndSearchBarViewModel
+{
+    Pagination = Model.ListView,
+    EntityName = "role",
+    CreateActionName = RouteNames.Roles.Create
+}))
+
+<div class="raytha-data-card mb-4">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-centered table-nowrap mb-0 rounded">
+                <thead class="thead-light">
+                    <tr>
+                        @(await Html.PartialAsync("_Partials/TableColumnHeader", new BaseTableColumnHeaderViewModel()
+                        {
+                            Pagination = Model.ListView,
+                            PropertyName = "Label",
+                            IsFirst = true,
+                            DisplayName = ViewModelExtensions.GetDisplayName<Index.RolesListItemViewModel>(p => p.Label)
+                        }))
+                        @(await Html.PartialAsync("_Partials/TableColumnHeader", new BaseTableColumnHeaderViewModel()
+                        {
+                            Pagination = Model.ListView,
+                            PropertyName = "DeveloperName",
+                            DisplayName = ViewModelExtensions.GetDisplayName<Index.RolesListItemViewModel>(p =>
+                            p.DeveloperName)
+                        }))
+                        <th class="border-0 rounded-end">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model.ListView.Items)
+                    {
+                        <tr>
+                            <td>@item.Label</td>
+                            <td>@item.DeveloperName</td>
+                            <td><a asp-page="@RouteNames.Roles.Edit" asp-route-id="@item.Id">Edit</a></td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+            <partial name="_Partials/TablePagination" model="@Model.ListView" />
+        </div>
+    </div>
+</div>
