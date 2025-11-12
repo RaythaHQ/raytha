@@ -305,10 +305,23 @@ public class LoginWithSaml
         {
             get
             {
-                bool status = true;
-
                 var manager = GetNamespaceManager();
+
+                // Enforce single assertion rule to prevent injection attacks
+                XmlNodeList allAssertions = xmlDoc.SelectNodes("//saml:Assertion", manager);
+                if (allAssertions == null || allAssertions.Count != 1)
+                {
+                    return false; // Reject: zero assertions or multiple assertions
+                }
+
+                // Verify signature exists
                 XmlNodeList nodeList = xmlDoc.SelectNodes("//ds:Signature", manager);
+                if (nodeList == null || nodeList.Count == 0)
+                {
+                    return false; // No signature found
+                }
+
+                bool status = true;
 
                 SignedXml signedXml = new SignedXml(xmlDoc);
                 signedXml.LoadXml((XmlElement)nodeList[0]);
