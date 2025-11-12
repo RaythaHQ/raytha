@@ -83,7 +83,7 @@ function initSortable() {
   if (typeof Sortable === 'undefined') {
     // Load SortableJS dynamically
     const script = document.createElement('script');
-    script.src = 'https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js';
+    script.src = '/raytha_admin/lib/sortablejs/Sortable.min.js';
     script.onload = () => {
       new Sortable(listEl, {
         animation: 150,

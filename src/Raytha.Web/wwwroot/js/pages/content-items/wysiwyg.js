@@ -342,8 +342,8 @@ async function initUppyForModal(containerId, config) {
         return null;
     }
 
-    // Import Uppy from CDN (same version as attachment.js)
-    const { Uppy, Dashboard, XHRUpload, AwsS3 } = await import('https://releases.transloadit.com/uppy/v4.13.3/uppy.min.mjs');
+    // Import Uppy from local library (same version as attachment.js)
+    const { Uppy, Dashboard, XHRUpload, AwsS3 } = await import('/raytha_admin/lib/uppy/dist/uppy.min.mjs');
 
     // Parse allowed MIME types
     const allowedFileTypes = config.allowedFileTypes || null;
@@ -1344,6 +1344,7 @@ export async function initWysiwygField(fieldElement, config) {
     }
 
     // TipTap imports - these will be available via the importmap defined in the page
+    /*
     const { Editor, Node, Extension } = await import('https://esm.sh/@tiptap/core@2.1.13');
     const StarterKit = await import('https://esm.sh/@tiptap/starter-kit@2.1.13');
     const Link = await import('https://esm.sh/@tiptap/extension-link@2.1.13');
@@ -1360,6 +1361,26 @@ export async function initWysiwygField(fieldElement, config) {
     const TextAlign = await import('https://esm.sh/@tiptap/extension-text-align@2.1.13');
     const Color = await import('https://esm.sh/@tiptap/extension-color@2.1.13');
     const Highlight = await import('https://esm.sh/@tiptap/extension-highlight@2.1.13');
+    */
+    const {
+        Editor,
+        Node,
+        Extension,
+        StarterKit,
+        Link,
+        Image,
+        Table,
+        TableRow,
+        TableCell,
+        TableHeader,
+        Underline,
+        Subscript,
+        Superscript,
+        TextStyle,
+        FontFamily,
+        TextAlign,
+        Color,
+        Highlight } = await import('/raytha_admin/lib/tiptap/tiptap-bundle.js');
 
     // Create custom Video node
     const Video = createVideoNode(Node);
@@ -1496,35 +1517,35 @@ export async function initWysiwygField(fieldElement, config) {
     const editor = new Editor({
         element: editorWrapper,
         extensions: [
-            StarterKit.default,
-            Link.default.configure({
+            StarterKit,
+            Link.configure({
                 openOnClick: false,
                 HTMLAttributes: {
                     class: 'link-primary',
                 },
             }),
-            Image.default.configure({
+            Image.configure({
                 HTMLAttributes: {
                     class: 'img-fluid',
                 },
             }),
-            Table.default.configure({
+            Table.configure({
                 resizable: true,
             }),
-            TableRow.default,
-            TableCell.default,
-            TableHeader.default,
-            Underline.default,
-            Subscript.default,
-            Superscript.default,
-            TextStyle.default,
-            FontFamily.default,
+            TableRow,
+            TableCell,
+            TableHeader,
+            Underline,
+            Subscript,
+            Superscript,
+            TextStyle,
+            FontFamily,
             FontSize,
-            TextAlign.default.configure({
+            TextAlign.configure({
                 types: ['heading', 'paragraph'],
             }),
-            Color.default,
-            Highlight.default.configure({
+            Color,
+            Highlight.configure({
                 multicolor: true,
             }),
             Video,

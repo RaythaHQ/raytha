@@ -11,7 +11,7 @@
 {
     <!-- DIRECT upload to your app with XHRUpload -->
     <script type="module">
-        import { Uppy, Dashboard, XHRUpload } from "https://releases.transloadit.com/uppy/v4.13.3/uppy.min.mjs"
+        import { Uppy, Dashboard, XHRUpload } from "/raytha_admin/lib/uppy/dist/uppy.min.mjs"
 
         const dragDropSelector = '@Model.DragDropZoneTarget';
         const listSelector = '@Model.CopyUrlsTarget';
@@ -93,7 +93,7 @@ else
 {
     <!-- CLOUD upload via AwsS3, then POST to create-after-upload -->
     <script type="module">
-        import { Uppy, Dashboard, AwsS3 } from "https://releases.transloadit.com/uppy/v4.13.3/uppy.min.mjs"
+        import { Uppy, Dashboard, AwsS3 } from "/raytha_admin/lib/uppy/dist/uppy.min.mjs"
 
         const dragDropSelector = '@Model.DragDropZoneTarget';
         const listSelector = '@Model.CopyUrlsTarget';
@@ -229,7 +229,7 @@ else
     </script>
 }
 
-<link href="https://releases.transloadit.com/uppy/v4.13.3/uppy.min.css" rel="stylesheet">
+<link href="~/raytha_admin/lib/uppy/dist/uppy.min.css" rel="stylesheet">
 
 
 <script type="module">

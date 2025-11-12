@@ -32,8 +32,8 @@ export async function initAttachmentField(fieldElement, config) {
     // Setup remove button handler function that will be used throughout
     let setupRemoveButton;
 
-    // Import Uppy from CDN
-    const { Uppy, Dashboard, XHRUpload, AwsS3 } = await import('https://releases.transloadit.com/uppy/v4.13.3/uppy.min.mjs');
+    // Import Uppy from local library
+    const { Uppy, Dashboard, XHRUpload, AwsS3 } = await import('/raytha_admin/lib/uppy/dist/uppy.min.mjs');
 
     // Parse allowed MIME types
     const allowedFileTypes = config.allowedMimeTypes

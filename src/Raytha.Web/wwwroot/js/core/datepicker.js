@@ -145,12 +145,12 @@ export const loadFlatpickr = () => {
         // Load CSS
         const link = document.createElement('link');
         link.rel = 'stylesheet';
-        link.href = 'https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.css';
+        link.href = '/raytha_admin/lib/flatpickr/dist/flatpickr.min.css';
         document.head.appendChild(link);
 
         // Load JS
         const script = document.createElement('script');
-        script.src = 'https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.js';
+        script.src = '/raytha_admin/lib/flatpickr/dist/flatpickr.min.js';
         script.onload = () => {
             console.log('Flatpickr loaded successfully');
             resolve(true);
