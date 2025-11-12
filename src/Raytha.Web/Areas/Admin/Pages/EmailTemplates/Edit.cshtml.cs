@@ -21,7 +21,8 @@ public class Edit : BaseAdminPageModel, ISubActionViewModel
     public Dictionary<
         string,
         IEnumerable<IEmailTemplatesInsertVariableListItemViewModel>
-    > TemplateVariables { get; set; }
+    > TemplateVariables
+    { get; set; }
 
     public async Task<IActionResult> OnGet(string id)
     {

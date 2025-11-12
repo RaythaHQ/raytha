@@ -384,7 +384,8 @@ public class Create : BaseAdminPageModel
         public Dictionary<
             string,
             IEnumerable<IWebTemplatesInsertVariableListItemViewModel>
-        > TemplateVariables { get; set; }
+        > TemplateVariables
+        { get; set; }
     }
 
     public record WebTemplatesInsertVariableListItemViewModel

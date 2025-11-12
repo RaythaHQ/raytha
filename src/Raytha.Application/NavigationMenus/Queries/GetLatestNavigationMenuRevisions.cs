@@ -8,7 +8,8 @@ namespace Raytha.Application.NavigationMenus.Queries;
 public class GetLatestNavigationMenuRevisions
 {
     public record Query
-        : IRequest<IQueryResponseDto<IReadOnlyCollection<NavigationMenuRevisionDto>>> { }
+        : IRequest<IQueryResponseDto<IReadOnlyCollection<NavigationMenuRevisionDto>>>
+    { }
 
     public class Handler
         : IRequestHandler<Query, IQueryResponseDto<IReadOnlyCollection<NavigationMenuRevisionDto>>>

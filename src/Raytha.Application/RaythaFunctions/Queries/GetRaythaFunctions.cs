@@ -10,7 +10,8 @@ public class GetRaythaFunctions
 {
     public record Query
         : GetPagedEntitiesInputDto,
-            IRequest<IQueryResponseDto<ListResultDto<RaythaFunctionDto>>> { }
+            IRequest<IQueryResponseDto<ListResultDto<RaythaFunctionDto>>>
+    { }
 
     public class Handler
         : IRequestHandler<Query, IQueryResponseDto<ListResultDto<RaythaFunctionDto>>>

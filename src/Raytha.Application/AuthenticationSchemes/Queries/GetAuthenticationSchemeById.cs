@@ -9,7 +9,8 @@ public class GetAuthenticationSchemeById
 {
     public record Query
         : GetEntityByIdInputDto,
-            IRequest<IQueryResponseDto<AuthenticationSchemeDto>> { }
+            IRequest<IQueryResponseDto<AuthenticationSchemeDto>>
+    { }
 
     public class Handler : IRequestHandler<Query, IQueryResponseDto<AuthenticationSchemeDto>>
     {

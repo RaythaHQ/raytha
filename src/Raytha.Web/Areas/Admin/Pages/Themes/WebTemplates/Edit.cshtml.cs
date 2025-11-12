@@ -430,7 +430,8 @@ public class Edit : BaseAdminPageModel, ISubActionViewModel
         public Dictionary<
             string,
             IEnumerable<IWebTemplatesInsertVariableListItemViewModel>
-        > TemplateVariables { get; set; }
+        > TemplateVariables
+        { get; set; }
     }
 
     public record WebTemplatesInsertVariableListItemViewModel

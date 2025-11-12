@@ -21,7 +21,8 @@ public class Reorder : BaseAdminPageModel, ISubActionViewModel
     public IDictionary<
         string,
         List<NavigationMenuItemsListItemViewModel>
-    > NavigationMenuItemsByParentNavigationMenuItemId { get; set; }
+    > NavigationMenuItemsByParentNavigationMenuItemId
+    { get; set; }
     public string NavigationMenuItemId { get; set; }
     public bool IsNavigationMenuItem { get; set; }
 

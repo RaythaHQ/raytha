@@ -53,16 +53,6 @@ public class BreadcrumbsTagHelper : TagHelper
     {
         var breadcrumbs = ViewContext.ViewData["Breadcrumbs"] as IEnumerable<BreadcrumbNode>;
 
-        // Debug: Check all ViewData keys
-        Console.WriteLine(
-            $"[Breadcrumbs Debug] ViewData Keys: {string.Join(", ", ViewContext.ViewData.Keys)}"
-        );
-        Console.WriteLine($"[Breadcrumbs Debug] Breadcrumbs is null: {breadcrumbs == null}");
-        if (breadcrumbs != null)
-        {
-            Console.WriteLine($"[Breadcrumbs Debug] Breadcrumbs count: {breadcrumbs.Count()}");
-        }
-
         if (breadcrumbs == null || !breadcrumbs.Any())
         {
             output.SuppressOutput();
@@ -81,16 +71,8 @@ public class BreadcrumbsTagHelper : TagHelper
         var html = new StringBuilder();
         html.AppendLine("<ol class=\"breadcrumb\">");
 
-        Console.WriteLine(
-            $"[Breadcrumbs Debug] Starting to render {breadcrumbs.Count()} breadcrumbs"
-        );
-
         foreach (var breadcrumb in breadcrumbs)
         {
-            Console.WriteLine(
-                $"[Breadcrumbs Debug] Rendering breadcrumb: {breadcrumb.Label}, Active: {breadcrumb.IsActive}, RouteName: {breadcrumb.RouteName}"
-            );
-
             var cssClasses = "breadcrumb-item";
             if (breadcrumb.IsActive)
             {
@@ -116,9 +98,6 @@ public class BreadcrumbsTagHelper : TagHelper
             {
                 // Generate link
                 var url = GenerateUrl(breadcrumb.RouteName, breadcrumb.RouteValues);
-                Console.WriteLine(
-                    $"[Breadcrumbs Debug] Generated URL for {breadcrumb.Label}: {url}"
-                );
                 html.Append($"<a href=\"{url}\">{breadcrumb.Label}</a>");
             }
             else
@@ -133,9 +112,6 @@ public class BreadcrumbsTagHelper : TagHelper
         html.AppendLine("</ol>");
 
         var htmlString = html.ToString();
-        Console.WriteLine($"[Breadcrumbs Debug] Final HTML length: {htmlString.Length}");
-        Console.WriteLine($"[Breadcrumbs Debug] Final HTML: {htmlString}");
-
         output.Content.SetHtmlContent(htmlString);
     }
 

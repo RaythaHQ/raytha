@@ -10,7 +10,8 @@ public class GetNavigationMenus
 {
     public record Query
         : GetPagedEntitiesInputDto,
-            IRequest<IQueryResponseDto<ListResultDto<NavigationMenuDto>>> { }
+            IRequest<IQueryResponseDto<ListResultDto<NavigationMenuDto>>>
+    { }
 
     public class Handler
         : IRequestHandler<Query, IQueryResponseDto<ListResultDto<NavigationMenuDto>>>

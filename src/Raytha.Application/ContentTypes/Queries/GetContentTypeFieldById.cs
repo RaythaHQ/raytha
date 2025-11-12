@@ -10,7 +10,8 @@ public class GetContentTypeFieldById
 {
     public record Query
         : GetEntityByIdInputDto,
-            IRequest<IQueryResponseDto<ContentTypeFieldDto>> { }
+            IRequest<IQueryResponseDto<ContentTypeFieldDto>>
+    { }
 
     public class Handler : IRequestHandler<Query, IQueryResponseDto<ContentTypeFieldDto>>
     {
