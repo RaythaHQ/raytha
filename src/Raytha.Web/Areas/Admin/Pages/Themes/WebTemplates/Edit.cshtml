@@ -154,28 +154,17 @@
 </form>
 <partial name="_InsertVariableMenu.cshtml" model="Model.Form.TemplateVariables" />
 
-<script type="importmap">
-  {
-    "imports": {
-      "style-mod": "https://esm.sh/style-mod",
-      "w3c-keyname": "https://esm.sh/w3c-keyname",
-      "crelt": "https://esm.sh/crelt",
-      "@@marijn/find-cluster-break": "https://esm.sh/@@marijn/find-cluster-break",
-      "@@lezer/": "https://esm.sh/*@@lezer/",
-      "@@codemirror/": "https://esm.sh/*@@codemirror/",
-      "codemirror": "https://esm.sh/*codemirror"
-    }
-  }
-</script>
-
 <script type="module">
-    import { EditorState } from '@@codemirror/state';
-    import { EditorView, basicSetup } from 'codemirror';
-    import { html } from '@@codemirror/lang-html';
-    import { javascript } from '@@codemirror/lang-javascript';
-    import { css } from '@@codemirror/lang-css';
-    import { indentWithTab } from '@@codemirror/commands';
-    import { keymap } from '@@codemirror/view';
+    import { 
+        EditorState,
+        EditorView,
+        basicSetup,
+        html,
+        javascript,
+        css,
+        indentWithTab,
+        keymap
+    } from '/raytha_admin/lib/codemirror/codemirror-bundle.js';
 
     // --- Base layout toggle (vanilla JS) ---
     function setupBaseLayoutToggle() {

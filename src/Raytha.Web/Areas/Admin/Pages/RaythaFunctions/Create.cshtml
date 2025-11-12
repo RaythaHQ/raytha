@@ -73,26 +73,15 @@
     </div>
 </div>
 
-<script type="importmap">
-  {
-    "imports": {
-      "style-mod": "https://esm.sh/style-mod",
-      "w3c-keyname": "https://esm.sh/w3c-keyname",
-      "crelt": "https://esm.sh/crelt",
-      "@@marijn/find-cluster-break": "https://esm.sh/@@marijn/find-cluster-break",
-      "@@lezer/": "https://esm.sh/*@@lezer/",
-      "@@codemirror/": "https://esm.sh/*@@codemirror/",
-      "codemirror": "https://esm.sh/*codemirror"
-    }
-  }
-</script>
-
 <script type="module">
-    import { EditorState } from '@@codemirror/state';
-    import { EditorView, basicSetup } from 'codemirror';
-    import { javascript } from '@@codemirror/lang-javascript';
-    import { indentWithTab } from '@@codemirror/commands';
-    import { keymap } from '@@codemirror/view';
+    import { 
+        EditorState,
+        EditorView,
+        basicSetup,
+        javascript,
+        indentWithTab,
+        keymap
+    } from '/raytha_admin/lib/codemirror/codemirror-bundle.js';
 
     const startState = EditorState.create({
         doc: @Html.Raw(Json.Serialize(Model.Form.Code)),

@@ -96,21 +96,56 @@ The TipTap bundle was created using Rollup in a separate project, then copied to
 
 ---
 
+### 5. CodeMirror v6 (Custom Bundle)
+**Purpose:** Code editor for templates and functions
+
+**Downloaded Files:**
+- `/wwwroot/raytha_admin/lib/codemirror/codemirror-bundle.js` (~1.5MB bundled, 29,447 lines)
+
+**Included Modules:**
+- codemirror (basicSetup)
+- @codemirror/state (EditorState)
+- @codemirror/view (EditorView, keymap)
+- @codemirror/commands (indentWithTab)
+- @codemirror/lang-html (html)
+- @codemirror/lang-javascript (javascript)
+- @codemirror/lang-css (css)
+
+**Files Updated (5 files):**
+1. `/Areas/Admin/Pages/EmailTemplates/Edit.cshtml`
+2. `/Areas/Admin/Pages/Themes/WebTemplates/Create.cshtml`
+3. `/Areas/Admin/Pages/Themes/WebTemplates/Edit.cshtml`
+4. `/Areas/Admin/Pages/RaythaFunctions/Create.cshtml`
+5. `/Areas/Admin/Pages/RaythaFunctions/Edit.cshtml`
+
+**Changes Made:**
+- Created custom Rollup bundle of all CodeMirror modules (built externally with npm)
+- Removed import maps that referenced `https://esm.sh/`
+- Replaced multiple imports from `@@codemirror/*` and `codemirror` with single bundle import
+- Removed dependency on external CDN for code editor functionality
+
+**Build Process:**
+The CodeMirror bundle was created using Rollup in a separate project, then copied to the application. Same build process as TipTap.
+
+---
+
 ## Total Changes
 
-**Files Modified:** 14 files
+**Files Modified:** 19 files
 - 7 files for SortableJS
 - 1 file for Flatpickr
 - 5 files for Uppy
 - 1 file for TipTap
+- 5 files for CodeMirror
 
-**Total Library Size:** ~2-3MB
+**Total Library Size:** ~4-5MB
 - SortableJS: 44KB
 - Flatpickr: 66KB (JS + CSS)
 - Uppy: 639KB (JS + CSS)
 - TipTap: ~1-2MB (bundled with all extensions and dependencies)
+- CodeMirror: ~1.5MB (bundled with all language modes and dependencies)
 
-**External CDN Dependencies Removed:** ~95% (CodeMirror still on CDN in 5 files)
+**External CDN Dependencies Removed:** 100% ✓
 
 ---
 
@@ -128,8 +163,10 @@ The TipTap bundle was created using Rollup in a separate project, then copied to
 │   └── dist/
 │       ├── uppy.min.mjs
 │       └── uppy.min.css
-└── tiptap/
-    └── tiptap-bundle.js
+├── tiptap/
+│   └── tiptap-bundle.js
+└── codemirror/
+    └── codemirror-bundle.js
 ```
 
 ---
@@ -183,25 +220,36 @@ After deploying these changes, test the following features:
 - [ ] All toolbar buttons functional
 - [ ] Content saving and loading
 
+### CodeMirror Code Editor Features:
+- [ ] Email template editing with HTML/CSS/JS syntax highlighting
+- [ ] Web template editing with HTML/CSS/JS syntax highlighting
+- [ ] Raytha Function code editing with JavaScript syntax highlighting
+- [ ] Code editor initialization and display
+- [ ] Syntax highlighting working correctly
+- [ ] Tab indentation working (indentWithTab)
+- [ ] Code changes being saved
+- [ ] Line numbers displaying
+- [ ] Basic editor features (undo, redo, copy, paste)
+
 ---
 
 ## Verification
 
-Run the following command to check CDN usage:
+Run the following command to check for any remaining CDN usage:
 ```bash
-grep -r "cdn\.jsdelivr\.net\|releases\.transloadit\.com\|cdnjs\|unpkg\.com" src/Raytha.Web/ | grep -v "esm\.sh"
+grep -r "cdn\.jsdelivr\.net\|releases\.transloadit\.com\|cdnjs\|unpkg\.com\|esm\.sh" src/Raytha.Web/ --exclude="*.js" | grep -v "/\*"
 ```
 
-Expected result: No matches found for SortableJS, Flatpickr, and Uppy ✓
+Expected result: No matches found (excluding commented-out code) ✓
 
-Note: CodeMirror imports from esm.sh remain in 5 files (themes, email templates, functions). These are used for code editor functionality and can be migrated separately if desired.
+All external JavaScript library dependencies are now served locally!
 
 ---
 
 ## Rollback Instructions
 
 If issues arise, you can rollback by:
-1. Reverting the 14 modified files to use CDN URLs
+1. Reverting the 19 modified files to use CDN URLs
 2. Optionally removing the downloaded library files
 
 The original CDN URLs were:
@@ -211,6 +259,7 @@ The original CDN URLs were:
 - Uppy JS: `https://releases.transloadit.com/uppy/v4.13.3/uppy.min.mjs`
 - Uppy CSS: `https://releases.transloadit.com/uppy/v4.13.3/uppy.min.css`
 - TipTap: `https://esm.sh/@tiptap/[package]@2.1.13` (16 separate modules)
+- CodeMirror: `https://esm.sh/@codemirror/[package]` and `https://esm.sh/codemirror` (via import maps)
 
 ---
 

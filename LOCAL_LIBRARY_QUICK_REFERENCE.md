@@ -66,6 +66,25 @@ import {
 } from "/raytha_admin/lib/tiptap/tiptap-bundle.js"
 ```
 
+## CodeMirror Bundle Usage
+
+```html
+<script type="module">
+    import { 
+        EditorState,
+        EditorView,
+        basicSetup,
+        html,
+        javascript,
+        css,
+        indentWithTab,
+        keymap
+    } from '/raytha_admin/lib/codemirror/codemirror-bundle.js';
+    
+    // Now use these exports to create your editor...
+</script>
+```
+
 ## Directory Structure
 
 ```
