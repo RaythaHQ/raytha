@@ -347,6 +347,13 @@ public class InitialSetup
                 "*",
                 SearchOption.AllDirectories
             );
+
+            // Filter out compressed files (.br, .gz) that are generated during build/publish
+            var excludedExtensions = new[] { ".br", ".gz" };
+            themeFiles = themeFiles
+                .Where(f => !excludedExtensions.Contains(Path.GetExtension(f)))
+                .ToArray();
+
             foreach (var file in themeFiles)
             {
                 var idForKey = ShortGuid.NewGuid();
