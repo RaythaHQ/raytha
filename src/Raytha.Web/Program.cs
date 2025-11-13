@@ -1,6 +1,7 @@
 //Force build and push
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.OpenApi;
 using Microsoft.Extensions.Hosting;
 
 namespace Raytha.Web;

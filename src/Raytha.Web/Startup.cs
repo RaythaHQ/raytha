@@ -5,16 +5,19 @@ using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.AspNetCore.OpenApi;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Options;
 using Raytha.Application;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Utils;
 using Raytha.Infrastructure.Persistence;
 using Raytha.Web.Middlewares;
+using Scalar.AspNetCore;
 
 namespace Raytha.Web;
 
@@ -37,7 +40,6 @@ public class Startup
         services.AddApplicationServices();
         services.AddInfrastructureServices(Configuration);
         services.AddWebUIServices();
-        services.AddRazorPages();
     }
 
     public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
@@ -45,11 +47,13 @@ public class Startup
         string pathBase = Configuration["PATHBASE"] ?? string.Empty;
         app.UsePathBase(new PathString(pathBase));
         app.UseForwardedHeaders();
-        app.UseExceptionHandler(new ExceptionHandlerOptions
-        {
-            ExceptionHandler = ExceptionsMiddleware.ErrorHandlerDelegate(pathBase, env),
-            AllowStatusCode404Response = true
-        });
+        app.UseExceptionHandler(
+            new ExceptionHandlerOptions
+            {
+                ExceptionHandler = ExceptionsMiddleware.ErrorHandlerDelegate(pathBase, env),
+                AllowStatusCode404Response = true,
+            }
+        );
         app.UseStatusCodePagesWithReExecute($"{pathBase}/raytha/error/{{0}}");
 
         if (!env.IsDevelopment())
@@ -77,6 +81,7 @@ public class Startup
             );
         }
 
+        /*
         app.UseSwagger(c =>
         {
             c.RouteTemplate = "raytha/api/{documentName}/swagger.json";
@@ -87,6 +92,7 @@ public class Startup
             c.SwaggerEndpoint($"{pathBase}/raytha/api/v1/swagger.json", "Raytha API - V1");
             c.RoutePrefix = $"raytha/api";
         });
+        */
 
         app.UseRouting();
         app.UseAuthentication();
@@ -96,6 +102,30 @@ public class Startup
         {
             endpoints.MapRazorPages();
             endpoints.MapControllers();
+            endpoints.MapOpenApi("/raytha/api/{documentName}/swagger.json");
+
+            endpoints.MapScalarApiReference(
+                "/raytha/api",
+                options =>
+                {
+                    options
+                        .WithTitle("Raytha API")
+                        .ForceDarkMode()
+                        .WithClassicLayout()
+                        .ExpandAllTags();
+                    options.WithOpenApiRoutePattern("/raytha/api/{documentName}/swagger.json");
+                    options
+                        .AddPreferredSecuritySchemes("ApiKey")
+                        .AddApiKeyAuthentication(
+                            "X-API-KEY",
+                            (scheme) =>
+                            {
+                                scheme.Name = "ApiKey";
+                                scheme.Name = "X-API-KEY";
+                            }
+                        );
+                }
+            );
         });
 
         bool applyMigrationsOnStartup = Convert.ToBoolean(

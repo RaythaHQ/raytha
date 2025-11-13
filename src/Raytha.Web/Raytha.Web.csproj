@@ -8,9 +8,10 @@
     <RootNamespace>Raytha.Web</RootNamespace>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Fluid.Core" Version="2.22.0" />
-    <PackageReference Include="Fluid.ViewEngine" Version="2.22.0" />
-    <PackageReference Include="Swashbuckle.AspNetCore" Version="8.1.1" />
+    <PackageReference Include="Fluid.Core" Version="2.31.0" />
+    <PackageReference Include="Fluid.ViewEngine" Version="2.31.0" />
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.0" />
+    <PackageReference Include="Scalar.AspNetCore" Version="2.10.3" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Raytha.Application\Raytha.Application.csproj" />

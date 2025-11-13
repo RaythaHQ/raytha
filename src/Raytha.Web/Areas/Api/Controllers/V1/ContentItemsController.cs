@@ -205,7 +205,10 @@ public class ContentItemsController : BaseController
         Policy = RaythaApiAuthorizationHandler.POLICY_PREFIX
             + BuiltInContentTypePermission.CONTENT_TYPE_READ_PERMISSION
     )]
-    public async Task<ActionResult<IQueryResponseDto<RouteDto>>> GetRouteByPath(string routePath)
+    public async Task<ActionResult<IQueryResponseDto<RouteDto>>> GetRouteByPath(
+        string contentTypeDeveloperName,
+        string routePath
+    )
     {
         var input = new GetRouteByPath.Query { Path = routePath };
         var response = await Mediator.Send(input) as QueryResponseDto<RouteDto>;

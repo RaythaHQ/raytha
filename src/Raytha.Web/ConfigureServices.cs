@@ -3,7 +3,8 @@ using CSharpVitamins;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.DataProtection;
-using Microsoft.OpenApi.Models;
+using Microsoft.AspNetCore.OpenApi;
+using Microsoft.OpenApi;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Security;
 using Raytha.Domain.Entities;
@@ -197,40 +198,12 @@ public static class ConfigureServices
             .SetApplicationName("Raytha")
             .PersistKeysToDbContext<RaythaDbContext>();
         services.AddHttpContextAccessor();
-        services.AddEndpointsApiExplorer();
-        services.AddSwaggerGen(c =>
+
+        services.AddOpenApi(options =>
         {
-            c.CustomSchemaIds(type => type.ToString());
-            c.DocumentFilter<LowercaseDocumentFilter>();
-            c.SchemaFilter<ExcludePropertyFromOpenApiDocsFilter>();
-            c.SwaggerDoc("v1", new OpenApiInfo { Title = "Raytha API - V1", Version = "v1" });
-
-            c.MapType<ShortGuid>(() => new OpenApiSchema { Type = "string" });
-
-            c.AddSecurityDefinition(
-                "ApiKey",
-                new OpenApiSecurityScheme
-                {
-                    Description = "X-API-KEY must appear in header",
-                    Type = SecuritySchemeType.ApiKey,
-                    Name = "X-API-KEY",
-                    In = ParameterLocation.Header,
-                    Scheme = "ApiKeyScheme",
-                }
-            );
-            var key = new OpenApiSecurityScheme()
-            {
-                Reference = new OpenApiReference
-                {
-                    Type = ReferenceType.SecurityScheme,
-                    Id = "ApiKey",
-                },
-                In = ParameterLocation.Header,
-            };
-            var requirement = new OpenApiSecurityRequirement { { key, new List<string>() } };
-            c.AddSecurityRequirement(requirement);
+            options.AddDocumentTransformer<ApiKeySecuritySchemeTransformer>();
         });
-
+        services.AddRazorPages();
         return services;
     }
 }

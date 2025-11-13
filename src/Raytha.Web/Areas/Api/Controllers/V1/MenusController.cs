@@ -80,6 +80,7 @@ public class MenusController : BaseController
         Name = "GetMenuItemById"
     )]
     public async Task<ActionResult<IQueryResponseDto<NavigationMenuItemDto>>> GetMenuItemById(
+        string menuDeveloperName,
         string menuItemId
     )
     {
