@@ -78,6 +78,7 @@ public class FileStorageProviderSettings : IFileStorageProviderSettings
     public string S3ServiceUrl => _configuration[FileStorageUtility.S3_SERVICE_URL_CONFIG_NAME];
 
     public string S3Bucket => _configuration[FileStorageUtility.S3_BUCKET_CONFIG_NAME];
+    public string S3Region => _configuration[FileStorageUtility.S3_REGION_CONFIG_NAME];
 
     public bool UseCloudStorage => !UseLocal;
 

@@ -16,6 +16,7 @@ public interface IFileStorageProviderSettings
     string S3SecretKey { get; }
     string S3ServiceUrl { get; }
     string S3Bucket { get; }
+    string S3Region { get; }
 
     bool UseDirectUploadToCloud { get; }
     bool UseCloudStorage { get; }

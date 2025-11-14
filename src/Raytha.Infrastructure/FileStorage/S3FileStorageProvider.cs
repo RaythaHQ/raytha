@@ -1,4 +1,5 @@
 ﻿using System.Net;
+using Amazon;
 using Amazon.Runtime;
 using Amazon.S3;
 using Amazon.S3.Model;
@@ -11,6 +12,7 @@ public class S3FileStorageProvider : IFileStorageProvider
 {
     private static AmazonS3Client _client;
     private string _bucket;
+    private bool _useHttps = true;
 
     public S3FileStorageProvider(IFileStorageProviderSettings configuration)
     {
@@ -18,6 +20,7 @@ public class S3FileStorageProvider : IFileStorageProvider
         string secretKey = configuration.S3SecretKey;
         string serviceUrl = configuration.S3ServiceUrl;
         string bucket = configuration.S3Bucket;
+        string region = configuration.S3Region ?? "us-east-1";
 
         if (
             string.IsNullOrEmpty(accessKey)
@@ -28,17 +31,28 @@ public class S3FileStorageProvider : IFileStorageProvider
             throw new InvalidOperationException("S3 Environment Variables were not found");
 
         _bucket = bucket;
-        if (_client == null)
-        {
-            var s3Config = new AmazonS3Config
-            {
-                ServiceURL = serviceUrl,
-                ForcePathStyle = true,
-                SignatureMethod = SigningAlgorithm.HmacSHA256,
-            };
 
-            _client = new AmazonS3Client(accessKey, secretKey, s3Config);
+        var s3Config = new AmazonS3Config
+        {
+            ForcePathStyle = true,
+            RegionEndpoint = Amazon.RegionEndpoint.GetBySystemName(region),
+            RequestChecksumCalculation = Amazon.Runtime.RequestChecksumCalculation.WHEN_REQUIRED,
+            ResponseChecksumValidation = Amazon.Runtime.ResponseChecksumValidation.WHEN_REQUIRED,
+        };
+
+        if (!string.IsNullOrWhiteSpace(serviceUrl))
+        {
+            s3Config.ServiceURL = serviceUrl;
+            _useHttps = serviceUrl.StartsWith("https://");
+            if (!_useHttps && !configuration.UseDirectUploadToCloud)
+            {
+                throw new Exception(
+                    "USE_DIRECT_UPLOAD_TO_CLOUD = false, require HTTPS service URL. Otherwise set env var to true"
+                );
+            }
         }
+
+        _client = new AmazonS3Client(accessKey, secretKey, s3Config);
     }
 
     public async Task DeleteAsync(string key)
@@ -61,18 +75,18 @@ public class S3FileStorageProvider : IFileStorageProvider
         bool inline = true
     )
     {
-        GetPreSignedUrlRequest request1 = new GetPreSignedUrlRequest
+        AWSConfigsS3.UseSignatureVersion4 = true;
+        var request = new GetPreSignedUrlRequest
         {
             BucketName = _bucket,
             Key = key,
             Expires = expiresAt,
-            Protocol = Protocol.HTTPS,
             Verb = HttpVerb.GET,
+            Protocol = _useHttps ? Protocol.HTTPS : Protocol.HTTP,
         };
-        request1.ResponseHeaderOverrides.ContentDisposition = inline
-            ? $"inline; filename={key}"
-            : $"attachment; filename={key}";
-        return _client.GetPreSignedURL(request1);
+
+        var url = _client.GetPreSignedURL(request);
+        return url;
     }
 
     public async Task<string> GetDownloadUrlAsync(string key)
@@ -89,18 +103,16 @@ public class S3FileStorageProvider : IFileStorageProvider
         bool inline = true
     )
     {
-        GetPreSignedUrlRequest request = new GetPreSignedUrlRequest
+        AWSConfigsS3.UseSignatureVersion4 = true;
+        var request = new GetPreSignedUrlRequest
         {
             BucketName = _bucket,
             Key = key,
             Expires = expiresAt,
-            Protocol = Protocol.HTTPS,
             Verb = HttpVerb.PUT,
+            Protocol = _useHttps ? Protocol.HTTPS : Protocol.HTTP,
         };
-        request.ResponseHeaderOverrides.ContentType = contentType;
-        request.ResponseHeaderOverrides.ContentDisposition = inline
-            ? $"inline; filename={key}"
-            : $"attachment; filename={key}";
+        request.Headers["Content-Type"] = contentType;
         return _client.GetPreSignedURL(request);
     }
 
@@ -113,37 +125,25 @@ public class S3FileStorageProvider : IFileStorageProvider
         bool inline = true
     )
     {
-        GetPreSignedUrlRequest request = new GetPreSignedUrlRequest
+        using var stream = new MemoryStream(data);
+
+        var request = new PutObjectRequest
         {
             BucketName = _bucket,
             Key = key,
-            Expires = expiresAt,
-            Protocol = Protocol.HTTPS,
-            Verb = HttpVerb.GET,
+            InputStream = stream,
+            ContentType = contentType,
+            DisablePayloadSigning = true,
         };
-        using (var ms = new MemoryStream())
+
+        var response = await _client.PutObjectAsync(request);
+        if (response.HttpStatusCode != System.Net.HttpStatusCode.OK)
         {
-            ms.Write(data, 0, data.Length);
-            ms.Position = 0;
-            var putObjectRequest = new PutObjectRequest
-            {
-                Key = key,
-                ContentType = contentType,
-                BucketName = _bucket,
-                InputStream = ms,
-                DisablePayloadSigning = true,
-            };
-            var response = await _client.PutObjectAsync(putObjectRequest);
-            if (response.HttpStatusCode != HttpStatusCode.OK)
-            {
-                throw new Exception(response.HttpStatusCode.ToString());
-            }
+            throw new Exception($"Failed to upload file to S3: {response.HttpStatusCode}");
         }
-        request.ResponseHeaderOverrides.ContentType = contentType;
-        request.ResponseHeaderOverrides.ContentDisposition = inline
-            ? $"inline; filename={key}"
-            : $"attachment; filename={key}";
-        return _client.GetPreSignedURL(request);
+
+        var downloadUrl = await GetDownloadUrlAsync(key, expiresAt, inline);
+        return downloadUrl;
     }
 
     public string GetName()
