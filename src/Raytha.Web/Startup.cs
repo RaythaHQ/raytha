@@ -35,7 +35,12 @@ public class Startup
         services.Configure<ForwardedHeadersOptions>(options =>
         {
             options.ForwardedHeaders =
-                ForwardedHeaders.XForwardedHost | ForwardedHeaders.XForwardedProto;
+                ForwardedHeaders.XForwardedFor
+                | ForwardedHeaders.XForwardedProto
+                | ForwardedHeaders.XForwardedHost;
+
+            options.KnownNetworks.Clear();
+            options.KnownProxies.Clear();
         });
         services.AddApplicationServices();
         services.AddInfrastructureServices(Configuration);

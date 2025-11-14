@@ -29,17 +29,17 @@
             const truncated = fileName.replace(/(.{20})..+/, '$1&hellip;');
 
             li.innerHTML = `
-                                                                            <a target="_blank" class="text-secondary"
-                                                                               href="@RelativeUrlBuilder.MediaRedirectToFileUrl("REPLACE_ME").Replace("REPLACE_ME", "${objectKey}")">
-                                                                               ${truncated}
-                                                                            </a>
-                                                                            |
-                                                                            <a href="javascript:void(0);" class="text-primary"
-                                                                               data-id="${objectKey}" data-copyas="public">Copy as public</a>
-                                                                            |
-                                                                            <a href="javascript:void(0);" class="text-primary"
-                                                                               data-id="${objectKey}" data-copyas="redirect">Copy as redirect</a>
-                                                                        `;
+                                                                                    <a target="_blank" class="text-secondary"
+                                                                                       href="@RelativeUrlBuilder.MediaRedirectToFileUrl("REPLACE_ME").Replace("REPLACE_ME", "${objectKey}")">
+                                                                                       ${truncated}
+                                                                                    </a>
+                                                                                    |
+                                                                                    <a href="javascript:void(0);" class="text-primary"
+                                                                                       data-id="${objectKey}" data-copyas="public">Copy as public</a>
+                                                                                    |
+                                                                                    <a href="javascript:void(0);" class="text-primary"
+                                                                                       data-id="${objectKey}" data-copyas="redirect">Copy as redirect</a>
+                                                                                `;
             listEl.appendChild(li);
         }
 
@@ -99,8 +99,8 @@ else
         const listSelector = '@Model.CopyUrlsTarget';
         const themeId = '@Model.ThemeId';
 
-        const PRESIGN_URL = '@RelativeUrlBuilder.MediaCloudUploadPresignUrl()';
-        const CREATE_AFTER_UPLOAD_URL = '@RelativeUrlBuilder.MediaCloudUploadCreateAfterUploadUrl()';
+        const PRESIGN_URL = '@RelativeUrlBuilder.MediaCloudUploadPresignUrl()'.replace(/^https?:\/\/[^/]+/i, '');
+        const CREATE_AFTER_UPLOAD_URL = '@RelativeUrlBuilder.MediaCloudUploadCreateAfterUploadUrl()'.replace(/^https?:\/\/[^/]+/i, '');
 
         const dashboardTarget = document.querySelector(dragDropSelector);
         const listEl = document.querySelector(listSelector);
@@ -118,17 +118,17 @@ else
             const truncated = fileName.replace(/(.{20})..+/, '$1&hellip;');
 
             li.innerHTML = `
-                                                                            <a target="_blank" class="text-secondary"
-                                                                               href="@RelativeUrlBuilder.MediaRedirectToFileUrl("REPLACE_ME").Replace("REPLACE_ME", "${objectKey}")">
-                                                                               ${truncated}
-                                                                            </a>
-                                                                            |
-                                                                            <a href="javascript:void(0);" class="text-primary"
-                                                                               data-id="${objectKey}" data-copyas="public">Copy as public</a>
-                                                                            |
-                                                                            <a href="javascript:void(0);" class="text-primary"
-                                                                               data-id="${objectKey}" data-copyas="redirect">Copy as redirect</a>
-                                                                        `;
+                                                                                    <a target="_blank" class="text-secondary"
+                                                                                       href="@RelativeUrlBuilder.MediaRedirectToFileUrl("REPLACE_ME").Replace("REPLACE_ME", "${objectKey}")">
+                                                                                       ${truncated}
+                                                                                    </a>
+                                                                                    |
+                                                                                    <a href="javascript:void(0);" class="text-primary"
+                                                                                       data-id="${objectKey}" data-copyas="public">Copy as public</a>
+                                                                                    |
+                                                                                    <a href="javascript:void(0);" class="text-primary"
+                                                                                       data-id="${objectKey}" data-copyas="redirect">Copy as redirect</a>
+                                                                                `;
             listEl.appendChild(li);
         }
 
