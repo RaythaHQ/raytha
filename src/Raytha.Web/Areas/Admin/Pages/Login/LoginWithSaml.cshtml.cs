@@ -3,8 +3,17 @@ using Raytha.Web.Areas.Admin.Pages.Shared;
 
 namespace Raytha.Web.Areas.Admin.Pages.Login;
 
+[IgnoreAntiforgeryToken]
 public class LoginWithSaml : BaseAdminLoginPageModel
 {
+    public IActionResult OnGet()
+    {
+        // This endpoint should only receive POST requests from SAML IdP
+        return BadRequest(
+            "This endpoint only accepts POST requests from a SAML Identity Provider."
+        );
+    }
+
     public async Task<IActionResult> OnPost(string developerName, string returnUrl = null)
     {
         var samlResponse = Request.Form["SAMLResponse"].ToString().Replace(" ", "+"); //can't figure out why spaces come in on the post
