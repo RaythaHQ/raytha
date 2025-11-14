@@ -44,6 +44,40 @@ public static class FileStorageUtility
             .Split(',', StringSplitOptions.RemoveEmptyEntries & StringSplitOptions.TrimEntries);
     }
 
+    /// <summary>
+    /// Checks whether a MIME type is allowed based on a comma-separated list of allowed types,
+    /// supporting wildcard patterns like image/* in addition to exact matches.
+    /// </summary>
+    /// <param name="contentType">The MIME type to validate (e.g. image/png).</param>
+    /// <param name="allowedMimeTypesCsv">The configured allowed MIME types (e.g. text/*,image/*).</param>
+    /// <returns>True if the MIME type is allowed; otherwise false.</returns>
+    public static bool IsAllowedMimeType(string contentType, string allowedMimeTypesCsv)
+    {
+        if (string.IsNullOrWhiteSpace(contentType))
+        {
+            return false;
+        }
+
+        var allowedMimeTypes = GetAllowedFileExtensionsFromConfig(allowedMimeTypesCsv);
+        foreach (var pattern in allowedMimeTypes)
+        {
+            if (pattern.EndsWith("/*", StringComparison.Ordinal))
+            {
+                var prefix = pattern[..^1]; // keep the trailing slash, drop the *
+                if (contentType.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+                {
+                    return true;
+                }
+            }
+            else if (string.Equals(pattern, contentType, StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     public static string CreateObjectKeyFromIdAndFileName(string id, string fileName)
     {
         var cleanFileName = Path.GetFileNameWithoutExtension(fileName).ToDeveloperName();

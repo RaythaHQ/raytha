@@ -5,6 +5,7 @@ using Raytha.Application.Common.Exceptions;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Models;
 using Raytha.Application.Common.Utils;
+using Raytha.Domain.ValueObjects;
 
 namespace Raytha.Application.RaythaFunctions.Commands;
 
@@ -32,14 +33,32 @@ public class ExecuteRaythaFunction
                             .RaythaFunctions.Where(rf =>
                                 rf.DeveloperName == request.DeveloperName.ToDeveloperName()
                             )
-                            .Select(rf => new { rf.IsActive })
+                            .Select(rf => new { rf.IsActive, rf.TriggerType })
                             .FirstOrDefault();
 
                         if (raythaFunction == null || !raythaFunction.IsActive)
+                        {
+                            // Security: Prevents invoking disabled or non-existent Raytha functions over HTTP,
+                            // which could otherwise allow unauthenticated code execution if the function were later reactivated.
                             context.AddFailure(
                                 "IsActive",
                                 $"A function with the developer name {request.DeveloperName} do not exist."
                             );
+                        }
+                        else if (
+                            raythaFunction.TriggerType.DeveloperName
+                            != RaythaFunctionTriggerType.HttpRequest.DeveloperName
+                        )
+                        {
+                            // Security: Ensures only functions explicitly configured as HttpRequest triggers
+                            // are callable via the public HTTP endpoint, reducing the risk of abusing internal
+                            // event-driven functions as unintended webhooks; this is safe because HttpRequest
+                            // is already the documented trigger type for HTTP-exposed functions.
+                            context.AddFailure(
+                                "TriggerType",
+                                "This function is not configured to be triggered via HTTP request."
+                            );
+                        }
                     }
                 );
         }
@@ -73,9 +92,13 @@ public class ExecuteRaythaFunction
             var code = await _db
                 .RaythaFunctions.Where(rf =>
                     rf.DeveloperName == request.DeveloperName.ToDeveloperName()
+                    && rf.TriggerType == RaythaFunctionTriggerType.HttpRequest
                 )
                 .Select(rf => rf.Code)
                 .FirstAsync(cancellationToken);
+            // Security: Handler-level guard mirrors the validator so that even if validation is skipped
+            // or bypassed, only HttpRequest-trigger functions can be executed via the HTTP entry point,
+            // which narrows the attack surface without changing behavior for correctly configured functions.
 
             if (
                 await _raythaFunctionSemaphore.WaitAsync(

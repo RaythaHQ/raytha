@@ -56,12 +56,33 @@ public class Startup
         );
         app.UseStatusCodePagesWithReExecute($"{pathBase}/raytha/error/{{0}}");
 
-        if (!env.IsDevelopment())
+        bool enforceHttps = Convert.ToBoolean(Configuration["ENFORCE_HTTPS"] ?? "true");
+        if (!env.IsDevelopment() && enforceHttps)
         {
+            // Security: Enforce HTTPS and strict transport security in non-development environments
+            // to prevent protocol downgrade and cookie hijacking; this relies on forwarded headers
+            // when running behind a reverse proxy and preserves existing development behavior.
+            app.UseHttpsRedirection();
             app.UseHsts();
         }
 
         app.UseStaticFiles();
+
+        // Security: Add a small set of conservative security headers to all responses to reduce
+        // common classes of browser-based attacks (MIME sniffing, clickjacking, and referrer leakage)
+        // without constraining existing content or introducing a breaking Content-Security-Policy.
+        app.Use(
+            async (context, next) =>
+            {
+                context.Response.Headers.TryAdd("X-Content-Type-Options", "nosniff");
+                context.Response.Headers.TryAdd("X-Frame-Options", "SAMEORIGIN");
+                context.Response.Headers.TryAdd(
+                    "Referrer-Policy",
+                    "strict-origin-when-cross-origin"
+                );
+                await next();
+            }
+        );
 
         var fileStorageProvider = Configuration[FileStorageUtility.CONFIG_NAME]
             .IfNullOrEmpty(FileStorageUtility.LOCAL)
@@ -80,19 +101,6 @@ public class Startup
                 }
             );
         }
-
-        /*
-        app.UseSwagger(c =>
-        {
-            c.RouteTemplate = "raytha/api/{documentName}/swagger.json";
-        });
-
-        app.UseSwaggerUI(c =>
-        {
-            c.SwaggerEndpoint($"{pathBase}/raytha/api/v1/swagger.json", "Raytha API - V1");
-            c.RoutePrefix = $"raytha/api";
-        });
-        */
 
         app.UseRouting();
         app.UseAuthentication();

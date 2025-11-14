@@ -32,6 +32,20 @@ public class MediaItemsController : BaseController
         string contentType
     )
     {
+        if (
+            !FileStorageUtility.IsAllowedMimeType(
+                body.contentType,
+                FileStorageProviderSettings.AllowedMimeTypes
+            )
+        )
+        {
+            // Security: Enforce server-side MIME-type checks so clients cannot bypass front-end
+            // validation to upload disallowed file types; this is safe because it only rejects
+            // types already disallowed by configuration and returns a clear JSON error.
+            this.HttpContext.Response.StatusCode = StatusCodes.Status403Forbidden;
+            return Json(new { success = false, error = "File type is not allowed." });
+        }
+
         var idForKey = ShortGuid.NewGuid();
         var objectKey = FileStorageUtility.CreateObjectKeyFromIdAndFileName(
             idForKey,
@@ -70,6 +84,19 @@ public class MediaItemsController : BaseController
         string themeId
     )
     {
+        if (
+            !FileStorageUtility.IsAllowedMimeType(
+                body.contentType,
+                FileStorageProviderSettings.AllowedMimeTypes
+            )
+        )
+        {
+            // Security: Double-check MIME types on the post-upload finalize step to ensure only
+            // previously approved file types are persisted in the media library.
+            this.HttpContext.Response.StatusCode = StatusCodes.Status403Forbidden;
+            return Json(new { success = false, error = "File type is not allowed." });
+        }
+
         var input = new CreateMediaItem.Command
         {
             Id = body.id,
@@ -105,6 +132,19 @@ public class MediaItemsController : BaseController
         {
             this.HttpContext.Response.StatusCode = 403;
             return Json(new { success = false });
+        }
+
+        if (
+            !FileStorageUtility.IsAllowedMimeType(
+                file.ContentType,
+                FileStorageProviderSettings.AllowedMimeTypes
+            )
+        )
+        {
+            // Security: Prevent local storage uploads of disallowed MIME types regardless of any
+            // client-side checks, reducing the chance of storing unexpected executable or HTML content.
+            this.HttpContext.Response.StatusCode = StatusCodes.Status403Forbidden;
+            return Json(new { success = false, error = "File type is not allowed." });
         }
         using (var stream = new MemoryStream())
         {

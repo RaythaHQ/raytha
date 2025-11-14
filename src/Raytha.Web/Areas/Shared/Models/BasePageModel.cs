@@ -154,9 +154,28 @@ public abstract class BasePageModel : PageModel
         if (hasListViewInterface != null)
         {
             string search = context.HttpContext.Request.Query["search"].ToString();
-            int pageNumber = Convert.ToInt32(context.HttpContext.Request.Query["pageNumber"]);
-            int pageSize = Convert.ToInt32(context.HttpContext.Request.Query["pageSize"]);
-            pageSize = pageSize == 0 ? 50 : pageSize;
+
+            // Security: Use safe parsing and sane defaults for paging parameters so that malformed
+            // or malicious query values cannot trigger FormatException-based error paths or force
+            // extreme page sizes; this preserves existing behavior for valid inputs.
+            var pageNumberRaw = context.HttpContext.Request.Query["pageNumber"].ToString();
+            var pageSizeRaw = context.HttpContext.Request.Query["pageSize"].ToString();
+
+            int pageNumber = 1;
+            if (!string.IsNullOrWhiteSpace(pageNumberRaw))
+            {
+                int.TryParse(pageNumberRaw, out pageNumber);
+            }
+
+            int pageSize = 50;
+            if (
+                !string.IsNullOrWhiteSpace(pageSizeRaw)
+                && int.TryParse(pageSizeRaw, out var parsedPageSize)
+            )
+            {
+                pageSize = parsedPageSize;
+            }
+
             string orderBy = context.HttpContext.Request.Query["orderBy"].ToString().Trim();
             string filter = context.HttpContext.Request.Query["filter"].ToString();
             string? actionName = context.RouteData.Values["page"]?.ToString();

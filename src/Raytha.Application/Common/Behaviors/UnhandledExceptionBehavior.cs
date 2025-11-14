@@ -39,11 +39,13 @@ public class UnhandledExceptionBehaviour<TRequest, TResponse>
         {
             var requestName = typeof(TRequest).Name;
 
+            // Security: Avoid logging entire request payloads, which may contain credentials, tokens,
+            // or other sensitive fields; instead log only the request name alongside the exception to
+            // retain diagnostic value without increasing the risk of sensitive data exposure in logs.
             _logger.LogError(
                 ex,
-                "Raytha Request: Unhandled Exception for Request {Name} {@Request}",
-                requestName,
-                request
+                "Raytha Request: Unhandled Exception for Request {Name}",
+                requestName
             );
 
             throw;

@@ -54,6 +54,18 @@ public class MediaItemsController : BaseController
         {
             return BadRequest(new { success = false, error = "File length is 0." });
         }
+
+        if (
+            !FileStorageUtility.IsAllowedMimeType(
+                file.ContentType,
+                FileStorageProviderSettings.AllowedMimeTypes
+            )
+        )
+        {
+            // Security: Apply the same server-side MIME-type whitelist to API uploads so that
+            // clients cannot upload disallowed content types even if they craft requests manually.
+            return BadRequest(new { success = false, error = "File type is not allowed." });
+        }
         using (var stream = new MemoryStream())
         {
             await file.CopyToAsync(stream);

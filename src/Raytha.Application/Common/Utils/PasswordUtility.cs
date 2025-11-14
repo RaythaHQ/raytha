@@ -11,12 +11,22 @@ public static class PasswordUtility
     {
         char[] characters =
             "abcdefghijklmnopqursuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890!@#$%(){}[]_".ToCharArray();
-        Random random = new Random();
         StringBuilder newPassword = new StringBuilder(string.Empty, length);
-        for (int i = 0; i < length; i++)
+
+        // Security: Use a cryptographically secure RNG for password generation so that automatically
+        // generated passwords/API keys cannot be predicted from process state or generation timing;
+        // this is safe because it only affects newly generated credentials and keeps their format unchanged.
+        using (var rng = RandomNumberGenerator.Create())
         {
-            newPassword.Append(characters[random.Next(characters.Length)]);
+            var buffer = new byte[4];
+            for (int i = 0; i < length; i++)
+            {
+                rng.GetBytes(buffer);
+                var index = BitConverter.ToUInt32(buffer, 0) % (uint)characters.Length;
+                newPassword.Append(characters[index]);
+            }
         }
+
         return newPassword.ToString();
     }
 
