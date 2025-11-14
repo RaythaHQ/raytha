@@ -2,11 +2,9 @@
 
 A priority of Raytha is to keep the technology footprint small for getting up and running as quickly as possible. However, you do need the minimum requirements listed below:
 
-* .NET 8
-* npm for compiling javascript
+* .NET 10
 * Postgres (default) or SQL Server Express
-* SMTP
-* Visual Studio 2022 or VS Code. All tutorials will assume Visual Studio.
+* SMTP (optional, for reset password, etc)
 
 The steps to run Raytha locally are that of any typical .NET application.
 
