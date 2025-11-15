@@ -13,14 +13,19 @@ using Raytha.Web.Utils;
 
 namespace Raytha.Web.Areas.Api.Controllers.V1;
 
-[Authorize(Policy = RaythaApiAuthorizationHandler.POLICY_PREFIX + BuiltInSystemPermission.MANAGE_CONTENT_TYPES_PERMISSION)]
+[Authorize(
+    Policy = RaythaApiAuthorizationHandler.POLICY_PREFIX
+        + BuiltInSystemPermission.MANAGE_CONTENT_TYPES_PERMISSION
+)]
 public class MenusController : BaseController
 {
     [HttpGet("", Name = "GetMenus")]
-    public async Task<ActionResult<IQueryResponseDto<ListResultDto<NavigationMenuDto>>>> GetMenus(string search = "",
-                                                                                                  string orderBy = $"CreationTime {SortOrder.DESCENDING}",
-                                                                                                  int pageNumber = 1,
-                                                                                                  int pageSize = 50)
+    public async Task<ActionResult<IQueryResponseDto<ListResultDto<NavigationMenuDto>>>> GetMenus(
+        string search = "",
+        string orderBy = $"CreationTime {SortOrder.DESCENDING}",
+        int pageNumber = 1,
+        int pageSize = 50
+    )
     {
         var input = new GetNavigationMenus.Query
         {
@@ -30,13 +35,16 @@ public class MenusController : BaseController
             PageSize = pageSize,
         };
 
-        var response = await Mediator.Send(input) as QueryResponseDto<ListResultDto<NavigationMenuDto>>;
+        var response =
+            await Mediator.Send(input) as QueryResponseDto<ListResultDto<NavigationMenuDto>>;
 
         return response;
     }
 
     [HttpGet($"{{{RouteConstants.MENU_DEVELOPER_NAME}}}", Name = "GetMenuByDeveloperName")]
-    public async Task<ActionResult<IQueryResponseDto<NavigationMenuDto>>> GetMenuByDeveloperName(string menuDeveloperName)
+    public async Task<ActionResult<IQueryResponseDto<NavigationMenuDto>>> GetMenuByDeveloperName(
+        string menuDeveloperName
+    )
     {
         var input = new GetNavigationMenuByDeveloperName.Query
         {
@@ -48,26 +56,35 @@ public class MenusController : BaseController
         return response;
     }
 
-    [HttpGet($"{{{RouteConstants.MENU_DEVELOPER_NAME}}}/menu-items", Name = "GetMenuItemsByMenuDeveloperName")]
-    public async Task<ActionResult<IQueryResponseDto<ListResultDto<NavigationMenuItemDto>>>> GetMenuItemsByMenuDeveloperName(string menuDeveloperName)
+    [HttpGet(
+        $"{{{RouteConstants.MENU_DEVELOPER_NAME}}}/menu-items",
+        Name = "GetMenuItemsByMenuDeveloperName"
+    )]
+    public async Task<
+        ActionResult<IQueryResponseDto<ListResultDto<NavigationMenuItemDto>>>
+    > GetMenuItemsByMenuDeveloperName(string menuDeveloperName)
     {
         var input = new GetNavigationMenuItemsByNavigationMenuDeveloperName.Query
         {
             NavigationMenuDeveloperName = menuDeveloperName,
         };
 
-        var response = await Mediator.Send(input) as QueryResponseDto<ListResultDto<NavigationMenuItemDto>>;
+        var response =
+            await Mediator.Send(input) as QueryResponseDto<ListResultDto<NavigationMenuItemDto>>;
 
         return response;
     }
 
-    [HttpGet($"{{{RouteConstants.MENU_DEVELOPER_NAME}}}/menu-items/{{menuItemId}}", Name = "GetMenuItemById")]
-    public async Task<ActionResult<IQueryResponseDto<NavigationMenuItemDto>>> GetMenuItemById(string menuItemId)
+    [HttpGet(
+        $"{{{RouteConstants.MENU_DEVELOPER_NAME}}}/menu-items/{{menuItemId}}",
+        Name = "GetMenuItemById"
+    )]
+    public async Task<ActionResult<IQueryResponseDto<NavigationMenuItemDto>>> GetMenuItemById(
+        string menuDeveloperName,
+        string menuItemId
+    )
     {
-        var input = new GetNavigationMenuItemById.Query
-        {
-            Id = menuItemId,
-        };
+        var input = new GetNavigationMenuItemById.Query { Id = menuItemId };
 
         var response = await Mediator.Send(input) as QueryResponseDto<NavigationMenuItemDto>;
 

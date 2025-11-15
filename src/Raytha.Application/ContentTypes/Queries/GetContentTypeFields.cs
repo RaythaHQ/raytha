@@ -10,7 +10,9 @@ namespace Raytha.Application.ContentTypes.Queries;
 
 public class GetContentTypeFields
 {
-    public record Query : GetPagedEntitiesInputDto, IRequest<IQueryResponseDto<ListResultDto<ContentTypeFieldDto>>>
+    public record Query
+        : GetPagedEntitiesInputDto,
+            IRequest<IQueryResponseDto<ListResultDto<ContentTypeFieldDto>>>
     {
         public override string OrderBy { get; init; } = $"Label {SortOrder.Ascending}";
         public ShortGuid ContentTypeId { get; init; } = ShortGuid.Empty;
@@ -18,19 +20,22 @@ public class GetContentTypeFields
         public bool ShowDeletedOnly { get; init; } = false;
     }
 
-    public class Handler : IRequestHandler<Query, IQueryResponseDto<ListResultDto<ContentTypeFieldDto>>>
+    public class Handler
+        : IRequestHandler<Query, IQueryResponseDto<ListResultDto<ContentTypeFieldDto>>>
     {
         private readonly IRaythaDbContext _db;
+
         public Handler(IRaythaDbContext db)
         {
             _db = db;
         }
 
-        public async Task<IQueryResponseDto<ListResultDto<ContentTypeFieldDto>>> Handle(Query request, CancellationToken cancellationToken)
+        public async Task<IQueryResponseDto<ListResultDto<ContentTypeFieldDto>>> Handle(
+            Query request,
+            CancellationToken cancellationToken
+        )
         {
-            var query = _db.ContentTypeFields
-                .Include(p => p.ContentType)
-                .AsQueryable();
+            var query = _db.ContentTypeFields.Include(p => p.ContentType).AsQueryable();
 
             if (request.ShowDeletedOnly)
             {
@@ -43,22 +48,31 @@ public class GetContentTypeFields
             }
             else if (!string.IsNullOrEmpty(request.DeveloperName.ToDeveloperName()))
             {
-                query = query.Where(p => p.ContentType.DeveloperName == request.DeveloperName.ToDeveloperName());
+                query = query.Where(p =>
+                    p.ContentType.DeveloperName == request.DeveloperName.ToDeveloperName()
+                );
             }
 
             if (!string.IsNullOrEmpty(request.Search))
             {
                 var searchQuery = request.Search.ToLower();
-                query = query
-                    .Where(d =>
-                        (d.Label.ToLower().Contains(searchQuery) ||
-                        d.DeveloperName.Contains(searchQuery)));
+                query = query.Where(d =>
+                    (
+                        d.Label.ToLower().Contains(searchQuery)
+                        || d.DeveloperName.Contains(searchQuery)
+                    )
+                );
             }
 
             var total = await query.CountAsync();
-            var items = query.ApplyPaginationInput(request).Select(ContentTypeFieldDto.GetProjection()).ToArray();
+            var items = query
+                .ApplyPaginationInput(request)
+                .Select(ContentTypeFieldDto.GetProjection())
+                .ToArray();
 
-            return new QueryResponseDto<ListResultDto<ContentTypeFieldDto>>(new ListResultDto<ContentTypeFieldDto>(items, total));
+            return new QueryResponseDto<ListResultDto<ContentTypeFieldDto>>(
+                new ListResultDto<ContentTypeFieldDto>(items, total)
+            );
         }
     }
 }

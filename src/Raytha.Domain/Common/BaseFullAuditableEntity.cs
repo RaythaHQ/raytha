@@ -17,9 +17,7 @@ public interface IDeletionAuditable : ISoftDelete
     DateTime? DeletionTime { get; set; }
 }
 
-public interface IFullAuditable : IAuditable, IDeletionAuditable
-{
-}
+public interface IFullAuditable : IAuditable, IDeletionAuditable { }
 
 public abstract class BaseFullAuditableEntity : BaseAuditableEntity, IFullAuditable
 {

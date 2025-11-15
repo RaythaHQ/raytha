@@ -1,6 +1,6 @@
-﻿using Raytha.Application.Common.Models;
+﻿using System.Linq.Expressions;
+using Raytha.Application.Common.Models;
 using Raytha.Domain.Entities;
-using System.Linq.Expressions;
 
 namespace Raytha.Application.UserGroups;
 
@@ -13,6 +13,7 @@ public record UserGroupDto : BaseAuditableEntityDto
     {
         return entity => GetProjection(entity);
     }
+
     public static UserGroupDto GetProjection(UserGroup entity)
     {
         if (entity == null)
@@ -26,7 +27,7 @@ public record UserGroupDto : BaseAuditableEntityDto
             CreatorUserId = entity.CreatorUserId,
             CreationTime = entity.CreationTime,
             LastModificationTime = entity.LastModificationTime,
-            LastModifierUserId = entity.LastModifierUserId
+            LastModifierUserId = entity.LastModifierUserId,
         };
     }
 }

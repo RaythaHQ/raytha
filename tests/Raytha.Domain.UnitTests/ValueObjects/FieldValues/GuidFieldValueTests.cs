@@ -7,7 +7,8 @@ namespace Raytha.Domain.UnitTests.ValueObjects;
 public class GuidFieldValueTests
 {
     private Guid? guidValue = Guid.Parse("b0c917f6-9614-44b8-94c9-b92a4165c3cf");
-    private string guidValueAsString = Guid.Parse("b0c917f6-9614-44b8-94c9-b92a4165c3cf").ToString();
+    private string guidValueAsString = Guid.Parse("b0c917f6-9614-44b8-94c9-b92a4165c3cf")
+        .ToString();
 
     [Test]
     public void ShouldReturnCorrectFieldValue()

@@ -1,6 +1,5 @@
 ﻿namespace Raytha.Domain.Common;
 
-
 public interface IHasCreationTime
 {
     DateTime CreationTime { get; set; }
@@ -21,9 +20,7 @@ public interface IModificationAuditable : IHasModificationTime
     Guid? LastModifierUserId { get; set; }
 }
 
-public interface IAuditable : ICreationAuditable, IModificationAuditable, IBaseEntity
-{
-}
+public interface IAuditable : ICreationAuditable, IModificationAuditable, IBaseEntity { }
 
 public abstract class BaseAuditableEntity : BaseEntity, IAuditable
 {

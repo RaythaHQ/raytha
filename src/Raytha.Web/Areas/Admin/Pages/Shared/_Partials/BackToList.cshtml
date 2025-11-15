@@ -1,0 +1,28 @@
+@using Microsoft.AspNetCore.Routing
+@model BackLinkOptions
+@{
+    Layout = null;
+    RouteValueDictionary routes = Model.RouteValues ?? new RouteValueDictionary();
+}
+
+@if (!string.IsNullOrEmpty(Model.Href))
+{
+    <a href="@Model.Href" class="@Model.Class">
+        @Html.Raw(Model.IconSvg ?? DefaultIcon)
+        @Model.Text
+    </a>
+}
+else
+{
+    <a asp-page="@Model.Page" asp-page-handler="@Model.Handler" class="@Model.Class"
+        asp-all-route-data="routes.ToDictionary(kvp => kvp.Key, kvp => kvp.Value?.ToString() ?? string.Empty)">
+        @Html.Raw(Model.IconSvg ?? DefaultIcon)
+        @Model.Text
+    </a>
+}
+
+@functions {
+    private const string DefaultIcon = @"<svg class=""icon icon-sm"" fill=""none"" stroke=""currentColor"" viewBox=""0 0 24
+24"" xmlns=""http://www.w3.org/2000/svg""><path stroke-linecap=""round"" stroke-linejoin=""round"" stroke-width=""2""
+d=""M7 16l-4-4m0 0l4-4m-4 4h18""></path></svg>";
+}

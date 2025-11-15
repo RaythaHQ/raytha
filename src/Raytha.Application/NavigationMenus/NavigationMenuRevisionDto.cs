@@ -12,7 +12,9 @@ public record NavigationMenuRevisionDto : BaseAuditableEntityDto
     public AuditableUserDto? CreatorUser { get; init; }
     public AuditableUserDto? LastModifierUser { get; init; }
 
-    public static Expression<Func<NavigationMenuRevision, NavigationMenuRevisionDto>> GetProjection()
+    public static Expression<
+        Func<NavigationMenuRevision, NavigationMenuRevisionDto>
+    > GetProjection()
     {
         return entity => GetProjection(entity);
     }

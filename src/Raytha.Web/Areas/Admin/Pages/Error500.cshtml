@@ -1,0 +1,29 @@
+@page "/raytha/error/500"
+@model Raytha.Web.Areas.Admin.Pages.Error500Model
+@{
+    Layout = "Shared/EmptyLayout";
+    ViewData["Title"] = "500 - Something Went Wrong";
+}
+
+<div class="d-flex justify-content-center align-items-center" style="min-height: 400px;">
+    <div class="text-center">
+        <h1 class="display-1 fw-bold">500</h1>
+        <h2 class="mb-4">Something Went Wrong</h2>
+        <p class="lead mb-4">@Model.ErrorMessage</p>
+        @if (!string.IsNullOrEmpty(Model.ErrorId))
+        {
+            <p class="text-muted"><strong>Error ID:</strong> @Model.ErrorId</p>
+        }
+        @if (Model.IsDevelopmentMode && !string.IsNullOrEmpty(Model.StackTrace))
+        {
+            <div class="mt-4 text-start">
+                <h4>Stack Trace (Development Mode Only)</h4>
+                <pre class="bg-light p-3 rounded" style="max-height: 400px; overflow-y: auto;">@Model.StackTrace</pre>
+            </div>
+        }
+        <div class="mt-4">
+            <a href="/raytha" class="btn btn-primary">Go to Dashboard</a>
+        </div>
+    </div>
+</div>
+

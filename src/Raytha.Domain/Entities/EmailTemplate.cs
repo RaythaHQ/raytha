@@ -8,18 +8,15 @@ public class EmailTemplate : BaseAuditableEntity
     public string? Bcc { get; set; }
     public string? Content { get; set; }
     public bool IsBuiltInTemplate { get; set; }
-    public virtual ICollection<WebTemplateRevision> Revisions { get; set; } = new List<WebTemplateRevision>();
+    public virtual ICollection<WebTemplateRevision> Revisions { get; set; } =
+        new List<WebTemplateRevision>();
 }
 
 public class BuiltInEmailTemplate : ValueObject
 {
-    static BuiltInEmailTemplate()
-    {
-    }
+    static BuiltInEmailTemplate() { }
 
-    private BuiltInEmailTemplate()
-    {
-    }
+    private BuiltInEmailTemplate() { }
 
     private BuiltInEmailTemplate(string subject, string developerName, bool safeToCc)
     {
@@ -40,17 +37,62 @@ public class BuiltInEmailTemplate : ValueObject
         return type;
     }
 
-    public static BuiltInEmailTemplate AdminWelcomeEmail => new("[{{ CurrentOrganization.OrganizationName }}] An administrator has created your account", "raytha_email_admin_welcome", false);
-    public static BuiltInEmailTemplate AdminPasswordChangedEmail => new("[{{ CurrentOrganization.OrganizationName }}] Your password has been changed", "raytha_email_admin_passwordchanged", false);
-    public static BuiltInEmailTemplate AdminPasswordResetEmail => new("[{{ CurrentOrganization.OrganizationName }}] Your password has been reset by an administrator", "raytha_email_admin_passwordreset", false);
+    public static BuiltInEmailTemplate AdminWelcomeEmail =>
+        new(
+            "[{{ CurrentOrganization.OrganizationName }}] An administrator has created your account",
+            "raytha_email_admin_welcome",
+            false
+        );
+    public static BuiltInEmailTemplate AdminPasswordChangedEmail =>
+        new(
+            "[{{ CurrentOrganization.OrganizationName }}] Your password has been changed",
+            "raytha_email_admin_passwordchanged",
+            false
+        );
+    public static BuiltInEmailTemplate AdminPasswordResetEmail =>
+        new(
+            "[{{ CurrentOrganization.OrganizationName }}] Your password has been reset by an administrator",
+            "raytha_email_admin_passwordreset",
+            false
+        );
 
-    public static BuiltInEmailTemplate LoginBeginLoginWithMagicLinkEmail => new("[{{ CurrentOrganization.OrganizationName }}] Website login access link", "raytha_email_login_beginloginwithmagiclink", false);
-    public static BuiltInEmailTemplate LoginBeginForgotPasswordEmail => new("[{{ CurrentOrganization.OrganizationName }}] Password recovery", "raytha_email_login_beginforgotpassword", false);
-    public static BuiltInEmailTemplate LoginCompletedForgotPasswordEmail => new("[{{ CurrentOrganization.OrganizationName }}] Your password has been recovered", "raytha_email_login_completedforgotpassword", false);
+    public static BuiltInEmailTemplate LoginBeginLoginWithMagicLinkEmail =>
+        new(
+            "[{{ CurrentOrganization.OrganizationName }}] Website login access link",
+            "raytha_email_login_beginloginwithmagiclink",
+            false
+        );
+    public static BuiltInEmailTemplate LoginBeginForgotPasswordEmail =>
+        new(
+            "[{{ CurrentOrganization.OrganizationName }}] Password recovery",
+            "raytha_email_login_beginforgotpassword",
+            false
+        );
+    public static BuiltInEmailTemplate LoginCompletedForgotPasswordEmail =>
+        new(
+            "[{{ CurrentOrganization.OrganizationName }}] Your password has been recovered",
+            "raytha_email_login_completedforgotpassword",
+            false
+        );
 
-    public static BuiltInEmailTemplate UserWelcomeEmail => new("[{{ CurrentOrganization.OrganizationName }}] An administrator has created your account", "raytha_email_user_welcome", false);
-    public static BuiltInEmailTemplate UserPasswordChangedEmail => new("[{{ CurrentOrganization.OrganizationName }}] Your password has been changed", "raytha_email_user_passwordchanged", false);
-    public static BuiltInEmailTemplate UserPasswordResetEmail => new("[{{ CurrentOrganization.OrganizationName }}] Your password has been reset by an administrator", "raytha_email_user_passwordreset", false);
+    public static BuiltInEmailTemplate UserWelcomeEmail =>
+        new(
+            "[{{ CurrentOrganization.OrganizationName }}] An administrator has created your account",
+            "raytha_email_user_welcome",
+            false
+        );
+    public static BuiltInEmailTemplate UserPasswordChangedEmail =>
+        new(
+            "[{{ CurrentOrganization.OrganizationName }}] Your password has been changed",
+            "raytha_email_user_passwordchanged",
+            false
+        );
+    public static BuiltInEmailTemplate UserPasswordResetEmail =>
+        new(
+            "[{{ CurrentOrganization.OrganizationName }}] Your password has been reset by an administrator",
+            "raytha_email_user_passwordreset",
+            false
+        );
 
     public string DefaultSubject { get; private set; } = string.Empty;
     public string DeveloperName { get; private set; } = string.Empty;
@@ -60,7 +102,12 @@ public class BuiltInEmailTemplate : ValueObject
     {
         get
         {
-            var pathToFile = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Entities", "DefaultTemplates", $"{DeveloperName}.liquid");
+            var pathToFile = Path.Combine(
+                AppDomain.CurrentDomain.BaseDirectory,
+                "Entities",
+                "DefaultTemplates",
+                $"{DeveloperName}.liquid"
+            );
             return File.ReadAllText(pathToFile);
         }
     }

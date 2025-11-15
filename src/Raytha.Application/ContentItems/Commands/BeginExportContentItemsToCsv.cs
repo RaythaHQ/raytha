@@ -1,18 +1,18 @@
-﻿using MediatR;
-using Raytha.Application.Common.Models;
+﻿using System.Text.Json;
 using CSharpVitamins;
-using Raytha.Application.Common.Interfaces;
-using FluentValidation;
-using Raytha.Application.Common.Exceptions;
-using Raytha.Domain.Entities;
-using Microsoft.EntityFrameworkCore;
-using Raytha.Domain.ValueObjects;
-using Raytha.Application.Common.Utils;
 using Csv;
-using Raytha.Domain.Common;
-using Raytha.Domain.ValueObjects.FieldValues;
-using System.Text.Json;
+using FluentValidation;
+using MediatR;
+using Microsoft.EntityFrameworkCore;
+using Raytha.Application.Common.Exceptions;
+using Raytha.Application.Common.Interfaces;
+using Raytha.Application.Common.Models;
+using Raytha.Application.Common.Utils;
 using Raytha.Application.MediaItems;
+using Raytha.Domain.Common;
+using Raytha.Domain.Entities;
+using Raytha.Domain.ValueObjects;
+using Raytha.Domain.ValueObjects.FieldValues;
 
 namespace Raytha.Application.ContentItems.Commands;
 
@@ -37,29 +37,39 @@ public class BeginExportContentItemsToCsv
         private readonly IBackgroundTaskQueue _taskQueue;
         private readonly IRaythaDbContext _entityFrameworkDb;
         private readonly IContentTypeInRoutePath _contentTypeInRoutePath;
+
         public Handler(
             IBackgroundTaskQueue taskQueue,
             IRaythaDbContext entityFrameworkDb,
             IContentTypeInRoutePath contentTypeInRoutePath
-            )
+        )
         {
             _taskQueue = taskQueue;
             _entityFrameworkDb = entityFrameworkDb;
             _contentTypeInRoutePath = contentTypeInRoutePath;
         }
-        public async Task<CommandResponseDto<ShortGuid>> Handle(Command request, CancellationToken cancellationToken)
+
+        public async Task<CommandResponseDto<ShortGuid>> Handle(
+            Command request,
+            CancellationToken cancellationToken
+        )
         {
-            View view = _entityFrameworkDb.Views
-                .Include(p => p.ContentType)
+            View view = _entityFrameworkDb
+                .Views.Include(p => p.ContentType)
                 .ThenInclude(p => p.ContentTypeFields)
                 .FirstOrDefault(p => p.Id == request.ViewId.Guid);
 
             if (view == null)
                 throw new NotFoundException("View", request.ViewId);
 
-            _contentTypeInRoutePath.ValidateContentTypeInRoutePathMatchesValue(view.ContentType.DeveloperName);
+            _contentTypeInRoutePath.ValidateContentTypeInRoutePathMatchesValue(
+                view.ContentType.DeveloperName
+            );
 
-            var backgroundJobId = await _taskQueue.EnqueueAsync<BackgroundTask>(request, cancellationToken);
+            var backgroundJobId = await _taskQueue.EnqueueAsync<BackgroundTask>(
+                request,
+                cancellationToken
+            );
 
             return new CommandResponseDto<ShortGuid>(backgroundJobId);
         }
@@ -75,11 +85,12 @@ public class BeginExportContentItemsToCsv
         private readonly FieldValueConverter _fieldValueConverter;
 
         public BackgroundTask(
-            ICurrentOrganization currentOrganization, 
-            IRaythaDbJsonQueryEngine db, 
-            IRaythaDbContext entityFrameworkDb, 
+            ICurrentOrganization currentOrganization,
+            IRaythaDbJsonQueryEngine db,
+            IRaythaDbContext entityFrameworkDb,
             IFileStorageProvider fileStorageProvider,
-            FieldValueConverter fieldValueConverter)
+            FieldValueConverter fieldValueConverter
+        )
         {
             _db = db;
             _entityFrameworkDb = entityFrameworkDb;
@@ -87,15 +98,17 @@ public class BeginExportContentItemsToCsv
             _fileStorageProvider = fileStorageProvider;
             _fieldValueConverter = fieldValueConverter;
         }
+
         public async Task Execute(Guid jobId, JsonElement args, CancellationToken cancellationToken)
         {
             IEnumerable<ContentItemDto> items;
 
             ShortGuid viewId = args.GetProperty("ViewId").GetString();
-            bool exportOnlyColumnsFromView = args.GetProperty("ExportOnlyColumnsFromView").GetBoolean();
+            bool exportOnlyColumnsFromView = args.GetProperty("ExportOnlyColumnsFromView")
+                .GetBoolean();
 
-            View view = _entityFrameworkDb.Views
-                .Include(p => p.ContentType)
+            View view = _entityFrameworkDb
+                .Views.Include(p => p.ContentType)
                 .ThenInclude(p => p.ContentTypeFields)
                 .FirstOrDefault(p => p.Id == viewId.Guid);
 
@@ -105,34 +118,49 @@ public class BeginExportContentItemsToCsv
             string[] filters = GetFiltersForView(view);
             string finalOrderBy = GetSortForView(view);
 
-            int count = _db.CountContentItems(view.ContentTypeId, new string[0], string.Empty, filters);
+            int count = _db.CountContentItems(
+                view.ContentTypeId,
+                new string[0],
+                string.Empty,
+                filters
+            );
 
             var job = _entityFrameworkDb.BackgroundTasks.First(p => p.Id == jobId);
             job.TaskStep = 1;
-            job.StatusInfo = $"Pulling {count} items for {view.ContentType.LabelPlural} - {view.Label}";
+            job.StatusInfo =
+                $"Pulling {count} items for {view.ContentType.LabelPlural} - {view.Label}";
             job.PercentComplete = 0;
             _entityFrameworkDb.BackgroundTasks.Update(job);
             await _entityFrameworkDb.SaveChangesAsync(cancellationToken);
 
             var myExport = new CsvExport();
             int currentIndex = 0;
-            var activeThemeId = await _entityFrameworkDb.OrganizationSettings
-                .Select(os => os.ActiveThemeId)
+            var activeThemeId = await _entityFrameworkDb
+                .OrganizationSettings.Select(os => os.ActiveThemeId)
                 .FirstAsync(cancellationToken);
 
-            var contentItemIdsTemplateLabels = await _entityFrameworkDb.WebTemplateContentItemRelations
-                .Where(wtr => wtr.WebTemplate!.ThemeId == activeThemeId)
+            var contentItemIdsTemplateLabels = await _entityFrameworkDb
+                .WebTemplateContentItemRelations.Where(wtr =>
+                    wtr.WebTemplate!.ThemeId == activeThemeId
+                )
                 .Select(wtr => new { wtr.ContentItemId, wtr.WebTemplate!.Label })
                 .ToDictionaryAsync(wtr => wtr.ContentItemId, wtr => wtr.Label, cancellationToken);
 
-            foreach (var item in _db.QueryAllContentItemsAsTransaction(view.ContentTypeId,
-                                                new string[0],
-                                                string.Empty,
-                                                filters,
-                                                finalOrderBy))
+            foreach (
+                var item in _db.QueryAllContentItemsAsTransaction(
+                    view.ContentTypeId,
+                    new string[0],
+                    string.Empty,
+                    filters,
+                    finalOrderBy
+                )
+            )
             {
                 var webTemplateLabel = contentItemIdsTemplateLabels[item.Id];
-                var contentItemAsDict = _fieldValueConverter.MapToListItemValues(ContentItemDto.GetProjection(item), webTemplateLabel);
+                var contentItemAsDict = _fieldValueConverter.MapToListItemValues(
+                    ContentItemDto.GetProjection(item),
+                    webTemplateLabel
+                );
 
                 myExport.AddRow();
                 if (exportOnlyColumnsFromView)
@@ -162,7 +190,11 @@ public class BeginExportContentItemsToCsv
                             myExport[column] = string.Empty;
                         }
                     }
-                    foreach (var column in view.ContentType.ContentTypeFields.Select(p => p.DeveloperName))
+                    foreach (
+                        var column in view.ContentType.ContentTypeFields.Select(p =>
+                            p.DeveloperName
+                        )
+                    )
                     {
                         if (contentItemAsDict.ContainsKey(column))
                         {
@@ -177,7 +209,7 @@ public class BeginExportContentItemsToCsv
 
                 currentIndex++;
                 int percentDone = (currentIndex / count) * 100;
-                if (percentDone % 20 == 0) 
+                if (percentDone % 20 == 0)
                 {
                     job.TaskStep = 2;
                     job.PercentComplete = percentDone - 10;
@@ -192,9 +224,13 @@ public class BeginExportContentItemsToCsv
             await _entityFrameworkDb.SaveChangesAsync(cancellationToken);
 
             var csvAsBytes = myExport.ExportToBytes();
-            string fileName = $"{_currentOrganization.TimeZoneConverter.UtcToTimeZoneAsDateTimeFormat(DateTime.UtcNow)}-{view.DeveloperName}.csv";
+            string fileName =
+                $"{_currentOrganization.TimeZoneConverter.UtcToTimeZoneAsDateTimeFormat(DateTime.UtcNow)}-{view.DeveloperName}.csv";
             var id = Guid.NewGuid();
-            var objectKey = FileStorageUtility.CreateObjectKeyFromIdAndFileName(id.ToString(), fileName);
+            var objectKey = FileStorageUtility.CreateObjectKeyFromIdAndFileName(
+                id.ToString(),
+                fileName
+            );
             var mediaItem = new MediaItem
             {
                 Id = id,
@@ -202,11 +238,17 @@ public class BeginExportContentItemsToCsv
                 ContentType = "text/csv",
                 FileName = fileName,
                 FileStorageProvider = _fileStorageProvider.GetName(),
-                Length = csvAsBytes.Length
+                Length = csvAsBytes.Length,
             };
             _entityFrameworkDb.MediaItems.Add(mediaItem);
-          
-            await _fileStorageProvider.SaveAndGetDownloadUrlAsync(csvAsBytes, objectKey, fileName, "text/csv", DateTime.UtcNow.AddYears(999));
+
+            await _fileStorageProvider.SaveAndGetDownloadUrlAsync(
+                csvAsBytes,
+                objectKey,
+                fileName,
+                "text/csv",
+                DateTime.UtcNow.AddYears(999)
+            );
 
             job.TaskStep = 4;
             job.PercentComplete = 100;
@@ -217,8 +259,11 @@ public class BeginExportContentItemsToCsv
 
         protected string GetSortForView(View view)
         {
-            string finalOrderBy = $"{BuiltInContentTypeField.CreationTime.DeveloperName} {SortOrder.DESCENDING}";
-            var viewOrderBy = view.Sort.Select(p => $"{p.DeveloperName} {p.SortOrder.DeveloperName}").ToList();
+            string finalOrderBy =
+                $"{BuiltInContentTypeField.CreationTime.DeveloperName} {SortOrder.DESCENDING}";
+            var viewOrderBy = view
+                .Sort.Select(p => $"{p.DeveloperName} {p.SortOrder.DeveloperName}")
+                .ToList();
             finalOrderBy = viewOrderBy.Any() ? string.Join(",", viewOrderBy) : finalOrderBy;
 
             return finalOrderBy;

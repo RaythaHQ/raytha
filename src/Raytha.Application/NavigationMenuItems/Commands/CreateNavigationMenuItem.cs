@@ -22,12 +22,13 @@ public class CreateNavigationMenuItem
         public string? CssClassName { get; init; }
         public ShortGuid? ParentNavigationMenuItemId { get; init; }
 
-        public static Command Empty() => new()
-        {
-            NavigationMenuId = string.Empty,
-            Label = string.Empty,
-            Url = string.Empty,
-        };
+        public static Command Empty() =>
+            new()
+            {
+                NavigationMenuId = string.Empty,
+                Label = string.Empty,
+                Url = string.Empty,
+            };
     }
 
     public class Validator : AbstractValidator<Command>
@@ -37,15 +38,28 @@ public class CreateNavigationMenuItem
             RuleFor(x => x.NavigationMenuId).NotEmpty();
             RuleFor(x => x.Label).NotEmpty();
             RuleFor(x => x.Url).NotEmpty();
-            RuleFor(x => x).Custom((request, _) =>
-            {
-                if (!db.NavigationMenus.Any(nm => nm.Id == request.NavigationMenuId.Guid))
-                    throw new NotFoundException("Navigation Menu", request.NavigationMenuId);
+            RuleFor(x => x)
+                .Custom(
+                    (request, _) =>
+                    {
+                        if (!db.NavigationMenus.Any(nm => nm.Id == request.NavigationMenuId.Guid))
+                            throw new NotFoundException(
+                                "Navigation Menu",
+                                request.NavigationMenuId
+                            );
 
-                if (request.ParentNavigationMenuItemId.HasValue)
-                    if (!db.NavigationMenuItems.Any(nmi => nmi.Id == request.ParentNavigationMenuItemId.Value.Guid))
-                        throw new NotFoundException("Navigation Menu Item", request.ParentNavigationMenuItemId);
-            });
+                        if (request.ParentNavigationMenuItemId.HasValue)
+                            if (
+                                !db.NavigationMenuItems.Any(nmi =>
+                                    nmi.Id == request.ParentNavigationMenuItemId.Value.Guid
+                                )
+                            )
+                                throw new NotFoundException(
+                                    "Navigation Menu Item",
+                                    request.ParentNavigationMenuItemId
+                                );
+                    }
+                );
         }
     }
 
@@ -60,15 +74,21 @@ public class CreateNavigationMenuItem
             _mediator = mediator;
         }
 
-        public async Task<CommandResponseDto<ShortGuid>> Handle(Command request, CancellationToken cancellationToken)
+        public async Task<CommandResponseDto<ShortGuid>> Handle(
+            Command request,
+            CancellationToken cancellationToken
+        )
         {
             var parentNavigationMenuItemId = request.ParentNavigationMenuItemId?.Guid;
-            var navigationMenuInfo = await _db.NavigationMenus
-                .Select(nm => new
+            var navigationMenuInfo = await _db
+                .NavigationMenus.Select(nm => new
                 {
                     nm.Id,
-                    ThisLevelNavigationMenuItemsCount = nm.NavigationMenuItems.Count(nmi => nmi.ParentNavigationMenuItemId == parentNavigationMenuItemId),
-                }).FirstAsync(nm => nm.Id == request.NavigationMenuId.Guid, cancellationToken);
+                    ThisLevelNavigationMenuItemsCount = nm.NavigationMenuItems.Count(nmi =>
+                        nmi.ParentNavigationMenuItemId == parentNavigationMenuItemId
+                    ),
+                })
+                .FirstAsync(nm => nm.Id == request.NavigationMenuId.Guid, cancellationToken);
 
             var entity = new NavigationMenuItem
             {
@@ -83,10 +103,13 @@ public class CreateNavigationMenuItem
                 ParentNavigationMenuItemId = request.ParentNavigationMenuItemId,
             };
 
-            await _mediator.Send(new CreateNavigationMenuRevision.Command
-            {
-                NavigationMenuId = navigationMenuInfo.Id,
-            }, cancellationToken);
+            await _mediator.Send(
+                new CreateNavigationMenuRevision.Command
+                {
+                    NavigationMenuId = navigationMenuInfo.Id,
+                },
+                cancellationToken
+            );
 
             await _db.NavigationMenuItems.AddAsync(entity, cancellationToken);
 

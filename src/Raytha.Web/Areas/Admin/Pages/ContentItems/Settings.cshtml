@@ -1,0 +1,61 @@
+@page "/raytha/{contentTypeDeveloperName}/edit/{id}/settings"
+@using Raytha.Domain.Entities
+@inject IAuthorizationService AuthorizationService
+@model Raytha.Web.Areas.Admin.Pages.ContentItems.Settings
+
+@{
+    var pageTitle = $"{Model.CurrentView.ContentType.LabelPlural} > Settings";
+    Layout = "SubActionLayout";
+    ViewData["Title"] = pageTitle;
+    ViewData["ActiveMenu"] = Model.CurrentView.ContentType.DeveloperName;
+    ViewData["ActiveSubMenu"] = "Settings";
+}
+
+<form asp-page="@RouteNames.ContentItems.Settings" method="post" class="py-4"
+    asp-route-contentTypeDeveloperName="@Model.CurrentView.ContentType.DeveloperName" asp-route-id="@Model.Id">
+    <div class="col-lg-12">
+        <div class="mb-3">
+            <label class="form-label raytha-required" asp-for="@Model.Form.TemplateId"></label>
+            <select class="form-select @Model.HasError("TemplateId")" asp-for="@Model.Form.TemplateId">
+                <option value="">-- SELECT --</option>
+                @foreach (var template in Model.Form.AvailableTemplates)
+                {
+                    <option value="@template.Key">@template.Value</option>
+                }
+            </select>
+            <div class="invalid-feedback">@Model.ErrorMessageFor("TemplateId")</div>
+        </div>
+    </div>
+    <div class="col-lg-12">
+        <label class="form-label raytha-required" asp-for="Form.RoutePath"></label>
+        <div class="input-group mb-3">
+            <span class="input-group-text">@Model.Form.WebsiteUrl</span>
+            <input type="text" class="form-control @Model.HasError("RoutePath")" asp-for="Form.RoutePath" required>
+            <div class="invalid-feedback">@Model.ErrorMessageFor("RoutePath")</div>
+        </div>
+    </div>
+    <input type="hidden" asp-for="@Model.Id">
+    <div class="col-lg-12">
+        <button type="submit" class="btn btn-success mx-2" name="SaveAsDraft" value="false">Save changes</button>
+    </div>
+</form>
+<br />
+
+@if ((await AuthorizationService.AuthorizeAsync(User,
+BuiltInSystemPermission.MANAGE_SYSTEM_SETTINGS_PERMISSION)).Succeeded)
+{
+    <hr />
+    if (!Model.Form.IsHomePage)
+    {
+        <form asp-page="@RouteNames.ContentItems.Settings" asp-page-handler="SetAsHomePage" method="post" class="py-4"
+            asp-route-contentTypeDeveloperName="@Model.CurrentView.ContentType.DeveloperName" asp-route-id="@Model.Id">
+            <div class="col-lg-12">
+                <button type="submit" class="btn btn-secondary mx-2">Set as home page</button>
+            </div>
+        </form>
+    }
+    else
+    {
+        <p>This content item is currently set as the home page.</p>
+    }
+}

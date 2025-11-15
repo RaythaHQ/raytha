@@ -16,20 +16,33 @@ public record NavigationMenuItem_RenderModel : IInsertTemplateVariable
     public bool IsLastItem { get; init; }
     public required IEnumerable<NavigationMenuItem_RenderModel> MenuItems { get; init; }
 
-    public static NavigationMenuItem_RenderModel Empty() => new()
-    {
-        Id = string.Empty,
-        Label = string.Empty,
-        Url = string.Empty,
-        MenuItems = new List<NavigationMenuItem_RenderModel>(),
-    };
+    public static NavigationMenuItem_RenderModel Empty() =>
+        new()
+        {
+            Id = string.Empty,
+            Label = string.Empty,
+            Url = string.Empty,
+            MenuItems = new List<NavigationMenuItem_RenderModel>(),
+        };
 
-    public static Expression<Func<NavigationMenuItemDto, IReadOnlyCollection<NavigationMenuItem_RenderModel>, int, NavigationMenuItem_RenderModel>> GetProjection()
+    public static Expression<
+        Func<
+            NavigationMenuItemDto,
+            IReadOnlyCollection<NavigationMenuItem_RenderModel>,
+            int,
+            NavigationMenuItem_RenderModel
+        >
+    > GetProjection()
     {
-        return (entity, nestedMenuItems, menuItemsWithSameParentCount) => GetProjection(entity, nestedMenuItems, menuItemsWithSameParentCount);
+        return (entity, nestedMenuItems, menuItemsWithSameParentCount) =>
+            GetProjection(entity, nestedMenuItems, menuItemsWithSameParentCount);
     }
 
-    public static NavigationMenuItem_RenderModel GetProjection(NavigationMenuItemDto entity, IReadOnlyCollection<NavigationMenuItem_RenderModel> nestedMenuItems, int menuItemsWithSameParentCount)
+    public static NavigationMenuItem_RenderModel GetProjection(
+        NavigationMenuItemDto entity,
+        IReadOnlyCollection<NavigationMenuItem_RenderModel> nestedMenuItems,
+        int menuItemsWithSameParentCount
+    )
     {
         return new NavigationMenuItem_RenderModel
         {
@@ -64,7 +77,10 @@ public record NavigationMenuItem_RenderModel : IInsertTemplateVariable
     {
         foreach (var developerName in GetDeveloperNames())
         {
-            yield return new KeyValuePair<string, string>(developerName, $"MenuItem.{developerName}");
+            yield return new KeyValuePair<string, string>(
+                developerName,
+                $"MenuItem.{developerName}"
+            );
         }
     }
 

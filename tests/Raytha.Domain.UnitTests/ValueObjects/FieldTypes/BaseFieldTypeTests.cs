@@ -85,8 +85,10 @@ public class BaseFieldTypeTests
     [Test]
     public void ShouldThrowUnsupportedColourExceptionGivenNotSupportedColourCode()
     {
-        FluentActions.Invoking(() => BaseFieldType.From("BadValue"))
-            .Should().Throw<UnsupportedFieldTypeException>();
+        FluentActions
+            .Invoking(() => BaseFieldType.From("BadValue"))
+            .Should()
+            .Throw<UnsupportedFieldTypeException>();
     }
 
     [Test]

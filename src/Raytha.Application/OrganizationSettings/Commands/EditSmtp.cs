@@ -1,9 +1,9 @@
-﻿using CSharpVitamins;
+﻿using System.Text.Json.Serialization;
+using CSharpVitamins;
 using FluentValidation;
 using MediatR;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Models;
-using System.Text.Json.Serialization;
 
 namespace Raytha.Application.OrganizationSettings.Commands;
 
@@ -30,21 +30,34 @@ public class EditSmtp
     {
         public Validator(IEmailerConfiguration emailerConfiguration)
         {
-            RuleFor(x => x.SmtpOverrideSystem).Equal(true).When(p => emailerConfiguration.IsMissingSmtpEnvVars())
-                .WithMessage("The server administrator did not set SMTP environment variables, so you must override the system defaults.");
+            RuleFor(x => x.SmtpOverrideSystem)
+                .Equal(true)
+                .When(p => emailerConfiguration.IsMissingSmtpEnvVars())
+                .WithMessage(
+                    "The server administrator did not set SMTP environment variables, so you must override the system defaults."
+                );
             RuleFor(x => x.SmtpHost).NotEmpty().When(p => p.SmtpOverrideSystem);
-            RuleFor(x => x.SmtpPort).NotNull().GreaterThan(0).LessThanOrEqualTo(65535).When(p => p.SmtpOverrideSystem);
+            RuleFor(x => x.SmtpPort)
+                .NotNull()
+                .GreaterThan(0)
+                .LessThanOrEqualTo(65535)
+                .When(p => p.SmtpOverrideSystem);
         }
     }
 
     public class Handler : IRequestHandler<Command, CommandResponseDto<ShortGuid>>
     {
         private readonly IRaythaDbContext _db;
+
         public Handler(IRaythaDbContext db)
         {
             _db = db;
         }
-        public async Task<CommandResponseDto<ShortGuid>> Handle(Command request, CancellationToken cancellationToken)
+
+        public async Task<CommandResponseDto<ShortGuid>> Handle(
+            Command request,
+            CancellationToken cancellationToken
+        )
         {
             var entity = _db.OrganizationSettings.First();
 

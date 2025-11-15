@@ -9,9 +9,7 @@ namespace Raytha.Application.ContentItems.Commands;
 
 public class DeleteAlreadyDeletedContentItem
 {
-    public record Command : LoggableEntityRequest<CommandResponseDto<ShortGuid>>
-    {
-    }
+    public record Command : LoggableEntityRequest<CommandResponseDto<ShortGuid>> { }
 
     public class Handler : IRequestHandler<Command, CommandResponseDto<ShortGuid>>
     {
@@ -23,16 +21,22 @@ public class DeleteAlreadyDeletedContentItem
             _db = db;
             _contentTypeInRoutePath = contentTypeInRoutePath;
         }
-        public async Task<CommandResponseDto<ShortGuid>> Handle(Command request, CancellationToken cancellationToken)
+
+        public async Task<CommandResponseDto<ShortGuid>> Handle(
+            Command request,
+            CancellationToken cancellationToken
+        )
         {
-            var entity = _db.DeletedContentItems
-                .Include(p => p.ContentType)
+            var entity = _db
+                .DeletedContentItems.Include(p => p.ContentType)
                 .FirstOrDefault(p => p.Id == request.Id.Guid);
 
             if (entity == null)
                 throw new NotFoundException("Deleted Content Item", request.Id);
 
-            _contentTypeInRoutePath.ValidateContentTypeInRoutePathMatchesValue(entity.ContentType.DeveloperName);
+            _contentTypeInRoutePath.ValidateContentTypeInRoutePathMatchesValue(
+                entity.ContentType.DeveloperName
+            );
 
             _db.DeletedContentItems.Remove(entity);
 

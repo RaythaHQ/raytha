@@ -1,9 +1,9 @@
-using MediatR;
-using FluentValidation;
-using Raytha.Application.Common.Models;
 using CSharpVitamins;
-using Raytha.Application.Common.Interfaces;
+using FluentValidation;
+using MediatR;
 using Raytha.Application.Common.Exceptions;
+using Raytha.Application.Common.Interfaces;
+using Raytha.Application.Common.Models;
 
 namespace Raytha.Application.Login.Commands;
 
@@ -28,14 +28,18 @@ public class ChangeProfile
     public class Handler : IRequestHandler<Command, CommandResponseDto<ShortGuid>>
     {
         private readonly IRaythaDbContext _db;
+
         public Handler(IRaythaDbContext db)
         {
             _db = db;
         }
-        public async Task<CommandResponseDto<ShortGuid>> Handle(Command request, CancellationToken cancellationToken)
+
+        public async Task<CommandResponseDto<ShortGuid>> Handle(
+            Command request,
+            CancellationToken cancellationToken
+        )
         {
-            var entity = _db.Users
-                .FirstOrDefault(p => p.Id == request.Id.Guid);
+            var entity = _db.Users.FirstOrDefault(p => p.Id == request.Id.Guid);
 
             if (entity == null)
                 throw new NotFoundException("Admin", request.Id);

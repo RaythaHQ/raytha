@@ -18,13 +18,14 @@ public class CreateTheme
         public required string Description { get; init; }
         public required bool InsertDefaultThemeMediaItems { get; init; }
 
-        public static Command Empty() => new()
-        {
-            Title = string.Empty,
-            DeveloperName = string.Empty,
-            Description = string.Empty,
-            InsertDefaultThemeMediaItems = false,
-        };
+        public static Command Empty() =>
+            new()
+            {
+                Title = string.Empty,
+                DeveloperName = string.Empty,
+                Description = string.Empty,
+                InsertDefaultThemeMediaItems = false,
+            };
     }
 
     public class Validator : AbstractValidator<Command>
@@ -34,11 +35,21 @@ public class CreateTheme
             RuleFor(x => x.Title).NotEmpty();
             RuleFor(x => x.Description).NotEmpty();
             RuleFor(x => x.DeveloperName).NotEmpty();
-            RuleFor(x => x).Custom((request, context) =>
-            {
-                if (db.Themes.Any(t => t.DeveloperName == request.DeveloperName.ToDeveloperName()))
-                    context.AddFailure("DeveloperName", $"A theme with the developer name {request.DeveloperName.ToDeveloperName()} already exists.");
-            });
+            RuleFor(x => x)
+                .Custom(
+                    (request, context) =>
+                    {
+                        if (
+                            db.Themes.Any(t =>
+                                t.DeveloperName == request.DeveloperName.ToDeveloperName()
+                            )
+                        )
+                            context.AddFailure(
+                                "DeveloperName",
+                                $"A theme with the developer name {request.DeveloperName.ToDeveloperName()} already exists."
+                            );
+                    }
+                );
         }
     }
 
@@ -53,7 +64,10 @@ public class CreateTheme
             _fileStorageProvider = fileStorageProvider;
         }
 
-        public async Task<CommandResponseDto<ShortGuid>> Handle(Command request, CancellationToken cancellationToken)
+        public async Task<CommandResponseDto<ShortGuid>> Handle(
+            Command request,
+            CancellationToken cancellationToken
+        )
         {
             var themeId = Guid.NewGuid();
             var theme = new Theme
@@ -77,25 +91,43 @@ public class CreateTheme
             return new CommandResponseDto<ShortGuid>(theme.Id);
         }
 
-        private async Task<IReadOnlyCollection<MediaItem>> InsertDefaultMediaItemsAsync(Guid themeId, CancellationToken cancellationToken)
+        private async Task<IReadOnlyCollection<MediaItem>> InsertDefaultMediaItemsAsync(
+            Guid themeId,
+            CancellationToken cancellationToken
+        )
         {
             var mediaItems = new List<MediaItem>();
             var themeAccessToMediaItems = new List<ThemeAccessToMediaItem>();
 
             var defaultThemeAssetsPath = Path.Combine("wwwroot", "raytha_default_2024", "assets");
             if (!Directory.Exists(defaultThemeAssetsPath))
-                throw new DirectoryNotFoundException($"Path '{defaultThemeAssetsPath}' does not exist.");
+                throw new DirectoryNotFoundException(
+                    $"Path '{defaultThemeAssetsPath}' does not exist."
+                );
 
-            var themeFiles = Directory.GetFiles(defaultThemeAssetsPath, "*", SearchOption.AllDirectories);
+            var themeFiles = Directory.GetFiles(
+                defaultThemeAssetsPath,
+                "*",
+                SearchOption.AllDirectories
+            );
             foreach (var file in themeFiles)
             {
                 var idForKey = ShortGuid.NewGuid();
                 var fileName = Path.GetFileName(file);
                 var data = await File.ReadAllBytesAsync(file, cancellationToken);
-                var objectKey = FileStorageUtility.CreateObjectKeyFromIdAndFileName(idForKey, fileName);
+                var objectKey = FileStorageUtility.CreateObjectKeyFromIdAndFileName(
+                    idForKey,
+                    fileName
+                );
                 var contentType = FileStorageUtility.GetMimeType(fileName);
 
-                await _fileStorageProvider.SaveAndGetDownloadUrlAsync(data, objectKey, fileName, contentType, FileStorageUtility.GetDefaultExpiry());
+                await _fileStorageProvider.SaveAndGetDownloadUrlAsync(
+                    data,
+                    objectKey,
+                    fileName,
+                    contentType,
+                    FileStorageUtility.GetDefaultExpiry()
+                );
 
                 var mediaItem = new MediaItem
                 {
@@ -109,21 +141,30 @@ public class CreateTheme
 
                 mediaItems.Add(mediaItem);
 
-                themeAccessToMediaItems.Add(new ThemeAccessToMediaItem
-                {
-                    Id = Guid.NewGuid(),
-                    ThemeId = themeId,
-                    MediaItemId = mediaItem.Id,
-                });
+                themeAccessToMediaItems.Add(
+                    new ThemeAccessToMediaItem
+                    {
+                        Id = Guid.NewGuid(),
+                        ThemeId = themeId,
+                        MediaItemId = mediaItem.Id,
+                    }
+                );
             }
 
             await _db.MediaItems.AddRangeAsync(mediaItems, cancellationToken);
-            await _db.ThemeAccessToMediaItems.AddRangeAsync(themeAccessToMediaItems, cancellationToken);
+            await _db.ThemeAccessToMediaItems.AddRangeAsync(
+                themeAccessToMediaItems,
+                cancellationToken
+            );
 
             return mediaItems;
         }
 
-        private async Task InsertDefaultWebTemplates(Guid themeId, IReadOnlyCollection<MediaItem> mediaItems, CancellationToken cancellationToken)
+        private async Task InsertDefaultWebTemplates(
+            Guid themeId,
+            IReadOnlyCollection<MediaItem> mediaItems,
+            CancellationToken cancellationToken
+        )
         {
             var loginWebTemplates = new List<string>
             {
@@ -137,14 +178,14 @@ public class CreateTheme
                 BuiltInWebTemplate.UserRegistrationForm,
                 BuiltInWebTemplate.UserRegistrationFormSuccess,
                 BuiltInWebTemplate.ChangePasswordPage,
-                BuiltInWebTemplate.ChangeProfilePage
+                BuiltInWebTemplate.ChangeProfilePage,
             };
 
             var standardWebTemplatesForContentTypes = new List<string>
             {
                 BuiltInWebTemplate.HomePage,
                 BuiltInWebTemplate.ContentItemDetailViewPage,
-                BuiltInWebTemplate.ContentItemListViewPage
+                BuiltInWebTemplate.ContentItemListViewPage,
             };
 
             var defaultWebTemplates = new List<WebTemplate>();
@@ -191,17 +232,20 @@ public class CreateTheme
                 Content = defaultBaseLoginLayout.DefaultContent,
                 Label = defaultBaseLoginLayout.DefaultLabel,
                 DeveloperName = defaultBaseLoginLayout.DeveloperName,
-                ParentTemplateId = baseLayout.Id
+                ParentTemplateId = baseLayout.Id,
             };
 
             defaultWebTemplates.Add(baseLoginLayout);
 
-            var builtInWebTemplatesWithoutBaseLayout = BuiltInWebTemplate.Templates
-                .Where(bwt => bwt.DeveloperName != BuiltInWebTemplate._Layout.DeveloperName && bwt.DeveloperName != BuiltInWebTemplate._LoginLayout.DeveloperName)
+            var builtInWebTemplatesWithoutBaseLayout = BuiltInWebTemplate
+                .Templates.Where(bwt =>
+                    bwt.DeveloperName != BuiltInWebTemplate._Layout.DeveloperName
+                    && bwt.DeveloperName != BuiltInWebTemplate._LoginLayout.DeveloperName
+                )
                 .ToArray();
 
-            var contentTypeIds = await _db.ContentTypes
-                .Select(ct => ct.Id)
+            var contentTypeIds = await _db
+                .ContentTypes.Select(ct => ct.Id)
                 .ToArrayAsync(cancellationToken);
 
             foreach (var webTemplateToBuild in builtInWebTemplatesWithoutBaseLayout)
@@ -223,15 +267,24 @@ public class CreateTheme
                     webTemplate.IsBuiltInTemplate = false;
                     webTemplate.AllowAccessForNewContentTypes = true;
                     webTemplate.TemplateAccessToModelDefinitions = contentTypeIds
-                        .Select(contentTypeId => new WebTemplateAccessToModelDefinition { ContentTypeId = contentTypeId })
+                        .Select(contentTypeId => new WebTemplateAccessToModelDefinition
+                        {
+                            ContentTypeId = contentTypeId,
+                        })
                         .ToList();
 
-                    if (webTemplate.DeveloperName == BuiltInWebTemplate.HomePage.DeveloperName && insertDefaultMediaItems)
+                    if (
+                        webTemplate.DeveloperName == BuiltInWebTemplate.HomePage.DeveloperName
+                        && insertDefaultMediaItems
+                    )
                     {
                         const string fileName = "raythadotcom_screenshot.webp";
                         var mediaItem = mediaItems.First(mi => mi.FileName.Contains(fileName));
 
-                        webTemplate.Content = webTemplate.Content.Replace(fileName, mediaItem.ObjectKey);
+                        webTemplate.Content = webTemplate.Content.Replace(
+                            fileName,
+                            mediaItem.ObjectKey
+                        );
                     }
                 }
                 else if (loginWebTemplates.Contains(webTemplateToBuild))

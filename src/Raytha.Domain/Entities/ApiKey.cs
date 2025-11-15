@@ -1,7 +1,7 @@
 ﻿namespace Raytha.Domain.Entities;
 
 public class ApiKey : BaseEntity, ICreationAuditable
-{   
+{
     public byte[] ApiKeyHash { get; set; } = null!;
 
     public Guid UserId { get; set; }

@@ -16,26 +16,48 @@ public static class SamlUtility
 
             using (XmlWriter xw = XmlWriter.Create(sw, xws))
             {
-                xw.WriteStartElement("samlp", "AuthnRequest", "urn:oasis:names:tc:SAML:2.0:protocol");
+                xw.WriteStartElement(
+                    "samlp",
+                    "AuthnRequest",
+                    "urn:oasis:names:tc:SAML:2.0:protocol"
+                );
                 xw.WriteAttributeString("ID", id);
                 xw.WriteAttributeString("Version", "2.0");
                 xw.WriteAttributeString("IssueInstant", issue_instant);
-                xw.WriteAttributeString("ProtocolBinding", "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST");
+                xw.WriteAttributeString(
+                    "ProtocolBinding",
+                    "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST"
+                );
                 xw.WriteAttributeString("AssertionConsumerServiceURL", acsUrl);
 
                 xw.WriteStartElement("saml", "Issuer", "urn:oasis:names:tc:SAML:2.0:assertion");
                 xw.WriteString(entityId);
                 xw.WriteEndElement();
 
-                xw.WriteStartElement("samlp", "NameIDPolicy", "urn:oasis:names:tc:SAML:2.0:protocol");
-                xw.WriteAttributeString("Format", "urn:oasis:names:tc:SAML:2.0:nameid-format:unspecified");
+                xw.WriteStartElement(
+                    "samlp",
+                    "NameIDPolicy",
+                    "urn:oasis:names:tc:SAML:2.0:protocol"
+                );
+                xw.WriteAttributeString(
+                    "Format",
+                    "urn:oasis:names:tc:SAML:2.0:nameid-format:unspecified"
+                );
                 xw.WriteAttributeString("AllowCreate", "true");
                 xw.WriteEndElement();
 
-                xw.WriteStartElement("samlp", "RequestedAuthnContext", "urn:oasis:names:tc:SAML:2.0:protocol");
+                xw.WriteStartElement(
+                    "samlp",
+                    "RequestedAuthnContext",
+                    "urn:oasis:names:tc:SAML:2.0:protocol"
+                );
                 xw.WriteAttributeString("Comparison", "exact");
 
-                xw.WriteStartElement("saml", "AuthnContextClassRef", "urn:oasis:names:tc:SAML:2.0:assertion");
+                xw.WriteStartElement(
+                    "saml",
+                    "AuthnContextClassRef",
+                    "urn:oasis:names:tc:SAML:2.0:assertion"
+                );
                 xw.WriteString("urn:oasis:names:tc:SAML:2.0:ac:classes:PasswordProtectedTransport");
                 xw.WriteEndElement();
 

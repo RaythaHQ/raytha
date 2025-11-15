@@ -8,9 +8,10 @@ namespace Raytha.Application.Themes.Queries;
 
 public class GetThemes
 {
-    public record Query : GetPagedEntitiesInputDto, IRequest<IQueryResponseDto<ListResultDto<ThemeDto>>>
-    {
-    }
+    public record Query
+        : GetPagedEntitiesInputDto,
+            IRequest<IQueryResponseDto<ListResultDto<ThemeDto>>>
+    { }
 
     public class Handler : IRequestHandler<Query, IQueryResponseDto<ListResultDto<ThemeDto>>>
     {
@@ -21,10 +22,13 @@ public class GetThemes
             _db = db;
         }
 
-        public async Task<IQueryResponseDto<ListResultDto<ThemeDto>>> Handle(Query request, CancellationToken cancellationToken)
+        public async Task<IQueryResponseDto<ListResultDto<ThemeDto>>> Handle(
+            Query request,
+            CancellationToken cancellationToken
+        )
         {
-            var query = _db.Themes
-                .Include(t => t.CreatorUser)
+            var query = _db
+                .Themes.Include(t => t.CreatorUser)
                 .Include(t => t.LastModifierUser)
                 .AsQueryable();
 
@@ -35,9 +39,14 @@ public class GetThemes
             }
 
             var total = await query.CountAsync(cancellationToken);
-            var items = await query.ApplyPaginationInput(request).Select(ThemeDto.GetProjection()).ToArrayAsync(cancellationToken);
+            var items = await query
+                .ApplyPaginationInput(request)
+                .Select(ThemeDto.GetProjection())
+                .ToArrayAsync(cancellationToken);
 
-            return new QueryResponseDto<ListResultDto<ThemeDto>>(new ListResultDto<ThemeDto>(items, total));
+            return new QueryResponseDto<ListResultDto<ThemeDto>>(
+                new ListResultDto<ThemeDto>(items, total)
+            );
         }
     }
 }

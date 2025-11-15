@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using CSharpVitamins;
 using FluentValidation;
 using MediatR;
@@ -6,7 +7,6 @@ using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Models;
 using Raytha.Application.Common.Utils;
 using Raytha.Domain.ValueObjects;
-using System.Text.Json.Serialization;
 
 namespace Raytha.Application.AuthenticationSchemes.Commands;
 
@@ -34,16 +34,19 @@ public class EditAuthenticationScheme
         public string AuthenticationSchemeType { get; init; } = null!;
     }
 
-    public class Validator : AbstractValidator<Command> 
+    public class Validator : AbstractValidator<Command>
     {
-        public Validator(IRaythaDbContext db) 
+        public Validator(IRaythaDbContext db)
         {
             RuleFor(x => x.Label).NotEmpty();
             RuleFor(x => x.LoginButtonText).NotEmpty();
             RuleFor(x => x.SignInUrl)
                 .NotEmpty()
                 .Must(StringExtensions.IsValidUriFormat)
-                .When(p => p.AuthenticationSchemeType == AuthenticationSchemeType.Jwt.DeveloperName || p.AuthenticationSchemeType == AuthenticationSchemeType.Saml.DeveloperName)
+                .When(p =>
+                    p.AuthenticationSchemeType == AuthenticationSchemeType.Jwt.DeveloperName
+                    || p.AuthenticationSchemeType == AuthenticationSchemeType.Saml.DeveloperName
+                )
                 .WithMessage("Sign in url is not a valid url.");
             RuleFor(x => x.SignOutUrl)
                 .Must(StringExtensions.IsValidUriFormat)
@@ -51,43 +54,66 @@ public class EditAuthenticationScheme
                 .WithMessage("Sign out url is not a valid url.");
             RuleFor(x => x.JwtSecretKey)
                 .NotEmpty()
-                .When(p => p.AuthenticationSchemeType == AuthenticationSchemeType.Jwt.DeveloperName);
+                .When(p =>
+                    p.AuthenticationSchemeType == AuthenticationSchemeType.Jwt.DeveloperName
+                );
             RuleFor(x => x.SamlCertificate)
                 .NotEmpty()
-                .When(p => p.AuthenticationSchemeType == AuthenticationSchemeType.Saml.DeveloperName);
+                .When(p =>
+                    p.AuthenticationSchemeType == AuthenticationSchemeType.Saml.DeveloperName
+                );
             RuleFor(x => x.MagicLinkExpiresInSeconds)
                 .NotEmpty()
                 .GreaterThanOrEqualTo(30)
                 .LessThanOrEqualTo(604800)
-                .When(p => p.AuthenticationSchemeType == AuthenticationSchemeType.MagicLink.DeveloperName);
-            RuleFor(x => x).Custom((request, context) =>
-            {
-                var entity = db.AuthenticationSchemes.FirstOrDefault(p => p.Id == request.Id.Guid);
-                if (entity == null)
-                    throw new NotFoundException("Authentication Scheme", request.Id);
+                .When(p =>
+                    p.AuthenticationSchemeType == AuthenticationSchemeType.MagicLink.DeveloperName
+                );
+            RuleFor(x => x)
+                .Custom(
+                    (request, context) =>
+                    {
+                        var entity = db.AuthenticationSchemes.FirstOrDefault(p =>
+                            p.Id == request.Id.Guid
+                        );
+                        if (entity == null)
+                            throw new NotFoundException("Authentication Scheme", request.Id);
 
-                var onlyOneAdminAuthLeft = db.AuthenticationSchemes.Count(p => p.IsEnabledForAdmins) == 1;
-                if (!request.IsEnabledForAdmins && entity.IsEnabledForAdmins && onlyOneAdminAuthLeft)
-                {
-                    context.AddFailure("IsEnabledForAdmins", "You must have at least 1 authentication scheme enabled for administrators.");
-                    return;
-                }
-            });
+                        var onlyOneAdminAuthLeft =
+                            db.AuthenticationSchemes.Count(p => p.IsEnabledForAdmins) == 1;
+                        if (
+                            !request.IsEnabledForAdmins
+                            && entity.IsEnabledForAdmins
+                            && onlyOneAdminAuthLeft
+                        )
+                        {
+                            context.AddFailure(
+                                "IsEnabledForAdmins",
+                                "You must have at least 1 authentication scheme enabled for administrators."
+                            );
+                            return;
+                        }
+                    }
+                );
         }
     }
 
     public class Handler : IRequestHandler<Command, CommandResponseDto<ShortGuid>>
     {
         private readonly IRaythaDbContext _db;
+
         public Handler(IRaythaDbContext db)
         {
             _db = db;
         }
-        public async Task<CommandResponseDto<ShortGuid>> Handle(Command request, CancellationToken cancellationToken)
+
+        public async Task<CommandResponseDto<ShortGuid>> Handle(
+            Command request,
+            CancellationToken cancellationToken
+        )
         {
-            var entity = _db.AuthenticationSchemes
-                    .First(p => p.Id == request.Id.Guid);
-            
+            var entity = _db.AuthenticationSchemes.First(p => p.Id == request.Id.Guid);
+
             entity.Label = request.Label;
             entity.SignInUrl = request.SignInUrl;
             entity.SignOutUrl = request.SignOutUrl;

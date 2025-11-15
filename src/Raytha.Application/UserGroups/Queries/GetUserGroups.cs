@@ -9,7 +9,9 @@ namespace Raytha.Application.UserGroups.Queries;
 
 public class GetUserGroups
 {
-    public record Query : GetPagedEntitiesInputDto, IRequest<IQueryResponseDto<ListResultDto<UserGroupDto>>>
+    public record Query
+        : GetPagedEntitiesInputDto,
+            IRequest<IQueryResponseDto<ListResultDto<UserGroupDto>>>
     {
         public override string OrderBy { get; init; } = $"Label {SortOrder.ASCENDING}";
     }
@@ -17,12 +19,16 @@ public class GetUserGroups
     public class Handler : IRequestHandler<Query, IQueryResponseDto<ListResultDto<UserGroupDto>>>
     {
         private readonly IRaythaDbContext _db;
+
         public Handler(IRaythaDbContext db)
         {
             _db = db;
         }
 
-        public async Task<IQueryResponseDto<ListResultDto<UserGroupDto>>> Handle(Query request, CancellationToken cancellationToken)
+        public async Task<IQueryResponseDto<ListResultDto<UserGroupDto>>> Handle(
+            Query request,
+            CancellationToken cancellationToken
+        )
         {
             var query = _db.UserGroups.AsQueryable();
 
@@ -30,14 +36,20 @@ public class GetUserGroups
             {
                 var searchQuery = request.Search.ToLower();
                 query = query.Where(d =>
-                    d.Label.ToLower().Contains(searchQuery) ||
-                    d.DeveloperName.ToLower().Contains(searchQuery));
+                    d.Label.ToLower().Contains(searchQuery)
+                    || d.DeveloperName.ToLower().Contains(searchQuery)
+                );
             }
 
             var total = await query.CountAsync();
-            var items = query.ApplyPaginationInput(request).Select(UserGroupDto.GetProjection()).ToArray();
+            var items = query
+                .ApplyPaginationInput(request)
+                .Select(UserGroupDto.GetProjection())
+                .ToArray();
 
-            return new QueryResponseDto<ListResultDto<UserGroupDto>>(new ListResultDto<UserGroupDto>(items, total));
+            return new QueryResponseDto<ListResultDto<UserGroupDto>>(
+                new ListResultDto<UserGroupDto>(items, total)
+            );
         }
     }
 }

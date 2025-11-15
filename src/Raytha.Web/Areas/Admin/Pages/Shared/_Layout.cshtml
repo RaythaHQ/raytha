@@ -1,0 +1,32 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Raytha</title>
+    <link rel="stylesheet" href="~/raytha_admin/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/raytha_admin/css/volt.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/raytha_admin/css/site.css" asp-append-version="true" />
+    <link rel="icon" type="image/x-icon" href="~/favicon.ico">
+
+    @RenderSection("headstyles", false)
+</head>
+
+<body data-active-menu="@ViewData["ActiveMenu"]">
+    @RenderBody()
+    <script src="~/raytha_admin/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+
+    @* Load shared modules that auto-initialize *@
+    <script type="module">
+        import '/js/shared/role-permissions.js';
+        import '/js/shared/confirm-dialog.js';
+        import '/js/core/datepicker.js';
+        import { initNavigation } from '/js/core/nav.js';
+        initNavigation();
+    </script>
+
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+
+</html>

@@ -15,16 +15,19 @@ public class GetRouteByPath
     public class Handler : IRequestHandler<Query, IQueryResponseDto<RouteDto>>
     {
         private readonly IRaythaDbContext _db;
+
         public Handler(IRaythaDbContext db)
         {
             _db = db;
         }
 
-        public async Task<IQueryResponseDto<RouteDto>> Handle(Query request, CancellationToken cancellationToken)
+        public async Task<IQueryResponseDto<RouteDto>> Handle(
+            Query request,
+            CancellationToken cancellationToken
+        )
         {
             var path = string.IsNullOrEmpty(request.Path) ? string.Empty : request.Path.ToLower();
-            var entity = _db.Routes
-                .FirstOrDefault(p => p.Path.ToLower() == path);
+            var entity = _db.Routes.FirstOrDefault(p => p.Path.ToLower() == path);
 
             if (entity == null)
                 throw new NotFoundException("Route", $"{request.Path} did not match any Route");

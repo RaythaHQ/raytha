@@ -1,7 +1,7 @@
-﻿using Dapper;
+﻿using System.Data;
+using Dapper;
 using Microsoft.Extensions.Configuration;
 using Raytha.Application.Common.Interfaces;
-using System.Data;
 
 namespace Raytha.Infrastructure.Persistence;
 
@@ -9,6 +9,7 @@ public class RaythaRawDbInfo : IRaythaRawDbInfo
 {
     private readonly IDbConnection _db;
     private readonly IConfiguration _configuration;
+
     public RaythaRawDbInfo(IDbConnection db, IConfiguration configuration)
     {
         _db = db;
@@ -17,11 +18,14 @@ public class RaythaRawDbInfo : IRaythaRawDbInfo
 
     public DbSpaceUsed GetDatabaseSize()
     {
-        var dbProvider = DbProviderHelper.GetDatabaseProviderTypeFromConnectionString(_configuration.GetConnectionString("DefaultConnection"));
+        var dbProvider = DbProviderHelper.GetDatabaseProviderTypeFromConnectionString(
+            _configuration.GetConnectionString("DefaultConnection")
+        );
         string query = string.Empty;
         if (dbProvider == DatabaseProviderType.Postgres)
         {
-            query = "SELECT pg_size_pretty(pg_database_size(current_database())) AS reserved FROM pg_class LIMIT 1;";
+            query =
+                "SELECT pg_size_pretty(pg_database_size(current_database())) AS reserved FROM pg_class LIMIT 1;";
         }
         else
         {

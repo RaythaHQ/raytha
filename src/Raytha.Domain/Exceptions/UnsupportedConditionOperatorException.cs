@@ -3,7 +3,5 @@
 public class UnsupportedConditionOperatorException : Exception
 {
     public UnsupportedConditionOperatorException(string developerName)
-        : base($"Condition operator \"{developerName}\" is unsupported.")
-    {
-    }
+        : base($"Condition operator \"{developerName}\" is unsupported.") { }
 }

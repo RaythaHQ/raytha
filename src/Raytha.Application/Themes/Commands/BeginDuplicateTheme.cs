@@ -1,4 +1,5 @@
-﻿using CSharpVitamins;
+﻿using System.Text.Json;
+using CSharpVitamins;
 using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
@@ -7,7 +8,6 @@ using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Models;
 using Raytha.Application.Common.Utils;
 using Raytha.Domain.Entities;
-using System.Text.Json;
 
 namespace Raytha.Application.Themes.Commands;
 
@@ -21,14 +21,15 @@ public class BeginDuplicateTheme
         public required string Description { get; init; }
         public required string PathBase { get; init; }
 
-        public static Command Empty() => new()
-        {
-            ThemeId = ShortGuid.Empty,
-            Title = string.Empty,
-            DeveloperName = string.Empty,
-            Description = string.Empty,
-            PathBase = string.Empty,
-        };
+        public static Command Empty() =>
+            new()
+            {
+                ThemeId = ShortGuid.Empty,
+                Title = string.Empty,
+                DeveloperName = string.Empty,
+                Description = string.Empty,
+                PathBase = string.Empty,
+            };
     }
 
     public class Validator : AbstractValidator<Command>
@@ -40,14 +41,24 @@ public class BeginDuplicateTheme
             RuleFor(x => x.Description).NotEmpty();
             RuleFor(x => x.DeveloperName).NotEmpty();
             RuleFor(x => x.PathBase).NotEmpty();
-            RuleFor(x => x).Custom((request, context) =>
-            {
-                if (db.Themes.Any(t => t.DeveloperName == request.DeveloperName.ToDeveloperName()))
-                    context.AddFailure("DeveloperName", $"A theme with the developer name {request.DeveloperName.ToDeveloperName()} already exists.");
+            RuleFor(x => x)
+                .Custom(
+                    (request, context) =>
+                    {
+                        if (
+                            db.Themes.Any(t =>
+                                t.DeveloperName == request.DeveloperName.ToDeveloperName()
+                            )
+                        )
+                            context.AddFailure(
+                                "DeveloperName",
+                                $"A theme with the developer name {request.DeveloperName.ToDeveloperName()} already exists."
+                            );
 
-                if (!db.Themes.Any(t => t.Id == request.ThemeId.Guid))
-                    throw new NotFoundException("Theme", request.ThemeId);
-            });
+                        if (!db.Themes.Any(t => t.Id == request.ThemeId.Guid))
+                            throw new NotFoundException("Theme", request.ThemeId);
+                    }
+                );
         }
     }
 
@@ -60,9 +71,15 @@ public class BeginDuplicateTheme
             _taskQueue = taskQueue;
         }
 
-        public async Task<CommandResponseDto<ShortGuid>> Handle(Command request, CancellationToken cancellationToken)
+        public async Task<CommandResponseDto<ShortGuid>> Handle(
+            Command request,
+            CancellationToken cancellationToken
+        )
         {
-            var backgroundJobId = await _taskQueue.EnqueueAsync<BackgroundTask>(request, cancellationToken);
+            var backgroundJobId = await _taskQueue.EnqueueAsync<BackgroundTask>(
+                request,
+                cancellationToken
+            );
 
             return new CommandResponseDto<ShortGuid>(backgroundJobId);
         }
@@ -105,13 +122,13 @@ public class BeginDuplicateTheme
             var mediaItems = new List<MediaItem>();
             var themeAccessToMediaItems = new List<ThemeAccessToMediaItem>();
 
-            var originalThemeMediaItems = await _db.ThemeAccessToMediaItems
-                .Where(tmi => tmi.ThemeId == themeId.Guid)
+            var originalThemeMediaItems = await _db
+                .ThemeAccessToMediaItems.Where(tmi => tmi.ThemeId == themeId.Guid)
                 .Select(tmi => tmi.MediaItem!)
                 .ToArrayAsync(cancellationToken);
 
-            var originalThemeWebTemplates = await _db.WebTemplates
-                .Include(wt => wt.TemplateAccessToModelDefinitions)
+            var originalThemeWebTemplates = await _db
+                .WebTemplates.Include(wt => wt.TemplateAccessToModelDefinitions)
                 .Include(wt => wt.ParentTemplate)
                 .Where(wt => wt.ThemeId == themeId.Guid)
                 .ToArrayAsync(cancellationToken);
@@ -121,12 +138,16 @@ public class BeginDuplicateTheme
             _db.BackgroundTasks.Update(job);
             await _db.SaveChangesAsync(cancellationToken);
 
-            var totalMediaItemsAndWebTemplates = originalThemeMediaItems.Length + originalThemeWebTemplates.Length;
+            var totalMediaItemsAndWebTemplates =
+                originalThemeMediaItems.Length + originalThemeWebTemplates.Length;
             var currentIndex = 1;
 
             foreach (var originalThemeMediaItem in originalThemeMediaItems)
             {
-                var downloadUrl = await _fileStorageProvider.GetDownloadUrlAsync(originalThemeMediaItem.ObjectKey, FileStorageUtility.GetDefaultExpiry());
+                var downloadUrl = await _fileStorageProvider.GetDownloadUrlAsync(
+                    originalThemeMediaItem.ObjectKey,
+                    FileStorageUtility.GetDefaultExpiry()
+                );
                 if (_fileStorageProvider.GetName() == FileStorageUtility.LOCAL)
                 {
                     downloadUrl = $"{pathBase}{downloadUrl}";
@@ -134,9 +155,18 @@ public class BeginDuplicateTheme
 
                 var fileInfo = await FileDownloadUtility.DownloadFile(downloadUrl);
                 var id = ShortGuid.NewGuid();
-                var objectKey = FileStorageUtility.CreateObjectKeyFromIdAndFileName(id, originalThemeMediaItem.FileName);
+                var objectKey = FileStorageUtility.CreateObjectKeyFromIdAndFileName(
+                    id,
+                    originalThemeMediaItem.FileName
+                );
                 var data = fileInfo.FileMemoryStream.ToArray();
-                await _fileStorageProvider.SaveAndGetDownloadUrlAsync(data, objectKey, originalThemeMediaItem.FileName, originalThemeMediaItem.ContentType, FileStorageUtility.GetDefaultExpiry());
+                await _fileStorageProvider.SaveAndGetDownloadUrlAsync(
+                    data,
+                    objectKey,
+                    originalThemeMediaItem.FileName,
+                    originalThemeMediaItem.ContentType,
+                    FileStorageUtility.GetDefaultExpiry()
+                );
 
                 var mediaItem = new MediaItem
                 {
@@ -155,12 +185,16 @@ public class BeginDuplicateTheme
                     ThemeId = entity.Id,
                 };
 
-                var originalWebTemplate = originalThemeWebTemplates
-                    .FirstOrDefault(wt => wt.Content!.Contains(originalThemeMediaItem.ObjectKey));
+                var originalWebTemplate = originalThemeWebTemplates.FirstOrDefault(wt =>
+                    wt.Content!.Contains(originalThemeMediaItem.ObjectKey)
+                );
 
                 if (originalWebTemplate != null)
                 {
-                    originalWebTemplate.Content = originalWebTemplate.Content!.Replace(originalThemeMediaItem.ObjectKey, mediaItem.ObjectKey);
+                    originalWebTemplate.Content = originalWebTemplate.Content!.Replace(
+                        originalThemeMediaItem.ObjectKey,
+                        mediaItem.ObjectKey
+                    );
                 }
 
                 mediaItems.Add(mediaItem);
@@ -178,17 +212,27 @@ public class BeginDuplicateTheme
             var webTemplateContentItemRelations = new List<WebTemplateContentItemRelation>();
             var webTemplateViewRelations = new List<WebTemplateViewRelation>();
 
-            var webTemplateIdsContentItemIds = await _db.WebTemplateContentItemRelations
-                .Where(wtr => wtr.WebTemplate!.ThemeId == themeId.Guid)
+            var webTemplateIdsContentItemIds = await _db
+                .WebTemplateContentItemRelations.Where(wtr =>
+                    wtr.WebTemplate!.ThemeId == themeId.Guid
+                )
                 .Select(wtr => new { wtr.ContentItemId, wtr.WebTemplateId })
                 .GroupBy(wtr => wtr.WebTemplateId)
-                .ToDictionaryAsync(g => g.Key, g => g.Select(wtr => wtr.ContentItemId).ToArray(), cancellationToken);
+                .ToDictionaryAsync(
+                    g => g.Key,
+                    g => g.Select(wtr => wtr.ContentItemId).ToArray(),
+                    cancellationToken
+                );
 
-            var webTemplateIdsViewIds = await _db.WebTemplateViewRelations
-                .Where(wtr => wtr.WebTemplate!.ThemeId == themeId.Guid)
+            var webTemplateIdsViewIds = await _db
+                .WebTemplateViewRelations.Where(wtr => wtr.WebTemplate!.ThemeId == themeId.Guid)
                 .Select(wtr => new { wtr.WebTemplateId, wtr.ViewId })
                 .GroupBy(wtr => wtr.WebTemplateId)
-                .ToDictionaryAsync(g => g.Key, g => g.Select(wtr => wtr.ViewId).ToArray(), cancellationToken);
+                .ToDictionaryAsync(
+                    g => g.Key,
+                    g => g.Select(wtr => wtr.ViewId).ToArray(),
+                    cancellationToken
+                );
 
             job.TaskStep = 3;
             job.StatusInfo = "Duplicate web-templates";
@@ -205,32 +249,52 @@ public class BeginDuplicateTheme
                     Label = originalThemeWebTemplate.Label,
                     DeveloperName = originalThemeWebTemplate.DeveloperName,
                     Content = originalThemeWebTemplate.Content,
-                    AllowAccessForNewContentTypes = originalThemeWebTemplate.AllowAccessForNewContentTypes,
+                    AllowAccessForNewContentTypes =
+                        originalThemeWebTemplate.AllowAccessForNewContentTypes,
                     IsBaseLayout = originalThemeWebTemplate.IsBaseLayout,
                     IsBuiltInTemplate = originalThemeWebTemplate.IsBuiltInTemplate,
-                    TemplateAccessToModelDefinitions = originalThemeWebTemplate.TemplateAccessToModelDefinitions.Any()
-                        ? originalThemeWebTemplate.TemplateAccessToModelDefinitions.Select(md => new WebTemplateAccessToModelDefinition { Id = Guid.NewGuid(), ContentTypeId = md.ContentTypeId, WebTemplateId = webTemplateId, }).ToArray()
-                        : new List<WebTemplateAccessToModelDefinition>(),
+                    TemplateAccessToModelDefinitions =
+                        originalThemeWebTemplate.TemplateAccessToModelDefinitions.Any()
+                            ? originalThemeWebTemplate
+                                .TemplateAccessToModelDefinitions.Select(
+                                    md => new WebTemplateAccessToModelDefinition
+                                    {
+                                        Id = Guid.NewGuid(),
+                                        ContentTypeId = md.ContentTypeId,
+                                        WebTemplateId = webTemplateId,
+                                    }
+                                )
+                                .ToArray()
+                            : new List<WebTemplateAccessToModelDefinition>(),
                 };
 
-                if (webTemplateIdsContentItemIds.TryGetValue(originalThemeWebTemplate.Id, out var contentItemIds))
+                if (
+                    webTemplateIdsContentItemIds.TryGetValue(
+                        originalThemeWebTemplate.Id,
+                        out var contentItemIds
+                    )
+                )
                 {
-                    webTemplateContentItemRelations.AddRange(contentItemIds.Select(contentItemId => new WebTemplateContentItemRelation
-                    {
-                        Id = Guid.NewGuid(),
-                        ContentItemId = contentItemId,
-                        WebTemplateId = webTemplateId,
-                    }));
+                    webTemplateContentItemRelations.AddRange(
+                        contentItemIds.Select(contentItemId => new WebTemplateContentItemRelation
+                        {
+                            Id = Guid.NewGuid(),
+                            ContentItemId = contentItemId,
+                            WebTemplateId = webTemplateId,
+                        })
+                    );
                 }
 
                 if (webTemplateIdsViewIds.TryGetValue(originalThemeWebTemplate.Id, out var viewIds))
                 {
-                    webTemplateViewRelations.AddRange(viewIds.Select(viewId => new WebTemplateViewRelation
-                    {
-                        Id = Guid.NewGuid(),
-                        ViewId = viewId,
-                        WebTemplateId = webTemplateId,
-                    }));
+                    webTemplateViewRelations.AddRange(
+                        viewIds.Select(viewId => new WebTemplateViewRelation
+                        {
+                            Id = Guid.NewGuid(),
+                            ViewId = viewId,
+                            WebTemplateId = webTemplateId,
+                        })
+                    );
                 }
 
                 webTemplateDeveloperNamesWebTemplates.Add(webTemplate.DeveloperName!, webTemplate);
@@ -247,8 +311,12 @@ public class BeginDuplicateTheme
             {
                 if (originalThemeWebTemplate.ParentTemplateId.HasValue)
                 {
-                    var webTemplate = webTemplateDeveloperNamesWebTemplates[originalThemeWebTemplate.DeveloperName!];
-                    var parentTemplateId = webTemplateDeveloperNamesWebTemplates[originalThemeWebTemplate.ParentTemplate!.DeveloperName!].Id;
+                    var webTemplate = webTemplateDeveloperNamesWebTemplates[
+                        originalThemeWebTemplate.DeveloperName!
+                    ];
+                    var parentTemplateId = webTemplateDeveloperNamesWebTemplates[
+                        originalThemeWebTemplate.ParentTemplate!.DeveloperName!
+                    ].Id;
 
                     webTemplate.ParentTemplateId = parentTemplateId;
                 }
@@ -256,10 +324,22 @@ public class BeginDuplicateTheme
 
             await _db.Themes.AddAsync(entity, cancellationToken);
             await _db.MediaItems.AddRangeAsync(mediaItems, cancellationToken);
-            await _db.ThemeAccessToMediaItems.AddRangeAsync(themeAccessToMediaItems, cancellationToken);
-            await _db.WebTemplates.AddRangeAsync(webTemplateDeveloperNamesWebTemplates.Values, cancellationToken);
-            await _db.WebTemplateContentItemRelations.AddRangeAsync(webTemplateContentItemRelations, cancellationToken);
-            await _db.WebTemplateViewRelations.AddRangeAsync(webTemplateViewRelations, cancellationToken);
+            await _db.ThemeAccessToMediaItems.AddRangeAsync(
+                themeAccessToMediaItems,
+                cancellationToken
+            );
+            await _db.WebTemplates.AddRangeAsync(
+                webTemplateDeveloperNamesWebTemplates.Values,
+                cancellationToken
+            );
+            await _db.WebTemplateContentItemRelations.AddRangeAsync(
+                webTemplateContentItemRelations,
+                cancellationToken
+            );
+            await _db.WebTemplateViewRelations.AddRangeAsync(
+                webTemplateViewRelations,
+                cancellationToken
+            );
 
             job.TaskStep = 4;
             job.StatusInfo = "Duplicate theme is finished.";

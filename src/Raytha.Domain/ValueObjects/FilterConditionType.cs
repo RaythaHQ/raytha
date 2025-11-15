@@ -2,13 +2,9 @@
 
 public class FilterConditionType : ValueObject
 {
-    static FilterConditionType()
-    {
-    }
+    static FilterConditionType() { }
 
-    public FilterConditionType()
-    {
-    }
+    public FilterConditionType() { }
 
     private FilterConditionType(string developerName)
     {

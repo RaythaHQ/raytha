@@ -1,28 +1,30 @@
-﻿using MediatR;
+﻿using System.Data;
+using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Models;
-using System.Data;
 
 namespace Raytha.Application.Dashboard.Queries;
 
 public class GetDashboardMetrics
 {
-    public record Query : IRequest<IQueryResponseDto<DashboardDto>>
-    {
-    }
+    public record Query : IRequest<IQueryResponseDto<DashboardDto>> { }
 
     public class Handler : IRequestHandler<Query, IQueryResponseDto<DashboardDto>>
     {
         private readonly IRaythaDbContext _db;
         public readonly IRaythaRawDbInfo _rawSqlDb;
+
         public Handler(IRaythaDbContext db, IRaythaRawDbInfo rawSqlDb)
         {
             _rawSqlDb = rawSqlDb;
             _db = db;
         }
 
-        public async Task<IQueryResponseDto<DashboardDto>> Handle(Query request, CancellationToken cancellationToken)
+        public async Task<IQueryResponseDto<DashboardDto>> Handle(
+            Query request,
+            CancellationToken cancellationToken
+        )
         {
             int totalContentItems = await _db.ContentItems.CountAsync();
             int totalUsers = await _db.Users.CountAsync();
@@ -38,13 +40,14 @@ public class GetDashboardMetrics
                     TotalContentItems = totalContentItems,
                     TotalUsers = totalUsers,
                     FileStorageSize = totalFileStorageSize,
-                    DbSize = dbSizeInMb
-                });
+                    DbSize = dbSizeInMb,
+                }
+            );
         }
 
         private decimal ComputeToMb(decimal rawValue, string units)
         {
-            switch(units)
+            switch (units)
             {
                 case "KB":
                     return rawValue / 1000;

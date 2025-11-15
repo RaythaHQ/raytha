@@ -4,6 +4,8 @@ public interface IContentTypeInRoutePath
 {
     public string ContentTypeDeveloperName { get; }
 
-    public bool ValidateContentTypeInRoutePathMatchesValue(string developerName, bool throwExceptionOnFailure = true);
-
+    public bool ValidateContentTypeInRoutePathMatchesValue(
+        string developerName,
+        bool throwExceptionOnFailure = true
+    );
 }

@@ -15,7 +15,7 @@ public enum ContentTypePermissions
     None = 0,
     Read = 1,
     Edit = 2,
-    Config = 4
+    Config = 4,
 }
 
 public class BuiltInContentTypePermission : ValueObject
@@ -24,15 +24,15 @@ public class BuiltInContentTypePermission : ValueObject
     public const string CONTENT_TYPE_EDIT_PERMISSION = "edit";
     public const string CONTENT_TYPE_CONFIG_PERMISSION = "config";
 
-    static BuiltInContentTypePermission()
-    {
-    }
+    static BuiltInContentTypePermission() { }
 
-    private BuiltInContentTypePermission()
-    {
-    }
+    private BuiltInContentTypePermission() { }
 
-    private BuiltInContentTypePermission(string label, string developerName, ContentTypePermissions permission)
+    private BuiltInContentTypePermission(
+        string label,
+        string developerName,
+        ContentTypePermissions permission
+    )
     {
         Label = label;
         DeveloperName = developerName;
@@ -82,9 +82,12 @@ public class BuiltInContentTypePermission : ValueObject
         return builtPermission;
     }
 
-    public static BuiltInContentTypePermission Read => new("Read", CONTENT_TYPE_READ_PERMISSION, ContentTypePermissions.Read);
-    public static BuiltInContentTypePermission Edit => new("Edit", CONTENT_TYPE_EDIT_PERMISSION, ContentTypePermissions.Edit);
-    public static BuiltInContentTypePermission Config => new("Config", CONTENT_TYPE_CONFIG_PERMISSION, ContentTypePermissions.Config);
+    public static BuiltInContentTypePermission Read =>
+        new("Read", CONTENT_TYPE_READ_PERMISSION, ContentTypePermissions.Read);
+    public static BuiltInContentTypePermission Edit =>
+        new("Edit", CONTENT_TYPE_EDIT_PERMISSION, ContentTypePermissions.Edit);
+    public static BuiltInContentTypePermission Config =>
+        new("Config", CONTENT_TYPE_CONFIG_PERMISSION, ContentTypePermissions.Config);
 
     public string Label { get; private set; } = string.Empty;
     public string DeveloperName { get; private set; } = string.Empty;
@@ -117,13 +120,7 @@ public class BuiltInContentTypePermission : ValueObject
 
     public static ContentTypePermissions AllPermissionsAsEnum
     {
-        get
-        {
-            return
-                Read.Permission |
-                Edit.Permission |
-                Config.Permission;
-        }
+        get { return Read.Permission | Edit.Permission | Config.Permission; }
     }
 
     protected override IEnumerable<object> GetEqualityComponents()

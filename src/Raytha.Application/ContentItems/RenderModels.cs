@@ -1,13 +1,13 @@
-﻿using Raytha.Application.Common.Interfaces;
+﻿using System.Linq.Expressions;
+using System.Text;
+using CSharpVitamins;
+using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Models;
 using Raytha.Application.Common.Models.RenderModels;
 using Raytha.Application.ContentTypes;
+using Raytha.Application.Themes;
 using Raytha.Application.Views;
 using Raytha.Domain.Entities;
-using System.Linq.Expressions;
-using System.Text;
-using CSharpVitamins;
-using Raytha.Application.Themes;
 
 namespace Raytha.Application.ContentItems;
 
@@ -29,7 +29,10 @@ public record ContentItem_RenderModel : IInsertTemplateVariable
         return (entity, templateDeveloperName) => GetProjection(entity, templateDeveloperName);
     }
 
-    public static ContentItem_RenderModel GetProjection(ContentItemDto entity, string templateDeveloperName)
+    public static ContentItem_RenderModel GetProjection(
+        ContentItemDto entity,
+        string templateDeveloperName
+    )
     {
         return new ContentItem_RenderModel
         {
@@ -42,7 +45,7 @@ public record ContentItem_RenderModel : IInsertTemplateVariable
             ContentType = ContentType_RenderModel.GetProjection(entity.ContentType),
             PrimaryField = entity.PrimaryField,
             PublishedContent = entity.PublishedContent,
-            RoutePath = entity.RoutePath
+            RoutePath = entity.RoutePath,
         };
     }
 
@@ -59,11 +62,19 @@ public record ContentItem_RenderModel : IInsertTemplateVariable
         yield return BuiltInContentTypeField.PrimaryField.DeveloperName;
         yield return BuiltInContentTypeField.Template.DeveloperName;
         yield return nameof(RoutePath);
-        foreach (var developerName in AuditableUser_RenderModel.FromPrefix(nameof(LastModifierUser)).GetDeveloperNames())
+        foreach (
+            var developerName in AuditableUser_RenderModel
+                .FromPrefix(nameof(LastModifierUser))
+                .GetDeveloperNames()
+        )
         {
             yield return developerName;
         }
-        foreach (var developerName in AuditableUser_RenderModel.FromPrefix(nameof(CreatorUser)).GetDeveloperNames())
+        foreach (
+            var developerName in AuditableUser_RenderModel
+                .FromPrefix(nameof(CreatorUser))
+                .GetDeveloperNames()
+        )
         {
             yield return developerName;
         }
@@ -98,7 +109,7 @@ public record ContentItemListResult_RenderModel : IInsertTemplateVariable
     public int PageNumber { get; init; } = 0;
     public int PageSize { get; init; } = 0;
     public string OrderBy { get; init; } = string.Empty;
-    public int TotalCount { get; init;  }
+    public int TotalCount { get; init; }
 
     public bool PreviousDisabledCss => TotalPages == 0 || PageNumber == 1;
     public bool NextDisabledCss => TotalPages == 0 || PageNumber == TotalPages;
@@ -119,11 +130,19 @@ public record ContentItemListResult_RenderModel : IInsertTemplateVariable
         string filter = "",
         string orderBy = "",
         int pageSize = 50,
-        int pageNumber = 1)
+        int pageNumber = 1
+    )
     {
         return new ContentItemListResult_RenderModel
         {
-            Items = entity.Items.Select(ci => ContentItem_RenderModel.GetProjection(ci, webTemplateDeveloperNamesByContentItemId[ci.Id])).ToArray(),
+            Items = entity
+                .Items.Select(ci =>
+                    ContentItem_RenderModel.GetProjection(
+                        ci,
+                        webTemplateDeveloperNamesByContentItemId[ci.Id]
+                    )
+                )
+                .ToArray(),
             TotalCount = entity.TotalCount,
             Search = search,
             Filter = filter,
@@ -133,7 +152,7 @@ public record ContentItemListResult_RenderModel : IInsertTemplateVariable
             RoutePath = view.RoutePath,
             DeveloperName = view.DeveloperName,
             Label = view.Label,
-            Description = view.Description
+            Description = view.Description,
         };
     }
 

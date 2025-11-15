@@ -1,13 +1,13 @@
-﻿using CSharpVitamins;
+﻿using System.Text.Json;
+using CSharpVitamins;
 using FluentValidation;
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 using Raytha.Application.Common.Exceptions;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Models;
 using Raytha.Application.NavigationMenuItems;
 using Raytha.Domain.Entities;
-using System.Text.Json;
-using Microsoft.EntityFrameworkCore;
 
 namespace Raytha.Application.NavigationMenus.Commands;
 
@@ -17,21 +17,24 @@ public class CreateNavigationMenuRevision
     {
         public required ShortGuid NavigationMenuId { get; init; }
 
-        public static Command Empty() => new()
-        {
-            NavigationMenuId = string.Empty,
-        };
+        public static Command Empty() => new() { NavigationMenuId = string.Empty };
     }
 
     public class Validator : AbstractValidator<Command>
     {
         public Validator(IRaythaDbContext db)
         {
-            RuleFor(x => x).Custom((request, _) =>
-            {
-                if (!db.NavigationMenus.Any(nm => nm.Id == request.NavigationMenuId.Guid))
-                    throw new NotFoundException("Navigation Menu", request.NavigationMenuId);
-            });
+            RuleFor(x => x)
+                .Custom(
+                    (request, _) =>
+                    {
+                        if (!db.NavigationMenus.Any(nm => nm.Id == request.NavigationMenuId.Guid))
+                            throw new NotFoundException(
+                                "Navigation Menu",
+                                request.NavigationMenuId
+                            );
+                    }
+                );
         }
     }
 
@@ -44,10 +47,15 @@ public class CreateNavigationMenuRevision
             _db = db;
         }
 
-        public async Task<CommandResponseDto<ShortGuid>> Handle(Command request, CancellationToken cancellationToken)
+        public async Task<CommandResponseDto<ShortGuid>> Handle(
+            Command request,
+            CancellationToken cancellationToken
+        )
         {
-            var navigationMenuItems = await _db.NavigationMenuItems
-                .Where(nmi => nmi.NavigationMenuId == request.NavigationMenuId.Guid)
+            var navigationMenuItems = await _db
+                .NavigationMenuItems.Where(nmi =>
+                    nmi.NavigationMenuId == request.NavigationMenuId.Guid
+                )
                 .Select(NavigationMenuItemJson.GetProjection())
                 .ToArrayAsync(cancellationToken);
 

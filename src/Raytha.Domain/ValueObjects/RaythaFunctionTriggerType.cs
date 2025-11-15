@@ -21,9 +21,12 @@ public class RaythaFunctionTriggerType : ValueObject
     }
 
     public static RaythaFunctionTriggerType HttpRequest => new("Http request", "http_request");
-    public static RaythaFunctionTriggerType ContentItemCreated => new("Content item created", "content_item_created");
-    public static RaythaFunctionTriggerType ContentItemUpdated => new("Content item updated", "content_item_updated");
-    public static RaythaFunctionTriggerType ContentItemDeleted => new("Content item deleted", "content_item_deleted");
+    public static RaythaFunctionTriggerType ContentItemCreated =>
+        new("Content item created", "content_item_created");
+    public static RaythaFunctionTriggerType ContentItemUpdated =>
+        new("Content item updated", "content_item_updated");
+    public static RaythaFunctionTriggerType ContentItemDeleted =>
+        new("Content item deleted", "content_item_deleted");
 
     public string Label { get; }
     public string DeveloperName { get; }

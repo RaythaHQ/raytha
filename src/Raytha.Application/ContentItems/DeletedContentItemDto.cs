@@ -1,7 +1,7 @@
-﻿using CSharpVitamins;
+﻿using System.Linq.Expressions;
+using CSharpVitamins;
 using Raytha.Application.Common.Models;
 using Raytha.Domain.Entities;
-using System.Linq.Expressions;
 
 namespace Raytha.Application.ContentItems;
 
@@ -19,6 +19,7 @@ public record DeletedContentItemDto
     {
         return entity => GetProjection(entity);
     }
+
     public static DeletedContentItemDto GetProjection(DeletedContentItem entity)
     {
         return new DeletedContentItemDto
@@ -29,7 +30,7 @@ public record DeletedContentItemDto
             LastModifierUser = AuditableUserDto.GetProjection(entity.LastModifierUser),
             LastModificationTime = entity.LastModificationTime,
             PrimaryField = entity.PrimaryField,
-            OriginalContentItemId = entity.OriginalContentItemId
+            OriginalContentItemId = entity.OriginalContentItemId,
         };
     }
 

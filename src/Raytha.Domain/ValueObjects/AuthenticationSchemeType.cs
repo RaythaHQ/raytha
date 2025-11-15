@@ -2,13 +2,9 @@
 
 public class AuthenticationSchemeType : ValueObject
 {
-    static AuthenticationSchemeType()
-    {
-    }
+    static AuthenticationSchemeType() { }
 
-    private AuthenticationSchemeType()
-    {
-    }
+    private AuthenticationSchemeType() { }
 
     private AuthenticationSchemeType(string label, string developerName)
     {
@@ -29,7 +25,8 @@ public class AuthenticationSchemeType : ValueObject
     }
 
     public static AuthenticationSchemeType MagicLink => new("Magic link", "magic_link");
-    public static AuthenticationSchemeType EmailAndPassword => new("Email and password", "email_and_password");
+    public static AuthenticationSchemeType EmailAndPassword =>
+        new("Email and password", "email_and_password");
     public static AuthenticationSchemeType Jwt => new("Json web token", "jwt");
     public static AuthenticationSchemeType Saml => new("SAML", "saml");
 

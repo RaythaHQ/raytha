@@ -10,10 +10,7 @@ public abstract record BaseSendToUserEmail_RenderModel : IInsertTemplateVariable
     public string EmailAddress { get; init; } = string.Empty;
     public string FullName
     {
-        get
-        {
-            return $"{FirstName} {LastName}";
-        }
+        get { return $"{FirstName} {LastName}"; }
     }
     public string SsoId { get; init; } = string.Empty;
     public string AuthenticationScheme { get; init; } = string.Empty;
@@ -65,9 +62,7 @@ public abstract record BaseSendWelcomeEmail_RenderModel : BaseSendToUserEmail_Re
     }
 }
 
-public abstract record BaseSendPasswordChanged_RenderModel : BaseSendToUserEmail_RenderModel
-{
-}
+public abstract record BaseSendPasswordChanged_RenderModel : BaseSendToUserEmail_RenderModel { }
 
 public abstract record BaseSendPasswordReset_RenderModel : BaseSendToUserEmail_RenderModel
 {

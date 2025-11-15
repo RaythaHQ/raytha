@@ -32,7 +32,8 @@ services:
       # - FILE_STORAGE_AZUREBLOB_CUSTOM_DOMAIN= # Required if FILE_STORAGE_PROVIDER = AzureBlob
       # - FILE_STORAGE_S3_ACCESS_KEY= # Required if FILE_STORAGE_PROVIDER = S3
       # - FILE_STORAGE_S3_SECRET_KEY= # Required if FILE_STORAGE_PROVIDER = S3
-      # - FILE_STORAGE_S3_SERVICE_URL= # Required if FILE_STORAGE_PROVIDER = S3
+      # - FILE_STORAGE_S3_SERVICE_URL= # Required if FILE_STORAGE_PROVIDER = S3-compatible (not AWS S3)
+      # - FILE_STORAGE_S3_REGION=us-east-1 # Required if FILE_STORAGE_PROVIDER = AWS S3 (not S3-compatible). 
       # - FILE_STORAGE_S3_BUCKET= # Required if FILE_STORAGE_PROVIDER = S3
       
       # - DATABASE_MAX_SIZE=1000000000 # Bytes, 1 gb
@@ -41,8 +42,8 @@ services:
       # - RAYTHA_FUNCTIONS_TIMEOUT=10000 # milliseconds
       # - RAYTHA_FUNCTIONS_QUEUE_TIMEOUT=10000 # milliseconds
       
-      # - REDIRECT_WEBSITE= # Only set a url here to redirect the website visitor elsewhere (useful for maintenance or non-payment)
-      # - APPLY_PENDING_MIGRATIONS=true # Apply db migrations automatically on startup
+    # - REDIRECT_WEBSITE= # Only set a url here to redirect the website visitor elsewhere (useful for maintenance or non-payment)
+    # - APPLY_PENDING_MIGRATIONS=true # Apply db migrations automatically on startup
     
     depends_on:
       - db

@@ -1,8 +1,8 @@
+using System.Linq.Expressions;
 using Raytha.Application.Common.Models;
 using Raytha.Application.Roles;
 using Raytha.Application.UserGroups;
 using Raytha.Domain.Entities;
-using System.Linq.Expressions;
 
 namespace Raytha.Application.Login;
 
@@ -11,7 +11,7 @@ public record LoginDto : BaseEntityDto
     public string EmailAddress { get; init; } = string.Empty;
     public string FirstName { get; init; } = string.Empty;
     public string LastName { get; init; } = string.Empty;
-    public string FullName 
+    public string FullName
     {
         get { return $"{FirstName} {LastName}"; }
     }
@@ -47,7 +47,7 @@ public record LoginDto : BaseEntityDto
             UserGroups = entity.UserGroups.AsQueryable().Select(UserGroupDto.GetProjection()),
             IsAdmin = entity.IsAdmin,
             SsoId = entity.SsoId,
-            AuthenticationScheme = entity.AuthenticationScheme?.DeveloperName?? string.Empty
+            AuthenticationScheme = entity.AuthenticationScheme?.DeveloperName ?? string.Empty,
         };
     }
 }

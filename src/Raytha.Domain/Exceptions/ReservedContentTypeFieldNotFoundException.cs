@@ -3,7 +3,5 @@
 public class ReservedContentTypeFieldNotFoundException : Exception
 {
     public ReservedContentTypeFieldNotFoundException(string developerName)
-        : base($"Reserved content type field \"{developerName}\" is unknown.")
-    {
-    }
+        : base($"Reserved content type field \"{developerName}\" is unknown.") { }
 }

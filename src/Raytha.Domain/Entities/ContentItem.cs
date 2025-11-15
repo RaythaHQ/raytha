@@ -11,7 +11,8 @@ public class ContentItem : BaseAuditableEntity
     public string? _PublishedContent { get; set; }
     public Guid ContentTypeId { get; set; }
     public virtual ContentType? ContentType { get; set; }
-    public virtual ICollection<ContentItemRevision> ContentItemRevisions { get; set; } = new List<ContentItemRevision>();
+    public virtual ICollection<ContentItemRevision> ContentItemRevisions { get; set; } =
+        new List<ContentItemRevision>();
 
     public Guid RouteId { get; set; }
     public Route Route { get; set; }
@@ -20,17 +21,17 @@ public class ContentItem : BaseAuditableEntity
     private dynamic _publishedContentAsDynamic;
 
     [NotMapped]
-    public dynamic DraftContent 
-    { 
-        get 
-        { 
+    public dynamic DraftContent
+    {
+        get
+        {
             if (_draftContentAsDynamic == null)
             {
                 _draftContentAsDynamic = JsonSerializer.Deserialize<dynamic>(_DraftContent ?? "{}");
             }
-            return _draftContentAsDynamic; 
+            return _draftContentAsDynamic;
         }
-        set 
+        set
         {
             _draftContentAsDynamic = value;
             _DraftContent = JsonSerializer.Serialize(value);
@@ -38,16 +39,18 @@ public class ContentItem : BaseAuditableEntity
     }
 
     [NotMapped]
-    public dynamic PublishedContent 
-    { 
-        get 
-        { 
+    public dynamic PublishedContent
+    {
+        get
+        {
             if (_publishedContentAsDynamic == null)
             {
-                _publishedContentAsDynamic = JsonSerializer.Deserialize<dynamic>(_PublishedContent ?? "{}");
+                _publishedContentAsDynamic = JsonSerializer.Deserialize<dynamic>(
+                    _PublishedContent ?? "{}"
+                );
             }
-            return _publishedContentAsDynamic; 
-        } 
+            return _publishedContentAsDynamic;
+        }
         set
         {
             _publishedContentAsDynamic = value;

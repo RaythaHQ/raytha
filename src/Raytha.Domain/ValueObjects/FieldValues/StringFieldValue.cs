@@ -3,6 +3,7 @@
 public record StringFieldValue : BaseFieldValue
 {
     private readonly string _value = null;
+
     public StringFieldValue(object value)
     {
         if (value != null && !string.IsNullOrEmpty(value.ToString()))

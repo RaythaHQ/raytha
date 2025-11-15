@@ -25,19 +25,28 @@ public class GetWebTemplateByContentItemId
             _db = db;
         }
 
-        public async Task<IQueryResponseDto<WebTemplateDto>> Handle(Query request, CancellationToken cancellationToken)
+        public async Task<IQueryResponseDto<WebTemplateDto>> Handle(
+            Query request,
+            CancellationToken cancellationToken
+        )
         {
-            var webTemplate = await _db.WebTemplateContentItemRelations
-                .Where(wtr => wtr.ContentItemId == request.ContentItemId.Guid && wtr.WebTemplate!.ThemeId == request.ThemeId.Guid)
+            var webTemplate = await _db
+                .WebTemplateContentItemRelations.Where(wtr =>
+                    wtr.ContentItemId == request.ContentItemId.Guid
+                    && wtr.WebTemplate!.ThemeId == request.ThemeId.Guid
+                )
                 .Include(wtr => wtr.WebTemplate!)
-                    .ThenInclude(wt => wt.TemplateAccessToModelDefinitions)
-                    .ThenInclude(wt => wt.ContentType)
-                    .IncludeParentTemplates(wtr => wtr.WebTemplate!.ParentTemplate)
+                .ThenInclude(wt => wt.TemplateAccessToModelDefinitions)
+                .ThenInclude(wt => wt.ContentType)
+                .IncludeParentTemplates(wtr => wtr.WebTemplate!.ParentTemplate)
                 .Select(wtr => wtr.WebTemplate)
                 .FirstOrDefaultAsync(cancellationToken);
 
             if (webTemplate == null)
-                throw new NotFoundException("WebTemplateContentItemRelation", request.ContentItemId);
+                throw new NotFoundException(
+                    "WebTemplateContentItemRelation",
+                    request.ContentItemId
+                );
 
             return new QueryResponseDto<WebTemplateDto>(WebTemplateDto.GetProjection(webTemplate)!);
         }

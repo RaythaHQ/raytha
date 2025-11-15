@@ -12,7 +12,9 @@ public record RaythaFunctionRevisionDto : BaseAuditableEntityDto
     public AuditableUserDto? CreatorUser { get; init; }
     public AuditableUserDto? LastModifierUser { get; init; }
 
-    public static Expression<Func<RaythaFunctionRevision, RaythaFunctionRevisionDto>> GetProjection()
+    public static Expression<
+        Func<RaythaFunctionRevision, RaythaFunctionRevisionDto>
+    > GetProjection()
     {
         return entity => GetProjection(entity);
     }

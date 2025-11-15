@@ -7,17 +7,22 @@ public static class FileStorageUtility
     private const string FILE_STORAGE_PREFIX = "FILE_STORAGE";
     public const string CONFIG_NAME = $"{FILE_STORAGE_PREFIX}_PROVIDER";
     public const string MAX_FILE_SIZE_CONFIG_NAME = $"{FILE_STORAGE_PREFIX}_MAX_FILE_SIZE";
-    public const string MAX_TOTAL_DISK_SPACE_CONFIG_NAME = $"{FILE_STORAGE_PREFIX}_MAX_TOTAL_DISK_SPACE";
+    public const string MAX_TOTAL_DISK_SPACE_CONFIG_NAME =
+        $"{FILE_STORAGE_PREFIX}_MAX_TOTAL_DISK_SPACE";
     public const string ALLOWED_MIMETYPES_CONFIG_NAME = $"{FILE_STORAGE_PREFIX}_ALLOWED_MIMETYPES";
     public const string LOCAL_DIRECTORY_CONFIG_NAME = $"{FILE_STORAGE_PREFIX}_LOCAL_DIRECTORY";
-    public const string AZUREBLOB_CONNECTION_STRING_CONFIG_NAME = $"{FILE_STORAGE_PREFIX}_AZUREBLOB_CONNECTION_STRING";
-    public const string AZUREBLOB_CONTAINER_CONFIG_NAME = $"{FILE_STORAGE_PREFIX}_AZUREBLOB_CONTAINER";
+    public const string AZUREBLOB_CONNECTION_STRING_CONFIG_NAME =
+        $"{FILE_STORAGE_PREFIX}_AZUREBLOB_CONNECTION_STRING";
+    public const string AZUREBLOB_CONTAINER_CONFIG_NAME =
+        $"{FILE_STORAGE_PREFIX}_AZUREBLOB_CONTAINER";
     public const string AZUREBLOB_CUSTOM_DOMAIN = $"{FILE_STORAGE_PREFIX}_AZUREBLOB_CUSTOM_DOMAIN";
     public const string S3_ACCESS_KEY_CONFIG_NAME = $"{FILE_STORAGE_PREFIX}_S3_ACCESS_KEY";
     public const string S3_SECRET_KEY_CONFIG_NAME = $"{FILE_STORAGE_PREFIX}_S3_SECRET_KEY";
     public const string S3_SERVICE_URL_CONFIG_NAME = $"{FILE_STORAGE_PREFIX}_S3_SERVICE_URL";
     public const string S3_BUCKET_CONFIG_NAME = $"{FILE_STORAGE_PREFIX}_S3_BUCKET";
-    public const string DIRECT_UPLOAD_TO_CLOUD_CONFIG_NAME = $"{FILE_STORAGE_PREFIX}_DIRECT_UPLOAD_TO_CLOUD";
+    public const string S3_REGION_CONFIG_NAME = $"{FILE_STORAGE_PREFIX}_S3_REGION";
+    public const string DIRECT_UPLOAD_TO_CLOUD_CONFIG_NAME =
+        $"{FILE_STORAGE_PREFIX}_USE_DIRECT_UPLOAD_TO_CLOUD";
     public const string DATABASE_MAX_SIZE_CONFIG_NAME = $"DATABASE_MAX_SIZE";
 
     public const string LOCAL = "local";
@@ -26,14 +31,51 @@ public static class FileStorageUtility
 
     public const string DEFAULT_LOCAL_DIRECTORY = "user-uploads";
     public const long DEFAULT_MAX_FILE_SIZE = 20000000; //20 mb
-    public const long DEFAULT_MAX_TOTAL_DISK_SPACE = 1000000000; //1 gb 
-    public const long DEFAULT_MAX_TOTAL_DB_SIZE = 1000000000; //1 gb 
-    public const string DEFAULT_ALLOWED_MIMETYPES = "text/*,image/*,video/*,audio/*,application/pdf";
+    public const long DEFAULT_MAX_TOTAL_DISK_SPACE = 1000000000; //1 gb
+    public const long DEFAULT_MAX_TOTAL_DB_SIZE = 1000000000; //1 gb
+    public const string DEFAULT_ALLOWED_MIMETYPES =
+        "text/*,image/*,video/*,audio/*,application/pdf";
     public const bool DEFAULT_DIRECT_UPLOAD_TO_CLOUD = true;
 
     public static string[] GetAllowedFileExtensionsFromConfig(string csvFileExt)
     {
-        return csvFileExt.ToLower().Split(',', StringSplitOptions.RemoveEmptyEntries & StringSplitOptions.TrimEntries);
+        return csvFileExt
+            .ToLower()
+            .Split(',', StringSplitOptions.RemoveEmptyEntries & StringSplitOptions.TrimEntries);
+    }
+
+    /// <summary>
+    /// Checks whether a MIME type is allowed based on a comma-separated list of allowed types,
+    /// supporting wildcard patterns like image/* in addition to exact matches.
+    /// </summary>
+    /// <param name="contentType">The MIME type to validate (e.g. image/png).</param>
+    /// <param name="allowedMimeTypesCsv">The configured allowed MIME types (e.g. text/*,image/*).</param>
+    /// <returns>True if the MIME type is allowed; otherwise false.</returns>
+    public static bool IsAllowedMimeType(string contentType, string allowedMimeTypesCsv)
+    {
+        if (string.IsNullOrWhiteSpace(contentType))
+        {
+            return false;
+        }
+
+        var allowedMimeTypes = GetAllowedFileExtensionsFromConfig(allowedMimeTypesCsv);
+        foreach (var pattern in allowedMimeTypes)
+        {
+            if (pattern.EndsWith("/*", StringComparison.Ordinal))
+            {
+                var prefix = pattern[..^1]; // keep the trailing slash, drop the *
+                if (contentType.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+                {
+                    return true;
+                }
+            }
+            else if (string.Equals(pattern, contentType, StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     public static string CreateObjectKeyFromIdAndFileName(string id, string fileName)

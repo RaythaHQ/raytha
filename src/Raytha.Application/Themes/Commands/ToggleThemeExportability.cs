@@ -14,21 +14,21 @@ public class ToggleThemeExportability
     {
         public required bool IsExportable { get; init; }
 
-        public static Command Empty() => new()
-        {
-            IsExportable = false,
-        };
+        public static Command Empty() => new() { IsExportable = false };
     }
 
     public class Validator : AbstractValidator<Command>
     {
         public Validator(IRaythaDbContext db)
         {
-            RuleFor(x => x).Custom((request, _) =>
-            {
-                if (!db.Themes.Any(rt => rt.Id == request.Id.Guid))
-                    throw new NotFoundException("Theme", request.Id);
-            });
+            RuleFor(x => x)
+                .Custom(
+                    (request, _) =>
+                    {
+                        if (!db.Themes.Any(rt => rt.Id == request.Id.Guid))
+                            throw new NotFoundException("Theme", request.Id);
+                    }
+                );
         }
     }
 
@@ -41,10 +41,15 @@ public class ToggleThemeExportability
             _db = db;
         }
 
-        public async Task<CommandResponseDto<ShortGuid>> Handle(Command request, CancellationToken cancellationToken)
+        public async Task<CommandResponseDto<ShortGuid>> Handle(
+            Command request,
+            CancellationToken cancellationToken
+        )
         {
-            var entity = await _db.Themes
-                .FirstAsync(t => t.Id == request.Id.Guid, cancellationToken);
+            var entity = await _db.Themes.FirstAsync(
+                t => t.Id == request.Id.Guid,
+                cancellationToken
+            );
 
             entity.IsExportable = request.IsExportable;
 

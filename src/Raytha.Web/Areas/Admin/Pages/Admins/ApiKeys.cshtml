@@ -1,0 +1,58 @@
+@page "/raytha/settings/admins/apikeys/{id}"
+@model Raytha.Web.Areas.Admin.Pages.Admins.ApiKeys
+
+@{
+    var pageTitle = "Api keys";
+    Layout = "SubActionLayout";
+    ViewData["Title"] = pageTitle;
+    ViewData["ActiveMenu"] = "Admins";
+    ViewData["ActiveSubMenu"] = "Api keys";
+    ViewData["ExpandSettingsMenu"] = true;
+}
+
+<form method="post" asp-page="@RouteNames.Admins.ApiKeys" asp-route-id="@Model.Id">
+    <button class="btn btn-primary">
+        <svg class="icon icon-xs me-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+        </svg> Create api key
+    </button>
+</form>
+
+@if (!string.IsNullOrEmpty(Model.CreatedApiKey))
+{
+    <div class="alert alert-success mt-2" role="alert">
+        <h4 class="alert-heading">Api key created!</h4>
+        <p>This is your api key: <strong>@Model.CreatedApiKey</strong></p>
+        <hr>
+        <p class="mb-0">Copy it and store it securely because this is the only time you will be able to view it from the
+            platform.</p>
+    </div>
+}
+<div class="table-responsive mt-2">
+    <table class="table table-centered table-nowrap mb-0 rounded">
+        <thead class="thead-light">
+            <tr>
+                <th class="border-0 rounded-start">Created at</th>
+                <th class="border-0 rounded-end">Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model.ListView.Items)
+            {
+                <tr>
+                    <td>@item.CreationTime</td>
+                    <td>
+                        <form method="post" asp-page="@RouteNames.Admins.ApiKeys" asp-page-handler="Delete" asp-route-id="@Model.Id"
+                            asp-route-apikeyId="@item.Id" onsubmit="return confirm('Are you sure you want to delete this API key?');">
+                            <button class="btn btn-sm btn-danger">
+                                Remove
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+    <partial name="_Partials/TablePagination" model="@Model.ListView" />
+</div>

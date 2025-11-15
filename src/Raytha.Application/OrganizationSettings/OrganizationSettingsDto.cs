@@ -1,7 +1,7 @@
-﻿using CSharpVitamins;
+﻿using System.Linq.Expressions;
+using CSharpVitamins;
 using Raytha.Application.Common.Utils;
 using Raytha.Application.ContentItems;
-using System.Linq.Expressions;
 
 namespace Raytha.Application.OrganizationSettings;
 
@@ -22,7 +22,9 @@ public record OrganizationSettingsDto
     public string HomePageType { get; init; } = string.Empty;
     public ShortGuid ActiveThemeId { get; init; }
 
-    public static Expression<Func<Domain.Entities.OrganizationSettings, OrganizationSettingsDto>> GetProjection()
+    public static Expression<
+        Func<Domain.Entities.OrganizationSettings, OrganizationSettingsDto>
+    > GetProjection()
     {
         return entity => GetProjection(entity);
     }

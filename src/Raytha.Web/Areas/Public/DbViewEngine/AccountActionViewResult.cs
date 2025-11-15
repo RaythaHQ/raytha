@@ -1,3 +1,6 @@
+using System.Collections.Generic;
+using System.IO;
+using System.Threading.Tasks;
 using MediatR;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -6,11 +9,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Primitives;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Models.RenderModels;
-using System.Collections.Generic;
-using System.IO;
-using System.Threading.Tasks;
-using Raytha.Application.Themes.WebTemplates.Queries;
 using Raytha.Application.Common.Utils;
+using Raytha.Application.Themes.WebTemplates.Queries;
 
 namespace Raytha.Web.Areas.Public.DbViewEngine;
 
@@ -40,13 +40,19 @@ public class AccountActionViewResult : IActionResult
         httpContext.Response.StatusCode = 200;
         httpContext.Response.ContentType = ContentType;
 
-        var template = await mediator.Send(new GetWebTemplateByDeveloperName.Query { 
-            DeveloperName = _view,
-            ThemeId = currentOrg.ActiveThemeId
-        });
+        var template = await mediator.Send(
+            new GetWebTemplateByDeveloperName.Query
+            {
+                DeveloperName = _view,
+                ThemeId = currentOrg.ActiveThemeId,
+            }
+        );
 
         var source = template.Result.Content;
-        var sourceWithParents = WebTemplateExtensions.ContentAssembledFromParents(source, template.Result.ParentTemplate);
+        var sourceWithParents = WebTemplateExtensions.ContentAssembledFromParents(
+            source,
+            template.Result.ParentTemplate
+        );
 
         var renderModel = new Wrapper_RenderModel
         {
@@ -55,7 +61,7 @@ public class AccountActionViewResult : IActionResult
             Target = _target,
             ViewData = _viewDictionary,
             QueryParams = QueryCollectionToDictionary(httpContext.Request.Query),
-            PathBase = currentOrg.PathBase
+            PathBase = currentOrg.PathBase,
         };
 
         await using (var sw = new StreamWriter(httpContext.Response.Body))

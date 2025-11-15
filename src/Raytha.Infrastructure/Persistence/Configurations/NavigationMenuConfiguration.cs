@@ -1,6 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using Raytha.Domain.Entities;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using Raytha.Domain.Entities;
 
 namespace Raytha.Infrastructure.Persistence.Configurations;
 
@@ -8,14 +8,9 @@ public class NavigationMenuConfiguration : IEntityTypeConfiguration<NavigationMe
 {
     public void Configure(EntityTypeBuilder<NavigationMenu> builder)
     {
-        builder
-            .HasIndex(nm => nm.DeveloperName)
-            .IsUnique();
+        builder.HasIndex(nm => nm.DeveloperName).IsUnique();
 
-        builder
-            .HasOne(nm => nm.CreatorUser)
-            .WithMany()
-            .HasForeignKey(nm => nm.CreatorUserId);
+        builder.HasOne(nm => nm.CreatorUser).WithMany().HasForeignKey(nm => nm.CreatorUserId);
 
         builder
             .HasOne(nm => nm.LastModifierUser)

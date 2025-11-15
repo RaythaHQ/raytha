@@ -1,0 +1,27 @@
+@if (ViewData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger mt-2">
+        @ViewData["ErrorMessage"]
+    </div>
+}
+
+@if (ViewData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success mt-2">
+        @ViewData["SuccessMessage"]
+    </div>
+}
+
+@if (ViewData["WarningMessage"] != null)
+{
+    <div class="alert alert-warning mt-2">
+        @ViewData["WarningMessage"]
+    </div>
+}
+
+@if (ViewData["InfoMessage"] != null)
+{
+    <div class="alert alert-info mt-2">
+        @ViewData["InfoMessage"]
+    </div>
+}

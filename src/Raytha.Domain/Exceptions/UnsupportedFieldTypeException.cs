@@ -3,7 +3,5 @@
 public class UnsupportedFieldTypeException : Exception
 {
     public UnsupportedFieldTypeException(string developerName)
-        : base($"Field type \"{developerName}\" is unsupported.")
-    {
-    }
+        : base($"Field type \"{developerName}\" is unsupported.") { }
 }

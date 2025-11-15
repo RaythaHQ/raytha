@@ -11,24 +11,30 @@ namespace Raytha.Application.NavigationMenus.Commands;
 
 public class DeleteNavigationMenu
 {
-    public record Command : LoggableEntityRequest<CommandResponseDto<ShortGuid>>
-    {
-    }
+    public record Command : LoggableEntityRequest<CommandResponseDto<ShortGuid>> { }
 
     public class Validator : AbstractValidator<Command>
     {
         public Validator(IRaythaDbContext db)
         {
-            RuleFor(x => x).Custom((request, context) =>
-            {
-                var entity = db.NavigationMenus.FirstOrDefault(nm => nm.Id == request.Id.Guid);
+            RuleFor(x => x)
+                .Custom(
+                    (request, context) =>
+                    {
+                        var entity = db.NavigationMenus.FirstOrDefault(nm =>
+                            nm.Id == request.Id.Guid
+                        );
 
-                if (entity == null)
-                    throw new NotFoundException("Navigation Menu", request.Id);
+                        if (entity == null)
+                            throw new NotFoundException("Navigation Menu", request.Id);
 
-                if (entity.IsMainMenu)
-                    context.AddFailure(Constants.VALIDATION_SUMMARY, "You cannot delete the main menu. Set another menu as the main menu before deleting this one.");
-            });
+                        if (entity.IsMainMenu)
+                            context.AddFailure(
+                                Constants.VALIDATION_SUMMARY,
+                                "You cannot delete the main menu. Set another menu as the main menu before deleting this one."
+                            );
+                    }
+                );
         }
     }
 
@@ -41,10 +47,15 @@ public class DeleteNavigationMenu
             _db = db;
         }
 
-        public async Task<CommandResponseDto<ShortGuid>> Handle(Command request, CancellationToken cancellationToken)
+        public async Task<CommandResponseDto<ShortGuid>> Handle(
+            Command request,
+            CancellationToken cancellationToken
+        )
         {
-            var entity = await _db.NavigationMenus
-                .FirstAsync(nm => nm.Id == request.Id.Guid, cancellationToken);
+            var entity = await _db.NavigationMenus.FirstAsync(
+                nm => nm.Id == request.Id.Guid,
+                cancellationToken
+            );
 
             _db.NavigationMenus.Remove(entity);
             await _db.SaveChangesAsync(cancellationToken);

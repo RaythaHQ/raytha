@@ -6,13 +6,10 @@ public class ImportMethod : ValueObject
     public const string UPDATE_EXISTING_RECORDS_ONLY = "update_existing_records_only";
     public const string UPSERT_ALL_RECORDS = "upsert_all_records";
     public const string ADD_NEW_RECORDS_ONLY = "add_new_records_only";
-    static ImportMethod()
-    {
-    }
 
-    public ImportMethod()
-    {
-    }
+    static ImportMethod() { }
+
+    public ImportMethod() { }
 
     private ImportMethod(string label, string developerName)
     {
@@ -22,7 +19,9 @@ public class ImportMethod : ValueObject
 
     public static ImportMethod From(string developerName)
     {
-        var type = SupportedImportMethods.FirstOrDefault(p => p.DeveloperName == developerName.ToLower());
+        var type = SupportedImportMethods.FirstOrDefault(p =>
+            p.DeveloperName == developerName.ToLower()
+        );
 
         if (type == null)
         {
@@ -32,9 +31,11 @@ public class ImportMethod : ValueObject
         return type;
     }
 
-    public static ImportMethod UpdateExistingRecordsOnly => new("Update existing records only", UPDATE_EXISTING_RECORDS_ONLY);
+    public static ImportMethod UpdateExistingRecordsOnly =>
+        new("Update existing records only", UPDATE_EXISTING_RECORDS_ONLY);
     public static ImportMethod UpsertAllRecords => new("Upsert all records", UPSERT_ALL_RECORDS);
-    public static ImportMethod AddNewRecordsOnly => new("Add new records only", ADD_NEW_RECORDS_ONLY);
+    public static ImportMethod AddNewRecordsOnly =>
+        new("Add new records only", ADD_NEW_RECORDS_ONLY);
 
     public string Label { get; set; } = string.Empty;
     public string DeveloperName { get; set; } = string.Empty;

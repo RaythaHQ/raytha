@@ -19,12 +19,13 @@ public class EditRaythaFunction
         public bool IsActive { get; init; }
         public required string Code { get; init; }
 
-        public static Command Empty() => new()
-        {
-            Name = string.Empty,
-            TriggerType = string.Empty,
-            Code = string.Empty,
-        };
+        public static Command Empty() =>
+            new()
+            {
+                Name = string.Empty,
+                TriggerType = string.Empty,
+                Code = string.Empty,
+            };
     }
 
     public class Validator : AbstractValidator<Command>
@@ -34,11 +35,14 @@ public class EditRaythaFunction
             RuleFor(x => x.Name).NotEmpty();
             RuleFor(x => x.Code).NotEmpty();
             RuleFor(x => x.TriggerType).NotEmpty();
-            RuleFor(x => x).Custom((request, _) =>
-            {
-                if (!db.RaythaFunctions.Any(p => p.Id == request.Id.Guid))
-                    throw new NotFoundException("Raytha Function", request.Id);
-            });
+            RuleFor(x => x)
+                .Custom(
+                    (request, _) =>
+                    {
+                        if (!db.RaythaFunctions.Any(p => p.Id == request.Id.Guid))
+                            throw new NotFoundException("Raytha Function", request.Id);
+                    }
+                );
         }
     }
 
@@ -51,9 +55,15 @@ public class EditRaythaFunction
             _db = db;
         }
 
-        public async Task<CommandResponseDto<ShortGuid>> Handle(Command request, CancellationToken cancellationToken)
+        public async Task<CommandResponseDto<ShortGuid>> Handle(
+            Command request,
+            CancellationToken cancellationToken
+        )
         {
-            var function = await _db.RaythaFunctions.FirstAsync(rf => rf.Id == request.Id.Guid, cancellationToken);
+            var function = await _db.RaythaFunctions.FirstAsync(
+                rf => rf.Id == request.Id.Guid,
+                cancellationToken
+            );
 
             if (!function.Code.Equals(request.Code))
             {

@@ -1,9 +1,9 @@
-﻿using Raytha.Domain.Entities;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
+using Raytha.Domain.Entities;
 
 namespace Raytha.Application.Common.Interfaces;
 
-public interface IRaythaDbContext 
+public interface IRaythaDbContext
 {
     public DbSet<User> Users { get; }
     public DbSet<Role> Roles { get; }

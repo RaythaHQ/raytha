@@ -1,0 +1,82 @@
+@page "/raytha/menus"
+@model Raytha.Web.Areas.Admin.Pages.NavigationMenus.Index
+
+@{
+    var pageTitle = "Menus";
+    Layout = "SidebarLayout";
+    ViewData["Title"] = pageTitle;
+    ViewData["ActiveMenu"] = "Menus";
+}
+
+<div>
+    <partial name="_Partials/PageHeading" model="pageTitle" />
+
+    @(await Html.PartialAsync("_Partials/TableCreateAndSearchBar", new BaseTableCreateAndSearchBarViewModel()
+    {
+        Pagination = Model.ListView,
+        EntityName = "menu",
+        CreateActionName = RouteNames.NavigationMenus.Create,
+    }))
+
+    <div class="raytha-data-card mb-4">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table mb-0 rounded">
+                <thead class="thead-light">
+                    <tr>
+                        @(await Html.PartialAsync("_Partials/TableColumnHeader", new BaseTableColumnHeaderViewModel
+                        {
+                            Pagination = Model.ListView,
+                            PropertyName = "Label",
+                            IsFirst = true,
+                            DisplayName = ViewModelExtensions.GetDisplayName<Index.NavigationMenusListItemViewModel>(nm =>
+                            nm.Label)
+                        }))
+                        @(await Html.PartialAsync("_Partials/TableColumnHeader", new BaseTableColumnHeaderViewModel
+                        {
+                            Pagination = Model.ListView,
+                            PropertyName = "DeveloperName",
+                            DisplayName = ViewModelExtensions.GetDisplayName<Index.NavigationMenusListItemViewModel>(nm =>
+                            nm.DeveloperName)
+                        }))
+                        @(await Html.PartialAsync("_Partials/TableColumnHeader", new BaseTableColumnHeaderViewModel
+                        {
+                            Pagination = Model.ListView,
+                            PropertyName = "LastModificationTime",
+                            DisplayName = ViewModelExtensions.GetDisplayName<Index.NavigationMenusListItemViewModel>(nm =>
+                            nm.LastModificationTime)
+                        }))
+                        <th class="border-0">
+                            Last modified by
+                        </th>
+                        <th class="border-0 rounded-end">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model.ListView.Items)
+                    {
+                        <tr>
+                            <td>@item.Label</td>
+                            <td>@item.DeveloperName</td>
+                            <td>@item.LastModificationTime</td>
+                            <td>@item.LastModifierUser</td>
+                            <td>
+                                <a asp-page="@RouteNames.NavigationMenus.Edit" asp-route-id="@item.Id">Edit</a>
+                                @if (item.IsMainMenu)
+                                {
+                                    <svg class="icon icon-xs" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                        stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                            d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" />
+                                    </svg>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+            <partial name="_Partials/TablePagination" model="@Model.ListView" />
+        </div>
+    </div>
+    </div>
+</div>

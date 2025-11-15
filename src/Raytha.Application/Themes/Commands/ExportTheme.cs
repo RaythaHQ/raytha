@@ -1,9 +1,9 @@
 ﻿using FluentValidation;
 using MediatR;
-using Raytha.Application.Common.Interfaces;
-using Raytha.Application.Common.Models;
 using Microsoft.EntityFrameworkCore;
 using Raytha.Application.Common.Exceptions;
+using Raytha.Application.Common.Interfaces;
+using Raytha.Application.Common.Models;
 using Raytha.Application.Common.Utils;
 using Raytha.Application.MediaItems;
 using Raytha.Application.Themes.WebTemplates;
@@ -16,10 +16,7 @@ public class ExportTheme
     {
         public required string DeveloperName { get; init; }
 
-        public static Command Empty() => new()
-        {
-            DeveloperName = string.Empty,
-        };
+        public static Command Empty() => new() { DeveloperName = string.Empty };
     }
 
     public class Validator : AbstractValidator<Command>
@@ -27,19 +24,27 @@ public class ExportTheme
         public Validator(IRaythaDbContext db)
         {
             RuleFor(x => x.DeveloperName).NotEmpty();
-            RuleFor(x => x).Custom((request, context) =>
-            {
-                var theme = db.Themes
-                    .Where(t => t.DeveloperName == request.DeveloperName.ToDeveloperName())
-                    .Select(t => new { t.IsExportable })
-                    .FirstOrDefault();
+            RuleFor(x => x)
+                .Custom(
+                    (request, context) =>
+                    {
+                        var theme = db
+                            .Themes.Where(t =>
+                                t.DeveloperName == request.DeveloperName.ToDeveloperName()
+                            )
+                            .Select(t => new { t.IsExportable })
+                            .FirstOrDefault();
 
-                if (theme == null)
-                    throw new NotFoundException("Theme", request.DeveloperName.ToDeveloperName());
+                        if (theme == null)
+                            throw new NotFoundException(
+                                "Theme",
+                                request.DeveloperName.ToDeveloperName()
+                            );
 
-                if (!theme.IsExportable)
-                    context.AddFailure("IsExportable", "The theme can not be exported");
-            });
+                        if (!theme.IsExportable)
+                            context.AddFailure("IsExportable", "The theme can not be exported");
+                    }
+                );
         }
     }
 
@@ -54,22 +59,35 @@ public class ExportTheme
             _fileStorageProvider = fileStorageProvider;
         }
 
-        public async Task<CommandResponseDto<ThemeJson>> Handle(Command request, CancellationToken cancellationToken)
+        public async Task<CommandResponseDto<ThemeJson>> Handle(
+            Command request,
+            CancellationToken cancellationToken
+        )
         {
-            var theme = await _db.Themes
-                .Include(t => t.WebTemplates)
+            var theme = await _db
+                .Themes.Include(t => t.WebTemplates)
                 .Include(t => t.ThemeAccessToMediaItems)
-                    .ThenInclude(tm => tm.MediaItem)
-                .FirstAsync(t => t.DeveloperName == request.DeveloperName.ToDeveloperName(), cancellationToken);
+                .ThenInclude(tm => tm.MediaItem)
+                .FirstAsync(
+                    t => t.DeveloperName == request.DeveloperName.ToDeveloperName(),
+                    cancellationToken
+                );
+
+            var mediaItems = theme.ThemeAccessToMediaItems.Select(tm => tm.MediaItem!).ToList();
+            var mediaItemJsonTasks = mediaItems.Select(async mi =>
+                MediaItemJson.GetProjection(
+                    mi.FileName,
+                    await _fileStorageProvider.GetDownloadUrlAsync(
+                        mi.ObjectKey,
+                        FileStorageUtility.GetDefaultExpiry()
+                    )
+                )
+            );
 
             var themePackage = new ThemeJson
             {
                 WebTemplates = theme.WebTemplates.Select(WebTemplateJson.GetProjection),
-                MediaItems = await theme.ThemeAccessToMediaItems
-                    .Select(tm => tm.MediaItem!)
-                    .ToAsyncEnumerable()
-                    .SelectAwait(async mi => MediaItemJson.GetProjection(mi.FileName, await _fileStorageProvider.GetDownloadUrlAsync(mi.ObjectKey, FileStorageUtility.GetDefaultExpiry())))
-                    .ToArrayAsync(cancellationToken)
+                MediaItems = await Task.WhenAll(mediaItemJsonTasks),
             };
 
             return new CommandResponseDto<ThemeJson>(themePackage);

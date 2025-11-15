@@ -1,8 +1,8 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using System.Text.Json;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Domain.Entities;
-using System.Text.Json;
 
 namespace Raytha.Infrastructure.BackgroundTasks;
 
@@ -26,10 +26,9 @@ public class QueuedHostedService : BackgroundService
         using (IServiceScope scope = _serviceProvider.CreateScope())
         {
             IBackgroundTaskQueue _taskQueue =
-                    scope.ServiceProvider.GetRequiredService<IBackgroundTaskQueue>();
+                scope.ServiceProvider.GetRequiredService<IBackgroundTaskQueue>();
 
-            IRaythaDbContext _db =
-                    scope.ServiceProvider.GetRequiredService<IRaythaDbContext>();
+            IRaythaDbContext _db = scope.ServiceProvider.GetRequiredService<IRaythaDbContext>();
 
             while (!stoppingToken.IsCancellationRequested)
             {
@@ -43,10 +42,14 @@ public class QueuedHostedService : BackgroundService
                 try
                 {
                     IExecuteBackgroundTask scopedProcessingService =
-                        scope.ServiceProvider
-                            .GetRequiredService(Type.GetType(backgroundTask.Name)) as IExecuteBackgroundTask;
+                        scope.ServiceProvider.GetRequiredService(Type.GetType(backgroundTask.Name))
+                        as IExecuteBackgroundTask;
 
-                    await scopedProcessingService.Execute(backgroundTask.Id, JsonSerializer.Deserialize<JsonElement>(backgroundTask.Args), stoppingToken);
+                    await scopedProcessingService.Execute(
+                        backgroundTask.Id,
+                        JsonSerializer.Deserialize<JsonElement>(backgroundTask.Args),
+                        stoppingToken
+                    );
                     backgroundTask.Status = BackgroundTaskStatus.Complete;
                 }
                 catch (Exception ex)

@@ -1,0 +1,13 @@
+﻿@{
+    Layout = "_Layout";
+}
+<div class="container">
+    <main role="main" class="">
+        @RenderBody()
+        <partial name="_Partials/Footer" />
+    </main>
+</div>
+
+@section Scripts {
+    @RenderSection("Scripts", required: false)
+}

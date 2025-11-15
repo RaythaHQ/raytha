@@ -25,60 +25,79 @@ public class EditSort
     {
         public Validator(IRaythaDbContext db)
         {
-            RuleFor(x => x).Custom((request, context) =>
-            {
-                var entity = db.Views
-                    .Include(p => p.ContentType)
-                    .ThenInclude(c => c.ContentTypeFields)
-                    .FirstOrDefault(p => p.Id == request.Id.Guid);
-
-                if (entity == null)
-                    throw new NotFoundException("View", request.Id);
-
-                try
-                {
-                    BuiltInContentTypeField.From(request.DeveloperName);
-                }
-                catch (ReservedContentTypeFieldNotFoundException)
-                {
-                    var exists = entity.ContentType.ContentTypeFields.Any(p => p.DeveloperName == request.DeveloperName);
-                    if (!exists)
+            RuleFor(x => x)
+                .Custom(
+                    (request, context) =>
                     {
-                        context.AddFailure(Constants.VALIDATION_SUMMARY, $"Developer name not recognized: {request.DeveloperName}");
+                        var entity = db
+                            .Views.Include(p => p.ContentType)
+                            .ThenInclude(c => c.ContentTypeFields)
+                            .FirstOrDefault(p => p.Id == request.Id.Guid);
+
+                        if (entity == null)
+                            throw new NotFoundException("View", request.Id);
+
+                        try
+                        {
+                            BuiltInContentTypeField.From(request.DeveloperName);
+                        }
+                        catch (ReservedContentTypeFieldNotFoundException)
+                        {
+                            var exists = entity.ContentType.ContentTypeFields.Any(p =>
+                                p.DeveloperName == request.DeveloperName
+                            );
+                            if (!exists)
+                            {
+                                context.AddFailure(
+                                    Constants.VALIDATION_SUMMARY,
+                                    $"Developer name not recognized: {request.DeveloperName}"
+                                );
+                            }
+                        }
+
+                        if (request.ShowColumn && string.IsNullOrEmpty(request.OrderByDirection))
+                        {
+                            context.AddFailure(
+                                Constants.VALIDATION_SUMMARY,
+                                $"Sort order required."
+                            );
+                            return;
+                        }
+
+                        try
+                        {
+                            if (request.ShowColumn)
+                                SortOrder.From(request.OrderByDirection);
+                        }
+                        catch (SortOrderNotFoundException)
+                        {
+                            context.AddFailure(
+                                Constants.VALIDATION_SUMMARY,
+                                $"Invalid sort order: {request.OrderByDirection}"
+                            );
+                            return;
+                        }
                     }
-                }
-
-                if (request.ShowColumn && string.IsNullOrEmpty(request.OrderByDirection))
-                {
-                    context.AddFailure(Constants.VALIDATION_SUMMARY, $"Sort order required.");
-                    return;
-                }
-
-                try
-                {
-                    if (request.ShowColumn)
-                        SortOrder.From(request.OrderByDirection);
-                }
-                catch (SortOrderNotFoundException)
-                {
-                    context.AddFailure(Constants.VALIDATION_SUMMARY, $"Invalid sort order: {request.OrderByDirection}");
-                    return;
-                }
-            });
+                );
         }
     }
 
     public class Handler : IRequestHandler<Command, CommandResponseDto<ShortGuid>>
     {
         private readonly IRaythaDbContext _db;
+
         public Handler(IRaythaDbContext db)
         {
             _db = db;
         }
-        public async Task<CommandResponseDto<ShortGuid>> Handle(Command request, CancellationToken cancellationToken)
+
+        public async Task<CommandResponseDto<ShortGuid>> Handle(
+            Command request,
+            CancellationToken cancellationToken
+        )
         {
-            var entity = _db.Views
-                .Include(p => p.ContentType)
+            var entity = _db
+                .Views.Include(p => p.ContentType)
                 .ThenInclude(c => c.ContentTypeFields)
                 .First(p => p.Id == request.Id.Guid);
 
@@ -89,19 +108,23 @@ public class EditSort
 
             if (request.ShowColumn && columnExists == null)
             {
-                columns.Add(new ColumnSortOrder
-                {
-                    SortOrder = SortOrder.From(request.OrderByDirection),
-                    DeveloperName = developerName
-                });
+                columns.Add(
+                    new ColumnSortOrder
+                    {
+                        SortOrder = SortOrder.From(request.OrderByDirection),
+                        DeveloperName = developerName,
+                    }
+                );
             }
             else if (!request.ShowColumn && columnExists != null)
             {
-                columns.Remove(new ColumnSortOrder
-                {
-                    SortOrder = columnExists.SortOrder,
-                    DeveloperName = developerName
-                });
+                columns.Remove(
+                    new ColumnSortOrder
+                    {
+                        SortOrder = columnExists.SortOrder,
+                        DeveloperName = developerName,
+                    }
+                );
             }
 
             entity.Sort = columns;

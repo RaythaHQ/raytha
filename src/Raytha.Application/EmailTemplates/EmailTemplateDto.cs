@@ -1,7 +1,7 @@
+using System.Linq.Expressions;
 using CSharpVitamins;
 using Raytha.Application.Common.Models;
 using Raytha.Domain.Entities;
-using System.Linq.Expressions;
 
 namespace Raytha.Application.EmailTemplates;
 

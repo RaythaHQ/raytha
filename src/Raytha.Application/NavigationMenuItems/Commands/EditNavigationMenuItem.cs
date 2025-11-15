@@ -22,12 +22,13 @@ public class EditNavigationMenuItem
         public ShortGuid? ParentNavigationMenuItemId { get; init; }
         public required ShortGuid NavigationMenuId { get; init; }
 
-        public static Command Empty() => new()
-        {
-            Label = string.Empty,
-            Url = string.Empty,
-            NavigationMenuId = string.Empty,
-        };
+        public static Command Empty() =>
+            new()
+            {
+                Label = string.Empty,
+                Url = string.Empty,
+                NavigationMenuId = string.Empty,
+            };
     }
 
     public class Validator : AbstractValidator<Command>
@@ -36,32 +37,52 @@ public class EditNavigationMenuItem
         {
             RuleFor(x => x.Label).NotEmpty();
             RuleFor(x => x.Url).NotEmpty();
-            RuleFor(x => x).Custom((request, context) =>
-            {
-                if (!db.NavigationMenuItems.Any(nmi => nmi.Id == request.Id.Guid))
-                {
-                    throw new NotFoundException("Navigation Menu Item", request.Id);
-                }
-
-                if (request.ParentNavigationMenuItemId.HasValue)
-                {
-                    if (!db.NavigationMenuItems.Any(nmi => nmi.Id == request.ParentNavigationMenuItemId.Value.Guid))
+            RuleFor(x => x)
+                .Custom(
+                    (request, context) =>
                     {
-                        throw new NotFoundException("Navigation Menu Item", request.ParentNavigationMenuItemId);
-                    }
+                        if (!db.NavigationMenuItems.Any(nmi => nmi.Id == request.Id.Guid))
+                        {
+                            throw new NotFoundException("Navigation Menu Item", request.Id);
+                        }
 
-                    var nestedNavigationMenuItemIds = db.NavigationMenuItems
-                        .Where(nmi => nmi.NavigationMenuId == request.NavigationMenuId.Guid)
-                        .Select(NavigationMenuItemDto.GetProjection())
-                        .ToArray()
-                        .GetNestedNavigationMenuItemIds(request.Id);
+                        if (request.ParentNavigationMenuItemId.HasValue)
+                        {
+                            if (
+                                !db.NavigationMenuItems.Any(nmi =>
+                                    nmi.Id == request.ParentNavigationMenuItemId.Value.Guid
+                                )
+                            )
+                            {
+                                throw new NotFoundException(
+                                    "Navigation Menu Item",
+                                    request.ParentNavigationMenuItemId
+                                );
+                            }
 
-                    if (nestedNavigationMenuItemIds.Any(id => id == request.ParentNavigationMenuItemId.Value) || request.Id == request.ParentNavigationMenuItemId)
-                    {
-                        context.AddFailure(Constants.VALIDATION_SUMMARY, "Cannot select a nested navigation menu item as the parent navigation menu item.");
+                            var nestedNavigationMenuItemIds = db
+                                .NavigationMenuItems.Where(nmi =>
+                                    nmi.NavigationMenuId == request.NavigationMenuId.Guid
+                                )
+                                .Select(NavigationMenuItemDto.GetProjection())
+                                .ToArray()
+                                .GetNestedNavigationMenuItemIds(request.Id);
+
+                            if (
+                                nestedNavigationMenuItemIds.Any(id =>
+                                    id == request.ParentNavigationMenuItemId.Value
+                                )
+                                || request.Id == request.ParentNavigationMenuItemId
+                            )
+                            {
+                                context.AddFailure(
+                                    Constants.VALIDATION_SUMMARY,
+                                    "Cannot select a nested navigation menu item as the parent navigation menu item."
+                                );
+                            }
+                        }
                     }
-                }
-            });
+                );
         }
     }
 
@@ -76,10 +97,15 @@ public class EditNavigationMenuItem
             _mediator = mediator;
         }
 
-        public async Task<CommandResponseDto<ShortGuid>> Handle(Command request, CancellationToken cancellationToken)
+        public async Task<CommandResponseDto<ShortGuid>> Handle(
+            Command request,
+            CancellationToken cancellationToken
+        )
         {
-            var entity = await _db.NavigationMenuItems
-                .FirstAsync(nmi => nmi.Id == request.Id.Guid, cancellationToken);
+            var entity = await _db.NavigationMenuItems.FirstAsync(
+                nmi => nmi.Id == request.Id.Guid,
+                cancellationToken
+            );
 
             entity.Url = request.Url;
             entity.Label = request.Label;
@@ -88,10 +114,13 @@ public class EditNavigationMenuItem
             entity.CssClassName = request.CssClassName;
             entity.ParentNavigationMenuItemId = request.ParentNavigationMenuItemId;
 
-            await _mediator.Send(new CreateNavigationMenuRevision.Command
-            {
-                NavigationMenuId = entity.NavigationMenuId,
-            }, cancellationToken);
+            await _mediator.Send(
+                new CreateNavigationMenuRevision.Command
+                {
+                    NavigationMenuId = entity.NavigationMenuId,
+                },
+                cancellationToken
+            );
 
             await _db.SaveChangesAsync(cancellationToken);
 

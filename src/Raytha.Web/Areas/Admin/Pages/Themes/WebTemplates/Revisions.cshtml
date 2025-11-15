@@ -1,0 +1,78 @@
+@page "/raytha/themes/edit/{themeId}/web-templates/edit/{id}/revisions"
+@model Raytha.Web.Areas.Admin.Pages.Themes.WebTemplates.Revisions
+
+@{
+    var pageTitle = "Themes > Web templates > Revisions";
+    Layout = "SubActionLayout";
+    ViewData["Title"] = pageTitle;
+    ViewData["ActiveMenu"] = "Themes";
+    ViewData["ActiveSubMenu"] = "Revisions";
+}
+<div class="table-responsive">
+    <table class="table table-centered table-nowrap mb-0 rounded">
+        <thead class="thead-light">
+            <tr>
+                <th class="border-0 rounded-start">Action</th>
+                @(await Html.PartialAsync("_Partials/TableColumnHeader", new BaseTableColumnHeaderViewModel()
+                {
+                    Pagination = Model.ListView,
+                    PropertyName = "CreationTime",
+                    DisplayName =
+                                ViewModelExtensions.GetDisplayName<Revisions.WebTemplatesRevisionsListItemViewModel>(p
+                                => p.CreationTime)
+                }))
+                <th class="border-0"></th>
+                <th class="border-0">
+                    Label
+                </th>
+                <th class="border-0 rounded-end">
+                    Created by
+                </th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model.ListView.Items)
+            {
+                <tr>
+                    <td class="align-middle">
+                        <form method="post" asp-page="@RouteNames.Themes.WebTemplates.Revisions" asp-page-handler="Revert"
+                            asp-route-revisionId="@item.Id" asp-route-id="@Model.ListView.TemplateId"
+                            asp-route-themeId="@Model.ListView.ThemeId"
+                            onsubmit="return confirm('Are you sure you want to revert to this web template?');">
+                            <button class="btn btn-sm btn-success">
+                                Revert
+                            </button>
+                        </form>
+                    </td>
+                    <td class="align-middle">@item.CreationTime</td>
+                    <td class="align-middle"><button class="btn" data-bs-toggle="modal"
+                            data-bs-target="#modal-@item.Id"><svg class="icon icon-sm mx-2" fill="none"
+                                stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z">
+                                </path>
+                            </svg></button></td>
+                    <td class="align-middle">@item.Label</td>
+                    <td class="align-middle">@item.CreatorUser</td>
+                </tr>
+                <div class="modal fade" id="modal-@item.Id" tabindex="-1" aria-labelledby="modal-default"
+                    style="display: none;" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered" role="document">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h2 class="h6 modal-title">Content</h2><button type="button" class="btn-close"
+                                    data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                <code>@item.Content</code>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </tbody>
+    </table>
+    <partial name="_Partials/TablePagination" model="@Model.ListView" />
+</div>

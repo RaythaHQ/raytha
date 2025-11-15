@@ -31,7 +31,7 @@ internal class SqlQueryBuilder
             _whereClauses.Add($"{condition}");
         else
             _whereClauses.Add($" AND {condition}");
-        
+
         return this;
     }
 
@@ -44,7 +44,7 @@ internal class SqlQueryBuilder
             _whereClauses.Add($"{condition}");
         else
             _whereClauses.Add($" OR {condition}");
-        
+
         return this;
     }
 
@@ -74,7 +74,8 @@ internal class SqlQueryBuilder
             query.Append(" ");
         }
 
-        if (_fromClause.Length > 0) query.Append(_fromClause).Append(" ");
+        if (_fromClause.Length > 0)
+            query.Append(_fromClause).Append(" ");
 
         if (_joinClauses.Any())
         {

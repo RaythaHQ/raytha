@@ -34,7 +34,7 @@ public record WebTemplateRevisionDto : BaseAuditableEntityDto
             CreationTime = entity.CreationTime,
             CreatorUser = AuditableUserDto.GetProjection(entity.CreatorUser),
             WebTemplate = WebTemplateDto.GetProjection(entity.WebTemplate),
-            AllowAccessForNewContentTypes = entity.AllowAccessForNewContentTypes
+            AllowAccessForNewContentTypes = entity.AllowAccessForNewContentTypes,
         };
     }
 }

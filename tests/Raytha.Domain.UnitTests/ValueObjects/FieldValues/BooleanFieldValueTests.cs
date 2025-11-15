@@ -12,7 +12,6 @@ public class BooleanFieldValueTests
     private string trueValueAsString = "True";
     private string falseValueAsString = "False";
 
-
     [Test]
     public void ShouldReturnCorrectFieldValue()
     {

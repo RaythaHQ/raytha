@@ -22,9 +22,15 @@ namespace Raytha.Migrations.SqlServer
                     Code = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     IsActive = table.Column<bool>(type: "bit", nullable: false),
                     CreationTime = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    LastModificationTime = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    LastModificationTime = table.Column<DateTime>(
+                        type: "datetime2",
+                        nullable: true
+                    ),
                     CreatorUserId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
-                    LastModifierUserId = table.Column<Guid>(type: "uniqueidentifier", nullable: true)
+                    LastModifierUserId = table.Column<Guid>(
+                        type: "uniqueidentifier",
+                        nullable: true
+                    ),
                 },
                 constraints: table =>
                 {
@@ -33,13 +39,16 @@ namespace Raytha.Migrations.SqlServer
                         name: "FK_RaythaFunctions_Users_CreatorUserId",
                         column: x => x.CreatorUserId,
                         principalTable: "Users",
-                        principalColumn: "Id");
+                        principalColumn: "Id"
+                    );
                     table.ForeignKey(
                         name: "FK_RaythaFunctions_Users_LastModifierUserId",
                         column: x => x.LastModifierUserId,
                         principalTable: "Users",
-                        principalColumn: "Id");
-                });
+                        principalColumn: "Id"
+                    );
+                }
+            );
 
             migrationBuilder.CreateTable(
                 name: "RaythaFunctionRevisions",
@@ -47,11 +56,20 @@ namespace Raytha.Migrations.SqlServer
                 {
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     Code = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    RaythaFunctionId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    RaythaFunctionId = table.Column<Guid>(
+                        type: "uniqueidentifier",
+                        nullable: false
+                    ),
                     CreationTime = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    LastModificationTime = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    LastModificationTime = table.Column<DateTime>(
+                        type: "datetime2",
+                        nullable: true
+                    ),
                     CreatorUserId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
-                    LastModifierUserId = table.Column<Guid>(type: "uniqueidentifier", nullable: true)
+                    LastModifierUserId = table.Column<Guid>(
+                        type: "uniqueidentifier",
+                        nullable: true
+                    ),
                 },
                 constraints: table =>
                 {
@@ -61,59 +79,67 @@ namespace Raytha.Migrations.SqlServer
                         column: x => x.RaythaFunctionId,
                         principalTable: "RaythaFunctions",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Cascade
+                    );
                     table.ForeignKey(
                         name: "FK_RaythaFunctionRevisions_Users_CreatorUserId",
                         column: x => x.CreatorUserId,
                         principalTable: "Users",
-                        principalColumn: "Id");
+                        principalColumn: "Id"
+                    );
                     table.ForeignKey(
                         name: "FK_RaythaFunctionRevisions_Users_LastModifierUserId",
                         column: x => x.LastModifierUserId,
                         principalTable: "Users",
-                        principalColumn: "Id");
-                });
+                        principalColumn: "Id"
+                    );
+                }
+            );
 
             migrationBuilder.CreateIndex(
                 name: "IX_RaythaFunctionRevisions_CreatorUserId",
                 table: "RaythaFunctionRevisions",
-                column: "CreatorUserId");
+                column: "CreatorUserId"
+            );
 
             migrationBuilder.CreateIndex(
                 name: "IX_RaythaFunctionRevisions_LastModifierUserId",
                 table: "RaythaFunctionRevisions",
-                column: "LastModifierUserId");
+                column: "LastModifierUserId"
+            );
 
             migrationBuilder.CreateIndex(
                 name: "IX_RaythaFunctionRevisions_RaythaFunctionId",
                 table: "RaythaFunctionRevisions",
-                column: "RaythaFunctionId");
+                column: "RaythaFunctionId"
+            );
 
             migrationBuilder.CreateIndex(
                 name: "IX_RaythaFunctions_CreatorUserId",
                 table: "RaythaFunctions",
-                column: "CreatorUserId");
+                column: "CreatorUserId"
+            );
 
             migrationBuilder.CreateIndex(
                 name: "IX_RaythaFunctions_DeveloperName",
                 table: "RaythaFunctions",
                 column: "DeveloperName",
-                unique: true);
+                unique: true
+            );
 
             migrationBuilder.CreateIndex(
                 name: "IX_RaythaFunctions_LastModifierUserId",
                 table: "RaythaFunctions",
-                column: "LastModifierUserId");
+                column: "LastModifierUserId"
+            );
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropTable(
-                name: "RaythaFunctionRevisions");
+            migrationBuilder.DropTable(name: "RaythaFunctionRevisions");
 
-            migrationBuilder.DropTable(
-                name: "RaythaFunctions");
+            migrationBuilder.DropTable(name: "RaythaFunctions");
         }
     }
 }

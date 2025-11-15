@@ -1,7 +1,7 @@
-﻿using Raytha.Application.Common.Interfaces;
-using Raytha.Application.Common.Models.RenderModels;
-using System.Linq.Expressions;
+﻿using System.Linq.Expressions;
 using System.Text;
+using Raytha.Application.Common.Interfaces;
+using Raytha.Application.Common.Models.RenderModels;
 
 namespace Raytha.Application.AuthenticationSchemes;
 
@@ -9,9 +9,7 @@ public record AuthenticationScheme_RenderModel : IInsertTemplateVariable
 {
     private string _prefix = string.Empty;
 
-    private AuthenticationScheme_RenderModel()
-    {
-    }
+    private AuthenticationScheme_RenderModel() { }
 
     private AuthenticationScheme_RenderModel(string prefix)
     {
@@ -28,7 +26,9 @@ public record AuthenticationScheme_RenderModel : IInsertTemplateVariable
     public string LoginButtonText { get; init; } = string.Empty;
     public string SignOutUrl { get; init; } = string.Empty;
 
-    public static Expression<Func<AuthenticationSchemeDto, AuthenticationScheme_RenderModel>> GetProjection()
+    public static Expression<
+        Func<AuthenticationSchemeDto, AuthenticationScheme_RenderModel>
+    > GetProjection()
     {
         return authScheme => GetProjection(authScheme);
     }
@@ -48,7 +48,7 @@ public record AuthenticationScheme_RenderModel : IInsertTemplateVariable
             LoginButtonText = entity.LoginButtonText,
             IsBuiltInAuth = entity.IsBuiltInAuth,
             IsEnabledForUsers = entity.IsEnabledForUsers,
-            IsEnabledForAdmins = entity.IsEnabledForAdmins
+            IsEnabledForAdmins = entity.IsEnabledForAdmins,
         };
     }
 

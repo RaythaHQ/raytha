@@ -2,7 +2,6 @@
 
 namespace Raytha.Application.Admins;
 
-
 public record SendAdminWelcomeEmail_RenderModel : BaseSendWelcomeEmail_RenderModel
 {
     public bool IsNewlyCreatedUser { get; init; }
@@ -17,10 +16,6 @@ public record SendAdminWelcomeEmail_RenderModel : BaseSendWelcomeEmail_RenderMod
     }
 }
 
-public record SendAdminPasswordChanged_RenderModel : BaseSendPasswordChanged_RenderModel
-{
-}
+public record SendAdminPasswordChanged_RenderModel : BaseSendPasswordChanged_RenderModel { }
 
-public record SendAdminPasswordReset_RenderModel : BaseSendPasswordReset_RenderModel
-{
-}
+public record SendAdminPasswordReset_RenderModel : BaseSendPasswordReset_RenderModel { }

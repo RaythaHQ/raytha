@@ -1,0 +1,273 @@
+/**
+ * TipTap WYSIWYG Editor Styles
+ * Styling for the TipTap editor, modals, toolbar, and custom context menu
+ */
+
+/* High-Contrast Toolbar Styling */
+.tiptap-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.25rem;
+    background: #fff !important;
+    border: 1px solid var(--bs-border-color, #dee2e6);
+    border-bottom: 0;
+    padding: 0.5rem;
+}
+
+.tiptap-toolbar .btn,
+.tiptap-toolbar .dropdown-toggle,
+.tiptap-toolbar .form-select {
+    color: var(--bs-body-color, #212529);
+    border-color: var(--bs-border-color, #dee2e6);
+}
+
+.tiptap-toolbar .btn {
+    border-color: var(--bs-border-color, #dee2e6);
+}
+
+.tiptap-toolbar .btn.active {
+    color: #fff;
+    background: var(--bs-primary, #0d6efd);
+    border-color: var(--bs-primary, #0d6efd);
+}
+
+.tiptap-toolbar .form-select {
+    display: inline-block;
+    width: auto;
+    min-width: 120px;
+    font-size: 0.875rem;
+    padding: 0.25rem 0.5rem;
+    height: auto;
+}
+
+.tiptap-toolbar .separator {
+    width: 1px;
+    height: 28px;
+    background: var(--bs-border-color, #dee2e6);
+    display: inline-block;
+    margin: 0 0.5rem;
+}
+
+/* Editor Wrapper with Scrollbar */
+.tiptap-editor-wrapper {
+    min-height: 250px;
+    max-height: 560px;
+    overflow: auto;
+    border: 1px solid var(--bs-border-color, #dee2e6);
+}
+
+.tiptap-editor-wrapper .ProseMirror {
+    padding: 0.75rem;
+    outline: none;
+}
+
+.tiptap-editor-wrapper .ProseMirror:focus {
+    outline: none;
+}
+
+/* Link Styling - Use Bootstrap 5 CSS variables */
+.tiptap-editor-wrapper .ProseMirror a {
+    color: var(--bs-link-color, #0d6efd);
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+.tiptap-editor-wrapper .ProseMirror a:hover {
+    color: var(--bs-link-hover-color, #0a58ca);
+    text-decoration: underline;
+}
+
+/* Blockquote Styling */
+.tiptap-editor-wrapper .ProseMirror blockquote {
+    border-left: 0.25rem solid var(--bs-border-color, #dee2e6);
+    margin: 0 0 1rem 0;
+    padding: 0.5rem 1rem;
+    color: var(--bs-secondary-color, #6c757d);
+    background: var(--bs-light, #f8f9fa);
+}
+
+/* Context Menu for Links, Images, Videos */
+.tiptap-link-context-menu,
+.tiptap-context-menu {
+    position: absolute;
+    z-index: 1050;
+    background: white;
+    border: 1px solid var(--bs-border-color, #dee2e6);
+    border-radius: 0.25rem;
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    min-width: 150px;
+    padding: 0.5rem 0;
+}
+
+.tiptap-link-context-menu button,
+.tiptap-context-menu button {
+    display: block;
+    width: 100%;
+    padding: 0.5rem 1rem;
+    border: none;
+    background: none;
+    text-align: left;
+    cursor: pointer;
+    font-size: 0.875rem;
+    color: var(--bs-body-color, #212529);
+}
+
+.tiptap-link-context-menu button:hover,
+.tiptap-context-menu button:hover {
+    background: var(--bs-light, #f8f9fa);
+}
+
+.tiptap-context-menu .context-menu-item {
+    display: block;
+    width: 100%;
+    padding: 0.5rem 1rem;
+    border: none;
+    background: none;
+    text-align: left;
+    cursor: pointer;
+    font-size: 0.875rem;
+    color: var(--bs-body-color, #212529);
+}
+
+.tiptap-context-menu .context-menu-item:hover {
+    background: var(--bs-light, #f8f9fa);
+}
+
+.tiptap-context-menu hr {
+    margin: 0.25rem 0;
+    border-top: 1px solid var(--bs-border-color, #dee2e6);
+    border-bottom: 0;
+}
+
+/* Modal Tab Content Padding */
+.tiptap-modal .tab-content {
+    padding-top: 1rem;
+}
+
+/* Uppy Container in Modals */
+.tiptap-modal .uppy-container {
+    min-height: 300px;
+}
+
+/* Video and Image in Editor */
+.tiptap-editor-wrapper .ProseMirror video,
+.tiptap-editor-wrapper .ProseMirror iframe {
+    max-width: 100%;
+    height: auto;
+}
+
+.tiptap-editor-wrapper .ProseMirror img {
+    max-width: 100%;
+    height: auto;
+}
+
+/* Table Styling */
+.tiptap-editor-wrapper .ProseMirror table {
+    border-collapse: collapse;
+    table-layout: fixed;
+    width: 100%;
+    margin: 1rem 0;
+    overflow: hidden;
+}
+
+.tiptap-editor-wrapper .ProseMirror table td,
+.tiptap-editor-wrapper .ProseMirror table th {
+    min-width: 1em;
+    border: 1px solid var(--bs-border-color, #dee2e6);
+    padding: 0.5rem;
+    vertical-align: top;
+    box-sizing: border-box;
+    position: relative;
+}
+
+.tiptap-editor-wrapper .ProseMirror table th {
+    font-weight: bold;
+    text-align: left;
+    background-color: var(--bs-light, #f8f9fa);
+}
+
+.tiptap-editor-wrapper .ProseMirror table td:hover,
+.tiptap-editor-wrapper .ProseMirror table th:hover {
+    background-color: var(--bs-light, #f8f9fa);
+}
+
+.tiptap-editor-wrapper .ProseMirror table .selectedCell {
+    background-color: var(--bs-primary-bg-subtle, #cfe2ff);
+}
+
+/* Code Block Styling */
+.tiptap-editor-wrapper .ProseMirror pre {
+    background: var(--bs-dark, #212529);
+    color: var(--bs-light, #f8f9fa);
+    font-family: 'Courier New', monospace;
+    padding: 0.75rem 1rem;
+    border-radius: 0.25rem;
+    overflow-x: auto;
+}
+
+.tiptap-editor-wrapper .ProseMirror code {
+    background: var(--bs-light, #f8f9fa);
+    color: var(--bs-danger, #dc3545);
+    padding: 0.2rem 0.4rem;
+    border-radius: 0.25rem;
+    font-size: 0.875em;
+}
+
+/* Text Alignment */
+.tiptap-editor-wrapper .ProseMirror .text-left {
+    text-align: left;
+}
+
+.tiptap-editor-wrapper .ProseMirror .text-center {
+    text-align: center;
+}
+
+.tiptap-editor-wrapper .ProseMirror .text-right {
+    text-align: right;
+}
+
+.tiptap-editor-wrapper .ProseMirror .text-justify {
+    text-align: justify;
+}
+
+/* Color Picker Popover */
+.color-picker-popover {
+    position: fixed;
+    background: white;
+    border: 1px solid var(--bs-border-color, #dee2e6);
+    border-radius: 0.25rem;
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    padding: 0.5rem;
+    z-index: 9999;
+    min-width: 220px;
+}
+
+.color-picker-popover .color-grid {
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    gap: 4px;
+}
+
+.color-picker-popover .color-swatch {
+    width: 24px;
+    height: 24px;
+    border: 1px solid var(--bs-border-color, #ccc);
+    cursor: pointer;
+    border-radius: 2px;
+}
+
+.color-picker-popover .color-swatch:hover {
+    border-color: var(--bs-primary, #0d6efd);
+    border-width: 2px;
+}
+
+/* Align dropdown checkmark */
+.align-check {
+    float: right;
+    visibility: hidden;
+}
+
+.align-check.active {
+    visibility: visible;
+}

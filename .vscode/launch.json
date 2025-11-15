@@ -5,22 +5,11 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": ".NET Core Launch (Debug without JS)",
-            "type": "coreclr",
-            "request": "launch",
-            "preLaunchTask": "build:DebugWithoutJS",
-            "program": "${workspaceFolder}/src/Raytha.Web/bin/Debug without JS/net8.0/Raytha.Web.dll",
-            "args": [],
-            "cwd": "${workspaceFolder}/src/Raytha.Web",
-            "console": "integratedTerminal",
-            "stopAtEntry": false
-        },
-        {
             "name": ".NET Core Launch",
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "build:Debug",
-            "program": "${workspaceFolder}/src/Raytha.Web/bin/Debug/net8.0/Raytha.Web.dll",
+            "program": "${workspaceFolder}/src/Raytha.Web/bin/Debug/net10.0/Raytha.Web.dll",
             "args": [],
             "cwd": "${workspaceFolder}/src/Raytha.Web",
             "console": "integratedTerminal",

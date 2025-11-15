@@ -3,7 +3,8 @@ using Raytha.Domain.ValueObjects.FieldValues;
 
 public class MultipleSelectFieldType : BaseFieldType
 {
-    public MultipleSelectFieldType() : base("Multiple select", "multiple_select", true) { }
+    public MultipleSelectFieldType()
+        : base("Multiple select", "multiple_select", true) { }
 
     public override IEnumerable<ConditionOperator> SupportedConditionOperators
     {

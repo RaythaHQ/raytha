@@ -1,21 +1,25 @@
 ﻿namespace Raytha.Infrastructure.Persistence;
 
 interface IPostgresConfiguration { }
+
 interface ISqlServerConfiguration { }
 
 public enum DatabaseProviderType
 {
     Postgres,
-    SqlServer
+    SqlServer,
 }
 
 public static class DbProviderHelper
 {
-    public static DatabaseProviderType GetDatabaseProviderTypeFromConnectionString(string connectionString)
+    public static DatabaseProviderType GetDatabaseProviderTypeFromConnectionString(
+        string connectionString
+    )
     {
         bool isPostgres = connectionString.Contains("Host=", StringComparison.OrdinalIgnoreCase);
-        bool isSqlServer = connectionString.Contains("Server=", StringComparison.OrdinalIgnoreCase) ||
-                           connectionString.Contains("Data Source=", StringComparison.OrdinalIgnoreCase);
+        bool isSqlServer =
+            connectionString.Contains("Server=", StringComparison.OrdinalIgnoreCase)
+            || connectionString.Contains("Data Source=", StringComparison.OrdinalIgnoreCase);
 
         if (isPostgres)
         {

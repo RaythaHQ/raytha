@@ -20,19 +20,26 @@ public class GetContentTypeByDeveloperName
     public class Handler : IRequestHandler<Query, IQueryResponseDto<ContentTypeDto>>
     {
         private readonly IRaythaDbContext _db;
+
         public Handler(IRaythaDbContext db)
         {
             _db = db;
         }
 
-        public async Task<IQueryResponseDto<ContentTypeDto>> Handle(Query request, CancellationToken cancellationToken)
+        public async Task<IQueryResponseDto<ContentTypeDto>> Handle(
+            Query request,
+            CancellationToken cancellationToken
+        )
         {
-            var entity = _db.ContentTypes
-                .Include(p => p.ContentTypeFields.OrderBy(c => c.FieldOrder))
+            var entity = _db
+                .ContentTypes.Include(p => p.ContentTypeFields.OrderBy(c => c.FieldOrder))
                 .FirstOrDefault(p => p.DeveloperName == request.DeveloperName.ToDeveloperName());
 
             if (entity == null)
-                throw new NotFoundException("Content type", request.DeveloperName.ToDeveloperName());
+                throw new NotFoundException(
+                    "Content type",
+                    request.DeveloperName.ToDeveloperName()
+                );
 
             return new QueryResponseDto<ContentTypeDto>(ContentTypeDto.GetProjection(entity));
         }

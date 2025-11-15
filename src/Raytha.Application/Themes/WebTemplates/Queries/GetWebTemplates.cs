@@ -10,7 +10,9 @@ namespace Raytha.Application.Themes.WebTemplates.Queries;
 
 public class GetWebTemplates
 {
-    public record Query : GetPagedEntitiesInputDto, IRequest<IQueryResponseDto<ListResultDto<WebTemplateDto>>>
+    public record Query
+        : GetPagedEntitiesInputDto,
+            IRequest<IQueryResponseDto<ListResultDto<WebTemplateDto>>>
     {
         public override string OrderBy { get; init; } = $"Label {SortOrder.ASCENDING}";
         public bool BaseLayoutsOnly { get; init; } = false;
@@ -27,11 +29,14 @@ public class GetWebTemplates
             _db = db;
         }
 
-        public async Task<IQueryResponseDto<ListResultDto<WebTemplateDto>>> Handle(Query request, CancellationToken cancellationToken)
+        public async Task<IQueryResponseDto<ListResultDto<WebTemplateDto>>> Handle(
+            Query request,
+            CancellationToken cancellationToken
+        )
         {
-            var query = _db.WebTemplates
-                .Include(wt => wt.TemplateAccessToModelDefinitions)
-                    .ThenInclude(wt => wt.ContentType)
+            var query = _db
+                .WebTemplates.Include(wt => wt.TemplateAccessToModelDefinitions)
+                .ThenInclude(wt => wt.ContentType)
                 .Include(wt => wt.LastModifierUser)
                 .Include(wt => wt.ParentTemplate)
                 .AsQueryable();
@@ -44,13 +49,26 @@ public class GetWebTemplates
             if (!string.IsNullOrEmpty(request.Search))
             {
                 var searchQuery = request.Search.ToLower();
-                query = query.Where(wt => wt.Label!.ToLower().Contains(searchQuery) || wt.DeveloperName!.ToLower().Contains(searchQuery)
-                                                    || (wt.LastModifierUser != null && (wt.LastModifierUser.FirstName.ToLower().Contains(searchQuery) || wt.LastModifierUser.LastName.ToLower().Contains(searchQuery))));
+                query = query.Where(wt =>
+                    wt.Label!.ToLower().Contains(searchQuery)
+                    || wt.DeveloperName!.ToLower().Contains(searchQuery)
+                    || (
+                        wt.LastModifierUser != null
+                        && (
+                            wt.LastModifierUser.FirstName.ToLower().Contains(searchQuery)
+                            || wt.LastModifierUser.LastName.ToLower().Contains(searchQuery)
+                        )
+                    )
+                );
             }
 
             if (request.ContentTypeId.HasValue)
             {
-                query = query.Where(wt => wt.TemplateAccessToModelDefinitions.Any(c => c.ContentTypeId == request.ContentTypeId.Value.Guid));
+                query = query.Where(wt =>
+                    wt.TemplateAccessToModelDefinitions.Any(c =>
+                        c.ContentTypeId == request.ContentTypeId.Value.Guid
+                    )
+                );
             }
 
             if (request.BaseLayoutsOnly)
@@ -59,9 +77,14 @@ public class GetWebTemplates
             }
 
             var total = await query.CountAsync(cancellationToken);
-            var items = await query.ApplyPaginationInput(request).Select(WebTemplateDto.GetProjection()).ToArrayAsync(cancellationToken);
+            var items = await query
+                .ApplyPaginationInput(request)
+                .Select(WebTemplateDto.GetProjection())
+                .ToArrayAsync(cancellationToken);
 
-            return new QueryResponseDto<ListResultDto<WebTemplateDto>>(new ListResultDto<WebTemplateDto>(items!, total));
+            return new QueryResponseDto<ListResultDto<WebTemplateDto>>(
+                new ListResultDto<WebTemplateDto>(items!, total)
+            );
         }
     }
 }

@@ -1,6 +1,6 @@
 namespace Raytha.Web.Areas.Public.Views.Login;
 
-public class LoginWithEmailAndPassword_ViewModel
+public class LoginWithEmailAndPasswordViewModel
 {
     public string EmailAddress { get; set; }
 
@@ -9,17 +9,17 @@ public class LoginWithEmailAndPassword_ViewModel
     public bool RememberMe { get; set; } = false;
 }
 
-public class LoginWithMagicLink_ViewModel
+public class LoginWithMagicLinkViewModel
 {
     public string EmailAddress { get; set; }
 }
 
-public class BeginForgotPassword_ViewModel
+public class BeginForgotPasswordViewModel
 {
     public string EmailAddress { get; set; }
 }
 
-public class CompleteForgotPassword_ViewModel
+public class CompleteForgotPasswordViewModel
 {
     public string Id { get; set; }
 
@@ -28,7 +28,7 @@ public class CompleteForgotPassword_ViewModel
     public string ConfirmNewPassword { get; set; }
 }
 
-public class CreateUser_ViewModel
+public class CreateUserViewModel
 {
     public string FirstName { get; set; }
     public string LastName { get; set; }
@@ -36,4 +36,3 @@ public class CreateUser_ViewModel
     public string Password { get; set; }
     public string ConfirmPassword { get; set; }
 }
-

@@ -1,7 +1,7 @@
-﻿using Raytha.Application.Common.Models;
+﻿using System.Linq.Expressions;
+using Raytha.Application.Common.Models;
 using Raytha.Application.UserGroups;
 using Raytha.Domain.Entities;
-using System.Linq.Expressions;
 
 namespace Raytha.Application.Users
 {
@@ -49,7 +49,10 @@ namespace Raytha.Application.Users
                 IsAdmin = entity.IsAdmin,
                 CreatorUser = AuditableUserDto.GetProjection(entity.CreatorUser),
                 LastModifierUser = AuditableUserDto.GetProjection(entity.LastModifierUser),
-                UserGroups = entity.UserGroups != null ? entity.UserGroups.AsQueryable().Select(UserGroupDto.GetProjection()) : new List<UserGroupDto>(),
+                UserGroups =
+                    entity.UserGroups != null
+                        ? entity.UserGroups.AsQueryable().Select(UserGroupDto.GetProjection())
+                        : new List<UserGroupDto>(),
             };
         }
     }

@@ -1,14 +1,15 @@
-﻿using MediatR;
+﻿using CSharpVitamins;
+using MediatR;
 using Raytha.Application.Common.Interfaces;
+using Raytha.Application.Common.Models.RenderModels;
 using Raytha.Domain.Common;
 using Raytha.Domain.Entities;
 using Raytha.Domain.Events;
-using CSharpVitamins;
-using Raytha.Application.Common.Models.RenderModels;
 
 namespace Raytha.Application.Login.EventHandlers;
 
-public class BeginLoginWithMagicLinkEventHandler : INotificationHandler<BeginLoginWithMagicLinkEvent>
+public class BeginLoginWithMagicLinkEventHandler
+    : INotificationHandler<BeginLoginWithMagicLinkEvent>
 {
     private readonly IEmailer _emailerService;
     private readonly IRaythaDbContext _db;
@@ -18,10 +19,11 @@ public class BeginLoginWithMagicLinkEventHandler : INotificationHandler<BeginLog
 
     public BeginLoginWithMagicLinkEventHandler(
         ICurrentOrganization currentOrganization,
-        IRaythaDbContext db, 
-        IEmailer emailerService, 
-        IRenderEngine renderEngineService, 
-        IRelativeUrlBuilder relativeUrlBuilderService)
+        IRaythaDbContext db,
+        IEmailer emailerService,
+        IRenderEngine renderEngineService,
+        IRelativeUrlBuilder relativeUrlBuilderService
+    )
     {
         _db = db;
         _emailerService = emailerService;
@@ -30,37 +32,59 @@ public class BeginLoginWithMagicLinkEventHandler : INotificationHandler<BeginLog
         _currentOrganization = currentOrganization;
     }
 
-    public async Task Handle(BeginLoginWithMagicLinkEvent notification, CancellationToken cancellationToken)
+    public async Task Handle(
+        BeginLoginWithMagicLinkEvent notification,
+        CancellationToken cancellationToken
+    )
     {
         if (notification.SendEmail)
         {
-            EmailTemplate renderTemplate = _db.EmailTemplates.First(p => p.DeveloperName == BuiltInEmailTemplate.LoginBeginLoginWithMagicLinkEmail);
-            SendBeginLoginWithMagicLink_RenderModel entity = new SendBeginLoginWithMagicLink_RenderModel
-            {
-                Id = (ShortGuid)notification.User.Id,
-                FirstName = notification.User.FirstName,
-                LastName = notification.User.LastName,
-                EmailAddress = notification.User.EmailAddress,
-                LoginWithMagicLinkCompleteUrl = notification.User.IsAdmin ? _relativeUrlBuilderService.AdminLoginWithMagicLinkCompleteUrl(notification.Token, notification.ReturnUrl) : _relativeUrlBuilderService.UserLoginWithMagicLinkCompleteUrl(notification.Token, notification.ReturnUrl),
-                SsoId = notification.User.SsoId,
-                AuthenticationScheme = notification.User.AuthenticationScheme?.DeveloperName,
-                IsAdmin = notification.User.IsAdmin,
-                MagicLinkExpiresInSeconds = notification.MagicLinkExpiresInSeconds
-            };
+            EmailTemplate renderTemplate = _db.EmailTemplates.First(p =>
+                p.DeveloperName == BuiltInEmailTemplate.LoginBeginLoginWithMagicLinkEmail
+            );
+            SendBeginLoginWithMagicLink_RenderModel entity =
+                new SendBeginLoginWithMagicLink_RenderModel
+                {
+                    Id = (ShortGuid)notification.User.Id,
+                    FirstName = notification.User.FirstName,
+                    LastName = notification.User.LastName,
+                    EmailAddress = notification.User.EmailAddress,
+                    LoginWithMagicLinkCompleteUrl = notification.User.IsAdmin
+                        ? _relativeUrlBuilderService.AdminLoginWithMagicLinkCompleteUrl(
+                            notification.Token,
+                            notification.ReturnUrl
+                        )
+                        : _relativeUrlBuilderService.UserLoginWithMagicLinkCompleteUrl(
+                            notification.Token,
+                            notification.ReturnUrl
+                        ),
+                    SsoId = notification.User.SsoId,
+                    AuthenticationScheme = notification.User.AuthenticationScheme?.DeveloperName,
+                    IsAdmin = notification.User.IsAdmin,
+                    MagicLinkExpiresInSeconds = notification.MagicLinkExpiresInSeconds,
+                };
 
             var wrappedModel = new Wrapper_RenderModel
             {
-                CurrentOrganization = CurrentOrganization_RenderModel.GetProjection(_currentOrganization),
-                Target = entity
+                CurrentOrganization = CurrentOrganization_RenderModel.GetProjection(
+                    _currentOrganization
+                ),
+                Target = entity,
             };
 
-            string subject = _renderEngineService.RenderAsHtml(renderTemplate.Subject, wrappedModel);
-            string content = _renderEngineService.RenderAsHtml(renderTemplate.Content, wrappedModel);
+            string subject = _renderEngineService.RenderAsHtml(
+                renderTemplate.Subject,
+                wrappedModel
+            );
+            string content = _renderEngineService.RenderAsHtml(
+                renderTemplate.Content,
+                wrappedModel
+            );
             var emailMessage = new EmailMessage
             {
                 Content = content,
                 To = new List<string> { entity.EmailAddress },
-                Subject = subject
+                Subject = subject,
             };
             _emailerService.SendEmail(emailMessage);
         }

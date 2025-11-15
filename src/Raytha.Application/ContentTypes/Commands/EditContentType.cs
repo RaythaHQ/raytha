@@ -28,39 +28,55 @@ public class EditContentType
             RuleFor(x => x.LabelSingular).NotEmpty();
             RuleFor(x => x.PrimaryFieldId).NotEmpty();
             RuleFor(x => x.DefaultRouteTemplate).NotEmpty();
-            RuleFor(x => x).Custom((request, context) =>
-            {
-                var entity = db.ContentTypes.FirstOrDefault(p => p.Id == request.Id.Guid);
-                if (entity == null)
-                    throw new NotFoundException("Content Type", request.Id);
+            RuleFor(x => x)
+                .Custom(
+                    (request, context) =>
+                    {
+                        var entity = db.ContentTypes.FirstOrDefault(p => p.Id == request.Id.Guid);
+                        if (entity == null)
+                            throw new NotFoundException("Content Type", request.Id);
 
-                var newPrimaryField = db.ContentTypeFields.FirstOrDefault(p => p.Id == request.PrimaryFieldId.Guid);
-                if (newPrimaryField == null)
-                    return;
+                        var newPrimaryField = db.ContentTypeFields.FirstOrDefault(p =>
+                            p.Id == request.PrimaryFieldId.Guid
+                        );
+                        if (newPrimaryField == null)
+                            return;
 
-                if (newPrimaryField.FieldType.DeveloperName != BaseFieldType.SingleLineText)
-                {
-                    context.AddFailure("PrimaryFieldId", "Primary field must be of type Single Line Text.");
-                    return;
-                }
+                        if (newPrimaryField.FieldType.DeveloperName != BaseFieldType.SingleLineText)
+                        {
+                            context.AddFailure(
+                                "PrimaryFieldId",
+                                "Primary field must be of type Single Line Text."
+                            );
+                            return;
+                        }
 
-                if (request.DefaultRouteTemplate.IsProtectedRoutePath())
-                {
-                    context.AddFailure("DefaultRouteTemplate", "Default route path cannot begin with a protected path.");
-                    return;
-                }
-            });
+                        if (request.DefaultRouteTemplate.IsProtectedRoutePath())
+                        {
+                            context.AddFailure(
+                                "DefaultRouteTemplate",
+                                "Default route path cannot begin with a protected path."
+                            );
+                            return;
+                        }
+                    }
+                );
         }
     }
 
     public class Handler : IRequestHandler<Command, CommandResponseDto<ShortGuid>>
     {
         private readonly IRaythaDbContext _db;
+
         public Handler(IRaythaDbContext db)
         {
             _db = db;
         }
-        public async Task<CommandResponseDto<ShortGuid>> Handle(Command request, CancellationToken cancellationToken)
+
+        public async Task<CommandResponseDto<ShortGuid>> Handle(
+            Command request,
+            CancellationToken cancellationToken
+        )
         {
             var entity = _db.ContentTypes.First(p => p.Id == request.Id.Guid);
 

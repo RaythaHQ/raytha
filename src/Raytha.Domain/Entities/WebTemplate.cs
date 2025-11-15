@@ -12,19 +12,17 @@ public class WebTemplate : BaseAuditableEntity
     public Guid? ParentTemplateId { get; set; }
     public bool AllowAccessForNewContentTypes { get; set; }
     public virtual WebTemplate? ParentTemplate { get; set; }
-    public virtual ICollection<WebTemplateRevision> Revisions { get; set; } = new List<WebTemplateRevision>();
-    public virtual ICollection<WebTemplateAccessToModelDefinition> TemplateAccessToModelDefinitions { get; set; } = new List<WebTemplateAccessToModelDefinition>();    
+    public virtual ICollection<WebTemplateRevision> Revisions { get; set; } =
+        new List<WebTemplateRevision>();
+    public virtual ICollection<WebTemplateAccessToModelDefinition> TemplateAccessToModelDefinitions { get; set; } =
+        new List<WebTemplateAccessToModelDefinition>();
 }
 
 public class BuiltInWebTemplate : ValueObject
 {
-    static BuiltInWebTemplate()
-    {
-    }
+    static BuiltInWebTemplate() { }
 
-    private BuiltInWebTemplate()
-    {
-    }
+    private BuiltInWebTemplate() { }
 
     private BuiltInWebTemplate(string label, string developerName, bool isBuiltInTemplate)
     {
@@ -46,24 +44,41 @@ public class BuiltInWebTemplate : ValueObject
     }
 
     public static BuiltInWebTemplate _Layout => new("_Layout", "raytha_html_base_layout", true);
-    public static BuiltInWebTemplate _LoginLayout => new("_LoginLayout", "raytha_html_base_login_layout", true);
-    public static BuiltInWebTemplate Error403 => new("Error, access denied", "raytha_html_error_403", true);
-    public static BuiltInWebTemplate Error404 => new("Error, resource not found", "raytha_html_error_404", true);
-    public static BuiltInWebTemplate Error500 => new("Error, something broke", "raytha_html_error_500", true);
+    public static BuiltInWebTemplate _LoginLayout =>
+        new("_LoginLayout", "raytha_html_base_login_layout", true);
+    public static BuiltInWebTemplate Error403 =>
+        new("Error, access denied", "raytha_html_error_403", true);
+    public static BuiltInWebTemplate Error404 =>
+        new("Error, resource not found", "raytha_html_error_404", true);
+    public static BuiltInWebTemplate Error500 =>
+        new("Error, something broke", "raytha_html_error_500", true);
     public static BuiltInWebTemplate HomePage => new("Home", "raytha_html_home", false);
-    public static BuiltInWebTemplate ContentItemListViewPage => new("Content item list view", "raytha_html_content_item_list", false);
-    public static BuiltInWebTemplate ContentItemDetailViewPage => new("Content item detail view", "raytha_html_content_item_detail", false);
-    public static BuiltInWebTemplate LoginWithEmailAndPasswordPage => new("Login with email and password", "raytha_html_login_emailandpassword", true);
-    public static BuiltInWebTemplate LoginWithMagicLinkPage => new("Login with magic link", "raytha_html_login_magiclink", true);
-    public static BuiltInWebTemplate LoginWithMagicLinkSentPage => new("Magic link sent", "raytha_html_login_magiclinksent", true);
-    public static BuiltInWebTemplate UserRegistrationForm => new("User registration form", "raytha_html_user_registration", true);
-    public static BuiltInWebTemplate UserRegistrationFormSuccess => new("User registration form success", "raytha_html_user_registration_success", true);
-    public static BuiltInWebTemplate ChangeProfilePage => new("Change profile", "raytha_html_changeprofile", true);
-    public static BuiltInWebTemplate ChangePasswordPage => new("Change password", "raytha_html_changepassword", true);
-    public static BuiltInWebTemplate ForgotPasswordPage => new("Forgot password", "raytha_html_forgotpassword", true);
-    public static BuiltInWebTemplate ForgotPasswordCompletePage => new("Complete forgot password", "raytha_html_forgotpasswordcomplete", true);
-    public static BuiltInWebTemplate ForgotPasswordResetLinkSentPage => new("Forgot password reset link sent", "raytha_html_forgotpassword_reset_link_sent", true);
-    public static BuiltInWebTemplate ForgotPasswordSuccessPage => new("Forgot password success", "raytha_html_forgotpasswordsuccess", true);
+    public static BuiltInWebTemplate ContentItemListViewPage =>
+        new("Content item list view", "raytha_html_content_item_list", false);
+    public static BuiltInWebTemplate ContentItemDetailViewPage =>
+        new("Content item detail view", "raytha_html_content_item_detail", false);
+    public static BuiltInWebTemplate LoginWithEmailAndPasswordPage =>
+        new("Login with email and password", "raytha_html_login_emailandpassword", true);
+    public static BuiltInWebTemplate LoginWithMagicLinkPage =>
+        new("Login with magic link", "raytha_html_login_magiclink", true);
+    public static BuiltInWebTemplate LoginWithMagicLinkSentPage =>
+        new("Magic link sent", "raytha_html_login_magiclinksent", true);
+    public static BuiltInWebTemplate UserRegistrationForm =>
+        new("User registration form", "raytha_html_user_registration", true);
+    public static BuiltInWebTemplate UserRegistrationFormSuccess =>
+        new("User registration form success", "raytha_html_user_registration_success", true);
+    public static BuiltInWebTemplate ChangeProfilePage =>
+        new("Change profile", "raytha_html_changeprofile", true);
+    public static BuiltInWebTemplate ChangePasswordPage =>
+        new("Change password", "raytha_html_changepassword", true);
+    public static BuiltInWebTemplate ForgotPasswordPage =>
+        new("Forgot password", "raytha_html_forgotpassword", true);
+    public static BuiltInWebTemplate ForgotPasswordCompletePage =>
+        new("Complete forgot password", "raytha_html_forgotpasswordcomplete", true);
+    public static BuiltInWebTemplate ForgotPasswordResetLinkSentPage =>
+        new("Forgot password reset link sent", "raytha_html_forgotpassword_reset_link_sent", true);
+    public static BuiltInWebTemplate ForgotPasswordSuccessPage =>
+        new("Forgot password success", "raytha_html_forgotpasswordsuccess", true);
 
     public string DefaultLabel { get; private set; } = string.Empty;
     public string DeveloperName { get; private set; } = string.Empty;
@@ -73,7 +88,12 @@ public class BuiltInWebTemplate : ValueObject
     {
         get
         {
-            var pathToFile = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Entities", "DefaultTemplates", $"{DeveloperName}.liquid");
+            var pathToFile = Path.Combine(
+                AppDomain.CurrentDomain.BaseDirectory,
+                "Entities",
+                "DefaultTemplates",
+                $"{DeveloperName}.liquid"
+            );
             return File.ReadAllText(pathToFile);
         }
     }

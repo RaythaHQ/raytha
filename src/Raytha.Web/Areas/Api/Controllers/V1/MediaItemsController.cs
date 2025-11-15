@@ -1,3 +1,5 @@
+using System.IO;
+using System.Threading.Tasks;
 using CSharpVitamins;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -9,28 +11,38 @@ using Raytha.Application.MediaItems.Commands;
 using Raytha.Application.MediaItems.Queries;
 using Raytha.Domain.Entities;
 using Raytha.Web.Authentication;
-using System.IO;
-using System.Threading.Tasks;
 
 namespace Raytha.Web.Areas.Api.Controllers.V1;
 
-[Authorize(Policy = RaythaApiAuthorizationHandler.POLICY_PREFIX + BuiltInSystemPermission.MANAGE_MEDIA_ITEMS)]
+[Authorize(
+    Policy = RaythaApiAuthorizationHandler.POLICY_PREFIX
+        + BuiltInSystemPermission.MANAGE_MEDIA_ITEMS
+)]
 public class MediaItemsController : BaseController
 {
     [HttpGet("", Name = "GetMediaItems")]
-    [Authorize(Policy = RaythaApiAuthorizationHandler.POLICY_PREFIX + BuiltInSystemPermission.MANAGE_SYSTEM_SETTINGS_PERMISSION)]
+    [Authorize(
+        Policy = RaythaApiAuthorizationHandler.POLICY_PREFIX
+            + BuiltInSystemPermission.MANAGE_SYSTEM_SETTINGS_PERMISSION
+    )]
     public async Task<ActionResult<IQueryResponseDto<ListResultDto<MediaItemDto>>>> GetMediaItems(
-                                           [FromQuery] GetMediaItems.Query request)
+        [FromQuery] GetMediaItems.Query request
+    )
     {
-        var response = await Mediator.Send(request) as QueryResponseDto<ListResultDto<MediaItemDto>>;
+        var response =
+            await Mediator.Send(request) as QueryResponseDto<ListResultDto<MediaItemDto>>;
         return response;
     }
 
     [HttpGet("{objectKey}", Name = "GetMediaItemUrlByObjectKey")]
     public async Task<ActionResult<IQueryResponseDto<MediaItemDto>>> GetMediaItemUrlByObjectKey(
-                                        string objectKey)
+        string objectKey
+    )
     {
-        var downloadUrl = await FileStorageProvider.GetDownloadUrlAsync(objectKey, FileStorageUtility.GetDefaultExpiry());
+        var downloadUrl = await FileStorageProvider.GetDownloadUrlAsync(
+            objectKey,
+            FileStorageUtility.GetDefaultExpiry()
+        );
         return Ok(new { success = true, result = downloadUrl });
     }
 
@@ -42,6 +54,18 @@ public class MediaItemsController : BaseController
         {
             return BadRequest(new { success = false, error = "File length is 0." });
         }
+
+        if (
+            !FileStorageUtility.IsAllowedMimeType(
+                file.ContentType,
+                FileStorageProviderSettings.AllowedMimeTypes
+            )
+        )
+        {
+            // Security: Apply the same server-side MIME-type whitelist to API uploads so that
+            // clients cannot upload disallowed content types even if they craft requests manually.
+            return BadRequest(new { success = false, error = "File type is not allowed." });
+        }
         using (var stream = new MemoryStream())
         {
             await file.CopyToAsync(stream);
@@ -49,8 +73,17 @@ public class MediaItemsController : BaseController
 
             var idForKey = ShortGuid.NewGuid();
 
-            var objectKey = FileStorageUtility.CreateObjectKeyFromIdAndFileName(idForKey, file.FileName);
-            var downloadUrl = await FileStorageProvider.SaveAndGetDownloadUrlAsync(data, objectKey, file.FileName, file.ContentType, FileStorageUtility.GetDefaultExpiry());
+            var objectKey = FileStorageUtility.CreateObjectKeyFromIdAndFileName(
+                idForKey,
+                file.FileName
+            );
+            var downloadUrl = await FileStorageProvider.SaveAndGetDownloadUrlAsync(
+                data,
+                objectKey,
+                file.FileName,
+                file.ContentType,
+                FileStorageUtility.GetDefaultExpiry()
+            );
 
             var input = new CreateMediaItem.Command
             {
@@ -59,13 +92,17 @@ public class MediaItemsController : BaseController
                 Length = data.Length,
                 ContentType = file.ContentType,
                 FileStorageProvider = FileStorageProvider.GetName(),
-                ObjectKey = objectKey
+                ObjectKey = objectKey,
             };
 
             var response = await Mediator.Send(input);
             if (response.Success)
             {
-                return CreatedAtAction(nameof(GetMediaItemUrlByObjectKey), new { objectKey }, new { success = true, result = objectKey });
+                return CreatedAtAction(
+                    nameof(GetMediaItemUrlByObjectKey),
+                    new { objectKey },
+                    new { success = true, result = objectKey }
+                );
             }
             else
             {

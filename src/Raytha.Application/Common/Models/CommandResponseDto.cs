@@ -18,17 +18,11 @@ public record CommandResponseDto<T> : ICommandResponseDto<T>
     public T Result { get; }
     public string Error
     {
-        get
-        {
-            return _errors != null && _errors.Any() ? string.Join(";", _errors) : string.Empty;
-        }
+        get { return _errors != null && _errors.Any() ? string.Join(";", _errors) : string.Empty; }
     }
     public bool Success
     {
-        get
-        {
-            return _errors == null || !_errors.Any();
-        }
+        get { return _errors == null || !_errors.Any(); }
     }
 
     public CommandResponseDto(T result)
@@ -43,10 +37,7 @@ public record CommandResponseDto<T> : ICommandResponseDto<T>
 
     public CommandResponseDto(string propertyName, string error)
     {
-        _errors = new List<ValidationFailure>
-            {
-                new ValidationFailure(propertyName, error)
-            };
+        _errors = new List<ValidationFailure> { new ValidationFailure(propertyName, error) };
     }
 
     public IEnumerable<ValidationFailure> GetErrors()

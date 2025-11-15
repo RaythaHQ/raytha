@@ -20,7 +20,11 @@ public class OrganizationTimeZoneConverter
         return new OrganizationTimeZoneConverter(timezone, dateTimeFormat);
     }
 
-    public static OrganizationTimeZoneConverter Default => new OrganizationTimeZoneConverter(DateTimeExtensions.DEFAULT_TIMEZONE, DateTimeExtensions.DEFAULT_DATE_FORMAT);
+    public static OrganizationTimeZoneConverter Default =>
+        new OrganizationTimeZoneConverter(
+            DateTimeExtensions.DEFAULT_TIMEZONE,
+            DateTimeExtensions.DEFAULT_DATE_FORMAT
+        );
 
     public DateTime UtcToTimeZone(DateTime utc)
     {

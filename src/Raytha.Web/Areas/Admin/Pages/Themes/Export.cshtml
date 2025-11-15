@@ -1,0 +1,153 @@
+@page "/raytha/themes/edit/{id}/export"
+@model Raytha.Web.Areas.Admin.Pages.Themes.Export
+
+@{
+    var pageTitle = "Themes > Export";
+    Layout = "SubActionLayout";
+    ViewData["Title"] = pageTitle;
+    ViewData["ActiveMenu"] = "Themes";
+    ViewData["ActiveSubMenu"] = "Export";
+}
+
+<form asp-page="@RouteNames.Themes.Export" method="post" class="py-2" novalidate>
+    <input type="hidden" asp-for="Form.Id">
+
+    <div class="mb-3 row">
+        <label class="col-auto col-form-label" asp-for="Form.IsExportable"></label>
+        <div class="col d-flex align-items-center">
+            <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" asp-for="Form.IsExportable">
+            </div>
+            <div>
+                <div class="form-text">
+                    Enable the ability to export a theme by URL. Exporting a theme includes web themes and media items.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="mb-3 row">
+        <label class="col-auto col-form-label" asp-for="Form.Url"></label>
+        <div class="col d-flex align-items-baseline input-group">
+            <input id="exportUrl" type="text" class="form-control" asp-for="Form.Url" disabled>
+            <button id="copyBtn" type="button" class="btn btn-secondary input-group-append">Copy</button>
+        </div>
+    </div>
+
+    <!-- Simple toast (no Bootstrap JS needed) -->
+    <div id="copyToast" class="toast-lite" role="status" aria-live="polite" aria-atomic="true">
+        <div class="toast-lite-body">
+            Successfully copied to the clipboard!
+            <button type="button" class="btn-close" aria-label="Close"></button>
+        </div>
+    </div>
+
+    <hr />
+    <div class="col-lg-12">
+        <button type="submit" class="btn btn-success">Save</button>
+    </div>
+</form>
+
+<style>
+    /* Minimal toast styling — independent of Bootstrap JS */
+    .toast-lite {
+        position: fixed;
+        right: 1rem;
+        bottom: 1rem;
+        background: #198754;
+        /* Bootstrap-ish success green */
+        color: #fff;
+        border-radius: .5rem;
+        box-shadow: 0 .25rem .5rem rgba(0, 0, 0, .2);
+        opacity: 0;
+        transform: translateY(10px);
+        pointer-events: none;
+        transition: opacity .2s ease, transform .2s ease;
+        z-index: 1080;
+    }
+
+    .toast-lite.show {
+        opacity: 1;
+        transform: translateY(0);
+        pointer-events: auto;
+    }
+
+    .toast-lite-body {
+        display: flex;
+        align-items: center;
+        gap: .75rem;
+        padding: .75rem 1rem;
+    }
+
+    .toast-lite .btn-close {
+        filter: invert(1);
+        /* make the close icon visible on dark bg */
+        opacity: .8;
+    }
+
+    .toast-lite .btn-close:hover {
+        opacity: 1;
+    }
+</style>
+
+<script>
+    (function () {
+        const copyBtn = document.getElementById('copyBtn');
+        const urlInput = document.getElementById('exportUrl');
+        const toast = document.getElementById('copyToast');
+        const closeBtn = toast.querySelector('.btn-close');
+
+        let hideTimer = null;
+
+        function showToast(message, isSuccess = true) {
+            // Update message color/state if you want
+            toast.querySelector('.toast-lite-body').firstChild.textContent = message + ' ';
+            toast.style.background = isSuccess ? '#198754' : '#dc3545'; // green or red
+            toast.classList.add('show');
+
+            clearTimeout(hideTimer);
+            hideTimer = setTimeout(hideToast, 2500);
+        }
+
+        function hideToast() {
+            toast.classList.remove('show');
+        }
+
+        async function copyText(text) {
+            // Prefer async Clipboard API
+            if (navigator.clipboard && window.isSecureContext) {
+                await navigator.clipboard.writeText(text);
+                return true;
+            }
+            // Fallback: temporary textarea + execCommand
+            const ta = document.createElement('textarea');
+            ta.value = text;
+            // Avoid scrolling to bottom
+            ta.style.position = 'fixed';
+            ta.style.top = '-9999px';
+            document.body.appendChild(ta);
+            ta.focus();
+            ta.select();
+            let ok = false;
+            try { ok = document.execCommand('copy'); } catch (e) { ok = false; }
+            document.body.removeChild(ta);
+            return ok;
+        }
+
+        copyBtn.addEventListener('click', async function () {
+            const value = urlInput ? urlInput.value : '';
+            if (!value) {
+                showToast('Nothing to copy.', false);
+                return;
+            }
+            try {
+                const ok = await copyText(value);
+                showToast(ok ? 'Successfully copied to the clipboard!' : 'Copy failed.', ok);
+            } catch (err) {
+                showToast('Copy failed.', false);
+            }
+        });
+
+        closeBtn.addEventListener('click', hideToast);
+    })();
+</script>

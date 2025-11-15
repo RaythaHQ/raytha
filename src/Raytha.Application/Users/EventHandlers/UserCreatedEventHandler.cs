@@ -21,7 +21,8 @@ public class UserCreatedEventHandler : INotificationHandler<UserCreatedEvent>
         IRaythaDbContext db,
         IEmailer emailerService,
         IRenderEngine renderEngineService,
-        IRelativeUrlBuilder relativeUrlBuilderService)
+        IRelativeUrlBuilder relativeUrlBuilderService
+    )
     {
         _db = db;
         _emailerService = emailerService;
@@ -34,7 +35,9 @@ public class UserCreatedEventHandler : INotificationHandler<UserCreatedEvent>
     {
         if (notification.SendEmail)
         {
-            EmailTemplate renderTemplate = _db.EmailTemplates.First(p => p.DeveloperName == BuiltInEmailTemplate.UserWelcomeEmail);
+            EmailTemplate renderTemplate = _db.EmailTemplates.First(p =>
+                p.DeveloperName == BuiltInEmailTemplate.UserWelcomeEmail
+            );
 
             SendUserWelcomeEmail_RenderModel entity = new SendUserWelcomeEmail_RenderModel
             {
@@ -45,22 +48,31 @@ public class UserCreatedEventHandler : INotificationHandler<UserCreatedEvent>
                 NewPassword = notification.NewPassword,
                 LoginUrl = _relativeUrlBuilderService.UserLoginUrl(),
                 AuthenticationScheme = notification.User.AuthenticationScheme?.DeveloperName,
-                LoginWithEmailAndPasswordIsEnabled = _currentOrganization.EmailAndPasswordIsEnabledForUsers
+                LoginWithEmailAndPasswordIsEnabled =
+                    _currentOrganization.EmailAndPasswordIsEnabledForUsers,
             };
 
             var wrappedModel = new Wrapper_RenderModel
             {
-                CurrentOrganization = CurrentOrganization_RenderModel.GetProjection(_currentOrganization),
-                Target = entity
+                CurrentOrganization = CurrentOrganization_RenderModel.GetProjection(
+                    _currentOrganization
+                ),
+                Target = entity,
             };
 
-            string subject = _renderEngineService.RenderAsHtml(renderTemplate.Subject, wrappedModel);
-            string content = _renderEngineService.RenderAsHtml(renderTemplate.Content, wrappedModel);
+            string subject = _renderEngineService.RenderAsHtml(
+                renderTemplate.Subject,
+                wrappedModel
+            );
+            string content = _renderEngineService.RenderAsHtml(
+                renderTemplate.Content,
+                wrappedModel
+            );
             var emailMessage = new EmailMessage
             {
                 Content = content,
                 To = new List<string> { entity.EmailAddress },
-                Subject = subject
+                Subject = subject,
             };
             _emailerService.SendEmail(emailMessage);
         }

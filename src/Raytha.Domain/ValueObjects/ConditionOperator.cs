@@ -2,13 +2,9 @@
 
 public class ConditionOperator : ValueObject
 {
-    static ConditionOperator()
-    {
-    }
+    static ConditionOperator() { }
 
-    public ConditionOperator()
-    {
-    }
+    public ConditionOperator() { }
 
     private ConditionOperator(string label, string developerName, bool hasFieldValue)
     {
@@ -19,7 +15,9 @@ public class ConditionOperator : ValueObject
 
     public static ConditionOperator From(string developerName)
     {
-        var type = SupportedOperators.FirstOrDefault(p => p.DeveloperName == developerName.ToLower());
+        var type = SupportedOperators.FirstOrDefault(p =>
+            p.DeveloperName == developerName.ToLower()
+        );
 
         if (type == null)
         {
@@ -38,7 +36,8 @@ public class ConditionOperator : ValueObject
     public static ConditionOperator CONTAINS => new("contains", "contains", true);
     public static ConditionOperator NOT_CONTAINS => new("does not contain", "notcontains", true);
     public static ConditionOperator STARTS_WITH => new("starts with", "startswith", true);
-    public static ConditionOperator NOT_STARTS_WITH => new("does not start with", "notstartswith", true);
+    public static ConditionOperator NOT_STARTS_WITH =>
+        new("does not start with", "notstartswith", true);
     public static ConditionOperator ENDS_WITH => new("ends with", "endswith", true);
     public static ConditionOperator NOT_ENDS_WITH => new("does not end with", "notendswith", true);
     public static ConditionOperator HAS => new("has", "has", true);

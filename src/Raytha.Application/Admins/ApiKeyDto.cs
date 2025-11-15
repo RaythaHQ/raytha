@@ -1,6 +1,6 @@
-﻿using Raytha.Application.Common.Models;
+﻿using System.Linq.Expressions;
+using Raytha.Application.Common.Models;
 using Raytha.Domain.Entities;
-using System.Linq.Expressions;
 
 namespace Raytha.Application.Admins;
 
@@ -22,7 +22,7 @@ public record ApiKeyDto : BaseEntityDto
             Id = entity.Id,
             CreatorUserId = entity.CreatorUserId,
             CreationTime = entity.CreationTime,
-            CreatorUser = AuditableUserDto.GetProjection(entity.CreatorUser)
+            CreatorUser = AuditableUserDto.GetProjection(entity.CreatorUser),
         };
     }
 }

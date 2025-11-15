@@ -1,5 +1,5 @@
-﻿using Raytha.Application.Common.Interfaces;
-using System.Text;
+﻿using System.Text;
+using Raytha.Application.Common.Interfaces;
 
 namespace Raytha.Application.ContentTypes;
 
@@ -22,7 +22,7 @@ public record ContentType_RenderModel : IInsertTemplateVariable
             LabelPlural = entity.LabelPlural,
             LabelSingular = entity.LabelSingular,
             DeveloperName = entity.DeveloperName,
-            Description = entity.Description
+            Description = entity.Description,
         };
     }
 
@@ -39,7 +39,10 @@ public record ContentType_RenderModel : IInsertTemplateVariable
     {
         foreach (var developerName in GetDeveloperNames())
         {
-            yield return new KeyValuePair<string, string>(developerName, $"ContentType.{developerName}");
+            yield return new KeyValuePair<string, string>(
+                developerName,
+                $"ContentType.{developerName}"
+            );
         }
     }
 

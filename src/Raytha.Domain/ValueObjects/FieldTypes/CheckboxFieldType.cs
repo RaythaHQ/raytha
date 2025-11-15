@@ -4,7 +4,8 @@ namespace Raytha.Domain.ValueObjects.FieldTypes;
 
 public class CheckboxFieldType : BaseFieldType
 {
-    public CheckboxFieldType() : base("Checkbox", "checkbox", false) { }
+    public CheckboxFieldType()
+        : base("Checkbox", "checkbox", false) { }
 
     public override IEnumerable<ConditionOperator> SupportedConditionOperators
     {

@@ -3,12 +3,8 @@
 public class InvalidApiKeyException : Exception
 {
     public InvalidApiKeyException()
-        : base()
-    {
-    }
+        : base() { }
 
     public InvalidApiKeyException(string message)
-        : base(message)
-    {
-    }
+        : base(message) { }
 }

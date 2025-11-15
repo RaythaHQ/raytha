@@ -1,30 +1,29 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
-	<RootNamespace>Raytha.Application</RootNamespace>
-	<AssemblyName>Raytha.Application</AssemblyName>
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace>Raytha.Application</RootNamespace>
+    <AssemblyName>Raytha.Application</AssemblyName>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <Configurations>Debug;Release;Debug without JS</Configurations>
   </PropertyGroup>
-
   <ItemGroup>
     <ProjectReference Include="..\Raytha.Domain\Raytha.Domain.csproj" />
   </ItemGroup>
-
   <ItemGroup>
-    <PackageReference Include="CsvExport" Version="2.0.1" />
+    <PackageReference Include="CsvExport" Version="2.2.0" />
     <PackageReference Include="LumenWorksCsvReader2" Version="4.4.0" />
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="9.0.4" />
-    <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="11.11.0" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.4" />
-    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.8.0" />
-    <PackageReference Include="System.Linq.Async" Version="6.0.1" />
-    <PackageReference Include="System.Linq.Dynamic.Core" Version="1.6.0.2" />
-    <PackageReference Include="System.Security.Cryptography.Xml" Version="9.0.4" />
-    <PackageReference Include="TimeZoneConverter" Version="7.0.0" />
+    <PackageReference
+      Include="Microsoft.Extensions.DependencyInjection.Abstractions"
+      Version="10.0.0"
+    />
+    <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="12.1.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.0" />
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.14.0" />
+    <PackageReference Include="System.Linq.Async" Version="6.0.3" />
+    <PackageReference Include="System.Linq.Dynamic.Core" Version="1.6.10" />
+    <PackageReference Include="System.Security.Cryptography.Xml" Version="10.0.0" />
+    <PackageReference Include="TimeZoneConverter" Version="7.2.0" />
     <PackageReference Include="TimeZoneNames" Version="7.0.0" />
   </ItemGroup>
-
 </Project>

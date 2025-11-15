@@ -24,22 +24,32 @@ public static class WebTemplateExtensions
         if (parent == null)
             return currentContent;
 
-        var updatedContent = Regex.Replace(parent.Content, RENDERBODY_REGEX, currentContent, RegexOptions.IgnoreCase);
+        var updatedContent = Regex.Replace(
+            parent.Content,
+            RENDERBODY_REGEX,
+            currentContent,
+            RegexOptions.IgnoreCase
+        );
 
         return ContentAssembledFromParents(updatedContent, parent.ParentTemplate);
     }
 
-    public static IQueryable<TEntity> IncludeParentTemplates<TEntity>(this IQueryable<TEntity> query, Expression<Func<TEntity, WebTemplate?>> navigationProperty) where TEntity : class
+    public static IQueryable<TEntity> IncludeParentTemplates<TEntity>(
+        this IQueryable<TEntity> query,
+        Expression<Func<TEntity, WebTemplate?>> navigationProperty
+    )
+        where TEntity : class
     {
         if (query == null)
             throw new ArgumentNullException(nameof(query));
 
-        var resultQuery = query
-            .Include(navigationProperty)
-            .ThenIncludeParentTemplates();
+        var resultQuery = query.Include(navigationProperty).ThenIncludeParentTemplates();
 
         var depth = 10;
-        while (resultQuery.Any(BuildParentTemplateIdHasValueExpression(navigationProperty, depth)) && depth < 100)
+        while (
+            resultQuery.Any(BuildParentTemplateIdHasValueExpression(navigationProperty, depth))
+            && depth < 100
+        )
         {
             resultQuery = resultQuery.ThenIncludeParentTemplates();
             depth += 10;
@@ -48,7 +58,10 @@ public static class WebTemplateExtensions
         return resultQuery;
     }
 
-    private static IIncludableQueryable<TEntity, WebTemplate?> ThenIncludeParentTemplates<TEntity>(this IIncludableQueryable<TEntity, WebTemplate?> query) where TEntity : class
+    private static IIncludableQueryable<TEntity, WebTemplate?> ThenIncludeParentTemplates<TEntity>(
+        this IIncludableQueryable<TEntity, WebTemplate?> query
+    )
+        where TEntity : class
     {
         return query
             .ThenInclude(wt => wt.ParentTemplate)
@@ -63,7 +76,10 @@ public static class WebTemplateExtensions
             .ThenInclude(wt => wt.ParentTemplate);
     }
 
-    private static Expression<Func<TEntity, bool>> BuildParentTemplateIdHasValueExpression<TEntity>(Expression<Func<TEntity, WebTemplate?>> navigationProperty, int depth)
+    private static Expression<Func<TEntity, bool>> BuildParentTemplateIdHasValueExpression<TEntity>(
+        Expression<Func<TEntity, WebTemplate?>> navigationProperty,
+        int depth
+    )
     {
         var parameter = navigationProperty.Parameters[0];
         var expression = navigationProperty.Body;

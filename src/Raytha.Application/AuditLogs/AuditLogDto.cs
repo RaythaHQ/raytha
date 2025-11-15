@@ -18,6 +18,7 @@ public record AuditLogDto : BaseAuditableEntityDto
     {
         return auditLog => GetProjection(auditLog);
     }
+
     public static AuditLogDto GetProjection(AuditLog auditLog)
     {
         return new AuditLogDto
@@ -28,7 +29,7 @@ public record AuditLogDto : BaseAuditableEntityDto
             UserEmail = auditLog.UserEmail,
             Request = auditLog.Request,
             IpAddress = auditLog.IpAddress,
-            EntityId = auditLog.EntityId
+            EntityId = auditLog.EntityId,
         };
     }
 }

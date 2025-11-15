@@ -4,6 +4,7 @@ public class AdminPasswordChangedEvent : BaseEvent, IBeforeSaveChangesNotificati
 {
     public User User { get; private set; }
     public bool SendEmail { get; private set; }
+
     public AdminPasswordChangedEvent(User user, bool sendEmail)
     {
         User = user;

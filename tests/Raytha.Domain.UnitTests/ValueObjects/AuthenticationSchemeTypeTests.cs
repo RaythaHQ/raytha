@@ -49,8 +49,10 @@ public class AuthenticationSchemeTypeTests
     [Test]
     public void ShouldThrowUnsupportedColourExceptionGivenNotSupportedColourCode()
     {
-        FluentActions.Invoking(() => AuthenticationSchemeType.From("BadValue"))
-            .Should().Throw<UnsupportedAuthenticationSchemeTypeException>();
+        FluentActions
+            .Invoking(() => AuthenticationSchemeType.From("BadValue"))
+            .Should()
+            .Throw<UnsupportedAuthenticationSchemeTypeException>();
     }
 
     [Test]

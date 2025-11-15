@@ -12,7 +12,6 @@ public class ArrayFieldValueTests
     private string twoValueArrayAsString = @"[""developer_name_1"", ""developer_name_2""]";
     private string emptyArrayAsString = "[]";
 
-
     [Test]
     public void ShouldReturnCorrectFieldValue()
     {

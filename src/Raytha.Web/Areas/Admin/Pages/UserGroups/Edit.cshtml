@@ -1,0 +1,75 @@
+@page "/raytha/users/groups/edit/{id}"
+@model Raytha.Web.Areas.Admin.Pages.UserGroups.Edit
+
+@{
+    var pageTitle = "Edit user group";
+    Layout = "SidebarLayout";
+    ViewData["Title"] = pageTitle;
+    ViewData["ActiveMenu"] = "Users";
+
+    BackLinkOptions back = new BackLinkOptions
+    {
+        Page = RouteNames.UserGroups.Index
+    };
+}
+
+<div>
+    <div class="row mb-4">
+        <partial name="_Partials/PageHeading" model='ViewData["Title"]' />
+        <div class="col-xxl-7 col-xl-8 col-lg-9 col-md-12">
+            <div class="card border-0 shadow mb-4">
+                <div class="card-body">
+                    @(await Html.PartialAsync("_Partials/BackToList", back))
+                    <form asp-page="@RouteNames.UserGroups.Edit" asp-route-id="@Model.Form.Id" method="post" class="py-4" novalidate>
+                    <div class="col-lg-12">
+                        <div class="mb-3">
+                            <label class="form-label raytha-required" asp-for="Form.Label"></label>
+                            <input type="text" class="form-control @Model.HasError("Label")" asp-for="Form.Label"
+                                required>
+                            <div class="invalid-feedback">@Model.ErrorMessageFor("Label")</div>
+                        </div>
+                    </div>
+                    <div class="col-lg-12">
+                        <div class="mb-3">
+                            <label class="form-label raytha-required" asp-for="Form.DeveloperName"></label>
+                            <input type="text" class="form-control" asp-for="Form.DeveloperName" readonly>
+                        </div>
+                    </div>
+                    <input type="hidden" asp-for="Form.Id">
+                    <button type="submit" class="btn btn-success mt-4">Save changes</button>
+                </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-3 col-md-12">
+            <div class="card border-0 shadow mb-4">
+                <div class="card-body">
+                    <div class="nav-wrapper position-relative">
+                        <ul class="nav nav-pills square nav-fill flex-column vertical-tab">
+                            <li class="nav-item">
+                                <form method="post" asp-page="@RouteNames.UserGroups.Delete" asp-route-id="@Model.Form.Id"
+                                    onsubmit="return confirm('Are you sure you want to delete?');">
+                                    <button
+                                        class="nav-link d-inline-flex align-items-center justify-content-center text-danger">
+                                        <svg class="icon icon-sm mx-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                                            xmlns="http://www.w3.org/2000/svg">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
+                                            </path>
+                                        </svg>
+                                        Delete user group
+                                    </button>
+                                </form>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script type="module" defer src="~/js/pages/user-groups/edit.js"></script>
+}

@@ -1,0 +1,62 @@
+@using Raytha.Web.Areas.Admin.Pages.Shared.Models
+@model ActionBarModel
+
+<nav class="navbar navbar-expand-lg navbar-light raytha-view-nav">
+    <div class="container-fluid mx-2">
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            @if (Model.Buttons != null && Model.Buttons.Any())
+            {
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    @foreach (var button in Model.Buttons)
+                    {
+                        <li class="nav-item">
+                            @if (button.RouteValues != null)
+                            {
+                                <a class="@button.CssClass" 
+                                   aria-current="page" 
+                                   asp-page="@button.Route"
+                                   asp-all-route-data="button.RouteValues">
+                                    @if (!string.IsNullOrEmpty(button.Icon))
+                                    {
+                                        @Html.Raw(button.Icon)
+                                    }
+                                    @button.Label
+                                </a>
+                            }
+                            else
+                            {
+                                <a class="@button.CssClass" 
+                                   aria-current="page" 
+                                   asp-page="@button.Route">
+                                    @if (!string.IsNullOrEmpty(button.Icon))
+                                    {
+                                        @Html.Raw(button.Icon)
+                                    }
+                                    @button.Label
+                                </a>
+                            }
+                        </li>
+                    }
+                </ul>
+            }
+            
+            @if (Model.Search != null)
+            {
+                <form class="d-flex" asp-page="@Model.Search.ActionPage" method="get">
+                    <input class="form-control me-2" 
+                           type="search" 
+                           placeholder="@Model.Search.Placeholder" 
+                           aria-label="@Model.Search.Placeholder" 
+                           name="search"
+                           value="@Model.Search.SearchValue">
+                    <button class="btn btn-outline-success" type="submit">Search</button>
+                </form>
+            }
+        </div>
+    </div>
+</nav>
+

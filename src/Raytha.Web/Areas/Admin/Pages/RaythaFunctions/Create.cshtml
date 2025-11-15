@@ -1,0 +1,106 @@
+@page "/raytha/functions/create"
+@using Raytha.Domain.ValueObjects
+@model Raytha.Web.Areas.Admin.Pages.RaythaFunctions.Create
+
+@{
+    var pageTitle = "Create function";
+    Layout = "SidebarLayout";
+    ViewData["Title"] = pageTitle;
+    ViewData["ActiveMenu"] = "Raytha Functions";
+
+    BackLinkOptions back = new BackLinkOptions
+    {
+        Page = RouteNames.RaythaFunctions.Index
+    };
+}
+
+<div class="row mb-4">
+    <partial name="_Partials/PageHeading" model='ViewData["Title"]' />
+    <div class="col-xxl-7 col-xl-8 col-lg-9 col-md-12">
+        <div class="card border-0 shadow mb-4">
+            <div class="card-body">
+                @(await Html.PartialAsync("_Partials/BackToList", back))
+                <form asp-page="@RouteNames.RaythaFunctions.Create" method="post" class="py-4">
+                    <div class="col-lg-12 col-md-12">
+                        <div class="mb-3">
+                            <label class="form-label raytha-required" asp-for="Form.Name"></label>
+                            <input type="text" class="form-control @Model.HasError("Name")" asp-for="Form.Name">
+                            <div class="invalid-feedback">@Model.ErrorMessageFor("Name")</div>
+                        </div>
+                    </div>
+                    <div class="col-lg-12 col-md-12">
+                        <div class="mb-3">
+                            <label class="form-label raytha-required" asp-for="Form.DeveloperName"></label>
+                            <input type="text" class="form-control @Model.HasError("DeveloperName")"
+                                asp-for="Form.DeveloperName">
+                            <div class="invalid-feedback">@Model.ErrorMessageFor("DeveloperName")</div>
+                            <div class="form-text">You cannot change the developer name after it has been created.</div>
+                        </div>
+                    </div>
+                    <div class="col-lg-12">
+                        <div class="mb-3">
+                            <label class="form-label raytha-required" asp-for="Form.TriggerType"></label>
+                            <select class="form-select @Model.HasError("TriggerType")" asp-for="Form.TriggerType">
+                                @foreach (var supportedTriggerType in RaythaFunctionTriggerType.SupportedTypes)
+                                {
+                                    <option value="@supportedTriggerType.DeveloperName">@supportedTriggerType.Label</option>
+                                }
+                            </select>
+                            <div class="invalid-feedback">@Model.ErrorMessageFor("TriggerType")</div>
+                        </div>
+                    </div>
+                    <div class="col-lg-12">
+                        <div class="form-check">
+                            <input class="form-check-input @Model.HasError("IsActive")" type="checkbox"
+                                asp-for="Form.IsActive">
+                            <label class="form-check-label" asp-for="Form.IsActive"></label>
+                            <div class="invalid-feedback">@Model.ErrorMessageFor("IsActive")</div>
+                        </div>
+                    </div>
+                    <div class="col-lg-12">
+                        <div class="mb-3">
+                            <label class="form-label raytha-required" asp-for="Form.Code"></label><br />
+                            <div class="@Model.HasError("Code")" id="editorContainer"
+                                style="height:600px;overflow: auto;"></div>
+                            <input type="hidden" asp-for="Form.Code" id="Form_Code">
+                            <div class="invalid-feedback">@Model.ErrorMessageFor("Code")</div>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-success mt-4">Save</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="module">
+    import { 
+        EditorState,
+        EditorView,
+        basicSetup,
+        javascript,
+        indentWithTab,
+        keymap
+    } from '/raytha_admin/lib/codemirror/codemirror-bundle.js';
+
+    const startState = EditorState.create({
+        doc: @Html.Raw(Json.Serialize(Model.Form.Code)),
+        extensions: [
+            basicSetup,
+            javascript(),
+            keymap.of([indentWithTab]),
+            EditorView.updateListener.of((update) => {
+                if (update.docChanged) {
+                    document.getElementById('Form_Code').value = view.state.doc.toString();
+                }
+            })
+        ],
+    });
+
+    const view = new EditorView({
+        state: startState,
+        parent: document.getElementById('editorContainer')
+    });
+</script>
+
+<script type="module" defer src="~/js/pages/raytha-functions/create.js"></script>

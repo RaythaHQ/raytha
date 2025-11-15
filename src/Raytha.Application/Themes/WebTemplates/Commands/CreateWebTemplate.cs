@@ -22,14 +22,15 @@ public class CreateWebTemplate
         public bool AllowAccessForNewContentTypes { get; init; }
         public required IEnumerable<ShortGuid> TemplateAccessToModelDefinitions { get; init; }
 
-        public static Command Empty() => new()
-        {
-            ThemeId = ShortGuid.Empty,
-            Label = string.Empty,
-            DeveloperName = string.Empty,
-            Content = string.Empty,
-            TemplateAccessToModelDefinitions = new List<ShortGuid>(),
-        };
+        public static Command Empty() =>
+            new()
+            {
+                ThemeId = ShortGuid.Empty,
+                Label = string.Empty,
+                DeveloperName = string.Empty,
+                Content = string.Empty,
+                TemplateAccessToModelDefinitions = new List<ShortGuid>(),
+            };
     }
 
     public class Validator : AbstractValidator<Command>
@@ -37,21 +38,39 @@ public class CreateWebTemplate
         public Validator(IRaythaDbContext db)
         {
             RuleFor(x => x.ThemeId).NotEmpty();
-            RuleFor(x => x).Custom((request, _) =>
-            {
-                if (!db.Themes.Any(t => t.Id == request.ThemeId.Guid))
-                    throw new NotFoundException("Theme", request.ThemeId);
-            });
+            RuleFor(x => x)
+                .Custom(
+                    (request, _) =>
+                    {
+                        if (!db.Themes.Any(t => t.Id == request.ThemeId.Guid))
+                            throw new NotFoundException("Theme", request.ThemeId);
+                    }
+                );
             RuleFor(x => x.Label).NotEmpty();
-            RuleFor(x => x.DeveloperName).Must(StringExtensions.IsValidDeveloperName).WithMessage("Invalid developer name.");
+            RuleFor(x => x.DeveloperName)
+                .Must(StringExtensions.IsValidDeveloperName)
+                .WithMessage("Invalid developer name.");
             RuleFor(x => x.Content).NotEmpty();
-            RuleFor(x => x.Content).NotEmpty().Must(WebTemplateExtensions.HasRenderBodyTag).When(p => p.IsBaseLayout)
+            RuleFor(x => x.Content)
+                .NotEmpty()
+                .Must(WebTemplateExtensions.HasRenderBodyTag)
+                .When(p => p.IsBaseLayout)
                 .WithMessage("Content must have the {% renderbody %} tag if it is a base layout.");
-            RuleFor(x => x).Custom((request, context) =>
-            {
-                if (db.WebTemplates.Any(wt => wt.ThemeId == request.ThemeId.Guid && wt.DeveloperName == request.DeveloperName.ToDeveloperName()))
-                    context.AddFailure("A template with that developer name already exists.");
-            });
+            RuleFor(x => x)
+                .Custom(
+                    (request, context) =>
+                    {
+                        if (
+                            db.WebTemplates.Any(wt =>
+                                wt.ThemeId == request.ThemeId.Guid
+                                && wt.DeveloperName == request.DeveloperName.ToDeveloperName()
+                            )
+                        )
+                            context.AddFailure(
+                                "A template with that developer name already exists."
+                            );
+                    }
+                );
         }
     }
 
@@ -64,7 +83,10 @@ public class CreateWebTemplate
             _db = db;
         }
 
-        public async Task<CommandResponseDto<ShortGuid>> Handle(Command request, CancellationToken cancellationToken)
+        public async Task<CommandResponseDto<ShortGuid>> Handle(
+            Command request,
+            CancellationToken cancellationToken
+        )
         {
             var webTemplate = new WebTemplate
             {
@@ -72,15 +94,19 @@ public class CreateWebTemplate
                 ThemeId = request.ThemeId.Guid,
                 Label = request.Label,
                 Content = request.Content,
-                ParentTemplateId = request.ParentTemplateId.HasValue && request.ParentTemplateId != Guid.Empty ? request.ParentTemplateId : null,
+                ParentTemplateId =
+                    request.ParentTemplateId.HasValue && request.ParentTemplateId != Guid.Empty
+                        ? request.ParentTemplateId
+                        : null,
                 IsBaseLayout = request.IsBaseLayout,
                 IsBuiltInTemplate = false,
                 AllowAccessForNewContentTypes = request.AllowAccessForNewContentTypes,
                 DeveloperName = request.DeveloperName.ToDeveloperName(),
-                TemplateAccessToModelDefinitions = request.TemplateAccessToModelDefinitions?.Select(p => new WebTemplateAccessToModelDefinition
-                {
-                    ContentTypeId = p,
-                }).ToList(),
+                TemplateAccessToModelDefinitions = request
+                    .TemplateAccessToModelDefinitions?.Select(
+                        p => new WebTemplateAccessToModelDefinition { ContentTypeId = p }
+                    )
+                    .ToList(),
             };
 
             await _db.WebTemplates.AddAsync(webTemplate, cancellationToken);

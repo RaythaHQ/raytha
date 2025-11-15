@@ -1,0 +1,22 @@
+@using Raytha.Web.Areas.Admin.Pages.Shared.Models
+@{
+    var index = ViewData["Index"] as int? ?? 0;
+    var parentModel = ViewData["ParentModel"] as BasePageModel;
+}
+
+<div class="col-lg-3 col-md-4 col-sm-12 mt-4" id="raytha_field-@Model.DeveloperName">
+    <div class="mb-3">
+        <label class="form-label @Model.AsteriskCssIfRequired" for="Form_FieldValues_@(index)__Value">@Model.Label</label>
+        <input type="text" pattern="[0-9]+([\.,][0-9]+)?" 
+               class="form-control @(parentModel?.HasError(Model.DeveloperName) ?? "")" 
+               id="Form_FieldValues_@(index)__Value" 
+               name="Form.FieldValues[@(index)].Value" 
+               value="@Model.Value">
+        <div class="invalid-feedback">@(parentModel?.ErrorMessageFor(Model.DeveloperName))</div>
+        @if (!string.IsNullOrEmpty(Model.Description))
+        {
+            <div class="form-text">@Model.Description</div>
+        }
+    </div>
+</div>
+

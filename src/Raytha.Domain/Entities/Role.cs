@@ -13,13 +13,9 @@ public class Role : BaseAuditableEntity
 
 public class BuiltInRole : ValueObject
 {
-    static BuiltInRole()
-    {
-    }
+    static BuiltInRole() { }
 
-    private BuiltInRole()
-    {
-    }
+    private BuiltInRole() { }
 
     private BuiltInRole(string label, string developerName, SystemPermissions permission)
     {
@@ -40,8 +36,14 @@ public class BuiltInRole : ValueObject
         return type;
     }
 
-    public static BuiltInRole SuperAdmin => new("Super Admin", "super_admin", BuiltInSystemPermission.AllPermissionsAsEnum);
-    public static BuiltInRole Admin => new("Admin", "admin", BuiltInSystemPermission.AllPermissionsAsEnum & ~SystemPermissions.ManageAdministrators);
+    public static BuiltInRole SuperAdmin =>
+        new("Super Admin", "super_admin", BuiltInSystemPermission.AllPermissionsAsEnum);
+    public static BuiltInRole Admin =>
+        new(
+            "Admin",
+            "admin",
+            BuiltInSystemPermission.AllPermissionsAsEnum & ~SystemPermissions.ManageAdministrators
+        );
     public static BuiltInRole Editor => new("Editor", "editor", SystemPermissions.None);
 
     public string DefaultLabel { get; private set; } = string.Empty;
@@ -79,7 +81,6 @@ public class BuiltInRole : ValueObject
     }
 }
 
-
 [Flags]
 public enum SystemPermissions
 {
@@ -89,7 +90,7 @@ public enum SystemPermissions
     ManageContentTypes = 4,
     ManageAdministrators = 8,
     ManageTemplates = 16,
-    ManageUsers = 32
+    ManageUsers = 32,
 }
 
 public class BuiltInSystemPermission : ValueObject
@@ -104,15 +105,15 @@ public class BuiltInSystemPermission : ValueObject
     //not an explicit permission
     public const string MANAGE_MEDIA_ITEMS = "media_items";
 
-    static BuiltInSystemPermission()
-    {
-    }
+    static BuiltInSystemPermission() { }
 
-    private BuiltInSystemPermission()
-    {
-    }
+    private BuiltInSystemPermission() { }
 
-    private BuiltInSystemPermission(string label, string developerName, SystemPermissions permission)
+    private BuiltInSystemPermission(
+        string label,
+        string developerName,
+        SystemPermissions permission
+    )
     {
         Label = label;
         DeveloperName = developerName;
@@ -167,12 +168,30 @@ public class BuiltInSystemPermission : ValueObject
         return builtPermission;
     }
 
-    public static BuiltInSystemPermission ManageSystemSettings => new("Manage System Settings", MANAGE_SYSTEM_SETTINGS_PERMISSION, SystemPermissions.ManageSystemSettings);
-    public static BuiltInSystemPermission ManageAuditLogs => new("Manage Audit Logs", MANAGE_AUDIT_LOGS_PERMISSION, SystemPermissions.ManageAuditLogs);
-    public static BuiltInSystemPermission ManageContentTypes => new("Manage Content Types", MANAGE_CONTENT_TYPES_PERMISSION, SystemPermissions.ManageContentTypes);
-    public static BuiltInSystemPermission ManageTemplates => new("Manage Templates", MANAGE_TEMPLATES_PERMISSION, SystemPermissions.ManageTemplates);
-    public static BuiltInSystemPermission ManageAdministrators => new("Manage Administrators", MANAGE_ADMINISTRATORS_PERMISSION, SystemPermissions.ManageAdministrators);
-    public static BuiltInSystemPermission ManageUsers => new("Manage Users", MANAGE_USERS_PERMISSION, SystemPermissions.ManageUsers);
+    public static BuiltInSystemPermission ManageSystemSettings =>
+        new(
+            "Manage System Settings",
+            MANAGE_SYSTEM_SETTINGS_PERMISSION,
+            SystemPermissions.ManageSystemSettings
+        );
+    public static BuiltInSystemPermission ManageAuditLogs =>
+        new("Manage Audit Logs", MANAGE_AUDIT_LOGS_PERMISSION, SystemPermissions.ManageAuditLogs);
+    public static BuiltInSystemPermission ManageContentTypes =>
+        new(
+            "Manage Content Types",
+            MANAGE_CONTENT_TYPES_PERMISSION,
+            SystemPermissions.ManageContentTypes
+        );
+    public static BuiltInSystemPermission ManageTemplates =>
+        new("Manage Templates", MANAGE_TEMPLATES_PERMISSION, SystemPermissions.ManageTemplates);
+    public static BuiltInSystemPermission ManageAdministrators =>
+        new(
+            "Manage Administrators",
+            MANAGE_ADMINISTRATORS_PERMISSION,
+            SystemPermissions.ManageAdministrators
+        );
+    public static BuiltInSystemPermission ManageUsers =>
+        new("Manage Users", MANAGE_USERS_PERMISSION, SystemPermissions.ManageUsers);
 
     public string Label { get; private set; } = string.Empty;
     public string DeveloperName { get; private set; } = string.Empty;
@@ -210,13 +229,12 @@ public class BuiltInSystemPermission : ValueObject
     {
         get
         {
-            return
-                ManageSystemSettings.Permission |
-                ManageAuditLogs.Permission |
-                ManageContentTypes.Permission |
-                ManageTemplates.Permission |
-                ManageAdministrators.Permission |
-                ManageUsers.Permission;
+            return ManageSystemSettings.Permission
+                | ManageAuditLogs.Permission
+                | ManageContentTypes.Permission
+                | ManageTemplates.Permission
+                | ManageAdministrators.Permission
+                | ManageUsers.Permission;
         }
     }
 

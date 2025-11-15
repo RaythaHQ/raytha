@@ -1,3 +1,6 @@
+using System.Collections.Generic;
+using System.IO;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -6,11 +9,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Primitives;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Models.RenderModels;
-using Raytha.Application.ContentTypes;
-using System.Collections.Generic;
-using System.IO;
-using System.Threading.Tasks;
 using Raytha.Application.Common.Utils;
+using Raytha.Application.ContentTypes;
 using Raytha.Application.Themes.WebTemplates;
 
 namespace Raytha.Web.Areas.Public.DbViewEngine;
@@ -22,7 +22,12 @@ public class ContentItemActionViewResult : IActionResult
     private readonly ContentType_RenderModel _contentType;
     private readonly ViewDataDictionary _viewDictionary;
 
-    public ContentItemActionViewResult(WebTemplateDto webTemplate, object target, ContentType_RenderModel contentType, ViewDataDictionary viewDictionary)
+    public ContentItemActionViewResult(
+        WebTemplateDto webTemplate,
+        object target,
+        ContentType_RenderModel contentType,
+        ViewDataDictionary viewDictionary
+    )
     {
         _webTemplate = webTemplate;
         _target = target;
@@ -43,7 +48,10 @@ public class ContentItemActionViewResult : IActionResult
         httpContext.Response.StatusCode = 200;
         httpContext.Response.ContentType = ContentType;
 
-        var sourceWithParents = WebTemplateExtensions.ContentAssembledFromParents(_webTemplate.Content, _webTemplate.ParentTemplate);
+        var sourceWithParents = WebTemplateExtensions.ContentAssembledFromParents(
+            _webTemplate.Content,
+            _webTemplate.ParentTemplate
+        );
 
         var renderModel = new Wrapper_RenderModel
         {
@@ -54,7 +62,7 @@ public class ContentItemActionViewResult : IActionResult
             QueryParams = QueryCollectionToDictionary(httpContext.Request.Query),
             RequestVerificationToken = antiforgery.GetAndStoreTokens(httpContext).RequestToken,
             ViewData = _viewDictionary,
-            PathBase = currentOrg.PathBase
+            PathBase = currentOrg.PathBase,
         };
 
         await using (var sw = new StreamWriter(httpContext.Response.Body))

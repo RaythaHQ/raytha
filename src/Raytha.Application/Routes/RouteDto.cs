@@ -1,7 +1,7 @@
-﻿using CSharpVitamins;
+﻿using System.Linq.Expressions;
+using CSharpVitamins;
 using Raytha.Application.Common.Models;
 using Raytha.Domain.Entities;
-using System.Linq.Expressions;
 
 namespace Raytha.Application.Routes;
 
@@ -33,6 +33,7 @@ public record RouteDto : BaseEntityDto
     {
         return entity => GetProjection(entity);
     }
+
     public static RouteDto GetProjection(Route entity)
     {
         if (entity == null)
@@ -43,7 +44,7 @@ public record RouteDto : BaseEntityDto
             Id = entity.Id,
             ViewId = entity.ViewId,
             ContentItemId = entity.ContentItemId,
-            Path = entity.Path
+            Path = entity.Path,
         };
     }
 }

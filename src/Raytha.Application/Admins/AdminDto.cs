@@ -1,7 +1,7 @@
+using System.Linq.Expressions;
 using Raytha.Application.Common.Models;
 using Raytha.Application.Roles;
 using Raytha.Domain.Entities;
-using System.Linq.Expressions;
 
 namespace Raytha.Application.Admins;
 
@@ -45,7 +45,7 @@ public record AdminDto : BaseFullAuditableEntityDto
             LastModifierUserId = entity.LastModifierUserId,
             Roles = entity.Roles.AsQueryable().Select(RoleDto.GetProjection()),
             IsAdmin = entity.IsAdmin,
-            RecentlyAccessedViews = entity.RecentlyAccessedViews
+            RecentlyAccessedViews = entity.RecentlyAccessedViews,
         };
     }
 }

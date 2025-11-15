@@ -1,20 +1,21 @@
-﻿using Raytha.Domain.Common;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
+using Raytha.Domain.Common;
 
 namespace MediatR;
 
 public static class MediatorExtensions
 {
-    public static async Task DispatchDomainEventsBeforeSaveChanges(this IMediator mediator, DbContext context)
+    public static async Task DispatchDomainEventsBeforeSaveChanges(
+        this IMediator mediator,
+        DbContext context
+    )
     {
-        var entities = context.ChangeTracker
-            .Entries<BaseEntity>()
+        var entities = context
+            .ChangeTracker.Entries<BaseEntity>()
             .Where(e => e.Entity.DomainEvents.Any(p => p is IBeforeSaveChangesNotification))
             .Select(e => e.Entity);
 
-        var domainEvents = entities
-            .SelectMany(e => e.DomainEvents)
-            .ToList();
+        var domainEvents = entities.SelectMany(e => e.DomainEvents).ToList();
 
         entities.ToList().ForEach(e => e.ClearDomainEvents());
 
@@ -22,16 +23,25 @@ public static class MediatorExtensions
             await mediator.Publish(domainEvent);
     }
 
-    public static async Task DispatchDomainEventsAfterSaveChanges(this IMediator mediator, DbContext context)
+    public static async Task DispatchDomainEventsAfterSaveChanges(
+        this IMediator mediator,
+        DbContext context
+    )
     {
-        var entities = context.ChangeTracker
-            .Entries<BaseEntity>()
-            .Where(e => e.Entity.DomainEvents.Any(p => p is IAfterSaveChangesNotification || (p is not IAfterSaveChangesNotification && p is not IBeforeSaveChangesNotification)))
+        var entities = context
+            .ChangeTracker.Entries<BaseEntity>()
+            .Where(e =>
+                e.Entity.DomainEvents.Any(p =>
+                    p is IAfterSaveChangesNotification
+                    || (
+                        p is not IAfterSaveChangesNotification
+                        && p is not IBeforeSaveChangesNotification
+                    )
+                )
+            )
             .Select(e => e.Entity);
 
-        var domainEvents = entities
-            .SelectMany(e => e.DomainEvents)
-            .ToList();
+        var domainEvents = entities.SelectMany(e => e.DomainEvents).ToList();
 
         entities.ToList().ForEach(e => e.ClearDomainEvents());
 

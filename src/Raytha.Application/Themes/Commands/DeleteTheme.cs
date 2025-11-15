@@ -12,46 +12,51 @@ namespace Raytha.Application.Themes.Commands;
 
 public class DeleteTheme
 {
-    public record Command : LoggableEntityRequest<CommandResponseDto<ShortGuid>>
-    {
-    }
+    public record Command : LoggableEntityRequest<CommandResponseDto<ShortGuid>> { }
 
     public class Validator : AbstractValidator<Command>
     {
         public Validator(IRaythaDbContext db)
         {
-            RuleFor(x => x).Custom((request, context) =>
-            {
-                var activeThemeId = db.OrganizationSettings
-                    .Select(os => os.ActiveThemeId)
-                    .First();
-
-                if (request.Id.Guid == activeThemeId)
-                {
-                    context.AddFailure(Constants.VALIDATION_SUMMARY, "You cannot delete an active theme. Set another theme as the active theme before deleting this one.");
-
-                    return;
-                }
-
-                var theme = db.Themes
-                    .Where(t => t.Id == request.Id.Guid)
-                    .Select(t => new
+            RuleFor(x => x)
+                .Custom(
+                    (request, context) =>
                     {
-                        t.DeveloperName,
-                    }).FirstOrDefault();
+                        var activeThemeId = db
+                            .OrganizationSettings.Select(os => os.ActiveThemeId)
+                            .First();
 
-                if (theme == null)
-                {
-                    throw new NotFoundException("Theme", request.Id);
-                }
-                
-                if (theme.DeveloperName == Theme.DEFAULT_THEME_DEVELOPER_NAME)
-                {
-                    context.AddFailure(Constants.VALIDATION_SUMMARY, "You cannot delete the default theme.");
+                        if (request.Id.Guid == activeThemeId)
+                        {
+                            context.AddFailure(
+                                Constants.VALIDATION_SUMMARY,
+                                "You cannot delete an active theme. Set another theme as the active theme before deleting this one."
+                            );
 
-                    return;
-                }
-            });
+                            return;
+                        }
+
+                        var theme = db
+                            .Themes.Where(t => t.Id == request.Id.Guid)
+                            .Select(t => new { t.DeveloperName })
+                            .FirstOrDefault();
+
+                        if (theme == null)
+                        {
+                            throw new NotFoundException("Theme", request.Id);
+                        }
+
+                        if (theme.DeveloperName == Theme.DEFAULT_THEME_DEVELOPER_NAME)
+                        {
+                            context.AddFailure(
+                                Constants.VALIDATION_SUMMARY,
+                                "You cannot delete the default theme."
+                            );
+
+                            return;
+                        }
+                    }
+                );
         }
     }
 
@@ -66,11 +71,14 @@ public class DeleteTheme
             _fileStorageProvider = fileStorageProvider;
         }
 
-        public async Task<CommandResponseDto<ShortGuid>> Handle(Command request, CancellationToken cancellationToken)
+        public async Task<CommandResponseDto<ShortGuid>> Handle(
+            Command request,
+            CancellationToken cancellationToken
+        )
         {
-            var theme = await _db.Themes
-                .Include(t => t.ThemeAccessToMediaItems)
-                    .ThenInclude(mi => mi.MediaItem)
+            var theme = await _db
+                .Themes.Include(t => t.ThemeAccessToMediaItems)
+                .ThenInclude(mi => mi.MediaItem)
                 .FirstAsync(t => t.Id == request.Id.Guid, cancellationToken);
 
             foreach (var themeAccessToMediaItem in theme.ThemeAccessToMediaItems)

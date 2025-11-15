@@ -13,7 +13,11 @@ public class ContentItemRevision : BaseAuditableEntity
     [NotMapped]
     public dynamic PublishedContent
     {
-        get { return JsonSerializer.Deserialize<dynamic>(_PublishedContent ?? "[]") ?? new ExpandoObject(); }
+        get
+        {
+            return JsonSerializer.Deserialize<dynamic>(_PublishedContent ?? "[]")
+                ?? new ExpandoObject();
+        }
         set { _PublishedContent = JsonSerializer.Serialize(value); }
     }
 }

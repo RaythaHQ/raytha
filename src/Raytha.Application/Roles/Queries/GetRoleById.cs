@@ -8,22 +8,24 @@ namespace Raytha.Application.Roles.Queries;
 
 public class GetRoleById
 {
-    public record Query : GetEntityByIdInputDto, IRequest<IQueryResponseDto<RoleDto>>
-    {
-    }
+    public record Query : GetEntityByIdInputDto, IRequest<IQueryResponseDto<RoleDto>> { }
 
     public class Handler : IRequestHandler<Query, IQueryResponseDto<RoleDto>>
     {
         private readonly IRaythaDbContext _db;
+
         public Handler(IRaythaDbContext db)
         {
             _db = db;
         }
 
-        public async Task<IQueryResponseDto<RoleDto>> Handle(Query request, CancellationToken cancellationToken)
+        public async Task<IQueryResponseDto<RoleDto>> Handle(
+            Query request,
+            CancellationToken cancellationToken
+        )
         {
-            var entity = _db.Roles
-                .Include(p => p.ContentTypeRolePermissions)
+            var entity = _db
+                .Roles.Include(p => p.ContentTypeRolePermissions)
                 .ThenInclude(p => p.ContentType)
                 .FirstOrDefault(p => p.Id == request.Id.Guid);
 

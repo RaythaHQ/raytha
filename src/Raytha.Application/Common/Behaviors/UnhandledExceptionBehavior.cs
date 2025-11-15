@@ -4,7 +4,9 @@ using Raytha.Application.Common.Exceptions;
 
 namespace Raytha.Application.Common.Behaviors;
 
-public class UnhandledExceptionBehaviour<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse> where TRequest : IRequest<TResponse>
+public class UnhandledExceptionBehaviour<TRequest, TResponse>
+    : IPipelineBehavior<TRequest, TResponse>
+    where TRequest : IRequest<TResponse>
 {
     private readonly ILogger<TRequest> _logger;
 
@@ -13,7 +15,11 @@ public class UnhandledExceptionBehaviour<TRequest, TResponse> : IPipelineBehavio
         _logger = logger;
     }
 
-    public async Task<TResponse> Handle(TRequest request, RequestHandlerDelegate<TResponse> next, CancellationToken cancellationToken)
+    public async Task<TResponse> Handle(
+        TRequest request,
+        RequestHandlerDelegate<TResponse> next,
+        CancellationToken cancellationToken
+    )
     {
         try
         {
@@ -33,7 +39,14 @@ public class UnhandledExceptionBehaviour<TRequest, TResponse> : IPipelineBehavio
         {
             var requestName = typeof(TRequest).Name;
 
-            _logger.LogError(ex, "Raytha Request: Unhandled Exception for Request {Name} {@Request}", requestName, request);
+            // Security: Avoid logging entire request payloads, which may contain credentials, tokens,
+            // or other sensitive fields; instead log only the request name alongside the exception to
+            // retain diagnostic value without increasing the risk of sensitive data exposure in logs.
+            _logger.LogError(
+                ex,
+                "Raytha Request: Unhandled Exception for Request {Name}",
+                requestName
+            );
 
             throw;
         }

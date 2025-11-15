@@ -9,15 +9,27 @@ public static class PasswordUtility
 
     public static string RandomPassword(int length)
     {
-        char[] characters = "abcdefghijklmnopqursuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890!@#$%(){}[]_".ToCharArray();
-        Random random = new Random();
+        char[] characters =
+            "abcdefghijklmnopqursuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890!@#$%(){}[]_".ToCharArray();
         StringBuilder newPassword = new StringBuilder(string.Empty, length);
-        for (int i = 0; i < length; i++)
+
+        // Security: Use a cryptographically secure RNG for password generation so that automatically
+        // generated passwords/API keys cannot be predicted from process state or generation timing;
+        // this is safe because it only affects newly generated credentials and keeps their format unchanged.
+        using (var rng = RandomNumberGenerator.Create())
         {
-            newPassword.Append(characters[random.Next(characters.Length)]);
+            var buffer = new byte[4];
+            for (int i = 0; i < length; i++)
+            {
+                rng.GetBytes(buffer);
+                var index = BitConverter.ToUInt32(buffer, 0) % (uint)characters.Length;
+                newPassword.Append(characters[index]);
+            }
         }
+
         return newPassword.ToString();
     }
+
     public static byte[] RandomSalt()
     {
         byte[] bytes = new byte[128 / 8];
@@ -27,6 +39,7 @@ public static class PasswordUtility
             return bytes;
         }
     }
+
     public static byte[] Hash(string value)
     {
         return SHA256.Create().ComputeHash(Encoding.UTF8.GetBytes(value));
@@ -42,6 +55,7 @@ public static class PasswordUtility
         byte[] saltedValue = value.Concat(salt).ToArray();
         return SHA256.Create().ComputeHash(saltedValue);
     }
+
     public static bool IsMatch(byte[] password1, byte[] password2)
     {
         if (password1.Length != password2.Length)

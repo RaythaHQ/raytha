@@ -24,11 +24,14 @@ public class EditConfiguration
         public Validator()
         {
             RuleFor(x => x.OrganizationName).NotEmpty();
-            RuleFor(x => x.TimeZone).Must(DateTimeExtensions.IsValidTimeZone)
+            RuleFor(x => x.TimeZone)
+                .Must(DateTimeExtensions.IsValidTimeZone)
                 .WithMessage(p => $"{p.TimeZone} timezone is unrecognized.");
-            RuleFor(x => x.DateFormat).Must(DateTimeExtensions.IsValidDateFormat)
+            RuleFor(x => x.DateFormat)
+                .Must(DateTimeExtensions.IsValidDateFormat)
                 .WithMessage(p => $"{p.DateFormat} format is unrecognized.");
-            RuleFor(x => x.WebsiteUrl).Must(StringExtensions.IsValidUriFormat)
+            RuleFor(x => x.WebsiteUrl)
+                .Must(StringExtensions.IsValidUriFormat)
                 .WithMessage(p => $"{p.WebsiteUrl} must be a valid URI format.");
             RuleFor(x => x.SmtpDefaultFromAddress).EmailAddress();
             RuleFor(x => x.SmtpDefaultFromName).NotEmpty();
@@ -38,11 +41,16 @@ public class EditConfiguration
     public class Handler : IRequestHandler<Command, CommandResponseDto<ShortGuid>>
     {
         private readonly IRaythaDbContext _db;
+
         public Handler(IRaythaDbContext db)
         {
             _db = db;
         }
-        public async Task<CommandResponseDto<ShortGuid>> Handle(Command request, CancellationToken cancellationToken)
+
+        public async Task<CommandResponseDto<ShortGuid>> Handle(
+            Command request,
+            CancellationToken cancellationToken
+        )
         {
             var entity = _db.OrganizationSettings.First();
 

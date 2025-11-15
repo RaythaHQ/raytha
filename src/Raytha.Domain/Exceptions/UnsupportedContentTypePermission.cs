@@ -3,7 +3,5 @@
 public class UnsupportedContentTypePermissionException : Exception
 {
     public UnsupportedContentTypePermissionException(string developerName)
-        : base($"Template type \"{developerName}\" is unsupported.")
-    {
-    }
+        : base($"Template type \"{developerName}\" is unsupported.") { }
 }

@@ -59,8 +59,10 @@ public class BuiltInContentTypeFieldTests
     [Test]
     public void ShouldThrowUnsupportedColourExceptionGivenNotSupportedColourCode()
     {
-        FluentActions.Invoking(() => BuiltInContentTypeField.From("BadValue"))
-            .Should().Throw<ReservedContentTypeFieldNotFoundException>();
+        FluentActions
+            .Invoking(() => BuiltInContentTypeField.From("BadValue"))
+            .Should()
+            .Throw<ReservedContentTypeFieldNotFoundException>();
     }
 
     [Test]

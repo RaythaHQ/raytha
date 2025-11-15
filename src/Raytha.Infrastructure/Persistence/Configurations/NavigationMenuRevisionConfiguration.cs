@@ -8,14 +8,8 @@ public class NavigationMenuRevisionConfiguration : IEntityTypeConfiguration<Navi
 {
     public void Configure(EntityTypeBuilder<NavigationMenuRevision> builder)
     {
-        builder
-            .HasOne(b => b.CreatorUser)
-            .WithMany()
-            .HasForeignKey(b => b.CreatorUserId);
+        builder.HasOne(b => b.CreatorUser).WithMany().HasForeignKey(b => b.CreatorUserId);
 
-        builder
-            .HasOne(b => b.LastModifierUser)
-            .WithMany()
-            .HasForeignKey(b => b.LastModifierUserId);
+        builder.HasOne(b => b.LastModifierUser).WithMany().HasForeignKey(b => b.LastModifierUserId);
     }
 }

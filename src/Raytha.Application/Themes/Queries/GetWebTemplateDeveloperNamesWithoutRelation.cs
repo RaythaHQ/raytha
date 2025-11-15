@@ -22,36 +22,56 @@ public class GetWebTemplateDeveloperNamesWithoutRelation
             _db = db;
         }
 
-        public async Task<IQueryResponseDto<IReadOnlyCollection<string>>> Handle(Query request, CancellationToken cancellationToken)
+        public async Task<IQueryResponseDto<IReadOnlyCollection<string>>> Handle(
+            Query request,
+            CancellationToken cancellationToken
+        )
         {
-            var activeThemeId = await _db.OrganizationSettings
-                .Select(os => os.ActiveThemeId)
+            var activeThemeId = await _db
+                .OrganizationSettings.Select(os => os.ActiveThemeId)
                 .FirstAsync(cancellationToken);
 
-            var activeThemeWebTemplateContentItemRelations = await _db.WebTemplateContentItemRelations
-                .Where(wtr => wtr.WebTemplate!.ThemeId == activeThemeId)
-                .Select(wtr => new { wtr.ContentItemId, WebTemplateDeveloperName = wtr.WebTemplate!.DeveloperName })
+            var activeThemeWebTemplateContentItemRelations = await _db
+                .WebTemplateContentItemRelations.Where(wtr =>
+                    wtr.WebTemplate!.ThemeId == activeThemeId
+                )
+                .Select(wtr => new
+                {
+                    wtr.ContentItemId,
+                    WebTemplateDeveloperName = wtr.WebTemplate!.DeveloperName,
+                })
                 .ToArrayAsync(cancellationToken);
 
-            var activeThemeWebTemplateViewRelations = await _db.WebTemplateViewRelations
-                .Where(wtr => wtr.WebTemplate!.ThemeId == activeThemeId)
-                .Select(wtr => new { wtr.ViewId, WebTemplateDeveloperName = wtr.WebTemplate!.DeveloperName })
+            var activeThemeWebTemplateViewRelations = await _db
+                .WebTemplateViewRelations.Where(wtr => wtr.WebTemplate!.ThemeId == activeThemeId)
+                .Select(wtr => new
+                {
+                    wtr.ViewId,
+                    WebTemplateDeveloperName = wtr.WebTemplate!.DeveloperName,
+                })
                 .ToArrayAsync(cancellationToken);
 
-            var newActiveThemeRelationsContentItemIds = await _db.WebTemplateContentItemRelations
-                .Where(wtr => wtr.WebTemplate!.ThemeId == request.ThemeId.Guid)
+            var newActiveThemeRelationsContentItemIds = await _db
+                .WebTemplateContentItemRelations.Where(wtr =>
+                    wtr.WebTemplate!.ThemeId == request.ThemeId.Guid
+                )
                 .Select(wtr => wtr.ContentItemId)
                 .ToArrayAsync(cancellationToken);
 
-            var newActiveThemeRelationViewIds = await _db.WebTemplateViewRelations
-                .Where(wtr => wtr.WebTemplate!.ThemeId == request.ThemeId.Guid)
+            var newActiveThemeRelationViewIds = await _db
+                .WebTemplateViewRelations.Where(wtr =>
+                    wtr.WebTemplate!.ThemeId == request.ThemeId.Guid
+                )
                 .Select(wtr => wtr.ViewId)
                 .ToArrayAsync(cancellationToken);
 
-            var webTemplateDeveloperNamesFromContentItems = activeThemeWebTemplateContentItemRelations
-                .Where(wtr => !newActiveThemeRelationsContentItemIds.Contains(wtr.ContentItemId))
-                .Select(wtr => wtr.WebTemplateDeveloperName!)
-                .ToArray();
+            var webTemplateDeveloperNamesFromContentItems =
+                activeThemeWebTemplateContentItemRelations
+                    .Where(wtr =>
+                        !newActiveThemeRelationsContentItemIds.Contains(wtr.ContentItemId)
+                    )
+                    .Select(wtr => wtr.WebTemplateDeveloperName!)
+                    .ToArray();
 
             var webTemplateDeveloperNamesFromViews = activeThemeWebTemplateViewRelations
                 .Where(wtr => !newActiveThemeRelationViewIds.Contains(wtr.ViewId))
@@ -63,7 +83,9 @@ public class GetWebTemplateDeveloperNamesWithoutRelation
                 .Distinct()
                 .ToArray();
 
-            return new QueryResponseDto<IReadOnlyCollection<string>>(webTemplateDeveloperNamesWithoutRelation);
+            return new QueryResponseDto<IReadOnlyCollection<string>>(
+                webTemplateDeveloperNamesWithoutRelation
+            );
         }
     }
 }

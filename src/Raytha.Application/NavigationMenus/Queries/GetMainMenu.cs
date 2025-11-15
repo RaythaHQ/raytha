@@ -8,9 +8,7 @@ namespace Raytha.Application.NavigationMenus.Queries;
 
 public class GetMainMenu
 {
-    public record Query : GetEntityByIdInputDto, IRequest<IQueryResponseDto<NavigationMenuDto>>
-    {
-    }
+    public record Query : GetEntityByIdInputDto, IRequest<IQueryResponseDto<NavigationMenuDto>> { }
 
     public class Handler : IRequestHandler<Query, IQueryResponseDto<NavigationMenuDto>>
     {
@@ -21,10 +19,15 @@ public class GetMainMenu
             _db = db;
         }
 
-        public async Task<IQueryResponseDto<NavigationMenuDto>> Handle(Query request, CancellationToken cancellationToken)
+        public async Task<IQueryResponseDto<NavigationMenuDto>> Handle(
+            Query request,
+            CancellationToken cancellationToken
+        )
         {
-            var entity = await _db.NavigationMenus
-                .FirstOrDefaultAsync(nm => nm.IsMainMenu == true, cancellationToken);
+            var entity = await _db.NavigationMenus.FirstOrDefaultAsync(
+                nm => nm.IsMainMenu == true,
+                cancellationToken
+            );
 
             if (entity == null)
                 throw new NotFoundException("Navigation Menu", request.Id);

@@ -1,0 +1,87 @@
+@page "/{contentTypeDeveloperName}/views/{viewId}/export-to-csv"
+@model Raytha.Web.Areas.Admin.Pages.ContentTypes.Views.BeginExportToCsv
+
+@{
+    var pageTitle = $"{Model.CurrentView.ContentType.LabelPlural} > Export to CSV";
+    Layout = "SidebarLayout";
+    ViewData["Title"] = pageTitle;
+    ViewData["ActiveMenu"] = Model.CurrentView.ContentType.DeveloperName;
+
+    var back = new BackLinkOptions
+    {
+        Href = Model.BackToListUrl,
+        Page = RouteNames.ContentItems.Index,
+        RouteValues = new RouteValueDictionary
+        {
+            ["contentTypeDeveloperName"] = Model.CurrentView.ContentType.DeveloperName,
+            ["viewId"] = Model.CurrentView.Id
+        }
+    };
+}
+
+<partial name="_Partials/PageHeading" model='ViewData["Title"]' />
+
+<div class="row mb-4">
+    <div class="col-xxl-7 col-xl-8 col-lg-9 col-md-12">
+        <div class="card border-0 shadow mb-4">
+            <div class="card-body">
+                @if (string.IsNullOrEmpty(Model.JobId))
+                {
+                    @* State A - Show Export Options Form *@
+                    @(await Html.PartialAsync("_Partials/BackToList", back))
+
+                    <form method="post" class="py-4" asp-route-backToListUrl="@Model.BackToListUrl">
+                        <div class="col-lg-12 mt-2">
+                            <div class="mb-3">
+                                <label class="form-label">Export Options</label>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" asp-for="ViewColumnsOnly" value="true"
+                                        checked id="exportViewColumns">
+                                    <label class="form-check-label" for="exportViewColumns">
+                                        Export only columns visible in this view
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" asp-for="ViewColumnsOnly" value="false"
+                                        id="exportAllFields">
+                                    <label class="form-check-label" for="exportAllFields">
+                                        Export all fields
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-12 mt-3">
+                            <button type="submit" class="btn btn-primary">Begin export</button>
+                        </div>
+                    </form>
+                }
+                else
+                {
+                    @* State B - Show Progress Tracker *@
+                    <div id="export-progress-config" data-path-base="@Model.PathBase" data-job-id="@Model.JobId"
+                        style="display:none;"></div>
+
+                    <div id="back-to-view" style="display:none;">
+                        @(await Html.PartialAsync("_Partials/BackToList", back))
+                    </div>
+
+                    <div class="py-4">
+                        <div class="progress">
+                            <div id="progress-bar" class="progress-bar" role="progressbar" aria-valuenow="0"
+                                aria-valuemin="0" aria-valuemax="100">
+                            </div>
+                        </div>
+
+                        <ul id="status-info" class="list-group mt-3">
+                            <li class="list-group-item">Background task running...</li>
+                        </ul>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script type="module" defer src="~/js/pages/content-types/views-export-to-csv.js"></script>
+}

@@ -13,39 +13,52 @@ public class ContentItemDeletedEventHandler : INotificationHandler<ContentItemDe
     private readonly IBackgroundTaskQueue _taskQueue;
     private readonly IRaythaDbContext _db;
 
-    public ContentItemDeletedEventHandler(
-        IBackgroundTaskQueue taskQueue,
-        IRaythaDbContext db)
+    public ContentItemDeletedEventHandler(IBackgroundTaskQueue taskQueue, IRaythaDbContext db)
     {
         _taskQueue = taskQueue;
         _db = db;
     }
 
-    public async Task Handle(ContentItemDeletedEvent notification, CancellationToken cancellationToken)
+    public async Task Handle(
+        ContentItemDeletedEvent notification,
+        CancellationToken cancellationToken
+    )
     {
-        var activeFunctions = _db.RaythaFunctions.Where(p => p.IsActive && p.TriggerType == RaythaFunctionTriggerType.ContentItemDeleted.DeveloperName);
+        var activeFunctions = _db.RaythaFunctions.Where(p =>
+            p.IsActive
+            && p.TriggerType == RaythaFunctionTriggerType.ContentItemDeleted.DeveloperName
+        );
         if (activeFunctions.Any())
         {
-            var activeThemeId = await _db.OrganizationSettings
-                .Select(os => os.ActiveThemeId)
+            var activeThemeId = await _db
+                .OrganizationSettings.Select(os => os.ActiveThemeId)
                 .FirstAsync(cancellationToken);
 
-            var webTemplate = await _db.WebTemplateContentItemRelations
-                .Where(wtr => wtr.ContentItemId == notification.ContentItem.Id && wtr.WebTemplate!.ThemeId == activeThemeId)
+            var webTemplate = await _db
+                .WebTemplateContentItemRelations.Where(wtr =>
+                    wtr.ContentItemId == notification.ContentItem.Id
+                    && wtr.WebTemplate!.ThemeId == activeThemeId
+                )
                 .Include(wtr => wtr.WebTemplate)
-                    .ThenInclude(wt => wt.TemplateAccessToModelDefinitions)
-                        .ThenInclude(md => md.ContentType)
+                .ThenInclude(wt => wt.TemplateAccessToModelDefinitions)
+                .ThenInclude(md => md.ContentType)
                 .IncludeParentTemplates(wtr => wtr.WebTemplate!.ParentTemplate)
                 .Select(wtr => wtr.WebTemplate)
                 .FirstAsync(cancellationToken);
 
             foreach (var activeFunction in activeFunctions)
             {
-                await _taskQueue.EnqueueAsync<RaythaFunctionAsBackgroundTask>(new RaythaFunctionAsBackgroundTaskPayload 
-                {
-                    Target = ContentItemRaythaFunctionTargetDto.GetProjection(notification.ContentItem, webTemplate),
-                    RaythaFunction = activeFunction
-                }, cancellationToken);
+                await _taskQueue.EnqueueAsync<RaythaFunctionAsBackgroundTask>(
+                    new RaythaFunctionAsBackgroundTaskPayload
+                    {
+                        Target = ContentItemRaythaFunctionTargetDto.GetProjection(
+                            notification.ContentItem,
+                            webTemplate
+                        ),
+                        RaythaFunction = activeFunction,
+                    },
+                    cancellationToken
+                );
             }
         }
     }

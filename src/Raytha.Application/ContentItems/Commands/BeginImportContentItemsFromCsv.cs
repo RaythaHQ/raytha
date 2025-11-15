@@ -1,4 +1,5 @@
-﻿using CSharpVitamins;
+﻿using System.Text.Json;
+using CSharpVitamins;
 using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
@@ -10,7 +11,6 @@ using Raytha.Application.MediaItems;
 using Raytha.Domain.Entities;
 using Raytha.Domain.ValueObjects.FieldTypes;
 using Raytha.Domain.ValueObjects.FieldValues;
-using System.Text.Json;
 
 namespace Raytha.Application.ContentItems.Commands;
 
@@ -28,69 +28,99 @@ public class BeginImportContentItemsFromCsv
     {
         public Validator(IRaythaDbContext db, ICsvService csvService)
         {
-            RuleFor(x => x).Custom((request, context) =>
-            {
-                var contentType = db.ContentTypes
-                    .Include(p => p.ContentTypeFields)
-                    .FirstOrDefault(p => p.Id == request.ContentTypeId.Guid);
-
-                if (contentType == null)
-                {
-                    throw new NotFoundException("Content Type", request.ContentTypeId);
-                }
-
-                if (string.IsNullOrEmpty(request.ImportMethod))
-                {
-                    context.AddFailure("ImportMethod", "Import method is required.");
-                    return;
-                }
-
-                ImportMethod importMethod;
-                try
-                {
-                    importMethod = ImportMethod.From(request.ImportMethod);
-                }
-                catch (NotFoundException)
-                {
-                    context.AddFailure("ImportMethod", $"Unknown import method: {request.ImportMethod}");
-                    return;
-                }
-
-
-                if (request.CsvAsBytes == null || request.CsvAsBytes.Length == 0)
-                {
-                    context.AddFailure("CsvAsBytes", "You must upload a CSV file.");
-                    return;
-                }
-                else
-                {
-                    try
+            RuleFor(x => x)
+                .Custom(
+                    (request, context) =>
                     {
-                        Stream stream = new MemoryStream(request.CsvAsBytes);
-                        var csvFile = csvService.ReadCsv<Dictionary<string, dynamic>>(stream);
-                        if (!csvFile.Any())
+                        var contentType = db
+                            .ContentTypes.Include(p => p.ContentTypeFields)
+                            .FirstOrDefault(p => p.Id == request.ContentTypeId.Guid);
+
+                        if (contentType == null)
                         {
-                            context.AddFailure(Constants.VALIDATION_SUMMARY, "Your CSV file is missing data.");
+                            throw new NotFoundException("Content Type", request.ContentTypeId);
+                        }
+
+                        if (string.IsNullOrEmpty(request.ImportMethod))
+                        {
+                            context.AddFailure("ImportMethod", "Import method is required.");
                             return;
                         }
-                        if (!csvFile.All(p => p.ContainsKey(BuiltInContentTypeField.Template.DeveloperName)))
+
+                        ImportMethod importMethod;
+                        try
                         {
-                            context.AddFailure(Constants.VALIDATION_SUMMARY, $"You must provide `{BuiltInContentTypeField.Template.DeveloperName}` column.");
+                            importMethod = ImportMethod.From(request.ImportMethod);
+                        }
+                        catch (NotFoundException)
+                        {
+                            context.AddFailure(
+                                "ImportMethod",
+                                $"Unknown import method: {request.ImportMethod}"
+                            );
                             return;
                         }
-                        if (importMethod == ImportMethod.UpdateExistingRecordsOnly && !csvFile.All(p => p.ContainsKey(BuiltInContentTypeField.Id.DeveloperName)))
+
+                        if (request.CsvAsBytes == null || request.CsvAsBytes.Length == 0)
                         {
-                            context.AddFailure(Constants.VALIDATION_SUMMARY, $"You must provide `{BuiltInContentTypeField.Id.DeveloperName}` column for updating records.");
+                            context.AddFailure("CsvAsBytes", "You must upload a CSV file.");
                             return;
+                        }
+                        else
+                        {
+                            try
+                            {
+                                Stream stream = new MemoryStream(request.CsvAsBytes);
+                                var csvFile = csvService.ReadCsv<Dictionary<string, dynamic>>(
+                                    stream
+                                );
+                                if (!csvFile.Any())
+                                {
+                                    context.AddFailure(
+                                        Constants.VALIDATION_SUMMARY,
+                                        "Your CSV file is missing data."
+                                    );
+                                    return;
+                                }
+                                if (
+                                    !csvFile.All(p =>
+                                        p.ContainsKey(
+                                            BuiltInContentTypeField.Template.DeveloperName
+                                        )
+                                    )
+                                )
+                                {
+                                    context.AddFailure(
+                                        Constants.VALIDATION_SUMMARY,
+                                        $"You must provide `{BuiltInContentTypeField.Template.DeveloperName}` column."
+                                    );
+                                    return;
+                                }
+                                if (
+                                    importMethod == ImportMethod.UpdateExistingRecordsOnly
+                                    && !csvFile.All(p =>
+                                        p.ContainsKey(BuiltInContentTypeField.Id.DeveloperName)
+                                    )
+                                )
+                                {
+                                    context.AddFailure(
+                                        Constants.VALIDATION_SUMMARY,
+                                        $"You must provide `{BuiltInContentTypeField.Id.DeveloperName}` column for updating records."
+                                    );
+                                    return;
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                context.AddFailure(
+                                    Constants.VALIDATION_SUMMARY,
+                                    $"There was an error processing your CSV file: {ex.Message}"
+                                );
+                                return;
+                            }
                         }
                     }
-                    catch (Exception ex)
-                    {
-                        context.AddFailure(Constants.VALIDATION_SUMMARY, $"There was an error processing your CSV file: {ex.Message}");
-                        return;
-                    }
-                }
-            });
+                );
         }
     }
 
@@ -99,25 +129,35 @@ public class BeginImportContentItemsFromCsv
         private readonly IBackgroundTaskQueue _taskQueue;
         private readonly IRaythaDbContext _db;
         private readonly IContentTypeInRoutePath _contentTypeInRoutePath;
+
         public Handler(
             IBackgroundTaskQueue taskQueue,
             IRaythaDbContext db,
             IContentTypeInRoutePath contentTypeInRoutePath
-            )
+        )
         {
             _taskQueue = taskQueue;
             _db = db;
             _contentTypeInRoutePath = contentTypeInRoutePath;
         }
-        public async Task<CommandResponseDto<ShortGuid>> Handle(Command request, CancellationToken cancellationToken)
+
+        public async Task<CommandResponseDto<ShortGuid>> Handle(
+            Command request,
+            CancellationToken cancellationToken
+        )
         {
-            var contentType = _db.ContentTypes
-                .Include(p => p.ContentTypeFields)
+            var contentType = _db
+                .ContentTypes.Include(p => p.ContentTypeFields)
                 .First(p => p.Id == request.ContentTypeId.Guid);
 
-            _contentTypeInRoutePath.ValidateContentTypeInRoutePathMatchesValue(contentType.DeveloperName);
+            _contentTypeInRoutePath.ValidateContentTypeInRoutePathMatchesValue(
+                contentType.DeveloperName
+            );
 
-            var backgroundJobId = await _taskQueue.EnqueueAsync<BackgroundTask>(request, cancellationToken);
+            var backgroundJobId = await _taskQueue.EnqueueAsync<BackgroundTask>(
+                request,
+                cancellationToken
+            );
 
             return new CommandResponseDto<ShortGuid>(backgroundJobId);
         }
@@ -138,7 +178,8 @@ public class BeginImportContentItemsFromCsv
             ICsvService csvService,
             IFileStorageProvider fileStorageProvider,
             IFileStorageProviderSettings fileStorageProviderSettings,
-            ICurrentOrganization currentOrganization)
+            ICurrentOrganization currentOrganization
+        )
         {
             _db = db;
             _csvService = csvService;
@@ -146,20 +187,25 @@ public class BeginImportContentItemsFromCsv
             _currentOrganization = currentOrganization;
             _fileStorageProviderSettings = fileStorageProviderSettings;
         }
+
         public async Task Execute(Guid jobId, JsonElement args, CancellationToken cancellationToken)
         {
             ShortGuid contentTypeId = args.GetProperty("ContentTypeId").GetString();
-            ImportMethod importMethod = ImportMethod.From(args.GetProperty("ImportMethod").GetString());
+            ImportMethod importMethod = ImportMethod.From(
+                args.GetProperty("ImportMethod").GetString()
+            );
             bool importAsDraft = args.GetProperty("ImportAsDraft").GetBoolean();
-            Stream csvAsStream = new MemoryStream(args.GetProperty("CsvAsBytes").GetBytesFromBase64());
+            Stream csvAsStream = new MemoryStream(
+                args.GetProperty("CsvAsBytes").GetBytesFromBase64()
+            );
 
-            ContentType contentType = _db.ContentTypes
-                                    .Include(p => p.ContentTypeFields)
-                                    .First(p => p.Id == contentTypeId.Guid);
+            ContentType contentType = _db
+                .ContentTypes.Include(p => p.ContentTypeFields)
+                .First(p => p.Id == contentTypeId.Guid);
 
             var records = _csvService.ReadCsv<Dictionary<string, dynamic>>(csvAsStream);
 
-            int taskStep = 0; 
+            int taskStep = 0;
             var job = _db.BackgroundTasks.First(p => p.Id == jobId);
             job.TaskStep = taskStep++;
             job.StatusInfo = $"Pulled {records.Count()} from the CSV file. Beginning import.";
@@ -171,24 +217,30 @@ public class BeginImportContentItemsFromCsv
             int rowNumber = 1;
             int successfullyImported = 0;
 
-            var activeThemeId = await _db.OrganizationSettings
-                .Select(os => os.ActiveThemeId)
+            var activeThemeId = await _db
+                .OrganizationSettings.Select(os => os.ActiveThemeId)
                 .FirstAsync(cancellationToken);
 
-            var contentItemIdsWebTemplateContentItemRelations = await _db.WebTemplateContentItemRelations
-                .Include(wtr => wtr.WebTemplate)
+            var contentItemIdsWebTemplateContentItemRelations = await _db
+                .WebTemplateContentItemRelations.Include(wtr => wtr.WebTemplate)
                 .Where(wtr => wtr.WebTemplate!.ThemeId == activeThemeId)
                 .ToDictionaryAsync(wtr => wtr.ContentItemId, wtr => wtr, cancellationToken);
 
-            var webTemplateDeveloperNamesIds = await _db.WebTemplates
-                .Where(wt => wt.ThemeId == activeThemeId)
+            var webTemplateDeveloperNamesIds = await _db
+                .WebTemplates.Where(wt => wt.ThemeId == activeThemeId)
                 .Select(wt => new { wt.Id, wt.DeveloperName })
                 .ToDictionaryAsync(wt => wt.DeveloperName!, wt => wt.Id, cancellationToken);
 
-            var contentItems = await _db.ContentItems
-                .ToArrayAsync(cancellationToken);
+            var contentItems = await _db.ContentItems.ToArrayAsync(cancellationToken);
 
-            await foreach (var item in PrepareRecordsForImport(contentType, records, importAsDraft, cancellationToken))
+            await foreach (
+                var item in PrepareRecordsForImport(
+                    contentType,
+                    records,
+                    importAsDraft,
+                    cancellationToken
+                )
+            )
             {
                 if (!item.Success)
                 {
@@ -197,7 +249,9 @@ public class BeginImportContentItemsFromCsv
                     continue;
                 }
 
-                var currentRecord = contentItems.FirstOrDefault(ci => ci.Id == item.Result.ContentItem.Id);
+                var currentRecord = contentItems.FirstOrDefault(ci =>
+                    ci.Id == item.Result.ContentItem.Id
+                );
                 if (currentRecord == null && importMethod == ImportMethod.UpdateExistingRecordsOnly)
                 {
                     rowNumber++;
@@ -210,9 +264,14 @@ public class BeginImportContentItemsFromCsv
                     continue;
                 }
 
-                var webTemplateId = webTemplateDeveloperNamesIds.TryGetValue(item.Result.WebTemplateDeveloperName, out var webTemplateIdByDeveloperName)
+                var webTemplateId = webTemplateDeveloperNamesIds.TryGetValue(
+                    item.Result.WebTemplateDeveloperName,
+                    out var webTemplateIdByDeveloperName
+                )
                     ? webTemplateIdByDeveloperName
-                    : webTemplateDeveloperNamesIds[BuiltInWebTemplate.ContentItemDetailViewPage.DeveloperName];
+                    : webTemplateDeveloperNamesIds[
+                        BuiltInWebTemplate.ContentItemDetailViewPage.DeveloperName
+                    ];
 
                 if (currentRecord != null)
                 {
@@ -227,7 +286,8 @@ public class BeginImportContentItemsFromCsv
 
                     _db.ContentItems.Update(currentRecord);
 
-                    var webTemplateContentItemRelation = contentItemIdsWebTemplateContentItemRelations[currentRecord.Id];
+                    var webTemplateContentItemRelation =
+                        contentItemIdsWebTemplateContentItemRelations[currentRecord.Id];
 
                     webTemplateContentItemRelation.WebTemplateId = webTemplateId;
 
@@ -244,7 +304,10 @@ public class BeginImportContentItemsFromCsv
                         WebTemplateId = webTemplateId,
                     };
 
-                    await _db.WebTemplateContentItemRelations.AddAsync(webTemplateContentItemRelation, cancellationToken);
+                    await _db.WebTemplateContentItemRelations.AddAsync(
+                        webTemplateContentItemRelation,
+                        cancellationToken
+                    );
                 }
 
                 if (rowNumber % 10 == 0)
@@ -284,9 +347,13 @@ public class BeginImportContentItemsFromCsv
                     myExport["Error Message"] = errorList[key];
                 }
                 var csvExportAsBytes = myExport.ExportToBytes();
-                string fileName = $"{_currentOrganization.TimeZoneConverter.UtcToTimeZoneAsDateTimeFormat(DateTime.UtcNow)}-{contentType.DeveloperName}.csv";
+                string fileName =
+                    $"{_currentOrganization.TimeZoneConverter.UtcToTimeZoneAsDateTimeFormat(DateTime.UtcNow)}-{contentType.DeveloperName}.csv";
                 var id = Guid.NewGuid();
-                var objectKey = FileStorageUtility.CreateObjectKeyFromIdAndFileName(id.ToString(), fileName);
+                var objectKey = FileStorageUtility.CreateObjectKeyFromIdAndFileName(
+                    id.ToString(),
+                    fileName
+                );
                 var mediaItem = new MediaItem
                 {
                     Id = id,
@@ -294,10 +361,16 @@ public class BeginImportContentItemsFromCsv
                     ContentType = "text/csv",
                     FileName = fileName,
                     FileStorageProvider = _fileStorageProvider.GetName(),
-                    Length = csvExportAsBytes.Length
+                    Length = csvExportAsBytes.Length,
                 };
                 _db.MediaItems.Add(mediaItem);
-                await _fileStorageProvider.SaveAndGetDownloadUrlAsync(csvExportAsBytes, objectKey, fileName, "text/csv", DateTime.UtcNow.AddYears(999));
+                await _fileStorageProvider.SaveAndGetDownloadUrlAsync(
+                    csvExportAsBytes,
+                    objectKey,
+                    fileName,
+                    "text/csv",
+                    DateTime.UtcNow.AddYears(999)
+                );
                 job.TaskStep = taskStep++;
                 job.StatusInfo = JsonSerializer.Serialize(MediaItemDto.GetProjection(mediaItem));
                 _db.BackgroundTasks.Update(job);
@@ -313,24 +386,36 @@ public class BeginImportContentItemsFromCsv
             }
         }
 
-        private async IAsyncEnumerable<CommandResponseDto<ContentItemDataFromCsv>> PrepareRecordsForImport(ContentType contentType, IEnumerable<Dictionary<string, dynamic>> records, bool importAsDraft, CancellationToken cancellationToken)
+        private async IAsyncEnumerable<
+            CommandResponseDto<ContentItemDataFromCsv>
+        > PrepareRecordsForImport(
+            ContentType contentType,
+            IEnumerable<Dictionary<string, dynamic>> records,
+            bool importAsDraft,
+            CancellationToken cancellationToken
+        )
         {
-            var activeThemeId = await _db.OrganizationSettings
-                .Select(os => os.ActiveThemeId)
+            var activeThemeId = await _db
+                .OrganizationSettings.Select(os => os.ActiveThemeId)
                 .FirstAsync(cancellationToken);
 
-            var webTemplateDeveloperNames = await _db.WebTemplates
-                .Where(wt => wt.ThemeId == activeThemeId)
+            var webTemplateDeveloperNames = await _db
+                .WebTemplates.Where(wt => wt.ThemeId == activeThemeId)
                 .Select(wt => wt.DeveloperName)
                 .ToArrayAsync(cancellationToken);
 
             foreach (var record in records)
             {
-                var templateDeveloperName = (record[BuiltInContentTypeField.Template.DeveloperName] as string)!.ToDeveloperName();
+                var templateDeveloperName = (
+                    record[BuiltInContentTypeField.Template.DeveloperName] as string
+                )!.ToDeveloperName();
 
                 if (!webTemplateDeveloperNames.Contains(templateDeveloperName))
                 {
-                    yield return new CommandResponseDto<ContentItemDataFromCsv>("Template", $"Template was not found with this developer name: {templateDeveloperName}");
+                    yield return new CommandResponseDto<ContentItemDataFromCsv>(
+                        "Template",
+                        $"Template was not found with this developer name: {templateDeveloperName}"
+                    );
                     continue;
                 }
 
@@ -338,32 +423,52 @@ public class BeginImportContentItemsFromCsv
 
                 foreach (var field in record)
                 {
-                    if (BuiltInContentTypeField.ReservedContentTypeFields.Any(p => p.DeveloperName == field.Key))
+                    if (
+                        BuiltInContentTypeField.ReservedContentTypeFields.Any(p =>
+                            p.DeveloperName == field.Key
+                        )
+                    )
                         continue;
 
-                    var fieldDefinition = contentType.ContentTypeFields.FirstOrDefault(p => p.DeveloperName == field.Key);
+                    var fieldDefinition = contentType.ContentTypeFields.FirstOrDefault(p =>
+                        p.DeveloperName == field.Key
+                    );
                     if (fieldDefinition != null)
                     {
                         string errorMessage = string.Empty;
                         BaseFieldValue fieldValue = null;
                         try
                         {
-
-                            if (fieldDefinition.FieldType.DeveloperName == BaseFieldType.MultipleSelect.DeveloperName)
+                            if (
+                                fieldDefinition.FieldType.DeveloperName
+                                == BaseFieldType.MultipleSelect.DeveloperName
+                            )
                             {
-                                fieldValue = fieldDefinition.FieldType.FieldValueFrom(field.Value?.Split(";"));
+                                fieldValue = fieldDefinition.FieldType.FieldValueFrom(
+                                    field.Value?.Split(";")
+                                );
                             }
-                            else if (fieldDefinition.FieldType.DeveloperName == BaseFieldType.Attachment.DeveloperName)
+                            else if (
+                                fieldDefinition.FieldType.DeveloperName
+                                == BaseFieldType.Attachment.DeveloperName
+                            )
                             {
                                 try
                                 {
-                                    var mediaItem = await DownloadAndSaveFile(field.Value, cancellationToken);
-                                    fieldValue = fieldDefinition.FieldType.FieldValueFrom(mediaItem.ObjectKey);
+                                    var mediaItem = await DownloadAndSaveFile(
+                                        field.Value,
+                                        cancellationToken
+                                    );
+                                    fieldValue = fieldDefinition.FieldType.FieldValueFrom(
+                                        mediaItem.ObjectKey
+                                    );
                                 }
                                 catch (Exception ex)
                                 {
                                     errorMessage = ex.Message;
-                                    fieldValue = fieldDefinition.FieldType.FieldValueFrom(string.Empty);
+                                    fieldValue = fieldDefinition.FieldType.FieldValueFrom(
+                                        string.Empty
+                                    );
                                 }
                             }
                             else
@@ -371,18 +476,27 @@ public class BeginImportContentItemsFromCsv
                                 fieldValue = fieldDefinition.FieldType.FieldValueFrom(field.Value);
                             }
 
-                            if (!importAsDraft && fieldDefinition.IsRequired && !fieldValue.HasValue)
+                            if (
+                                !importAsDraft
+                                && fieldDefinition.IsRequired
+                                && !fieldValue.HasValue
+                            )
                             {
-                                errorMessage = $"Value is empty for required field: {fieldDefinition.DeveloperName}";
+                                errorMessage =
+                                    $"Value is empty for required field: {fieldDefinition.DeveloperName}";
                             }
                         }
                         catch (Exception ex)
                         {
-                            errorMessage = $"'{fieldDefinition.DeveloperName}' is in an invalid format.";
+                            errorMessage =
+                                $"'{fieldDefinition.DeveloperName}' is in an invalid format.";
                         }
                         if (!string.IsNullOrEmpty(errorMessage))
                         {
-                            yield return new CommandResponseDto<ContentItemDataFromCsv>("FieldError", errorMessage);
+                            yield return new CommandResponseDto<ContentItemDataFromCsv>(
+                                "FieldError",
+                                errorMessage
+                            );
                             continue;
                         }
                         else
@@ -398,7 +512,7 @@ public class BeginImportContentItemsFromCsv
                     DraftContent = content,
                     IsPublished = importAsDraft == false,
                     IsDraft = importAsDraft,
-                    ContentTypeId = contentType.Id
+                    ContentTypeId = contentType.Id,
                 };
 
                 if (record.ContainsKey(BuiltInContentTypeField.Id.DeveloperName))
@@ -419,17 +533,15 @@ public class BeginImportContentItemsFromCsv
                 }
 
                 var path = GetRoutePath(content, contentItem.Id, contentType);
-                contentItem.Route = new Route
-                {
-                    Path = path,
-                    ContentItemId = contentItem.Id
-                };
+                contentItem.Route = new Route { Path = path, ContentItemId = contentItem.Id };
 
-                yield return new CommandResponseDto<ContentItemDataFromCsv>(new ContentItemDataFromCsv
-                {
-                    ContentItem = contentItem,
-                    WebTemplateDeveloperName = templateDeveloperName,
-                });
+                yield return new CommandResponseDto<ContentItemDataFromCsv>(
+                    new ContentItemDataFromCsv
+                    {
+                        ContentItem = contentItem,
+                        WebTemplateDeveloperName = templateDeveloperName,
+                    }
+                );
             }
         }
 
@@ -437,15 +549,22 @@ public class BeginImportContentItemsFromCsv
         {
             var routePathTemplate = contentType.DefaultRouteTemplate;
 
-            string primaryFieldDeveloperName = contentType.ContentTypeFields.First(p => p.Id == contentType.PrimaryFieldId).DeveloperName;
-            var primaryField = ((IDictionary<string, dynamic>)content)[primaryFieldDeveloperName] as string;
+            string primaryFieldDeveloperName = contentType
+                .ContentTypeFields.First(p => p.Id == contentType.PrimaryFieldId)
+                .DeveloperName;
+            var primaryField =
+                ((IDictionary<string, dynamic>)content)[primaryFieldDeveloperName] as string;
 
-            string path = routePathTemplate.IfNullOrEmpty($"{BuiltInContentTypeField.PrimaryField.DeveloperName}")
-                                            .Replace($"{{{BuiltInContentTypeField.PrimaryField.DeveloperName}}}", primaryField.IfNullOrEmpty(entityId))
-                                            .Replace($"{{{BuiltInContentTypeField.Id.DeveloperName}}}", (ShortGuid)entityId)
-                                            .Replace("{ContentTypeDeveloperName}", contentType.DeveloperName)
-                                            .Replace("{CurrentYear}", DateTime.UtcNow.Year.ToString())
-                                            .Replace("{CurrentMonth}", DateTime.UtcNow.Month.ToString());
+            string path = routePathTemplate
+                .IfNullOrEmpty($"{BuiltInContentTypeField.PrimaryField.DeveloperName}")
+                .Replace(
+                    $"{{{BuiltInContentTypeField.PrimaryField.DeveloperName}}}",
+                    primaryField.IfNullOrEmpty(entityId)
+                )
+                .Replace($"{{{BuiltInContentTypeField.Id.DeveloperName}}}", (ShortGuid)entityId)
+                .Replace("{ContentTypeDeveloperName}", contentType.DeveloperName)
+                .Replace("{CurrentYear}", DateTime.UtcNow.Year.ToString())
+                .Replace("{CurrentMonth}", DateTime.UtcNow.Month.ToString());
 
             path = path.ToUrlSlug().Truncate(200, string.Empty);
 
@@ -457,8 +576,11 @@ public class BeginImportContentItemsFromCsv
             return path;
         }
 
-        private async Task<MediaItem> DownloadAndSaveFile(string fileUrl, CancellationToken cancellationToken)
-        {          
+        private async Task<MediaItem> DownloadAndSaveFile(
+            string fileUrl,
+            CancellationToken cancellationToken
+        )
+        {
             if (!fileUrl.IsValidUriFormat())
                 throw new Exception($"Invalid url format: {fileUrl}");
 
@@ -468,8 +590,10 @@ public class BeginImportContentItemsFromCsv
                 throw new Exception($"Unable to retrieve file from {fileUrl}. Reason unknown.");
 
             if (!response.IsSuccessStatusCode)
-                throw new Exception($"Unable to retrieve file from {fileUrl}: {response.StatusCode} - {response.ReasonPhrase}");
-            
+                throw new Exception(
+                    $"Unable to retrieve file from {fileUrl}: {response.StatusCode} - {response.ReasonPhrase}"
+                );
+
             string fileName = Path.GetFileName(fileUrl);
             string contentType = response?.Content?.Headers?.ContentType?.ToString() ?? "Unknown";
             var memoryStream = new MemoryStream();
@@ -480,12 +604,23 @@ public class BeginImportContentItemsFromCsv
                 throw new Exception($"File size is 0 bytes or corrupted.");
 
             if (fileBytes.Length > _fileStorageProviderSettings.MaxFileSize)
-                throw new Exception($"File size of {fileUrl} is {fileBytes.Length}, which is greater than max file size of {_fileStorageProviderSettings.MaxFileSize}");
+                throw new Exception(
+                    $"File size of {fileUrl} is {fileBytes.Length}, which is greater than max file size of {_fileStorageProviderSettings.MaxFileSize}"
+                );
 
             var id = ShortGuid.NewGuid();
-            var objectKey = FileStorageUtility.CreateObjectKeyFromIdAndFileName(id.ToString(), fileName);
+            var objectKey = FileStorageUtility.CreateObjectKeyFromIdAndFileName(
+                id.ToString(),
+                fileName
+            );
 
-            await _fileStorageProvider.SaveAndGetDownloadUrlAsync(fileBytes, objectKey, fileName, contentType, DateTime.UtcNow.AddYears(999));
+            await _fileStorageProvider.SaveAndGetDownloadUrlAsync(
+                fileBytes,
+                objectKey,
+                fileName,
+                contentType,
+                DateTime.UtcNow.AddYears(999)
+            );
 
             var mediaItem = new MediaItem
             {
@@ -494,7 +629,7 @@ public class BeginImportContentItemsFromCsv
                 ContentType = contentType,
                 FileName = fileName,
                 FileStorageProvider = _fileStorageProvider.GetName(),
-                Length = fileBytes.Length
+                Length = fileBytes.Length,
             };
             _db.MediaItems.Add(mediaItem);
             await _db.SaveChangesAsync(cancellationToken);

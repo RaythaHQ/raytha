@@ -1,3 +1,4 @@
+using System.Threading.Tasks;
 using CSharpVitamins;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -7,24 +8,26 @@ using Raytha.Application.Users.Commands;
 using Raytha.Application.Users.Queries;
 using Raytha.Domain.Entities;
 using Raytha.Web.Authentication;
-using System.Threading.Tasks;
 
 namespace Raytha.Web.Areas.Api.Controllers.V1;
 
-[Authorize(Policy = RaythaApiAuthorizationHandler.POLICY_PREFIX + BuiltInSystemPermission.MANAGE_USERS_PERMISSION)]
+[Authorize(
+    Policy = RaythaApiAuthorizationHandler.POLICY_PREFIX
+        + BuiltInSystemPermission.MANAGE_USERS_PERMISSION
+)]
 public class UsersController : BaseController
 {
     [HttpGet("", Name = "GetUsers")]
     public async Task<ActionResult<IQueryResponseDto<ListResultDto<UserDto>>>> GetUsers(
-                                           [FromQuery] GetUsers.Query request)
+        [FromQuery] GetUsers.Query request
+    )
     {
         var response = await Mediator.Send(request) as QueryResponseDto<ListResultDto<UserDto>>;
         return response;
     }
 
     [HttpGet("{userId}", Name = "GetUserById")]
-    public async Task<ActionResult<IQueryResponseDto<UserDto>>> GetUserById(
-                                        string userId)
+    public async Task<ActionResult<IQueryResponseDto<UserDto>>> GetUserById(string userId)
     {
         var input = new GetUserById.Query { Id = userId };
         var response = await Mediator.Send(input) as QueryResponseDto<UserDto>;
@@ -33,7 +36,8 @@ public class UsersController : BaseController
 
     [HttpPost("", Name = "CreateUser")]
     public async Task<ActionResult<ICommandResponseDto<ShortGuid>>> CreateUser(
-                                        [FromBody] CreateUser.Command request)
+        [FromBody] CreateUser.Command request
+    )
     {
         var response = await Mediator.Send(request);
         if (!response.Success)
@@ -45,8 +49,9 @@ public class UsersController : BaseController
 
     [HttpPut("{userId}", Name = "EditUser")]
     public async Task<ActionResult<ICommandResponseDto<ShortGuid>>> EditUser(
-                                        string userId,
-                                        [FromBody] EditUser.Command request)
+        string userId,
+        [FromBody] EditUser.Command request
+    )
     {
         var input = request with { Id = userId };
         var response = await Mediator.Send(input);
@@ -58,8 +63,7 @@ public class UsersController : BaseController
     }
 
     [HttpDelete("{userId}", Name = "DeleteUser")]
-    public async Task<ActionResult<ICommandResponseDto<ShortGuid>>> DeleteUser(
-                                        string userId)
+    public async Task<ActionResult<ICommandResponseDto<ShortGuid>>> DeleteUser(string userId)
     {
         var input = new DeleteUser.Command { Id = userId };
         var response = await Mediator.Send(input);
@@ -72,15 +76,16 @@ public class UsersController : BaseController
 
     [HttpPut("{userId}/password", Name = "ResetPassword")]
     public async Task<ActionResult<ICommandResponseDto<ShortGuid>>> ResetPassword(
-                                        string userId,
-                                        [FromBody] ResetPassword_RequestModel request)
+        string userId,
+        [FromBody] ResetPassword_RequestModel request
+    )
     {
-        var input = new ResetPassword.Command 
-        { 
-            Id = userId, 
-            SendEmail = request.SendEmail, 
-            NewPassword = request.NewPassword, 
-            ConfirmNewPassword = request.NewPassword 
+        var input = new ResetPassword.Command
+        {
+            Id = userId,
+            SendEmail = request.SendEmail,
+            NewPassword = request.NewPassword,
+            ConfirmNewPassword = request.NewPassword,
         };
         var response = await Mediator.Send(input);
         if (!response.Success)
@@ -92,8 +97,9 @@ public class UsersController : BaseController
 
     [HttpPut("{userId}/is-active", Name = "SetIsActive")]
     public async Task<ActionResult<ICommandResponseDto<ShortGuid>>> SetIsActive(
-                                        string userId,
-                                        [FromBody] SetIsActive.Command request)
+        string userId,
+        [FromBody] SetIsActive.Command request
+    )
     {
         var input = request with { Id = userId };
         var response = await Mediator.Send(input);

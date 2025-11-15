@@ -9,22 +9,24 @@ namespace Raytha.Application.Login.Queries;
 
 public class GetUserForAuthenticationById
 {
-    public record Query : GetEntityByIdInputDto, IRequest<IQueryResponseDto<LoginDto>>
-    {
-    }
+    public record Query : GetEntityByIdInputDto, IRequest<IQueryResponseDto<LoginDto>> { }
 
     public class Handler : IRequestHandler<Query, IQueryResponseDto<LoginDto>>
     {
         private readonly IRaythaDbContext _db;
+
         public Handler(IRaythaDbContext db)
         {
             _db = db;
         }
-        
-        public async Task<IQueryResponseDto<LoginDto>> Handle(Query request, CancellationToken cancellationToken)
+
+        public async Task<IQueryResponseDto<LoginDto>> Handle(
+            Query request,
+            CancellationToken cancellationToken
+        )
         {
-            var entity = _db.Users
-                .Include(p => p.Roles)
+            var entity = _db
+                .Users.Include(p => p.Roles)
                 .ThenInclude(p => p.ContentTypeRolePermissions)
                 .ThenInclude(p => p.ContentType)
                 .Include(p => p.UserGroups)

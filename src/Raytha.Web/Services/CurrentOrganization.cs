@@ -1,4 +1,6 @@
-﻿using CSharpVitamins;
+﻿using System.Collections.Generic;
+using System.Linq;
+using CSharpVitamins;
 using MediatR;
 using Raytha.Application.AuthenticationSchemes;
 using Raytha.Application.AuthenticationSchemes.Queries;
@@ -10,8 +12,6 @@ using Raytha.Application.OrganizationSettings;
 using Raytha.Application.OrganizationSettings.Queries;
 using Raytha.Domain.Entities;
 using Raytha.Domain.ValueObjects;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace Raytha.Web.Services;
 
@@ -36,20 +36,26 @@ public class CurrentOrganization : ICurrentOrganization
         {
             if (_organizationSettings == null)
             {
-                var response = Mediator.Send(new GetOrganizationSettings.Query()).GetAwaiter().GetResult();
+                var response = Mediator
+                    .Send(new GetOrganizationSettings.Query())
+                    .GetAwaiter()
+                    .GetResult();
                 _organizationSettings = response.Result;
             }
             return _organizationSettings;
         }
     }
 
-    public IEnumerable<AuthenticationSchemeDto> AuthenticationSchemes 
-    { 
+    public IEnumerable<AuthenticationSchemeDto> AuthenticationSchemes
+    {
         get
         {
             if (_authenticationSchemes == null)
             {
-                var response = Mediator.Send(new GetAuthenticationSchemes.Query()).GetAwaiter().GetResult();
+                var response = Mediator
+                    .Send(new GetAuthenticationSchemes.Query())
+                    .GetAwaiter()
+                    .GetResult();
                 _authenticationSchemes = response.Result.Items;
             }
             return _authenticationSchemes;
@@ -62,19 +68,33 @@ public class CurrentOrganization : ICurrentOrganization
         {
             if (_contentTypes == null)
             {
-                var response = Mediator.Send(new GetContentTypes.Query
-                {
-                    OrderBy = $"{BuiltInContentTypeField.CreationTime.DeveloperName} {SortOrder.ASCENDING}",
-                }).GetAwaiter().GetResult();
+                var response = Mediator
+                    .Send(
+                        new GetContentTypes.Query
+                        {
+                            OrderBy =
+                                $"{BuiltInContentTypeField.CreationTime.DeveloperName} {SortOrder.ASCENDING}",
+                        }
+                    )
+                    .GetAwaiter()
+                    .GetResult();
                 _contentTypes = response.Result.Items;
             }
             return _contentTypes;
         }
     }
 
-    public bool EmailAndPasswordIsEnabledForAdmins => AuthenticationSchemes.Any(p => p.IsEnabledForAdmins && p.AuthenticationSchemeType.DeveloperName == AuthenticationSchemeType.EmailAndPassword);
-    public bool EmailAndPasswordIsEnabledForUsers => AuthenticationSchemes.Any(p => p.IsEnabledForUsers && p.AuthenticationSchemeType.DeveloperName == AuthenticationSchemeType.EmailAndPassword);
-    
+    public bool EmailAndPasswordIsEnabledForAdmins =>
+        AuthenticationSchemes.Any(p =>
+            p.IsEnabledForAdmins
+            && p.AuthenticationSchemeType.DeveloperName == AuthenticationSchemeType.EmailAndPassword
+        );
+    public bool EmailAndPasswordIsEnabledForUsers =>
+        AuthenticationSchemes.Any(p =>
+            p.IsEnabledForUsers
+            && p.AuthenticationSchemeType.DeveloperName == AuthenticationSchemeType.EmailAndPassword
+        );
+
     public bool InitialSetupComplete => OrganizationSettings != null;
 
     public string OrganizationName => OrganizationSettings.OrganizationName;
@@ -94,7 +114,8 @@ public class CurrentOrganization : ICurrentOrganization
     public string HomePageType => OrganizationSettings.HomePageType;
     public ShortGuid ActiveThemeId => OrganizationSettings.ActiveThemeId;
 
-    public OrganizationTimeZoneConverter TimeZoneConverter => OrganizationTimeZoneConverter.From(TimeZone, DateFormat);
+    public OrganizationTimeZoneConverter TimeZoneConverter =>
+        OrganizationTimeZoneConverter.From(TimeZone, DateFormat);
 
     public string PathBase => Configuration.PathBase;
     public string RedirectWebsite => Configuration.RedirectWebsite;

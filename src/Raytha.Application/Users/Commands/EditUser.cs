@@ -26,40 +26,50 @@ public class EditUser
             RuleFor(x => x.FirstName).NotEmpty();
             RuleFor(x => x.LastName).NotEmpty();
             RuleFor(x => x.EmailAddress).NotEmpty().EmailAddress();
-            RuleFor(x => x).Custom((request, context) =>
-            {
-                var entity = db.Users
-                    .FirstOrDefault(p => p.Id == request.Id.Guid);
-
-                if (entity == null)
-                    throw new NotFoundException("User", request.Id);
-
-                if (request.EmailAddress.ToLower() != entity.EmailAddress.ToLower())
-                {
-                    var emailAddressToCheck = request.EmailAddress.ToLower();
-                    var doesAnotherEmailExist = db.Users.Any(p => p.EmailAddress.ToLower() == emailAddressToCheck);
-                    if (doesAnotherEmailExist)
+            RuleFor(x => x)
+                .Custom(
+                    (request, context) =>
                     {
-                        context.AddFailure("EmailAddress", "Another user with this email address already exists");
-                        return;
+                        var entity = db.Users.FirstOrDefault(p => p.Id == request.Id.Guid);
+
+                        if (entity == null)
+                            throw new NotFoundException("User", request.Id);
+
+                        if (request.EmailAddress.ToLower() != entity.EmailAddress.ToLower())
+                        {
+                            var emailAddressToCheck = request.EmailAddress.ToLower();
+                            var doesAnotherEmailExist = db.Users.Any(p =>
+                                p.EmailAddress.ToLower() == emailAddressToCheck
+                            );
+                            if (doesAnotherEmailExist)
+                            {
+                                context.AddFailure(
+                                    "EmailAddress",
+                                    "Another user with this email address already exists"
+                                );
+                                return;
+                            }
+                        }
                     }
-                }
-            });
+                );
         }
     }
 
     public class Handler : IRequestHandler<Command, CommandResponseDto<ShortGuid>>
     {
         private readonly IRaythaDbContext _db;
+
         public Handler(IRaythaDbContext db)
         {
             _db = db;
         }
-        public async Task<CommandResponseDto<ShortGuid>> Handle(Command request, CancellationToken cancellationToken)
+
+        public async Task<CommandResponseDto<ShortGuid>> Handle(
+            Command request,
+            CancellationToken cancellationToken
+        )
         {
-            var entity = _db.Users
-                    .Include(p => p.UserGroups)
-                    .First(p => p.Id == request.Id.Guid);
+            var entity = _db.Users.Include(p => p.UserGroups).First(p => p.Id == request.Id.Guid);
 
             //do not allow modifications to these elements of admins. (they should use admins screens)
             if (!entity.IsAdmin)
@@ -69,12 +79,13 @@ public class EditUser
                 entity.EmailAddress = request.EmailAddress;
             }
 
-            if (entity.UserGroups == null) 
+            if (entity.UserGroups == null)
             {
                 entity.UserGroups = new List<UserGroup>();
             }
 
-            var newUserGroups = request.UserGroups != null ? request.UserGroups : new List<ShortGuid>();
+            var newUserGroups =
+                request.UserGroups != null ? request.UserGroups : new List<ShortGuid>();
 
             var currentUserGroupIds = entity.UserGroups.Select(p => (ShortGuid)p.Id);
 
@@ -89,7 +100,9 @@ public class EditUser
 
             foreach (var userGroupToDeleteId in userGroupsToDeleteIds)
             {
-                entity.UserGroups.Remove(entity.UserGroups.First(p => p.Id == userGroupToDeleteId.Guid));
+                entity.UserGroups.Remove(
+                    entity.UserGroups.First(p => p.Id == userGroupToDeleteId.Guid)
+                );
             }
 
             await _db.SaveChangesAsync(cancellationToken);

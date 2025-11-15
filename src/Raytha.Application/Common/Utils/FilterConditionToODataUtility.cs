@@ -1,7 +1,7 @@
-﻿using Raytha.Domain.Entities;
+﻿using System.Text;
+using Raytha.Domain.Entities;
 using Raytha.Domain.ValueObjects;
 using Raytha.Domain.ValueObjects.FieldTypes;
-using System.Text;
 
 namespace Raytha.Application.Common.Utils;
 
@@ -31,9 +31,14 @@ public class FilterConditionToODataUtility
             List<string> oDataSubtrees = new List<string>();
             foreach (var child in children)
             {
-                oDataSubtrees.Add(BuildODataFilter(children.ToList().Where(p => p.ParentId == child.Id), child));
+                oDataSubtrees.Add(
+                    BuildODataFilter(children.ToList().Where(p => p.ParentId == child.Id), child)
+                );
             }
-            string joinedSubtrees = string.Join($" {current.GroupOperator} ", oDataSubtrees.Where(p => !string.IsNullOrEmpty(p)));
+            string joinedSubtrees = string.Join(
+                $" {current.GroupOperator} ",
+                oDataSubtrees.Where(p => !string.IsNullOrEmpty(p))
+            );
             if (!string.IsNullOrEmpty(joinedSubtrees))
                 return $"({joinedSubtrees})";
             else
@@ -54,77 +59,125 @@ public class FilterConditionToODataUtility
     private string TranslateToODataExpression(FilterCondition condition)
     {
         StringBuilder expression = new StringBuilder();
-        var chosenColumnAsCustomField = _contentType.ContentTypeFields.FirstOrDefault(p => p.DeveloperName == condition.Field);
+        var chosenColumnAsCustomField = _contentType.ContentTypeFields.FirstOrDefault(p =>
+            p.DeveloperName == condition.Field
+        );
 
         if (condition.ConditionOperator.DeveloperName == ConditionOperator.IS_EMPTY)
         {
-            if (chosenColumnAsCustomField != null && chosenColumnAsCustomField.FieldType.DeveloperName == BaseFieldType.MultipleSelect)
+            if (
+                chosenColumnAsCustomField != null
+                && chosenColumnAsCustomField.FieldType.DeveloperName == BaseFieldType.MultipleSelect
+            )
             {
                 expression.Append($"{ConditionOperator.CONTAINS}({condition.Field}, '[]')");
             }
-            else if (chosenColumnAsCustomField != null && chosenColumnAsCustomField.FieldType.DeveloperName == BaseFieldType.Number)
+            else if (
+                chosenColumnAsCustomField != null
+                && chosenColumnAsCustomField.FieldType.DeveloperName == BaseFieldType.Number
+            )
             {
                 expression.Append($"{condition.Field} {ConditionOperator.EQUALS} null");
             }
-            else if (chosenColumnAsCustomField != null && chosenColumnAsCustomField.FieldType.DeveloperName == BaseFieldType.Date)
+            else if (
+                chosenColumnAsCustomField != null
+                && chosenColumnAsCustomField.FieldType.DeveloperName == BaseFieldType.Date
+            )
             {
                 expression.Append($"{condition.Field} {ConditionOperator.EQUALS} null");
             }
-            else if (condition.Field == BuiltInContentTypeField.CreationTime || condition.Field == BuiltInContentTypeField.LastModificationTime)
+            else if (
+                condition.Field == BuiltInContentTypeField.CreationTime
+                || condition.Field == BuiltInContentTypeField.LastModificationTime
+            )
             {
                 expression.Append($"{condition.Field} {ConditionOperator.EQUALS} null");
             }
             else
             {
-                expression.Append($"{condition.Field} {ConditionOperator.EQUALS} '' {BooleanOperator.OR} {condition.Field} {ConditionOperator.EQUALS} null");
+                expression.Append(
+                    $"{condition.Field} {ConditionOperator.EQUALS} '' {BooleanOperator.OR} {condition.Field} {ConditionOperator.EQUALS} null"
+                );
             }
         }
         else if (condition.ConditionOperator.DeveloperName == ConditionOperator.IS_NOT_EMPTY)
         {
-            if (chosenColumnAsCustomField != null && chosenColumnAsCustomField.FieldType.DeveloperName == BaseFieldType.MultipleSelect)
+            if (
+                chosenColumnAsCustomField != null
+                && chosenColumnAsCustomField.FieldType.DeveloperName == BaseFieldType.MultipleSelect
+            )
             {
                 expression.Append($"not {ConditionOperator.CONTAINS}({condition.Field}, '[]')");
             }
-            else if (chosenColumnAsCustomField != null && chosenColumnAsCustomField.FieldType.DeveloperName == BaseFieldType.Number)
+            else if (
+                chosenColumnAsCustomField != null
+                && chosenColumnAsCustomField.FieldType.DeveloperName == BaseFieldType.Number
+            )
             {
                 expression.Append($"{condition.Field} {ConditionOperator.NOT_EQUALS} null");
             }
-            else if (chosenColumnAsCustomField != null && chosenColumnAsCustomField.FieldType.DeveloperName == BaseFieldType.Date)
+            else if (
+                chosenColumnAsCustomField != null
+                && chosenColumnAsCustomField.FieldType.DeveloperName == BaseFieldType.Date
+            )
             {
                 expression.Append($"{condition.Field} {ConditionOperator.NOT_EQUALS} null");
             }
-            else if (condition.Field == BuiltInContentTypeField.CreationTime || condition.Field == BuiltInContentTypeField.LastModificationTime)
+            else if (
+                condition.Field == BuiltInContentTypeField.CreationTime
+                || condition.Field == BuiltInContentTypeField.LastModificationTime
+            )
             {
                 expression.Append($"{condition.Field} {ConditionOperator.NOT_EQUALS} null");
             }
             else
             {
-                expression.Append($"({condition.Field} {ConditionOperator.NOT_EQUALS} '' {BooleanOperator.AND} {condition.Field} {ConditionOperator.NOT_EQUALS} null)");
+                expression.Append(
+                    $"({condition.Field} {ConditionOperator.NOT_EQUALS} '' {BooleanOperator.AND} {condition.Field} {ConditionOperator.NOT_EQUALS} null)"
+                );
             }
         }
-        else if (condition.ConditionOperator.DeveloperName == ConditionOperator.CONTAINS || condition.ConditionOperator.DeveloperName == ConditionOperator.HAS)
+        else if (
+            condition.ConditionOperator.DeveloperName == ConditionOperator.CONTAINS
+            || condition.ConditionOperator.DeveloperName == ConditionOperator.HAS
+        )
         {
-            expression.Append($"{ConditionOperator.CONTAINS}({condition.Field}, '{condition.Value}')");
+            expression.Append(
+                $"{ConditionOperator.CONTAINS}({condition.Field}, '{condition.Value}')"
+            );
         }
-        else if (condition.ConditionOperator.DeveloperName == ConditionOperator.NOT_CONTAINS || condition.ConditionOperator.DeveloperName == ConditionOperator.NOT_HAS)
+        else if (
+            condition.ConditionOperator.DeveloperName == ConditionOperator.NOT_CONTAINS
+            || condition.ConditionOperator.DeveloperName == ConditionOperator.NOT_HAS
+        )
         {
-            expression.Append($"not {ConditionOperator.CONTAINS}({condition.Field}, '{condition.Value}')");
+            expression.Append(
+                $"not {ConditionOperator.CONTAINS}({condition.Field}, '{condition.Value}')"
+            );
         }
         else if (condition.ConditionOperator.DeveloperName == ConditionOperator.STARTS_WITH)
         {
-            expression.Append($"{ConditionOperator.STARTS_WITH}({condition.Field}, '{condition.Value}')");
+            expression.Append(
+                $"{ConditionOperator.STARTS_WITH}({condition.Field}, '{condition.Value}')"
+            );
         }
         else if (condition.ConditionOperator.DeveloperName == ConditionOperator.NOT_STARTS_WITH)
         {
-            expression.Append($"not {ConditionOperator.STARTS_WITH}({condition.Field}, '{condition.Value}')");
+            expression.Append(
+                $"not {ConditionOperator.STARTS_WITH}({condition.Field}, '{condition.Value}')"
+            );
         }
         else if (condition.ConditionOperator.DeveloperName == ConditionOperator.ENDS_WITH)
         {
-            expression.Append($"{ConditionOperator.ENDS_WITH}({condition.Field}, '{condition.Value}')");
+            expression.Append(
+                $"{ConditionOperator.ENDS_WITH}({condition.Field}, '{condition.Value}')"
+            );
         }
         else if (condition.ConditionOperator.DeveloperName == ConditionOperator.NOT_ENDS_WITH)
         {
-            expression.Append($"not {ConditionOperator.ENDS_WITH}({condition.Field}, '{condition.Value}')");
+            expression.Append(
+                $"not {ConditionOperator.ENDS_WITH}({condition.Field}, '{condition.Value}')"
+            );
         }
         else if (condition.ConditionOperator.DeveloperName == ConditionOperator.IS_TRUE)
         {
@@ -138,17 +191,26 @@ public class FilterConditionToODataUtility
         {
             if (condition.Field == BuiltInContentTypeField.Id)
             {
-                expression.Append($"{condition.Field} {condition.ConditionOperator} 'guid_{condition.Value}'");
+                expression.Append(
+                    $"{condition.Field} {condition.ConditionOperator} 'guid_{condition.Value}'"
+                );
             }
             else
             {
-                if (chosenColumnAsCustomField != null && chosenColumnAsCustomField.FieldType.DeveloperName == BaseFieldType.Number)
+                if (
+                    chosenColumnAsCustomField != null
+                    && chosenColumnAsCustomField.FieldType.DeveloperName == BaseFieldType.Number
+                )
                 {
-                    expression.Append($"{condition.Field} {condition.ConditionOperator} {condition.Value}");
+                    expression.Append(
+                        $"{condition.Field} {condition.ConditionOperator} {condition.Value}"
+                    );
                 }
                 else
                 {
-                    expression.Append($"{condition.Field} {condition.ConditionOperator} '{condition.Value}'");
+                    expression.Append(
+                        $"{condition.Field} {condition.ConditionOperator} '{condition.Value}'"
+                    );
                 }
             }
         }

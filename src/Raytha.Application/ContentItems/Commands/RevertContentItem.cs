@@ -10,44 +10,51 @@ namespace Raytha.Application.ContentItems.Commands;
 
 public class RevertContentItem
 {
-    public record Command : LoggableEntityRequest<CommandResponseDto<ShortGuid>>
-    {
-    }
+    public record Command : LoggableEntityRequest<CommandResponseDto<ShortGuid>> { }
 
     public class Handler : IRequestHandler<Command, CommandResponseDto<ShortGuid>>
     {
         private readonly IRaythaDbContext _db;
         private readonly IContentTypeInRoutePath _contentTypeInRoutePath;
+
         public Handler(IRaythaDbContext db, IContentTypeInRoutePath contentTypeInRoutePath)
         {
             _db = db;
             _contentTypeInRoutePath = contentTypeInRoutePath;
         }
-        public async Task<CommandResponseDto<ShortGuid>> Handle(Command request, CancellationToken cancellationToken)
+
+        public async Task<CommandResponseDto<ShortGuid>> Handle(
+            Command request,
+            CancellationToken cancellationToken
+        )
         {
-            var entity = _db.ContentItemRevisions
-                .Include(p => p.ContentItem)
+            var entity = _db
+                .ContentItemRevisions.Include(p => p.ContentItem)
                 .FirstOrDefault(p => p.Id == request.Id.Guid);
 
             if (entity == null)
                 throw new NotFoundException("Content Item Revision", request.Id);
 
-            var contentItem = _db.ContentItems
-                .Include(p => p.ContentType)
+            var contentItem = _db
+                .ContentItems.Include(p => p.ContentType)
                 .FirstOrDefault(p => p.Id == entity.ContentItemId);
 
             if (contentItem == null)
                 throw new BusinessException($"Content item is null {entity.ContentItemId}");
 
-            _contentTypeInRoutePath.ValidateContentTypeInRoutePathMatchesValue(contentItem.ContentType.DeveloperName);
+            _contentTypeInRoutePath.ValidateContentTypeInRoutePathMatchesValue(
+                contentItem.ContentType.DeveloperName
+            );
 
             if (!contentItem.IsDraft)
             {
-                _db.ContentItemRevisions.Add(new ContentItemRevision
-                {
-                    ContentItemId = entity.ContentItemId,
-                    PublishedContent = entity.PublishedContent
-                });
+                _db.ContentItemRevisions.Add(
+                    new ContentItemRevision
+                    {
+                        ContentItemId = entity.ContentItemId,
+                        PublishedContent = entity.PublishedContent,
+                    }
+                );
                 contentItem.PublishedContent = entity.PublishedContent;
             }
 

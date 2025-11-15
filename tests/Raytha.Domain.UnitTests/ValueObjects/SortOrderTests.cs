@@ -45,8 +45,10 @@ public class SortOrderTests
     [Test]
     public void ShouldThrowUnsupportedColourExceptionGivenNotSupportedColourCode()
     {
-        FluentActions.Invoking(() => SortOrder.From("BadValue"))
-            .Should().Throw<SortOrderNotFoundException>();
+        FluentActions
+            .Invoking(() => SortOrder.From("BadValue"))
+            .Should()
+            .Throw<SortOrderNotFoundException>();
     }
 
     [Test]

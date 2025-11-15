@@ -1,15 +1,17 @@
-﻿using Raytha.Application.Common.Interfaces;
+﻿using System.Text.Json;
+using System.Text.Json.Serialization;
+using Raytha.Application.Common.Interfaces;
 using Raytha.Domain.Entities;
 using Raytha.Domain.JsonConverters;
-using System.Text.Json;
-using System.Text.Json.Serialization;
 
 namespace Raytha.Infrastructure.BackgroundTasks;
+
 public class BackgroundTaskQueue : IBackgroundTaskQueue
 {
     static readonly object _lockObject = new object();
     private readonly IRaythaDbContext _db;
     private readonly IBackgroundTaskDb _backgroundTaskDb;
+
     public BackgroundTaskQueue(IRaythaDbContext db, IBackgroundTaskDb backgroundTaskDb)
     {
         _db = db;
@@ -20,29 +22,30 @@ public class BackgroundTaskQueue : IBackgroundTaskQueue
     {
         Guid jobId = Guid.NewGuid();
 
-        _db.BackgroundTasks.Add(new BackgroundTask
-        {
-            Id = jobId,
-            Name = typeof(T).AssemblyQualifiedName,
-            Args = JsonSerializer.Serialize(args, new JsonSerializerOptions
+        _db.BackgroundTasks.Add(
+            new BackgroundTask
             {
-                ReferenceHandler = ReferenceHandler.IgnoreCycles,
-                Converters =
-                {
-                    new ShortGuidConverter()
-                }
-            })
-        });
+                Id = jobId,
+                Name = typeof(T).AssemblyQualifiedName,
+                Args = JsonSerializer.Serialize(
+                    args,
+                    new JsonSerializerOptions
+                    {
+                        ReferenceHandler = ReferenceHandler.IgnoreCycles,
+                        Converters = { new ShortGuidConverter() },
+                    }
+                ),
+            }
+        );
 
         await _db.SaveChangesAsync(cancellationToken);
 
         return jobId;
     }
 
-    public async ValueTask<BackgroundTask> DequeueAsync(
-        CancellationToken cancellationToken)
+    public async ValueTask<BackgroundTask> DequeueAsync(CancellationToken cancellationToken)
     {
-        lock(_lockObject)
+        lock (_lockObject)
         {
             try
             {

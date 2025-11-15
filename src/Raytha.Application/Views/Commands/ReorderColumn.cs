@@ -1,4 +1,5 @@
-﻿using CSharpVitamins;
+﻿using System.Collections.ObjectModel;
+using CSharpVitamins;
 using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
@@ -8,7 +9,6 @@ using Raytha.Application.Common.Models;
 using Raytha.Application.Common.Utils;
 using Raytha.Domain.Entities;
 using Raytha.Domain.Exceptions;
-using System.Collections.ObjectModel;
 
 namespace Raytha.Application.Views.Commands;
 
@@ -24,44 +24,57 @@ public class ReorderColumn
     {
         public Validator(IRaythaDbContext db)
         {
-            RuleFor(x => x).Custom((request, context) =>
-            {
-                var entity = db.Views
-                    .Include(p => p.ContentType)
-                    .ThenInclude(c => c.ContentTypeFields)
-                    .FirstOrDefault(p => p.Id == request.Id.Guid);
-
-                if (entity == null)
-                    throw new NotFoundException("View", request.Id);
-
-                try
-                {
-                    BuiltInContentTypeField.From(request.DeveloperName);
-                } 
-                catch (ReservedContentTypeFieldNotFoundException)
-                {
-                    var exists = entity.ContentType.ContentTypeFields.Any(p => p.DeveloperName == request.DeveloperName);
-                    if (!exists)
+            RuleFor(x => x)
+                .Custom(
+                    (request, context) =>
                     {
-                        context.AddFailure(Constants.VALIDATION_SUMMARY, $"Developer name not recognized: {request.DeveloperName}");
-                        return;
+                        var entity = db
+                            .Views.Include(p => p.ContentType)
+                            .ThenInclude(c => c.ContentTypeFields)
+                            .FirstOrDefault(p => p.Id == request.Id.Guid);
+
+                        if (entity == null)
+                            throw new NotFoundException("View", request.Id);
+
+                        try
+                        {
+                            BuiltInContentTypeField.From(request.DeveloperName);
+                        }
+                        catch (ReservedContentTypeFieldNotFoundException)
+                        {
+                            var exists = entity.ContentType.ContentTypeFields.Any(p =>
+                                p.DeveloperName == request.DeveloperName
+                            );
+                            if (!exists)
+                            {
+                                context.AddFailure(
+                                    Constants.VALIDATION_SUMMARY,
+                                    $"Developer name not recognized: {request.DeveloperName}"
+                                );
+                                return;
+                            }
+                        }
                     }
-                }
-            });
+                );
         }
     }
 
     public class Handler : IRequestHandler<Command, CommandResponseDto<ShortGuid>>
     {
         private readonly IRaythaDbContext _db;
+
         public Handler(IRaythaDbContext db)
         {
             _db = db;
         }
-        public async Task<CommandResponseDto<ShortGuid>> Handle(Command request, CancellationToken cancellationToken)
+
+        public async Task<CommandResponseDto<ShortGuid>> Handle(
+            Command request,
+            CancellationToken cancellationToken
+        )
         {
-            var entity = _db.Views
-                .Include(p => p.ContentType)
+            var entity = _db
+                .Views.Include(p => p.ContentType)
                 .ThenInclude(c => c.ContentTypeFields)
                 .First(p => p.Id == request.Id.Guid);
 
@@ -70,11 +83,13 @@ public class ReorderColumn
             var columns = entity.Columns.ToList();
             int originalColumnOrder = columns.IndexOf(developerName);
             var newColumnOrder = request.NewFieldOrder - 1; //convert to 0-index
-            
+
             if (originalColumnOrder == -1 || originalColumnOrder == newColumnOrder)
                 return new CommandResponseDto<ShortGuid>(entity.Id);
 
-            ObservableCollection<string> columnsAsMovable = new ObservableCollection<string>(columns);
+            ObservableCollection<string> columnsAsMovable = new ObservableCollection<string>(
+                columns
+            );
             columnsAsMovable.Move(originalColumnOrder, newColumnOrder);
             entity.Columns = columnsAsMovable;
 

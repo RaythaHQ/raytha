@@ -1,15 +1,15 @@
-﻿using CSharpVitamins;
+﻿using System.Dynamic;
+using System.Text.Json.Serialization;
+using CSharpVitamins;
 using FluentValidation;
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Models;
 using Raytha.Application.Common.Utils;
 using Raytha.Domain.Entities;
 using Raytha.Domain.ValueObjects;
 using Raytha.Domain.ValueObjects.FieldTypes;
-using System.Dynamic;
-using System.Text.Json.Serialization;
-using Microsoft.EntityFrameworkCore;
 
 namespace Raytha.Application.OrganizationSettings.Commands;
 
@@ -52,12 +52,20 @@ public class InitialSetup
             RuleFor(x => x.SuperAdminEmailAddress).EmailAddress();
             RuleFor(x => x.FirstName).NotEmpty();
             RuleFor(x => x.LastName).NotEmpty();
-            RuleFor(x => x.SmtpHost).NotEmpty().When(p => emailerConfiguration.IsMissingSmtpEnvVars());
-            RuleFor(x => x.SmtpPort).NotNull().GreaterThan(0).LessThanOrEqualTo(65535).When(p => emailerConfiguration.IsMissingSmtpEnvVars());
+            RuleFor(x => x.SmtpHost)
+                .NotEmpty()
+                .When(p => emailerConfiguration.IsMissingSmtpEnvVars());
+            RuleFor(x => x.SmtpPort)
+                .NotNull()
+                .GreaterThan(0)
+                .LessThanOrEqualTo(65535)
+                .When(p => emailerConfiguration.IsMissingSmtpEnvVars());
             RuleFor(x => x.OrganizationName).NotEmpty();
-            RuleFor(x => x.TimeZone).Must(DateTimeExtensions.IsValidTimeZone)
+            RuleFor(x => x.TimeZone)
+                .Must(DateTimeExtensions.IsValidTimeZone)
                 .WithMessage(p => $"{p.TimeZone} timezone is unrecognized.");
-            RuleFor(x => x.WebsiteUrl).Must(StringExtensions.IsValidUriFormat)
+            RuleFor(x => x.WebsiteUrl)
+                .Must(StringExtensions.IsValidUriFormat)
                 .WithMessage(p => $"{p.WebsiteUrl} must be a valid URI format.");
             RuleFor(x => x.SmtpDefaultFromAddress).EmailAddress();
             RuleFor(x => x.SmtpDefaultFromName).NotEmpty();
@@ -94,25 +102,33 @@ public class InitialSetup
         private readonly IEmailerConfiguration _emailerConfiguration;
         private readonly IFileStorageProvider _fileStorageProvider;
 
-        public Handler(IRaythaDbContext db, IEmailerConfiguration emailerConfiguration, IFileStorageProvider fileStorageProvider)
+        public Handler(
+            IRaythaDbContext db,
+            IEmailerConfiguration emailerConfiguration,
+            IFileStorageProvider fileStorageProvider
+        )
         {
             _db = db;
             _emailerConfiguration = emailerConfiguration;
             _fileStorageProvider = fileStorageProvider;
         }
 
-        public async Task<CommandResponseDto<ShortGuid>> Handle(Command request, CancellationToken cancellationToken)
+        public async Task<CommandResponseDto<ShortGuid>> Handle(
+            Command request,
+            CancellationToken cancellationToken
+        )
         {
-            var defaultThemeId = await _db.Themes
-                .Select(t => t.Id)
-                .FirstAsync(cancellationToken);
+            var defaultThemeId = await _db.Themes.Select(t => t.Id).FirstAsync(cancellationToken);
 
             InsertOrganizationSettings(request, defaultThemeId);
             InsertDefaultContentTypes();
             InsertDefaultContentTypeFields();
             InsertDefaultRolesAndSuperAdmin(request);
 
-            var mediaItemObjectKeys = await InsertDefaultThemeAssetsToFileStorage(cancellationToken, defaultThemeId);
+            var mediaItemObjectKeys = await InsertDefaultThemeAssetsToFileStorage(
+                cancellationToken,
+                defaultThemeId
+            );
             InsertDefaultWebTemplates(mediaItemObjectKeys, defaultThemeId);
             InsertDefaultEmailTemplates();
             InsertDefaultAuthentications();
@@ -160,10 +176,18 @@ public class InitialSetup
                 SystemPermissions = BuiltInRole.SuperAdmin.DefaultSystemPermission,
                 ContentTypeRolePermissions = new List<ContentTypeRolePermission>
                 {
-                    new ContentTypeRolePermission { ContentTypeId = pageTypeGuid, ContentTypePermissions = BuiltInContentTypePermission.AllPermissionsAsEnum },
-                    new ContentTypeRolePermission { ContentTypeId = postTypeGuid, ContentTypePermissions = BuiltInContentTypePermission.AllPermissionsAsEnum }
+                    new ContentTypeRolePermission
+                    {
+                        ContentTypeId = pageTypeGuid,
+                        ContentTypePermissions = BuiltInContentTypePermission.AllPermissionsAsEnum,
+                    },
+                    new ContentTypeRolePermission
+                    {
+                        ContentTypeId = postTypeGuid,
+                        ContentTypePermissions = BuiltInContentTypePermission.AllPermissionsAsEnum,
+                    },
                 },
-                CreationTime = DateTime.UtcNow
+                CreationTime = DateTime.UtcNow,
             };
             roles.Add(superAdminRole);
             Role adminRole = new Role
@@ -174,10 +198,18 @@ public class InitialSetup
                 SystemPermissions = BuiltInRole.Admin.DefaultSystemPermission,
                 ContentTypeRolePermissions = new List<ContentTypeRolePermission>
                 {
-                    new ContentTypeRolePermission { ContentTypeId = pageTypeGuid, ContentTypePermissions = BuiltInContentTypePermission.AllPermissionsAsEnum },
-                    new ContentTypeRolePermission { ContentTypeId = postTypeGuid, ContentTypePermissions = BuiltInContentTypePermission.AllPermissionsAsEnum }
+                    new ContentTypeRolePermission
+                    {
+                        ContentTypeId = pageTypeGuid,
+                        ContentTypePermissions = BuiltInContentTypePermission.AllPermissionsAsEnum,
+                    },
+                    new ContentTypeRolePermission
+                    {
+                        ContentTypeId = postTypeGuid,
+                        ContentTypePermissions = BuiltInContentTypePermission.AllPermissionsAsEnum,
+                    },
                 },
-                CreationTime = DateTime.UtcNow
+                CreationTime = DateTime.UtcNow,
             };
             roles.Add(adminRole);
             Role editorRole = new Role
@@ -188,10 +220,18 @@ public class InitialSetup
                 SystemPermissions = BuiltInRole.Editor.DefaultSystemPermission,
                 ContentTypeRolePermissions = new List<ContentTypeRolePermission>
                 {
-                    new ContentTypeRolePermission { ContentTypeId = pageTypeGuid, ContentTypePermissions = BuiltInContentTypePermission.AllPermissionsAsEnum },
-                    new ContentTypeRolePermission { ContentTypeId = postTypeGuid, ContentTypePermissions = BuiltInContentTypePermission.AllPermissionsAsEnum }
+                    new ContentTypeRolePermission
+                    {
+                        ContentTypeId = pageTypeGuid,
+                        ContentTypePermissions = BuiltInContentTypePermission.AllPermissionsAsEnum,
+                    },
+                    new ContentTypeRolePermission
+                    {
+                        ContentTypeId = postTypeGuid,
+                        ContentTypePermissions = BuiltInContentTypePermission.AllPermissionsAsEnum,
+                    },
                 },
-                CreationTime = DateTime.UtcNow
+                CreationTime = DateTime.UtcNow,
             };
             roles.Add(editorRole);
 
@@ -205,7 +245,7 @@ public class InitialSetup
                 Salt = salt,
                 PasswordHash = PasswordUtility.Hash(request.SuperAdminPassword, salt),
                 IsActive = true,
-                IsAdmin = true
+                IsAdmin = true,
             };
             _db.Users.Add(superAdmin);
         }
@@ -219,7 +259,7 @@ public class InitialSetup
                 DeveloperName = TITLE_FIELD_DEVELOPER_NAME,
                 ContentTypeId = pageTypeGuid,
                 FieldOrder = 1,
-                FieldType = BaseFieldType.SingleLineText
+                FieldType = BaseFieldType.SingleLineText,
             };
             _db.ContentTypeFields.Add(titlePageField);
 
@@ -230,7 +270,7 @@ public class InitialSetup
                 DeveloperName = CONTENT_FIELD_DEVELOPER_NAME,
                 ContentTypeId = pageTypeGuid,
                 FieldOrder = 2,
-                FieldType = BaseFieldType.Wysiwyg
+                FieldType = BaseFieldType.Wysiwyg,
             };
             _db.ContentTypeFields.Add(contentPageField);
 
@@ -241,7 +281,7 @@ public class InitialSetup
                 DeveloperName = TITLE_FIELD_DEVELOPER_NAME,
                 ContentTypeId = postTypeGuid,
                 FieldOrder = 1,
-                FieldType = BaseFieldType.SingleLineText
+                FieldType = BaseFieldType.SingleLineText,
             };
             _db.ContentTypeFields.Add(titlePostField);
 
@@ -252,7 +292,7 @@ public class InitialSetup
                 DeveloperName = CONTENT_FIELD_DEVELOPER_NAME,
                 ContentTypeId = postTypeGuid,
                 FieldOrder = 2,
-                FieldType = BaseFieldType.Wysiwyg
+                FieldType = BaseFieldType.Wysiwyg,
             };
             _db.ContentTypeFields.Add(contentPostField);
         }
@@ -267,7 +307,7 @@ public class InitialSetup
                 DeveloperName = PAGES_DEVELOPER_NAME,
                 IsActive = true,
                 IsDeleted = false,
-                DefaultRouteTemplate = "{PrimaryField}"
+                DefaultRouteTemplate = "{PrimaryField}",
             };
             _db.ContentTypes.Add(pageContentType);
 
@@ -279,30 +319,59 @@ public class InitialSetup
                 DeveloperName = POSTS_DEVELOPER_NAME,
                 IsActive = true,
                 IsDeleted = false,
-                DefaultRouteTemplate = "{CurrentYear}/{CurrentMonth}/{PrimaryField}"
+                DefaultRouteTemplate = "{CurrentYear}/{CurrentMonth}/{PrimaryField}",
             };
             _db.ContentTypes.Add(postContentType);
         }
 
-        protected async Task<IReadOnlyCollection<MediaItem>> InsertDefaultThemeAssetsToFileStorage(CancellationToken cancellationToken, Guid defaultThemeId)
+        protected async Task<IReadOnlyCollection<MediaItem>> InsertDefaultThemeAssetsToFileStorage(
+            CancellationToken cancellationToken,
+            Guid defaultThemeId
+        )
         {
             var mediaItems = new List<MediaItem>();
             var themeAccessToMediaItems = new List<ThemeAccessToMediaItem>();
 
-            var defaultThemeAssetsPath = Path.Combine("wwwroot", DEFAULT_THEME_DEVELOPER_NAME, "assets");
+            var defaultThemeAssetsPath = Path.Combine(
+                "wwwroot",
+                DEFAULT_THEME_DEVELOPER_NAME,
+                "assets"
+            );
             if (!Directory.Exists(defaultThemeAssetsPath))
-                throw new DirectoryNotFoundException($"Path '{defaultThemeAssetsPath}' does not exist.");
+                throw new DirectoryNotFoundException(
+                    $"Path '{defaultThemeAssetsPath}' does not exist."
+                );
 
-            var themeFiles = Directory.GetFiles(defaultThemeAssetsPath, "*", SearchOption.AllDirectories);
+            var themeFiles = Directory.GetFiles(
+                defaultThemeAssetsPath,
+                "*",
+                SearchOption.AllDirectories
+            );
+
+            // Filter out compressed files (.br, .gz) that are generated during build/publish
+            var excludedExtensions = new[] { ".br", ".gz" };
+            themeFiles = themeFiles
+                .Where(f => !excludedExtensions.Contains(Path.GetExtension(f)))
+                .ToArray();
+
             foreach (var file in themeFiles)
             {
                 var idForKey = ShortGuid.NewGuid();
                 var fileName = Path.GetFileName(file);
                 var data = await File.ReadAllBytesAsync(file, cancellationToken);
-                var objectKey = FileStorageUtility.CreateObjectKeyFromIdAndFileName(idForKey, fileName);
+                var objectKey = FileStorageUtility.CreateObjectKeyFromIdAndFileName(
+                    idForKey,
+                    fileName
+                );
                 var contentType = FileStorageUtility.GetMimeType(fileName);
 
-                await _fileStorageProvider.SaveAndGetDownloadUrlAsync(data, objectKey, fileName, contentType, FileStorageUtility.GetDefaultExpiry());
+                await _fileStorageProvider.SaveAndGetDownloadUrlAsync(
+                    data,
+                    objectKey,
+                    fileName,
+                    contentType,
+                    FileStorageUtility.GetDefaultExpiry()
+                );
 
                 var mediaItem = new MediaItem
                 {
@@ -316,12 +385,14 @@ public class InitialSetup
 
                 mediaItems.Add(mediaItem);
 
-                themeAccessToMediaItems.Add(new ThemeAccessToMediaItem
-                {
-                    Id = Guid.NewGuid(),
-                    ThemeId = defaultThemeId,
-                    MediaItemId = idForKey.Guid,
-                });
+                themeAccessToMediaItems.Add(
+                    new ThemeAccessToMediaItem
+                    {
+                        Id = Guid.NewGuid(),
+                        ThemeId = defaultThemeId,
+                        MediaItemId = idForKey.Guid,
+                    }
+                );
             }
 
             _db.MediaItems.AddRange(mediaItems);
@@ -330,7 +401,10 @@ public class InitialSetup
             return mediaItems;
         }
 
-        protected void InsertDefaultWebTemplates(IReadOnlyCollection<MediaItem> mediaItems, Guid defaultThemeId)
+        protected void InsertDefaultWebTemplates(
+            IReadOnlyCollection<MediaItem> mediaItems,
+            Guid defaultThemeId
+        )
         {
             var baseLayoutFileNames = new[]
             {
@@ -356,7 +430,7 @@ public class InitialSetup
                 IsBuiltInTemplate = true,
                 Content = updatedContent,
                 Label = defaultBaseLayout.DefaultLabel,
-                DeveloperName = defaultBaseLayout.DeveloperName
+                DeveloperName = defaultBaseLayout.DeveloperName,
             };
             list.Add(baseLayout);
 
@@ -370,15 +444,18 @@ public class InitialSetup
                 Content = defaultBaseLoginLayout.DefaultContent,
                 Label = defaultBaseLoginLayout.DefaultLabel,
                 DeveloperName = defaultBaseLoginLayout.DeveloperName,
-                ParentTemplateId = baseLayout.Id
+                ParentTemplateId = baseLayout.Id,
             };
             list.Add(baseLoginLayout);
 
             var homePageMediaItem = "raythadotcom_screenshot.webp";
 
-            foreach (var templateToBuild in BuiltInWebTemplate.Templates.Where(p =>
-                            p.DeveloperName != BuiltInWebTemplate._Layout.DeveloperName &&
-                            p.DeveloperName != BuiltInWebTemplate._LoginLayout.DeveloperName))
+            foreach (
+                var templateToBuild in BuiltInWebTemplate.Templates.Where(p =>
+                    p.DeveloperName != BuiltInWebTemplate._Layout.DeveloperName
+                    && p.DeveloperName != BuiltInWebTemplate._LoginLayout.DeveloperName
+                )
+            )
             {
                 var template = new WebTemplate
                 {
@@ -389,20 +466,20 @@ public class InitialSetup
                     IsBuiltInTemplate = true,
                     Content = templateToBuild.DefaultContent,
                     Label = templateToBuild.DefaultLabel,
-                    DeveloperName = templateToBuild.DeveloperName
+                    DeveloperName = templateToBuild.DeveloperName,
                 };
 
                 var templateAccess = new List<WebTemplateAccessToModelDefinition>
                 {
                     new WebTemplateAccessToModelDefinition { ContentTypeId = pageTypeGuid },
-                    new WebTemplateAccessToModelDefinition { ContentTypeId = postTypeGuid }
+                    new WebTemplateAccessToModelDefinition { ContentTypeId = postTypeGuid },
                 };
 
                 var standardTemplatesForContentTypes = new List<string>
                 {
                     BuiltInWebTemplate.HomePage,
                     BuiltInWebTemplate.ContentItemDetailViewPage,
-                    BuiltInWebTemplate.ContentItemListViewPage
+                    BuiltInWebTemplate.ContentItemListViewPage,
                 };
 
                 var loginTemplates = new List<string>
@@ -417,7 +494,7 @@ public class InitialSetup
                     BuiltInWebTemplate.UserRegistrationForm,
                     BuiltInWebTemplate.UserRegistrationFormSuccess,
                     BuiltInWebTemplate.ChangePasswordPage,
-                    BuiltInWebTemplate.ChangeProfilePage
+                    BuiltInWebTemplate.ChangeProfilePage,
                 };
 
                 if (standardTemplatesForContentTypes.Contains(templateToBuild))
@@ -428,7 +505,12 @@ public class InitialSetup
 
                     if (templateToBuild.DeveloperName == BuiltInWebTemplate.HomePage.DeveloperName)
                     {
-                        template.Content = template.Content.Replace(homePageMediaItem, mediaItems.First(mi => mi.FileName.Contains(homePageMediaItem)).ObjectKey);
+                        template.Content = template.Content.Replace(
+                            homePageMediaItem,
+                            mediaItems
+                                .First(mi => mi.FileName.Contains(homePageMediaItem))
+                                .ObjectKey
+                        );
                     }
                 }
                 else if (loginTemplates.Contains(templateToBuild))
@@ -454,7 +536,7 @@ public class InitialSetup
                     Content = templateToBuild.DefaultContent,
                     Subject = templateToBuild.DefaultSubject,
                     DeveloperName = templateToBuild.DeveloperName,
-                    IsBuiltInTemplate = true
+                    IsBuiltInTemplate = true,
                 };
                 list.Add(template);
             }
@@ -476,7 +558,6 @@ public class InitialSetup
                     AuthenticationSchemeType = AuthenticationSchemeType.EmailAndPassword,
                     LoginButtonText = "Login with your email and password",
                 },
-
                 new AuthenticationScheme
                 {
                     Label = "Magic link",
@@ -486,8 +567,8 @@ public class InitialSetup
                     IsEnabledForUsers = false,
                     AuthenticationSchemeType = AuthenticationSchemeType.MagicLink,
                     LoginButtonText = "Email me a login link",
-                    MagicLinkExpiresInSeconds = 900
-                }
+                    MagicLinkExpiresInSeconds = 900,
+                },
             };
             _db.AuthenticationSchemes.AddRange(list);
         }
@@ -497,7 +578,8 @@ public class InitialSetup
             dynamic homePageContent = new ExpandoObject();
             homePageContent.title = "Home";
             var homePagePath = $"{((string)homePageContent.title).ToUrlSlug()}";
-            homePageContent.content = @"
+            homePageContent.content =
+                @"
 <div><!--block-->Welcome to our website! We are currently in the process of building and designing our new online home. We apologize for any inconvenience this may cause and appreciate your patience as we work to bring you the best possible experience. In the meantime, please feel free to contact us with any questions or inquiries you may have. We are always happy to help. Thank you for visiting and please check back soon for updates on our progress.&nbsp;</div>";
             var homePage = new ContentItem
             {
@@ -507,17 +589,15 @@ public class InitialSetup
                 IsPublished = true,
                 IsDraft = false,
                 ContentTypeId = pageTypeGuid,
-                Route = new Route
-                {
-                    ContentItemId = homePageGuid,
-                    Path = homePagePath
-                }
+                Route = new Route { ContentItemId = homePageGuid, Path = homePagePath },
             };
 
             _db.ContentItems.Add(homePage);
 
-            var homePageTemplateId = _db.WebTemplates
-                .Where(wt => wt.DeveloperName == BuiltInWebTemplate.HomePage.DeveloperName)
+            var homePageTemplateId = _db
+                .WebTemplates.Where(wt =>
+                    wt.DeveloperName == BuiltInWebTemplate.HomePage.DeveloperName
+                )
                 .Select(wt => wt.Id)
                 .First();
 
@@ -533,7 +613,8 @@ public class InitialSetup
             dynamic aboutPageContent = new ExpandoObject();
             aboutPageContent.title = "About";
             var aboutPagePath = $"{((string)aboutPageContent.title).ToUrlSlug()}";
-            aboutPageContent.content = @"
+            aboutPageContent.content =
+                @"
 <div><!--block-->The following content is default typography elements for your convenience while you style your new website.<br><br></div>
 <h1><!--block-->h1. heading</h1>
 <h2><!--block-->h2. heading</h2>
@@ -561,17 +642,15 @@ public class InitialSetup
                 IsPublished = true,
                 IsDraft = false,
                 ContentTypeId = pageTypeGuid,
-                Route = new Route
-                {
-                    ContentItemId = anotherPageId,
-                    Path = aboutPagePath
-                }
+                Route = new Route { ContentItemId = anotherPageId, Path = aboutPagePath },
             };
 
             _db.ContentItems.Add(anotherPage);
 
-            var aboutPageTemplateId = _db.WebTemplates
-                .Where(wt => wt.DeveloperName == BuiltInWebTemplate.ContentItemDetailViewPage.DeveloperName)
+            var aboutPageTemplateId = _db
+                .WebTemplates.Where(wt =>
+                    wt.DeveloperName == BuiltInWebTemplate.ContentItemDetailViewPage.DeveloperName
+                )
                 .Select(wt => wt.Id)
                 .First();
 
@@ -590,7 +669,8 @@ public class InitialSetup
             dynamic postContent = new ExpandoObject();
             postContent.title = "Hello World!";
             var homePagePath = $"{((string)postContent.title).ToUrlSlug()}";
-            postContent.content = @"
+            postContent.content =
+                @"
 <div><!--block-->If you're reading this, it means you've successfully installed your CMS and created your first blog post. Congratulations!<br><br></div>
 <div><!--block-->This is the ""Hello World"" of the blogging world - the first post that many bloggers create to test out their new platform. Now that everything is up and running, it's time to start creating and sharing your content with the world.<br><br></div>
 <div><!--block-->To get started, you might want to familiarize yourself with the features and tools of your CMS. Some things you might want to explore include:<br><br></div>
@@ -607,17 +687,15 @@ public class InitialSetup
                 IsPublished = true,
                 IsDraft = false,
                 ContentTypeId = postTypeGuid,
-                Route = new Route
-                {
-                    ContentItemId = postId,
-                    Path = homePagePath
-                }
+                Route = new Route { ContentItemId = postId, Path = homePagePath },
             };
 
             _db.ContentItems.Add(post);
 
-            var postTemplateId = _db.WebTemplates
-                .Where(wt => wt.DeveloperName == BuiltInWebTemplate.ContentItemDetailViewPage.DeveloperName)
+            var postTemplateId = _db
+                .WebTemplates.Where(wt =>
+                    wt.DeveloperName == BuiltInWebTemplate.ContentItemDetailViewPage.DeveloperName
+                )
                 .Select(wt => wt.Id)
                 .First();
 
@@ -640,19 +718,22 @@ public class InitialSetup
                 Label = $"All {PAGES_NAME_PLURAL.ToLower()}",
                 DeveloperName = PAGES_DEVELOPER_NAME,
                 ContentTypeId = pageTypeGuid,
-                Columns = new[] { BuiltInContentTypeField.PrimaryField.DeveloperName, BuiltInContentTypeField.CreationTime.DeveloperName, BuiltInContentTypeField.Template },
-                Route = new Route
+                Columns = new[]
                 {
-                    Path = PAGES_DEVELOPER_NAME,
-                    ViewId = defaultPageViewId
+                    BuiltInContentTypeField.PrimaryField.DeveloperName,
+                    BuiltInContentTypeField.CreationTime.DeveloperName,
+                    BuiltInContentTypeField.Template,
                 },
-                IsPublished = true
+                Route = new Route { Path = PAGES_DEVELOPER_NAME, ViewId = defaultPageViewId },
+                IsPublished = true,
             };
 
             _db.Views.Add(defaultPageView);
 
-            var listViewTemplateId = _db.WebTemplates
-                .Where(wt => wt.DeveloperName == BuiltInWebTemplate.ContentItemListViewPage.DeveloperName)
+            var listViewTemplateId = _db
+                .WebTemplates.Where(wt =>
+                    wt.DeveloperName == BuiltInWebTemplate.ContentItemListViewPage.DeveloperName
+                )
                 .Select(wt => wt.Id)
                 .First();
 
@@ -672,13 +753,14 @@ public class InitialSetup
                 Label = $"All {POSTS_NAME_PLURAL.ToLower()}",
                 DeveloperName = POSTS_DEVELOPER_NAME,
                 ContentTypeId = postTypeGuid,
-                Columns = new[] { BuiltInContentTypeField.PrimaryField.DeveloperName, BuiltInContentTypeField.CreationTime.DeveloperName, BuiltInContentTypeField.Template },
-                Route = new Route
+                Columns = new[]
                 {
-                    Path = POSTS_DEVELOPER_NAME,
-                    ViewId = defaultPostsViewId
+                    BuiltInContentTypeField.PrimaryField.DeveloperName,
+                    BuiltInContentTypeField.CreationTime.DeveloperName,
+                    BuiltInContentTypeField.Template,
                 },
-                IsPublished = true
+                Route = new Route { Path = POSTS_DEVELOPER_NAME, ViewId = defaultPostsViewId },
+                IsPublished = true,
             };
             _db.Views.Add(defaultPostsView);
 
@@ -697,7 +779,10 @@ public class InitialSetup
             var contentTypes = _db.ContentTypes.Where(p => true);
             foreach (var contentType in contentTypes)
             {
-                contentType.PrimaryFieldId = contentType.DeveloperName == PAGES_DEVELOPER_NAME ? pageTitleFieldGuid : postsTitleFieldGuid;
+                contentType.PrimaryFieldId =
+                    contentType.DeveloperName == PAGES_DEVELOPER_NAME
+                        ? pageTitleFieldGuid
+                        : postsTitleFieldGuid;
             }
         }
 

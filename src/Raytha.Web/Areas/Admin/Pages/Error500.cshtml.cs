@@ -1,0 +1,27 @@
+using CSharpVitamins;
+using Microsoft.AspNetCore.Mvc.RazorPages;
+using Raytha.Web.Middlewares;
+
+namespace Raytha.Web.Areas.Admin.Pages;
+
+public class Error500Model : PageModel
+{
+    public string ErrorId { get; set; } = string.Empty;
+    public string ErrorMessage { get; set; } = string.Empty;
+    public string StackTrace { get; set; } = string.Empty;
+    public bool IsDevelopmentMode { get; set; }
+
+    public void OnGet()
+    {
+        var errorDetails = HttpContext.Items[ExceptionsMiddleware.ERROR_DETAILS_KEY] 
+            as ExceptionsMiddleware.ErrorDetails;
+
+        ErrorId = ShortGuid.NewGuid();
+        ErrorMessage = errorDetails?.ErrorMessage ?? "An unknown error has occurred";
+        StackTrace = errorDetails?.StackTrace ?? string.Empty;
+        IsDevelopmentMode = errorDetails?.IsDevelopmentMode ?? false;
+
+        Response.StatusCode = 500;
+    }
+}
+

@@ -1,7 +1,7 @@
-﻿using CSharpVitamins;
+﻿using System.Linq.Expressions;
+using CSharpVitamins;
 using Raytha.Application.Common.Models;
 using Raytha.Domain.Entities;
-using System.Linq.Expressions;
 
 namespace Raytha.Application.ContentItems;
 
@@ -18,6 +18,7 @@ public record ContentItemRevisionDto
     {
         return entity => GetProjection(entity);
     }
+
     public static ContentItemRevisionDto GetProjection(ContentItemRevision entity)
     {
         return new ContentItemRevisionDto

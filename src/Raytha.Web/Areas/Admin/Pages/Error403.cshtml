@@ -1,0 +1,29 @@
+@page "/raytha/error/403"
+@model Raytha.Web.Areas.Admin.Pages.Error403Model
+@{
+    Layout = "Shared/EmptyLayout";
+    ViewData["Title"] = "403 - Access Denied";
+}
+
+<div class="d-flex justify-content-center align-items-center" style="min-height: 400px;">
+    <div class="text-center">
+        <h1 class="display-1 fw-bold">403</h1>
+        <h2 class="mb-4">Access Denied</h2>
+        <p class="lead mb-4">@Model.ErrorMessage</p>
+        @if (!string.IsNullOrEmpty(Model.ErrorId))
+        {
+            <p class="text-muted"><strong>Error ID:</strong> @Model.ErrorId</p>
+        }
+        @if (Model.IsDevelopmentMode && !string.IsNullOrEmpty(Model.StackTrace))
+        {
+            <div class="mt-4 text-start">
+                <h4>Stack Trace (Development Mode Only)</h4>
+                <pre class="bg-light p-3 rounded" style="max-height: 400px; overflow-y: auto;">@Model.StackTrace</pre>
+            </div>
+        }
+        <div class="mt-4">
+            <a href="/raytha" class="btn btn-primary">Go to Dashboard</a>
+        </div>
+    </div>
+</div>
+

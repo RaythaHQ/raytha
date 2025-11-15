@@ -25,14 +25,20 @@ public class GetWebTemplateByViewId
             _db = db;
         }
 
-        public async Task<IQueryResponseDto<WebTemplateDto>> Handle(Query request, CancellationToken cancellationToken)
+        public async Task<IQueryResponseDto<WebTemplateDto>> Handle(
+            Query request,
+            CancellationToken cancellationToken
+        )
         {
-            var webTemplate = await _db.WebTemplateViewRelations
-                .Where(wtr => wtr.ViewId == request.ViewId.Guid && wtr.WebTemplate!.ThemeId == request.ThemeId.Guid)
+            var webTemplate = await _db
+                .WebTemplateViewRelations.Where(wtr =>
+                    wtr.ViewId == request.ViewId.Guid
+                    && wtr.WebTemplate!.ThemeId == request.ThemeId.Guid
+                )
                 .Include(wtr => wtr.WebTemplate)
-                    .ThenInclude(wt => wt!.TemplateAccessToModelDefinitions)
-                    .ThenInclude(md => md.ContentType)
-                    .IncludeParentTemplates(wtr => wtr.WebTemplate!.ParentTemplate)
+                .ThenInclude(wt => wt!.TemplateAccessToModelDefinitions)
+                .ThenInclude(md => md.ContentType)
+                .IncludeParentTemplates(wtr => wtr.WebTemplate!.ParentTemplate)
                 .Select(wtr => wtr.WebTemplate)
                 .FirstOrDefaultAsync(cancellationToken);
 

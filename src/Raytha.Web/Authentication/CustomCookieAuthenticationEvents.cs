@@ -25,19 +25,26 @@ public class CustomCookieAuthenticationEvents : CookieAuthenticationEvents
         var userPrincipal = context.Principal;
 
         // Look for the LastChanged claim.
-        var lastModifiedAsString = userPrincipal.Claims.FirstOrDefault(p => p.Type == "LastModificationTime")?.Value;
-        var userIdAsString = userPrincipal.Claims.FirstOrDefault(p => p.Type == ClaimTypes.NameIdentifier)?.Value;
+        var lastModifiedAsString = userPrincipal
+            .Claims.FirstOrDefault(p => p.Type == "LastModificationTime")
+            ?.Value;
+        var userIdAsString = userPrincipal
+            .Claims.FirstOrDefault(p => p.Type == ClaimTypes.NameIdentifier)
+            ?.Value;
 
         if (lastModifiedAsString == null || userIdAsString == null)
             return;
 
-        var user = await _mediator.Send(new GetUserForAuthenticationById.Query { Id = userIdAsString });
+        var user = await _mediator.Send(
+            new GetUserForAuthenticationById.Query { Id = userIdAsString }
+        );
 
         if (user == null || !user.Success || !user.Result.IsActive)
         {
             context.RejectPrincipal();
             await context.HttpContext.SignOutAsync(
-                CookieAuthenticationDefaults.AuthenticationScheme);
+                CookieAuthenticationDefaults.AuthenticationScheme
+            );
             return;
         }
 
@@ -47,7 +54,10 @@ public class CustomCookieAuthenticationEvents : CookieAuthenticationEvents
             new Claim(ClaimTypes.Email, user.Result.EmailAddress),
             new Claim(ClaimTypes.GivenName, user.Result.FirstName),
             new Claim(ClaimTypes.Surname, user.Result.LastName),
-            new Claim(RaythaClaimTypes.LastModificationTime, user.Result.LastModificationTime.ToString()),
+            new Claim(
+                RaythaClaimTypes.LastModificationTime,
+                user.Result.LastModificationTime.ToString()
+            ),
             new Claim(RaythaClaimTypes.IsAdmin, user.Result.IsAdmin.ToString()),
             new Claim(RaythaClaimTypes.SsoId, user.Result.SsoId.IfNullOrEmpty(string.Empty)),
             new Claim(RaythaClaimTypes.AuthenticationScheme, user.Result.AuthenticationScheme),
@@ -85,7 +95,10 @@ public class CustomCookieAuthenticationEvents : CookieAuthenticationEvents
             claims.Add(new Claim(RaythaClaimTypes.UserGroups, userGroup.DeveloperName));
         }
 
-        ClaimsIdentity identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+        ClaimsIdentity identity = new ClaimsIdentity(
+            claims,
+            CookieAuthenticationDefaults.AuthenticationScheme
+        );
         ClaimsPrincipal principal = new ClaimsPrincipal(identity);
         context.ReplacePrincipal(principal);
         context.ShouldRenew = true;

@@ -1,19 +1,19 @@
-using MediatR;
-using FluentValidation;
-using CSharpVitamins;
-using System.Security.Cryptography.X509Certificates;
-using System.Xml;
-using Raytha.Application.Common.Models;
-using Raytha.Application.Common.Interfaces;
-using Raytha.Domain.Entities;
-using System.Security.Cryptography.Xml;
-using Raytha.Application.Common.Utils;
-using Raytha.Application.Common.Exceptions;
 using System.Linq.Dynamic.Core;
-using Microsoft.IdentityModel.JsonWebTokens;
-using Raytha.Application.Common.Security;
-using Microsoft.EntityFrameworkCore;
+using System.Security.Cryptography.X509Certificates;
+using System.Security.Cryptography.Xml;
 using System.Text.Json.Serialization;
+using System.Xml;
+using CSharpVitamins;
+using FluentValidation;
+using MediatR;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.JsonWebTokens;
+using Raytha.Application.Common.Exceptions;
+using Raytha.Application.Common.Interfaces;
+using Raytha.Application.Common.Models;
+using Raytha.Application.Common.Security;
+using Raytha.Application.Common.Utils;
+using Raytha.Domain.Entities;
 
 namespace Raytha.Application.Login.Commands;
 
@@ -26,95 +26,138 @@ public class LoginWithSaml
         public string DeveloperName { get; set; } = null!;
     }
 
-    public class Validator : AbstractValidator<Command> 
+    public class Validator : AbstractValidator<Command>
     {
-        public Validator(IRaythaDbContext db) 
+        public Validator(IRaythaDbContext db)
         {
             RuleFor(x => x.SAMLResponse).NotEmpty();
             RuleFor(x => x.DeveloperName).NotEmpty();
-            RuleFor(x => x).Custom((request, context) =>
-            {
-                var developerName = request.DeveloperName.ToDeveloperName();
-                var authScheme = db.AuthenticationSchemes.FirstOrDefault(p =>
-                    p.DeveloperName == developerName);
-
-                if (authScheme == null)
-                {
-                    throw new NotFoundException("Auth scheme", $"{request.DeveloperName} was not found");
-                }
-
-                if (!authScheme.IsEnabledForUsers && !authScheme.IsEnabledForAdmins)
-                {
-                    context.AddFailure(Constants.VALIDATION_SUMMARY, "Authentication scheme is disabled");
-                    return;
-                }
-
-                var payload = new SAMLResponse(request.SAMLResponse, authScheme.SamlCertificate);
-
-                if (!payload.IsValid)
-                {
-                    context.AddFailure(Constants.VALIDATION_SUMMARY, "Failed authentication.");
-                    return;
-                }
-
-                if (string.IsNullOrEmpty(payload.EmailAddress))
-                {
-                    context.AddFailure(Constants.VALIDATION_SUMMARY, "Missing 'email' attribute from saml assertion payload.");
-                    return;
-                }
-
-                var email = payload.EmailAddress.ToLower().Trim();
-
-                if (!email.IsValidEmailAddress())
-                {
-                    context.AddFailure(Constants.VALIDATION_SUMMARY, $"'email' is not a valid email address");
-                    return;
-                }
-
-                User entity = null;
-                if (!string.IsNullOrEmpty(payload.NameID))
-                {
-                    entity = db.Users.FirstOrDefault(p => p.SsoId == payload.NameID && p.AuthenticationSchemeId == authScheme.Id);
-                }
-                else
-                {
-                    entity = db.Users.FirstOrDefault(p => p.EmailAddress.ToLower() == email);
-                }
-
-                if (entity != null)
-                {
-                    if (entity.IsAdmin && !authScheme.IsEnabledForAdmins)
+            RuleFor(x => x)
+                .Custom(
+                    (request, context) =>
                     {
-                        context.AddFailure(Constants.VALIDATION_SUMMARY, $"Authentication scheme disabled for administrators.");
-                        return;
-                    }
+                        var developerName = request.DeveloperName.ToDeveloperName();
+                        var authScheme = db.AuthenticationSchemes.FirstOrDefault(p =>
+                            p.DeveloperName == developerName
+                        );
 
-                    if (!entity.IsAdmin && !authScheme.IsEnabledForUsers)
-                    {
-                        context.AddFailure(Constants.VALIDATION_SUMMARY, $"Authentication scheme disabled for public users.");
-                        return;
-                    }
+                        if (authScheme == null)
+                        {
+                            throw new NotFoundException(
+                                "Auth scheme",
+                                $"{request.DeveloperName} was not found"
+                            );
+                        }
 
-                    if (!entity.IsActive)
-                    {
-                        context.AddFailure(Constants.VALIDATION_SUMMARY, $"User has been deactivated.");
-                        return;
+                        if (!authScheme.IsEnabledForUsers && !authScheme.IsEnabledForAdmins)
+                        {
+                            context.AddFailure(
+                                Constants.VALIDATION_SUMMARY,
+                                "Authentication scheme is disabled"
+                            );
+                            return;
+                        }
+
+                        var payload = new SAMLResponse(
+                            request.SAMLResponse,
+                            authScheme.SamlCertificate
+                        );
+
+                        if (!payload.IsValid)
+                        {
+                            context.AddFailure(
+                                Constants.VALIDATION_SUMMARY,
+                                "Failed authentication."
+                            );
+                            return;
+                        }
+
+                        if (string.IsNullOrEmpty(payload.EmailAddress))
+                        {
+                            context.AddFailure(
+                                Constants.VALIDATION_SUMMARY,
+                                "Missing 'email' attribute from saml assertion payload."
+                            );
+                            return;
+                        }
+
+                        var email = payload.EmailAddress.ToLower().Trim();
+
+                        if (!email.IsValidEmailAddress())
+                        {
+                            context.AddFailure(
+                                Constants.VALIDATION_SUMMARY,
+                                $"'email' is not a valid email address"
+                            );
+                            return;
+                        }
+
+                        User entity = null;
+                        if (!string.IsNullOrEmpty(payload.NameID))
+                        {
+                            entity = db.Users.FirstOrDefault(p =>
+                                p.SsoId == payload.NameID
+                                && p.AuthenticationSchemeId == authScheme.Id
+                            );
+                        }
+                        else
+                        {
+                            entity = db.Users.FirstOrDefault(p =>
+                                p.EmailAddress.ToLower() == email
+                            );
+                        }
+
+                        if (entity != null)
+                        {
+                            if (entity.IsAdmin && !authScheme.IsEnabledForAdmins)
+                            {
+                                context.AddFailure(
+                                    Constants.VALIDATION_SUMMARY,
+                                    $"Authentication scheme disabled for administrators."
+                                );
+                                return;
+                            }
+
+                            if (!entity.IsAdmin && !authScheme.IsEnabledForUsers)
+                            {
+                                context.AddFailure(
+                                    Constants.VALIDATION_SUMMARY,
+                                    $"Authentication scheme disabled for public users."
+                                );
+                                return;
+                            }
+
+                            if (!entity.IsActive)
+                            {
+                                context.AddFailure(
+                                    Constants.VALIDATION_SUMMARY,
+                                    $"User has been deactivated."
+                                );
+                                return;
+                            }
+                        }
                     }
-                }
-            });
+                );
         }
     }
 
     public class Handler : IRequestHandler<Command, CommandResponseDto<LoginDto>>
     {
         private readonly IRaythaDbContext _db;
+
         public Handler(IRaythaDbContext db)
         {
             _db = db;
         }
-        public async Task<CommandResponseDto<LoginDto>> Handle(Command request, CancellationToken cancellationToken)
+
+        public async Task<CommandResponseDto<LoginDto>> Handle(
+            Command request,
+            CancellationToken cancellationToken
+        )
         {
-            var authScheme = _db.AuthenticationSchemes.First(p => p.DeveloperName == request.DeveloperName.ToDeveloperName());
+            var authScheme = _db.AuthenticationSchemes.First(p =>
+                p.DeveloperName == request.DeveloperName.ToDeveloperName()
+            );
             var payload = new SAMLResponse(request.SAMLResponse, authScheme.SamlCertificate);
 
             string nameID = payload.NameID;
@@ -127,19 +170,27 @@ public class LoginWithSaml
 
             if (!string.IsNullOrWhiteSpace(nameID))
             {
-                entity = _db.Users.Include(p => p.UserGroups).FirstOrDefault(p => p.SsoId == nameID && p.AuthenticationSchemeId == authScheme.Id);
+                entity = _db
+                    .Users.Include(p => p.UserGroups)
+                    .FirstOrDefault(p =>
+                        p.SsoId == nameID && p.AuthenticationSchemeId == authScheme.Id
+                    );
             }
 
             if (entity == null)
             {
                 var cleanedEmail = email.Trim().ToLower();
-                entity = _db.Users.Include(p => p.UserGroups).FirstOrDefault(p => p.EmailAddress.ToLower() == cleanedEmail);
+                entity = _db
+                    .Users.Include(p => p.UserGroups)
+                    .FirstOrDefault(p => p.EmailAddress.ToLower() == cleanedEmail);
             }
 
             ICollection<UserGroup> foundUserGroups = null;
             if (userGroups.Any())
             {
-                foundUserGroups = _db.UserGroups.Where(p => userGroups.Any(c => c == p.DeveloperName)).ToList();
+                foundUserGroups = _db
+                    .UserGroups.Where(p => userGroups.Any(c => c == p.DeveloperName))
+                    .ToList();
             }
 
             bool firstTime = false;
@@ -158,7 +209,7 @@ public class LoginWithSaml
                     IsActive = true,
                     Salt = salt,
                     PasswordHash = PasswordUtility.Hash(PasswordUtility.RandomPassword(12), salt),
-                    UserGroups = foundUserGroups
+                    UserGroups = foundUserGroups,
                 };
             }
             else
@@ -193,24 +244,26 @@ public class LoginWithSaml
 
             if (firstTime)
                 _db.Users.Add(entity);
-            
-            await _db.SaveChangesAsync(cancellationToken);        
-            return new CommandResponseDto<LoginDto>(new LoginDto
-            {
-                Id = entity.Id,
-                FirstName = entity.FirstName,
-                LastName = entity.LastName,
-                EmailAddress = entity.EmailAddress,
-                LastModificationTime = entity.LastModificationTime,
-                AuthenticationScheme = authScheme.DeveloperName,
-                SsoId = entity.SsoId,
-                IsAdmin = entity.IsAdmin
-            });
+
+            await _db.SaveChangesAsync(cancellationToken);
+            return new CommandResponseDto<LoginDto>(
+                new LoginDto
+                {
+                    Id = entity.Id,
+                    FirstName = entity.FirstName,
+                    LastName = entity.LastName,
+                    EmailAddress = entity.EmailAddress,
+                    LastModificationTime = entity.LastModificationTime,
+                    AuthenticationScheme = authScheme.DeveloperName,
+                    SsoId = entity.SsoId,
+                    IsAdmin = entity.IsAdmin,
+                }
+            );
         }
     }
 
     public class SAMLResponse
-	{
+    {
         private XmlDocument xmlDoc;
         private Certificate certificate;
 
@@ -235,7 +288,10 @@ public class LoginWithSaml
             get
             {
                 var manager = GetNamespaceManager();
-                XmlNode node = xmlDoc.SelectSingleNode("/samlp:Response/saml:Assertion/saml:Subject/saml:NameID", manager);
+                XmlNode node = xmlDoc.SelectSingleNode(
+                    "/samlp:Response/saml:Assertion/saml:Subject/saml:NameID",
+                    manager
+                );
                 return node.InnerText;
             }
         }
@@ -249,10 +305,23 @@ public class LoginWithSaml
         {
             get
             {
-                bool status = true;
-
                 var manager = GetNamespaceManager();
+
+                // Enforce single assertion rule to prevent injection attacks
+                XmlNodeList allAssertions = xmlDoc.SelectNodes("//saml:Assertion", manager);
+                if (allAssertions == null || allAssertions.Count != 1)
+                {
+                    return false; // Reject: zero assertions or multiple assertions
+                }
+
+                // Verify signature exists
                 XmlNodeList nodeList = xmlDoc.SelectNodes("//ds:Signature", manager);
+                if (nodeList == null || nodeList.Count == 0)
+                {
+                    return false; // No signature found
+                }
+
+                bool status = true;
 
                 SignedXml signedXml = new SignedXml(xmlDoc);
                 signedXml.LoadXml((XmlElement)nodeList[0]);
@@ -272,7 +341,10 @@ public class LoginWithSaml
         private string GetSingleAttribute(string attr)
         {
             var manager = GetNamespaceManager();
-            XmlNode node = xmlDoc.SelectSingleNode($"/samlp:Response/saml:Assertion/saml:AttributeStatement/saml:Attribute[@Name='{attr}']/saml:AttributeValue", manager);
+            XmlNode node = xmlDoc.SelectSingleNode(
+                $"/samlp:Response/saml:Assertion/saml:AttributeStatement/saml:Attribute[@Name='{attr}']/saml:AttributeValue",
+                manager
+            );
             return node == null ? null : node.InnerText;
         }
 
@@ -282,9 +354,18 @@ public class LoginWithSaml
             manager.AddNamespace("saml", "urn:oasis:names:tc:SAML:2.0:assertion");
             manager.AddNamespace("samlp", "urn:oasis:names:tc:SAML:2.0:protocol");
 
-            var nodes = xmlDoc.SelectNodes("/samlp:Response/saml:Assertion/saml:Conditions", manager);
+            var nodes = xmlDoc.SelectNodes(
+                "/samlp:Response/saml:Assertion/saml:Conditions",
+                manager
+            );
             string value = null;
-            if (nodes != null && nodes.Count > 0 && nodes[0] != null && nodes[0].Attributes != null && nodes[0].Attributes["NotBefore"] != null)
+            if (
+                nodes != null
+                && nodes.Count > 0
+                && nodes[0] != null
+                && nodes[0].Attributes != null
+                && nodes[0].Attributes["NotBefore"] != null
+            )
             {
                 value = nodes[0].Attributes["NotBefore"].Value;
             }
@@ -297,9 +378,18 @@ public class LoginWithSaml
             manager.AddNamespace("saml", "urn:oasis:names:tc:SAML:2.0:assertion");
             manager.AddNamespace("samlp", "urn:oasis:names:tc:SAML:2.0:protocol");
 
-            var nodes = xmlDoc.SelectNodes("/samlp:Response/saml:Assertion/saml:Conditions", manager);
+            var nodes = xmlDoc.SelectNodes(
+                "/samlp:Response/saml:Assertion/saml:Conditions",
+                manager
+            );
             string value = null;
-            if (nodes != null && nodes.Count > 0 && nodes[0] != null && nodes[0].Attributes != null && nodes[0].Attributes["NotOnOrAfter"] != null)
+            if (
+                nodes != null
+                && nodes.Count > 0
+                && nodes[0] != null
+                && nodes[0].Attributes != null
+                && nodes[0].Attributes["NotOnOrAfter"] != null
+            )
             {
                 value = nodes[0].Attributes["NotOnOrAfter"].Value;
             }
@@ -309,7 +399,10 @@ public class LoginWithSaml
         private string[] GetArrayAttribute(string attr)
         {
             var manager = GetNamespaceManager();
-            XmlNodeList nodes = xmlDoc.SelectNodes($"/samlp:Response/saml:Assertion/saml:AttributeStatement/saml:Attribute[@Name='{attr}']/saml:AttributeValue", manager);
+            XmlNodeList nodes = xmlDoc.SelectNodes(
+                $"/samlp:Response/saml:Assertion/saml:AttributeStatement/saml:Attribute[@Name='{attr}']/saml:AttributeValue",
+                manager
+            );
             if (nodes == null)
                 return null;
 
@@ -330,7 +423,7 @@ public class LoginWithSaml
             manager.AddNamespace("samlp", "urn:oasis:names:tc:SAML:2.0:protocol");
             return manager;
         }
-	}
+    }
 
     public class Certificate
     {

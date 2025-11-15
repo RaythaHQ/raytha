@@ -2,8 +2,7 @@
 {
     public class RaythaFunctionScriptException : Exception
     {
-        public RaythaFunctionScriptException(string message) : base(message)
-        {
-        }
+        public RaythaFunctionScriptException(string message)
+            : base(message) { }
     }
 }
