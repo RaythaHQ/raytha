@@ -6,7 +6,7 @@
 
 Raytha is a versatile and lightweight general purpose content management system. Create any type of website by easily configuring custom content types and HTML templates that can be directly edited within the platform.
 
-🚀 <strong>[Try out Raytha with a 14-day free trial on our cloud hosting platform](https://dashboard.raytha.com/account/create).</strong>
+[![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/deploy/raytha-cms?referralCode=RU52It&utm_medium=integration&utm_source=template&utm_campaign=generic)
 
 <details>
   <summary>See it in action (2 min 📹)</summary>
