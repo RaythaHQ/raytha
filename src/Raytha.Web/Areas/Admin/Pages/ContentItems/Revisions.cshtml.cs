@@ -22,6 +22,7 @@ public class Revisions
     public ListViewModel<ContentItemsRevisionsListItemViewModel> ListView { get; set; }
     ViewDto ISubActionViewModel.CurrentView => base.CurrentView;
     public string Id { get; set; }
+    public string? RoutePath { get; set; }
 
     public async Task<IActionResult> OnGet(
         string id,
@@ -55,6 +56,9 @@ public class Revisions
                 IsActive = true,
             }
         );
+
+        var contentItemResponse = await Mediator.Send(new GetContentItemById.Query { Id = id });
+        RoutePath = contentItemResponse.Result.RoutePath;
 
         var input = new GetContentItemRevisionsByContentItemId.Query
         {
