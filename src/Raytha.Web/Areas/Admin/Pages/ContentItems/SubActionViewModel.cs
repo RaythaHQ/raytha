@@ -6,4 +6,5 @@ public interface ISubActionViewModel
 {
     public string Id { get; set; }
     public ViewDto CurrentView { get; }
+    public string? RoutePath { get; set; }
 }
