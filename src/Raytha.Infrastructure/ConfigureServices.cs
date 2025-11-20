@@ -82,6 +82,7 @@ public static class ConfigureServices
         services.AddScoped<IEmailer, Emailer>();
         services.AddTransient<IBackgroundTaskDb, BackgroundTaskDb>();
         services.AddTransient<IRaythaRawDbInfo, RaythaRawDbInfo>();
+        services.AddTransient<IRaythaRawDbCommands, RaythaRawDbCommands>();
 
         //file storage provider
         var fileStorageProvider = configuration[FileStorageUtility.CONFIG_NAME]

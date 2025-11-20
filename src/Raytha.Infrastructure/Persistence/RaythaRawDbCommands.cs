@@ -1,4 +1,4 @@
-﻿using System.Data;
+using System.Data;
 using Dapper;
 using Microsoft.Extensions.Configuration;
 using Raytha.Application.Common.Interfaces;
@@ -6,35 +6,36 @@ using Raytha.Application.Common.Interfaces;
 namespace Raytha.Infrastructure.Persistence;
 
 /// <summary>
-/// Retrieves raw database information.
+/// Executes raw database commands that require database-specific SQL.
 /// </summary>
-public class RaythaRawDbInfo : IRaythaRawDbInfo
+public class RaythaRawDbCommands : IRaythaRawDbCommands
 {
     private readonly IDbConnection _db;
     private readonly IConfiguration _configuration;
 
-    public RaythaRawDbInfo(IDbConnection db, IConfiguration configuration)
+    public RaythaRawDbCommands(IDbConnection db, IConfiguration configuration)
     {
         _db = db;
         _configuration = configuration;
     }
 
-    public DbSpaceUsed GetDatabaseSize()
+    public async Task ClearAuditLogsAsync(CancellationToken cancellationToken = default)
     {
         var dbProvider = DbProviderHelper.GetDatabaseProviderTypeFromConnectionString(
             _configuration.GetConnectionString("DefaultConnection")
         );
+
         string query = string.Empty;
         if (dbProvider == DatabaseProviderType.Postgres)
         {
-            query =
-                "SELECT pg_size_pretty(pg_database_size(current_database())) AS reserved FROM pg_class LIMIT 1;";
+            query = "TRUNCATE TABLE \"AuditLogs\"";
         }
         else
         {
-            query = "EXEC sp_spaceused @oneresultset = 1";
+            query = "TRUNCATE TABLE AuditLogs";
         }
-        DbSpaceUsed dbSizeInfo = _db.QueryFirst<DbSpaceUsed>(query);
-        return dbSizeInfo;
+
+        await _db.ExecuteAsync(query);
     }
 }
+

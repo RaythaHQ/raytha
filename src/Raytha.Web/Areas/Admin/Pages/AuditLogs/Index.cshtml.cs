@@ -2,6 +2,7 @@ using CSharpVitamins;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Raytha.Application.Admins.Commands;
+using Raytha.Application.AuditLogs.Commands;
 using Raytha.Application.AuditLogs.Queries;
 using Raytha.Application.AuthenticationSchemes.Commands;
 using Raytha.Application.Common.Utils;
@@ -190,6 +191,24 @@ public class Index : BaseAdminPageModel
             ListView.OrderByDirection = orderBy.Split(' ')[1];
         }
         return Page();
+    }
+
+    [Authorize(Policy = BuiltInSystemPermission.MANAGE_SYSTEM_SETTINGS_PERMISSION)]
+    public async Task<IActionResult> OnPostClearAllAsync()
+    {
+        var input = new ClearAllAuditLogs.Command();
+        var response = await Mediator.Send(input);
+
+        if (!response.Success)
+        {
+            SetErrorMessage(response.Error);
+        }
+        else
+        {
+            SetSuccessMessage("All audit logs have been cleared successfully.");
+        }
+
+        return RedirectToPage("Index");
     }
 
     public record AuditLogsListItemViewModel

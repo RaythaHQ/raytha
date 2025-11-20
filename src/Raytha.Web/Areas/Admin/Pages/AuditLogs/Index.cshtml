@@ -1,5 +1,7 @@
 @page "/raytha/audit-logs"
 @using Raytha.Domain.ValueObjects
+@using Raytha.Domain.Entities
+@inject IAuthorizationService AuthorizationService
 @model Raytha.Web.Areas.Admin.Pages.AuditLogs.Index
 
 @{
@@ -95,6 +97,14 @@
             <button type="submit" class="btn btn-primary mb-4">Apply filter</button>
         </form>
 
+        @if ((await AuthorizationService.AuthorizeAsync(User, BuiltInSystemPermission.MANAGE_SYSTEM_SETTINGS_PERMISSION)).Succeeded)
+        {
+            <form method="post" asp-page-handler="ClearAll" onsubmit="return confirm('Are you sure you want to clear all audit logs? This action cannot be undone.');" class="mb-4">
+                <button type="submit" class="btn btn-danger">
+                    Clear all audit logs
+                </button>
+            </form>
+        }
 
         <div class="table-responsive">
             <table class="table table-centered table-nowrap mb-0 rounded">
