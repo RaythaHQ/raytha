@@ -17,6 +17,7 @@ using Raytha.Domain.Entities;
 using Raytha.Web.Areas.Admin.Pages.Shared;
 using Raytha.Web.Areas.Admin.Pages.Shared.Models;
 using Raytha.Web.Areas.Shared.Models;
+using System.Text.Json;
 
 namespace Raytha.Web.Areas.Admin.Pages.AuditLogs;
 
@@ -168,7 +169,7 @@ public class Index : BaseAdminPageModel
                     p.EntityId.HasValue && p.EntityId.Value != ShortGuid.Empty
                         ? p.EntityId.Value
                         : "N/A",
-                Request = p.Request,
+                Request = PrettyPrintJson(p.Request),
                 IpAddress = p.IpAddress,
             });
             ListView = new ListViewModel<AuditLogsListItemViewModel>(
@@ -209,6 +210,26 @@ public class Index : BaseAdminPageModel
         }
 
         return RedirectToPage("Index");
+    }
+
+    private static string PrettyPrintJson(string json)
+    {
+        if (string.IsNullOrWhiteSpace(json))
+            return json;
+
+        try
+        {
+            var jsonDocument = JsonDocument.Parse(json);
+            return JsonSerializer.Serialize(jsonDocument, new JsonSerializerOptions
+            {
+                WriteIndented = true
+            });
+        }
+        catch
+        {
+            // If it's not valid JSON, return as-is
+            return json;
+        }
     }
 
     public record AuditLogsListItemViewModel
