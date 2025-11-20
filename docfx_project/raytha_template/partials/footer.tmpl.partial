@@ -1,4 +1,0 @@
-<footer>
-  <a class="github-button" href="{{source.remote.repo}}" data-size="large" aria-label="Follow">Follow</a>
-  <script async defer src="https://buttons.github.io/buttons.js"></script>
-</footer>
