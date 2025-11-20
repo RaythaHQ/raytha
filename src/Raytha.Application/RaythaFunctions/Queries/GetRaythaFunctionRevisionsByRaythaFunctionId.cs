@@ -1,5 +1,5 @@
 ﻿using CSharpVitamins;
-using MediatR;
+using Mediator;
 using Microsoft.EntityFrameworkCore;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Models;
@@ -28,7 +28,7 @@ public class GetRaythaFunctionRevisionsByRaythaFunctionId
             _db = db;
         }
 
-        public async Task<IQueryResponseDto<ListResultDto<RaythaFunctionRevisionDto>>> Handle(
+        public async ValueTask<IQueryResponseDto<ListResultDto<RaythaFunctionRevisionDto>>> Handle(
             Query request,
             CancellationToken cancellationToken
         )

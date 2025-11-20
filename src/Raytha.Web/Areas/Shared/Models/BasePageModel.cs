@@ -1,6 +1,6 @@
 #nullable enable
 using FluentValidation.Results;
-using MediatR;
+using Mediator;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Logging;

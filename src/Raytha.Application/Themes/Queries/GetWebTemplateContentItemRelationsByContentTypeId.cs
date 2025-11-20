@@ -1,5 +1,5 @@
 ﻿using CSharpVitamins;
-using MediatR;
+using Mediator;
 using Microsoft.EntityFrameworkCore;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Models;
@@ -28,7 +28,7 @@ public class GetWebTemplateContentItemRelationsByContentTypeId
             _db = db;
         }
 
-        public async Task<
+        public async ValueTask<
             IQueryResponseDto<IReadOnlyCollection<WebTemplateContentItemRelationDto>>
         > Handle(Query request, CancellationToken cancellationToken)
         {

@@ -1,5 +1,5 @@
 ﻿using FluentValidation;
-using MediatR;
+using Mediator;
 using Microsoft.EntityFrameworkCore;
 using Raytha.Application.Common.Exceptions;
 using Raytha.Application.Common.Interfaces;
@@ -59,7 +59,7 @@ public class ExportTheme
             _fileStorageProvider = fileStorageProvider;
         }
 
-        public async Task<CommandResponseDto<ThemeJson>> Handle(
+        public async ValueTask<CommandResponseDto<ThemeJson>> Handle(
             Command request,
             CancellationToken cancellationToken
         )

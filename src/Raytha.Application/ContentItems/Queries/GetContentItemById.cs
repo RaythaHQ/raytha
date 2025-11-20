@@ -1,4 +1,4 @@
-﻿using MediatR;
+﻿using Mediator;
 using Raytha.Application.Common.Exceptions;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Models;
@@ -20,7 +20,7 @@ public class GetContentItemById
             _contentTypeInRoutePath = contentTypeInRoutePath;
         }
 
-        public async Task<IQueryResponseDto<ContentItemDto>> Handle(
+        public async ValueTask<IQueryResponseDto<ContentItemDto>> Handle(
             Query request,
             CancellationToken cancellationToken
         )

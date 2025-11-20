@@ -1,5 +1,5 @@
 ﻿using CSharpVitamins;
-using MediatR;
+using Mediator;
 using Raytha.Application.Common.Exceptions;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Models;
@@ -22,7 +22,7 @@ public class GetMediaItemByObjectKey
             _db = db;
         }
 
-        public async Task<IQueryResponseDto<MediaItemDto>> Handle(
+        public async ValueTask<IQueryResponseDto<MediaItemDto>> Handle(
             Query request,
             CancellationToken cancellationToken
         )

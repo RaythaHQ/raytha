@@ -1,5 +1,5 @@
 ﻿using CSharpVitamins;
-using MediatR;
+using Mediator;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Models;
 using Raytha.Application.Common.Utils;
@@ -26,7 +26,7 @@ public class GetApiKeysForAdmin
             _db = db;
         }
 
-        public async Task<IQueryResponseDto<ListResultDto<ApiKeyDto>>> Handle(
+        public async ValueTask<IQueryResponseDto<ListResultDto<ApiKeyDto>>> Handle(
             Query request,
             CancellationToken cancellationToken
         )

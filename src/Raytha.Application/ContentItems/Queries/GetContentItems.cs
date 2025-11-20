@@ -1,5 +1,5 @@
 ﻿using CSharpVitamins;
-using MediatR;
+using Mediator;
 using Microsoft.EntityFrameworkCore;
 using Raytha.Application.Common.Exceptions;
 using Raytha.Application.Common.Interfaces;
@@ -39,7 +39,7 @@ public class GetContentItems
             _contentTypeInRoutePath = contentTypeInRoutePath;
         }
 
-        public async Task<IQueryResponseDto<ListResultDto<ContentItemDto>>> Handle(
+        public async ValueTask<IQueryResponseDto<ListResultDto<ContentItemDto>>> Handle(
             Query request,
             CancellationToken cancellationToken
         )

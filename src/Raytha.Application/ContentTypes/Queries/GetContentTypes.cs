@@ -1,4 +1,4 @@
-﻿using MediatR;
+﻿using Mediator;
 using Microsoft.EntityFrameworkCore;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Models;
@@ -25,7 +25,7 @@ public class GetContentTypes
             _db = db;
         }
 
-        public async Task<IQueryResponseDto<ListResultDto<ContentTypeDto>>> Handle(
+        public async ValueTask<IQueryResponseDto<ListResultDto<ContentTypeDto>>> Handle(
             Query request,
             CancellationToken cancellationToken
         )

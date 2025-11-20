@@ -1,4 +1,4 @@
-﻿using MediatR;
+﻿using Mediator;
 using Raytha.Application.Common.Exceptions;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Models;
@@ -18,7 +18,7 @@ public class GetBackgroundTaskById
             _db = db;
         }
 
-        public async Task<IQueryResponseDto<BackgroundTaskDto>> Handle(
+        public async ValueTask<IQueryResponseDto<BackgroundTaskDto>> Handle(
             Query request,
             CancellationToken cancellationToken
         )

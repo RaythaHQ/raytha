@@ -1,5 +1,5 @@
 ﻿using CSharpVitamins;
-using MediatR;
+using Mediator;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Models.RenderModels;
 using Raytha.Domain.Common;
@@ -31,7 +31,7 @@ public class AdminCreatedEventHandler : INotificationHandler<AdminCreatedEvent>
         _currentOrganization = currentOrganization;
     }
 
-    public async Task Handle(AdminCreatedEvent notification, CancellationToken cancellationToken)
+    public async ValueTask Handle(AdminCreatedEvent notification, CancellationToken cancellationToken)
     {
         if (notification.SendEmail)
         {

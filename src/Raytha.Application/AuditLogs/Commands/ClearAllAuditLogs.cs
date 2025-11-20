@@ -1,4 +1,4 @@
-using MediatR;
+using Mediator;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Models;
 using Raytha.Application.Common.Utils;
@@ -18,7 +18,7 @@ public class ClearAllAuditLogs
             _dbCommands = dbCommands;
         }
 
-        public async Task<CommandResponseDto<string>> Handle(
+        public async ValueTask<CommandResponseDto<string>> Handle(
             Command request,
             CancellationToken cancellationToken
         )

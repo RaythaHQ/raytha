@@ -1,5 +1,5 @@
 using FluentValidation;
-using MediatR;
+using Mediator;
 using Raytha.Application.Common.Exceptions;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Models;
@@ -23,7 +23,7 @@ public class GetAuthenticationSchemeByName
             _db = db;
         }
 
-        public async Task<IQueryResponseDto<AuthenticationSchemeDto>> Handle(
+        public async ValueTask<IQueryResponseDto<AuthenticationSchemeDto>> Handle(
             Query request,
             CancellationToken cancellationToken
         )

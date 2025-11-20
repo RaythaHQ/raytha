@@ -1,4 +1,4 @@
-﻿using MediatR;
+﻿using Mediator;
 using Microsoft.EntityFrameworkCore;
 using Raytha.Application.Common.Exceptions;
 using Raytha.Application.Common.Interfaces;
@@ -20,7 +20,7 @@ public class GetWebTemplateById
             _db = db;
         }
 
-        public async Task<IQueryResponseDto<WebTemplateDto>> Handle(
+        public async ValueTask<IQueryResponseDto<WebTemplateDto>> Handle(
             Query request,
             CancellationToken cancellationToken
         )

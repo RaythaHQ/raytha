@@ -1,10 +1,11 @@
 ﻿using System.Reflection;
-using MediatR;
+using Mediator;
 using Microsoft.AspNetCore.DataProtection.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Domain.Entities;
+using Raytha.Infrastructure.Common;
 using Raytha.Infrastructure.Persistence.Interceptors;
 
 namespace Raytha.Infrastructure.Persistence;

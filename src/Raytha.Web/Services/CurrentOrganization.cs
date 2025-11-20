@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using CSharpVitamins;
-using MediatR;
+using Mediator;
 using Raytha.Application.AuthenticationSchemes;
 using Raytha.Application.AuthenticationSchemes.Queries;
 using Raytha.Application.Common.Interfaces;

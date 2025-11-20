@@ -1,4 +1,4 @@
-﻿using MediatR;
+﻿using Mediator;
 using Microsoft.EntityFrameworkCore;
 using Raytha.Application.Common.Attributes;
 using Raytha.Application.Common.Interfaces;
@@ -29,7 +29,7 @@ public class GetDeletedContentItems
             _db = db;
         }
 
-        public async Task<IQueryResponseDto<ListResultDto<DeletedContentItemDto>>> Handle(
+        public async ValueTask<IQueryResponseDto<ListResultDto<DeletedContentItemDto>>> Handle(
             Query request,
             CancellationToken cancellationToken
         )

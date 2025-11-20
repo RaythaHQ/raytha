@@ -1,4 +1,4 @@
-﻿using MediatR;
+﻿using Mediator;
 using Microsoft.EntityFrameworkCore;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Shared;
@@ -19,7 +19,7 @@ public class ContentItemUpdatedEventHandler : INotificationHandler<ContentItemUp
         _db = db;
     }
 
-    public async Task Handle(
+    public async ValueTask Handle(
         ContentItemUpdatedEvent notification,
         CancellationToken cancellationToken
     )

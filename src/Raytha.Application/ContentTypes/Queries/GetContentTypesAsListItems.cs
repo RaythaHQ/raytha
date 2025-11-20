@@ -1,4 +1,4 @@
-﻿using MediatR;
+﻿using Mediator;
 using Microsoft.EntityFrameworkCore;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Models;
@@ -26,7 +26,7 @@ public class GetContentTypesAsListItems
             _db = db;
         }
 
-        public async Task<IQueryResponseDto<ListResultDto<ContentTypeListItemDto>>> Handle(
+        public async ValueTask<IQueryResponseDto<ListResultDto<ContentTypeListItemDto>>> Handle(
             Query request,
             CancellationToken cancellationToken
         )

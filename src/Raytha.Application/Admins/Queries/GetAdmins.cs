@@ -1,6 +1,6 @@
 using System.Data;
 using FluentValidation;
-using MediatR;
+using Mediator;
 using Microsoft.EntityFrameworkCore;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Models;
@@ -27,7 +27,7 @@ public class GetAdmins
             _db = db;
         }
 
-        public async Task<IQueryResponseDto<ListResultDto<AdminDto>>> Handle(
+        public async ValueTask<IQueryResponseDto<ListResultDto<AdminDto>>> Handle(
             Query request,
             CancellationToken cancellationToken
         )

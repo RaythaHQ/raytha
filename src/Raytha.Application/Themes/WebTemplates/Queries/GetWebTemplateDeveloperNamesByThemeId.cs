@@ -1,5 +1,5 @@
 ﻿using CSharpVitamins;
-using MediatR;
+using Mediator;
 using Microsoft.EntityFrameworkCore;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Models;
@@ -22,7 +22,7 @@ public class GetWebTemplateDeveloperNamesByThemeId
             _db = db;
         }
 
-        public async Task<IQueryResponseDto<IReadOnlyCollection<string>>> Handle(
+        public async ValueTask<IQueryResponseDto<IReadOnlyCollection<string>>> Handle(
             Query request,
             CancellationToken cancellationToken
         )

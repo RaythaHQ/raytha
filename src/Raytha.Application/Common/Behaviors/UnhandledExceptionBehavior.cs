@@ -1,29 +1,29 @@
-﻿using MediatR;
+﻿using Mediator;
 using Microsoft.Extensions.Logging;
 using Raytha.Application.Common.Exceptions;
 
 namespace Raytha.Application.Common.Behaviors;
 
-public class UnhandledExceptionBehaviour<TRequest, TResponse>
-    : IPipelineBehavior<TRequest, TResponse>
-    where TRequest : IRequest<TResponse>
+public class UnhandledExceptionBehaviour<TMessage, TResponse>
+    : IPipelineBehavior<TMessage, TResponse>
+    where TMessage : IMessage
 {
-    private readonly ILogger<TRequest> _logger;
+    private readonly ILogger<TMessage> _logger;
 
-    public UnhandledExceptionBehaviour(ILogger<TRequest> logger)
+    public UnhandledExceptionBehaviour(ILogger<TMessage> logger)
     {
         _logger = logger;
     }
 
-    public async Task<TResponse> Handle(
-        TRequest request,
-        RequestHandlerDelegate<TResponse> next,
+    public async ValueTask<TResponse> Handle(
+        TMessage message,
+        MessageHandlerDelegate<TMessage, TResponse> next,
         CancellationToken cancellationToken
     )
     {
         try
         {
-            return await next();
+            return await next(message, cancellationToken);
         }
         catch (NotFoundException ex)
         {
@@ -37,7 +37,7 @@ public class UnhandledExceptionBehaviour<TRequest, TResponse>
         }
         catch (Exception ex)
         {
-            var requestName = typeof(TRequest).Name;
+            var messageName = typeof(TMessage).Name;
 
             // Security: Avoid logging entire request payloads, which may contain credentials, tokens,
             // or other sensitive fields; instead log only the request name alongside the exception to
@@ -45,7 +45,7 @@ public class UnhandledExceptionBehaviour<TRequest, TResponse>
             _logger.LogError(
                 ex,
                 "Raytha Request: Unhandled Exception for Request {Name}",
-                requestName
+                messageName
             );
 
             throw;

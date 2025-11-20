@@ -1,4 +1,4 @@
-﻿using MediatR;
+﻿using Mediator;
 using Microsoft.EntityFrameworkCore;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Models;
@@ -21,7 +21,7 @@ public class GetLatestNavigationMenuRevisions
             _db = db;
         }
 
-        public async Task<IQueryResponseDto<IReadOnlyCollection<NavigationMenuRevisionDto>>> Handle(
+        public async ValueTask<IQueryResponseDto<IReadOnlyCollection<NavigationMenuRevisionDto>>> Handle(
             Query request,
             CancellationToken cancellationToken
         )

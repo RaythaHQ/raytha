@@ -1,4 +1,4 @@
-using MediatR;
+using Mediator;
 using Raytha.Application.Common.Exceptions;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Models;
@@ -21,7 +21,7 @@ public class GetRouteByPath
             _db = db;
         }
 
-        public async Task<IQueryResponseDto<RouteDto>> Handle(
+        public async ValueTask<IQueryResponseDto<RouteDto>> Handle(
             Query request,
             CancellationToken cancellationToken
         )

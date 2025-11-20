@@ -1,4 +1,4 @@
-﻿using MediatR;
+﻿using Mediator;
 using Microsoft.EntityFrameworkCore;
 using Raytha.Application.Common.Exceptions;
 using Raytha.Application.Common.Interfaces;
@@ -23,7 +23,7 @@ public class LoginWithApiKey
             _db = db;
         }
 
-        public async Task<CommandResponseDto<LoginDto>> Handle(
+        public async ValueTask<CommandResponseDto<LoginDto>> Handle(
             Command request,
             CancellationToken cancellationToken
         )
