@@ -70,7 +70,7 @@ public class PublicSettings : BaseContentTypeContextPageModel
             },
             new BreadcrumbNode
             {
-                Label = "Public Settings",
+                Label = "Edit public settings",
                 RouteName = RouteNames.ContentTypes.Views.PublicSettings,
                 IsActive = true,
             }

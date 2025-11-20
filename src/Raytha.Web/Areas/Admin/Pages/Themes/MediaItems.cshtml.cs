@@ -29,7 +29,7 @@ public class MediaItems : BaseAdminPageModel, ISubActionViewModel
             },
             new BreadcrumbNode
             {
-                Label = "Media Items",
+                Label = "View media items",
                 RouteName = RouteNames.Themes.MediaItems,
                 IsActive = true,
             }

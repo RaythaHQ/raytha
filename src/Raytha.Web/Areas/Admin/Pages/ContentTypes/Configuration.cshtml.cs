@@ -36,7 +36,7 @@ public class Configuration : BaseContentTypeContextPageModel
             },
             new BreadcrumbNode
             {
-                Label = "Configuration",
+                Label = "Edit configuration",
                 RouteName = RouteNames.ContentTypes.Configuration,
                 IsActive = true,
             }

@@ -40,7 +40,7 @@ public class Reorder : BaseContentTypeContextPageModel
             },
             new BreadcrumbNode
             {
-                Label = "Reorder",
+                Label = "Reorder fields",
                 RouteName = RouteNames.ContentTypes.Fields.Reorder,
                 IsActive = true,
             }

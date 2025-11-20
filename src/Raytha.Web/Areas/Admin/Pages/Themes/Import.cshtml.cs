@@ -27,7 +27,7 @@ public class Import : BaseAdminPageModel
             },
             new BreadcrumbNode
             {
-                Label = "Import",
+                Label = "Import theme",
                 RouteName = RouteNames.Themes.Import,
                 IsActive = true,
             }

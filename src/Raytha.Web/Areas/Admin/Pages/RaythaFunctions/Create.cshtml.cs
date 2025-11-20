@@ -27,7 +27,7 @@ public class Create : BaseAdminPageModel
             },
             new BreadcrumbNode
             {
-                Label = "Create",
+                Label = "Create Raytha function",
                 RouteName = RouteNames.RaythaFunctions.Create,
                 IsActive = true,
             }

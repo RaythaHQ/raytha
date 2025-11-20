@@ -51,7 +51,7 @@ public class Revisions
             },
             new BreadcrumbNode
             {
-                Label = "Revisions",
+                Label = "View revisions",
                 RouteName = RouteNames.ContentItems.Revisions,
                 IsActive = true,
             }

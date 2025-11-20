@@ -57,7 +57,7 @@ public class Create : BaseAdminPageModel, ISubActionViewModel
             },
             new BreadcrumbNode
             {
-                Label = "Create",
+                Label = "Create menu item",
                 RouteName = RouteNames.NavigationMenus.MenuItems.Create,
                 IsActive = true,
             }

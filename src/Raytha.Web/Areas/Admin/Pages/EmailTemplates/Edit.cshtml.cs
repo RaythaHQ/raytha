@@ -37,7 +37,7 @@ public class Edit : BaseAdminPageModel, ISubActionViewModel
             },
             new BreadcrumbNode
             {
-                Label = "Edit",
+                Label = "Edit email template",
                 RouteName = RouteNames.EmailTemplates.Edit,
                 IsActive = true,
             }

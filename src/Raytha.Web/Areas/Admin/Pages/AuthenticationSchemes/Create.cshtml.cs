@@ -28,6 +28,7 @@ public class Create : BaseAdminPageModel
                 Label = "Settings",
                 RouteName = RouteNames.Configuration.Index,
                 IsActive = false,
+                Icon = SidebarIcons.Settings,
             },
             new BreadcrumbNode
             {
@@ -37,7 +38,7 @@ public class Create : BaseAdminPageModel
             },
             new BreadcrumbNode
             {
-                Label = "Create",
+                Label = "Create authentication scheme",
                 RouteName = RouteNames.AuthenticationSchemes.Create,
                 IsActive = true,
             }

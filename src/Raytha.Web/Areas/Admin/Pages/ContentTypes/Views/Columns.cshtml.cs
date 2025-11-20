@@ -43,7 +43,7 @@ public class Columns : BaseContentTypeContextPageModel
             },
             new BreadcrumbNode
             {
-                Label = "Columns",
+                Label = "Edit columns",
                 RouteName = RouteNames.ContentTypes.Views.Columns,
                 IsActive = true,
             }

@@ -5,7 +5,7 @@
 @model Raytha.Web.Areas.Admin.Pages.ContentItems.Index
 
 @{
-    var pageTitle = $"{Model.CurrentView.ContentType.LabelPlural} > {Model.CurrentView.Label}";
+    var pageTitle = $"{Model.CurrentView.Label}";
     Layout = "SidebarLayout";
     ViewData["Title"] = pageTitle;
     ViewData["ActiveMenu"] = Model.CurrentView.ContentType.DeveloperName;

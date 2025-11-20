@@ -60,7 +60,7 @@ public class Reorder : BaseAdminPageModel, ISubActionViewModel
             },
             new BreadcrumbNode
             {
-                Label = "Reorder",
+                Label = "Reorder menu items",
                 RouteName = RouteNames.NavigationMenus.MenuItems.Reorder,
                 IsActive = true,
             }

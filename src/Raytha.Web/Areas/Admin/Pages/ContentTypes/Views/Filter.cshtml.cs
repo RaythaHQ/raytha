@@ -49,7 +49,7 @@ public class Filter : BaseContentTypeContextPageModel
             },
             new BreadcrumbNode
             {
-                Label = "Filter",
+                Label = "Edit filter",
                 RouteName = RouteNames.ContentTypes.Views.Filter,
                 IsActive = true,
             }

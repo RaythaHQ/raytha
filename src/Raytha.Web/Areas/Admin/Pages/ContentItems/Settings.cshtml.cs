@@ -52,7 +52,7 @@ public class Settings : BaseHasFavoriteViewsPageModel, ISubActionViewModel
             },
             new BreadcrumbNode
             {
-                Label = "Settings",
+                Label = "Edit settings",
                 RouteName = RouteNames.ContentItems.Settings,
                 IsActive = true,
             }

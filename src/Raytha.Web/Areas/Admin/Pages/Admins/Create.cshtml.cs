@@ -36,7 +36,7 @@ public class Create : BaseAdminPageModel
             },
             new BreadcrumbNode
             {
-                Label = "Create",
+                Label = "Create admin",
                 RouteName = RouteNames.Admins.Create,
                 IsActive = true,
             }

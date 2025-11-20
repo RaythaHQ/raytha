@@ -55,7 +55,7 @@ public class Edit : BaseHasFavoriteViewsPageModel, ISubActionViewModel
             },
             new BreadcrumbNode
             {
-                Label = "Edit",
+                Label = $"Edit {CurrentView.ContentType.LabelSingular.ToLower()}",
                 RouteName = RouteNames.ContentItems.Edit,
                 IsActive = true,
             }

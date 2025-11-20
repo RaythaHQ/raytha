@@ -34,7 +34,7 @@ public class Index : BaseAdminPageModel
             },
             new BreadcrumbNode
             {
-                Label = "Web Templates",
+                Label = "Web templates",
                 RouteName = RouteNames.Themes.WebTemplates.Index,
                 IsActive = true,
             }

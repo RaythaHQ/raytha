@@ -38,7 +38,7 @@ public class Revisions
             },
             new BreadcrumbNode
             {
-                Label = "Revisions",
+                Label = "View revisions",
                 RouteName = RouteNames.EmailTemplates.Revisions,
                 IsActive = true,
             }

@@ -2,7 +2,7 @@
 @model Raytha.Web.Areas.Admin.Pages.ContentItems.Create
 
 @{
-    var pageTitle = $"{Model.CurrentView.ContentType.LabelPlural} > Create";
+    var pageTitle = $"Create {Model.CurrentView.ContentType.LabelSingular.ToLower()}";
     Layout = "SidebarLayout";
     ViewData["Title"] = pageTitle;
     ViewData["ActiveMenu"] = Model.CurrentView.ContentType.DeveloperName;

@@ -6,6 +6,7 @@ using Raytha.Application.Roles.Commands;
 using Raytha.Domain.Entities;
 using Raytha.Web.Areas.Admin.Pages.Shared;
 using Raytha.Web.Areas.Admin.Pages.Shared.Models;
+using Raytha.Web.Areas.Shared.Models;
 
 namespace Raytha.Web.Areas.Admin.Pages.Roles;
 
@@ -17,6 +18,28 @@ public class Create : BaseAdminPageModel
 
     public async Task<IActionResult> OnGet()
     {
+        SetBreadcrumbs(
+            new BreadcrumbNode
+            {
+                Label = "Settings",
+                RouteName = RouteNames.Configuration.Index,
+                IsActive = false,
+                Icon = SidebarIcons.Settings,
+            },
+            new BreadcrumbNode
+            {
+                Label = "Roles",
+                RouteName = RouteNames.Roles.Index,
+                IsActive = false,
+            },
+            new BreadcrumbNode
+            {
+                Label = "Create role",
+                RouteName = RouteNames.Roles.Create,
+                IsActive = true,
+            }
+        );
+
         var systemPermissions = BuiltInSystemPermission.Permissions.Select(
             p => new FormModel.SystemPermissionCheckboxItemViewModel
             {

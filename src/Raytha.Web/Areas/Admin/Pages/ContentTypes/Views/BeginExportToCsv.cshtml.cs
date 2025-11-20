@@ -1,10 +1,13 @@
+using System.Collections.Generic;
 using CSharpVitamins;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Raytha.Application.BackgroundTasks.Queries;
 using Raytha.Application.ContentItems.Commands;
 using Raytha.Domain.Entities;
+using Raytha.Web.Areas.Admin.Pages.Shared;
 using Raytha.Web.Areas.Admin.Pages.Shared.Models;
+using Raytha.Web.Areas.Shared.Models;
 
 namespace Raytha.Web.Areas.Admin.Pages.ContentTypes.Views;
 
@@ -31,6 +34,32 @@ public class BeginExportToCsv : BaseHasFavoriteViewsPageModel
             var response = await Mediator.Send(new GetBackgroundTaskById.Query { Id = jobId });
             return new JsonResult(response.Result);
         }
+
+        SetBreadcrumbs(
+            new BreadcrumbNode
+            {
+                Label = CurrentView.ContentType.LabelPlural,
+                RouteName = RouteNames.ContentItems.Index,
+                RouteValues = new Dictionary<string, string>
+                {
+                    { "contentTypeDeveloperName", CurrentView.ContentType.DeveloperName },
+                },
+                IsActive = false,
+                Icon = SidebarIcons.ContentItems,
+            },
+            new BreadcrumbNode
+            {
+                Label = "Views",
+                RouteName = RouteNames.ContentTypes.Views.Index,
+                IsActive = false,
+            },
+            new BreadcrumbNode
+            {
+                Label = "Export to CSV",
+                RouteName = RouteNames.ContentTypes.Views.BeginExportToCsv,
+                IsActive = true,
+            }
+        );
 
         PathBase = CurrentOrganization.PathBase;
         BackToListUrl = backToListUrl;

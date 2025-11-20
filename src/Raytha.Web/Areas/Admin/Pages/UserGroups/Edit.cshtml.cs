@@ -34,7 +34,7 @@ public class Edit : BaseAdminPageModel
             },
             new BreadcrumbNode
             {
-                Label = "Edit",
+                Label = "Edit user group",
                 RouteName = RouteNames.UserGroups.Edit,
                 IsActive = true,
             }

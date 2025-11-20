@@ -33,7 +33,7 @@ public class Create : BaseAdminPageModel
             },
             new BreadcrumbNode
             {
-                Label = "Create",
+                Label = "Create user group",
                 RouteName = RouteNames.UserGroups.Create,
                 IsActive = true,
             }

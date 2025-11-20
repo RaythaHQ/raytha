@@ -31,7 +31,7 @@ public class Create : BaseAdminPageModel
             },
             new BreadcrumbNode
             {
-                Label = "Create",
+                Label = "Create menu",
                 RouteName = RouteNames.NavigationMenus.Create,
                 IsActive = true,
             }

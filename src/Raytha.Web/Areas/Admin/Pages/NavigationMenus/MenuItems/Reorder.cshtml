@@ -2,7 +2,7 @@
 @using Raytha.Application.Common.Utils
 @model Raytha.Web.Areas.Admin.Pages.NavigationMenus.MenuItems.Reorder
 @{
-    var pageTitle = "Menus > Menu items > Reorder";
+    var pageTitle = "Reorder menu items";
     Layout = "SubActionLayout";
     ViewData["Title"] = pageTitle;
     ViewData["ActiveMenu"] = "Menus";
@@ -17,6 +17,12 @@
     pageName: null,
     values: new { navigationMenuId = Model.NavigationMenuId, parentMenuItem = "__PARENT__" }
     );
+
+    BackLinkOptions back = new BackLinkOptions
+    {
+        Page = "/NavigationMenus/MenuItems/Index",
+        RouteValues = new RouteValueDictionary { ["navigationMenuId"] = Model.NavigationMenuId }
+    };
 }
 
 @{
@@ -46,6 +52,7 @@
 }
 
 
+@(await Html.PartialAsync("_Partials/BackToList", back))
 <div class="py-4">
     <div class="col-lg-12">
         <div class="mb-3">

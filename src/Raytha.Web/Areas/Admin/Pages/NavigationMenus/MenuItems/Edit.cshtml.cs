@@ -59,7 +59,7 @@ public class Edit : BaseAdminPageModel, ISubActionViewModel
             },
             new BreadcrumbNode
             {
-                Label = "Edit",
+                Label = "Edit menu item",
                 RouteName = RouteNames.NavigationMenus.MenuItems.Edit,
                 IsActive = true,
             }

@@ -5,7 +5,7 @@
 @inject Microsoft.AspNetCore.Authorization.IAuthorizationService AuthorizationService
 
 @{
-    var pageTitle = $"{Model.CurrentView.ContentType.LabelPlural} > Views";
+    var pageTitle = "Views";
     Layout = "SidebarLayout";
     ViewData["Title"] = pageTitle;
     ViewData["ActiveMenu"] = Model.CurrentView.ContentType.DeveloperName;

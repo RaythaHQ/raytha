@@ -30,7 +30,7 @@ public class Create : BaseAdminPageModel
             },
             new BreadcrumbNode
             {
-                Label = "Create",
+                Label = "Create content type",
                 RouteName = RouteNames.ContentTypes.Create,
                 IsActive = true,
             }

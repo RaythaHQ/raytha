@@ -31,7 +31,7 @@ public class Export : BaseAdminPageModel, ISubActionViewModel
             },
             new BreadcrumbNode
             {
-                Label = "Export",
+                Label = "Export theme",
                 RouteName = RouteNames.Themes.Export,
                 IsActive = true,
             }
