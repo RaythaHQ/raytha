@@ -339,14 +339,16 @@ public class BeginImportContentItemsFromCsv
                 _db.BackgroundTasks.Update(job);
                 await _db.SaveChangesAsync(cancellationToken);
 
-                var myExport = new Csv.CsvExport();
+                var csvWriter = new CsvWriterUtility();
                 foreach (var key in errorList.Keys)
                 {
-                    myExport.AddRow();
-                    myExport["Row Number"] = key.ToString();
-                    myExport["Error Message"] = errorList[key];
+                    csvWriter.AddRow(new Dictionary<string, string>
+                    {
+                        { "Row Number", key.ToString() },
+                        { "Error Message", errorList[key] }
+                    });
                 }
-                var csvExportAsBytes = myExport.ExportToBytes();
+                var csvExportAsBytes = csvWriter.ExportToBytes();
                 string fileName =
                     $"{_currentOrganization.TimeZoneConverter.UtcToTimeZoneAsDateTimeFormat(DateTime.UtcNow)}-{contentType.DeveloperName}.csv";
                 var id = Guid.NewGuid();

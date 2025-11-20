@@ -11,7 +11,6 @@
     <ProjectReference Include="..\Raytha.Domain\Raytha.Domain.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="CsvExport" Version="2.2.0" />
     <PackageReference Include="LumenWorksCsvReader2" Version="4.4.0" />
     <PackageReference
       Include="Microsoft.Extensions.DependencyInjection.Abstractions"
