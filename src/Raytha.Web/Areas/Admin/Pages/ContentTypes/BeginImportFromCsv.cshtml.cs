@@ -1,9 +1,12 @@
+using System.Collections.Generic;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Raytha.Application.BackgroundTasks.Queries;
 using Raytha.Application.ContentItems.Commands;
 using Raytha.Domain.Entities;
+using Raytha.Web.Areas.Admin.Pages.Shared;
 using Raytha.Web.Areas.Admin.Pages.Shared.Models;
+using Raytha.Web.Areas.Shared.Models;
 
 namespace Raytha.Web.Areas.Admin.Pages.ContentTypes;
 
@@ -29,6 +32,26 @@ public class BeginImportFromCsv : BaseHasFavoriteViewsPageModel
         string backToListUrl = ""
     )
     {
+        SetBreadcrumbs(
+            new BreadcrumbNode
+            {
+                Label = CurrentView.ContentType.LabelPlural,
+                RouteName = RouteNames.ContentItems.Index,
+                RouteValues = new Dictionary<string, string>
+                {
+                    { "contentTypeDeveloperName", CurrentView.ContentType.DeveloperName },
+                },
+                IsActive = false,
+                Icon = SidebarIcons.ContentItems,
+            },
+            new BreadcrumbNode
+            {
+                Label = "Import from CSV",
+                RouteName = RouteNames.ContentTypes.BeginImportFromCsv,
+                IsActive = true,
+            }
+        );
+
         TaskId = taskId;
         BackToListUrl = backToListUrl;
         PathBase = CurrentOrganization.PathBase;

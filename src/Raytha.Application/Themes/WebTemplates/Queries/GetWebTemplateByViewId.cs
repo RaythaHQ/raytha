@@ -1,5 +1,5 @@
 ﻿using CSharpVitamins;
-using MediatR;
+using Mediator;
 using Microsoft.EntityFrameworkCore;
 using Raytha.Application.Common.Exceptions;
 using Raytha.Application.Common.Interfaces;
@@ -25,7 +25,7 @@ public class GetWebTemplateByViewId
             _db = db;
         }
 
-        public async Task<IQueryResponseDto<WebTemplateDto>> Handle(
+        public async ValueTask<IQueryResponseDto<WebTemplateDto>> Handle(
             Query request,
             CancellationToken cancellationToken
         )

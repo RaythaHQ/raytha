@@ -40,7 +40,7 @@ public class DeletedContentItemsList
             },
             new BreadcrumbNode
             {
-                Label = "Deleted Items",
+                Label = "View deleted items",
                 RouteName = RouteNames.ContentTypes.DeletedContentItemsList,
                 IsActive = true,
             }

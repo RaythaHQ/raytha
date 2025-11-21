@@ -1,7 +1,9 @@
 ﻿using System;
 using System.IO;
+using System.Text.Json;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Diagnostics;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.HttpOverrides;
@@ -137,6 +139,32 @@ public class Startup
                                 scheme.Name = "X-API-KEY";
                             }
                         );
+                }
+            );
+
+            endpoints.MapHealthChecks(
+                "/healthz",
+                new HealthCheckOptions
+                {
+                    ResponseWriter = async (ctx, report) =>
+                    {
+                        ctx.Response.ContentType = "application/json";
+                        var json = JsonSerializer.Serialize(
+                            new
+                            {
+                                status = report.Status.ToString(),
+                                checks = report.Entries.Select(e => new
+                                {
+                                    name = e.Key,
+                                    status = e.Value.Status.ToString(),
+                                    error = e.Value.Exception?.Message,
+                                    duration = e.Value.Duration.ToString(),
+                                }),
+                            },
+                            new JsonSerializerOptions { WriteIndented = true }
+                        );
+                        await ctx.Response.WriteAsync(json);
+                    },
                 }
             );
         });

@@ -1,6 +1,6 @@
 ﻿using CSharpVitamins;
 using FluentValidation;
-using MediatR;
+using Mediator;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Models;
 using Raytha.Application.Common.Utils;
@@ -57,7 +57,7 @@ public class CreateApiKey
             _db = db;
         }
 
-        public async Task<CommandResponseDto<string>> Handle(
+        public async ValueTask<CommandResponseDto<string>> Handle(
             Command request,
             CancellationToken cancellationToken
         )

@@ -4,7 +4,7 @@
 
 
 @{
-    var pageTitle = $"{Model.CurrentView.ContentType.LabelPlural} > Edit";
+    var pageTitle = $"Edit {Model.CurrentView.ContentType.LabelSingular.ToLower()}";
     Layout = "SubActionLayout";
     ViewData["Title"] = pageTitle;
     ViewData["ActiveMenu"] = Model.CurrentView.ContentType.DeveloperName;

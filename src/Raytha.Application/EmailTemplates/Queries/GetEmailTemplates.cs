@@ -1,4 +1,4 @@
-﻿using MediatR;
+﻿using Mediator;
 using Microsoft.EntityFrameworkCore;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Models;
@@ -26,7 +26,7 @@ public class GetEmailTemplates
             _db = db;
         }
 
-        public async Task<IQueryResponseDto<ListResultDto<EmailTemplateDto>>> Handle(
+        public async ValueTask<IQueryResponseDto<ListResultDto<EmailTemplateDto>>> Handle(
             Query request,
             CancellationToken cancellationToken
         )

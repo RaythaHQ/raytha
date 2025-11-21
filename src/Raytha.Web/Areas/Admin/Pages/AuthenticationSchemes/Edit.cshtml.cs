@@ -30,6 +30,7 @@ public class Edit : BaseAdminPageModel
                 Label = "Settings",
                 RouteName = RouteNames.Configuration.Index,
                 IsActive = false,
+                Icon = SidebarIcons.Settings,
             },
             new BreadcrumbNode
             {
@@ -39,7 +40,7 @@ public class Edit : BaseAdminPageModel
             },
             new BreadcrumbNode
             {
-                Label = "Edit",
+                Label = "Edit authentication scheme",
                 RouteName = RouteNames.AuthenticationSchemes.Edit,
                 IsActive = true,
             }

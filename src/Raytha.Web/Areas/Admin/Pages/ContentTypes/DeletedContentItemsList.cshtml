@@ -3,7 +3,7 @@
 @model Raytha.Web.Areas.Admin.Pages.ContentTypes.DeletedContentItemsList
 
 @{
-    var pageTitle = $"{Model.CurrentView.ContentType.LabelPlural} > Deleted content items";
+    var pageTitle = "View deleted items";
     Layout = "SidebarLayout";
     ViewData["Title"] = pageTitle;
     ViewData["ActiveMenu"] = Model.CurrentView.ContentType.DeveloperName;

@@ -1,5 +1,5 @@
 ﻿using CSharpVitamins;
-using MediatR;
+using Mediator;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Models;
 using Raytha.Application.Common.Utils;

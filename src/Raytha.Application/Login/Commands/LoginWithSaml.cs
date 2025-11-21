@@ -5,7 +5,7 @@ using System.Text.Json.Serialization;
 using System.Xml;
 using CSharpVitamins;
 using FluentValidation;
-using MediatR;
+using Mediator;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.JsonWebTokens;
 using Raytha.Application.Common.Exceptions;
@@ -150,7 +150,7 @@ public class LoginWithSaml
             _db = db;
         }
 
-        public async Task<CommandResponseDto<LoginDto>> Handle(
+        public async ValueTask<CommandResponseDto<LoginDto>> Handle(
             Command request,
             CancellationToken cancellationToken
         )

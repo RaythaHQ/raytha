@@ -1,5 +1,5 @@
 ﻿using FluentValidation;
-using MediatR;
+using Mediator;
 using Microsoft.EntityFrameworkCore;
 using Raytha.Application.Common.Exceptions;
 using Raytha.Application.Common.Interfaces;
@@ -84,7 +84,7 @@ public class ExecuteRaythaFunction
             _raythaFunctionScriptEngine = raythaFunctionScriptEngine;
         }
 
-        public async Task<CommandResponseDto<object>> Handle(
+        public async ValueTask<CommandResponseDto<object>> Handle(
             Command request,
             CancellationToken cancellationToken
         )

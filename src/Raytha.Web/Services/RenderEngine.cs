@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using Fluid;
 using Fluid.Filters;
 using Fluid.Values;
-using MediatR;
+using Mediator;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Utils;
 using Raytha.Application.ContentItems.Queries;

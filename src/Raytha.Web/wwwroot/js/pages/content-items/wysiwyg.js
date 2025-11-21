@@ -160,6 +160,18 @@ function createLinkModalHTML() {
                                         Open in new window
                                     </label>
                                 </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="link-noopener">
+                                    <label class="form-check-label" for="link-noopener">
+                                        No opener (prevents access to window.opener)
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="link-noreferrer">
+                                    <label class="form-check-label" for="link-noreferrer">
+                                        No referrer (don't send referrer information)
+                                    </label>
+                                </div>
                             </div>
                             <div class="tab-pane fade" id="link-upload" role="tabpanel">
                                 <div id="link-uppy-container" class="uppy-container mt-3"></div>
@@ -558,6 +570,84 @@ function showLinkContextMenu(e, editor, config) {
 }
 
 /**
+ * Check if an image is inside a link
+ * @param {Object} editor - TipTap editor instance
+ * @param {HTMLElement} imgElement - Image element
+ * @returns {Object|null} Link attributes if linked, null otherwise
+ */
+function getImageLinkAttributes(editor, imgElement) {
+    try {
+        const pos = editor.view.posAtDOM(imgElement, 0);
+        const $pos = editor.state.doc.resolve(pos);
+        
+        // Check if the image is wrapped in a link mark
+        const marks = $pos.marks();
+        const linkMark = marks.find(mark => mark.type.name === 'link');
+        
+        if (linkMark) {
+            return linkMark.attrs;
+        }
+        
+        return null;
+    } catch (e) {
+        console.error('Error getting image link attributes:', e);
+        return null;
+    }
+}
+
+/**
+ * Wrap an image with a link
+ * @param {Object} editor - TipTap editor instance
+ * @param {HTMLElement} imgElement - Image element
+ * @param {Object} linkAttrs - Link attributes
+ */
+function linkImage(editor, imgElement, linkAttrs) {
+    try {
+        const pos = editor.view.posAtDOM(imgElement, 0);
+        const $pos = editor.state.doc.resolve(pos);
+        const imageNode = $pos.nodeAfter;
+        
+        if (imageNode && imageNode.type.name === 'image') {
+            const { tr } = editor.state;
+            const from = pos;
+            const to = pos + imageNode.nodeSize;
+            
+            // Add link mark to the image
+            tr.addMark(from, to, editor.schema.marks.link.create(linkAttrs));
+            editor.view.dispatch(tr);
+        }
+    } catch (e) {
+        console.error('Error linking image:', e);
+    }
+}
+
+/**
+ * Remove link from an image
+ * @param {Object} editor - TipTap editor instance
+ * @param {HTMLElement} imgElement - Image element
+ */
+function unlinkImage(editor, imgElement) {
+    try {
+        const pos = editor.view.posAtDOM(imgElement, 0);
+        const $pos = editor.state.doc.resolve(pos);
+        const imageNode = $pos.nodeAfter;
+        
+        if (imageNode && imageNode.type.name === 'image') {
+            const { tr } = editor.state;
+            const from = pos;
+            const to = pos + imageNode.nodeSize;
+            
+            // Remove link mark from the image
+            const linkMark = editor.schema.marks.link;
+            tr.removeMark(from, to, linkMark);
+            editor.view.dispatch(tr);
+        }
+    } catch (e) {
+        console.error('Error unlinking image:', e);
+    }
+}
+
+/**
  * Show image context menu on right-click
  * @param {MouseEvent} e - Mouse event
  * @param {Object} editor - TipTap editor instance
@@ -573,16 +663,27 @@ function showImageContextMenu(e, editor, config, imgElement) {
         existingMenu.remove();
     }
 
+    // Check if image is already linked
+    const linkAttrs = getImageLinkAttributes(editor, imgElement);
+    const isLinked = !!linkAttrs;
+
     // Create menu
     const menu = document.createElement('div');
     menu.className = 'tiptap-context-menu';
     menu.style.left = `${e.pageX}px`;
     menu.style.top = `${e.pageY}px`;
 
-    menu.innerHTML = `
-        <button type="button" class="context-menu-edit">Edit image</button>
-    `;
+    let menuItems = '<button type="button" class="context-menu-edit">Edit image</button>';
+    
+    if (isLinked) {
+        menuItems += '<button type="button" class="context-menu-edit-link">Edit link</button>';
+        menuItems += '<button type="button" class="context-menu-unlink">Unlink image</button>';
+        menuItems += '<button type="button" class="context-menu-open-link">Open link</button>';
+    } else {
+        menuItems += '<button type="button" class="context-menu-link">Link image</button>';
+    }
 
+    menu.innerHTML = menuItems;
     document.body.appendChild(menu);
 
     // Edit image
@@ -596,6 +697,44 @@ function showImageContextMenu(e, editor, config, imgElement) {
         };
         showImageModal(editor, config, attrs);
     });
+
+    // Link image (if not linked)
+    const linkBtn = menu.querySelector('.context-menu-link');
+    if (linkBtn) {
+        linkBtn.addEventListener('click', () => {
+            menu.remove();
+            showImageLinkModal(editor, config, imgElement, null);
+        });
+    }
+
+    // Edit link (if linked)
+    const editLinkBtn = menu.querySelector('.context-menu-edit-link');
+    if (editLinkBtn) {
+        editLinkBtn.addEventListener('click', () => {
+            menu.remove();
+            showImageLinkModal(editor, config, imgElement, linkAttrs);
+        });
+    }
+
+    // Unlink image (if linked)
+    const unlinkBtn = menu.querySelector('.context-menu-unlink');
+    if (unlinkBtn) {
+        unlinkBtn.addEventListener('click', () => {
+            menu.remove();
+            unlinkImage(editor, imgElement);
+        });
+    }
+
+    // Open link (if linked)
+    const openLinkBtn = menu.querySelector('.context-menu-open-link');
+    if (openLinkBtn) {
+        openLinkBtn.addEventListener('click', () => {
+            menu.remove();
+            if (linkAttrs && linkAttrs.href) {
+                window.open(linkAttrs.href, '_blank', 'noopener,noreferrer');
+            }
+        });
+    }
 
     // Close on outside click
     const closeMenu = (event) => {
@@ -614,6 +753,124 @@ function showImageContextMenu(e, editor, config, imgElement) {
         }
     };
     document.addEventListener('keydown', closeOnEscape);
+}
+
+/**
+ * Show image link modal
+ * @param {Object} editor - TipTap editor instance
+ * @param {Object} config - Configuration
+ * @param {HTMLElement} imgElement - Image element
+ * @param {Object} existingAttrs - Existing link attributes (for editing)
+ */
+function showImageLinkModal(editor, config, imgElement, existingAttrs = null) {
+    // Reuse the link modal HTML but with a different title
+    const modalEl = ensureModal('tiptap-link-modal', createLinkModalHTML());
+    
+    // Update title
+    const modalTitle = modalEl.querySelector('.modal-title');
+    modalTitle.textContent = existingAttrs ? 'Edit image link' : 'Link image';
+    
+    const modal = new bootstrap.Modal(modalEl);
+
+    const urlInput = modalEl.querySelector('#link-url');
+    const textInput = modalEl.querySelector('#link-text');
+    const titleInput = modalEl.querySelector('#link-title');
+    const newWindowCheckbox = modalEl.querySelector('#link-new-window');
+    const noopenerCheckbox = modalEl.querySelector('#link-noopener');
+    const noreferrerCheckbox = modalEl.querySelector('#link-noreferrer');
+    const insertBtn = modalEl.querySelector('#link-insert-btn');
+
+    // Hide text input and upload tab for image links (not needed)
+    textInput.closest('.mb-3').style.display = 'none';
+    const uploadTab = modalEl.querySelector('#link-upload-tab');
+    if (uploadTab) {
+        uploadTab.closest('.nav-item').style.display = 'none';
+    }
+
+    // Prefill for editing
+    if (existingAttrs) {
+        urlInput.value = existingAttrs.href || '';
+        titleInput.value = existingAttrs.title || '';
+        newWindowCheckbox.checked = existingAttrs.target === '_blank';
+        
+        // Parse rel attribute for noopener and noreferrer
+        const rel = existingAttrs.rel || '';
+        noopenerCheckbox.checked = rel.includes('noopener');
+        noreferrerCheckbox.checked = rel.includes('noreferrer');
+    } else {
+        urlInput.value = '';
+        titleInput.value = '';
+        newWindowCheckbox.checked = false;
+        noopenerCheckbox.checked = false;
+        noreferrerCheckbox.checked = false;
+    }
+
+    // Update button text
+    insertBtn.textContent = existingAttrs ? 'Update link' : 'Add link';
+
+    // Enable/disable insert button based on URL
+    const validateForm = () => {
+        insertBtn.disabled = !urlInput.value.trim();
+    };
+    urlInput.addEventListener('input', validateForm);
+    validateForm();
+
+    // Focus first input
+    modalEl.addEventListener('shown.bs.modal', () => {
+        urlInput.focus();
+    });
+
+    // Insert link handler
+    const handleInsert = () => {
+        const url = urlInput.value.trim();
+        if (!url) return;
+
+        const title = titleInput.value.trim();
+        const openInNewWindow = newWindowCheckbox.checked;
+        const noopener = noopenerCheckbox.checked;
+        const noreferrer = noreferrerCheckbox.checked;
+
+        // Build rel attribute
+        const relParts = [];
+        if (noopener) relParts.push('noopener');
+        if (noreferrer) relParts.push('noreferrer');
+        const rel = relParts.join(' ');
+
+        const linkAttrs = {
+            href: url,
+            ...(title && { title }),
+            ...(openInNewWindow && { target: '_blank' }),
+            ...(rel && { rel })
+        };
+
+        linkImage(editor, imgElement, linkAttrs);
+        modal.hide();
+    };
+
+    insertBtn.onclick = handleInsert;
+
+    // Handle Enter key in inputs
+    [urlInput, titleInput].forEach(input => {
+        input.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !insertBtn.disabled) {
+                e.preventDefault();
+                handleInsert();
+            }
+        });
+    });
+
+    // Cleanup on hide
+    modalEl.addEventListener('hidden.bs.modal', () => {
+        // Restore text input and upload tab visibility for regular link modal usage
+        textInput.closest('.mb-3').style.display = '';
+        if (uploadTab) {
+            uploadTab.closest('.nav-item').style.display = '';
+        }
+        modalTitle.textContent = 'Insert link';
+        insertBtn.textContent = 'Insert link';
+    }, { once: true });
+
+    modal.show();
 }
 
 /**
@@ -703,6 +960,8 @@ function showLinkModal(editor, config, existingAttrs = null) {
     const textInput = modalEl.querySelector('#link-text');
     const titleInput = modalEl.querySelector('#link-title');
     const newWindowCheckbox = modalEl.querySelector('#link-new-window');
+    const noopenerCheckbox = modalEl.querySelector('#link-noopener');
+    const noreferrerCheckbox = modalEl.querySelector('#link-noreferrer');
     const insertBtn = modalEl.querySelector('#link-insert-btn');
 
     // Prefill for editing
@@ -710,6 +969,12 @@ function showLinkModal(editor, config, existingAttrs = null) {
         urlInput.value = existingAttrs.href || '';
         titleInput.value = existingAttrs.title || '';
         newWindowCheckbox.checked = existingAttrs.target === '_blank';
+        
+        // Parse rel attribute for noopener and noreferrer
+        const rel = existingAttrs.rel || '';
+        noopenerCheckbox.checked = rel.includes('noopener');
+        noreferrerCheckbox.checked = rel.includes('noreferrer');
+        
         textInput.value = '';  // Can't easily get selected text for editing
     } else {
         // Prefill with selection text
@@ -719,6 +984,8 @@ function showLinkModal(editor, config, existingAttrs = null) {
         textInput.value = text;
         titleInput.value = '';
         newWindowCheckbox.checked = false;
+        noopenerCheckbox.checked = false;
+        noreferrerCheckbox.checked = false;
     }
 
     // Enable/disable insert button based on URL
@@ -768,11 +1035,20 @@ function showLinkModal(editor, config, existingAttrs = null) {
         const text = textInput.value.trim();
         const title = titleInput.value.trim();
         const openInNewWindow = newWindowCheckbox.checked;
+        const noopener = noopenerCheckbox.checked;
+        const noreferrer = noreferrerCheckbox.checked;
+
+        // Build rel attribute
+        const relParts = [];
+        if (noopener) relParts.push('noopener');
+        if (noreferrer) relParts.push('noreferrer');
+        const rel = relParts.join(' ');
 
         const linkAttrs = {
             href: url,
             ...(title && { title }),
-            ...(openInNewWindow && { target: '_blank', rel: 'noopener noreferrer' })
+            ...(openInNewWindow && { target: '_blank' }),
+            ...(rel && { rel })
         };
 
         if (existingAttrs) {
@@ -1176,8 +1452,9 @@ function showHTMLSourceModal(editor) {
     });
 
     saveBtn.onclick = () => {
-        const html = textarea.value.trim();
-        editor.commands.setContent(html, false);
+        const html = textarea.value;
+        // Set emitUpdate to true so the onUpdate handler fires and updates the form textarea
+        editor.commands.setContent(html, true);
         modal.hide();
     };
 
@@ -1323,6 +1600,664 @@ function createFontSizeExtension(Extension) {
 }
 
 /**
+ * Create Div node extension for TipTap
+ * @param {Object} Node - TipTap Node class
+ * @returns {Object} Div extension
+ */
+function createDivNode(Node) {
+    return Node.create({
+        name: 'div',
+        content: 'block+',
+        group: 'block',
+        defining: true,
+        parseHTML() {
+            return [{ tag: 'div' }];
+        },
+        renderHTML({ HTMLAttributes }) {
+            return ['div', HTMLAttributes, 0];
+        },
+    });
+}
+
+
+/**
+ * Create Section node extension for TipTap
+ * @param {Object} Node - TipTap Node class
+ * @returns {Object} Section extension
+ */
+function createSectionNode(Node) {
+    return Node.create({
+        name: 'section',
+        content: 'block+',
+        group: 'block',
+        defining: true,
+        parseHTML() {
+            return [{ tag: 'section' }];
+        },
+        renderHTML({ HTMLAttributes }) {
+            return ['section', HTMLAttributes, 0];
+        },
+    });
+}
+
+/**
+ * Create Article node extension for TipTap
+ * @param {Object} Node - TipTap Node class
+ * @returns {Object} Article extension
+ */
+function createArticleNode(Node) {
+    return Node.create({
+        name: 'article',
+        content: 'block+',
+        group: 'block',
+        defining: true,
+        parseHTML() {
+            return [{ tag: 'article' }];
+        },
+        renderHTML({ HTMLAttributes }) {
+            return ['article', HTMLAttributes, 0];
+        },
+    });
+}
+
+/**
+ * Create Aside node extension for TipTap
+ * @param {Object} Node - TipTap Node class
+ * @returns {Object} Aside extension
+ */
+function createAsideNode(Node) {
+    return Node.create({
+        name: 'aside',
+        content: 'block+',
+        group: 'block',
+        defining: true,
+        parseHTML() {
+            return [{ tag: 'aside' }];
+        },
+        renderHTML({ HTMLAttributes }) {
+            return ['aside', HTMLAttributes, 0];
+        },
+    });
+}
+
+/**
+ * Create Nav node extension for TipTap
+ * @param {Object} Node - TipTap Node class
+ * @returns {Object} Nav extension
+ */
+function createNavNode(Node) {
+    return Node.create({
+        name: 'nav',
+        content: 'block+',
+        group: 'block',
+        defining: true,
+        parseHTML() {
+            return [{ tag: 'nav' }];
+        },
+        renderHTML({ HTMLAttributes }) {
+            return ['nav', HTMLAttributes, 0];
+        },
+    });
+}
+
+/**
+ * Create Figure node extension for TipTap
+ * @param {Object} Node - TipTap Node class
+ * @returns {Object} Figure extension
+ */
+function createFigureNode(Node) {
+    return Node.create({
+        name: 'figure',
+        content: 'block+',
+        group: 'block',
+        defining: true,
+        parseHTML() {
+            return [{ tag: 'figure' }];
+        },
+        renderHTML({ HTMLAttributes }) {
+            return ['figure', HTMLAttributes, 0];
+        },
+    });
+}
+
+/**
+ * Create Figcaption node extension for TipTap
+ * @param {Object} Node - TipTap Node class
+ * @returns {Object} Figcaption extension
+ */
+function createFigcaptionNode(Node) {
+    return Node.create({
+        name: 'figcaption',
+        content: 'inline*',
+        group: 'block',
+        defining: true,
+        parseHTML() {
+            return [{ tag: 'figcaption' }];
+        },
+        renderHTML({ HTMLAttributes }) {
+            return ['figcaption', HTMLAttributes, 0];
+        },
+    });
+}
+
+/**
+ * Create Details node extension for TipTap
+ * @param {Object} Node - TipTap Node class
+ * @returns {Object} Details extension
+ */
+function createDetailsNode(Node) {
+    return Node.create({
+        name: 'details',
+        content: 'block+',
+        group: 'block',
+        defining: true,
+        parseHTML() {
+            return [{ tag: 'details' }];
+        },
+        renderHTML({ HTMLAttributes }) {
+            return ['details', HTMLAttributes, 0];
+        },
+    });
+}
+
+/**
+ * Create Summary node extension for TipTap
+ * @param {Object} Node - TipTap Node class
+ * @returns {Object} Summary extension
+ */
+function createSummaryNode(Node) {
+    return Node.create({
+        name: 'summary',
+        content: 'inline*',
+        group: 'block',
+        defining: true,
+        parseHTML() {
+            return [{ tag: 'summary' }];
+        },
+        renderHTML({ HTMLAttributes }) {
+            return ['summary', HTMLAttributes, 0];
+        },
+    });
+}
+
+/**
+ * Create Pre (without code) node extension for TipTap
+ * @param {Object} Node - TipTap Node class
+ * @returns {Object} Pre extension
+ */
+function createPreNode(Node) {
+    return Node.create({
+        name: 'pre',
+        content: 'inline*',
+        group: 'block',
+        code: true,
+        defining: true,
+        parseHTML() {
+            return [{ tag: 'pre', preserveWhitespace: 'full' }];
+        },
+        renderHTML({ HTMLAttributes }) {
+            return ['pre', HTMLAttributes, 0];
+        },
+    });
+}
+
+/**
+ * Create Button node extension for TipTap
+ * Allows <button> elements to be used anywhere in content (Bootstrap accordions, etc.)
+ * Preserves all attributes including data-bs-*, aria-*, id, class, type
+ * @param {Object} Node - TipTap Node class
+ * @returns {Object} Button extension
+ */
+function createButtonNode(Node) {
+    return Node.create({
+        name: 'button',
+        inline: true,
+        group: 'inline',
+        content: 'text*',  // Allow text content inside button
+        atom: false,       // Not atomic so content can be edited
+        
+        addAttributes() {
+            return {
+                // Bootstrap attributes
+                'data-bs-toggle': {
+                    default: null,
+                    parseHTML: element => element.getAttribute('data-bs-toggle') || null,
+                    renderHTML: attributes => {
+                        if (!attributes['data-bs-toggle']) return {};
+                        return { 'data-bs-toggle': attributes['data-bs-toggle'] };
+                    },
+                },
+                'data-bs-target': {
+                    default: null,
+                    parseHTML: element => element.getAttribute('data-bs-target') || null,
+                    renderHTML: attributes => {
+                        if (!attributes['data-bs-target']) return {};
+                        return { 'data-bs-target': attributes['data-bs-target'] };
+                    },
+                },
+                'data-bs-parent': {
+                    default: null,
+                    parseHTML: element => element.getAttribute('data-bs-parent') || null,
+                    renderHTML: attributes => {
+                        if (!attributes['data-bs-parent']) return {};
+                        return { 'data-bs-parent': attributes['data-bs-parent'] };
+                    },
+                },
+                // ARIA attributes
+                'aria-expanded': {
+                    default: null,
+                    parseHTML: element => element.getAttribute('aria-expanded') || null,
+                    renderHTML: attributes => {
+                        if (!attributes['aria-expanded']) return {};
+                        return { 'aria-expanded': attributes['aria-expanded'] };
+                    },
+                },
+                'aria-controls': {
+                    default: null,
+                    parseHTML: element => element.getAttribute('aria-controls') || null,
+                    renderHTML: attributes => {
+                        if (!attributes['aria-controls']) return {};
+                        return { 'aria-controls': attributes['aria-controls'] };
+                    },
+                },
+                // Standard attributes (class, id, type, etc. handled by CustomAttributes extension)
+                class: {
+                    default: null,
+                    parseHTML: element => element.getAttribute('class') || null,
+                    renderHTML: attributes => {
+                        if (!attributes.class) return {};
+                        return { class: attributes.class };
+                    },
+                },
+                id: {
+                    default: null,
+                    parseHTML: element => element.getAttribute('id') || null,
+                    renderHTML: attributes => {
+                        if (!attributes.id) return {};
+                        return { id: attributes.id };
+                    },
+                },
+                type: {
+                    default: null,
+                    parseHTML: element => element.getAttribute('type') || null,
+                    renderHTML: attributes => {
+                        if (!attributes.type) return {};
+                        return { type: attributes.type };
+                    },
+                },
+                style: {
+                    default: null,
+                    parseHTML: element => element.getAttribute('style') || null,
+                    renderHTML: attributes => {
+                        if (!attributes.style) return {};
+                        return { style: attributes.style };
+                    },
+                },
+                title: {
+                    default: null,
+                    parseHTML: element => element.getAttribute('title') || null,
+                    renderHTML: attributes => {
+                        if (!attributes.title) return {};
+                        return { title: attributes.title };
+                    },
+                },
+                // Catch-all for any other data-* attributes
+                'data-id': {
+                    default: null,
+                    parseHTML: element => element.getAttribute('data-id') || null,
+                    renderHTML: attributes => {
+                        if (!attributes['data-id']) return {};
+                        return { 'data-id': attributes['data-id'] };
+                    },
+                },
+                'data-name': {
+                    default: null,
+                    parseHTML: element => element.getAttribute('data-name') || null,
+                    renderHTML: attributes => {
+                        if (!attributes['data-name']) return {};
+                        return { 'data-name': attributes['data-name'] };
+                    },
+                },
+                'data-value': {
+                    default: null,
+                    parseHTML: element => element.getAttribute('data-value') || null,
+                    renderHTML: attributes => {
+                        if (!attributes['data-value']) return {};
+                        return { 'data-value': attributes['data-value'] };
+                    },
+                },
+            };
+        },
+        
+        parseHTML() {
+            return [
+                {
+                    tag: 'button',
+                    // Preserve all attributes when parsing
+                    getAttrs: element => {
+                        return {};  // Return empty object to accept all buttons
+                    },
+                },
+            ];
+        },
+        
+        renderHTML({ HTMLAttributes }) {
+            // Render button with all preserved attributes
+            return ['button', HTMLAttributes, 0];
+        },
+    });
+}
+
+/**
+ * Create custom TextStyle extension that supports span with custom attributes
+ * @param {Object} TextStyle - TipTap TextStyle extension
+ * @returns {Object} Extended TextStyle
+ */
+function createExtendedTextStyle(TextStyle) {
+    return TextStyle.extend({
+        addAttributes() {
+            return {
+                ...this.parent?.(),
+                class: {
+                    default: null,
+                    parseHTML: element => element.getAttribute('class') || null,
+                    renderHTML: attributes => {
+                        if (!attributes.class) return {};
+                        return { class: attributes.class };
+                    },
+                },
+                id: {
+                    default: null,
+                    parseHTML: element => element.getAttribute('id') || null,
+                    renderHTML: attributes => {
+                        if (!attributes.id) return {};
+                        return { id: attributes.id };
+                    },
+                },
+                style: {
+                    default: null,
+                    parseHTML: element => element.getAttribute('style') || null,
+                    renderHTML: attributes => {
+                        if (!attributes.style) return {};
+                        return { style: attributes.style };
+                    },
+                },
+                title: {
+                    default: null,
+                    parseHTML: element => element.getAttribute('title') || null,
+                    renderHTML: attributes => {
+                        if (!attributes.title) return {};
+                        return { title: attributes.title };
+                    },
+                },
+                'data-id': {
+                    default: null,
+                    parseHTML: element => element.getAttribute('data-id') || null,
+                    renderHTML: attributes => {
+                        if (!attributes['data-id']) return {};
+                        return { 'data-id': attributes['data-id'] };
+                    },
+                },
+                'data-name': {
+                    default: null,
+                    parseHTML: element => element.getAttribute('data-name') || null,
+                    renderHTML: attributes => {
+                        if (!attributes['data-name']) return {};
+                        return { 'data-name': attributes['data-name'] };
+                    },
+                },
+                'data-value': {
+                    default: null,
+                    parseHTML: element => element.getAttribute('data-value') || null,
+                    renderHTML: attributes => {
+                        if (!attributes['data-value']) return {};
+                        return { 'data-value': attributes['data-value'] };
+                    },
+                },
+            };
+        },
+        parseHTML() {
+            return [
+                {
+                    tag: 'span',
+                    getAttrs: element => {
+                        // Only parse spans that have attributes we care about
+                        const hasRelevantAttrs = element.hasAttribute('style') ||
+                                                element.hasAttribute('class') ||
+                                                element.hasAttribute('id') ||
+                                                element.hasAttribute('title') ||
+                                                Array.from(element.attributes).some(attr => attr.name.startsWith('data-'));
+                        
+                        return hasRelevantAttrs ? {} : false;
+                    },
+                },
+            ];
+        },
+    });
+}
+
+/**
+ * Create custom attributes extension for TipTap
+ * Supports: class, id, style, title, alt, aria-*, role, data-*
+ * @param {Object} Extension - TipTap Extension class
+ * @returns {Object} Custom attributes extension
+ */
+function createCustomAttributesExtension(Extension) {
+    return Extension.create({
+        name: 'customAttributes',
+        
+        addGlobalAttributes() {
+            return [
+                {
+                    // Apply to all node types
+                    types: [
+                        'paragraph',
+                        'heading',
+                        'blockquote',
+                        'bulletList',
+                        'orderedList',
+                        'listItem',
+                        'codeBlock',
+                        'horizontalRule',
+                        'image',
+                        'table',
+                        'tableRow',
+                        'tableCell',
+                        'tableHeader',
+                        'div',
+                        'section',
+                        'article',
+                        'aside',
+                        'nav',
+                        'figure',
+                        'figcaption',
+                        'details',
+                        'summary',
+                        'pre',
+                        'video',
+                        'link',
+                        'button',
+                    ],
+                    attributes: {
+                        class: {
+                            default: null,
+                            parseHTML: element => element.getAttribute('class') || null,
+                            renderHTML: attributes => {
+                                if (!attributes.class) return {};
+                                return { class: attributes.class };
+                            },
+                        },
+                        id: {
+                            default: null,
+                            parseHTML: element => element.getAttribute('id') || null,
+                            renderHTML: attributes => {
+                                if (!attributes.id) return {};
+                                return { id: attributes.id };
+                            },
+                        },
+                        style: {
+                            default: null,
+                            parseHTML: element => element.getAttribute('style') || null,
+                            renderHTML: attributes => {
+                                if (!attributes.style) return {};
+                                return { style: attributes.style };
+                            },
+                        },
+                        title: {
+                            default: null,
+                            parseHTML: element => element.getAttribute('title') || null,
+                            renderHTML: attributes => {
+                                if (!attributes.title) return {};
+                                return { title: attributes.title };
+                            },
+                        },
+                        role: {
+                            default: null,
+                            parseHTML: element => element.getAttribute('role') || null,
+                            renderHTML: attributes => {
+                                if (!attributes.role) return {};
+                                return { role: attributes.role };
+                            },
+                        },
+                        // Aria attributes
+                        'aria-label': {
+                            default: null,
+                            parseHTML: element => element.getAttribute('aria-label') || null,
+                            renderHTML: attributes => {
+                                if (!attributes['aria-label']) return {};
+                                return { 'aria-label': attributes['aria-label'] };
+                            },
+                        },
+                        'aria-labelledby': {
+                            default: null,
+                            parseHTML: element => element.getAttribute('aria-labelledby') || null,
+                            renderHTML: attributes => {
+                                if (!attributes['aria-labelledby']) return {};
+                                return { 'aria-labelledby': attributes['aria-labelledby'] };
+                            },
+                        },
+                        'aria-describedby': {
+                            default: null,
+                            parseHTML: element => element.getAttribute('aria-describedby') || null,
+                            renderHTML: attributes => {
+                                if (!attributes['aria-describedby']) return {};
+                                return { 'aria-describedby': attributes['aria-describedby'] };
+                            },
+                        },
+                        'aria-hidden': {
+                            default: null,
+                            parseHTML: element => element.getAttribute('aria-hidden') || null,
+                            renderHTML: attributes => {
+                                if (!attributes['aria-hidden']) return {};
+                                return { 'aria-hidden': attributes['aria-hidden'] };
+                            },
+                        },
+                        'aria-expanded': {
+                            default: null,
+                            parseHTML: element => element.getAttribute('aria-expanded') || null,
+                            renderHTML: attributes => {
+                                if (!attributes['aria-expanded']) return {};
+                                return { 'aria-expanded': attributes['aria-expanded'] };
+                            },
+                        },
+                        'aria-controls': {
+                            default: null,
+                            parseHTML: element => element.getAttribute('aria-controls') || null,
+                            renderHTML: attributes => {
+                                if (!attributes['aria-controls']) return {};
+                                return { 'aria-controls': attributes['aria-controls'] };
+                            },
+                        },
+                        // Common data attributes
+                        'data-id': {
+                            default: null,
+                            parseHTML: element => element.getAttribute('data-id') || null,
+                            renderHTML: attributes => {
+                                if (!attributes['data-id']) return {};
+                                return { 'data-id': attributes['data-id'] };
+                            },
+                        },
+                        'data-name': {
+                            default: null,
+                            parseHTML: element => element.getAttribute('data-name') || null,
+                            renderHTML: attributes => {
+                                if (!attributes['data-name']) return {};
+                                return { 'data-name': attributes['data-name'] };
+                            },
+                        },
+                        'data-value': {
+                            default: null,
+                            parseHTML: element => element.getAttribute('data-value') || null,
+                            renderHTML: attributes => {
+                                if (!attributes['data-value']) return {};
+                                return { 'data-value': attributes['data-value'] };
+                            },
+                        },
+                        'data-type': {
+                            default: null,
+                            parseHTML: element => element.getAttribute('data-type') || null,
+                            renderHTML: attributes => {
+                                if (!attributes['data-type']) return {};
+                                return { 'data-type': attributes['data-type'] };
+                            },
+                        },
+                        'data-target': {
+                            default: null,
+                            parseHTML: element => element.getAttribute('data-target') || null,
+                            renderHTML: attributes => {
+                                if (!attributes['data-target']) return {};
+                                return { 'data-target': attributes['data-target'] };
+                            },
+                        },
+                        'data-toggle': {
+                            default: null,
+                            parseHTML: element => element.getAttribute('data-toggle') || null,
+                            renderHTML: attributes => {
+                                if (!attributes['data-toggle']) return {};
+                                return { 'data-toggle': attributes['data-toggle'] };
+                            },
+                        },
+                        'data-dismiss': {
+                            default: null,
+                            parseHTML: element => element.getAttribute('data-dismiss') || null,
+                            renderHTML: attributes => {
+                                if (!attributes['data-dismiss']) return {};
+                                return { 'data-dismiss': attributes['data-dismiss'] };
+                            },
+                        },
+                        // Bootstrap 5 specific attributes (for accordions, modals, etc.)
+                        'data-bs-toggle': {
+                            default: null,
+                            parseHTML: element => element.getAttribute('data-bs-toggle') || null,
+                            renderHTML: attributes => {
+                                if (!attributes['data-bs-toggle']) return {};
+                                return { 'data-bs-toggle': attributes['data-bs-toggle'] };
+                            },
+                        },
+                        'data-bs-target': {
+                            default: null,
+                            parseHTML: element => element.getAttribute('data-bs-target') || null,
+                            renderHTML: attributes => {
+                                if (!attributes['data-bs-target']) return {};
+                                return { 'data-bs-target': attributes['data-bs-target'] };
+                            },
+                        },
+                        'data-bs-parent': {
+                            default: null,
+                            parseHTML: element => element.getAttribute('data-bs-parent') || null,
+                            renderHTML: attributes => {
+                                if (!attributes['data-bs-parent']) return {};
+                                return { 'data-bs-parent': attributes['data-bs-parent'] };
+                            },
+                        },
+                    },
+                },
+            ];
+        },
+    });
+}
+
+/**
  * Initialize a WYSIWYG field with TipTap editor
  * @param {HTMLElement} fieldElement - The field container element
  * @param {Object} config - Configuration object
@@ -1368,6 +2303,27 @@ export async function initWysiwygField(fieldElement, config) {
 
     // Create custom FontSize extension
     const FontSize = createFontSizeExtension(Extension);
+
+    // Create extended TextStyle that supports span with custom attributes
+    const ExtendedTextStyle = createExtendedTextStyle(TextStyle);
+
+    // Create custom HTML5 semantic element nodes
+    const Div = createDivNode(Node);
+    const Section = createSectionNode(Node);
+    const Article = createArticleNode(Node);
+    const Aside = createAsideNode(Node);
+    const Nav = createNavNode(Node);
+    const Figure = createFigureNode(Node);
+    const Figcaption = createFigcaptionNode(Node);
+    const Details = createDetailsNode(Node);
+    const Summary = createSummaryNode(Node);
+    const Pre = createPreNode(Node);
+
+    // Create Button node (for Bootstrap accordions, modals, etc.)
+    const Button = createButtonNode(Node);
+
+    // Create custom attributes extension (class, id, style, aria-*, data-*, etc.)
+    const CustomAttributes = createCustomAttributesExtension(Extension);
 
     // Create toolbar
     const toolbar = document.createElement('div');
@@ -1506,6 +2462,7 @@ export async function initWysiwygField(fieldElement, config) {
                 },
             }),
             Image.configure({
+                inline: true,  // Allow images to be inline so they can be wrapped in links
                 HTMLAttributes: {
                     class: 'img-fluid',
                 },
@@ -1519,7 +2476,7 @@ export async function initWysiwygField(fieldElement, config) {
             Underline,
             Subscript,
             Superscript,
-            TextStyle,
+            ExtendedTextStyle,  // Use extended TextStyle that supports span with custom attributes
             FontFamily,
             FontSize,
             TextAlign.configure({
@@ -1530,6 +2487,21 @@ export async function initWysiwygField(fieldElement, config) {
                 multicolor: true,
             }),
             Video,
+            // Custom HTML5 semantic elements
+            Div,
+            Section,
+            Article,
+            Aside,
+            Nav,
+            Figure,
+            Figcaption,
+            Details,
+            Summary,
+            Pre,
+            // Button element (for Bootstrap accordions, modals, etc.)
+            Button,
+            // Custom attributes (must be last to apply to all elements)
+            CustomAttributes,
         ],
         content: textarea.value || '',
         editorProps: {
@@ -1695,16 +2667,20 @@ export async function initWysiwygField(fieldElement, config) {
     editorWrapper.addEventListener('contextmenu', (e) => {
         const target = e.target;
 
-        // Check for link
-        if ((target.tagName === 'A' || target.closest('a')) && editor.isActive('link')) {
-            showLinkContextMenu(e, editor, config);
-            return;
-        }
-
-        // Check for image
+        // Check for image first (even if inside a link)
         if (target.tagName === 'IMG') {
             showImageContextMenu(e, editor, config, target);
             return;
+        }
+
+        // Check for link (but not if it contains an image)
+        if ((target.tagName === 'A' || target.closest('a')) && editor.isActive('link')) {
+            // Make sure it's not a link around an image
+            const linkElement = target.tagName === 'A' ? target : target.closest('a');
+            if (linkElement && !linkElement.querySelector('img')) {
+                showLinkContextMenu(e, editor, config);
+                return;
+            }
         }
 
         // Check for video (iframe or video element)

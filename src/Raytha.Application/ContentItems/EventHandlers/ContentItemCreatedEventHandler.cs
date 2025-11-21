@@ -1,5 +1,5 @@
 ﻿using System.Text.Json;
-using MediatR;
+using Mediator;
 using Microsoft.EntityFrameworkCore;
 using Raytha.Application.Common.Exceptions;
 using Raytha.Application.Common.Interfaces;
@@ -22,7 +22,7 @@ public class ContentItemCreatedEventHandler : INotificationHandler<ContentItemCr
         _db = db;
     }
 
-    public async Task Handle(
+    public async ValueTask Handle(
         ContentItemCreatedEvent notification,
         CancellationToken cancellationToken
     )

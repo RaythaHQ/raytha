@@ -46,7 +46,7 @@ public class Create : BaseAdminPageModel
             },
             new BreadcrumbNode
             {
-                Label = "Create",
+                Label = "Create web template",
                 RouteName = RouteNames.Themes.WebTemplates.Create,
                 IsActive = true,
             }

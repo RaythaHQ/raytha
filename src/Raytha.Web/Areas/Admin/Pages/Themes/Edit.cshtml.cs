@@ -36,7 +36,7 @@ public class Edit : BaseAdminPageModel, ISubActionViewModel
             },
             new BreadcrumbNode
             {
-                Label = "Edit",
+                Label = "Edit theme",
                 RouteName = RouteNames.Themes.Edit,
                 IsActive = true,
             }

@@ -1,4 +1,4 @@
-﻿using MediatR;
+﻿using Mediator;
 using Microsoft.EntityFrameworkCore;
 using Raytha.Application.Common.Exceptions;
 using Raytha.Application.Common.Interfaces;
@@ -22,7 +22,7 @@ public class GetNavigationMenuItemById
             _db = db;
         }
 
-        public async Task<IQueryResponseDto<NavigationMenuItemDto>> Handle(
+        public async ValueTask<IQueryResponseDto<NavigationMenuItemDto>> Handle(
             Query request,
             CancellationToken cancellationToken
         )

@@ -1,5 +1,5 @@
 ﻿using FluentValidation;
-using MediatR;
+using Mediator;
 using Microsoft.EntityFrameworkCore;
 using Raytha.Application.Common.Exceptions;
 using Raytha.Application.Common.Interfaces;
@@ -20,7 +20,7 @@ public class GetViewById
             _db = db;
         }
 
-        public async Task<IQueryResponseDto<ViewDto>> Handle(
+        public async ValueTask<IQueryResponseDto<ViewDto>> Handle(
             Query request,
             CancellationToken cancellationToken
         )

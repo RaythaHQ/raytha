@@ -1,5 +1,5 @@
 ﻿using CSharpVitamins;
-using MediatR;
+using Mediator;
 using Microsoft.EntityFrameworkCore;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Models;
@@ -30,7 +30,7 @@ public class GetContentTypeFields
             _db = db;
         }
 
-        public async Task<IQueryResponseDto<ListResultDto<ContentTypeFieldDto>>> Handle(
+        public async ValueTask<IQueryResponseDto<ListResultDto<ContentTypeFieldDto>>> Handle(
             Query request,
             CancellationToken cancellationToken
         )

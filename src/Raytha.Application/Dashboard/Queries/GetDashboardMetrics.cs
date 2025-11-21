@@ -1,5 +1,5 @@
 ﻿using System.Data;
-using MediatR;
+using Mediator;
 using Microsoft.EntityFrameworkCore;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Models;
@@ -21,7 +21,7 @@ public class GetDashboardMetrics
             _db = db;
         }
 
-        public async Task<IQueryResponseDto<DashboardDto>> Handle(
+        public async ValueTask<IQueryResponseDto<DashboardDto>> Handle(
             Query request,
             CancellationToken cancellationToken
         )

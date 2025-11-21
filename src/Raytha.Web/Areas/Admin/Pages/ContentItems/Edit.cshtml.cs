@@ -21,6 +21,7 @@ namespace Raytha.Web.Areas.Admin.Pages.ContentItems;
 public class Edit : BaseHasFavoriteViewsPageModel, ISubActionViewModel
 {
     public string Id { get; set; }
+    public string? RoutePath { get; set; }
     ViewDto ISubActionViewModel.CurrentView => base.CurrentView;
     private FieldValueConverter _fieldValueConverter;
 
@@ -54,13 +55,14 @@ public class Edit : BaseHasFavoriteViewsPageModel, ISubActionViewModel
             },
             new BreadcrumbNode
             {
-                Label = "Edit",
+                Label = $"Edit {CurrentView.ContentType.LabelSingular.ToLower()}",
                 RouteName = RouteNames.ContentItems.Edit,
                 IsActive = true,
             }
         );
 
         var response = await Mediator.Send(new GetContentItemById.Query { Id = id });
+        RoutePath = response.Result.RoutePath;
         var (imageJson, videoJson) = await GetMediaItemsJsonAsync();
         var fieldValues = BuildFieldValuesForEdit(
             CurrentView.ContentType.ContentTypeFields,

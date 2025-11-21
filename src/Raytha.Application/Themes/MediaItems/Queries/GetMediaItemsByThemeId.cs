@@ -1,5 +1,5 @@
 ﻿using CSharpVitamins;
-using MediatR;
+using Mediator;
 using Microsoft.EntityFrameworkCore;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Models;
@@ -24,7 +24,7 @@ public class GetMediaItemsByThemeId
             _db = db;
         }
 
-        public async Task<IQueryResponseDto<IReadOnlyCollection<MediaItemDto>>> Handle(
+        public async ValueTask<IQueryResponseDto<IReadOnlyCollection<MediaItemDto>>> Handle(
             Query request,
             CancellationToken cancellationToken
         )

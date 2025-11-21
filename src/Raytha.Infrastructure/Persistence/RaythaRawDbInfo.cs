@@ -5,6 +5,9 @@ using Raytha.Application.Common.Interfaces;
 
 namespace Raytha.Infrastructure.Persistence;
 
+/// <summary>
+/// Retrieves raw database information.
+/// </summary>
 public class RaythaRawDbInfo : IRaythaRawDbInfo
 {
     private readonly IDbConnection _db;

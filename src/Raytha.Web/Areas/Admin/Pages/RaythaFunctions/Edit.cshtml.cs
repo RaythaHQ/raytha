@@ -33,7 +33,7 @@ public class Edit : BaseAdminPageModel, ISubActionViewModel
             },
             new BreadcrumbNode
             {
-                Label = "Edit",
+                Label = "Edit Raytha function",
                 RouteName = RouteNames.RaythaFunctions.Edit,
                 IsActive = true,
             }

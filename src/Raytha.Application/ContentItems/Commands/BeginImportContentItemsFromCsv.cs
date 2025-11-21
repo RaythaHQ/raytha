@@ -1,7 +1,7 @@
 ﻿using System.Text.Json;
 using CSharpVitamins;
 using FluentValidation;
-using MediatR;
+using Mediator;
 using Microsoft.EntityFrameworkCore;
 using Raytha.Application.Common.Exceptions;
 using Raytha.Application.Common.Interfaces;
@@ -141,7 +141,7 @@ public class BeginImportContentItemsFromCsv
             _contentTypeInRoutePath = contentTypeInRoutePath;
         }
 
-        public async Task<CommandResponseDto<ShortGuid>> Handle(
+        public async ValueTask<CommandResponseDto<ShortGuid>> Handle(
             Command request,
             CancellationToken cancellationToken
         )
@@ -339,14 +339,16 @@ public class BeginImportContentItemsFromCsv
                 _db.BackgroundTasks.Update(job);
                 await _db.SaveChangesAsync(cancellationToken);
 
-                var myExport = new Csv.CsvExport();
+                var csvWriter = new CsvWriterUtility();
                 foreach (var key in errorList.Keys)
                 {
-                    myExport.AddRow();
-                    myExport["Row Number"] = key.ToString();
-                    myExport["Error Message"] = errorList[key];
+                    csvWriter.AddRow(new Dictionary<string, string>
+                    {
+                        { "Row Number", key.ToString() },
+                        { "Error Message", errorList[key] }
+                    });
                 }
-                var csvExportAsBytes = myExport.ExportToBytes();
+                var csvExportAsBytes = csvWriter.ExportToBytes();
                 string fileName =
                     $"{_currentOrganization.TimeZoneConverter.UtcToTimeZoneAsDateTimeFormat(DateTime.UtcNow)}-{contentType.DeveloperName}.csv";
                 var id = Guid.NewGuid();

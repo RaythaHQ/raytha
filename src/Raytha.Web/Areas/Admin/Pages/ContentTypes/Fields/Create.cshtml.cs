@@ -44,7 +44,7 @@ public class Create : BaseContentTypeContextPageModel
             },
             new BreadcrumbNode
             {
-                Label = "Create",
+                Label = "Create field",
                 RouteName = RouteNames.ContentTypes.Fields.Create,
                 IsActive = true,
             }

@@ -1,7 +1,7 @@
 ﻿using System.Text.Json;
 using CSharpVitamins;
 using FluentValidation;
-using MediatR;
+using Mediator;
 using Microsoft.EntityFrameworkCore;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Models;
@@ -67,7 +67,7 @@ public class BeginImportThemeFromUrl
             _taskQueue = taskQueue;
         }
 
-        public async Task<CommandResponseDto<ShortGuid>> Handle(
+        public async ValueTask<CommandResponseDto<ShortGuid>> Handle(
             Command request,
             CancellationToken cancellationToken
         )

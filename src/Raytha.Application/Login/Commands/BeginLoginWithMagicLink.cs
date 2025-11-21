@@ -1,6 +1,6 @@
 using CSharpVitamins;
 using FluentValidation;
-using MediatR;
+using Mediator;
 using Microsoft.EntityFrameworkCore;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Models;
@@ -94,7 +94,7 @@ public class BeginLoginWithMagicLink
             _db = db;
         }
 
-        public async Task<CommandResponseDto<ShortGuid>> Handle(
+        public async ValueTask<CommandResponseDto<ShortGuid>> Handle(
             Command request,
             CancellationToken cancellationToken
         )

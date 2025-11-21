@@ -1,7 +1,13 @@
 ﻿namespace Raytha.Application.Common.Interfaces;
 
+/// <summary>
+/// Interface for retrieving raw database information.
+/// </summary>
 public interface IRaythaRawDbInfo
 {
+    /// <summary>
+    /// Gets the current database size information.
+    /// </summary>
     DbSpaceUsed GetDatabaseSize();
 }
 

@@ -1,4 +1,4 @@
-﻿using MediatR;
+﻿using Mediator;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Models;
 
@@ -17,7 +17,7 @@ public class GetOrganizationSettings
             _db = db;
         }
 
-        public async Task<IQueryResponseDto<OrganizationSettingsDto>> Handle(
+        public async ValueTask<IQueryResponseDto<OrganizationSettingsDto>> Handle(
             Query request,
             CancellationToken cancellationToken
         )

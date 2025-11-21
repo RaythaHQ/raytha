@@ -1,5 +1,6 @@
 services:
   app:
+    build: .
     image: raytha
     ports:
       - "5001:8080"  # Default port for .NET apps
@@ -43,7 +44,7 @@ services:
       # - RAYTHA_FUNCTIONS_QUEUE_TIMEOUT=10000 # milliseconds
       
     # - REDIRECT_WEBSITE= # Only set a url here to redirect the website visitor elsewhere (useful for maintenance or non-payment)
-    # - APPLY_PENDING_MIGRATIONS=true # Apply db migrations automatically on startup
+    - APPLY_PENDING_MIGRATIONS=true # Apply db migrations automatically on startup
     
     depends_on:
       - db

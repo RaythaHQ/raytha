@@ -1,4 +1,5 @@
-﻿using System.Data;
+﻿using System;
+using System.Data;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -51,6 +52,11 @@ public static class ConfigureServices
             services.AddScoped<IRaythaDbContext>(provider =>
                 provider.GetRequiredService<RaythaDbContext>()
             );
+
+            // Health checks for PostgreSQL
+            services
+                .AddHealthChecks()
+                .AddNpgSql(dbConnectionString, name: "postgres", timeout: TimeSpan.FromSeconds(5));
         }
         else
         {
@@ -70,6 +76,15 @@ public static class ConfigureServices
             services.AddScoped<IRaythaDbContext>(provider =>
                 provider.GetRequiredService<RaythaDbContext>()
             );
+
+            // Health checks for SQL Server
+            services
+                .AddHealthChecks()
+                .AddSqlServer(
+                    dbConnectionString,
+                    name: "sqlserver",
+                    timeout: TimeSpan.FromSeconds(5)
+                );
         }
 
         services.AddSingleton<
@@ -82,6 +97,7 @@ public static class ConfigureServices
         services.AddScoped<IEmailer, Emailer>();
         services.AddTransient<IBackgroundTaskDb, BackgroundTaskDb>();
         services.AddTransient<IRaythaRawDbInfo, RaythaRawDbInfo>();
+        services.AddTransient<IRaythaRawDbCommands, RaythaRawDbCommands>();
 
         //file storage provider
         var fileStorageProvider = configuration[FileStorageUtility.CONFIG_NAME]

@@ -1,4 +1,4 @@
-﻿using MediatR;
+﻿using Mediator;
 using Raytha.Application.Common.Exceptions;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Models;
@@ -18,7 +18,7 @@ public class GetUserGroupById
             _db = db;
         }
 
-        public async Task<IQueryResponseDto<UserGroupDto>> Handle(
+        public async ValueTask<IQueryResponseDto<UserGroupDto>> Handle(
             Query request,
             CancellationToken cancellationToken
         )

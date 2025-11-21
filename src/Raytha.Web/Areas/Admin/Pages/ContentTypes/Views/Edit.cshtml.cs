@@ -41,7 +41,7 @@ public class Edit : BaseContentTypeContextPageModel
             },
             new BreadcrumbNode
             {
-                Label = "Edit",
+                Label = "Edit view",
                 RouteName = RouteNames.ContentTypes.Views.Edit,
                 IsActive = true,
             }

@@ -1,4 +1,4 @@
-﻿using MediatR;
+﻿using Mediator;
 using Microsoft.EntityFrameworkCore;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Models;
@@ -22,7 +22,7 @@ public class GetThemes
             _db = db;
         }
 
-        public async Task<IQueryResponseDto<ListResultDto<ThemeDto>>> Handle(
+        public async ValueTask<IQueryResponseDto<ListResultDto<ThemeDto>>> Handle(
             Query request,
             CancellationToken cancellationToken
         )

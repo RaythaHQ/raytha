@@ -1,6 +1,6 @@
 ﻿using System.Reflection;
 using FluentValidation;
-using MediatR;
+using Mediator;
 using Microsoft.Extensions.DependencyInjection;
 using Raytha.Application.Common.Behaviors;
 using Raytha.Application.Common.Shared;
@@ -17,13 +17,14 @@ public static class ConfigureServices
     public static IServiceCollection AddApplicationServices(this IServiceCollection services)
     {
         services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly());
-        services.AddMediatR(cfg =>
+        services.AddMediator(options =>
         {
-            cfg.RegisterServicesFromAssembly(Assembly.GetExecutingAssembly());
-            cfg.AddBehavior(typeof(IPipelineBehavior<,>), typeof(UnhandledExceptionBehaviour<,>));
-            cfg.AddBehavior(typeof(IPipelineBehavior<,>), typeof(ValidationBehaviour<,>));
-            cfg.AddBehavior(typeof(IPipelineBehavior<,>), typeof(AuditBehavior<,>));
+            options.Namespace = "Raytha.Application.Mediator";
+            options.ServiceLifetime = ServiceLifetime.Scoped;
         });
+        services.AddSingleton(typeof(IPipelineBehavior<,>), typeof(UnhandledExceptionBehaviour<,>));
+        services.AddSingleton(typeof(IPipelineBehavior<,>), typeof(ValidationBehaviour<,>));
+        services.AddSingleton(typeof(IPipelineBehavior<,>), typeof(AuditBehavior<,>));
         services.AddScoped<BeginExportContentItemsToCsv.BackgroundTask>();
         services.AddScoped<BeginImportContentItemsFromCsv.BackgroundTask>();
         services.AddScoped<BeginImportThemeFromUrl.BackgroundTask>();

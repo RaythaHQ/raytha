@@ -43,7 +43,7 @@ public class Revisions : BaseAdminPageModel, ISubActionViewModel
             },
             new BreadcrumbNode
             {
-                Label = "Revisions",
+                Label = "View revisions",
                 RouteName = RouteNames.Themes.WebTemplates.Revisions,
                 IsActive = true,
             }

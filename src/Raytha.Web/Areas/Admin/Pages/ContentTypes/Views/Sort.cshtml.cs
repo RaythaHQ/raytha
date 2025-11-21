@@ -49,7 +49,7 @@ public class Sort : BaseContentTypeContextPageModel
             },
             new BreadcrumbNode
             {
-                Label = "Sort",
+                Label = "Edit sort",
                 RouteName = RouteNames.ContentTypes.Views.Sort,
                 IsActive = true,
             }

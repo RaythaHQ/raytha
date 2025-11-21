@@ -1,6 +1,6 @@
 using CSharpVitamins;
 using FluentValidation;
-using MediatR;
+using Mediator;
 using Microsoft.EntityFrameworkCore;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Models;
@@ -42,7 +42,7 @@ public class GetAuditLogs
             _db = db;
         }
 
-        public async Task<IQueryResponseDto<ListResultDto<AuditLogDto>>> Handle(
+        public async ValueTask<IQueryResponseDto<ListResultDto<AuditLogDto>>> Handle(
             Query request,
             CancellationToken cancellationToken
         )

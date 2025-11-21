@@ -28,7 +28,7 @@ public class Create : BaseAdminPageModel
             },
             new BreadcrumbNode
             {
-                Label = "Create",
+                Label = "Create theme",
                 RouteName = RouteNames.Themes.Create,
                 IsActive = true,
             }

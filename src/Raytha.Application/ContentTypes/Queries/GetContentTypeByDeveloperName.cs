@@ -1,5 +1,5 @@
 ﻿using FluentValidation;
-using MediatR;
+using Mediator;
 using Microsoft.EntityFrameworkCore;
 using Raytha.Application.Common.Attributes;
 using Raytha.Application.Common.Exceptions;
@@ -26,7 +26,7 @@ public class GetContentTypeByDeveloperName
             _db = db;
         }
 
-        public async Task<IQueryResponseDto<ContentTypeDto>> Handle(
+        public async ValueTask<IQueryResponseDto<ContentTypeDto>> Handle(
             Query request,
             CancellationToken cancellationToken
         )

@@ -2,7 +2,7 @@
 @model Raytha.Web.Areas.Admin.Pages.ContentTypes.Views.PublicSettings
 
 @{
-    var pageTitle = $"{Model.CurrentView!.ContentType.LabelPlural} > Views > Public Settings";
+    var pageTitle = "Edit public settings";
     Layout = "SidebarLayout";
     ViewData["Title"] = pageTitle;
     ViewData["ActiveMenu"] = Model.CurrentView.ContentType.DeveloperName;

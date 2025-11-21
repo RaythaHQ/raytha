@@ -7,6 +7,7 @@ using Raytha.Application.Roles.Queries;
 using Raytha.Domain.Entities;
 using Raytha.Web.Areas.Admin.Pages.Shared;
 using Raytha.Web.Areas.Admin.Pages.Shared.Models;
+using Raytha.Web.Areas.Shared.Models;
 
 namespace Raytha.Web.Areas.Admin.Pages.Roles;
 
@@ -19,6 +20,28 @@ public class Edit : BaseAdminPageModel
 
     public async Task<IActionResult> OnGet(string id)
     {
+        SetBreadcrumbs(
+            new BreadcrumbNode
+            {
+                Label = "Settings",
+                RouteName = RouteNames.Configuration.Index,
+                IsActive = false,
+                Icon = SidebarIcons.Settings,
+            },
+            new BreadcrumbNode
+            {
+                Label = "Roles",
+                RouteName = RouteNames.Roles.Index,
+                IsActive = false,
+            },
+            new BreadcrumbNode
+            {
+                Label = "Edit role",
+                RouteName = RouteNames.Roles.Edit,
+                IsActive = true,
+            }
+        );
+
         var response = await Mediator.Send(new GetRoleById.Query { Id = id });
 
         var systemPermissions = BuiltInSystemPermission.Permissions.Select(

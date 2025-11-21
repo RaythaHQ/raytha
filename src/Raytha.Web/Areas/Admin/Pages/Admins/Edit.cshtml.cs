@@ -40,7 +40,7 @@ public class Edit : BaseAdminPageModel, ISubActionViewModel
             },
             new BreadcrumbNode
             {
-                Label = "Edit",
+                Label = "Edit admin",
                 RouteName = RouteNames.Admins.Edit,
                 IsActive = true,
             }

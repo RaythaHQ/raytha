@@ -3,7 +3,7 @@ using System.Text;
 using System.Text.Json.Serialization;
 using CSharpVitamins;
 using FluentValidation;
-using MediatR;
+using Mediator;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Raytha.Application.Common.Exceptions;
@@ -202,7 +202,7 @@ public class LoginWithJwt
             _db = db;
         }
 
-        public async Task<CommandResponseDto<LoginDto>> Handle(
+        public async ValueTask<CommandResponseDto<LoginDto>> Handle(
             Command request,
             CancellationToken cancellationToken
         )

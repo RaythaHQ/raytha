@@ -17,6 +17,7 @@ namespace Raytha.Web.Areas.Admin.Pages.ContentItems;
 public class Settings : BaseHasFavoriteViewsPageModel, ISubActionViewModel
 {
     public string Id { get; set; }
+    public string? RoutePath { get; set; }
     ViewDto ISubActionViewModel.CurrentView => base.CurrentView;
     private FieldValueConverter _fieldValueConverter;
 
@@ -51,13 +52,14 @@ public class Settings : BaseHasFavoriteViewsPageModel, ISubActionViewModel
             },
             new BreadcrumbNode
             {
-                Label = "Settings",
+                Label = "Edit settings",
                 RouteName = RouteNames.ContentItems.Settings,
                 IsActive = true,
             }
         );
 
         var response = await Mediator.Send(new GetContentItemById.Query { Id = id });
+        RoutePath = response.Result.RoutePath;
 
         var webTemplates = await Mediator.Send(
             new GetWebTemplates.Query

@@ -1,8 +1,7 @@
 ﻿using System.Text.Json;
 using CSharpVitamins;
-using Csv;
 using FluentValidation;
-using MediatR;
+using Mediator;
 using Microsoft.EntityFrameworkCore;
 using Raytha.Application.Common.Exceptions;
 using Raytha.Application.Common.Interfaces;
@@ -49,7 +48,7 @@ public class BeginExportContentItemsToCsv
             _contentTypeInRoutePath = contentTypeInRoutePath;
         }
 
-        public async Task<CommandResponseDto<ShortGuid>> Handle(
+        public async ValueTask<CommandResponseDto<ShortGuid>> Handle(
             Command request,
             CancellationToken cancellationToken
         )
@@ -133,7 +132,7 @@ public class BeginExportContentItemsToCsv
             _entityFrameworkDb.BackgroundTasks.Update(job);
             await _entityFrameworkDb.SaveChangesAsync(cancellationToken);
 
-            var myExport = new CsvExport();
+            var csvWriter = new CsvWriterUtility();
             int currentIndex = 0;
             var activeThemeId = await _entityFrameworkDb
                 .OrganizationSettings.Select(os => os.ActiveThemeId)
@@ -157,38 +156,29 @@ public class BeginExportContentItemsToCsv
             )
             {
                 var webTemplateLabel = contentItemIdsTemplateLabels[item.Id];
-                var contentItemAsDict = _fieldValueConverter.MapToListItemValues(
+                // Use MapToExportValues instead of MapToListItemValues to avoid truncation
+                var contentItemAsDict = _fieldValueConverter.MapToExportValues(
                     ContentItemDto.GetProjection(item),
                     webTemplateLabel
                 );
 
-                myExport.AddRow();
+                Dictionary<string, string> rowData = new();
                 if (exportOnlyColumnsFromView)
                 {
                     foreach (var column in view.Columns)
                     {
-                        if (contentItemAsDict.ContainsKey(column))
-                        {
-                            myExport[column] = contentItemAsDict[column];
-                        }
-                        else
-                        {
-                            myExport[column] = string.Empty;
-                        }
+                        rowData[column] = contentItemAsDict.ContainsKey(column)
+                            ? contentItemAsDict[column]
+                            : string.Empty;
                     }
                 }
                 else
                 {
                     foreach (var column in BuiltInContentTypeField.ReservedContentTypeFields)
                     {
-                        if (contentItemAsDict.ContainsKey(column))
-                        {
-                            myExport[column] = contentItemAsDict[column];
-                        }
-                        else
-                        {
-                            myExport[column] = string.Empty;
-                        }
+                        rowData[column] = contentItemAsDict.ContainsKey(column)
+                            ? contentItemAsDict[column]
+                            : string.Empty;
                     }
                     foreach (
                         var column in view.ContentType.ContentTypeFields.Select(p =>
@@ -196,16 +186,13 @@ public class BeginExportContentItemsToCsv
                         )
                     )
                     {
-                        if (contentItemAsDict.ContainsKey(column))
-                        {
-                            myExport[column] = contentItemAsDict[column];
-                        }
-                        else
-                        {
-                            myExport[column] = string.Empty;
-                        }
+                        rowData[column] = contentItemAsDict.ContainsKey(column)
+                            ? contentItemAsDict[column]
+                            : string.Empty;
                     }
                 }
+
+                csvWriter.AddRow(rowData);
 
                 currentIndex++;
                 int percentDone = (currentIndex / count) * 100;
@@ -223,7 +210,7 @@ public class BeginExportContentItemsToCsv
             _entityFrameworkDb.BackgroundTasks.Update(job);
             await _entityFrameworkDb.SaveChangesAsync(cancellationToken);
 
-            var csvAsBytes = myExport.ExportToBytes();
+            var csvAsBytes = csvWriter.ExportToBytes();
             string fileName =
                 $"{_currentOrganization.TimeZoneConverter.UtcToTimeZoneAsDateTimeFormat(DateTime.UtcNow)}-{view.DeveloperName}.csv";
             var id = Guid.NewGuid();

@@ -1,4 +1,4 @@
-﻿using MediatR;
+﻿using Mediator;
 using Microsoft.EntityFrameworkCore;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Models;
@@ -20,7 +20,7 @@ public class GetForgotPasswordTokenValidity
             _db = db;
         }
 
-        public async Task<IQueryResponseDto<bool>> Handle(
+        public async ValueTask<IQueryResponseDto<bool>> Handle(
             Query request,
             CancellationToken cancellationToken
         )

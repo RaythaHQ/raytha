@@ -2,6 +2,7 @@ using CSharpVitamins;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Raytha.Application.Admins.Commands;
+using Raytha.Application.AuditLogs.Commands;
 using Raytha.Application.AuditLogs.Queries;
 using Raytha.Application.AuthenticationSchemes.Commands;
 using Raytha.Application.Common.Utils;
@@ -16,6 +17,7 @@ using Raytha.Domain.Entities;
 using Raytha.Web.Areas.Admin.Pages.Shared;
 using Raytha.Web.Areas.Admin.Pages.Shared.Models;
 using Raytha.Web.Areas.Shared.Models;
+using System.Text.Json;
 
 namespace Raytha.Web.Areas.Admin.Pages.AuditLogs;
 
@@ -167,7 +169,7 @@ public class Index : BaseAdminPageModel
                     p.EntityId.HasValue && p.EntityId.Value != ShortGuid.Empty
                         ? p.EntityId.Value
                         : "N/A",
-                Request = p.Request,
+                Request = PrettyPrintJson(p.Request),
                 IpAddress = p.IpAddress,
             });
             ListView = new ListViewModel<AuditLogsListItemViewModel>(
@@ -190,6 +192,44 @@ public class Index : BaseAdminPageModel
             ListView.OrderByDirection = orderBy.Split(' ')[1];
         }
         return Page();
+    }
+
+    [Authorize(Policy = BuiltInSystemPermission.MANAGE_SYSTEM_SETTINGS_PERMISSION)]
+    public async Task<IActionResult> OnPostClearAllAsync()
+    {
+        var input = new ClearAllAuditLogs.Command();
+        var response = await Mediator.Send(input);
+
+        if (!response.Success)
+        {
+            SetErrorMessage(response.Error);
+        }
+        else
+        {
+            SetSuccessMessage("All audit logs have been cleared successfully.");
+        }
+
+        return RedirectToPage("Index");
+    }
+
+    private static string PrettyPrintJson(string json)
+    {
+        if (string.IsNullOrWhiteSpace(json))
+            return json;
+
+        try
+        {
+            var jsonDocument = JsonDocument.Parse(json);
+            return JsonSerializer.Serialize(jsonDocument, new JsonSerializerOptions
+            {
+                WriteIndented = true
+            });
+        }
+        catch
+        {
+            // If it's not valid JSON, return as-is
+            return json;
+        }
     }
 
     public record AuditLogsListItemViewModel

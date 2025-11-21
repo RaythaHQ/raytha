@@ -20,6 +20,16 @@ public class FieldValueConverter
 
     public Dictionary<string, string> MapToListItemValues(ContentItemDto item, string templateLabel)
     {
+        return MapToValues(item, templateLabel, truncateForDisplay: true);
+    }
+
+    public Dictionary<string, string> MapToExportValues(ContentItemDto item, string templateLabel)
+    {
+        return MapToValues(item, templateLabel, truncateForDisplay: false);
+    }
+
+    private Dictionary<string, string> MapToValues(ContentItemDto item, string templateLabel, bool truncateForDisplay)
+    {
         var viewModel = new Dictionary<string, string>
         {
             //Built in
@@ -66,7 +76,16 @@ public class FieldValueConverter
             }
             else if (field.Value is StringFieldValue)
             {
-                viewModel.Add(field.Key, ((string)field.Value).StripHtml().Truncate(40));
+                string stringValue = (string)field.Value;
+                // For display, strip HTML and truncate; for export, keep full value
+                if (truncateForDisplay)
+                {
+                    viewModel.Add(field.Key, stringValue.StripHtml().Truncate(40));
+                }
+                else
+                {
+                    viewModel.Add(field.Key, stringValue ?? string.Empty);
+                }
             }
             else if (field.Value is IBaseEntity)
             {

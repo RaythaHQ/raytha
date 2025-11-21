@@ -53,7 +53,7 @@ public class Create : BaseHasFavoriteViewsPageModel
             },
             new BreadcrumbNode
             {
-                Label = "Create",
+                Label = $"Create {CurrentView.ContentType.LabelSingular.ToLower()}",
                 RouteName = RouteNames.ContentItems.Create,
                 IsActive = true,
             }

@@ -1,27 +1,27 @@
 ﻿using FluentValidation;
-using MediatR;
+using Mediator;
 
 namespace Raytha.Application.Common.Behaviors;
 
-public class ValidationBehaviour<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse>
-    where TRequest : IRequest<TResponse>
+public class ValidationBehaviour<TMessage, TResponse> : IPipelineBehavior<TMessage, TResponse>
+    where TMessage : IMessage
 {
-    private readonly IEnumerable<IValidator<TRequest>> _validators;
+    private readonly IEnumerable<IValidator<TMessage>> _validators;
 
-    public ValidationBehaviour(IEnumerable<IValidator<TRequest>> validators)
+    public ValidationBehaviour(IEnumerable<IValidator<TMessage>> validators)
     {
         _validators = validators;
     }
 
-    public async Task<TResponse> Handle(
-        TRequest request,
-        RequestHandlerDelegate<TResponse> next,
+    public async ValueTask<TResponse> Handle(
+        TMessage message,
+        MessageHandlerDelegate<TMessage, TResponse> next,
         CancellationToken cancellationToken
     )
     {
         if (_validators.Any())
         {
-            var context = new ValidationContext<TRequest>(request);
+            var context = new ValidationContext<TMessage>(message);
 
             var validationResults = await Task.WhenAll(
                 _validators.Select(v => v.ValidateAsync(context, cancellationToken))
@@ -38,6 +38,6 @@ public class ValidationBehaviour<TRequest, TResponse> : IPipelineBehavior<TReque
                 return result;
             }
         }
-        return await next();
+        return await next(message, cancellationToken);
     }
 }

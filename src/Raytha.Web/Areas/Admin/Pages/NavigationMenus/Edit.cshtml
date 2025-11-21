@@ -2,7 +2,7 @@
 @model Raytha.Web.Areas.Admin.Pages.NavigationMenus.Edit
 
 @{
-    var pageTitle = "Menus > Edit";
+    var pageTitle = "Edit menu";
     Layout = "SubActionLayout";
     ViewData["Title"] = pageTitle;
     ViewData["ActiveMenu"] = "Menus";
@@ -10,7 +10,8 @@
 
     BackLinkOptions back = new BackLinkOptions
     {
-        Page = RouteNames.NavigationMenus.Index
+        Page = RouteNames.NavigationMenus.Index,
+        Text = "Back to menus"
     };
 }
 

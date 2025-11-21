@@ -1,7 +1,7 @@
 ﻿using System.Text.Json.Serialization;
 using CSharpVitamins;
 using FluentValidation;
-using MediatR;
+using Mediator;
 using Raytha.Application.Common.Exceptions;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Models;
@@ -102,7 +102,7 @@ public class ResetPassword
             _db = db;
         }
 
-        public async Task<CommandResponseDto<ShortGuid>> Handle(
+        public async ValueTask<CommandResponseDto<ShortGuid>> Handle(
             Command request,
             CancellationToken cancellationToken
         )

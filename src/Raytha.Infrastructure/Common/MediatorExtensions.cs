@@ -1,7 +1,8 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Mediator;
+using Microsoft.EntityFrameworkCore;
 using Raytha.Domain.Common;
 
-namespace MediatR;
+namespace Raytha.Infrastructure.Common;
 
 public static class MediatorExtensions
 {
