@@ -1802,6 +1802,153 @@ function createPreNode(Node) {
 }
 
 /**
+ * Create Button node extension for TipTap
+ * Allows <button> elements to be used anywhere in content (Bootstrap accordions, etc.)
+ * Preserves all attributes including data-bs-*, aria-*, id, class, type
+ * @param {Object} Node - TipTap Node class
+ * @returns {Object} Button extension
+ */
+function createButtonNode(Node) {
+    return Node.create({
+        name: 'button',
+        inline: true,
+        group: 'inline',
+        content: 'text*',  // Allow text content inside button
+        atom: false,       // Not atomic so content can be edited
+        
+        addAttributes() {
+            return {
+                // Bootstrap attributes
+                'data-bs-toggle': {
+                    default: null,
+                    parseHTML: element => element.getAttribute('data-bs-toggle') || null,
+                    renderHTML: attributes => {
+                        if (!attributes['data-bs-toggle']) return {};
+                        return { 'data-bs-toggle': attributes['data-bs-toggle'] };
+                    },
+                },
+                'data-bs-target': {
+                    default: null,
+                    parseHTML: element => element.getAttribute('data-bs-target') || null,
+                    renderHTML: attributes => {
+                        if (!attributes['data-bs-target']) return {};
+                        return { 'data-bs-target': attributes['data-bs-target'] };
+                    },
+                },
+                'data-bs-parent': {
+                    default: null,
+                    parseHTML: element => element.getAttribute('data-bs-parent') || null,
+                    renderHTML: attributes => {
+                        if (!attributes['data-bs-parent']) return {};
+                        return { 'data-bs-parent': attributes['data-bs-parent'] };
+                    },
+                },
+                // ARIA attributes
+                'aria-expanded': {
+                    default: null,
+                    parseHTML: element => element.getAttribute('aria-expanded') || null,
+                    renderHTML: attributes => {
+                        if (!attributes['aria-expanded']) return {};
+                        return { 'aria-expanded': attributes['aria-expanded'] };
+                    },
+                },
+                'aria-controls': {
+                    default: null,
+                    parseHTML: element => element.getAttribute('aria-controls') || null,
+                    renderHTML: attributes => {
+                        if (!attributes['aria-controls']) return {};
+                        return { 'aria-controls': attributes['aria-controls'] };
+                    },
+                },
+                // Standard attributes (class, id, type, etc. handled by CustomAttributes extension)
+                class: {
+                    default: null,
+                    parseHTML: element => element.getAttribute('class') || null,
+                    renderHTML: attributes => {
+                        if (!attributes.class) return {};
+                        return { class: attributes.class };
+                    },
+                },
+                id: {
+                    default: null,
+                    parseHTML: element => element.getAttribute('id') || null,
+                    renderHTML: attributes => {
+                        if (!attributes.id) return {};
+                        return { id: attributes.id };
+                    },
+                },
+                type: {
+                    default: null,
+                    parseHTML: element => element.getAttribute('type') || null,
+                    renderHTML: attributes => {
+                        if (!attributes.type) return {};
+                        return { type: attributes.type };
+                    },
+                },
+                style: {
+                    default: null,
+                    parseHTML: element => element.getAttribute('style') || null,
+                    renderHTML: attributes => {
+                        if (!attributes.style) return {};
+                        return { style: attributes.style };
+                    },
+                },
+                title: {
+                    default: null,
+                    parseHTML: element => element.getAttribute('title') || null,
+                    renderHTML: attributes => {
+                        if (!attributes.title) return {};
+                        return { title: attributes.title };
+                    },
+                },
+                // Catch-all for any other data-* attributes
+                'data-id': {
+                    default: null,
+                    parseHTML: element => element.getAttribute('data-id') || null,
+                    renderHTML: attributes => {
+                        if (!attributes['data-id']) return {};
+                        return { 'data-id': attributes['data-id'] };
+                    },
+                },
+                'data-name': {
+                    default: null,
+                    parseHTML: element => element.getAttribute('data-name') || null,
+                    renderHTML: attributes => {
+                        if (!attributes['data-name']) return {};
+                        return { 'data-name': attributes['data-name'] };
+                    },
+                },
+                'data-value': {
+                    default: null,
+                    parseHTML: element => element.getAttribute('data-value') || null,
+                    renderHTML: attributes => {
+                        if (!attributes['data-value']) return {};
+                        return { 'data-value': attributes['data-value'] };
+                    },
+                },
+            };
+        },
+        
+        parseHTML() {
+            return [
+                {
+                    tag: 'button',
+                    // Preserve all attributes when parsing
+                    getAttrs: element => {
+                        return {};  // Return empty object to accept all buttons
+                    },
+                },
+            ];
+        },
+        
+        renderHTML({ HTMLAttributes }) {
+            // Render button with all preserved attributes
+            return ['button', HTMLAttributes, 0];
+        },
+    });
+}
+
+/**
  * Create custom TextStyle extension that supports span with custom attributes
  * @param {Object} TextStyle - TipTap TextStyle extension
  * @returns {Object} Extended TextStyle
@@ -1929,6 +2076,7 @@ function createCustomAttributesExtension(Extension) {
                         'pre',
                         'video',
                         'link',
+                        'button',
                     ],
                     attributes: {
                         class: {
@@ -2077,6 +2225,31 @@ function createCustomAttributesExtension(Extension) {
                                 return { 'data-dismiss': attributes['data-dismiss'] };
                             },
                         },
+                        // Bootstrap 5 specific attributes (for accordions, modals, etc.)
+                        'data-bs-toggle': {
+                            default: null,
+                            parseHTML: element => element.getAttribute('data-bs-toggle') || null,
+                            renderHTML: attributes => {
+                                if (!attributes['data-bs-toggle']) return {};
+                                return { 'data-bs-toggle': attributes['data-bs-toggle'] };
+                            },
+                        },
+                        'data-bs-target': {
+                            default: null,
+                            parseHTML: element => element.getAttribute('data-bs-target') || null,
+                            renderHTML: attributes => {
+                                if (!attributes['data-bs-target']) return {};
+                                return { 'data-bs-target': attributes['data-bs-target'] };
+                            },
+                        },
+                        'data-bs-parent': {
+                            default: null,
+                            parseHTML: element => element.getAttribute('data-bs-parent') || null,
+                            renderHTML: attributes => {
+                                if (!attributes['data-bs-parent']) return {};
+                                return { 'data-bs-parent': attributes['data-bs-parent'] };
+                            },
+                        },
                     },
                 },
             ];
@@ -2145,6 +2318,9 @@ export async function initWysiwygField(fieldElement, config) {
     const Details = createDetailsNode(Node);
     const Summary = createSummaryNode(Node);
     const Pre = createPreNode(Node);
+
+    // Create Button node (for Bootstrap accordions, modals, etc.)
+    const Button = createButtonNode(Node);
 
     // Create custom attributes extension (class, id, style, aria-*, data-*, etc.)
     const CustomAttributes = createCustomAttributesExtension(Extension);
@@ -2322,6 +2498,8 @@ export async function initWysiwygField(fieldElement, config) {
             Details,
             Summary,
             Pre,
+            // Button element (for Bootstrap accordions, modals, etc.)
+            Button,
             // Custom attributes (must be last to apply to all elements)
             CustomAttributes,
         ],
