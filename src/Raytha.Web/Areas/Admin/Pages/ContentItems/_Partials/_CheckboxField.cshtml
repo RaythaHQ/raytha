@@ -13,7 +13,7 @@
                    id="Form_FieldValues_@(index)__Value" 
                    name="Form.FieldValues[@(index)].Value" 
                    value="true" 
-                   checked="@(Model.Value == "True" || Model.Value == "true")"> 
+                   checked="@(Model.Value == "true")"> 
             <div class="invalid-feedback">@(parentModel?.ErrorMessageFor(Model.DeveloperName))</div>
         </div>
         @if (!string.IsNullOrEmpty(Model.Description))
