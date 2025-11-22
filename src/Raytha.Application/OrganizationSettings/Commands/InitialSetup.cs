@@ -609,6 +609,10 @@ public class InitialSetup
             dynamic aboutPageContent = new ExpandoObject();
             aboutPageContent.title = "About";
             var aboutPagePath = $"{((string)aboutPageContent.title).ToUrlSlug()}";
+            aboutPageContent.Content =
+                @"
+            
+            ";
             aboutPageContent.content =
                 @"
 <div><!--block-->The following content is default typography elements for your convenience while you style your new website.<br><br></div>

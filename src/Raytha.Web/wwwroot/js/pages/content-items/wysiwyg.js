@@ -2103,6 +2103,97 @@ function createExtendedTextStyle(TextStyle) {
 }
 
 /**
+ * Create custom Image extension that properly handles width and height attributes
+ * @param {Object} Image - TipTap Image extension
+ * @returns {Object} Extended Image
+ */
+function createExtendedImage(Image) {
+    return Image.extend({
+        addAttributes() {
+            return {
+                src: {
+                    default: null,
+                    parseHTML(element) {
+                        return element.getAttribute('src') || null;
+                    },
+                },
+                alt: {
+                    default: null,
+                    parseHTML(element) {
+                        return element.getAttribute('alt') || null;
+                    },
+                },
+                title: {
+                    default: null,
+                    parseHTML(element) {
+                        return element.getAttribute('title') || null;
+                    },
+                },
+                width: {
+                    default: null,
+                    parseHTML(element) {
+                        const width = element.getAttribute('width');
+                        return width ? parseInt(width) : null;
+                    },
+                },
+                height: {
+                    default: null,
+                    parseHTML(element) {
+                        const height = element.getAttribute('height');
+                        return height ? parseInt(height) : null;
+                    },
+                },
+                class: {
+                    default: null,
+                    parseHTML(element) {
+                        return element.getAttribute('class') || null;
+                    },
+                },
+                style: {
+                    default: null,
+                    parseHTML(element) {
+                        return element.getAttribute('style') || null;
+                    },
+                },
+            };
+        },
+        
+        renderHTML({ HTMLAttributes }) {
+            // Build attributes object manually
+            const attrs = {
+                src: HTMLAttributes.src,
+            };
+            
+            if (HTMLAttributes.alt) {
+                attrs.alt = HTMLAttributes.alt;
+            }
+            
+            if (HTMLAttributes.title) {
+                attrs.title = HTMLAttributes.title;
+            }
+            
+            if (HTMLAttributes.width) {
+                attrs.width = HTMLAttributes.width;
+            }
+            
+            if (HTMLAttributes.height) {
+                attrs.height = HTMLAttributes.height;
+            }
+            
+            if (HTMLAttributes.class) {
+                attrs.class = HTMLAttributes.class;
+            }
+            
+            if (HTMLAttributes.style) {
+                attrs.style = HTMLAttributes.style;
+            }
+            
+            return ['img', attrs];
+        },
+    });
+}
+
+/**
  * Create custom Link extension that properly handles rel and target attributes without defaults
  * Disables TipTap's automatic security attributes (noopener, noreferrer, nofollow)
  * @param {Object} Link - TipTap Link extension
@@ -2467,6 +2558,9 @@ export async function initWysiwygField(fieldElement, config) {
     // Create custom FontSize extension
     const FontSize = createFontSizeExtension(Extension);
 
+    // Create extended Image that properly handles width and height attributes
+    const ExtendedImage = createExtendedImage(Image);
+
     // Create extended Link that properly handles rel attribute without defaults
     const ExtendedLink = createExtendedLink(Link);
 
@@ -2628,11 +2722,9 @@ export async function initWysiwygField(fieldElement, config) {
                 linkOnPaste: false,
                 HTMLAttributes: {},
             }),
-            Image.configure({
+            ExtendedImage.configure({
                 inline: true,  // Allow images to be inline so they can be wrapped in links
-                HTMLAttributes: {
-                    class: 'img-fluid',
-                },
+                HTMLAttributes: {},
             }),
             Table.configure({
                 resizable: true,
