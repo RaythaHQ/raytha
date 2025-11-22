@@ -52,14 +52,10 @@ public class InitialSetup
             RuleFor(x => x.SuperAdminEmailAddress).EmailAddress();
             RuleFor(x => x.FirstName).NotEmpty();
             RuleFor(x => x.LastName).NotEmpty();
-            RuleFor(x => x.SmtpHost)
-                .NotEmpty()
-                .When(p => emailerConfiguration.IsMissingSmtpEnvVars());
             RuleFor(x => x.SmtpPort)
-                .NotNull()
                 .GreaterThan(0)
                 .LessThanOrEqualTo(65535)
-                .When(p => emailerConfiguration.IsMissingSmtpEnvVars());
+                .When(p => p.SmtpPort.HasValue);
             RuleFor(x => x.OrganizationName).NotEmpty();
             RuleFor(x => x.TimeZone)
                 .Must(DateTimeExtensions.IsValidTimeZone)
