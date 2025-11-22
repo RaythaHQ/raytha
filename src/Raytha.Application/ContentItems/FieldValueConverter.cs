@@ -117,7 +117,7 @@ public class FieldValueConverter
             {
                 var asArray = content[contentTypeField.DeveloperName].Value as IList<string>;
                 bool tempValue = asArray.Contains(contentTypeFieldChoice.DeveloperName);
-                value = tempValue.ToString();
+                value = tempValue.ToString().ToLower();
             }
         }
         else
@@ -167,7 +167,7 @@ public class FieldValueConverter
                 bool tempValue =
                     content[contentTypeField.DeveloperName].HasValue
                     && content[contentTypeField.DeveloperName].Value;
-                value = tempValue.ToString();
+                value = tempValue.ToString().ToLower();
             }
             else
             {

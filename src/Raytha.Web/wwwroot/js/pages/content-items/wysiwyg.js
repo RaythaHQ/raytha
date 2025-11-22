@@ -172,6 +172,12 @@ function createLinkModalHTML() {
                                         No referrer (don't send referrer information)
                                     </label>
                                 </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="link-nofollow">
+                                    <label class="form-check-label" for="link-nofollow">
+                                        No follow (don't follow this link for SEO)
+                                    </label>
+                                </div>
                             </div>
                             <div class="tab-pane fade" id="link-upload" role="tabpanel">
                                 <div id="link-uppy-container" class="uppy-container mt-3"></div>
@@ -778,6 +784,7 @@ function showImageLinkModal(editor, config, imgElement, existingAttrs = null) {
     const newWindowCheckbox = modalEl.querySelector('#link-new-window');
     const noopenerCheckbox = modalEl.querySelector('#link-noopener');
     const noreferrerCheckbox = modalEl.querySelector('#link-noreferrer');
+    const nofollowCheckbox = modalEl.querySelector('#link-nofollow');
     const insertBtn = modalEl.querySelector('#link-insert-btn');
 
     // Hide text input and upload tab for image links (not needed)
@@ -793,16 +800,18 @@ function showImageLinkModal(editor, config, imgElement, existingAttrs = null) {
         titleInput.value = existingAttrs.title || '';
         newWindowCheckbox.checked = existingAttrs.target === '_blank';
         
-        // Parse rel attribute for noopener and noreferrer
+        // Parse rel attribute for noopener, noreferrer, and nofollow
         const rel = existingAttrs.rel || '';
         noopenerCheckbox.checked = rel.includes('noopener');
         noreferrerCheckbox.checked = rel.includes('noreferrer');
+        nofollowCheckbox.checked = rel.includes('nofollow');
     } else {
         urlInput.value = '';
         titleInput.value = '';
         newWindowCheckbox.checked = false;
         noopenerCheckbox.checked = false;
         noreferrerCheckbox.checked = false;
+        nofollowCheckbox.checked = false;
     }
 
     // Update button text
@@ -829,18 +838,20 @@ function showImageLinkModal(editor, config, imgElement, existingAttrs = null) {
         const openInNewWindow = newWindowCheckbox.checked;
         const noopener = noopenerCheckbox.checked;
         const noreferrer = noreferrerCheckbox.checked;
+        const nofollow = nofollowCheckbox.checked;
 
         // Build rel attribute
         const relParts = [];
         if (noopener) relParts.push('noopener');
         if (noreferrer) relParts.push('noreferrer');
+        if (nofollow) relParts.push('nofollow');
         const rel = relParts.join(' ');
 
         const linkAttrs = {
             href: url,
-            ...(title && { title }),
-            ...(openInNewWindow && { target: '_blank' }),
-            ...(rel && { rel })
+            title: title || null,
+            target: openInNewWindow ? '_blank' : null,
+            rel: rel || null
         };
 
         linkImage(editor, imgElement, linkAttrs);
@@ -962,6 +973,7 @@ function showLinkModal(editor, config, existingAttrs = null) {
     const newWindowCheckbox = modalEl.querySelector('#link-new-window');
     const noopenerCheckbox = modalEl.querySelector('#link-noopener');
     const noreferrerCheckbox = modalEl.querySelector('#link-noreferrer');
+    const nofollowCheckbox = modalEl.querySelector('#link-nofollow');
     const insertBtn = modalEl.querySelector('#link-insert-btn');
 
     // Prefill for editing
@@ -970,10 +982,11 @@ function showLinkModal(editor, config, existingAttrs = null) {
         titleInput.value = existingAttrs.title || '';
         newWindowCheckbox.checked = existingAttrs.target === '_blank';
         
-        // Parse rel attribute for noopener and noreferrer
+        // Parse rel attribute for noopener, noreferrer, and nofollow
         const rel = existingAttrs.rel || '';
         noopenerCheckbox.checked = rel.includes('noopener');
         noreferrerCheckbox.checked = rel.includes('noreferrer');
+        nofollowCheckbox.checked = rel.includes('nofollow');
         
         textInput.value = '';  // Can't easily get selected text for editing
     } else {
@@ -986,6 +999,7 @@ function showLinkModal(editor, config, existingAttrs = null) {
         newWindowCheckbox.checked = false;
         noopenerCheckbox.checked = false;
         noreferrerCheckbox.checked = false;
+        nofollowCheckbox.checked = false;
     }
 
     // Enable/disable insert button based on URL
@@ -1037,18 +1051,20 @@ function showLinkModal(editor, config, existingAttrs = null) {
         const openInNewWindow = newWindowCheckbox.checked;
         const noopener = noopenerCheckbox.checked;
         const noreferrer = noreferrerCheckbox.checked;
+        const nofollow = nofollowCheckbox.checked;
 
         // Build rel attribute
         const relParts = [];
         if (noopener) relParts.push('noopener');
         if (noreferrer) relParts.push('noreferrer');
+        if (nofollow) relParts.push('nofollow');
         const rel = relParts.join(' ');
 
         const linkAttrs = {
             href: url,
-            ...(title && { title }),
-            ...(openInNewWindow && { target: '_blank' }),
-            ...(rel && { rel })
+            title: title || null,
+            target: openInNewWindow ? '_blank' : null,
+            rel: rel || null
         };
 
         if (existingAttrs) {
@@ -1060,11 +1076,15 @@ function showLinkModal(editor, config, existingAttrs = null) {
                 // Replace selection with link
                 editor.chain().focus().setLink(linkAttrs).run();
             } else if (text) {
-                // Insert new text with link
-                editor.chain().focus().insertContent(`<a href="${url}">${text}</a>`).run();
+                // Insert new text with link - use proper mark structure to avoid HTML parsing
+                editor.chain().focus()
+                    .insertContent({ type: 'text', text: text, marks: [{ type: 'link', attrs: linkAttrs }] })
+                    .run();
             } else {
-                // Just use URL as text
-                editor.chain().focus().insertContent(`<a href="${url}">${url}</a>`).run();
+                // Just use URL as text - use proper mark structure to avoid HTML parsing
+                editor.chain().focus()
+                    .insertContent({ type: 'text', text: url, marks: [{ type: 'link', attrs: linkAttrs }] })
+                    .run();
             }
         }
 
@@ -1802,6 +1822,52 @@ function createPreNode(Node) {
 }
 
 /**
+ * Create Style node extension for TipTap
+ * Allows <style> blocks to be preserved in HTML mode
+ * @param {Object} Node - TipTap Node class
+ * @returns {Object} Style extension
+ */
+function createStyleNode(Node) {
+    return Node.create({
+        name: 'style',
+        content: 'text*',
+        group: 'block',
+        code: true,
+        defining: true,
+        marks: '',
+        parseHTML() {
+            return [{ 
+                tag: 'style',
+                preserveWhitespace: 'full',
+            }];
+        },
+        renderHTML({ HTMLAttributes }) {
+            return ['style', HTMLAttributes, 0];
+        },
+        addAttributes() {
+            return {
+                type: {
+                    default: null,
+                    parseHTML: element => element.getAttribute('type') || null,
+                    renderHTML: attributes => {
+                        if (!attributes.type) return {};
+                        return { type: attributes.type };
+                    },
+                },
+                media: {
+                    default: null,
+                    parseHTML: element => element.getAttribute('media') || null,
+                    renderHTML: attributes => {
+                        if (!attributes.media) return {};
+                        return { media: attributes.media };
+                    },
+                },
+            };
+        },
+    });
+}
+
+/**
  * Create Button node extension for TipTap
  * Allows <button> elements to be used anywhere in content (Bootstrap accordions, etc.)
  * Preserves all attributes including data-bs-*, aria-*, id, class, type
@@ -2037,6 +2103,194 @@ function createExtendedTextStyle(TextStyle) {
 }
 
 /**
+ * Create custom Image extension that properly handles width and height attributes
+ * @param {Object} Image - TipTap Image extension
+ * @returns {Object} Extended Image
+ */
+function createExtendedImage(Image) {
+    return Image.extend({
+        addAttributes() {
+            return {
+                src: {
+                    default: null,
+                    parseHTML(element) {
+                        return element.getAttribute('src') || null;
+                    },
+                },
+                alt: {
+                    default: null,
+                    parseHTML(element) {
+                        return element.getAttribute('alt') || null;
+                    },
+                },
+                title: {
+                    default: null,
+                    parseHTML(element) {
+                        return element.getAttribute('title') || null;
+                    },
+                },
+                width: {
+                    default: null,
+                    parseHTML(element) {
+                        const width = element.getAttribute('width');
+                        return width ? parseInt(width) : null;
+                    },
+                },
+                height: {
+                    default: null,
+                    parseHTML(element) {
+                        const height = element.getAttribute('height');
+                        return height ? parseInt(height) : null;
+                    },
+                },
+                class: {
+                    default: null,
+                    parseHTML(element) {
+                        return element.getAttribute('class') || null;
+                    },
+                },
+                style: {
+                    default: null,
+                    parseHTML(element) {
+                        return element.getAttribute('style') || null;
+                    },
+                },
+            };
+        },
+        
+        renderHTML({ HTMLAttributes }) {
+            // Build attributes object manually
+            const attrs = {
+                src: HTMLAttributes.src,
+            };
+            
+            if (HTMLAttributes.alt) {
+                attrs.alt = HTMLAttributes.alt;
+            }
+            
+            if (HTMLAttributes.title) {
+                attrs.title = HTMLAttributes.title;
+            }
+            
+            if (HTMLAttributes.width) {
+                attrs.width = HTMLAttributes.width;
+            }
+            
+            if (HTMLAttributes.height) {
+                attrs.height = HTMLAttributes.height;
+            }
+            
+            if (HTMLAttributes.class) {
+                attrs.class = HTMLAttributes.class;
+            }
+            
+            if (HTMLAttributes.style) {
+                attrs.style = HTMLAttributes.style;
+            }
+            
+            return ['img', attrs];
+        },
+    });
+}
+
+/**
+ * Create custom Link extension that properly handles rel and target attributes without defaults
+ * Disables TipTap's automatic security attributes (noopener, noreferrer, nofollow)
+ * @param {Object} Link - TipTap Link extension
+ * @returns {Object} Extended Link
+ */
+function createExtendedLink(Link) {
+    return Link.extend({
+        addOptions() {
+            return {
+                ...this.parent?.(),
+                // Disable automatic protocol validation
+                validate: undefined,
+                // Disable auto-linking
+                autolink: false,
+                // Override default HTMLAttributes
+                HTMLAttributes: {},
+            };
+        },
+        
+        addAttributes() {
+            return {
+                href: {
+                    default: null,
+                    parseHTML(element) {
+                        return element.getAttribute('href') || null;
+                    },
+                },
+                target: {
+                    default: null,
+                    parseHTML(element) {
+                        return element.getAttribute('target') || null;
+                    },
+                },
+                rel: {
+                    default: null,
+                    parseHTML(element) {
+                        return element.getAttribute('rel') || null;
+                    },
+                },
+                class: {
+                    default: null,
+                    parseHTML(element) {
+                        const className = element.getAttribute('class');
+                        return className || null;
+                    },
+                },
+                title: {
+                    default: null,
+                    parseHTML(element) {
+                        const title = element.getAttribute('title');
+                        return title || null;
+                    },
+                },
+            };
+        },
+        
+        // Override parseHTML to prevent automatic attribute manipulation
+        parseHTML() {
+            return [
+                {
+                    tag: 'a[href]',
+                    getAttrs: (dom) => {
+                        return {};
+                    },
+                },
+            ];
+        },
+        
+        // CRITICAL: Override renderHTML to have full control over output
+        renderHTML({ HTMLAttributes }) {
+            // Build attributes object manually, only including non-null values
+            const attrs = {
+                href: HTMLAttributes.href,
+            };
+            
+            if (HTMLAttributes.target) {
+                attrs.target = HTMLAttributes.target;
+            }
+            
+            if (HTMLAttributes.rel) {
+                attrs.rel = HTMLAttributes.rel;
+            }
+            
+            if (HTMLAttributes.class) {
+                attrs.class = HTMLAttributes.class;
+            }
+            
+            if (HTMLAttributes.title) {
+                attrs.title = HTMLAttributes.title;
+            }
+            
+            return ['a', attrs, 0];
+        },
+    });
+}
+
+/**
  * Create custom attributes extension for TipTap
  * Supports: class, id, style, title, alt, aria-*, role, data-*
  * @param {Object} Extension - TipTap Extension class
@@ -2049,7 +2303,7 @@ function createCustomAttributesExtension(Extension) {
         addGlobalAttributes() {
             return [
                 {
-                    // Apply to all node types
+                    // Apply to all node types (excluding 'link' which has its own extended version)
                     types: [
                         'paragraph',
                         'heading',
@@ -2074,8 +2328,8 @@ function createCustomAttributesExtension(Extension) {
                         'details',
                         'summary',
                         'pre',
+                        'style',
                         'video',
-                        'link',
                         'button',
                     ],
                     attributes: {
@@ -2304,6 +2558,12 @@ export async function initWysiwygField(fieldElement, config) {
     // Create custom FontSize extension
     const FontSize = createFontSizeExtension(Extension);
 
+    // Create extended Image that properly handles width and height attributes
+    const ExtendedImage = createExtendedImage(Image);
+
+    // Create extended Link that properly handles rel attribute without defaults
+    const ExtendedLink = createExtendedLink(Link);
+
     // Create extended TextStyle that supports span with custom attributes
     const ExtendedTextStyle = createExtendedTextStyle(TextStyle);
 
@@ -2318,6 +2578,7 @@ export async function initWysiwygField(fieldElement, config) {
     const Details = createDetailsNode(Node);
     const Summary = createSummaryNode(Node);
     const Pre = createPreNode(Node);
+    const Style = createStyleNode(Node);
 
     // Create Button node (for Bootstrap accordions, modals, etc.)
     const Button = createButtonNode(Node);
@@ -2455,17 +2716,15 @@ export async function initWysiwygField(fieldElement, config) {
         element: editorWrapper,
         extensions: [
             StarterKit,
-            Link.configure({
+            ExtendedLink.configure({
                 openOnClick: false,
-                HTMLAttributes: {
-                    class: 'link-primary',
-                },
+                autolink: false,
+                linkOnPaste: false,
+                HTMLAttributes: {},
             }),
-            Image.configure({
+            ExtendedImage.configure({
                 inline: true,  // Allow images to be inline so they can be wrapped in links
-                HTMLAttributes: {
-                    class: 'img-fluid',
-                },
+                HTMLAttributes: {},
             }),
             Table.configure({
                 resizable: true,
@@ -2498,6 +2757,7 @@ export async function initWysiwygField(fieldElement, config) {
             Details,
             Summary,
             Pre,
+            Style,
             // Button element (for Bootstrap accordions, modals, etc.)
             Button,
             // Custom attributes (must be last to apply to all elements)
