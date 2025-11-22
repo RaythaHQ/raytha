@@ -1822,6 +1822,52 @@ function createPreNode(Node) {
 }
 
 /**
+ * Create Style node extension for TipTap
+ * Allows <style> blocks to be preserved in HTML mode
+ * @param {Object} Node - TipTap Node class
+ * @returns {Object} Style extension
+ */
+function createStyleNode(Node) {
+    return Node.create({
+        name: 'style',
+        content: 'text*',
+        group: 'block',
+        code: true,
+        defining: true,
+        marks: '',
+        parseHTML() {
+            return [{ 
+                tag: 'style',
+                preserveWhitespace: 'full',
+            }];
+        },
+        renderHTML({ HTMLAttributes }) {
+            return ['style', HTMLAttributes, 0];
+        },
+        addAttributes() {
+            return {
+                type: {
+                    default: null,
+                    parseHTML: element => element.getAttribute('type') || null,
+                    renderHTML: attributes => {
+                        if (!attributes.type) return {};
+                        return { type: attributes.type };
+                    },
+                },
+                media: {
+                    default: null,
+                    parseHTML: element => element.getAttribute('media') || null,
+                    renderHTML: attributes => {
+                        if (!attributes.media) return {};
+                        return { media: attributes.media };
+                    },
+                },
+            };
+        },
+    });
+}
+
+/**
  * Create Button node extension for TipTap
  * Allows <button> elements to be used anywhere in content (Bootstrap accordions, etc.)
  * Preserves all attributes including data-bs-*, aria-*, id, class, type
@@ -2191,6 +2237,7 @@ function createCustomAttributesExtension(Extension) {
                         'details',
                         'summary',
                         'pre',
+                        'style',
                         'video',
                         'button',
                     ],
@@ -2437,6 +2484,7 @@ export async function initWysiwygField(fieldElement, config) {
     const Details = createDetailsNode(Node);
     const Summary = createSummaryNode(Node);
     const Pre = createPreNode(Node);
+    const Style = createStyleNode(Node);
 
     // Create Button node (for Bootstrap accordions, modals, etc.)
     const Button = createButtonNode(Node);
@@ -2617,6 +2665,7 @@ export async function initWysiwygField(fieldElement, config) {
             Details,
             Summary,
             Pre,
+            Style,
             // Button element (for Bootstrap accordions, modals, etc.)
             Button,
             // Custom attributes (must be last to apply to all elements)
