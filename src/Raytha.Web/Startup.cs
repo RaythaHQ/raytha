@@ -153,9 +153,14 @@ public class Startup
                     ResponseWriter = async (ctx, report) =>
                     {
                         ctx.Response.ContentType = "application/json";
+
+                        var currentVersion =
+                            ctx.RequestServices.GetRequiredService<ICurrentVersion>();
+
                         var json = JsonSerializer.Serialize(
                             new
                             {
+                                version = currentVersion.Version,
                                 status = report.Status.ToString(),
                                 checks = report.Entries.Select(e => new
                                 {
