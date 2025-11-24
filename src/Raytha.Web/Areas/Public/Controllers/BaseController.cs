@@ -3,9 +3,11 @@ using System.Linq;
 using FluentValidation.Results;
 using Mediator;
 using Microsoft.AspNetCore.Antiforgery;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Utils;
 using Raytha.Web.Areas.Admin.Pages.Shared;
@@ -20,6 +22,8 @@ public class BaseController : Controller
     private ICurrentOrganization _currentOrganization;
     private ICurrentUser _currentUser;
     private IAntiforgery _antiforgery;
+    private IWebHostEnvironment _environment;
+    private ILogger _logger;
 
     protected ISender Mediator =>
         _mediator ??= HttpContext.RequestServices.GetRequiredService<ISender>();
@@ -30,6 +34,10 @@ public class BaseController : Controller
         _currentUser ??= HttpContext.RequestServices.GetRequiredService<ICurrentUser>();
     protected IAntiforgery Antiforgery =>
         _antiforgery ??= HttpContext.RequestServices.GetRequiredService<IAntiforgery>();
+    protected IWebHostEnvironment Environment =>
+        _environment ??= HttpContext.RequestServices.GetRequiredService<IWebHostEnvironment>();
+    protected ILogger Logger =>
+        _logger ??= HttpContext.RequestServices.GetRequiredService<ILogger<BaseController>>();
 
     public const string ErrorMessageKey = "ErrorMessage";
     public const string SuccessMessageKey = "SuccessMessage";

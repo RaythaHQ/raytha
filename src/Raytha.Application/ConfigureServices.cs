@@ -22,9 +22,9 @@ public static class ConfigureServices
             options.Namespace = "Raytha.Application.Mediator";
             options.ServiceLifetime = ServiceLifetime.Scoped;
         });
-        services.AddSingleton(typeof(IPipelineBehavior<,>), typeof(UnhandledExceptionBehaviour<,>));
-        services.AddSingleton(typeof(IPipelineBehavior<,>), typeof(ValidationBehaviour<,>));
-        services.AddSingleton(typeof(IPipelineBehavior<,>), typeof(AuditBehavior<,>));
+        services.AddScoped(typeof(IPipelineBehavior<,>), typeof(UnhandledExceptionBehaviour<,>));
+        services.AddScoped(typeof(IPipelineBehavior<,>), typeof(ValidationBehaviour<,>));
+        services.AddScoped(typeof(IPipelineBehavior<,>), typeof(AuditBehavior<,>));
         services.AddScoped<BeginExportContentItemsToCsv.BackgroundTask>();
         services.AddScoped<BeginImportContentItemsFromCsv.BackgroundTask>();
         services.AddScoped<BeginImportThemeFromUrl.BackgroundTask>();

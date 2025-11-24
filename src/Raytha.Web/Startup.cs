@@ -51,6 +51,10 @@ public class Startup
 
     public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
     {
+        Console.WriteLine(
+            $"[Startup] Environment: {env.EnvironmentName}, IsDevelopment: {env.IsDevelopment()}"
+        );
+
         string pathBase = Configuration["PATHBASE"] ?? string.Empty;
         app.UsePathBase(new PathString(pathBase));
         app.UseForwardedHeaders();
@@ -149,9 +153,14 @@ public class Startup
                     ResponseWriter = async (ctx, report) =>
                     {
                         ctx.Response.ContentType = "application/json";
+
+                        var currentVersion =
+                            ctx.RequestServices.GetRequiredService<ICurrentVersion>();
+
                         var json = JsonSerializer.Serialize(
                             new
                             {
+                                version = currentVersion.Version,
                                 status = report.Status.ToString(),
                                 checks = report.Entries.Select(e => new
                                 {

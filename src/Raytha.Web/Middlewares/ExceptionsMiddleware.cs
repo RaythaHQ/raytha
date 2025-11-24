@@ -91,6 +91,7 @@ public class ExceptionsMiddleware
 
                 var errorDetails = new ErrorDetails
                 {
+                    Route = path.Value ?? string.Empty,
                     Exception = error.Error,
                     ErrorMessage = error.Error?.Message ?? "An unknown error has occurred",
                     StackTrace = error.Error?.StackTrace,
@@ -105,6 +106,24 @@ public class ExceptionsMiddleware
                     && !path.Value.ToLower().StartsWith($"{pathBase}/raytha/error")
                 )
                 {
+                    // Store error details in TempData factory for redirect (HttpContext.Items doesn't survive redirects)
+                    var tempDataProvider =
+                        context.RequestServices.GetService<Microsoft.AspNetCore.Mvc.ViewFeatures.ITempDataProvider>();
+                    var tempDataDictionaryFactory =
+                        context.RequestServices.GetService<Microsoft.AspNetCore.Mvc.ViewFeatures.ITempDataDictionaryFactory>();
+
+                    if (tempDataProvider != null && tempDataDictionaryFactory != null)
+                    {
+                        var tempData = tempDataDictionaryFactory.GetTempData(context);
+                        tempData[$"{ERROR_DETAILS_KEY}_Message"] = errorDetails.ErrorMessage;
+                        tempData[$"{ERROR_DETAILS_KEY}_StackTrace"] =
+                            errorDetails.StackTrace ?? string.Empty;
+                        tempData[$"{ERROR_DETAILS_KEY}_IsDevelopment"] =
+                            errorDetails.IsDevelopmentMode;
+                        tempData[$"{ERROR_DETAILS_KEY}_Route"] = errorDetails.Route;
+                        tempData.Save();
+                    }
+
                     context.Response.Redirect($"{pathBase}/raytha/error/{statusCode}");
                 }
                 else
@@ -123,6 +142,7 @@ public class ExceptionsMiddleware
 
     public class ErrorDetails
     {
+        public string Route { get; set; }
         public Exception Exception { get; set; }
         public string ErrorMessage { get; set; }
         public string StackTrace { get; set; }

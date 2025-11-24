@@ -5,6 +5,12 @@
 		{% if Target.ErrorId %}
 		<p>Error id: {{ Target.ErrorId }}</p>
 		{% endif %}
+        {% if Target.ErrorMessage %}
+        <p>{{ Target.ErrorMessage }}</p>
+        {% endif %}
+        {% if Target.IsDevelopmentMode %}
+        <p>{{ Target.StackTrace }}</p>
+        {% endif %}
     </div>
   </div>
 </div>

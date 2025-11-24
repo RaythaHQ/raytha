@@ -274,6 +274,7 @@ public class MainController : BaseController
         }
         catch (NotFoundException)
         {
+            Logger.LogInformation("Not found exception: {route}", route);
             var errorModel = new GenericError_RenderModel { ErrorId = ShortGuid.NewGuid() };
             return new ErrorActionViewResult(
                 BuiltInWebTemplate.Error404,
@@ -284,6 +285,7 @@ public class MainController : BaseController
         }
         catch (UnauthorizedAccessException)
         {
+            Logger.LogInformation("Unauthorized access exception: {route}", route);
             var errorModel = new GenericError_RenderModel { ErrorId = ShortGuid.NewGuid() };
             return new ErrorActionViewResult(
                 BuiltInWebTemplate.Error403,
@@ -292,9 +294,20 @@ public class MainController : BaseController
                 ViewData
             );
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            var errorModel = new GenericError_RenderModel { ErrorId = ShortGuid.NewGuid() };
+            var id = ShortGuid.NewGuid();
+            Logger.LogError(ex, "Unhandled exception: {Id}", id);
+            var isDevelopment = Environment.IsDevelopment();
+            var errorModel = new GenericError_RenderModel
+            {
+                ErrorId = id,
+                ErrorMessage = ex.Message,
+                StackTrace = isDevelopment
+                    ? ex.StackTrace
+                    : "Stack trace not available in production mode",
+                IsDevelopmentMode = isDevelopment,
+            };
             return new ErrorActionViewResult(
                 BuiltInWebTemplate.Error500,
                 500,

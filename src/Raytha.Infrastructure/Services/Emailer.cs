@@ -1,5 +1,6 @@
 ﻿using System.Net;
 using System.Net.Mail;
+using Microsoft.Extensions.Logging;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Utils;
 using Raytha.Domain.Common;
@@ -9,14 +10,21 @@ namespace Raytha.Infrastructure.Services;
 public class Emailer : IEmailer
 {
     private readonly IEmailerConfiguration _configuration;
+    private readonly ILogger<Emailer> _logger;
 
-    public Emailer(IEmailerConfiguration configuration)
+    public Emailer(IEmailerConfiguration configuration, ILogger<Emailer> logger)
     {
         _configuration = configuration;
+        _logger = logger;
     }
 
     public void SendEmail(EmailMessage message)
     {
+        if (string.IsNullOrWhiteSpace(_configuration.SmtpHost))
+        {
+            _logger.LogWarning("SMTP host is not configured, skipping email send");
+            return;
+        }
         var smtpReplyToName = message.FromName.IfNullOrEmpty(_configuration.SmtpDefaultFromName);
         var smtpReplyToAddress = message.FromEmailAddress.IfNullOrEmpty(
             _configuration.SmtpDefaultFromAddress
