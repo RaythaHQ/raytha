@@ -51,6 +51,10 @@ public class Startup
 
     public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
     {
+        Console.WriteLine(
+            $"[Startup] Environment: {env.EnvironmentName}, IsDevelopment: {env.IsDevelopment()}"
+        );
+
         string pathBase = Configuration["PATHBASE"] ?? string.Empty;
         app.UsePathBase(new PathString(pathBase));
         app.UseForwardedHeaders();

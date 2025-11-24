@@ -14,6 +14,10 @@
         {
             <p class="text-muted"><strong>Error ID:</strong> @Model.ErrorId</p>
         }
+        @if (!string.IsNullOrEmpty(Model.Route))
+        {
+            <p class="text-muted"><strong>Route:</strong> <code>@Model.Route</code></p>
+        }
         @if (Model.IsDevelopmentMode && !string.IsNullOrEmpty(Model.StackTrace))
         {
             <div class="mt-4 text-start">

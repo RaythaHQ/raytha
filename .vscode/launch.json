@@ -13,7 +13,10 @@
             "args": [],
             "cwd": "${workspaceFolder}/src/Raytha.Web",
             "console": "integratedTerminal",
-            "stopAtEntry": false
+            "stopAtEntry": false,
+            "env": {
+                "ASPNETCORE_ENVIRONMENT": "Development"
+            }
         },
         {
             "name": ".NET Core Attach",
