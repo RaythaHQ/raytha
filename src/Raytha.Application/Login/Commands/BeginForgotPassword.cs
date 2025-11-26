@@ -40,44 +40,6 @@ public class BeginForgotPassword
                             );
                             return;
                         }
-
-                        var emailAddress = request.EmailAddress.ToLower().Trim();
-                        var entity = db.Users.FirstOrDefault(p =>
-                            p.EmailAddress.ToLower() == emailAddress
-                        );
-
-                        if (entity == null)
-                        {
-                            context.AddFailure(Constants.VALIDATION_SUMMARY, "User not found.");
-                            return;
-                        }
-
-                        if (!entity.IsActive)
-                        {
-                            context.AddFailure(
-                                Constants.VALIDATION_SUMMARY,
-                                "Your account has been deactivated."
-                            );
-                            return;
-                        }
-
-                        if (entity.IsAdmin && !authScheme.IsEnabledForAdmins)
-                        {
-                            context.AddFailure(
-                                Constants.VALIDATION_SUMMARY,
-                                "Authentication scheme disabled for administrators."
-                            );
-                            return;
-                        }
-
-                        if (!entity.IsAdmin && !authScheme.IsEnabledForUsers)
-                        {
-                            context.AddFailure(
-                                Constants.VALIDATION_SUMMARY,
-                                "Authentication scheme disabled for public users."
-                            );
-                            return;
-                        }
                     }
                 );
         }
@@ -97,9 +59,26 @@ public class BeginForgotPassword
             CancellationToken cancellationToken
         )
         {
-            var entity = _db.Users.First(p =>
-                p.EmailAddress.ToLower() == request.EmailAddress.ToLower().Trim()
+            var emailAddress = request.EmailAddress.ToLower().Trim();
+            var entity = _db.Users.FirstOrDefault(p => p.EmailAddress.ToLower() == emailAddress);
+
+            if (entity == null || !entity.IsActive)
+            {
+                return new CommandResponseDto<ShortGuid>(ShortGuid.NewGuid());
+            }
+
+            // Check auth scheme eligibility without revealing to the caller
+            var authScheme = _db.AuthenticationSchemes.First(p =>
+                p.DeveloperName == AuthenticationSchemeType.EmailAndPassword.DeveloperName
             );
+
+            if (
+                (entity.IsAdmin && !authScheme.IsEnabledForAdmins)
+                || (!entity.IsAdmin && !authScheme.IsEnabledForUsers)
+            )
+            {
+                return new CommandResponseDto<ShortGuid>(ShortGuid.NewGuid());
+            }
 
             ShortGuid guid = ShortGuid.NewGuid();
             var otp = new OneTimePassword
