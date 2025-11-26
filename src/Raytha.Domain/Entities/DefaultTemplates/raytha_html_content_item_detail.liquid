@@ -1,8 +1,141 @@
-<div class="container">
-  <div class="d-flex justify-content-center">
-    <div class="col-lg-8">
-      <h3>{{ Target.PrimaryField }}</h3>
-      {{ Target.PublishedContent.content.Text }}
+<!-- Page Header -->
+<div class="bg-white border-bottom py-4">
+  <div class="container">
+    <div class="row">
+      <div class="col-lg-10 mx-auto">
+        <nav aria-label="breadcrumb">
+          <ol class="breadcrumb mb-3">
+            <li class="breadcrumb-item">
+              <a href="{{ PathBase }}/" class="text-decoration-none">
+                <i class="bi bi-house-door me-1"></i>Home
+              </a>
+            </li>
+            <li class="breadcrumb-item">
+              <a href="{{ PathBase }}/{{ ContentType.DeveloperName }}" class="text-decoration-none">
+                {{ ContentType.LabelPlural }}
+              </a>
+            </li>
+            <li class="breadcrumb-item active text-truncate" aria-current="page">
+              {{ Target.PrimaryField }}
+            </li>
+          </ol>
+        </nav>
+        
+        <h1 class="display-6 fw-bold mb-3">{{ Target.PrimaryField }}</h1>
+        
+        <div class="d-flex flex-wrap align-items-center gap-3">
+          <span class="badge bg-primary bg-opacity-10 text-primary px-3 py-2">
+            <i class="bi bi-folder me-1"></i>{{ ContentType.LabelSingular }}
+          </span>
+          <span class="text-muted d-flex align-items-center gap-1">
+            <i class="bi bi-calendar3"></i>
+            {{ Target.CreationTime | organization_time: "%B %e, %Y" }}
+          </span>
+          {% if Target.LastModificationTime %}
+          <span class="text-muted d-flex align-items-center gap-1">
+            <i class="bi bi-pencil"></i>
+            Updated {{ Target.LastModificationTime | organization_time: "%B %e, %Y" }}
+          </span>
+          {% endif %}
+
+          {% if CurrentUser.IsAdmin %}
+          <a href="{{ PathBase }}/raytha/{{ ContentType.DeveloperName }}/edit/{{ Target.Id }}" class="btn btn-sm btn-warning d-inline-flex align-items-center gap-1 ms-auto">
+            <i class="bi bi-pencil-square"></i>
+            Edit in Admin
+          </a>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Content -->
+<div class="py-5">
+  <div class="container">
+    <div class="row">
+      <div class="col-lg-10 mx-auto">
+        <div class="card border-0 shadow-sm">
+          <div class="card-body p-4 p-lg-5">
+            <article class="lh-lg">
+              {{ Target.PublishedContent.content.Text }}
+            </article>
+          </div>
+        </div>
+        
+        <!-- Navigation -->
+        <div class="mt-4 pt-4 border-top">
+          <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+            <a href="{{ PathBase }}/{{ ContentType.DeveloperName }}" class="btn btn-outline-primary d-inline-flex align-items-center gap-2">
+              <i class="bi bi-arrow-left"></i>
+              Back to {{ ContentType.LabelPlural }}
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Related Content -->
+{% assign related_items = get_content_items(ContentType=ContentType.DeveloperName, PageSize=4) %}
+<div class="bg-white py-5 border-top">
+  <div class="container">
+    <div class="row">
+      <div class="col-lg-10 mx-auto">
+        <div class="d-flex align-items-center justify-content-between mb-4">
+          <h3 class="h5 fw-bold mb-0 d-flex align-items-center gap-2">
+            <i class="bi bi-collection text-primary"></i>
+            More from {{ ContentType.LabelPlural }}
+          </h3>
+          <a href="{{ PathBase }}/{{ ContentType.DeveloperName }}.html" class="btn btn-sm btn-outline-primary">
+            View all <i class="bi bi-arrow-right ms-1"></i>
+          </a>
+        </div>
+        
+        {% assign has_related = false %}
+        {% for item in related_items.Items %}
+          {% if item.RoutePath != Target.RoutePath %}
+            {% assign has_related = true %}
+          {% endif %}
+        {% endfor %}
+        
+        {% if has_related %}
+        <div class="row g-3">
+          {% for item in related_items.Items %}
+            {% if item.RoutePath != Target.RoutePath %}
+            <div class="col-md-6 col-lg-4">
+              <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body p-3">
+                  <div class="d-flex align-items-center gap-2 mb-2">
+                    <span class="badge bg-primary bg-opacity-10 text-primary small">
+                      {{ ContentType.LabelSingular }}
+                    </span>
+                    <small class="text-muted">
+                      {{ item.CreationTime | organization_time: "%b %e, %Y" }}
+                    </small>
+                  </div>
+                  <h5 class="card-title h6 fw-semibold mb-2">
+                    <a href="{{ PathBase }}/{{ item.RoutePath }}" class="text-decoration-none text-dark stretched-link">
+                      {{ item.PrimaryField }}
+                    </a>
+                  </h5>
+                  <p class="card-text text-secondary small mb-0">
+                    {{ item.PublishedContent.content.Text | strip_html | truncate: 80, "..." }}
+                  </p>
+                </div>
+              </div>
+            </div>
+            {% endif %}
+          {% endfor %}
+        </div>
+        {% else %}
+        <div class="alert alert-light border d-flex align-items-center gap-2 mb-0">
+          <i class="bi bi-info-circle text-primary"></i>
+          <span>Explore more content in the <a href="{{ PathBase }}/{{ ContentType.DeveloperName }}.html" class="fw-semibold">{{ ContentType.LabelPlural }}</a> section.</span>
+        </div>
+        {% endif %}
+      </div>
     </div>
   </div>
 </div>

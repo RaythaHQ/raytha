@@ -1,66 +1,127 @@
-<div class="container">
-  <div class="d-flex justify-content-center">
-    <div class="col-lg-8">
-      <h3>{{ Target.Label }}</h3>
-      {% for item in Target.Items %}
-      <div class="row g-0 border rounded overflow-hidden flex-md-row mb-4 shadow-sm h-md-250 position-relative">
-        <div class="col p-4 d-flex flex-column position-static">
-          <h3 class="mb-0">{{ item.PrimaryField }}</h3>
-          <div class="mb-1 text-body-secondary">{{ item.CreationTime | organization_time: "%b %e %Y, %l:%M:%S %P" }}</div>
-          <p class="card-text">{{ item.PublishedContent.content | strip_html | truncate: 280, "..." }}</p>
-          <a href="{{ PathBase }}/{{ item.RoutePath }}" class="icon-link gap-1 icon-link-hover stretched-link">
-            Continue reading
-          </a>
-        </div>
-        <!-- Uncomment if you wish to add thumbnail images
-        <div class="col-auto d-none d-lg-block">
-          <svg class="bd-placeholder-img" width="200" height="250" xmlns="http://www.w3.org/2000/svg" role="img"
-            aria-label="Placeholder: Thumbnail" preserveAspectRatio="xMidYMid slice" focusable="false">
-            <title>Placeholder</title>
-            <rect width="100%" height="100%" fill="#55595c"></rect><text x="30%" y="50%" fill="#eceeef"
-              dy=".3em">Thumbnail</text>
-          </svg>
-        </div>
-        -->
+<!-- Page Header -->
+<div class="bg-white border-bottom py-4">
+  <div class="container">
+    <div class="row align-items-center">
+      <div class="col">
+        <nav aria-label="breadcrumb">
+          <ol class="breadcrumb mb-2">
+            <li class="breadcrumb-item"><a href="{{ PathBase }}/" class="text-decoration-none"><i class="bi bi-house-door me-1"></i>Home</a></li>
+            <li class="breadcrumb-item active" aria-current="page">{{ Target.Label }}</li>
+          </ol>
+        </nav>
+        <h1 class="h2 fw-bold mb-0 d-flex align-items-center gap-2">
+          <i class="bi bi-folder2-open text-primary"></i>
+          {{ Target.Label }}
+        </h1>
       </div>
-      <hr />
-      {% endfor %}
-      <nav aria-label="page navigation" class="py-4">
-        {% if Target.TotalCount == 1 %}
-        <p>{{ Target.TotalCount }} result</p>
-        {% else %}
-        <p>{{ Target.TotalCount }} results</p>
-        {% endif %}
-        <ul class="pagination">
-          <li class="page-item {% if Target.PreviousDisabledCss %}disabled{% endif %}">
-            <a href="{{ PathBase }}/{{ Target.RoutePath }}?pageNumber={{ Target.PageNumber | minus: 1 }}"
-              class="page-link">
-              «
-            </a>
-          </li>
-          {% if Target.FirstVisiblePageNumber > 1 %}
-          <li class="page-item disabled">
-            <a class="page-link">...</a>
-          </li>
-          {% endif %}
-          {% for i in (Target.FirstVisiblePageNumber..Target.LastVisiblePageNumber) %}
-          <li class="page-item {% if Target.PageNumber == i %}active{% endif %}">
-            <a href="{{ PathBase }}/{{ Target.RoutePath }}?pageNumber={{ i }}" class="page-link">{{ i }}</a>
-          </li>
-          {% endfor %}
+      <div class="col-auto">
+        <span class="badge bg-primary bg-opacity-10 text-primary fs-6 px-3 py-2">
+          {{ Target.TotalCount }} {% if Target.TotalCount == 1 %}item{% else %}items{% endif %}
+        </span>
+      </div>
+    </div>
+  </div>
+</div>
 
-          {% if Target.LastVisiblePageNumber < Target.TotalPages %} <li class="page-item disabled">
-            <a class="page-link">...</a>
-            </li>
-            {% endif %}
-            <li class="page-item {% if Target.NextDisabledCss %}disabled{% endif %}">
-              <a href="{{ PathBase }}/{{ Target.RoutePath }}?pageNumber={{ Target.PageNumber | plus: 1 }}"
-                class="page-link">
-                »
-              </a>
-            </li>
-        </ul>
-      </nav>
+<!-- Content List -->
+<div class="py-5">
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-lg-10">
+        
+        {% if Target.Items.size == 0 %}
+        <!-- Empty State -->
+        <div class="text-center py-5">
+          <div class="bg-secondary bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center p-4 mb-4">
+            <i class="bi bi-inbox display-4 text-secondary"></i>
+          </div>
+          <h3 class="h5 text-secondary">No items found</h3>
+          <p class="text-muted">There are no {{ Target.Label | downcase }} to display yet.</p>
+        </div>
+        {% else %}
+        
+        <!-- Items Grid -->
+        <div class="row g-4">
+          {% for item in Target.Items %}
+          <div class="col-12">
+            <div class="card border-0 shadow-sm h-100 overflow-hidden">
+              <div class="card-body p-4">
+                <div class="d-flex flex-column flex-md-row gap-3">
+                  <div class="flex-grow-1">
+                    <div class="d-flex align-items-center gap-2 mb-2">
+                      <span class="badge bg-success bg-opacity-10 text-success">
+                        <i class="bi bi-check-circle me-1"></i>Published
+                      </span>
+                      <small class="text-muted">
+                        <i class="bi bi-calendar3 me-1"></i>
+                        {{ item.CreationTime | organization_time: "%b %e, %Y" }}
+                      </small>
+                    </div>
+                    <h3 class="h5 fw-bold mb-2">
+                      <a href="{{ PathBase }}/{{ item.RoutePath }}" class="text-decoration-none text-dark stretched-link">
+                        {{ item.PrimaryField }}
+                      </a>
+                    </h3>
+                    <p class="text-secondary mb-0">
+                      {{ item.PublishedContent.content.Text | strip_html | truncate: 200, "..." }}
+                    </p>
+                  </div>
+                  <div class="d-flex align-items-center">
+                    <span class="text-primary">
+                      <i class="bi bi-arrow-right-circle fs-4"></i>
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+
+        <!-- Pagination -->
+        {% if Target.TotalPages > 1 %}
+        <nav aria-label="Page navigation" class="mt-5">
+          <div class="d-flex flex-column flex-sm-row justify-content-between align-items-center gap-3">
+            <div class="text-muted small">
+              <i class="bi bi-list-ul me-1"></i>
+              Showing page {{ Target.PageNumber }} of {{ Target.TotalPages }}
+            </div>
+            <ul class="pagination mb-0">
+              <li class="page-item {% if Target.PreviousDisabledCss %}disabled{% endif %}">
+                <a href="{{ PathBase }}/{{ Target.RoutePath }}?pageNumber={{ Target.PageNumber | minus: 1 }}" class="page-link d-flex align-items-center gap-1">
+                  <i class="bi bi-chevron-left"></i>
+                  <span class="d-none d-sm-inline">Previous</span>
+                </a>
+              </li>
+              {% if Target.FirstVisiblePageNumber > 1 %}
+              <li class="page-item disabled d-none d-sm-block">
+                <span class="page-link">...</span>
+              </li>
+              {% endif %}
+              {% for i in (Target.FirstVisiblePageNumber..Target.LastVisiblePageNumber) %}
+              <li class="page-item {% if Target.PageNumber == i %}active{% endif %}">
+                <a href="{{ PathBase }}/{{ Target.RoutePath }}?pageNumber={{ i }}" class="page-link">{{ i }}</a>
+              </li>
+              {% endfor %}
+              {% if Target.LastVisiblePageNumber < Target.TotalPages %}
+              <li class="page-item disabled d-none d-sm-block">
+                <span class="page-link">...</span>
+              </li>
+              {% endif %}
+              <li class="page-item {% if Target.NextDisabledCss %}disabled{% endif %}">
+                <a href="{{ PathBase }}/{{ Target.RoutePath }}?pageNumber={{ Target.PageNumber | plus: 1 }}" class="page-link d-flex align-items-center gap-1">
+                  <span class="d-none d-sm-inline">Next</span>
+                  <i class="bi bi-chevron-right"></i>
+                </a>
+              </li>
+            </ul>
+          </div>
+        </nav>
+        {% endif %}
+        
+        {% endif %}
+        
+      </div>
     </div>
   </div>
 </div>

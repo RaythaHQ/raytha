@@ -1,27 +1,139 @@
-<div class="px-4 pt-5 mt-5 text-center border-bottom">
-	<h1 class="display-4 fw-bold text-body-emphasis">You did it!</h1>
-	<div class="col-lg-6 mx-auto">
-		<p class="lead mb-4">Welcome to the Raytha Content Management System! This blurb is hardcoded into the Home Page
-			Template as an example of what you can do. Head over to the Admin Panel > Themes > Web-Templates, and edit the Home Page
-			Template to your liking!</p>
-		<div class="d-grid gap-2 d-sm-flex justify-content-sm-center mb-5">
-			<a href="{{ PathBase }}/raytha" class="btn btn-primary btn-lg px-4 me-sm-3">Admin Panel</a>
-			<a href="https://raytha.com/user-guide" class="btn btn-outline-secondary btn-lg px-4">User
-				Guide</a>
-		</div>
-	</div>
-	<div class="overflow-hidden" style="max-height: 30vh;">
-		<div class="container px-5">
-			<img src={{ "raythadotcom_screenshot.webp" | attachment_public_url }} class="img-fluid border rounded-3 shadow-lg mb-4" alt="Example image" width="700" height="500" loading="lazy">
-		</div>
-	</div>
+<!-- Hero Section -->
+<div class="bg-primary bg-gradient text-white py-5">
+  <div class="container py-5">
+    <div class="row align-items-center g-5">
+      <div class="col-lg-6">
+        <h1 class="display-4 fw-bold mb-3">
+          <i class="bi bi-check-circle-fill me-2"></i>You did it!
+        </h1>
+        <p class="lead mb-4 opacity-75">
+          Welcome to the Raytha Content Management System! This is your starting point for building something amazing. Head to the Admin Panel to customize everything.
+        </p>
+        <div class="d-flex flex-wrap gap-3">
+          <a href="{{ PathBase }}/raytha" class="btn btn-light btn-lg px-4 d-inline-flex align-items-center gap-2">
+            <i class="bi bi-gear-fill"></i>
+            Admin Panel
+          </a>
+          <a href="https://raytha.com/user-guide" class="btn btn-outline-light btn-lg px-4 d-inline-flex align-items-center gap-2">
+            <i class="bi bi-book"></i>
+            User Guide
+          </a>
+        </div>
+      </div>
+      <div class="col-lg-6">
+        <div class="card bg-white bg-opacity-10 border-0 shadow-lg">
+          <div class="card-body p-4">
+            <div class="ratio ratio-16x9">
+              <img src={{ "raythadotcom_screenshot.webp" | attachment_public_url }} class="rounded-3 object-fit-cover" alt="Raytha CMS Screenshot">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
 
-<div class="p-5 bg-body-tertiary">
-	<div class="container">
-		<h1 class="text-center text-body-emphasis">{{ Target.PrimaryField }}</h1>
-		<p class="col-lg-8 mx-auto lead">
-			{{ Target.PublishedContent.content.Text }}
-		</p>
-	</div>
+<!-- Features Section -->
+<div class="py-5">
+  <div class="container py-4">
+    <div class="text-center mb-5">
+      <span class="badge bg-primary bg-opacity-10 text-primary px-3 py-2 rounded-pill mb-3">
+        <i class="bi bi-stars me-1"></i>Features
+      </span>
+      <h2 class="display-6 fw-bold text-dark">Everything you need</h2>
+      <p class="lead text-secondary col-lg-8 mx-auto">Raytha gives you complete control over your content and templates with powerful, developer-friendly features.</p>
+    </div>
+    
+    <div class="row g-4">
+      <div class="col-md-6 col-lg-3">
+        <div class="card h-100 border-0 shadow-sm">
+          <div class="card-body text-center p-4">
+            <div class="bg-primary bg-opacity-10 text-primary rounded-circle d-inline-flex align-items-center justify-content-center p-3 mb-3">
+              <i class="bi bi-collection fs-2"></i>
+            </div>
+            <h5 class="card-title fw-semibold">Custom Content Types</h5>
+            <p class="card-text text-secondary small">Define exactly how your content is structured with flexible custom fields.</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-6 col-lg-3">
+        <div class="card h-100 border-0 shadow-sm">
+          <div class="card-body text-center p-4">
+            <div class="bg-success bg-opacity-10 text-success rounded-circle d-inline-flex align-items-center justify-content-center p-3 mb-3">
+              <i class="bi bi-code-slash fs-2"></i>
+            </div>
+            <h5 class="card-title fw-semibold">Liquid Templates</h5>
+            <p class="card-text text-secondary small">Build dynamic pages with the powerful Liquid templating engine.</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-6 col-lg-3">
+        <div class="card h-100 border-0 shadow-sm">
+          <div class="card-body text-center p-4">
+            <div class="bg-info bg-opacity-10 text-info rounded-circle d-inline-flex align-items-center justify-content-center p-3 mb-3">
+              <i class="bi bi-shield-check fs-2"></i>
+            </div>
+            <h5 class="card-title fw-semibold">User Management</h5>
+            <p class="card-text text-secondary small">Built-in authentication and role-based access control.</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-6 col-lg-3">
+        <div class="card h-100 border-0 shadow-sm">
+          <div class="card-body text-center p-4">
+            <div class="bg-warning bg-opacity-10 text-warning rounded-circle d-inline-flex align-items-center justify-content-center p-3 mb-3">
+              <i class="bi bi-lightning-charge fs-2"></i>
+            </div>
+            <h5 class="card-title fw-semibold">Fast & Flexible</h5>
+            <p class="card-text text-secondary small">Built with .NET for performance and adaptability.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Content Section -->
+<div class="bg-white py-5">
+  <div class="container py-4">
+    <div class="row justify-content-center">
+      <div class="col-lg-8">
+        <div class="text-center mb-4">
+          <span class="badge bg-secondary bg-opacity-10 text-secondary px-3 py-2 rounded-pill mb-3">
+            <i class="bi bi-file-text me-1"></i>About This Page
+          </span>
+          <h2 class="display-6 fw-bold text-dark">{{ Target.PrimaryField }}</h2>
+        </div>
+        <div class="card border-0 shadow-sm">
+          <div class="card-body p-4 p-lg-5">
+            <div class="lead text-secondary">
+              {{ Target.PublishedContent.content.Text }}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CTA Section -->
+<div class="bg-dark text-white py-5">
+  <div class="container py-4">
+    <div class="row justify-content-center text-center">
+      <div class="col-lg-8">
+        <h2 class="display-6 fw-bold mb-3">Ready to get started?</h2>
+        <p class="lead opacity-75 mb-4">Explore the Admin Panel to create content types, add content, and customize your templates.</p>
+        <div class="d-flex flex-wrap justify-content-center gap-3">
+          <a href="{{ PathBase }}/raytha" class="btn btn-primary btn-lg px-4 d-inline-flex align-items-center gap-2">
+            <i class="bi bi-rocket-takeoff"></i>
+            Launch Admin Panel
+          </a>
+          <a href="https://github.com/raytha" class="btn btn-outline-light btn-lg px-4 d-inline-flex align-items-center gap-2">
+            <i class="bi bi-github"></i>
+            View on GitHub
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
