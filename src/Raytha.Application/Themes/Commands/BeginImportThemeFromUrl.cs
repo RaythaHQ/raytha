@@ -31,7 +31,7 @@ public class BeginImportThemeFromUrl
 
     public class Validator : AbstractValidator<Command>
     {
-        public Validator(IRaythaDbContext db)
+        public Validator(IRaythaDbContext db, ISecurityConfiguration securityConfiguration)
         {
             RuleFor(x => x.Title).NotEmpty();
             RuleFor(x => x.Description).NotEmpty();
@@ -51,8 +51,14 @@ public class BeginImportThemeFromUrl
                                 $"A theme with the developer name {request.DeveloperName.ToDeveloperName()} already exists."
                             );
 
-                        if (!request.Url.IsValidUriFormat())
-                            context.AddFailure("Url", $"Invalid url format: {request.Url}");
+                        // Validate URL format and SSRF protection
+                        if (!SafeUrlValidator.IsSafeUrl(
+                                request.Url,
+                                securityConfiguration.AllowInternalUrlImports,
+                                out var urlError))
+                        {
+                            context.AddFailure("Url", urlError);
+                        }
                     }
                 );
         }

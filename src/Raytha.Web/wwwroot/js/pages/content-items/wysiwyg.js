@@ -505,6 +505,101 @@ function getFileExtension(filename) {
 }
 
 /**
+ * Upload an image file and return the URL
+ * @param {File} file - Image file to upload
+ * @param {Object} config - Configuration object
+ * @returns {Promise<string>} Uploaded image URL
+ */
+async function uploadImageFile(file, config) {
+    const pathBase = config.pathBase || '';
+
+    if (!config.useDirectUploadToCloud) {
+        // Direct upload to application server
+        const formData = new FormData();
+        formData.append('file', file);
+
+        const response = await fetch(`${pathBase}/raytha/media-items/upload`, {
+            method: 'POST',
+            body: formData,
+        });
+
+        if (!response.ok) {
+            throw new Error('Upload failed');
+        }
+
+        const data = await response.json();
+        const fields = data.fields || data;
+        const objectKey = fields.objectKey || '';
+
+        if (!objectKey) {
+            throw new Error('No object key returned');
+        }
+
+        return `${pathBase}/raytha/media-items/objectkey/${objectKey}`;
+    } else {
+        // Cloud upload via presigned URL
+        const ext = getFileExtension(file.name);
+        const presignUrl = `${pathBase}/raytha/media-items/presign`;
+
+        const presignRes = await fetch(presignUrl, {
+            method: 'POST',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                filename: file.name,
+                contentType: file.type,
+                extension: ext,
+            }),
+        });
+
+        if (!presignRes.ok) {
+            throw new Error('Failed to get presigned URL');
+        }
+
+        const presignData = await presignRes.json();
+        const uploadId = presignData.fields?.id;
+        const objectKey = presignData.fields?.objectKey;
+
+        // Upload to cloud storage
+        const uploadRes = await fetch(presignData.url, {
+            method: 'PUT',
+            headers: { 'x-ms-blob-type': 'BlockBlob' },
+            body: file,
+        });
+
+        if (!uploadRes.ok) {
+            throw new Error('Cloud upload failed');
+        }
+
+        // Register the uploaded file
+        const createUrl = `${pathBase}/raytha/media-items/create-after-upload`;
+        const createRes = await fetch(createUrl, {
+            method: 'POST',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                filename: file.name,
+                contentType: file.type,
+                extension: ext,
+                id: uploadId,
+                objectKey: objectKey,
+                length: file.size,
+            }),
+        });
+
+        if (!createRes.ok) {
+            throw new Error('Failed to register uploaded file');
+        }
+
+        return `${pathBase}/raytha/media-items/objectkey/${objectKey}`;
+    }
+}
+
+/**
  * Show link context menu on right-click
  * @param {MouseEvent} e - Mouse event
  * @param {Object} editor - TipTap editor instance
@@ -585,15 +680,15 @@ function getImageLinkAttributes(editor, imgElement) {
     try {
         const pos = editor.view.posAtDOM(imgElement, 0);
         const $pos = editor.state.doc.resolve(pos);
-        
+
         // Check if the image is wrapped in a link mark
         const marks = $pos.marks();
         const linkMark = marks.find(mark => mark.type.name === 'link');
-        
+
         if (linkMark) {
             return linkMark.attrs;
         }
-        
+
         return null;
     } catch (e) {
         console.error('Error getting image link attributes:', e);
@@ -612,12 +707,12 @@ function linkImage(editor, imgElement, linkAttrs) {
         const pos = editor.view.posAtDOM(imgElement, 0);
         const $pos = editor.state.doc.resolve(pos);
         const imageNode = $pos.nodeAfter;
-        
+
         if (imageNode && imageNode.type.name === 'image') {
             const { tr } = editor.state;
             const from = pos;
             const to = pos + imageNode.nodeSize;
-            
+
             // Add link mark to the image
             tr.addMark(from, to, editor.schema.marks.link.create(linkAttrs));
             editor.view.dispatch(tr);
@@ -637,12 +732,12 @@ function unlinkImage(editor, imgElement) {
         const pos = editor.view.posAtDOM(imgElement, 0);
         const $pos = editor.state.doc.resolve(pos);
         const imageNode = $pos.nodeAfter;
-        
+
         if (imageNode && imageNode.type.name === 'image') {
             const { tr } = editor.state;
             const from = pos;
             const to = pos + imageNode.nodeSize;
-            
+
             // Remove link mark from the image
             const linkMark = editor.schema.marks.link;
             tr.removeMark(from, to, linkMark);
@@ -680,7 +775,7 @@ function showImageContextMenu(e, editor, config, imgElement) {
     menu.style.top = `${e.pageY}px`;
 
     let menuItems = '<button type="button" class="context-menu-edit">Edit image</button>';
-    
+
     if (isLinked) {
         menuItems += '<button type="button" class="context-menu-edit-link">Edit link</button>';
         menuItems += '<button type="button" class="context-menu-unlink">Unlink image</button>';
@@ -771,11 +866,11 @@ function showImageContextMenu(e, editor, config, imgElement) {
 function showImageLinkModal(editor, config, imgElement, existingAttrs = null) {
     // Reuse the link modal HTML but with a different title
     const modalEl = ensureModal('tiptap-link-modal', createLinkModalHTML());
-    
+
     // Update title
     const modalTitle = modalEl.querySelector('.modal-title');
     modalTitle.textContent = existingAttrs ? 'Edit image link' : 'Link image';
-    
+
     const modal = new bootstrap.Modal(modalEl);
 
     const urlInput = modalEl.querySelector('#link-url');
@@ -799,7 +894,7 @@ function showImageLinkModal(editor, config, imgElement, existingAttrs = null) {
         urlInput.value = existingAttrs.href || '';
         titleInput.value = existingAttrs.title || '';
         newWindowCheckbox.checked = existingAttrs.target === '_blank';
-        
+
         // Parse rel attribute for noopener, noreferrer, and nofollow
         const rel = existingAttrs.rel || '';
         noopenerCheckbox.checked = rel.includes('noopener');
@@ -981,13 +1076,13 @@ function showLinkModal(editor, config, existingAttrs = null) {
         urlInput.value = existingAttrs.href || '';
         titleInput.value = existingAttrs.title || '';
         newWindowCheckbox.checked = existingAttrs.target === '_blank';
-        
+
         // Parse rel attribute for noopener, noreferrer, and nofollow
         const rel = existingAttrs.rel || '';
         noopenerCheckbox.checked = rel.includes('noopener');
         noreferrerCheckbox.checked = rel.includes('noreferrer');
         nofollowCheckbox.checked = rel.includes('nofollow');
-        
+
         textInput.value = '';  // Can't easily get selected text for editing
     } else {
         // Prefill with selection text
@@ -1836,7 +1931,7 @@ function createStyleNode(Node) {
         defining: true,
         marks: '',
         parseHTML() {
-            return [{ 
+            return [{
                 tag: 'style',
                 preserveWhitespace: 'full',
             }];
@@ -1881,7 +1976,7 @@ function createButtonNode(Node) {
         group: 'inline',
         content: 'text*',  // Allow text content inside button
         atom: false,       // Not atomic so content can be edited
-        
+
         addAttributes() {
             return {
                 // Bootstrap attributes
@@ -1994,7 +2089,7 @@ function createButtonNode(Node) {
                 },
             };
         },
-        
+
         parseHTML() {
             return [
                 {
@@ -2006,7 +2101,7 @@ function createButtonNode(Node) {
                 },
             ];
         },
-        
+
         renderHTML({ HTMLAttributes }) {
             // Render button with all preserved attributes
             return ['button', HTMLAttributes, 0];
@@ -2089,11 +2184,11 @@ function createExtendedTextStyle(TextStyle) {
                     getAttrs: element => {
                         // Only parse spans that have attributes we care about
                         const hasRelevantAttrs = element.hasAttribute('style') ||
-                                                element.hasAttribute('class') ||
-                                                element.hasAttribute('id') ||
-                                                element.hasAttribute('title') ||
-                                                Array.from(element.attributes).some(attr => attr.name.startsWith('data-'));
-                        
+                            element.hasAttribute('class') ||
+                            element.hasAttribute('id') ||
+                            element.hasAttribute('title') ||
+                            Array.from(element.attributes).some(attr => attr.name.startsWith('data-'));
+
                         return hasRelevantAttrs ? {} : false;
                     },
                 },
@@ -2157,37 +2252,37 @@ function createExtendedImage(Image) {
                 },
             };
         },
-        
+
         renderHTML({ HTMLAttributes }) {
             // Build attributes object manually
             const attrs = {
                 src: HTMLAttributes.src,
             };
-            
+
             if (HTMLAttributes.alt) {
                 attrs.alt = HTMLAttributes.alt;
             }
-            
+
             if (HTMLAttributes.title) {
                 attrs.title = HTMLAttributes.title;
             }
-            
+
             if (HTMLAttributes.width) {
                 attrs.width = HTMLAttributes.width;
             }
-            
+
             if (HTMLAttributes.height) {
                 attrs.height = HTMLAttributes.height;
             }
-            
+
             if (HTMLAttributes.class) {
                 attrs.class = HTMLAttributes.class;
             }
-            
+
             if (HTMLAttributes.style) {
                 attrs.style = HTMLAttributes.style;
             }
-            
+
             return ['img', attrs];
         },
     });
@@ -2212,7 +2307,7 @@ function createExtendedLink(Link) {
                 HTMLAttributes: {},
             };
         },
-        
+
         addAttributes() {
             return {
                 href: {
@@ -2249,7 +2344,7 @@ function createExtendedLink(Link) {
                 },
             };
         },
-        
+
         // Override parseHTML to prevent automatic attribute manipulation
         parseHTML() {
             return [
@@ -2261,30 +2356,30 @@ function createExtendedLink(Link) {
                 },
             ];
         },
-        
+
         // CRITICAL: Override renderHTML to have full control over output
         renderHTML({ HTMLAttributes }) {
             // Build attributes object manually, only including non-null values
             const attrs = {
                 href: HTMLAttributes.href,
             };
-            
+
             if (HTMLAttributes.target) {
                 attrs.target = HTMLAttributes.target;
             }
-            
+
             if (HTMLAttributes.rel) {
                 attrs.rel = HTMLAttributes.rel;
             }
-            
+
             if (HTMLAttributes.class) {
                 attrs.class = HTMLAttributes.class;
             }
-            
+
             if (HTMLAttributes.title) {
                 attrs.title = HTMLAttributes.title;
             }
-            
+
             return ['a', attrs, 0];
         },
     });
@@ -2299,7 +2394,7 @@ function createExtendedLink(Link) {
 function createCustomAttributesExtension(Extension) {
     return Extension.create({
         name: 'customAttributes',
-        
+
         addGlobalAttributes() {
             return [
                 {
@@ -2973,6 +3068,90 @@ export async function initWysiwygField(fieldElement, config) {
                 event.preventDefault();
                 showVideoModal(editor, config, { src: text });
             }
+        }
+    });
+
+    // Image paste handler (Ctrl+V with image in clipboard)
+    editorWrapper.addEventListener('paste', async (e) => {
+        const clipboardData = e.clipboardData;
+        if (!clipboardData) return;
+
+        // Check for image files in clipboard
+        const items = clipboardData.items;
+        let imageFile = null;
+
+        for (let i = 0; i < items.length; i++) {
+            if (items[i].type.startsWith('image/')) {
+                imageFile = items[i].getAsFile();
+                break;
+            }
+        }
+
+        if (!imageFile) return;
+
+        // Prevent default paste behavior
+        e.preventDefault();
+        e.stopPropagation();
+
+        // Generate a filename if the pasted image doesn't have one
+        const filename = imageFile.name || `pasted-image-${Date.now()}.${imageFile.type.split('/')[1] || 'png'}`;
+        const fileToUpload = new File([imageFile], filename, { type: imageFile.type });
+
+        // Show uploading indicator
+        const placeholderText = '[Uploading image...]';
+        editor.chain().focus().insertContent(placeholderText).run();
+
+        try {
+            const imageUrl = await uploadImageFile(fileToUpload, config);
+
+            // Remove placeholder and insert actual image
+            // Find and delete the placeholder text
+            const { state } = editor;
+            const { doc } = state;
+            let placeholderPos = null;
+
+            doc.descendants((node, pos) => {
+                if (node.isText && node.text.includes(placeholderText)) {
+                    placeholderPos = pos;
+                    return false;
+                }
+            });
+
+            if (placeholderPos !== null) {
+                editor.chain()
+                    .focus()
+                    .setTextSelection({ from: placeholderPos, to: placeholderPos + placeholderText.length })
+                    .deleteSelection()
+                    .setImage({ src: imageUrl })
+                    .run();
+            } else {
+                // Fallback: just insert the image at current position
+                editor.chain().focus().setImage({ src: imageUrl }).run();
+            }
+        } catch (error) {
+            console.error('Image paste upload failed:', error);
+
+            // Remove placeholder on error
+            const { state } = editor;
+            const { doc } = state;
+            let placeholderPos = null;
+
+            doc.descendants((node, pos) => {
+                if (node.isText && node.text.includes(placeholderText)) {
+                    placeholderPos = pos;
+                    return false;
+                }
+            });
+
+            if (placeholderPos !== null) {
+                editor.chain()
+                    .focus()
+                    .setTextSelection({ from: placeholderPos, to: placeholderPos + placeholderText.length })
+                    .deleteSelection()
+                    .run();
+            }
+
+            alert('Failed to upload pasted image. Please try again or use the image button to upload.');
         }
     });
 

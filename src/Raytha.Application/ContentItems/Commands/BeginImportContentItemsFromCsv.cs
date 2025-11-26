@@ -170,6 +170,7 @@ public class BeginImportContentItemsFromCsv
         private readonly IFileStorageProvider _fileStorageProvider;
         private readonly ICurrentOrganization _currentOrganization;
         private readonly IFileStorageProviderSettings _fileStorageProviderSettings;
+        private readonly ISecurityConfiguration _securityConfiguration;
 
         private static HttpClient httpClient = new HttpClient();
 
@@ -178,7 +179,8 @@ public class BeginImportContentItemsFromCsv
             ICsvService csvService,
             IFileStorageProvider fileStorageProvider,
             IFileStorageProviderSettings fileStorageProviderSettings,
-            ICurrentOrganization currentOrganization
+            ICurrentOrganization currentOrganization,
+            ISecurityConfiguration securityConfiguration
         )
         {
             _db = db;
@@ -186,6 +188,7 @@ public class BeginImportContentItemsFromCsv
             _fileStorageProvider = fileStorageProvider;
             _currentOrganization = currentOrganization;
             _fileStorageProviderSettings = fileStorageProviderSettings;
+            _securityConfiguration = securityConfiguration;
         }
 
         public async Task Execute(Guid jobId, JsonElement args, CancellationToken cancellationToken)
@@ -342,11 +345,13 @@ public class BeginImportContentItemsFromCsv
                 var csvWriter = new CsvWriterUtility();
                 foreach (var key in errorList.Keys)
                 {
-                    csvWriter.AddRow(new Dictionary<string, string>
-                    {
-                        { "Row Number", key.ToString() },
-                        { "Error Message", errorList[key] }
-                    });
+                    csvWriter.AddRow(
+                        new Dictionary<string, string>
+                        {
+                            { "Row Number", key.ToString() },
+                            { "Error Message", errorList[key] },
+                        }
+                    );
                 }
                 var csvExportAsBytes = csvWriter.ExportToBytes();
                 string fileName =
@@ -583,8 +588,17 @@ public class BeginImportContentItemsFromCsv
             CancellationToken cancellationToken
         )
         {
-            if (!fileUrl.IsValidUriFormat())
-                throw new Exception($"Invalid url format: {fileUrl}");
+            // Validate URL with SSRF protection
+            if (
+                !SafeUrlValidator.IsSafeUrl(
+                    fileUrl,
+                    _securityConfiguration.AllowInternalUrlImports,
+                    out var urlError
+                )
+            )
+            {
+                throw new Exception(urlError);
+            }
 
             var response = await httpClient.GetAsync(fileUrl);
 

@@ -9,9 +9,20 @@ using Raytha.Web.Areas.Admin.Pages.Shared.Models;
 namespace Raytha.Web.Areas.Admin.Pages.RaythaFunctions;
 
 [AllowAnonymous]
+[IgnoreAntiforgeryToken]
 public class Execute : BaseAdminPageModel
 {
     public async Task<IActionResult> OnGet(string developerName)
+    {
+        return await ExecuteFunction(developerName);
+    }
+
+    public async Task<IActionResult> OnPost(string developerName)
+    {
+        return await ExecuteFunction(developerName);
+    }
+
+    private async Task<IActionResult> ExecuteFunction(string developerName)
     {
         string payloadJson = null;
         if (HttpContext.Request.HasFormContentType)

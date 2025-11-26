@@ -109,6 +109,16 @@ public class Startup
                 {
                     FileProvider = new PhysicalFileProvider(fullPath),
                     RequestPath = new PathString("/_static-files"),
+                    OnPrepareResponse = ctx =>
+                    {
+                        // Security: Add restrictive CSP headers to user-uploaded files to prevent
+                        // malicious SVGs or other files from executing inline scripts. This blocks
+                        // XSS attacks via uploaded SVG files while allowing normal display.
+                        ctx.Context.Response.Headers.TryAdd(
+                            "Content-Security-Policy",
+                            "default-src 'none'; img-src 'self' data:; style-src 'unsafe-inline'; sandbox"
+                        );
+                    },
                 }
             );
         }

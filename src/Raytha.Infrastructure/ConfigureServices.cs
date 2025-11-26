@@ -92,6 +92,7 @@ public static class ConfigureServices
             CurrentOrganizationConfiguration
         >();
         services.AddSingleton<IRaythaFunctionConfiguration, RaythaFunctionConfiguration>();
+        services.AddSingleton<ISecurityConfiguration, SecurityConfiguration>();
         services.AddScoped<IEmailerConfiguration, EmailerConfiguration>();
 
         services.AddScoped<IEmailer, Emailer>();
