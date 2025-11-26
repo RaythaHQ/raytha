@@ -102,10 +102,23 @@ public class RelativeUrlBuilder : IRelativeUrlBuilder
             new { area = "Public", token }
         );
 
-    public string GetBaseUrl() =>
-        _httpContextAccessor.HttpContext == null
-            ? $"{_currentOrganization.PathBase}"
-            : $"{_httpContextAccessor.HttpContext.Request.Scheme}://{_httpContextAccessor.HttpContext.Request.Host}{_currentOrganization.PathBase}";
+    public string GetBaseUrl()
+    {
+        // Prefer the configured WebsiteUrl for security; fall back to request for dev/unconfigured
+        if (!string.IsNullOrEmpty(_currentOrganization.WebsiteUrl))
+        {
+            var baseUrl = _currentOrganization.WebsiteUrl.TrimEnd('/');
+            return $"{baseUrl}{_currentOrganization.PathBase}";
+        }
+
+        // Fallback for development or when WebsiteUrl is not configured
+        if (_httpContextAccessor.HttpContext == null)
+        {
+            return $"{_currentOrganization.PathBase}";
+        }
+
+        return $"{_httpContextAccessor.HttpContext.Request.Scheme}://{_httpContextAccessor.HttpContext.Request.Host}{_currentOrganization.PathBase}";
+    }
 
     private string ResolveUrlIfHttpContextAccessExists(string page, object values)
     {
