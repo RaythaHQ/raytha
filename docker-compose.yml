@@ -43,8 +43,8 @@ services:
       # - RAYTHA_FUNCTIONS_TIMEOUT=10000 # milliseconds
       # - RAYTHA_FUNCTIONS_QUEUE_TIMEOUT=10000 # milliseconds
       
-    # - REDIRECT_WEBSITE= # Only set a url here to redirect the website visitor elsewhere (useful for maintenance or non-payment)
-    - APPLY_PENDING_MIGRATIONS=true # Apply db migrations automatically on startup
+      # - REDIRECT_WEBSITE= # Only set a url here to redirect the website visitor elsewhere (useful for maintenance or non-payment)
+      - APPLY_PENDING_MIGRATIONS=true # Apply db migrations automatically on startup
     
     depends_on:
       - db
@@ -52,7 +52,7 @@ services:
   db:
     image: postgres:17
     ports:
-      - "5432:5432"  # Default port for PostgreSQL
+      - "5433:5432"  # Using 5433 on host since 5432 is already in use
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: changeme

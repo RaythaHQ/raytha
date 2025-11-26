@@ -97,22 +97,22 @@ public class CurrentOrganization : ICurrentOrganization
 
     public bool InitialSetupComplete => OrganizationSettings != null;
 
-    public string OrganizationName => OrganizationSettings.OrganizationName;
+    public string OrganizationName => OrganizationSettings?.OrganizationName;
 
-    public string WebsiteUrl => OrganizationSettings.WebsiteUrl;
+    public string WebsiteUrl => OrganizationSettings?.WebsiteUrl;
 
-    public string TimeZone => OrganizationSettings.TimeZone;
+    public string TimeZone => OrganizationSettings?.TimeZone;
 
-    public string SmtpDefaultFromAddress => OrganizationSettings.SmtpDefaultFromAddress;
+    public string SmtpDefaultFromAddress => OrganizationSettings?.SmtpDefaultFromAddress;
 
-    public string SmtpDefaultFromName => OrganizationSettings.SmtpDefaultFromName;
+    public string SmtpDefaultFromName => OrganizationSettings?.SmtpDefaultFromName;
 
-    public string DateFormat => OrganizationSettings.DateFormat;
+    public string DateFormat => OrganizationSettings?.DateFormat;
 
-    public ShortGuid? HomePageId => OrganizationSettings.HomePageId;
+    public ShortGuid? HomePageId => OrganizationSettings?.HomePageId;
 
-    public string HomePageType => OrganizationSettings.HomePageType;
-    public ShortGuid ActiveThemeId => OrganizationSettings.ActiveThemeId;
+    public string HomePageType => OrganizationSettings?.HomePageType;
+    public ShortGuid ActiveThemeId => OrganizationSettings?.ActiveThemeId ?? default;
 
     public OrganizationTimeZoneConverter TimeZoneConverter =>
         OrganizationTimeZoneConverter.From(TimeZone, DateFormat);
