@@ -1,5 +1,6 @@
 ﻿using Mediator;
 using Microsoft.EntityFrameworkCore;
+using Raytha.Application.Common.Exceptions;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Models;
 using Raytha.Application.Common.Utils;
@@ -14,6 +15,11 @@ public class GetWebTemplatesAsListItems
             IRequest<IQueryResponseDto<ListResultDto<WebTemplateListItemDto>>>
     {
         public override string OrderBy { get; init; } = $"Label {SortOrder.ASCENDING}";
+
+        /// <summary>
+        /// Optional theme developer name. If not provided, falls back to the active theme.
+        /// </summary>
+        public string? ThemeDeveloperName { get; init; }
     }
 
     public class Handler
@@ -31,11 +37,30 @@ public class GetWebTemplatesAsListItems
             CancellationToken cancellationToken
         )
         {
-            var activeThemeId = await _db
-                .OrganizationSettings.Select(os => os.ActiveThemeId)
-                .FirstAsync(cancellationToken);
+            Guid themeId;
 
-            var query = _db.WebTemplates.Where(wt => wt.ThemeId == activeThemeId);
+            if (!string.IsNullOrEmpty(request.ThemeDeveloperName))
+            {
+                var theme = await _db
+                    .Themes.Where(t =>
+                        t.DeveloperName == request.ThemeDeveloperName.ToDeveloperName()
+                    )
+                    .Select(t => new { t.Id })
+                    .FirstOrDefaultAsync(cancellationToken);
+
+                if (theme == null)
+                    throw new NotFoundException("Theme", request.ThemeDeveloperName);
+
+                themeId = theme.Id;
+            }
+            else
+            {
+                themeId = await _db
+                    .OrganizationSettings.Select(os => os.ActiveThemeId)
+                    .FirstAsync(cancellationToken);
+            }
+
+            var query = _db.WebTemplates.Where(wt => wt.ThemeId == themeId);
 
             if (!string.IsNullOrEmpty(request.Search))
             {
