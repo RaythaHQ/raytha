@@ -44,24 +44,39 @@ public class RaythaFunctionScriptEngine : IRaythaFunctionScriptEngine
         _engine.AddHostObject("CurrentUser", _currentUser);
         _engine.AddHostObject("Emailer", _emailer);
         _engine.AddHostObject("HttpClient", _httpClient);
-        _engine.AddHostObject("host", new HostFunctions());
-        _engine.AddHostObject(
-            "clr",
-            new HostTypeCollection(
-                "mscorlib",
-                "System",
-                "System.Core",
-                "System.Linq",
-                "System.Collections"
-            )
-        );
+
         _engine.AddHostType(typeof(JavaScriptExtensions));
         _engine.AddHostType(typeof(Enumerable));
         _engine.AddHostType(typeof(ShortGuid));
         _engine.AddHostType(typeof(Guid));
         _engine.AddHostType(typeof(Convert));
         _engine.AddHostType(typeof(EmailMessage));
-        _engine.Execute("var System = clr.System;");
+        _engine.AddHostType(typeof(List<>));
+        _engine.AddHostType(typeof(Dictionary<,>));
+        _engine.AddHostType(typeof(KeyValuePair<,>));
+        _engine.AddHostType(typeof(HashSet<>));
+        _engine.AddHostType(typeof(Queue<>));
+        _engine.AddHostType(typeof(Stack<>));
+        _engine.AddHostType(typeof(DateTime));
+        _engine.AddHostType(typeof(DateTimeOffset));
+        _engine.AddHostType(typeof(DateOnly));
+        _engine.AddHostType(typeof(TimeOnly));
+        _engine.AddHostType(typeof(TimeSpan));
+        _engine.AddHostType(typeof(Math));
+        _engine.AddHostType(typeof(decimal));
+        _engine.AddHostType(typeof(char));
+        _engine.AddHostType(typeof(Random));
+        _engine.AddHostType(typeof(Uri));
+        _engine.AddHostType(typeof(UriBuilder));
+        _engine.AddHostType(typeof(System.Text.RegularExpressions.Regex));
+        _engine.AddHostType(typeof(System.Text.StringBuilder));
+        _engine.AddHostType(typeof(System.Text.Encoding));
+        _engine.AddHostType(typeof(StringComparison));
+        _engine.AddHostType(typeof(System.Diagnostics.Stopwatch));
+        _engine.AddHostType(typeof(BitConverter));
+        _engine.AddHostType(typeof(Tuple));
+        _engine.AddHostType(typeof(ValueTuple));
+
         _engine.Execute(
             @"
         class JsonResult {
