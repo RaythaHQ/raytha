@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
@@ -23,10 +24,29 @@ public class RenderEngine : IRenderEngine
     private static readonly FluidParser _parser = new FluidParser(
         new FluidParserOptions { AllowFunctions = true }
     );
+
+    private static readonly TemplateOptions _templateOptions;
+    private static readonly ConcurrentDictionary<string, IFluidTemplate> _templateCache = new();
+    private static readonly JsonSerializerOptions _jsonSerializerOptions = new()
+    {
+        WriteIndented = true,
+    };
+
     private readonly IRelativeUrlBuilder _relativeUrlBuilder;
     private readonly ICurrentOrganization _currentOrganization;
     private readonly IMediator _mediator;
     private readonly IFileStorageProvider _fileStorageProvider;
+
+    static RenderEngine()
+    {
+        _templateOptions = new TemplateOptions();
+        _templateOptions.MemberAccessStrategy = new UnsafeMemberAccessStrategy();
+        _templateOptions.Filters.AddFilter("attachment_redirect_url", AttachmentRedirectUrl);
+        _templateOptions.Filters.AddFilter("attachment_public_url", AttachmentPublicUrl);
+        _templateOptions.Filters.AddFilter("organization_time", LocalDateFilter);
+        _templateOptions.Filters.AddFilter("groupby", GroupBy);
+        _templateOptions.Filters.AddFilter("json", JsonFilter);
+    }
 
     public RenderEngine(
         IMediator mediator,
@@ -43,42 +63,45 @@ public class RenderEngine : IRenderEngine
 
     public string RenderAsHtml(string source, object entity)
     {
-        if (_parser.TryParse(source, out var template, out var error))
-        {
-            var options = new TemplateOptions();
-            options.MemberAccessStrategy = new UnsafeMemberAccessStrategy();
-            options.TimeZone = DateTimeExtensions.GetTimeZoneInfo(_currentOrganization.TimeZone);
-            options.Filters.AddFilter("attachment_redirect_url", AttachmentRedirectUrl);
-            options.Filters.AddFilter("attachment_public_url", AttachmentPublicUrl);
-            options.Filters.AddFilter("organization_time", LocalDateFilter);
-            options.Filters.AddFilter("groupby", GroupBy);
-            options.Filters.AddFilter("json", JsonFilter);
+        var template = _templateCache.GetOrAdd(
+            source,
+            key =>
+            {
+                if (_parser.TryParse(key, out var parsedTemplate, out var error))
+                {
+                    return parsedTemplate;
+                }
+                throw new Exception(error);
+            }
+        );
 
-            var context = new TemplateContext(entity, options);
-            context.SetValue("get_content_item_by_id", GetContentItemById());
-            context.SetValue("get_content_items", GetContentItems());
-            context.SetValue("get_content_type_by_developer_name", GetContentTypeByDeveloperName());
-            context.SetValue("get_main_menu", GetMainMenu());
-            context.SetValue("get_menu", GetMenuByDeveloperName());
-            string renderedHtml = template.Render(context);
-            return renderedHtml;
-        }
-        else
-        {
-            throw new Exception(error);
-        }
+        var context = new TemplateContext(entity, _templateOptions);
+        context.TimeZone = DateTimeExtensions.GetTimeZoneInfo(_currentOrganization.TimeZone);
+
+        // Store services in ambient values for filters to access
+        context.AmbientValues["RelativeUrlBuilder"] = _relativeUrlBuilder;
+        context.AmbientValues["FileStorageProvider"] = _fileStorageProvider;
+
+        context.SetValue("get_content_item_by_id", GetContentItemById());
+        context.SetValue("get_content_items", GetContentItems());
+        context.SetValue("get_content_type_by_developer_name", GetContentTypeByDeveloperName());
+        context.SetValue("get_main_menu", GetMainMenu());
+        context.SetValue("get_menu", GetMenuByDeveloperName());
+
+        return template.Render(context);
     }
 
-    public ValueTask<FluidValue> AttachmentRedirectUrl(
+    private static ValueTask<FluidValue> AttachmentRedirectUrl(
         FluidValue input,
         FilterArguments arguments,
         TemplateContext context
     )
     {
-        return new StringValue(_relativeUrlBuilder.MediaRedirectToFileUrl(input.ToStringValue()));
+        var relativeUrlBuilder = (IRelativeUrlBuilder)context.AmbientValues["RelativeUrlBuilder"];
+        return new StringValue(relativeUrlBuilder.MediaRedirectToFileUrl(input.ToStringValue()));
     }
 
-    public ValueTask<FluidValue> AttachmentPublicUrl(
+    private static ValueTask<FluidValue> AttachmentPublicUrl(
         FluidValue input,
         FilterArguments arguments,
         TemplateContext context
@@ -87,14 +110,16 @@ public class RenderEngine : IRenderEngine
         if (string.IsNullOrEmpty(input.ToStringValue()))
             return new StringValue(string.Empty);
 
+        var fileStorageProvider = (IFileStorageProvider)
+            context.AmbientValues["FileStorageProvider"];
         return new StringValue(
-            _fileStorageProvider
+            fileStorageProvider
                 .GetDownloadUrlAsync(input.ToStringValue(), FileStorageUtility.GetDefaultExpiry())
                 .Result
         );
     }
 
-    public ValueTask<FluidValue> GroupBy(
+    private static ValueTask<FluidValue> GroupBy(
         FluidValue input,
         FilterArguments property,
         TemplateContext context
@@ -218,7 +243,11 @@ public class RenderEngine : IRenderEngine
         );
     }
 
-    private string ApplyGroupBy(FluidValue p, string groupByProperty, TemplateContext context)
+    private static string ApplyGroupBy(
+        FluidValue p,
+        string groupByProperty,
+        TemplateContext context
+    )
     {
         if (groupByProperty.StartsWith("PublishedContent") && groupByProperty.Contains("."))
         {
@@ -233,7 +262,7 @@ public class RenderEngine : IRenderEngine
         }
     }
 
-    public ValueTask<FluidValue> LocalDateFilter(
+    private static ValueTask<FluidValue> LocalDateFilter(
         FluidValue input,
         FilterArguments arguments,
         TemplateContext context
@@ -245,16 +274,18 @@ public class RenderEngine : IRenderEngine
             : MiscFilters.Date(value, arguments, context);
     }
 
-    public static ValueTask<FluidValue> JsonFilter(
+    private static ValueTask<FluidValue> JsonFilter(
         FluidValue input,
         FilterArguments arguments,
         TemplateContext context
     )
     {
-        return new StringValue(JsonSerializer.Serialize(input.ToObjectValue()));
+        return new StringValue(
+            JsonSerializer.Serialize(input.ToObjectValue(), _jsonSerializerOptions)
+        );
     }
 
-    private FluidValue TimeZoneConverter(FluidValue input, TemplateContext context)
+    private static FluidValue TimeZoneConverter(FluidValue input, TemplateContext context)
     {
         if (!input.TryGetDateTimeInput(context, out var value))
         {
