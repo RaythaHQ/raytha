@@ -111,6 +111,7 @@ public class CreateAuthenticationScheme
                 Label = request.Label,
                 DeveloperName = request.DeveloperName.ToDeveloperName(),
                 JwtSecretKey = request.JwtSecretKey,
+                JwtUseHighSecurity = request.JwtUseHighSecurity,
                 SamlCertificate = request.SamlCertificate,
                 SamlIdpEntityId = request.SamlIdpEntityId,
                 LoginButtonText = request.LoginButtonText,
