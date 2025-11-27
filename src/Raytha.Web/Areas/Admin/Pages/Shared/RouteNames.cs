@@ -192,6 +192,16 @@ public static class RouteNames
         }
 
         /// <summary>
+        /// Route constants for theme widget templates management pages.
+        /// </summary>
+        public static class WidgetTemplates
+        {
+            public const string Index = "/Themes/WidgetTemplates/Index";
+            public const string Edit = "/Themes/WidgetTemplates/Edit";
+            public const string Revisions = "/Themes/WidgetTemplates/Revisions";
+        }
+
+        /// <summary>
         /// Route constants for theme template management pages.
         /// </summary>
         public static class Templates
