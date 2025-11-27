@@ -91,6 +91,7 @@ public enum SystemPermissions
     ManageAdministrators = 8,
     ManageTemplates = 16,
     ManageUsers = 32,
+    ManageSitePages = 64,
 }
 
 public class BuiltInSystemPermission : ValueObject
@@ -101,6 +102,7 @@ public class BuiltInSystemPermission : ValueObject
     public const string MANAGE_AUDIT_LOGS_PERMISSION = "audit_logs";
     public const string MANAGE_CONTENT_TYPES_PERMISSION = "content_types";
     public const string MANAGE_SYSTEM_SETTINGS_PERMISSION = "system_settings";
+    public const string MANAGE_SITE_PAGES_PERMISSION = "site_pages";
 
     //not an explicit permission
     public const string MANAGE_MEDIA_ITEMS = "media_items";
@@ -148,6 +150,8 @@ public class BuiltInSystemPermission : ValueObject
             permissions.Add(ManageSystemSettings);
         if (permission.HasFlag(SystemPermissions.ManageUsers))
             permissions.Add(ManageUsers);
+        if (permission.HasFlag(SystemPermissions.ManageSitePages))
+            permissions.Add(ManageSitePages);
         return permissions;
     }
 
@@ -192,6 +196,8 @@ public class BuiltInSystemPermission : ValueObject
         );
     public static BuiltInSystemPermission ManageUsers =>
         new("Manage Users", MANAGE_USERS_PERMISSION, SystemPermissions.ManageUsers);
+    public static BuiltInSystemPermission ManageSitePages =>
+        new("Manage Site Pages", MANAGE_SITE_PAGES_PERMISSION, SystemPermissions.ManageSitePages);
 
     public string Label { get; private set; } = string.Empty;
     public string DeveloperName { get; private set; } = string.Empty;
@@ -222,6 +228,7 @@ public class BuiltInSystemPermission : ValueObject
             yield return ManageTemplates;
             yield return ManageAdministrators;
             yield return ManageUsers;
+            yield return ManageSitePages;
         }
     }
 
@@ -234,7 +241,8 @@ public class BuiltInSystemPermission : ValueObject
                 | ManageContentTypes.Permission
                 | ManageTemplates.Permission
                 | ManageAdministrators.Permission
-                | ManageUsers.Permission;
+                | ManageUsers.Permission
+                | ManageSitePages.Permission;
         }
     }
 

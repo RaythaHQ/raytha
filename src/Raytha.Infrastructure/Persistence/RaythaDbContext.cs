@@ -68,6 +68,9 @@ public class RaythaDbContext : DbContext, IRaythaDbContext, IDataProtectionKeyCo
         Set<WebTemplateViewRelation>();
     public DbSet<WebTemplateContentItemRelation> WebTemplateContentItemRelations =>
         Set<WebTemplateContentItemRelation>();
+    public DbSet<SitePage> SitePages => Set<SitePage>();
+    public DbSet<WidgetTemplate> WidgetTemplates => Set<WidgetTemplate>();
+    public DbSet<WidgetTemplateRevision> WidgetTemplateRevisions => Set<WidgetTemplateRevision>();
     public DbSet<DataProtectionKey> DataProtectionKeys { get; set; } = null!;
 
     public DbContext DbContext => DbContext;

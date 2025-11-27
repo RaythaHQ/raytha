@@ -1,0 +1,65 @@
+{% comment %}
+Card Grid Widget - Grid of cards with image, title, description, and link.
+
+Settings:
+  - headline: Section heading (optional)
+  - subheadline: Section subheading (optional)
+  - columns: Number of columns - 2, 3, 4 (default: 3)
+  - cards: Array of card objects, each with:
+    - imageUrl: Card image URL
+    - title: Card title
+    - description: Card description
+    - linkUrl: Link URL (optional)
+    - linkText: Link text (default: "Learn more")
+  - backgroundColor: Background color (optional)
+{% endcomment %}
+
+{% assign columns = widget.settings.columns | default: 3 %}
+{% assign col_class = 'col-md-4' %}
+{% case columns %}
+  {% when 2 %}
+    {% assign col_class = 'col-md-6' %}
+  {% when 4 %}
+    {% assign col_class = 'col-md-6 col-lg-3' %}
+{% endcase %}
+
+<div class="cardgrid-widget py-5"
+     {% if widget.settings.backgroundColor %}style="background-color: {{ widget.settings.backgroundColor }};"{% endif %}>
+  
+  {% if widget.settings.headline or widget.settings.subheadline %}
+  <div class="text-center mb-5">
+    {% if widget.settings.headline %}
+    <h2 class="fw-bold mb-2">{{ widget.settings.headline }}</h2>
+    {% endif %}
+    {% if widget.settings.subheadline %}
+    <p class="text-secondary lead">{{ widget.settings.subheadline }}</p>
+    {% endif %}
+  </div>
+  {% endif %}
+  
+  <div class="row g-4">
+    {% for card in widget.settings.cards %}
+    <div class="{{ col_class }}">
+      <div class="card h-100 border-0 shadow-sm">
+        {% if card.imageUrl %}
+        <img src="{{ card.imageUrl }}" class="card-img-top" alt="{{ card.title }}">
+        {% endif %}
+        <div class="card-body">
+          {% if card.title %}
+          <h5 class="card-title fw-semibold">{{ card.title }}</h5>
+          {% endif %}
+          {% if card.description %}
+          <p class="card-text text-secondary">{{ card.description }}</p>
+          {% endif %}
+          {% if card.linkUrl %}
+          <a href="{{ card.linkUrl }}" class="btn btn-outline-primary btn-sm">
+            {{ card.linkText | default: 'Learn more' }}
+          </a>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+

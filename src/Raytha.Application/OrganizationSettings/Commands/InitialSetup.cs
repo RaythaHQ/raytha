@@ -126,6 +126,7 @@ public class InitialSetup
                 defaultThemeId
             );
             InsertDefaultWebTemplates(mediaItemObjectKeys, defaultThemeId);
+            InsertDefaultWidgetTemplates(defaultThemeId);
             InsertDefaultEmailTemplates();
             InsertDefaultAuthentications();
             await _db.SaveChangesAsync(cancellationToken);
@@ -518,6 +519,27 @@ public class InitialSetup
             }
 
             _db.WebTemplates.AddRange(list);
+        }
+
+        protected void InsertDefaultWidgetTemplates(Guid defaultThemeId)
+        {
+            var list = new List<WidgetTemplate>();
+
+            foreach (var widgetType in BuiltInWidgetType.WidgetTypes)
+            {
+                var template = new WidgetTemplate
+                {
+                    Id = Guid.NewGuid(),
+                    ThemeId = defaultThemeId,
+                    Label = widgetType.DisplayName,
+                    DeveloperName = widgetType.DeveloperName,
+                    Content = widgetType.DefaultTemplateContent,
+                    IsBuiltInTemplate = true,
+                };
+                list.Add(template);
+            }
+
+            _db.WidgetTemplates.AddRange(list);
         }
 
         protected void InsertDefaultEmailTemplates()
