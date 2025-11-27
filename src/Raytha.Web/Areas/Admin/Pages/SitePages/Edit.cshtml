@@ -1,0 +1,124 @@
+@page "/raytha/site-pages/edit/{id}"
+@model Raytha.Web.Areas.Admin.Pages.SitePages.Edit
+
+@{
+    Layout = "SidebarLayout";
+    ViewData["Title"] = $"Edit: {Model.Form.Title}";
+    ViewData["ActiveMenu"] = "Site Pages";
+
+    BackLinkOptions back = new BackLinkOptions
+    {
+        Page = RouteNames.SitePages.Index
+    };
+}
+
+<div class="row mb-4">
+    <partial name="_Partials/PageHeading" model='ViewData["Title"]' />
+    <div class="col-xxl-7 col-xl-8 col-lg-9 col-md-12">
+        <div class="card border-0 shadow mb-4">
+            <div class="card-body">
+                @(await Html.PartialAsync("_Partials/BackToList", back))
+                
+                <div class="d-flex justify-content-between align-items-center mb-3 mt-3">
+                    <div>
+                        @if (Model.Form.IsPublished)
+                        {
+                            <span class="badge bg-success me-2">Published</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-secondary me-2">Unpublished</span>
+                        }
+                        @if (Model.Form.SaveAsDraft)
+                        {
+                            <span class="badge bg-warning text-dark">Has Draft</span>
+                        }
+                    </div>
+                    <div>
+                        <a asp-page="@RouteNames.SitePages.Layout" asp-route-id="@Model.Form.Id" 
+                           class="btn btn-outline-primary btn-sm">
+                            <i class="bi bi-grid-3x3-gap me-1"></i> Edit Layout
+                        </a>
+                    </div>
+                </div>
+
+                <div class="alert alert-light border mb-4">
+                    <div class="row small">
+                        <div class="col-md-6">
+                            <strong>URL Path:</strong> <code>/@Model.RoutePath</code>
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Created:</strong> @Model.CreatedAt
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Last Modified:</strong> @Model.LastModifiedAt
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Modified By:</strong> @Model.LastModifiedBy
+                        </div>
+                    </div>
+                </div>
+
+                <form asp-page="@RouteNames.SitePages.Edit" asp-route-id="@Model.Form.Id" method="post" class="py-2" novalidate>
+                    <input type="hidden" asp-for="Form.Id" />
+                    <input type="hidden" asp-for="Form.IsPublished" />
+                    
+                    <div class="col-lg-12">
+                        <div class="mb-3">
+                            <label class="form-label raytha-required" asp-for="Form.Title"></label>
+                            <input type="text" class="form-control @Model.HasError("Title")" asp-for="Form.Title"
+                                required>
+                            <div class="invalid-feedback">@Model.ErrorMessageFor("Title")</div>
+                        </div>
+                    </div>
+                    <div class="col-lg-12">
+                        <div class="mb-3">
+                            <label class="form-label raytha-required" asp-for="Form.TemplateId"></label>
+                            <select class="form-select @Model.HasError("TemplateId")" asp-for="Form.TemplateId"
+                                asp-items="Model.AvailableTemplates" required>
+                                <option value="">-- Select a template --</option>
+                            </select>
+                            <div class="invalid-feedback">@Model.ErrorMessageFor("TemplateId")</div>
+                            <div class="form-text">Choose the template that will be used to render this page.</div>
+                        </div>
+                    </div>
+                    <div class="col-lg-12">
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" class="form-check-input" asp-for="Form.SaveAsDraft">
+                            <label class="form-check-label" asp-for="Form.SaveAsDraft">Save as draft (do not publish changes)</label>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between align-items-center mt-4">
+                        <button type="submit" class="btn btn-success">Save changes</button>
+                        <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteModal">
+                            Delete page
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteModalLabel">Delete Site Page</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Are you sure you want to delete <strong>@Model.Form.Title</strong>? This action cannot be undone.
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form asp-page="@RouteNames.SitePages.Delete" asp-route-id="@Model.Form.Id" method="post" class="d-inline">
+                    <button type="submit" class="btn btn-danger">Delete</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+

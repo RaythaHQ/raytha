@@ -272,6 +272,18 @@ public static class RouteNames
     }
 
     /// <summary>
+    /// Route constants for site page management pages.
+    /// </summary>
+    public static class SitePages
+    {
+        public const string Index = "/SitePages/Index";
+        public const string Create = "/SitePages/Create";
+        public const string Edit = "/SitePages/Edit";
+        public const string Delete = "/SitePages/Delete";
+        public const string Layout = "/SitePages/Layout";
+    }
+
+    /// <summary>
     /// Route constants for user profile pages.
     /// </summary>
     public static class Profile

@@ -1,0 +1,97 @@
+@page "/raytha/site-pages/layout/{id}"
+@model Raytha.Web.Areas.Admin.Pages.SitePages.Layout
+
+@{
+    Layout = "SidebarLayout";
+    ViewData["Title"] = $"Layout: {Model.SitePage.Title}";
+    ViewData["ActiveMenu"] = "Site Pages";
+
+    BackLinkOptions back = new BackLinkOptions
+    {
+        Page = RouteNames.SitePages.Edit,
+        RouteValues = new RouteValueDictionary { ["id"] = Model.SitePage.Id }
+    };
+}
+
+<div class="row mb-4">
+    <partial name="_Partials/PageHeading" model='ViewData["Title"]' />
+    <div class="col-12">
+        <div class="card border-0 shadow mb-4">
+            <div class="card-body">
+                @(await Html.PartialAsync("_Partials/BackToList", back))
+                
+                <div class="d-flex justify-content-between align-items-center mb-4 mt-3">
+                    <div>
+                        <h5 class="mb-0">
+                            @Model.SitePage.Title
+                            @if (Model.SitePage.IsPublished)
+                            {
+                                <span class="badge bg-success ms-2">Published</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-secondary ms-2">Unpublished</span>
+                            }
+                        </h5>
+                        <small class="text-muted">URL: <code>/@Model.SitePage.RoutePath</code></small>
+                    </div>
+                </div>
+
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle me-2"></i>
+                    <strong>Layout Editor</strong> - The gridstack-based drag-and-drop layout editor will be implemented in a future PR.
+                    For now, you can view the available widget types below.
+                </div>
+
+                <h6 class="mt-4 mb-3">Available Widget Types</h6>
+                <div class="row g-3">
+                    @foreach (var widgetType in Model.AvailableWidgetTypes)
+                    {
+                        <div class="col-md-4 col-lg-3">
+                            <div class="card h-100 border">
+                                <div class="card-body text-center">
+                                    <i class="bi @widgetType.IconClass fs-2 text-primary mb-2"></i>
+                                    <h6 class="card-title mb-1">@widgetType.DisplayName</h6>
+                                    <p class="card-text small text-muted mb-0">@widgetType.Description</p>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+
+                @if (Model.SitePage.Widgets.Any())
+                {
+                    <h6 class="mt-4 mb-3">Current Widgets</h6>
+                    @foreach (var section in Model.SitePage.Widgets)
+                    {
+                        <div class="mb-3">
+                            <strong>Section: @(section.Key)</strong>
+                            <ul class="list-group mt-2">
+                                @foreach (var widget in section.Value)
+                                {
+                                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                                        <span>
+                                            <i class="bi bi-puzzle me-2"></i>
+                                            @widget.WidgetType
+                                        </span>
+                                        <span class="badge bg-secondary">
+                                            Row @widget.Row, Col @widget.Column, Span @widget.ColumnSpan
+                                        </span>
+                                    </li>
+                                }
+                            </ul>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div class="alert alert-light border mt-4">
+                        <i class="bi bi-inbox me-2"></i>
+                        No widgets have been added to this page yet.
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+

@@ -1,0 +1,94 @@
+@page "/raytha/site-pages"
+@model Raytha.Web.Areas.Admin.Pages.SitePages.Index
+
+@{
+    var pageTitle = "Site Pages";
+    Layout = "SidebarLayout";
+    ViewData["Title"] = pageTitle;
+    ViewData["ActiveMenu"] = "Site Pages";
+}
+
+@(await Html.PartialAsync("_Partials/TableCreateAndSearchBar", new BaseTableCreateAndSearchBarViewModel
+{
+    Pagination = Model.ListView,
+    EntityName = "site page",
+    CreateActionName = RouteNames.SitePages.Create
+}))
+
+<div class="raytha-data-card mb-4">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-centered table-nowrap mb-0 rounded">
+                <thead class="thead-light">
+                    <tr>
+                        @(await Html.PartialAsync("_Partials/TableColumnHeader", new BaseTableColumnHeaderViewModel()
+                        {
+                            Pagination = Model.ListView,
+                            PropertyName = "Title",
+                            IsFirst = true,
+                            DisplayName = ViewModelExtensions.GetDisplayName<Index.SitePagesListItemViewModel>(p => p.Title)
+                        }))
+                        <th class="border-0">URL Path</th>
+                        @(await Html.PartialAsync("_Partials/TableColumnHeader", new BaseTableColumnHeaderViewModel()
+                        {
+                            Pagination = Model.ListView,
+                            PropertyName = "IsPublished",
+                            DisplayName = ViewModelExtensions.GetDisplayName<Index.SitePagesListItemViewModel>(p =>
+                            p.IsPublished)
+                        }))
+                        @(await Html.PartialAsync("_Partials/TableColumnHeader", new BaseTableColumnHeaderViewModel()
+                        {
+                            Pagination = Model.ListView,
+                            PropertyName = "IsDraft",
+                            DisplayName = ViewModelExtensions.GetDisplayName<Index.SitePagesListItemViewModel>(p =>
+                            p.IsDraft)
+                        }))
+                        <th class="border-0">Last modified</th>
+                        <th class="border-0">Modified by</th>
+                        <th class="border-0 rounded-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model.ListView.Items)
+                    {
+                        <tr>
+                            <td>
+                                <a asp-page="@RouteNames.SitePages.Edit" asp-route-id="@item.Id">@item.Title</a>
+                            </td>
+                            <td>
+                                <code>/@item.RoutePath</code>
+                            </td>
+                            <td>
+                                @if (item.IsPublished == "Yes")
+                                {
+                                    <span class="badge bg-success">Published</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary">Unpublished</span>
+                                }
+                            </td>
+                            <td>
+                                @if (item.IsDraft == "Yes")
+                                {
+                                    <span class="badge bg-warning text-dark">Draft</span>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">-</span>
+                                }
+                            </td>
+                            <td>@item.LastModificationTime</td>
+                            <td>@item.LastModifierUser</td>
+                            <td>
+                                <a asp-page="@RouteNames.SitePages.Edit" asp-route-id="@item.Id" class="me-2">Edit</a>
+                                <a asp-page="@RouteNames.SitePages.Layout" asp-route-id="@item.Id">Layout</a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+            <partial name="_Partials/TablePagination" model="@Model.ListView" />
+        </div>
+    </div>
+</div>
