@@ -1,6 +1,5 @@
-using System;
+﻿using System;
 using Microsoft.EntityFrameworkCore.Migrations;
-using Raytha.Domain.Entities;
 
 #nullable disable
 
@@ -12,7 +11,13 @@ namespace Raytha.Migrations.Postgres
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            // Create SitePages table
+            migrationBuilder.AddColumn<Guid>(
+                name: "SitePageId",
+                table: "Routes",
+                type: "uuid",
+                nullable: false,
+                defaultValue: new Guid("00000000-0000-0000-0000-000000000000"));
+
             migrationBuilder.CreateTable(
                 name: "SitePages",
                 columns: table => new
@@ -23,11 +28,11 @@ namespace Raytha.Migrations.Postgres
                     IsDraft = table.Column<bool>(type: "boolean", nullable: false),
                     RouteId = table.Column<Guid>(type: "uuid", nullable: false),
                     WebTemplateId = table.Column<Guid>(type: "uuid", nullable: false),
-                    _WidgetsJson = table.Column<string>(type: "text", nullable: false, defaultValue: "{}"),
+                    _WidgetsJson = table.Column<string>(type: "jsonb", nullable: false),
                     CreationTime = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     LastModificationTime = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     CreatorUserId = table.Column<Guid>(type: "uuid", nullable: true),
-                    LastModifierUserId = table.Column<Guid>(type: "uuid", nullable: true),
+                    LastModifierUserId = table.Column<Guid>(type: "uuid", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -36,67 +41,25 @@ namespace Raytha.Migrations.Postgres
                         name: "FK_SitePages_Routes_RouteId",
                         column: x => x.RouteId,
                         principalTable: "Routes",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade
-                    );
+                        principalColumn: "Id");
+                    table.ForeignKey(
+                        name: "FK_SitePages_Users_CreatorUserId",
+                        column: x => x.CreatorUserId,
+                        principalTable: "Users",
+                        principalColumn: "Id");
+                    table.ForeignKey(
+                        name: "FK_SitePages_Users_LastModifierUserId",
+                        column: x => x.LastModifierUserId,
+                        principalTable: "Users",
+                        principalColumn: "Id");
                     table.ForeignKey(
                         name: "FK_SitePages_WebTemplates_WebTemplateId",
                         column: x => x.WebTemplateId,
                         principalTable: "WebTemplates",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict
-                    );
-                    table.ForeignKey(
-                        name: "FK_SitePages_Users_CreatorUserId",
-                        column: x => x.CreatorUserId,
-                        principalTable: "Users",
-                        principalColumn: "Id"
-                    );
-                    table.ForeignKey(
-                        name: "FK_SitePages_Users_LastModifierUserId",
-                        column: x => x.LastModifierUserId,
-                        principalTable: "Users",
-                        principalColumn: "Id"
-                    );
-                }
-            );
+                        onDelete: ReferentialAction.Cascade);
+                });
 
-            // Add SitePageId column to Routes table
-            migrationBuilder.AddColumn<Guid>(
-                name: "SitePageId",
-                table: "Routes",
-                type: "uuid",
-                nullable: false,
-                defaultValue: Guid.Empty
-            );
-
-            // Create indexes for SitePages
-            migrationBuilder.CreateIndex(
-                name: "IX_SitePages_RouteId",
-                table: "SitePages",
-                column: "RouteId",
-                unique: true
-            );
-
-            migrationBuilder.CreateIndex(
-                name: "IX_SitePages_WebTemplateId",
-                table: "SitePages",
-                column: "WebTemplateId"
-            );
-
-            migrationBuilder.CreateIndex(
-                name: "IX_SitePages_CreatorUserId",
-                table: "SitePages",
-                column: "CreatorUserId"
-            );
-
-            migrationBuilder.CreateIndex(
-                name: "IX_SitePages_LastModifierUserId",
-                table: "SitePages",
-                column: "LastModifierUserId"
-            );
-
-            // Create WidgetTemplates table
             migrationBuilder.CreateTable(
                 name: "WidgetTemplates",
                 columns: table => new
@@ -104,13 +67,13 @@ namespace Raytha.Migrations.Postgres
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
                     ThemeId = table.Column<Guid>(type: "uuid", nullable: false),
                     Label = table.Column<string>(type: "text", nullable: true),
-                    DeveloperName = table.Column<string>(type: "character varying(450)", nullable: true),
+                    DeveloperName = table.Column<string>(type: "text", nullable: true),
                     Content = table.Column<string>(type: "text", nullable: true),
                     IsBuiltInTemplate = table.Column<bool>(type: "boolean", nullable: false),
                     CreationTime = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     LastModificationTime = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     CreatorUserId = table.Column<Guid>(type: "uuid", nullable: true),
-                    LastModifierUserId = table.Column<Guid>(type: "uuid", nullable: true),
+                    LastModifierUserId = table.Column<Guid>(type: "uuid", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -120,24 +83,19 @@ namespace Raytha.Migrations.Postgres
                         column: x => x.ThemeId,
                         principalTable: "Themes",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade
-                    );
+                        onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
                         name: "FK_WidgetTemplates_Users_CreatorUserId",
                         column: x => x.CreatorUserId,
                         principalTable: "Users",
-                        principalColumn: "Id"
-                    );
+                        principalColumn: "Id");
                     table.ForeignKey(
                         name: "FK_WidgetTemplates_Users_LastModifierUserId",
                         column: x => x.LastModifierUserId,
                         principalTable: "Users",
-                        principalColumn: "Id"
-                    );
-                }
-            );
+                        principalColumn: "Id");
+                });
 
-            // Create WidgetTemplateRevisions table
             migrationBuilder.CreateTable(
                 name: "WidgetTemplateRevisions",
                 columns: table => new
@@ -149,77 +107,79 @@ namespace Raytha.Migrations.Postgres
                     CreationTime = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     LastModificationTime = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     CreatorUserId = table.Column<Guid>(type: "uuid", nullable: true),
-                    LastModifierUserId = table.Column<Guid>(type: "uuid", nullable: true),
+                    LastModifierUserId = table.Column<Guid>(type: "uuid", nullable: true)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_WidgetTemplateRevisions", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_WidgetTemplateRevisions_WidgetTemplates_WidgetTemplateId",
-                        column: x => x.WidgetTemplateId,
-                        principalTable: "WidgetTemplates",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade
-                    );
-                    table.ForeignKey(
                         name: "FK_WidgetTemplateRevisions_Users_CreatorUserId",
                         column: x => x.CreatorUserId,
                         principalTable: "Users",
-                        principalColumn: "Id"
-                    );
+                        principalColumn: "Id");
                     table.ForeignKey(
                         name: "FK_WidgetTemplateRevisions_Users_LastModifierUserId",
                         column: x => x.LastModifierUserId,
                         principalTable: "Users",
-                        principalColumn: "Id"
-                    );
-                }
-            );
-
-            // Create indexes for WidgetTemplates
-            migrationBuilder.CreateIndex(
-                name: "IX_WidgetTemplates_ThemeId",
-                table: "WidgetTemplates",
-                column: "ThemeId"
-            );
+                        principalColumn: "Id");
+                    table.ForeignKey(
+                        name: "FK_WidgetTemplateRevisions_WidgetTemplates_WidgetTemplateId",
+                        column: x => x.WidgetTemplateId,
+                        principalTable: "WidgetTemplates",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
 
             migrationBuilder.CreateIndex(
-                name: "IX_WidgetTemplates_DeveloperName_ThemeId",
-                table: "WidgetTemplates",
-                columns: new[] { "DeveloperName", "ThemeId" },
-                unique: true
-            );
+                name: "IX_SitePages_CreatorUserId",
+                table: "SitePages",
+                column: "CreatorUserId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_WidgetTemplates_CreatorUserId",
-                table: "WidgetTemplates",
-                column: "CreatorUserId"
-            );
+                name: "IX_SitePages_LastModifierUserId",
+                table: "SitePages",
+                column: "LastModifierUserId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_WidgetTemplates_LastModifierUserId",
-                table: "WidgetTemplates",
-                column: "LastModifierUserId"
-            );
+                name: "IX_SitePages_RouteId",
+                table: "SitePages",
+                column: "RouteId",
+                unique: true);
 
-            // Create indexes for WidgetTemplateRevisions
             migrationBuilder.CreateIndex(
-                name: "IX_WidgetTemplateRevisions_WidgetTemplateId",
-                table: "WidgetTemplateRevisions",
-                column: "WidgetTemplateId"
-            );
+                name: "IX_SitePages_WebTemplateId",
+                table: "SitePages",
+                column: "WebTemplateId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_WidgetTemplateRevisions_CreatorUserId",
                 table: "WidgetTemplateRevisions",
-                column: "CreatorUserId"
-            );
+                column: "CreatorUserId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_WidgetTemplateRevisions_LastModifierUserId",
                 table: "WidgetTemplateRevisions",
-                column: "LastModifierUserId"
-            );
+                column: "LastModifierUserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_WidgetTemplateRevisions_WidgetTemplateId",
+                table: "WidgetTemplateRevisions",
+                column: "WidgetTemplateId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_WidgetTemplates_CreatorUserId",
+                table: "WidgetTemplates",
+                column: "CreatorUserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_WidgetTemplates_LastModifierUserId",
+                table: "WidgetTemplates",
+                column: "LastModifierUserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_WidgetTemplates_ThemeId",
+                table: "WidgetTemplates",
+                column: "ThemeId");
 
             // Update super_admin and admin roles to include ManageSitePages permission (64)
             migrationBuilder.Sql(
@@ -243,42 +203,18 @@ namespace Raytha.Migrations.Postgres
                 "
             );
 
-            // Drop WidgetTemplateRevisions table
-            migrationBuilder.DropTable(name: "WidgetTemplateRevisions");
+            migrationBuilder.DropTable(
+                name: "SitePages");
 
-            // Drop WidgetTemplates table
-            migrationBuilder.DropTable(name: "WidgetTemplates");
+            migrationBuilder.DropTable(
+                name: "WidgetTemplateRevisions");
 
-            // Drop indexes
-            migrationBuilder.DropIndex(
-                name: "IX_SitePages_RouteId",
-                table: "SitePages"
-            );
+            migrationBuilder.DropTable(
+                name: "WidgetTemplates");
 
-            migrationBuilder.DropIndex(
-                name: "IX_SitePages_WebTemplateId",
-                table: "SitePages"
-            );
-
-            migrationBuilder.DropIndex(
-                name: "IX_SitePages_CreatorUserId",
-                table: "SitePages"
-            );
-
-            migrationBuilder.DropIndex(
-                name: "IX_SitePages_LastModifierUserId",
-                table: "SitePages"
-            );
-
-            // Drop SitePageId column from Routes
             migrationBuilder.DropColumn(
                 name: "SitePageId",
-                table: "Routes"
-            );
-
-            // Drop SitePages table
-            migrationBuilder.DropTable(name: "SitePages");
+                table: "Routes");
         }
     }
 }
-

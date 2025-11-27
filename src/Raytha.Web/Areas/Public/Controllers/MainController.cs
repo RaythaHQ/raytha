@@ -6,6 +6,7 @@ using Raytha.Application.ContentItems;
 using Raytha.Application.ContentItems.Queries;
 using Raytha.Application.ContentTypes;
 using Raytha.Application.Routes.Queries;
+using Raytha.Application.SitePages.Queries;
 using Raytha.Application.Themes.Queries;
 using Raytha.Application.Themes.WebTemplates.Queries;
 using Raytha.Application.Views.Queries;
@@ -148,6 +149,37 @@ public class MainController : BaseController
                         ViewData
                     );
                 }
+                else if (CurrentOrganization.HomePageType == Domain.Entities.Route.SITE_PAGE_TYPE)
+                {
+                    var sitePage = await Mediator.Send(
+                        new GetSitePageById.Query { Id = CurrentOrganization.HomePageId.Value }
+                    );
+                    if (!sitePage.Result.IsPublished)
+                    {
+                        return new ErrorActionViewResult(
+                            BuiltInWebTemplate.Error404,
+                            404,
+                            new GenericError_RenderModel(),
+                            ViewData
+                        );
+                    }
+
+                    var webTemplateResponse = await Mediator.Send(
+                        new GetWebTemplateById.Query { Id = sitePage.Result.WebTemplateId }
+                    );
+
+                    var model = SitePage_RenderModel.GetProjection(
+                        sitePage.Result,
+                        webTemplateResponse.Result.DeveloperName
+                    );
+
+                    return new SitePageActionViewResult(
+                        webTemplateResponse.Result,
+                        model,
+                        sitePage.Result,
+                        ViewData
+                    );
+                }
                 throw new Exception("Unknown content type");
             }
             else
@@ -266,6 +298,37 @@ public class MainController : BaseController
                         webTemplateResponse.Result,
                         modelAsList,
                         contentType,
+                        ViewData
+                    );
+                }
+                else if (response.Result.PathType == Domain.Entities.Route.SITE_PAGE_TYPE)
+                {
+                    var sitePage = await Mediator.Send(
+                        new GetSitePageById.Query { Id = response.Result.SitePageId.Value }
+                    );
+                    if (!sitePage.Result.IsPublished)
+                    {
+                        return new ErrorActionViewResult(
+                            BuiltInWebTemplate.Error404,
+                            404,
+                            new GenericError_RenderModel(),
+                            ViewData
+                        );
+                    }
+
+                    var webTemplateResponse = await Mediator.Send(
+                        new GetWebTemplateById.Query { Id = sitePage.Result.WebTemplateId }
+                    );
+
+                    var model = SitePage_RenderModel.GetProjection(
+                        sitePage.Result,
+                        webTemplateResponse.Result.DeveloperName
+                    );
+
+                    return new SitePageActionViewResult(
+                        webTemplateResponse.Result,
+                        model,
+                        sitePage.Result,
                         ViewData
                     );
                 }

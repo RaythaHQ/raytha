@@ -73,6 +73,10 @@ public static class ConfigureServices
                 policy => policy.Requirements.Add(new ManageMediaItemsRequirement())
             );
             options.AddPolicy(
+                BuiltInSystemPermission.MANAGE_SITE_PAGES_PERMISSION,
+                policy => policy.Requirements.Add(new ManageSitePagesRequirement())
+            );
+            options.AddPolicy(
                 BuiltInContentTypePermission.CONTENT_TYPE_CONFIG_PERMISSION,
                 policy =>
                     policy.Requirements.Add(

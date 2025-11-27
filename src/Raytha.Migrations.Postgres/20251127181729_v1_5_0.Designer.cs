@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Raytha.Infrastructure.Persistence;
@@ -11,9 +12,11 @@ using Raytha.Infrastructure.Persistence;
 namespace Raytha.Migrations.Postgres
 {
     [DbContext(typeof(RaythaDbContext))]
-    partial class RaythaDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251127181729_v1_5_0")]
+    partial class v1_5_0
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
