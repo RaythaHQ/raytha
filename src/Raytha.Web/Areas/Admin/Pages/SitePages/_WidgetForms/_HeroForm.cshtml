@@ -1,0 +1,86 @@
+@model Raytha.Web.Areas.Admin.Pages.SitePages.EditWidget
+
+<h6 class="mb-3">Content</h6>
+
+<div class="mb-3">
+    <label class="form-label" asp-for="HeroForm.Headline"></label>
+    <input type="text" class="form-control" asp-for="HeroForm.Headline" placeholder="Enter headline text">
+</div>
+
+<div class="mb-3">
+    <label class="form-label" asp-for="HeroForm.Subheadline"></label>
+    <textarea class="form-control" asp-for="HeroForm.Subheadline" rows="2" placeholder="Enter subheadline text"></textarea>
+</div>
+
+<h6 class="mb-3 mt-4">Appearance</h6>
+
+<div class="row">
+    <div class="col-md-6 mb-3">
+        <label class="form-label" asp-for="HeroForm.BackgroundColor"></label>
+        <div class="input-group">
+            <input type="color" class="form-control form-control-color" asp-for="HeroForm.BackgroundColor">
+            <input type="text" class="form-control" asp-for="HeroForm.BackgroundColor" style="max-width: 120px;">
+        </div>
+    </div>
+    <div class="col-md-6 mb-3">
+        <label class="form-label" asp-for="HeroForm.TextColor"></label>
+        <div class="input-group">
+            <input type="color" class="form-control form-control-color" asp-for="HeroForm.TextColor">
+            <input type="text" class="form-control" asp-for="HeroForm.TextColor" style="max-width: 120px;">
+        </div>
+    </div>
+</div>
+
+<div class="mb-3">
+    <label class="form-label" asp-for="HeroForm.BackgroundImage"></label>
+    <input type="url" class="form-control" asp-for="HeroForm.BackgroundImage" placeholder="https://example.com/image.jpg">
+    <div class="form-text">Optional background image URL</div>
+</div>
+
+<div class="row">
+    <div class="col-md-6 mb-3">
+        <label class="form-label" asp-for="HeroForm.Alignment"></label>
+        <select class="form-select" asp-for="HeroForm.Alignment">
+            <option value="left">Left</option>
+            <option value="center">Center</option>
+            <option value="right">Right</option>
+        </select>
+    </div>
+    <div class="col-md-6 mb-3">
+        <label class="form-label" asp-for="HeroForm.MinHeight"></label>
+        <div class="input-group">
+            <input type="number" class="form-control" asp-for="HeroForm.MinHeight" min="100" max="1000">
+            <span class="input-group-text">px</span>
+        </div>
+    </div>
+</div>
+
+<h6 class="mb-3 mt-4">Call to Action Button (Optional)</h6>
+
+<div class="row">
+    <div class="col-md-6 mb-3">
+        <label class="form-label" asp-for="HeroForm.ButtonText"></label>
+        <input type="text" class="form-control" asp-for="HeroForm.ButtonText" placeholder="e.g., Learn More">
+    </div>
+    <div class="col-md-6 mb-3">
+        <label class="form-label" asp-for="HeroForm.ButtonUrl"></label>
+        <input type="text" class="form-control" asp-for="HeroForm.ButtonUrl" placeholder="/about or https://...">
+    </div>
+</div>
+
+<div class="mb-3">
+    <label class="form-label" asp-for="HeroForm.ButtonStyle"></label>
+    <select class="form-select" asp-for="HeroForm.ButtonStyle">
+        <option value="primary">Primary (Blue)</option>
+        <option value="secondary">Secondary (Gray)</option>
+        <option value="success">Success (Green)</option>
+        <option value="danger">Danger (Red)</option>
+        <option value="warning">Warning (Yellow)</option>
+        <option value="info">Info (Cyan)</option>
+        <option value="light">Light</option>
+        <option value="dark">Dark</option>
+        <option value="outline-primary">Outline Primary</option>
+        <option value="outline-light">Outline Light</option>
+    </select>
+</div>
+

@@ -1,0 +1,87 @@
+@page "/raytha/site-pages/{sitePageId}/widget/edit"
+@model Raytha.Web.Areas.Admin.Pages.SitePages.EditWidget
+
+@{
+    Layout = "SidebarLayout";
+    ViewData["Title"] = $"Edit {Model.WidgetDisplayName}";
+    ViewData["ActiveMenu"] = "Site Pages";
+
+    BackLinkOptions back = new BackLinkOptions
+    {
+        Page = RouteNames.SitePages.Layout,
+        RouteValues = new RouteValueDictionary { ["id"] = Model.SitePageId },
+        Text = "Back to layout"
+    };
+}
+
+<div class="row mb-4">
+    <partial name="_Partials/PageHeading" model='ViewData["Title"]' />
+    <div class="col-lg-8 col-md-10">
+        <div class="card border-0 shadow mb-4">
+            <div class="card-header">
+                @(await Html.PartialAsync("_Partials/BackToList", back))
+            </div>
+            <div class="card-body">
+                <div class="alert alert-light border mb-4">
+                    <div class="row small">
+                        <div class="col-md-6">
+                            <strong>Page:</strong> @Model.SitePageTitle
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Widget Type:</strong> @Model.WidgetDisplayName
+                        </div>
+                    </div>
+                </div>
+
+                <form method="post" asp-page="@RouteNames.SitePages.EditWidget" asp-route-sitePageId="@Model.SitePageId"
+                    asp-route-widgetId="@Model.WidgetId" asp-route-widgetType="@Model.WidgetType"
+                    asp-route-sectionName="@Model.SectionName" novalidate>
+
+                    @switch (Model.WidgetType)
+                    {
+                        case "hero":
+                            @await Html.PartialAsync("_WidgetForms/_HeroForm", Model)
+                            break;
+                        case "wysiwyg":
+                            @await Html.PartialAsync("_WidgetForms/_WysiwygForm", Model)
+                            break;
+                        case "cta":
+                            @await Html.PartialAsync("_WidgetForms/_CtaForm", Model)
+                            break;
+                        case "imagetext":
+                            @await Html.PartialAsync("_WidgetForms/_ImageTextForm", Model)
+                            break;
+                        case "embed":
+                            @await Html.PartialAsync("_WidgetForms/_EmbedForm", Model)
+                            break;
+                        case "cardgrid":
+                            @await Html.PartialAsync("_WidgetForms/_CardGridForm", Model)
+                            break;
+                        case "faq":
+                            @await Html.PartialAsync("_WidgetForms/_FaqForm", Model)
+                            break;
+                        case "contentlist":
+                            @await Html.PartialAsync("_WidgetForms/_ContentListForm", Model)
+                            break;
+                        default:
+                            <div class="alert alert-warning">
+                                <i class="bi bi-exclamation-triangle me-2"></i>
+                                Unknown widget type: @Model.WidgetType
+                            </div>
+                            break;
+                    }
+
+                    <div class="d-flex justify-content-between align-items-center mt-4 pt-3 border-top">
+                        <button type="submit" class="btn btn-success">
+                            <i class="bi bi-check-lg me-1"></i> Save Widget
+                        </button>
+                        <a asp-page="@RouteNames.SitePages.Layout" asp-route-id="@Model.SitePageId"
+                            class="btn btn-outline-secondary">
+                            Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

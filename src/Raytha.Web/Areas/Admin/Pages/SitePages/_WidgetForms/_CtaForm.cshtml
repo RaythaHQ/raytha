@@ -1,0 +1,67 @@
+@model Raytha.Web.Areas.Admin.Pages.SitePages.EditWidget
+
+<h6 class="mb-3">Content</h6>
+
+<div class="mb-3">
+    <label class="form-label" asp-for="CtaForm.Headline"></label>
+    <input type="text" class="form-control" asp-for="CtaForm.Headline" placeholder="Enter headline text">
+</div>
+
+<div class="mb-3">
+    <label class="form-label" asp-for="CtaForm.Content"></label>
+    <textarea class="form-control" asp-for="CtaForm.Content" rows="3"
+        placeholder="Enter supporting content (HTML allowed)"></textarea>
+</div>
+
+<h6 class="mb-3 mt-4">Button</h6>
+
+<div class="row">
+    <div class="col-md-6 mb-3">
+        <label class="form-label" asp-for="CtaForm.ButtonText"></label>
+        <input type="text" class="form-control" asp-for="CtaForm.ButtonText" placeholder="e.g., Get Started">
+    </div>
+    <div class="col-md-6 mb-3">
+        <label class="form-label" asp-for="CtaForm.ButtonUrl"></label>
+        <input type="text" class="form-control" asp-for="CtaForm.ButtonUrl" placeholder="/contact or https://...">
+    </div>
+</div>
+
+<div class="mb-3">
+    <label class="form-label" asp-for="CtaForm.ButtonStyle"></label>
+    <select class="form-select" asp-for="CtaForm.ButtonStyle">
+        <option value="primary">Primary (Blue)</option>
+        <option value="secondary">Secondary (Gray)</option>
+        <option value="success">Success (Green)</option>
+        <option value="light">Light</option>
+        <option value="dark">Dark</option>
+        <option value="outline-light">Outline Light</option>
+        <option value="outline-dark">Outline Dark</option>
+    </select>
+</div>
+
+<h6 class="mb-3 mt-4">Appearance</h6>
+
+<div class="row">
+    <div class="col-md-4 mb-3">
+        <label class="form-label" asp-for="CtaForm.BackgroundColor"></label>
+        <div class="input-group">
+            <input type="color" class="form-control form-control-color" asp-for="CtaForm.BackgroundColor">
+            <input type="text" class="form-control" asp-for="CtaForm.BackgroundColor" style="max-width: 100px;">
+        </div>
+    </div>
+    <div class="col-md-4 mb-3">
+        <label class="form-label" asp-for="CtaForm.TextColor"></label>
+        <div class="input-group">
+            <input type="color" class="form-control form-control-color" asp-for="CtaForm.TextColor">
+            <input type="text" class="form-control" asp-for="CtaForm.TextColor" style="max-width: 100px;">
+        </div>
+    </div>
+    <div class="col-md-4 mb-3">
+        <label class="form-label" asp-for="CtaForm.Alignment"></label>
+        <select class="form-select" asp-for="CtaForm.Alignment">
+            <option value="left">Left</option>
+            <option value="center">Center</option>
+            <option value="right">Right</option>
+        </select>
+    </div>
+</div>

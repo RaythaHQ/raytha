@@ -1,0 +1,94 @@
+@model Raytha.Web.Areas.Admin.Pages.SitePages.EditWidget
+
+<h6 class="mb-3">Section Header</h6>
+
+<div class="row">
+    <div class="col-md-6 mb-3">
+        <label class="form-label" asp-for="CardGridForm.Headline"></label>
+        <input type="text" class="form-control" asp-for="CardGridForm.Headline" 
+               placeholder="Optional section headline">
+    </div>
+    <div class="col-md-6 mb-3">
+        <label class="form-label" asp-for="CardGridForm.Subheadline"></label>
+        <input type="text" class="form-control" asp-for="CardGridForm.Subheadline" 
+               placeholder="Optional subheadline">
+    </div>
+</div>
+
+<h6 class="mb-3 mt-4">Layout</h6>
+
+<div class="row">
+    <div class="col-md-6 mb-3">
+        <label class="form-label" asp-for="CardGridForm.Columns"></label>
+        <select class="form-select" asp-for="CardGridForm.Columns">
+            <option value="2">2 Columns</option>
+            <option value="3">3 Columns</option>
+            <option value="4">4 Columns</option>
+        </select>
+    </div>
+    <div class="col-md-6 mb-3">
+        <label class="form-label" asp-for="CardGridForm.BackgroundColor"></label>
+        <div class="input-group">
+            <input type="color" class="form-control form-control-color" 
+                   value="@(Model.CardGridForm?.BackgroundColor ?? "#ffffff")"
+                   onchange="document.getElementById('CardGridForm_BackgroundColor').value = this.value">
+            <input type="text" class="form-control" asp-for="CardGridForm.BackgroundColor" placeholder="#ffffff">
+        </div>
+    </div>
+</div>
+
+<h6 class="mb-3 mt-4">Cards</h6>
+
+<div class="alert alert-info small">
+    <i class="bi bi-info-circle me-2"></i>
+    Cards are stored as JSON. Edit the JSON below to add/modify cards.
+</div>
+
+<div class="mb-3">
+    <label class="form-label">Cards JSON</label>
+    <textarea class="form-control font-monospace" asp-for="CardGridForm.CardsJson" rows="12" 
+              id="cardsJsonEditor"></textarea>
+    <div class="form-text">
+        Each card should have: <code>imageUrl</code>, <code>title</code>, <code>description</code>, 
+        <code>linkUrl</code>, <code>linkText</code>
+    </div>
+</div>
+
+<div class="mb-3">
+    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="addSampleCard()">
+        <i class="bi bi-plus me-1"></i> Add Sample Card
+    </button>
+    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="formatJson()">
+        <i class="bi bi-code me-1"></i> Format JSON
+    </button>
+</div>
+
+<script>
+    function addSampleCard() {
+        const textarea = document.getElementById('cardsJsonEditor');
+        try {
+            let cards = JSON.parse(textarea.value || '[]');
+            cards.push({
+                imageUrl: '',
+                title: 'Card Title',
+                description: 'Card description goes here.',
+                linkUrl: '',
+                linkText: 'Learn more'
+            });
+            textarea.value = JSON.stringify(cards, null, 2);
+        } catch (e) {
+            alert('Invalid JSON. Please fix the JSON before adding a card.');
+        }
+    }
+    
+    function formatJson() {
+        const textarea = document.getElementById('cardsJsonEditor');
+        try {
+            const json = JSON.parse(textarea.value || '[]');
+            textarea.value = JSON.stringify(json, null, 2);
+        } catch (e) {
+            alert('Invalid JSON format: ' + e.message);
+        }
+    }
+</script>
+

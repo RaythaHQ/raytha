@@ -1,0 +1,90 @@
+@model Raytha.Web.Areas.Admin.Pages.SitePages.EditWidget
+
+<h6 class="mb-3">Section Header</h6>
+
+<div class="row">
+    <div class="col-md-6 mb-3">
+        <label class="form-label" asp-for="FaqForm.Headline"></label>
+        <input type="text" class="form-control" asp-for="FaqForm.Headline" 
+               placeholder="e.g., Frequently Asked Questions">
+    </div>
+    <div class="col-md-6 mb-3">
+        <label class="form-label" asp-for="FaqForm.Subheadline"></label>
+        <input type="text" class="form-control" asp-for="FaqForm.Subheadline" 
+               placeholder="Optional subheadline">
+    </div>
+</div>
+
+<h6 class="mb-3 mt-4">Options</h6>
+
+<div class="row">
+    <div class="col-md-6 mb-3">
+        <div class="form-check">
+            <input class="form-check-input" type="checkbox" asp-for="FaqForm.ExpandFirst" id="expandFirstCheck">
+            <label class="form-check-label" for="expandFirstCheck">
+                Expand first item by default
+            </label>
+        </div>
+    </div>
+    <div class="col-md-6 mb-3">
+        <label class="form-label" asp-for="FaqForm.BackgroundColor"></label>
+        <div class="input-group">
+            <input type="color" class="form-control form-control-color" 
+                   value="@(Model.FaqForm?.BackgroundColor ?? "#ffffff")"
+                   onchange="document.getElementById('FaqForm_BackgroundColor').value = this.value">
+            <input type="text" class="form-control" asp-for="FaqForm.BackgroundColor" placeholder="#ffffff">
+        </div>
+    </div>
+</div>
+
+<h6 class="mb-3 mt-4">FAQ Items</h6>
+
+<div class="alert alert-info small">
+    <i class="bi bi-info-circle me-2"></i>
+    FAQ items are stored as JSON. Edit the JSON below to add/modify questions and answers.
+</div>
+
+<div class="mb-3">
+    <label class="form-label">FAQ Items JSON</label>
+    <textarea class="form-control font-monospace" asp-for="FaqForm.ItemsJson" rows="12" 
+              id="faqItemsEditor"></textarea>
+    <div class="form-text">
+        Each item should have: <code>question</code> and <code>answer</code> (HTML allowed in answer)
+    </div>
+</div>
+
+<div class="mb-3">
+    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="addSampleFaq()">
+        <i class="bi bi-plus me-1"></i> Add Sample FAQ
+    </button>
+    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="formatFaqJson()">
+        <i class="bi bi-code me-1"></i> Format JSON
+    </button>
+</div>
+
+<script>
+    function addSampleFaq() {
+        const textarea = document.getElementById('faqItemsEditor');
+        try {
+            let items = JSON.parse(textarea.value || '[]');
+            items.push({
+                question: 'What is your question?',
+                answer: 'This is the answer to the question.'
+            });
+            textarea.value = JSON.stringify(items, null, 2);
+        } catch (e) {
+            alert('Invalid JSON. Please fix the JSON before adding an item.');
+        }
+    }
+    
+    function formatFaqJson() {
+        const textarea = document.getElementById('faqItemsEditor');
+        try {
+            const json = JSON.parse(textarea.value || '[]');
+            textarea.value = JSON.stringify(json, null, 2);
+        } catch (e) {
+            alert('Invalid JSON format: ' + e.message);
+        }
+    }
+</script>
+
