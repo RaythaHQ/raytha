@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
@@ -18,6 +19,7 @@ using Raytha.Application.NavigationMenuItems.Queries;
 using Raytha.Application.NavigationMenus;
 using Raytha.Application.NavigationMenus.Queries;
 using Raytha.Application.RaythaFunctions.Queries;
+using Raytha.Application.Themes.WidgetTemplates.Queries;
 using Raytha.Domain.ValueObjects;
 
 namespace Raytha.Web.Services;
@@ -72,6 +74,16 @@ public class RenderEngine : IRenderEngine
 
     public string RenderAsHtml(string source, object entity)
     {
+        return RenderAsHtml(source, entity, Guid.Empty, null);
+    }
+
+    public string RenderAsHtml(
+        string source,
+        object entity,
+        Guid themeId,
+        Dictionary<string, List<SitePageWidgetRenderData>>? widgets
+    )
+    {
         var template = _templateCache.GetOrAdd(
             source,
             key =>
@@ -91,12 +103,20 @@ public class RenderEngine : IRenderEngine
         context.AmbientValues["RelativeUrlBuilder"] = _relativeUrlBuilder;
         context.AmbientValues["FileStorageProvider"] = _fileStorageProvider;
 
+        // Store Site Page widgets in ambient values for section() function
+        if (widgets != null && themeId != Guid.Empty)
+        {
+            context.AmbientValues["SitePageWidgets"] = widgets;
+            context.AmbientValues["ThemeId"] = themeId;
+        }
+
         context.SetValue("get_content_item_by_id", GetContentItemById());
         context.SetValue("get_content_items", GetContentItems());
         context.SetValue("get_content_type_by_developer_name", GetContentTypeByDeveloperName());
         context.SetValue("get_main_menu", GetMainMenu());
         context.SetValue("get_menu", GetMenuByDeveloperName());
         context.SetValue("raytha_function", RaythaFunction());
+        context.SetValue("section", RenderSection(context));
 
         return template.Render(context);
     }
@@ -288,7 +308,10 @@ public class RenderEngine : IRenderEngine
                     var raythaFunction = response.Result;
 
                     // Validate trigger type is liquid_template
-                    if (raythaFunction.TriggerType.DeveloperName != RaythaFunctionTriggerType.LiquidTemplate.DeveloperName)
+                    if (
+                        raythaFunction.TriggerType.DeveloperName
+                        != RaythaFunctionTriggerType.LiquidTemplate.DeveloperName
+                    )
                     {
                         return NilValue.Instance;
                     }
@@ -310,7 +333,10 @@ public class RenderEngine : IRenderEngine
                         // Check if this arg has a name (named argument)
                         // Named args in Fluid start from index 0 in Names collection
                         var nameIndex = i - 2;
-                        if (nameIndex < argNames.Count && !string.IsNullOrEmpty(argNames[nameIndex]))
+                        if (
+                            nameIndex < argNames.Count
+                            && !string.IsNullOrEmpty(argNames[nameIndex])
+                        )
                         {
                             functionArgs[argNames[nameIndex]] = argValue;
                         }
@@ -342,6 +368,164 @@ public class RenderEngine : IRenderEngine
                 }
             }
         );
+    }
+
+    /// <summary>
+    /// Renders widgets for a named section in a Site Page template.
+    /// Usage: {{ section("main") }} or {% for widget in section("sidebar") %}...{% endfor %}
+    ///
+    /// The function retrieves widgets from the SitePage.Widgets dictionary,
+    /// sorts them by Row then Column, and renders each using its widget template.
+    /// Widgets are wrapped in Bootstrap row/column structure.
+    ///
+    /// For content-type templates (non-Site Pages), this function returns empty string.
+    /// </summary>
+    public FunctionValue RenderSection(TemplateContext parentContext)
+    {
+        return new FunctionValue(
+            async (args, context) =>
+            {
+                var sectionName = args.At(0).ToStringValue();
+
+                if (string.IsNullOrEmpty(sectionName))
+                {
+                    return new StringValue(string.Empty);
+                }
+
+                // Try to get SitePage data from ambient values
+                if (
+                    !context.AmbientValues.TryGetValue("SitePageWidgets", out var widgetsObj)
+                    || widgetsObj
+                        is not Dictionary<string, List<SitePageWidgetRenderData>> allWidgets
+                )
+                {
+                    // No Site Page widgets available - this is a content type template
+                    return new StringValue(string.Empty);
+                }
+
+                if (
+                    !context.AmbientValues.TryGetValue("ThemeId", out var themeIdObj)
+                    || themeIdObj is not Guid themeId
+                )
+                {
+                    return new StringValue(string.Empty);
+                }
+
+                // Get widgets for this section
+                if (
+                    !allWidgets.TryGetValue(sectionName, out var sectionWidgets)
+                    || !sectionWidgets.Any()
+                )
+                {
+                    return new StringValue(string.Empty);
+                }
+
+                // Sort widgets by Row, then by Column
+                var sortedWidgets = sectionWidgets
+                    .OrderBy(w => w.Row)
+                    .ThenBy(w => w.Column)
+                    .ToList();
+
+                // Group widgets by Row for Bootstrap row structure
+                var widgetsByRow = sortedWidgets.GroupBy(w => w.Row).OrderBy(g => g.Key);
+
+                var htmlBuilder = new StringBuilder();
+
+                foreach (var rowGroup in widgetsByRow)
+                {
+                    htmlBuilder.AppendLine("<div class=\"row\">");
+
+                    foreach (var widget in rowGroup.OrderBy(w => w.Column))
+                    {
+                        // Calculate Bootstrap column class
+                        var colClass = $"col-md-{widget.ColumnSpan}";
+
+                        htmlBuilder.AppendLine($"  <div class=\"{colClass}\">");
+
+                        try
+                        {
+                            // Get the widget template
+                            var templateResponse = await _mediator.Send(
+                                new GetWidgetTemplateByDeveloperName.Query
+                                {
+                                    DeveloperName = widget.WidgetType,
+                                    ThemeId = themeId,
+                                }
+                            );
+
+                            var widgetTemplateContent = templateResponse.Result.Content;
+
+                            // Parse widget settings from JSON
+                            var settings = !string.IsNullOrEmpty(widget.SettingsJson)
+                                ? JsonSerializer.Deserialize<Dictionary<string, object>>(
+                                    widget.SettingsJson,
+                                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
+                                )
+                                : new Dictionary<string, object>();
+
+                            // Create render model for the widget
+                            var widgetModel = new
+                            {
+                                id = widget.Id,
+                                type = widget.WidgetType,
+                                settings = settings,
+                                row = widget.Row,
+                                column = widget.Column,
+                                columnSpan = widget.ColumnSpan,
+                            };
+
+                            // Render the widget template
+                            var renderedWidget = RenderWidgetTemplate(
+                                widgetTemplateContent,
+                                widgetModel
+                            );
+                            htmlBuilder.AppendLine(renderedWidget);
+                        }
+                        catch (Exception ex)
+                        {
+                            // Widget template not found or rendering error
+                            htmlBuilder.AppendLine(
+                                $"    <!-- Widget rendering error: {widget.WidgetType} - {ex.Message} -->"
+                            );
+                        }
+
+                        htmlBuilder.AppendLine("  </div>");
+                    }
+
+                    htmlBuilder.AppendLine("</div>");
+                }
+
+                return new StringValue(htmlBuilder.ToString());
+            }
+        );
+    }
+
+    /// <summary>
+    /// Renders a widget template with the given model.
+    /// </summary>
+    private string RenderWidgetTemplate(string templateContent, object model)
+    {
+        var template = _templateCache.GetOrAdd(
+            templateContent,
+            key =>
+            {
+                if (_parser.TryParse(key, out var parsedTemplate, out var error))
+                {
+                    return parsedTemplate;
+                }
+                throw new Exception(error);
+            }
+        );
+
+        var widgetContext = new TemplateContext(model, _templateOptions);
+        widgetContext.TimeZone = DateTimeExtensions.GetTimeZoneInfo(_currentOrganization.TimeZone);
+        widgetContext.AmbientValues["RelativeUrlBuilder"] = _relativeUrlBuilder;
+        widgetContext.AmbientValues["FileStorageProvider"] = _fileStorageProvider;
+
+        // Make the widget available as "widget" variable
+        widgetContext.SetValue("widget", model);
+
+        return template.Render(widgetContext);
     }
 
     private static string ApplyGroupBy(
