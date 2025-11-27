@@ -229,4 +229,15 @@ public class RaythaFunctionScriptEngine : IRaythaFunctionScriptEngine
     {
         await Evaluate(code, $"run({payload})", executeTimeout, cancellationToken);
     }
+
+    public async Task<object> EvaluateInternal(
+        string code,
+        string methodName,
+        string argsJson,
+        TimeSpan executeTimeout,
+        CancellationToken cancellationToken
+    )
+    {
+        return await Evaluate(code, $"{methodName}({argsJson})", executeTimeout, cancellationToken);
+    }
 }

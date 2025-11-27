@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
+using System.Threading;
 using System.Threading.Tasks;
 using Fluid;
 using Fluid.Filters;
@@ -16,6 +17,8 @@ using Raytha.Application.NavigationMenuItems;
 using Raytha.Application.NavigationMenuItems.Queries;
 using Raytha.Application.NavigationMenus;
 using Raytha.Application.NavigationMenus.Queries;
+using Raytha.Application.RaythaFunctions.Queries;
+using Raytha.Domain.ValueObjects;
 
 namespace Raytha.Web.Services;
 
@@ -36,6 +39,8 @@ public class RenderEngine : IRenderEngine
     private readonly ICurrentOrganization _currentOrganization;
     private readonly IMediator _mediator;
     private readonly IFileStorageProvider _fileStorageProvider;
+    private readonly IRaythaFunctionScriptEngine _raythaFunctionScriptEngine;
+    private readonly IRaythaFunctionConfiguration _raythaFunctionConfiguration;
 
     static RenderEngine()
     {
@@ -52,13 +57,17 @@ public class RenderEngine : IRenderEngine
         IMediator mediator,
         IRelativeUrlBuilder relativeUrlBuilder,
         ICurrentOrganization currentOrganization,
-        IFileStorageProvider fileStorageProvider
+        IFileStorageProvider fileStorageProvider,
+        IRaythaFunctionScriptEngine raythaFunctionScriptEngine,
+        IRaythaFunctionConfiguration raythaFunctionConfiguration
     )
     {
         _relativeUrlBuilder = relativeUrlBuilder;
         _currentOrganization = currentOrganization;
         _mediator = mediator;
         _fileStorageProvider = fileStorageProvider;
+        _raythaFunctionScriptEngine = raythaFunctionScriptEngine;
+        _raythaFunctionConfiguration = raythaFunctionConfiguration;
     }
 
     public string RenderAsHtml(string source, object entity)
@@ -87,6 +96,7 @@ public class RenderEngine : IRenderEngine
         context.SetValue("get_content_type_by_developer_name", GetContentTypeByDeveloperName());
         context.SetValue("get_main_menu", GetMainMenu());
         context.SetValue("get_menu", GetMenuByDeveloperName());
+        context.SetValue("raytha_function", RaythaFunction());
 
         return template.Render(context);
     }
@@ -239,6 +249,97 @@ public class RenderEngine : IRenderEngine
                 var menu = NavigationMenu_RenderModel.GetProjection(menuResponse.Result, menuItems);
 
                 return new ObjectValue(menu);
+            }
+        );
+    }
+
+    /// <summary>
+    /// Calls a Raytha Function from a Liquid template.
+    /// Usage: raytha_function("developer-name", "methodName", arg1: value1, arg2: value2)
+    /// Only functions with trigger type "liquid_template" can be called.
+    /// </summary>
+    public FunctionValue RaythaFunction()
+    {
+        return new FunctionValue(
+            async (args, context) =>
+            {
+                // Check if Raytha Functions are enabled
+                if (!_raythaFunctionConfiguration.IsEnabled)
+                {
+                    return NilValue.Instance;
+                }
+
+                // Get developer name (arg 0) and method name (arg 1)
+                var developerName = args.At(0).ToStringValue();
+                var methodName = args.At(1).ToStringValue();
+
+                if (string.IsNullOrEmpty(developerName) || string.IsNullOrEmpty(methodName))
+                {
+                    return NilValue.Instance;
+                }
+
+                // Fetch the Raytha Function from database
+                try
+                {
+                    var response = await _mediator.Send(
+                        new GetRaythaFunctionByDeveloperName.Query { DeveloperName = developerName }
+                    );
+
+                    var raythaFunction = response.Result;
+
+                    // Validate trigger type is liquid_template
+                    if (raythaFunction.TriggerType.DeveloperName != RaythaFunctionTriggerType.LiquidTemplate.DeveloperName)
+                    {
+                        return NilValue.Instance;
+                    }
+
+                    // Check function is active
+                    if (!raythaFunction.IsActive)
+                    {
+                        return NilValue.Instance;
+                    }
+
+                    // Collect remaining args (starting from index 2) into a dictionary
+                    var functionArgs = new Dictionary<string, object>();
+                    var argNames = args.Names.ToList();
+
+                    for (int i = 2; i < args.Count; i++)
+                    {
+                        var argValue = args.At(i).ToObjectValue();
+
+                        // Check if this arg has a name (named argument)
+                        // Named args in Fluid start from index 0 in Names collection
+                        var nameIndex = i - 2;
+                        if (nameIndex < argNames.Count && !string.IsNullOrEmpty(argNames[nameIndex]))
+                        {
+                            functionArgs[argNames[nameIndex]] = argValue;
+                        }
+                        else
+                        {
+                            // Positional argument
+                            functionArgs[$"arg{i - 1}"] = argValue;
+                        }
+                    }
+
+                    // Serialize args to JSON
+                    var argsJson = JsonSerializer.Serialize(functionArgs, _jsonSerializerOptions);
+
+                    // Execute the function
+                    var result = await _raythaFunctionScriptEngine.EvaluateInternal(
+                        raythaFunction.Code,
+                        methodName,
+                        argsJson,
+                        _raythaFunctionConfiguration.ExecuteTimeout,
+                        CancellationToken.None
+                    );
+
+                    return FluidValue.Create(result, context.Options);
+                }
+                catch
+                {
+                    // Function not found or error during execution
+                    return NilValue.Instance;
+                }
             }
         );
     }
