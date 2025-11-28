@@ -21,9 +21,32 @@ public class EditRole
 
     public class Validator : AbstractValidator<Command>
     {
-        public Validator()
+        public Validator(IRaythaDbContext db)
         {
+            RuleFor(x => x.Id)
+                .Must(id =>
+                {
+                    var entity = db.Roles.FirstOrDefault(p => p.Id == id.Guid);
+                    return entity == null || entity.DeveloperName != BuiltInRole.SuperAdmin;
+                })
+                .WithMessage("The Super Admin role cannot be edited.");
             RuleFor(x => x.Label).NotEmpty();
+            RuleFor(x => x.SystemPermissions)
+                .Must(permissions =>
+                {
+                    var permissionsList = permissions?.ToList() ?? new List<string>();
+                    var hasSystemSettings = permissionsList.Contains(
+                        BuiltInSystemPermission.MANAGE_SYSTEM_SETTINGS_PERMISSION
+                    );
+                    var hasAdministrators = permissionsList.Contains(
+                        BuiltInSystemPermission.MANAGE_ADMINISTRATORS_PERMISSION
+                    );
+                    // Both must be selected together or neither
+                    return hasSystemSettings == hasAdministrators;
+                })
+                .WithMessage(
+                    "Manage System Settings and Manage Administrators permissions must be selected together."
+                );
         }
     }
 
@@ -47,28 +70,27 @@ public class EditRole
             if (entity == null)
                 throw new NotFoundException("Role", request.Id);
 
+            // Prevent any edits to the Super Admin role
+            if (entity.DeveloperName == BuiltInRole.SuperAdmin)
+                throw new InvalidOperationException("The Super Admin role cannot be edited.");
+
             entity.Label = request.Label;
+            entity.SystemPermissions = BuiltInSystemPermission.From(
+                request.SystemPermissions.ToArray()
+            );
+            entity.ContentTypeRolePermissions.Clear();
 
-            //Don't modify super admin permissions ever
-            if (entity.DeveloperName != BuiltInRole.SuperAdmin)
+            foreach (var permission in request.ContentTypePermissions)
             {
-                entity.SystemPermissions = BuiltInSystemPermission.From(
-                    request.SystemPermissions.ToArray()
+                var permissionAsEnum = BuiltInContentTypePermission.From(
+                    permission.Value.ToArray()
                 );
-                entity.ContentTypeRolePermissions.Clear();
-
-                foreach (var permission in request.ContentTypePermissions)
+                var newContentTypePermission = new ContentTypeRolePermission
                 {
-                    var permissionAsEnum = BuiltInContentTypePermission.From(
-                        permission.Value.ToArray()
-                    );
-                    var newContentTypePermission = new ContentTypeRolePermission
-                    {
-                        ContentTypeId = (ShortGuid)permission.Key,
-                        ContentTypePermissions = permissionAsEnum,
-                    };
-                    entity.ContentTypeRolePermissions.Add(newContentTypePermission);
-                }
+                    ContentTypeId = (ShortGuid)permission.Key,
+                    ContentTypePermissions = permissionAsEnum,
+                };
+                entity.ContentTypeRolePermissions.Add(newContentTypePermission);
             }
 
             await _db.SaveChangesAsync(cancellationToken);

@@ -38,6 +38,22 @@ public class CreateRole
                     }
                 )
                 .WithMessage("A role with that developer name already exists.");
+            RuleFor(x => x.SystemPermissions)
+                .Must(permissions =>
+                {
+                    var permissionsList = permissions?.ToList() ?? new List<string>();
+                    var hasSystemSettings = permissionsList.Contains(
+                        BuiltInSystemPermission.MANAGE_SYSTEM_SETTINGS_PERMISSION
+                    );
+                    var hasAdministrators = permissionsList.Contains(
+                        BuiltInSystemPermission.MANAGE_ADMINISTRATORS_PERMISSION
+                    );
+                    // Both must be selected together or neither
+                    return hasSystemSettings == hasAdministrators;
+                })
+                .WithMessage(
+                    "Manage System Settings and Manage Administrators permissions must be selected together."
+                );
         }
     }
 

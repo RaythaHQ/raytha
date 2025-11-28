@@ -42,7 +42,7 @@ public class BuiltInRole : ValueObject
         new(
             "Admin",
             "admin",
-            BuiltInSystemPermission.AllPermissionsAsEnum & ~SystemPermissions.ManageAdministrators
+            BuiltInSystemPermission.AllPermissionsAsEnum
         );
     public static BuiltInRole Editor => new("Editor", "editor", SystemPermissions.None);
 
@@ -223,10 +223,10 @@ public class BuiltInSystemPermission : ValueObject
         get
         {
             yield return ManageSystemSettings;
+            yield return ManageAdministrators;
             yield return ManageAuditLogs;
             yield return ManageContentTypes;
             yield return ManageTemplates;
-            yield return ManageAdministrators;
             yield return ManageUsers;
             yield return ManageSitePages;
         }
