@@ -20,12 +20,13 @@
     var isImageText = Model.WidgetType == "imagetext";
     var isCard = Model.WidgetType == "card";
     var isFaq = Model.WidgetType == "faq";
+    var isCta = Model.WidgetType == "cta";
     var needsUppy = isWysiwyg || isHero || isImageText || isCard;
     // FAQ handles its own TipTap initialization for dynamic items
-    var needsTipTap = isWysiwyg || isImageText || isCard;
+    var needsTipTap = isWysiwyg || isImageText || isCard || isCta;
     var needsTipTapCss = needsTipTap || isFaq;
     // Controls whether we need the Scripts section at all
-    var needsScripts = needsUppy || isFaq;
+    var needsScripts = needsUppy || isFaq || isCta;
 }
 
 <div class="row mb-4">
@@ -124,14 +125,13 @@
                         </div>
                     </div>
 
-                    <div class="d-flex justify-content-between align-items-center mt-4 pt-3 border-top">
-                        <button type="submit" class="btn btn-success">
-                            <i class="bi bi-check-lg me-1"></i> Save Widget
+                    <div class="mt-4 pt-3 border-top d-flex gap-2">
+                        <button type="submit" name="SubmitAction" value="save" class="btn btn-primary">
+                            <i class="bi bi-check-lg me-1"></i> Save
                         </button>
-                        <a asp-page="@RouteNames.SitePages.Layout" asp-route-id="@Model.SitePageId"
-                            class="btn btn-outline-secondary">
-                            Cancel
-                        </a>
+                        <button type="submit" name="SubmitAction" value="save-and-back" class="btn btn-success">
+                            <i class="bi bi-check-lg me-1"></i> Save and back
+                        </button>
                     </div>
                 </form>
             </div>

@@ -7,10 +7,17 @@
     <input type="text" class="form-control" asp-for="CtaForm.Headline" placeholder="Enter headline text">
 </div>
 
-<div class="mb-3">
-    <label class="form-label" asp-for="CtaForm.Content"></label>
-    <textarea class="form-control" asp-for="CtaForm.Content" rows="3"
-        placeholder="Enter supporting content (HTML allowed)"></textarea>
+<div class="cta-content-wrapper" 
+     data-field-type="wysiwyg"
+     data-developername="CtaForm_Content">
+    <div class="mb-3">
+        <label class="form-label" asp-for="CtaForm.Content"></label>
+        <div></div>
+        <textarea data-developername="CtaForm_Content"
+            id="CtaForm_Content"
+            asp-for="CtaForm.Content"
+            hidden></textarea>
+    </div>
 </div>
 
 <h6 class="mb-3 mt-4">Button</h6>

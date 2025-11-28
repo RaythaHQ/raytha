@@ -52,6 +52,9 @@ public class EditWidget : BaseAdminPageModel
     [BindProperty]
     public AdvancedMetaFormModel AdvancedMeta { get; set; } = new AdvancedMetaFormModel();
 
+    [BindProperty]
+    public string SubmitAction { get; set; } = "save";
+
     // For content list widget - content types dropdown
     public IEnumerable<SelectListItem> ContentTypes { get; set; } = Enumerable.Empty<SelectListItem>();
 
@@ -207,7 +210,23 @@ public class EditWidget : BaseAdminPageModel
         if (saveResponse.Success)
         {
             SetSuccessMessage($"{WidgetDisplayName} widget saved successfully.");
-            return RedirectToPage(RouteNames.SitePages.Layout, new { id = sitePageId });
+            
+            if (SubmitAction == "save-and-back")
+            {
+                return RedirectToPage(RouteNames.SitePages.Layout, new { id = sitePageId });
+            }
+            
+            // Stay on same page - redirect to self with the actual widget ID (important for new widgets)
+            return RedirectToPage(
+                RouteNames.SitePages.EditWidget,
+                new
+                {
+                    sitePageId,
+                    widgetId = actualWidgetId,
+                    widgetType,
+                    sectionName
+                }
+            );
         }
         else
         {
