@@ -17,7 +17,7 @@ public static class WidgetDefinitionService
             new HeroWidgetDefinition(),
             new WysiwygWidgetDefinition(),
             new ImageTextWidgetDefinition(),
-            new CardGridWidgetDefinition(),
+            new CardWidgetDefinition(),
             new FaqWidgetDefinition(),
             new CtaWidgetDefinition(),
             new EmbedWidgetDefinition(),

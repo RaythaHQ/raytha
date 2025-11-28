@@ -41,7 +41,7 @@ public class EditWidget : BaseAdminPageModel
     public EmbedFormModel EmbedForm { get; set; }
 
     [BindProperty]
-    public CardGridFormModel CardGridForm { get; set; }
+    public CardFormModel CardForm { get; set; }
 
     [BindProperty]
     public FaqFormModel FaqForm { get; set; }
@@ -305,17 +305,20 @@ public class EditWidget : BaseAdminPageModel
                 };
                 break;
 
-            case "cardgrid":
-                var cardGridSettings =
-                    JsonSerializer.Deserialize<CardGridWidgetSettings>(settingsJson, options)
-                    ?? new CardGridWidgetSettings();
-                CardGridForm = new CardGridFormModel
+            case "card":
+                var cardSettings =
+                    JsonSerializer.Deserialize<CardWidgetSettings>(settingsJson, options)
+                    ?? new CardWidgetSettings();
+                CardForm = new CardFormModel
                 {
-                    Headline = cardGridSettings.Headline,
-                    Subheadline = cardGridSettings.Subheadline,
-                    Columns = cardGridSettings.Columns,
-                    BackgroundColor = cardGridSettings.BackgroundColor,
-                    CardsJson = JsonSerializer.Serialize(cardGridSettings.Cards),
+                    Title = cardSettings.Title,
+                    Description = cardSettings.Description,
+                    ImageUrl = cardSettings.ImageUrl,
+                    ImageAlt = cardSettings.ImageAlt,
+                    ButtonText = cardSettings.ButtonText,
+                    ButtonUrl = cardSettings.ButtonUrl,
+                    ButtonStyle = cardSettings.ButtonStyle,
+                    BackgroundColor = cardSettings.BackgroundColor,
                 };
                 break;
 
@@ -329,8 +332,17 @@ public class EditWidget : BaseAdminPageModel
                     Subheadline = faqSettings.Subheadline,
                     BackgroundColor = faqSettings.BackgroundColor,
                     ExpandFirst = faqSettings.ExpandFirst,
-                    ItemsJson = JsonSerializer.Serialize(faqSettings.Items),
+                    Items = faqSettings.Items?.Select(i => new FaqItemFormModel
+                    {
+                        Question = i.Question,
+                        Answer = i.Answer,
+                    }).ToList() ?? new List<FaqItemFormModel>(),
                 };
+                // Ensure at least one item exists for the form
+                if (FaqForm.Items.Count == 0)
+                {
+                    FaqForm.Items.Add(new FaqItemFormModel());
+                }
                 break;
 
             case "contentlist":
@@ -378,7 +390,7 @@ public class EditWidget : BaseAdminPageModel
                     Headline = HeroForm?.Headline ?? string.Empty,
                     Subheadline = HeroForm?.Subheadline ?? string.Empty,
                     BackgroundImage = HeroForm?.BackgroundImage,
-                    BackgroundColor = HeroForm?.BackgroundColor ?? "#0d6efd",
+                    BackgroundColor = HeroForm?.BackgroundColor ?? "#1e293b",
                     TextColor = HeroForm?.TextColor ?? "#ffffff",
                     ButtonText = HeroForm?.ButtonText,
                     ButtonUrl = HeroForm?.ButtonUrl,
@@ -444,19 +456,17 @@ public class EditWidget : BaseAdminPageModel
                 options
             ),
 
-            "cardgrid" => JsonSerializer.Serialize(
-                new CardGridWidgetSettings
+            "card" => JsonSerializer.Serialize(
+                new CardWidgetSettings
                 {
-                    Headline = CardGridForm?.Headline,
-                    Subheadline = CardGridForm?.Subheadline,
-                    Columns = CardGridForm?.Columns ?? 3,
-                    BackgroundColor = CardGridForm?.BackgroundColor,
-                    Cards = !string.IsNullOrEmpty(CardGridForm?.CardsJson)
-                        ? JsonSerializer.Deserialize<List<CardGridWidgetSettings.CardItem>>(
-                              CardGridForm.CardsJson,
-                              new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
-                          ) ?? new List<CardGridWidgetSettings.CardItem>()
-                        : new List<CardGridWidgetSettings.CardItem>(),
+                    Title = CardForm?.Title ?? string.Empty,
+                    Description = CardForm?.Description ?? string.Empty,
+                    ImageUrl = CardForm?.ImageUrl,
+                    ImageAlt = CardForm?.ImageAlt,
+                    ButtonText = CardForm?.ButtonText,
+                    ButtonUrl = CardForm?.ButtonUrl,
+                    ButtonStyle = CardForm?.ButtonStyle ?? "primary",
+                    BackgroundColor = CardForm?.BackgroundColor,
                 },
                 options
             ),
@@ -468,12 +478,13 @@ public class EditWidget : BaseAdminPageModel
                     Subheadline = FaqForm?.Subheadline,
                     BackgroundColor = FaqForm?.BackgroundColor,
                     ExpandFirst = FaqForm?.ExpandFirst ?? true,
-                    Items = !string.IsNullOrEmpty(FaqForm?.ItemsJson)
-                        ? JsonSerializer.Deserialize<List<FaqWidgetSettings.FaqItem>>(
-                              FaqForm.ItemsJson,
-                              new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
-                          ) ?? new List<FaqWidgetSettings.FaqItem>()
-                        : new List<FaqWidgetSettings.FaqItem>(),
+                    Items = FaqForm?.Items?
+                        .Where(i => !string.IsNullOrWhiteSpace(i.Question))
+                        .Select(i => new FaqWidgetSettings.FaqItem
+                        {
+                            Question = i.Question,
+                            Answer = i.Answer,
+                        }).ToList() ?? new List<FaqWidgetSettings.FaqItem>(),
                 },
                 options
             ),
@@ -512,11 +523,11 @@ public class EditWidget : BaseAdminPageModel
         [Display(Name = "Subheadline")]
         public string Subheadline { get; set; } = string.Empty;
 
-        [Display(Name = "Background Image URL")]
+        [Display(Name = "Background Image")]
         public string? BackgroundImage { get; set; }
 
         [Display(Name = "Background Color")]
-        public string BackgroundColor { get; set; } = "#0d6efd";
+        public string BackgroundColor { get; set; } = "#1e293b";
 
         [Display(Name = "Text Color")]
         public string TextColor { get; set; } = "#ffffff";
@@ -630,22 +641,31 @@ public class EditWidget : BaseAdminPageModel
         public string? BackgroundColor { get; set; }
     }
 
-    public record CardGridFormModel
+    public record CardFormModel
     {
-        [Display(Name = "Headline")]
-        public string? Headline { get; set; }
+        [Display(Name = "Title")]
+        public string Title { get; set; } = string.Empty;
 
-        [Display(Name = "Subheadline")]
-        public string? Subheadline { get; set; }
+        [Display(Name = "Description")]
+        public string Description { get; set; } = string.Empty;
 
-        [Display(Name = "Number of Columns")]
-        public int Columns { get; set; } = 3;
+        [Display(Name = "Image URL")]
+        public string? ImageUrl { get; set; }
+
+        [Display(Name = "Image Alt Text")]
+        public string? ImageAlt { get; set; }
+
+        [Display(Name = "Button Text")]
+        public string? ButtonText { get; set; }
+
+        [Display(Name = "Button URL")]
+        public string? ButtonUrl { get; set; }
+
+        [Display(Name = "Button Style")]
+        public string ButtonStyle { get; set; } = "primary";
 
         [Display(Name = "Background Color")]
         public string? BackgroundColor { get; set; }
-
-        // Cards stored as JSON for simplicity
-        public string CardsJson { get; set; } = "[]";
     }
 
     public record FaqFormModel
@@ -662,8 +682,17 @@ public class EditWidget : BaseAdminPageModel
         [Display(Name = "Expand First Item")]
         public bool ExpandFirst { get; set; } = true;
 
-        // Items stored as JSON for simplicity
-        public string ItemsJson { get; set; } = "[]";
+        // List of FAQ items
+        public List<FaqItemFormModel> Items { get; set; } = new();
+    }
+
+    public record FaqItemFormModel
+    {
+        [Display(Name = "Question")]
+        public string Question { get; set; } = string.Empty;
+
+        [Display(Name = "Answer")]
+        public string Answer { get; set; } = string.Empty;
     }
 
     public record ContentListFormModel

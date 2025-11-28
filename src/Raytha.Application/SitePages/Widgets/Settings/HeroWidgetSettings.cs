@@ -21,9 +21,9 @@ public class HeroWidgetSettings
     public string? BackgroundImage { get; set; }
 
     /// <summary>
-    /// Background color hex code (default: #0d6efd).
+    /// Background color hex code (default: #1e293b - dark slate).
     /// </summary>
-    public string BackgroundColor { get; set; } = "#0d6efd";
+    public string BackgroundColor { get; set; } = "#1e293b";
 
     /// <summary>
     /// Text color hex code (default: #ffffff).

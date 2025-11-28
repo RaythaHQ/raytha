@@ -14,8 +14,16 @@
         RouteValues = new RouteValueDictionary { ["id"] = Model.SitePageId },
         Text = "Back to layout"
     };
-    
+
     var isWysiwyg = Model.WidgetType == "wysiwyg";
+    var isHero = Model.WidgetType == "hero";
+    var isImageText = Model.WidgetType == "imagetext";
+    var isCard = Model.WidgetType == "card";
+    var isFaq = Model.WidgetType == "faq";
+    var needsUppy = isWysiwyg || isHero || isImageText || isCard;
+    // FAQ handles its own TipTap initialization for dynamic items
+    var needsTipTap = isWysiwyg || isImageText || isCard;
+    var needsTipTapCss = needsTipTap || isFaq;
 }
 
 <div class="row mb-4">
@@ -58,8 +66,8 @@
                         case "embed":
                             @await Html.PartialAsync("_WidgetForms/_EmbedForm", Model)
                             break;
-                        case "cardgrid":
-                            @await Html.PartialAsync("_WidgetForms/_CardGridForm", Model)
+                        case "card":
+                            @await Html.PartialAsync("_WidgetForms/_CardForm", Model)
                             break;
                         case "faq":
                             @await Html.PartialAsync("_WidgetForms/_FaqForm", Model)
@@ -80,27 +88,34 @@
                         <div class="accordion-item">
                             <h2 class="accordion-header" id="advancedHeading">
                                 <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
-                                    data-bs-target="#advancedCollapse" aria-expanded="false" aria-controls="advancedCollapse">
+                                    data-bs-target="#advancedCollapse" aria-expanded="false"
+                                    aria-controls="advancedCollapse">
                                     <i class="bi bi-gear me-2"></i> Advanced
                                 </button>
                             </h2>
-                            <div id="advancedCollapse" class="accordion-collapse collapse" aria-labelledby="advancedHeading"
-                                data-bs-parent="#advancedAccordion">
+                            <div id="advancedCollapse" class="accordion-collapse collapse"
+                                aria-labelledby="advancedHeading" data-bs-parent="#advancedAccordion">
                                 <div class="accordion-body">
                                     <div class="mb-3">
                                         <label asp-for="AdvancedMeta.CssClass" class="form-label"></label>
-                                        <input asp-for="AdvancedMeta.CssClass" class="form-control" placeholder="e.g., my-custom-class another-class" />
-                                        <div class="form-text">Add custom CSS classes to the widget wrapper element.</div>
+                                        <input asp-for="AdvancedMeta.CssClass" class="form-control"
+                                            placeholder="e.g., my-custom-class another-class" />
+                                        <div class="form-text">Add custom CSS classes to the widget wrapper element.
+                                        </div>
                                     </div>
                                     <div class="mb-3">
                                         <label asp-for="AdvancedMeta.HtmlId" class="form-label"></label>
-                                        <input asp-for="AdvancedMeta.HtmlId" class="form-control" placeholder="e.g., my-section" />
-                                        <div class="form-text">Set a unique HTML ID for anchor links or JavaScript targeting.</div>
+                                        <input asp-for="AdvancedMeta.HtmlId" class="form-control"
+                                            placeholder="e.g., my-section" />
+                                        <div class="form-text">Set a unique HTML ID for anchor links or JavaScript
+                                            targeting.</div>
                                     </div>
                                     <div class="mb-3">
                                         <label asp-for="AdvancedMeta.CustomAttributes" class="form-label"></label>
-                                        <input asp-for="AdvancedMeta.CustomAttributes" class="form-control" placeholder="e.g., data-aos=fade-up data-delay=100" />
-                                        <div class="form-text">Add custom HTML attributes (e.g., for animations or data attributes).</div>
+                                        <input asp-for="AdvancedMeta.CustomAttributes" class="form-control"
+                                            placeholder="e.g., data-aos=fade-up data-delay=100" />
+                                        <div class="form-text">Add custom HTML attributes (e.g., for animations or data
+                                            attributes).</div>
                                     </div>
                                 </div>
                             </div>
@@ -122,16 +137,19 @@
     </div>
 </div>
 
-@if (isWysiwyg)
+@if (needsUppy)
 {
     @section Scripts {
         <!-- Load Uppy CSS -->
         <link href="~/raytha_admin/lib/uppy/dist/uppy.min.css" rel="stylesheet">
 
-        <!-- Load TipTap WYSIWYG CSS -->
-        <link href="~/css/pages/content-items/wysiwyg.css" rel="stylesheet">
+        @if (needsTipTapCss)
+        {
+            <!-- Load TipTap WYSIWYG CSS -->
+            <link href="~/css/pages/content-items/wysiwyg.css" rel="stylesheet">
+        }
 
-        <!-- Global configuration for WYSIWYG -->
+        <!-- Global configuration -->
         <script>
             window.RaythaContentItemsConfig = {
                 pathBase: '@CurrentOrganization.PathBase',
@@ -143,16 +161,626 @@
             };
         </script>
 
-        <!-- Load WYSIWYG module for widget editor -->
-        <script type="module">
-            import { ready } from '/js/core/events.js';
-            import { initAllWysiwygFields } from '/js/pages/content-items/wysiwyg.js';
+        @if (needsTipTap)
+        {
+            <!-- Load WYSIWYG module for widget editor -->
+            <script type="module">
+                import { ready } from '/js/core/events.js';
+                import { initAllWysiwygFields } from '/js/pages/content-items/wysiwyg.js';
 
-            ready(() => {
-                const config = window.RaythaContentItemsConfig || {};
-                console.log('Initializing WYSIWYG for widget editor...', config);
-                initAllWysiwygFields(config);
-            });
-        </script>
+                ready(() => {
+                    const config = window.RaythaContentItemsConfig || {};
+                    console.log('Initializing WYSIWYG for widget editor...', config);
+                    initAllWysiwygFields(config);
+                });
+            </script>
+        }
+
+        @if (isHero)
+        {
+            <!-- Hero Widget Background Image Upload -->
+            <script type="module">
+                import { ready } from '/js/core/events.js';
+
+                ready(async () => {
+                    const config = window.RaythaContentItemsConfig || {};
+                    const uppyContainer = document.getElementById('hero-background-uppy');
+                    const hiddenInput = document.getElementById('HeroForm_BackgroundImage_Hidden');
+                    const urlInput = document.getElementById('HeroForm_BackgroundImage_Url');
+                    const fileInfoDiv = document.getElementById('hero-background-file-info');
+                    const filenameSpan = document.getElementById('hero-background-filename');
+                    const removeBtn = document.getElementById('hero-background-remove');
+                    const previewDiv = document.getElementById('hero-background-preview');
+                    const previewImg = document.getElementById('hero-background-preview-img');
+
+                    if (!uppyContainer || !hiddenInput) return;
+
+                    // Import Uppy
+                    const { Uppy, Dashboard, XHRUpload, AwsS3 } = await import('/raytha_admin/lib/uppy/dist/uppy.min.mjs');
+
+                    // Initialize with existing value
+                    const existingValue = hiddenInput.value || '';
+                    if (existingValue) {
+                        urlInput.value = existingValue;
+                        updatePreview(existingValue);
+                    }
+
+                    // Sync URL input to hidden field
+                    urlInput.addEventListener('input', () => {
+                        hiddenInput.value = urlInput.value;
+                        updatePreview(urlInput.value);
+                    });
+
+                    // Initialize Uppy
+                    const uppy = new Uppy({
+                        autoProceed: true,
+                        allowMultipleUploads: false,
+                        restrictions: {
+                            maxFileSize: config.maxFileSize || null,
+                            allowedFileTypes: ['image/*'],
+                            maxNumberOfFiles: 1,
+                        },
+                    });
+
+                    uppy.use(Dashboard, {
+                        inline: true,
+                        target: uppyContainer,
+                        height: 150,
+                        hideUploadButton: false,
+                        showProgressDetails: true,
+                        note: 'Upload an image for the hero background',
+                    });
+
+                    if (!config.useDirectUploadToCloud) {
+                        uppy.use(XHRUpload, {
+                            endpoint: `${config.pathBase}/raytha/media-items/upload`,
+                            fieldName: 'file',
+                        });
+
+                        uppy.on('upload-success', (file, response) => {
+                            const body = response && response.body ? response.body : {};
+                            const fields = body.fields || body;
+                            const objectKey = fields.objectKey || '';
+
+                            if (objectKey) {
+                                const imageUrl = `${config.pathBase}/raytha/media-items/objectkey/${objectKey}`;
+                                hiddenInput.value = imageUrl;
+                                showFileInfo(file.name, imageUrl);
+                                uppyContainer.style.display = 'none';
+                            }
+                        });
+                    } else {
+                        uppy.use(AwsS3, {
+                            getUploadParameters: async (file) => {
+                                const presignUrl = `${config.pathBase}/raytha/media-items/presign`;
+                                const ext = file.name.lastIndexOf('.') >= 0 ? file.name.substring(file.name.lastIndexOf('.') + 1) : '';
+
+                                const res = await fetch(presignUrl, {
+                                    method: 'POST',
+                                    headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({ filename: file.name, contentType: file.type, extension: ext }),
+                                });
+
+                                const data = await res.json();
+                                if (data && data.fields) {
+                                    file.meta.uploadId = data.fields.id;
+                                    file.meta.objectKey = data.fields.objectKey;
+                                }
+
+                                return {
+                                    method: 'PUT',
+                                    url: data.url,
+                                    fields: data.fields,
+                                    headers: { 'x-ms-blob-type': 'BlockBlob' },
+                                };
+                            },
+                        });
+
+                        uppy.on('upload-success', async (file, _response) => {
+                            try {
+                                const createUrl = `${config.pathBase}/raytha/media-items/create-after-upload`;
+                                const ext = file.name.lastIndexOf('.') >= 0 ? file.name.substring(file.name.lastIndexOf('.') + 1) : '';
+
+                                await fetch(createUrl, {
+                                    method: 'POST',
+                                    headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({
+                                        filename: file.name,
+                                        contentType: file.type,
+                                        extension: ext,
+                                        id: file.meta.uploadId,
+                                        objectKey: file.meta.objectKey,
+                                        length: file.size,
+                                    }),
+                                });
+
+                                if (file.meta.objectKey) {
+                                    const imageUrl = `${config.pathBase}/raytha/media-items/objectkey/${file.meta.objectKey}`;
+                                    hiddenInput.value = imageUrl;
+                                    showFileInfo(file.name, imageUrl);
+                                    uppyContainer.style.display = 'none';
+                                }
+                            } catch (err) {
+                                console.error('Error in create-after-upload:', err);
+                            }
+                        });
+                    }
+
+                    // Remove button handler
+                    if (removeBtn) {
+                        removeBtn.addEventListener('click', () => {
+                            hiddenInput.value = '';
+                            urlInput.value = '';
+                            fileInfoDiv.hidden = true;
+                            uppyContainer.style.display = 'block';
+                            uppy.reset();
+                            updatePreview('');
+                        });
+                    }
+
+                    function showFileInfo(filename, url) {
+                        if (fileInfoDiv && filenameSpan) {
+                            filenameSpan.textContent = filename;
+                            fileInfoDiv.hidden = false;
+                        }
+                        updatePreview(url);
+                    }
+
+                    function updatePreview(url) {
+                        if (previewDiv && previewImg) {
+                            if (url) {
+                                previewImg.src = url;
+                                previewDiv.style.display = 'block';
+                            } else {
+                                previewDiv.style.display = 'none';
+                            }
+                        }
+                    }
+                });
+            </script>
+        }
+
+        @if (isImageText)
+        {
+            <!-- ImageText Widget Image Upload -->
+            <script type="module">
+                import { ready } from '/js/core/events.js';
+
+                ready(async () => {
+                    const config = window.RaythaContentItemsConfig || {};
+                    const uppyContainer = document.getElementById('imagetext-image-uppy');
+                    const hiddenInput = document.getElementById('ImageTextForm_ImageUrl_Hidden');
+                    const urlInput = document.getElementById('ImageTextForm_ImageUrl_Url');
+                    const fileInfoDiv = document.getElementById('imagetext-image-file-info');
+                    const filenameSpan = document.getElementById('imagetext-image-filename');
+                    const removeBtn = document.getElementById('imagetext-image-remove');
+                    const previewDiv = document.getElementById('imagetext-image-preview');
+                    const previewImg = document.getElementById('imagetext-image-preview-img');
+
+                    if (!uppyContainer || !hiddenInput) return;
+
+                    // Import Uppy
+                    const { Uppy, Dashboard, XHRUpload, AwsS3 } = await import('/raytha_admin/lib/uppy/dist/uppy.min.mjs');
+
+                    // Initialize with existing value
+                    const existingValue = hiddenInput.value || '';
+                    if (existingValue) {
+                        urlInput.value = existingValue;
+                        updatePreview(existingValue);
+                    }
+
+                    // Sync URL input to hidden field
+                    urlInput.addEventListener('input', () => {
+                        hiddenInput.value = urlInput.value;
+                        updatePreview(urlInput.value);
+                    });
+
+                    // Initialize Uppy
+                    const uppy = new Uppy({
+                        autoProceed: true,
+                        allowMultipleUploads: false,
+                        restrictions: {
+                            maxFileSize: config.maxFileSize || null,
+                            allowedFileTypes: ['image/*'],
+                            maxNumberOfFiles: 1,
+                        },
+                    });
+
+                    uppy.use(Dashboard, {
+                        inline: true,
+                        target: uppyContainer,
+                        height: 150,
+                        hideUploadButton: false,
+                        showProgressDetails: true,
+                        note: 'Upload an image',
+                    });
+
+                    if (!config.useDirectUploadToCloud) {
+                        uppy.use(XHRUpload, {
+                            endpoint: `${config.pathBase}/raytha/media-items/upload`,
+                            fieldName: 'file',
+                        });
+
+                        uppy.on('upload-success', (file, response) => {
+                            const body = response && response.body ? response.body : {};
+                            const fields = body.fields || body;
+                            const objectKey = fields.objectKey || '';
+
+                            if (objectKey) {
+                                const imageUrl = `${config.pathBase}/raytha/media-items/objectkey/${objectKey}`;
+                                hiddenInput.value = imageUrl;
+                                showFileInfo(file.name, imageUrl);
+                                uppyContainer.style.display = 'none';
+                            }
+                        });
+                    } else {
+                        uppy.use(AwsS3, {
+                            getUploadParameters: async (file) => {
+                                const presignUrl = `${config.pathBase}/raytha/media-items/presign`;
+                                const ext = file.name.lastIndexOf('.') >= 0 ? file.name.substring(file.name.lastIndexOf('.') + 1) : '';
+
+                                const res = await fetch(presignUrl, {
+                                    method: 'POST',
+                                    headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({ filename: file.name, contentType: file.type, extension: ext }),
+                                });
+
+                                const data = await res.json();
+                                if (data && data.fields) {
+                                    file.meta.uploadId = data.fields.id;
+                                    file.meta.objectKey = data.fields.objectKey;
+                                }
+
+                                return {
+                                    method: 'PUT',
+                                    url: data.url,
+                                    fields: data.fields,
+                                    headers: { 'x-ms-blob-type': 'BlockBlob' },
+                                };
+                            },
+                        });
+
+                        uppy.on('upload-success', async (file, _response) => {
+                            try {
+                                const createUrl = `${config.pathBase}/raytha/media-items/create-after-upload`;
+                                const ext = file.name.lastIndexOf('.') >= 0 ? file.name.substring(file.name.lastIndexOf('.') + 1) : '';
+
+                                await fetch(createUrl, {
+                                    method: 'POST',
+                                    headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({
+                                        filename: file.name,
+                                        contentType: file.type,
+                                        extension: ext,
+                                        id: file.meta.uploadId,
+                                        objectKey: file.meta.objectKey,
+                                        length: file.size,
+                                    }),
+                                });
+
+                                if (file.meta.objectKey) {
+                                    const imageUrl = `${config.pathBase}/raytha/media-items/objectkey/${file.meta.objectKey}`;
+                                    hiddenInput.value = imageUrl;
+                                    showFileInfo(file.name, imageUrl);
+                                    uppyContainer.style.display = 'none';
+                                }
+                            } catch (err) {
+                                console.error('Error in create-after-upload:', err);
+                            }
+                        });
+                    }
+
+                    // Remove button handler
+                    if (removeBtn) {
+                        removeBtn.addEventListener('click', () => {
+                            hiddenInput.value = '';
+                            urlInput.value = '';
+                            fileInfoDiv.hidden = true;
+                            uppyContainer.style.display = 'block';
+                            uppy.reset();
+                            updatePreview('');
+                        });
+                    }
+
+                    function showFileInfo(filename, url) {
+                        if (fileInfoDiv && filenameSpan) {
+                            filenameSpan.textContent = filename;
+                            fileInfoDiv.hidden = false;
+                        }
+                        updatePreview(url);
+                    }
+
+                    function updatePreview(url) {
+                        if (previewDiv && previewImg) {
+                            if (url) {
+                                previewImg.src = url;
+                                previewDiv.style.display = 'block';
+                            } else {
+                                previewDiv.style.display = 'none';
+                            }
+                        }
+                    }
+                });
+            </script>
+        }
+
+        @if (isCard)
+        {
+            <!-- Card Widget Image Upload -->
+            <script type="module">
+                import { ready } from '/js/core/events.js';
+
+                ready(async () => {
+                    const config = window.RaythaContentItemsConfig || {};
+                    const uppyContainer = document.getElementById('card-image-uppy');
+                    const hiddenInput = document.getElementById('CardForm_ImageUrl_Hidden');
+                    const urlInput = document.getElementById('CardForm_ImageUrl_Url');
+                    const fileInfoDiv = document.getElementById('card-image-file-info');
+                    const filenameSpan = document.getElementById('card-image-filename');
+                    const removeBtn = document.getElementById('card-image-remove');
+                    const previewDiv = document.getElementById('card-image-preview');
+                    const previewImg = document.getElementById('card-image-preview-img');
+
+                    if (!uppyContainer || !hiddenInput) return;
+
+                    // Import Uppy
+                    const { Uppy, Dashboard, XHRUpload, AwsS3 } = await import('/raytha_admin/lib/uppy/dist/uppy.min.mjs');
+
+                    // Initialize with existing value
+                    const existingValue = hiddenInput.value || '';
+                    if (existingValue) {
+                        urlInput.value = existingValue;
+                        updatePreview(existingValue);
+                    }
+
+                    // Sync URL input to hidden field
+                    urlInput.addEventListener('input', () => {
+                        hiddenInput.value = urlInput.value;
+                        updatePreview(urlInput.value);
+                    });
+
+                    // Initialize Uppy
+                    const uppy = new Uppy({
+                        autoProceed: true,
+                        allowMultipleUploads: false,
+                        restrictions: {
+                            maxFileSize: config.maxFileSize || null,
+                            allowedFileTypes: ['image/*'],
+                            maxNumberOfFiles: 1,
+                        },
+                    });
+
+                    uppy.use(Dashboard, {
+                        inline: true,
+                        target: uppyContainer,
+                        height: 150,
+                        hideUploadButton: false,
+                        showProgressDetails: true,
+                        note: 'Upload an image',
+                    });
+
+                    if (!config.useDirectUploadToCloud) {
+                        uppy.use(XHRUpload, {
+                            endpoint: `${config.pathBase}/raytha/media-items/upload`,
+                            fieldName: 'file',
+                        });
+
+                        uppy.on('upload-success', (file, response) => {
+                            const body = response && response.body ? response.body : {};
+                            const fields = body.fields || body;
+                            const objectKey = fields.objectKey || '';
+
+                            if (objectKey) {
+                                const imageUrl = `${config.pathBase}/raytha/media-items/objectkey/${objectKey}`;
+                                hiddenInput.value = imageUrl;
+                                showFileInfo(file.name, imageUrl);
+                                uppyContainer.style.display = 'none';
+                            }
+                        });
+                    } else {
+                        uppy.use(AwsS3, {
+                            getUploadParameters: async (file) => {
+                                const presignUrl = `${config.pathBase}/raytha/media-items/presign`;
+                                const ext = file.name.lastIndexOf('.') >= 0 ? file.name.substring(file.name.lastIndexOf('.') + 1) : '';
+
+                                const res = await fetch(presignUrl, {
+                                    method: 'POST',
+                                    headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({ filename: file.name, contentType: file.type, extension: ext }),
+                                });
+
+                                const data = await res.json();
+                                if (data && data.fields) {
+                                    file.meta.uploadId = data.fields.id;
+                                    file.meta.objectKey = data.fields.objectKey;
+                                }
+
+                                return {
+                                    method: 'PUT',
+                                    url: data.url,
+                                    fields: data.fields,
+                                    headers: { 'x-ms-blob-type': 'BlockBlob' },
+                                };
+                            },
+                        });
+
+                        uppy.on('upload-success', async (file, _response) => {
+                            try {
+                                const createUrl = `${config.pathBase}/raytha/media-items/create-after-upload`;
+                                const ext = file.name.lastIndexOf('.') >= 0 ? file.name.substring(file.name.lastIndexOf('.') + 1) : '';
+
+                                await fetch(createUrl, {
+                                    method: 'POST',
+                                    headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({
+                                        filename: file.name,
+                                        contentType: file.type,
+                                        extension: ext,
+                                        id: file.meta.uploadId,
+                                        objectKey: file.meta.objectKey,
+                                        length: file.size,
+                                    }),
+                                });
+
+                                if (file.meta.objectKey) {
+                                    const imageUrl = `${config.pathBase}/raytha/media-items/objectkey/${file.meta.objectKey}`;
+                                    hiddenInput.value = imageUrl;
+                                    showFileInfo(file.name, imageUrl);
+                                    uppyContainer.style.display = 'none';
+                                }
+                            } catch (err) {
+                                console.error('Error in create-after-upload:', err);
+                            }
+                        });
+                    }
+
+                    // Remove button handler
+                    if (removeBtn) {
+                        removeBtn.addEventListener('click', () => {
+                            hiddenInput.value = '';
+                            urlInput.value = '';
+                            fileInfoDiv.hidden = true;
+                            uppyContainer.style.display = 'block';
+                            uppy.reset();
+                            updatePreview('');
+                        });
+                    }
+
+                    function showFileInfo(filename, url) {
+                        if (fileInfoDiv && filenameSpan) {
+                            filenameSpan.textContent = filename;
+                            fileInfoDiv.hidden = false;
+                        }
+                        updatePreview(url);
+                    }
+
+                    function updatePreview(url) {
+                        if (previewDiv && previewImg) {
+                            if (url) {
+                                previewImg.src = url;
+                                previewDiv.style.display = 'block';
+                            } else {
+                                previewDiv.style.display = 'none';
+                            }
+                        }
+                    }
+                });
+            </script>
+        }
+
+        @if (isFaq)
+        {
+            <!-- FAQ Widget Dynamic Items -->
+            <script type="module">
+                import { ready } from '/js/core/events.js';
+                import { initWysiwygField } from '/js/pages/content-items/wysiwyg.js';
+
+                ready(async () => {
+                    const config = window.RaythaContentItemsConfig || {};
+                    const container = document.getElementById('faq-items-container');
+                    const addButton = document.getElementById('add-faq-item');
+                    const template = document.getElementById('faq-item-template');
+
+                    if (!container || !addButton || !template) {
+                        console.error('FAQ elements not found');
+                        return;
+                    }
+
+                    // Track current index
+                    let currentIndex = container.querySelectorAll('.faq-item').length;
+
+                    // Initialize existing FAQ item answer fields
+                    const existingWrappers = container.querySelectorAll('.faq-answer-wrapper');
+                    for (const wrapper of existingWrappers) {
+                        await initWysiwygField(wrapper, config);
+                    }
+
+                    // Attach remove handlers to existing items
+                    container.querySelectorAll('.faq-item').forEach(attachRemoveHandler);
+
+                    // Add new FAQ item
+                    addButton.addEventListener('click', async () => {
+                        const html = template.innerHTML
+                            .replace(/__INDEX__/g, currentIndex)
+                            .replace(/__NUMBER__/g, currentIndex + 1);
+
+                        const tempDiv = document.createElement('div');
+                        tempDiv.innerHTML = html;
+                        const newItem = tempDiv.firstElementChild;
+                        container.appendChild(newItem);
+
+                        // Initialize TipTap on the new answer field
+                        const answerWrapper = newItem.querySelector('.faq-answer-wrapper');
+                        if (answerWrapper) {
+                            await initWysiwygField(answerWrapper, config);
+                        }
+
+                        // Attach remove handler
+                        attachRemoveHandler(newItem);
+
+                        currentIndex++;
+                        updateItemNumbers();
+                    });
+
+                    // Remove FAQ item
+                    function attachRemoveHandler(item) {
+                        const removeBtn = item.querySelector('.remove-faq-item');
+                        if (removeBtn) {
+                            removeBtn.addEventListener('click', () => {
+                                // Don't allow removing if it's the last item
+                                if (container.querySelectorAll('.faq-item').length <= 1) {
+                                    alert('You must have at least one FAQ item.');
+                                    return;
+                                }
+                                item.remove();
+                                updateItemNumbers();
+                                reindexItems();
+                            });
+                        }
+                    }
+
+                    // Update item numbers display
+                    function updateItemNumbers() {
+                        const items = container.querySelectorAll('.faq-item');
+                        items.forEach((item, index) => {
+                            const numberSpan = item.querySelector('.item-number');
+                            if (numberSpan) {
+                                numberSpan.textContent = index + 1;
+                            }
+                        });
+                    }
+
+                    // Reindex items after removal to ensure proper form binding
+                    function reindexItems() {
+                        const items = container.querySelectorAll('.faq-item');
+                        items.forEach((item, index) => {
+                            item.dataset.index = index;
+
+                            // Update question input name
+                            const questionInput = item.querySelector('.faq-question');
+                            if (questionInput) {
+                                questionInput.name = `FaqForm.Items[${index}].Question`;
+                            }
+
+                            // Update answer textarea name and id
+                            const answerTextarea = item.querySelector('textarea[name*="Answer"]');
+                            if (answerTextarea) {
+                                answerTextarea.name = `FaqForm.Items[${index}].Answer`;
+                                answerTextarea.id = `FaqForm_Items_${index}_Answer`;
+                                answerTextarea.dataset.developername = `FaqForm_Items_${index}_Answer`;
+                            }
+
+                            // Update wrapper data attributes
+                            const answerWrapper = item.querySelector('.faq-answer-wrapper');
+                            if (answerWrapper) {
+                                answerWrapper.dataset.developername = `FaqForm_Items_${index}_Answer`;
+                            }
+                        });
+
+                        currentIndex = items.length;
+                    }
+                });
+            </script>
+        }
     }
 }

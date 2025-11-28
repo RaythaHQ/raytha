@@ -47,9 +47,9 @@ public class BuiltInWidgetType : ValueObject
     public static BuiltInWidgetType ImageText => new("Image + Text", "imagetext");
 
     /// <summary>
-    /// Card Grid widget - grid of cards with image, title, description, and link.
+    /// Card widget - single card with image, title, description, and CTA.
     /// </summary>
-    public static BuiltInWidgetType CardGrid => new("Card Grid", "cardgrid");
+    public static BuiltInWidgetType Card => new("Card", "card");
 
     /// <summary>
     /// FAQ widget - expandable accordion of questions and answers.
@@ -129,7 +129,7 @@ public class BuiltInWidgetType : ValueObject
             yield return Hero;
             yield return Wysiwyg;
             yield return ImageText;
-            yield return CardGrid;
+            yield return Card;
             yield return FAQ;
             yield return CTA;
             yield return Embed;

@@ -5,8 +5,54 @@
 <div class="row">
     <div class="col-md-8 mb-3">
         <label class="form-label" asp-for="ImageTextForm.ImageUrl"></label>
-        <input type="url" class="form-control" asp-for="ImageTextForm.ImageUrl"
-            placeholder="https://example.com/image.jpg">
+        
+        <!-- Tabs for URL or Upload -->
+        <ul class="nav nav-tabs mb-2" id="imageTextImageTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="imagetext-url-tab" data-bs-toggle="tab" data-bs-target="#imagetext-url-content" 
+                    type="button" role="tab" aria-controls="imagetext-url-content" aria-selected="true">
+                    <i class="bi bi-link-45deg me-1"></i> URL
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="imagetext-upload-tab" data-bs-toggle="tab" data-bs-target="#imagetext-upload-content" 
+                    type="button" role="tab" aria-controls="imagetext-upload-content" aria-selected="false">
+                    <i class="bi bi-upload me-1"></i> Upload
+                </button>
+            </li>
+        </ul>
+        
+        <div class="tab-content" id="imageTextImageTabContent">
+            <!-- URL Tab -->
+            <div class="tab-pane fade show active" id="imagetext-url-content" role="tabpanel" aria-labelledby="imagetext-url-tab">
+                <input type="url" class="form-control" id="ImageTextForm_ImageUrl_Url" 
+                    placeholder="https://example.com/image.jpg">
+                <div class="form-text">Enter an image URL directly</div>
+            </div>
+            
+            <!-- Upload Tab -->
+            <div class="tab-pane fade" id="imagetext-upload-content" role="tabpanel" aria-labelledby="imagetext-upload-tab">
+                <div id="imagetext-image-uppy"></div>
+                <div id="imagetext-image-uppy-progress"></div>
+                <div id="imagetext-image-file-info" hidden>
+                    <div class="d-flex align-items-center gap-2 p-2 bg-light rounded">
+                        <i class="bi bi-image fs-4 text-primary"></i>
+                        <span id="imagetext-image-filename" class="flex-grow-1"></span>
+                        <button type="button" class="btn btn-sm btn-outline-danger" id="imagetext-image-remove">
+                            <i class="bi bi-x-lg"></i> Remove
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Hidden field that stores the actual value -->
+        <input type="hidden" asp-for="ImageTextForm.ImageUrl" id="ImageTextForm_ImageUrl_Hidden">
+        
+        <!-- Preview -->
+        <div id="imagetext-image-preview" class="mt-2" style="display: none;">
+            <img id="imagetext-image-preview-img" src="" alt="Preview" class="img-thumbnail" style="max-height: 100px;">
+        </div>
     </div>
     <div class="col-md-4 mb-3">
         <label class="form-label" asp-for="ImageTextForm.ImagePosition"></label>
@@ -30,10 +76,15 @@
     <input type="text" class="form-control" asp-for="ImageTextForm.Headline" placeholder="Enter headline">
 </div>
 
-<div class="mb-3">
+<div class="mb-3" id="imagetext-widget-content" 
+     data-field-type="wysiwyg"
+     data-developername="ImageTextForm_Content">
     <label class="form-label" asp-for="ImageTextForm.Content"></label>
-    <textarea class="form-control" asp-for="ImageTextForm.Content" rows="5"
-        placeholder="Enter content (HTML allowed)"></textarea>
+    <div></div>
+    <textarea data-developername="ImageTextForm_Content"
+        id="ImageTextForm_Content"
+        asp-for="ImageTextForm.Content"
+        hidden></textarea>
 </div>
 
 <h6 class="mb-3 mt-4">Button (Optional)</h6>
