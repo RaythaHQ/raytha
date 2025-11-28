@@ -528,6 +528,14 @@ public class RenderEngine : IRenderEngine
         // Make the widget available as "widget" variable
         widgetContext.SetValue("widget", model);
 
+        // Register custom Liquid functions (same as main template rendering)
+        widgetContext.SetValue("get_content_item_by_id", GetContentItemById());
+        widgetContext.SetValue("get_content_items", GetContentItems());
+        widgetContext.SetValue("get_content_type_by_developer_name", GetContentTypeByDeveloperName());
+        widgetContext.SetValue("get_main_menu", GetMainMenu());
+        widgetContext.SetValue("get_menu", GetMenuByDeveloperName());
+        widgetContext.SetValue("raytha_function", RaythaFunction());
+
         return template.Render(widgetContext);
     }
 

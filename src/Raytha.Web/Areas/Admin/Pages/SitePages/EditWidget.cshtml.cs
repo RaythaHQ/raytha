@@ -56,7 +56,8 @@ public class EditWidget : BaseAdminPageModel
     public string SubmitAction { get; set; } = "save";
 
     // For content list widget - content types dropdown
-    public IEnumerable<SelectListItem> ContentTypes { get; set; } = Enumerable.Empty<SelectListItem>();
+    public IEnumerable<SelectListItem> ContentTypes { get; set; } =
+        Enumerable.Empty<SelectListItem>();
 
     public async Task<IActionResult> OnGet(
         string sitePageId,
@@ -146,7 +147,8 @@ public class EditWidget : BaseAdminPageModel
         var settingsJson = SerializeFormToJson(widgetType);
 
         // Get current widgets for the section
-        var currentWidgets = response.Result.Widgets.GetValueOrDefault(sectionName)?.ToList()
+        var currentWidgets =
+            response.Result.Widgets.GetValueOrDefault(sectionName)?.ToList()
             ?? new List<Application.SitePages.SitePageWidgetDto>();
 
         // Find existing widget or create new
@@ -156,18 +158,20 @@ public class EditWidget : BaseAdminPageModel
         if (isNewWidget)
         {
             // Add new widget at the end
-            currentWidgets.Add(new Application.SitePages.SitePageWidgetDto
-            {
-                Id = actualWidgetId,
-                WidgetType = widgetType,
-                SettingsJson = settingsJson,
-                Row = currentWidgets.Count,
-                Column = 0,
-                ColumnSpan = 12,
-                CssClass = AdvancedMeta?.CssClass ?? string.Empty,
-                HtmlId = AdvancedMeta?.HtmlId ?? string.Empty,
-                CustomAttributes = AdvancedMeta?.CustomAttributes ?? string.Empty,
-            });
+            currentWidgets.Add(
+                new Application.SitePages.SitePageWidgetDto
+                {
+                    Id = actualWidgetId,
+                    WidgetType = widgetType,
+                    SettingsJson = settingsJson,
+                    Row = currentWidgets.Count,
+                    Column = 0,
+                    ColumnSpan = 12,
+                    CssClass = AdvancedMeta?.CssClass ?? string.Empty,
+                    HtmlId = AdvancedMeta?.HtmlId ?? string.Empty,
+                    CustomAttributes = AdvancedMeta?.CustomAttributes ?? string.Empty,
+                }
+            );
         }
         else
         {
@@ -210,12 +214,12 @@ public class EditWidget : BaseAdminPageModel
         if (saveResponse.Success)
         {
             SetSuccessMessage($"{WidgetDisplayName} widget saved successfully.");
-            
+
             if (SubmitAction == "save-and-back")
             {
                 return RedirectToPage(RouteNames.SitePages.Layout, new { id = sitePageId });
             }
-            
+
             // Stay on same page - redirect to self with the actual widget ID (important for new widgets)
             return RedirectToPage(
                 RouteNames.SitePages.EditWidget,
@@ -224,7 +228,7 @@ public class EditWidget : BaseAdminPageModel
                     sitePageId,
                     widgetId = actualWidgetId,
                     widgetType,
-                    sectionName
+                    sectionName,
                 }
             );
         }
@@ -351,11 +355,14 @@ public class EditWidget : BaseAdminPageModel
                     Subheadline = faqSettings.Subheadline,
                     BackgroundColor = faqSettings.BackgroundColor,
                     ExpandFirst = faqSettings.ExpandFirst,
-                    Items = faqSettings.Items?.Select(i => new FaqItemFormModel
-                    {
-                        Question = i.Question,
-                        Answer = i.Answer,
-                    }).ToList() ?? new List<FaqItemFormModel>(),
+                    Items =
+                        faqSettings
+                            .Items?.Select(i => new FaqItemFormModel
+                            {
+                                Question = i.Question,
+                                Answer = i.Answer,
+                            })
+                            .ToList() ?? new List<FaqItemFormModel>(),
                 };
                 // Ensure at least one item exists for the form
                 if (FaqForm.Items.Count == 0)
@@ -399,7 +406,10 @@ public class EditWidget : BaseAdminPageModel
 
     private string SerializeFormToJson(string widgetType)
     {
-        var options = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
+        var options = new JsonSerializerOptions
+        {
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+        };
 
         return widgetType switch
         {
@@ -497,13 +507,15 @@ public class EditWidget : BaseAdminPageModel
                     Subheadline = FaqForm?.Subheadline,
                     BackgroundColor = FaqForm?.BackgroundColor,
                     ExpandFirst = FaqForm?.ExpandFirst ?? true,
-                    Items = FaqForm?.Items?
-                        .Where(i => !string.IsNullOrWhiteSpace(i.Question))
-                        .Select(i => new FaqWidgetSettings.FaqItem
-                        {
-                            Question = i.Question,
-                            Answer = i.Answer,
-                        }).ToList() ?? new List<FaqWidgetSettings.FaqItem>(),
+                    Items =
+                        FaqForm
+                            ?.Items?.Where(i => !string.IsNullOrWhiteSpace(i.Question))
+                            .Select(i => new FaqWidgetSettings.FaqItem
+                            {
+                                Question = i.Question,
+                                Answer = i.Answer,
+                            })
+                            .ToList() ?? new List<FaqWidgetSettings.FaqItem>(),
                 },
                 options
             ),
@@ -771,4 +783,3 @@ public class EditWidget : BaseAdminPageModel
         public string CustomAttributes { get; set; } = string.Empty;
     }
 }
-
