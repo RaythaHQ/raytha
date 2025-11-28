@@ -8,6 +8,7 @@ using Raytha.Application.SitePages.Commands;
 using Raytha.Application.SitePages.Queries;
 using Raytha.Application.SitePages.Widgets;
 using Raytha.Application.SitePages.Widgets.Settings;
+using Raytha.Application.Views.Queries;
 using Raytha.Domain.Entities;
 using Raytha.Web.Areas.Admin.Pages.Shared;
 using Raytha.Web.Areas.Admin.Pages.Shared.Models;
@@ -240,6 +241,29 @@ public class EditWidget : BaseAdminPageModel
         }
     }
 
+    /// <summary>
+    /// Returns views for a content type as JSON (used by Content List widget).
+    /// </summary>
+    public async Task<IActionResult> OnGetViews(string contentTypeDeveloperName)
+    {
+        if (string.IsNullOrEmpty(contentTypeDeveloperName))
+        {
+            return new JsonResult(new { items = Array.Empty<object>() });
+        }
+
+        var viewsResponse = await Mediator.Send(
+            new GetViews.Query
+            {
+                ContentTypeDeveloperName = contentTypeDeveloperName,
+                PageSize = 100, // Get all views
+            }
+        );
+
+        var items = viewsResponse.Result.Items.Select(v => new { id = v.Id, label = v.Label });
+
+        return new JsonResult(new { items });
+    }
+
     private async Task InitializeForm(string widgetType, string settingsJson)
     {
         var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
@@ -380,11 +404,11 @@ public class EditWidget : BaseAdminPageModel
                     Headline = contentListSettings.Headline,
                     Subheadline = contentListSettings.Subheadline,
                     ContentType = contentListSettings.ContentType,
+                    ViewId = contentListSettings.ViewId,
                     Filter = contentListSettings.Filter,
                     OrderBy = contentListSettings.OrderBy,
                     PageSize = contentListSettings.PageSize,
                     DisplayStyle = contentListSettings.DisplayStyle,
-                    Columns = contentListSettings.Columns,
                     ShowImage = contentListSettings.ShowImage,
                     ShowDate = contentListSettings.ShowDate,
                     ShowExcerpt = contentListSettings.ShowExcerpt,
@@ -526,11 +550,11 @@ public class EditWidget : BaseAdminPageModel
                     Headline = ContentListForm?.Headline,
                     Subheadline = ContentListForm?.Subheadline,
                     ContentType = ContentListForm?.ContentType ?? string.Empty,
+                    ViewId = ContentListForm?.ViewId,
                     Filter = ContentListForm?.Filter,
-                    OrderBy = ContentListForm?.OrderBy ?? "CreationTime desc",
-                    PageSize = ContentListForm?.PageSize ?? 6,
+                    OrderBy = ContentListForm?.OrderBy,
+                    PageSize = ContentListForm?.PageSize ?? 3,
                     DisplayStyle = ContentListForm?.DisplayStyle ?? "cards",
-                    Columns = ContentListForm?.Columns ?? 3,
                     ShowImage = ContentListForm?.ShowImage ?? true,
                     ShowDate = ContentListForm?.ShowDate ?? true,
                     ShowExcerpt = ContentListForm?.ShowExcerpt ?? true,
@@ -737,20 +761,20 @@ public class EditWidget : BaseAdminPageModel
         [Display(Name = "Content Type")]
         public string ContentType { get; set; } = string.Empty;
 
-        [Display(Name = "Filter")]
-        public string? Filter { get; set; }
+        [Display(Name = "View")]
+        public string? ViewId { get; set; }
+
+        [Display(Name = "Additional Filter")]
+        public string? Filter { get; set; } = "IsPublished eq 'true'";
 
         [Display(Name = "Order By")]
-        public string OrderBy { get; set; } = "CreationTime desc";
+        public string? OrderBy { get; set; }
 
         [Display(Name = "Number of Items")]
-        public int PageSize { get; set; } = 6;
+        public int PageSize { get; set; } = 3;
 
         [Display(Name = "Display Style")]
         public string DisplayStyle { get; set; } = "cards";
-
-        [Display(Name = "Number of Columns")]
-        public int Columns { get; set; } = 3;
 
         [Display(Name = "Show Image")]
         public bool ShowImage { get; set; } = true;

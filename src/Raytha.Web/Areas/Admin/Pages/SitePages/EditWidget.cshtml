@@ -21,12 +21,13 @@
     var isCard = Model.WidgetType == "card";
     var isFaq = Model.WidgetType == "faq";
     var isCta = Model.WidgetType == "cta";
+    var isEmbed = Model.WidgetType == "embed";
     var needsUppy = isWysiwyg || isHero || isImageText || isCard;
     // FAQ handles its own TipTap initialization for dynamic items
     var needsTipTap = isWysiwyg || isImageText || isCard || isCta;
     var needsTipTapCss = needsTipTap || isFaq;
     // Controls whether we need the Scripts section at all
-    var needsScripts = needsUppy || isFaq || isCta;
+    var needsScripts = needsUppy || isFaq || isCta || isEmbed;
 }
 
 <div class="row mb-4">
@@ -824,6 +825,80 @@
                     });
                 } else {
                     initFaqWidget().catch(err => console.error('FAQ init error:', err));
+                }
+            </script>
+        }
+
+        @if (isEmbed)
+        {
+            <!-- Embed Widget CodeMirror for HTML -->
+            <script type="module">
+                import {
+                    EditorState,
+                    EditorView,
+                    basicSetup,
+                    html,
+                    javascript,
+                    css,
+                    indentWithTab,
+                    keymap
+                } from '/raytha_admin/lib/codemirror/codemirror-bundle.js';
+
+                let editorView = null;
+                const embedTypeSelect = document.getElementById('embedTypeSelect');
+                const iframeUrlGroup = document.getElementById('iframeUrlGroup');
+                const htmlContentGroup = document.getElementById('htmlContentGroup');
+                const editorContainer = document.getElementById('embedHtmlEditorContainer');
+                const hiddenInput = document.getElementById('EmbedForm_HtmlContent_Hidden');
+
+                function initCodeMirror() {
+                    if (editorView) return; // Already initialized
+
+                    const initialContent = hiddenInput?.value || '';
+
+                    const startState = EditorState.create({
+                        doc: initialContent,
+                        extensions: [
+                            basicSetup,
+                            html({
+                                matchClosingTags: true,
+                                autoCloseTags: true,
+                                codeLanguages: [javascript(), css()]
+                            }),
+                            keymap.of([indentWithTab]),
+                            EditorView.updateListener.of((update) => {
+                                if (update.docChanged && hiddenInput) {
+                                    hiddenInput.value = editorView.state.doc.toString();
+                                }
+                            })
+                        ],
+                    });
+
+                    editorView = new EditorView({
+                        state: startState,
+                        parent: editorContainer
+                    });
+                }
+
+                function toggleEmbedType(isIframe) {
+                    if (iframeUrlGroup) iframeUrlGroup.style.display = isIframe ? 'block' : 'none';
+                    if (htmlContentGroup) htmlContentGroup.style.display = isIframe ? 'none' : 'block';
+
+                    // Initialize CodeMirror when switching to HTML mode
+                    if (!isIframe) {
+                        initCodeMirror();
+                    }
+                }
+
+                // Listen for embed type changes
+                if (embedTypeSelect) {
+                    embedTypeSelect.addEventListener('change', function () {
+                        toggleEmbedType(this.value === 'iframe');
+                    });
+
+                    // Initialize on page load
+                    const isIframe = embedTypeSelect.value === 'iframe';
+                    toggleEmbedType(isIframe);
                 }
             </script>
         }

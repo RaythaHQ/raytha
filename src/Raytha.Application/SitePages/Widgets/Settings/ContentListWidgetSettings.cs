@@ -21,29 +21,29 @@ public class ContentListWidgetSettings
     public string ContentType { get; set; } = string.Empty;
 
     /// <summary>
-    /// OData filter expression (optional).
+    /// View ID to use for filtering/ordering (optional).
     /// </summary>
-    public string? Filter { get; set; }
+    public string? ViewId { get; set; }
 
     /// <summary>
-    /// Order by expression (default: CreationTime desc).
+    /// Additional OData filter expression (optional).
     /// </summary>
-    public string OrderBy { get; set; } = "CreationTime desc";
+    public string? Filter { get; set; } = "IsPublished eq 'true'";
+
+    /// <summary>
+    /// Order by expression - OData format (optional).
+    /// </summary>
+    public string? OrderBy { get; set; }
 
     /// <summary>
     /// Number of items to display.
     /// </summary>
-    public int PageSize { get; set; } = 6;
+    public int PageSize { get; set; } = 3;
 
     /// <summary>
     /// Display style - cards, list, compact.
     /// </summary>
     public string DisplayStyle { get; set; } = "cards";
-
-    /// <summary>
-    /// Number of columns for card view - 2, 3, 4.
-    /// </summary>
-    public int Columns { get; set; } = 3;
 
     /// <summary>
     /// Show featured image if available.

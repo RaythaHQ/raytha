@@ -1,17 +1,17 @@
 @model Raytha.Web.Areas.Admin.Pages.SitePages.EditWidget
+@inject Raytha.Application.Common.Interfaces.ICurrentOrganization CurrentOrganization
 
 <h6 class="mb-3">Section Header</h6>
 
 <div class="row">
     <div class="col-md-6 mb-3">
         <label class="form-label" asp-for="ContentListForm.Headline"></label>
-        <input type="text" class="form-control" asp-for="ContentListForm.Headline" 
-               placeholder="e.g., Latest Posts">
+        <input type="text" class="form-control" asp-for="ContentListForm.Headline" placeholder="e.g., Latest Posts">
     </div>
     <div class="col-md-6 mb-3">
         <label class="form-label" asp-for="ContentListForm.Subheadline"></label>
-        <input type="text" class="form-control" asp-for="ContentListForm.Subheadline" 
-               placeholder="Optional subheadline">
+        <input type="text" class="form-control" asp-for="ContentListForm.Subheadline"
+            placeholder="Optional subheadline">
     </div>
 </div>
 
@@ -20,41 +20,37 @@
 <div class="row">
     <div class="col-md-6 mb-3">
         <label class="form-label" asp-for="ContentListForm.ContentType"></label>
-        <select class="form-select" asp-for="ContentListForm.ContentType" 
-                asp-items="@Model.ContentTypes">
+        <select class="form-select" asp-for="ContentListForm.ContentType" asp-items="@Model.ContentTypes"
+            id="contentTypeSelect">
             <option value="">-- Select Content Type --</option>
         </select>
     </div>
     <div class="col-md-6 mb-3">
-        <label class="form-label" asp-for="ContentListForm.PageSize"></label>
-        <select class="form-select" asp-for="ContentListForm.PageSize">
-            <option value="3">3 items</option>
-            <option value="4">4 items</option>
-            <option value="6">6 items</option>
-            <option value="8">8 items</option>
-            <option value="10">10 items</option>
-            <option value="12">12 items</option>
+        <label class="form-label" asp-for="ContentListForm.ViewId"></label>
+        <select class="form-select" asp-for="ContentListForm.ViewId" id="viewSelect">
+            <option value="">-- All Items (No View) --</option>
         </select>
+        <div class="form-text">Select a view to use its filter and sort settings</div>
     </div>
 </div>
 
 <div class="row">
     <div class="col-md-6 mb-3">
-        <label class="form-label" asp-for="ContentListForm.OrderBy"></label>
-        <select class="form-select" asp-for="ContentListForm.OrderBy">
-            <option value="CreationTime desc">Newest First</option>
-            <option value="CreationTime asc">Oldest First</option>
-            <option value="LastModificationTime desc">Recently Modified</option>
-            <option value="PrimaryField asc">Title (A-Z)</option>
-            <option value="PrimaryField desc">Title (Z-A)</option>
-        </select>
+        <label class="form-label" asp-for="ContentListForm.PageSize"></label>
+        <input type="number" class="form-control" asp-for="ContentListForm.PageSize" min="1" max="100" placeholder="3">
+        <div class="form-text">Number of items to display</div>
     </div>
     <div class="col-md-6 mb-3">
-        <label class="form-label" asp-for="ContentListForm.Filter"></label>
-        <input type="text" class="form-control" asp-for="ContentListForm.Filter" 
-               placeholder="e.g., IsPublished eq true">
-        <div class="form-text">OData filter expression (optional)</div>
+        <label class="form-label" asp-for="ContentListForm.OrderBy"></label>
+        <input type="text" class="form-control" asp-for="ContentListForm.OrderBy" placeholder="e.g., CreationTime desc">
+        <div class="form-text">OData order expression (optional, overrides view)</div>
     </div>
+</div>
+
+<div class="mb-3">
+    <label class="form-label" asp-for="ContentListForm.Filter"></label>
+    <input type="text" class="form-control" asp-for="ContentListForm.Filter" placeholder="e.g., IsPublished eq true">
+    <div class="form-text">Additional OData filter expression (combined with view filter)</div>
 </div>
 
 <h6 class="mb-3 mt-4">Display Options</h6>
@@ -67,15 +63,6 @@
             <option value="list">List</option>
             <option value="compact">Compact</option>
         </select>
-    </div>
-    <div class="col-md-6 mb-3">
-        <label class="form-label" asp-for="ContentListForm.Columns"></label>
-        <select class="form-select" asp-for="ContentListForm.Columns">
-            <option value="2">2 Columns</option>
-            <option value="3">3 Columns</option>
-            <option value="4">4 Columns</option>
-        </select>
-        <div class="form-text">For card display style</div>
     </div>
 </div>
 
@@ -111,13 +98,11 @@
 <div class="row">
     <div class="col-md-6 mb-3">
         <label class="form-label" asp-for="ContentListForm.LinkText"></label>
-        <input type="text" class="form-control" asp-for="ContentListForm.LinkText" 
-               placeholder="e.g., View all posts">
+        <input type="text" class="form-control" asp-for="ContentListForm.LinkText" placeholder="e.g., View all posts">
     </div>
     <div class="col-md-6 mb-3">
         <label class="form-label" asp-for="ContentListForm.LinkUrl"></label>
-        <input type="text" class="form-control" asp-for="ContentListForm.LinkUrl" 
-               placeholder="/posts">
+        <input type="text" class="form-control" asp-for="ContentListForm.LinkUrl" placeholder="/posts">
     </div>
 </div>
 
@@ -126,10 +111,61 @@
 <div class="mb-3">
     <label class="form-label" asp-for="ContentListForm.BackgroundColor"></label>
     <div class="input-group" style="max-width: 200px;">
-        <input type="color" class="form-control form-control-color" 
-               value="@(Model.ContentListForm?.BackgroundColor ?? "#ffffff")"
-               onchange="document.getElementById('ContentListForm_BackgroundColor').value = this.value">
+        <input type="color" class="form-control form-control-color"
+            value="@(Model.ContentListForm?.BackgroundColor ?? "#ffffff")"
+            onchange="document.getElementById('ContentListForm_BackgroundColor').value = this.value">
         <input type="text" class="form-control" asp-for="ContentListForm.BackgroundColor" placeholder="#ffffff">
     </div>
 </div>
 
+<script>
+    (function () {
+        const contentTypeSelect = document.getElementById('contentTypeSelect');
+        const viewSelect = document.getElementById('viewSelect');
+        const currentViewId = '@(Model.ContentListForm?.ViewId ?? "")';
+
+        async function loadViews(contentTypeDeveloperName) {
+            viewSelect.innerHTML = '<option value="">-- All Items (No View) --</option>';
+
+            if (!contentTypeDeveloperName) return;
+
+            try {
+                // Use the page handler to get views
+                const currentUrl = new URL(window.location.href);
+                currentUrl.searchParams.set('handler', 'Views');
+                currentUrl.searchParams.set('contentTypeDeveloperName', contentTypeDeveloperName);
+
+                const response = await fetch(currentUrl.toString(), {
+                    headers: { 'Accept': 'application/json' }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.items && data.items.length > 0) {
+                        data.items.forEach(view => {
+                            const option = document.createElement('option');
+                            option.value = view.id;
+                            option.textContent = view.label;
+                            if (view.id === currentViewId) {
+                                option.selected = true;
+                            }
+                            viewSelect.appendChild(option);
+                        });
+                    }
+                }
+            } catch (err) {
+                console.error('Error loading views:', err);
+            }
+        }
+
+        // Load views on content type change
+        contentTypeSelect.addEventListener('change', () => {
+            loadViews(contentTypeSelect.value);
+        });
+
+        // Load views on page load if content type is already selected
+        if (contentTypeSelect.value) {
+            loadViews(contentTypeSelect.value);
+        }
+    })();
+</script>

@@ -5,11 +5,11 @@ Settings:
   - headline: Section heading (optional)
   - subheadline: Section subheading (optional)
   - contentType: Developer name of content type to query
-  - filter: OData filter expression (optional)
-  - orderBy: Order by expression (optional, default: CreationTime desc)
-  - pageSize: Number of items to display (default: 6)
+  - viewId: View ID to use for filtering/ordering (optional)
+  - filter: Additional OData filter expression (optional)
+  - orderBy: Order by expression - OData format (optional, overrides view)
+  - pageSize: Number of items to display (default: 3)
   - displayStyle: Display style - cards, list, compact (default: cards)
-  - columns: Number of columns for card view - 2, 3, 4 (default: 3)
   - showImage: Show featured image if available (default: true)
   - showDate: Show creation date (default: true)
   - showExcerpt: Show content excerpt (default: true)
@@ -18,24 +18,19 @@ Settings:
   - backgroundColor: Background color (optional)
 {% endcomment %}
 
-{% assign page_size = widget.settings.pageSize | default: 6 %}
-{% assign order_by = widget.settings.orderBy | default: 'CreationTime desc' %}
+{% assign page_size = widget.settings.pageSize | default: 3 %}
+{% assign order_by = widget.settings.orderBy %}
 {% assign display_style = widget.settings.displayStyle | default: 'cards' %}
-{% assign columns = widget.settings.columns | default: 3 %}
 {% assign show_image = widget.settings.showImage | default: true %}
 {% assign show_date = widget.settings.showDate | default: true %}
 {% assign show_excerpt = widget.settings.showExcerpt | default: true %}
 
-{% assign col_class = 'col-md-4' %}
-{% case columns %}
-  {% when 2 %}
-    {% assign col_class = 'col-md-6' %}
-  {% when 4 %}
-    {% assign col_class = 'col-md-6 col-lg-3' %}
-{% endcase %}
-
 {% if widget.settings.contentType %}
-  {% assign items = get_content_items(ContentType=widget.settings.contentType, Filter=widget.settings.filter, OrderBy=order_by, PageSize=page_size) %}
+  {% if widget.settings.viewId %}
+    {% assign items = get_content_items(ContentType=widget.settings.contentType, ViewId=widget.settings.viewId, Filter=widget.settings.filter, OrderBy=order_by, PageSize=page_size) %}
+  {% else %}
+    {% assign items = get_content_items(ContentType=widget.settings.contentType, Filter=widget.settings.filter, OrderBy=order_by, PageSize=page_size) %}
+  {% endif %}
 {% endif %}
 
 <div class="contentlist-widget py-5"
@@ -62,16 +57,17 @@ Settings:
   
   {% if items and items.Items.size > 0 %}
     {% if display_style == 'cards' %}
-    <div class="row g-4">
+    <div class="d-flex flex-wrap" style="gap: 1.5rem;">
       {% for item in items.Items %}
-      <div class="{{ col_class }}">
+      <div class="contentlist-card" style="flex: 1 1 300px; max-width: 400px;">
         <div class="card h-100 border-0 shadow-sm">
           {% if show_image and item.PublishedContent.featured_image %}
           <img src="{{ item.PublishedContent.featured_image.Value | attachment_public_url }}" 
                class="card-img-top" 
-               alt="{{ item.PrimaryField }}">
+               alt="{{ item.PrimaryField }}"
+               style="height: 200px; object-fit: cover;">
           {% endif %}
-          <div class="card-body">
+          <div class="card-body d-flex flex-column">
             {% if show_date %}
             <small class="text-muted d-block mb-2">
               {{ item.CreationTime | organization_time: "%B %e, %Y" }}
@@ -83,7 +79,7 @@ Settings:
               </a>
             </h5>
             {% if show_excerpt and item.PublishedContent.content %}
-            <p class="card-text text-secondary small">
+            <p class="card-text text-secondary small flex-grow-1">
               {{ item.PublishedContent.content.Text | strip_html | truncate: 100, "..." }}
             </p>
             {% endif %}
@@ -138,4 +134,3 @@ Settings:
   </div>
   {% endif %}
 </div>
-

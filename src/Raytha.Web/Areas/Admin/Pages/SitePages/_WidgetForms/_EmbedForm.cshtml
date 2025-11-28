@@ -19,8 +19,8 @@
 
 <div class="mb-3" id="htmlContentGroup" style="display: none;">
     <label class="form-label" asp-for="EmbedForm.HtmlContent"></label>
-    <textarea class="form-control font-monospace" asp-for="EmbedForm.HtmlContent" rows="8" 
-              placeholder="<script>...</script>"></textarea>
+    <div id="embedHtmlEditorContainer" style="height: 300px; border: 1px solid #dee2e6; border-radius: 0.375rem; overflow: auto;"></div>
+    <input type="hidden" asp-for="EmbedForm.HtmlContent" id="EmbedForm_HtmlContent_Hidden">
     <div class="form-text text-warning">
         <i class="bi bi-exclamation-triangle me-1"></i>
         Be careful with raw HTML - only embed trusted content
@@ -65,21 +65,3 @@
         <input type="text" class="form-control" asp-for="EmbedForm.BackgroundColor" placeholder="#ffffff">
     </div>
 </div>
-
-<script>
-    document.getElementById('embedTypeSelect')?.addEventListener('change', function() {
-        const isIframe = this.value === 'iframe';
-        document.getElementById('iframeUrlGroup').style.display = isIframe ? 'block' : 'none';
-        document.getElementById('htmlContentGroup').style.display = isIframe ? 'none' : 'block';
-    });
-    // Initialize on load
-    (function() {
-        const select = document.getElementById('embedTypeSelect');
-        if (select) {
-            const isIframe = select.value === 'iframe';
-            document.getElementById('iframeUrlGroup').style.display = isIframe ? 'block' : 'none';
-            document.getElementById('htmlContentGroup').style.display = isIframe ? 'none' : 'block';
-        }
-    })();
-</script>
-
