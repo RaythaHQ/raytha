@@ -3,9 +3,10 @@
 
 @{
     var pageTitle = $"Edit: {Model.Form.Label}";
-    Layout = "SidebarLayout";
+    Layout = "SubActionLayout";
     ViewData["Title"] = pageTitle;
     ViewData["ActiveMenu"] = "Themes";
+    ViewData["ActiveSubMenu"] = "Edit";
     var back = new BackLinkOptions
     {
         Page = RouteNames.Themes.WidgetTemplates.Index,
@@ -14,65 +15,55 @@
     };
 }
 
-<partial name="_Partials/PageHeading" model="pageTitle" />
+@(await Html.PartialAsync("_Partials/BackToList", back))
 
-<div class="row mb-4">
-    <div class="col-12">
-        <div class="card border-0 shadow mb-4">
-            <div class="card-body">
-                @(await Html.PartialAsync("_Partials/BackToList", back))
-
-                <div class="alert alert-light border mt-3 mb-4">
-                    <div class="row small">
-                        <div class="col-md-4">
-                            <strong>Widget Type:</strong> <code>@Model.Form.DeveloperName</code>
-                        </div>
-                        <div class="col-md-4">
-                            <strong>Last Modified:</strong> @Model.Form.LastModificationTime
-                        </div>
-                        <div class="col-md-4">
-                            <strong>Modified By:</strong> @Model.Form.LastModifierUser
-                        </div>
-                    </div>
-                </div>
-
-                <form asp-page="@RouteNames.Themes.WidgetTemplates.Edit" 
-                      asp-route-themeId="@Model.Form.ThemeId"
-                      asp-route-id="@Model.Form.Id" 
-                      method="post" 
-                      class="py-2" 
-                      novalidate>
-                    <input type="hidden" asp-for="Form.Id" />
-                    <input type="hidden" asp-for="Form.DeveloperName" />
-                    <input type="hidden" asp-for="Form.IsBuiltInTemplate" />
-
-                    <div class="mb-3">
-                        <label class="form-label raytha-required" asp-for="Form.Label"></label>
-                        <input type="text" class="form-control @Model.HasError("Label")" asp-for="Form.Label" required>
-                        <div class="invalid-feedback">@Model.ErrorMessageFor("Label")</div>
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label raytha-required" asp-for="Form.Content"></label>
-                        <div class="form-text mb-2">
-                            This Liquid template defines how the <strong>@Model.Form.Label</strong> widget is rendered. 
-                            Widget settings are available via <code>widget.settings</code>.
-                        </div>
-                        <div id="editorContainer" style="height:600px;overflow: auto;"></div>
-                        <input type="hidden" asp-for="Form.Content" id="Form_Content">
-                        <div class="invalid-feedback">@Model.ErrorMessageFor("Content")</div>
-                    </div>
-
-                    <input type="hidden" asp-for="Form.Id">
-                    <input type="hidden" asp-for="Form.IsBuiltInTemplate">
-                    <button type="submit" class="btn btn-success mt-4">Publish changes</button>
-                </form>
-            </div>
+<div class="alert alert-light border mt-3 mb-4">
+    <div class="row small">
+        <div class="col-md-4">
+            <strong>Widget Type:</strong> <code>@Model.Form.DeveloperName</code>
+        </div>
+        <div class="col-md-4">
+            <strong>Last Modified:</strong> @Model.Form.LastModificationTime
+        </div>
+        <div class="col-md-4">
+            <strong>Modified By:</strong> @Model.Form.LastModifierUser
         </div>
     </div>
 </div>
 
-<div class="card border-0 shadow mb-4">
+<form asp-page="@RouteNames.Themes.WidgetTemplates.Edit" 
+      asp-route-themeId="@Model.Form.ThemeId"
+      asp-route-id="@Model.Form.Id" 
+      method="post" 
+      class="py-2" 
+      novalidate>
+    <input type="hidden" asp-for="Form.Id" />
+    <input type="hidden" asp-for="Form.DeveloperName" />
+    <input type="hidden" asp-for="Form.IsBuiltInTemplate" />
+
+    <div class="mb-3">
+        <label class="form-label raytha-required" asp-for="Form.Label"></label>
+        <input type="text" class="form-control @Model.HasError("Label")" asp-for="Form.Label" required>
+        <div class="invalid-feedback">@Model.ErrorMessageFor("Label")</div>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label raytha-required" asp-for="Form.Content"></label>
+        <div class="form-text mb-2">
+            This Liquid template defines how the <strong>@Model.Form.Label</strong> widget is rendered. 
+            Widget settings are available via <code>widget.settings</code>.
+        </div>
+        <div id="editorContainer" style="height:600px;overflow: auto;"></div>
+        <input type="hidden" asp-for="Form.Content" id="Form_Content">
+        <div class="invalid-feedback">@Model.ErrorMessageFor("Content")</div>
+    </div>
+
+    <input type="hidden" asp-for="Form.Id">
+    <input type="hidden" asp-for="Form.IsBuiltInTemplate">
+    <button type="submit" class="btn btn-success mt-4">Publish changes</button>
+</form>
+
+<div class="card border-0 shadow mb-4 mt-4">
     <div class="card-header">
         <h6 class="mb-0">Widget Settings Reference</h6>
     </div>
@@ -101,6 +92,7 @@
     </div>
 </div>
 
+@section Scripts {
 <script type="module">
     import { 
         EditorState,
@@ -138,4 +130,4 @@
         parent: document.getElementById('editorContainer')
     });
 </script>
-
+}

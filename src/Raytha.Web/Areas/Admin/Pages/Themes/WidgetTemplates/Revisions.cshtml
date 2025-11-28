@@ -1,5 +1,5 @@
-@page "/raytha/themes/edit/{themeId}/web-templates/edit/{id}/revisions"
-@model Raytha.Web.Areas.Admin.Pages.Themes.WebTemplates.Revisions
+@page "/raytha/themes/edit/{themeId}/widget-templates/edit/{id}/revisions"
+@model Raytha.Web.Areas.Admin.Pages.Themes.WidgetTemplates.Revisions
 
 @{
     var pageTitle = "View revisions";
@@ -18,7 +18,7 @@
                     Pagination = Model.ListView,
                     PropertyName = "CreationTime",
                     DisplayName =
-                                ViewModelExtensions.GetDisplayName<Revisions.WebTemplatesRevisionsListItemViewModel>(p
+                                ViewModelExtensions.GetDisplayName<Revisions.WidgetTemplatesRevisionsListItemViewModel>(p
                                 => p.CreationTime)
                 }))
                 <th class="border-0"></th>
@@ -35,10 +35,10 @@
             {
                 <tr>
                     <td class="align-middle">
-                        <form method="post" asp-page="@RouteNames.Themes.WebTemplates.Revisions" asp-page-handler="Revert"
+                        <form method="post" asp-page="@RouteNames.Themes.WidgetTemplates.Revisions" asp-page-handler="Revert"
                             asp-route-revisionId="@item.Id" asp-route-id="@Model.ListView.TemplateId"
                             asp-route-themeId="@Model.ListView.ThemeId"
-                            onsubmit="return confirm('Are you sure you want to revert to this web template?');">
+                            onsubmit="return confirm('Are you sure you want to revert to this widget template?');">
                             <button class="btn btn-sm btn-success">
                                 Revert
                             </button>
@@ -76,3 +76,4 @@
     </table>
     <partial name="_Partials/TablePagination" model="@Model.ListView" />
 </div>
+

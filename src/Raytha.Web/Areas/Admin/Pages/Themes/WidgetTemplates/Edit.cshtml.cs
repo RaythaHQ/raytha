@@ -13,7 +13,7 @@ using Raytha.Web.Areas.Shared.Models;
 namespace Raytha.Web.Areas.Admin.Pages.Themes.WidgetTemplates;
 
 [Authorize(Policy = BuiltInSystemPermission.MANAGE_TEMPLATES_PERMISSION)]
-public class Edit : BaseAdminPageModel
+public class Edit : BaseAdminPageModel, ISubActionViewModel
 {
     [BindProperty]
     public FormModel Form { get; set; }
