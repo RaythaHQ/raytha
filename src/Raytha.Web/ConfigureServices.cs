@@ -135,6 +135,11 @@ public static class ConfigureServices
             );
             options.AddPolicy(
                 RaythaApiAuthorizationHandler.POLICY_PREFIX
+                    + BuiltInSystemPermission.MANAGE_SITE_PAGES_PERMISSION,
+                policy => policy.Requirements.Add(new ApiManageSitePagesRequirement())
+            );
+            options.AddPolicy(
+                RaythaApiAuthorizationHandler.POLICY_PREFIX
                     + BuiltInContentTypePermission.CONTENT_TYPE_CONFIG_PERMISSION,
                 policy =>
                     policy.Requirements.Add(

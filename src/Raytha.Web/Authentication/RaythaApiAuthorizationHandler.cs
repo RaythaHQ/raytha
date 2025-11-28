@@ -27,6 +27,8 @@ public class ApiManageContentTypesRequirement : IHasApiKeyRequirement { }
 
 public class ApiManageMediaItemsRequirement : IHasApiKeyRequirement { }
 
+public class ApiManageSitePagesRequirement : IHasApiKeyRequirement { }
+
 public class ApiContentTypePermissionRequirement : IHasApiKeyRequirement
 {
     public ApiContentTypePermissionRequirement(string permission) => Permission = permission;
@@ -158,6 +160,17 @@ public class RaythaApiAuthorizationHandler : IAuthorizationHandler
                     {
                         context.Succeed(requirement);
                     }
+                }
+            }
+            else if (requirement is ApiManageSitePagesRequirement)
+            {
+                if (
+                    systemPermissions.Contains(
+                        BuiltInSystemPermission.MANAGE_SITE_PAGES_PERMISSION
+                    )
+                )
+                {
+                    context.Succeed(requirement);
                 }
             }
             else if (requirement is ApiContentTypePermissionRequirement)

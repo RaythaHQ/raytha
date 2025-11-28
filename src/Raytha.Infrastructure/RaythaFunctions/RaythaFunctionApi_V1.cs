@@ -10,9 +10,18 @@ using Raytha.Application.ContentTypes;
 using Raytha.Application.ContentTypes.Queries;
 using Raytha.Application.MediaItems;
 using Raytha.Application.MediaItems.Queries;
+using Raytha.Application.NavigationMenuItems;
+using Raytha.Application.NavigationMenuItems.Commands;
+using Raytha.Application.NavigationMenuItems.Queries;
+using Raytha.Application.NavigationMenus;
+using Raytha.Application.NavigationMenus.Commands;
+using Raytha.Application.NavigationMenus.Queries;
 using Raytha.Application.RaythaFunctions.Commands;
 using Raytha.Application.Routes;
 using Raytha.Application.Routes.Queries;
+using Raytha.Application.SitePages;
+using Raytha.Application.SitePages.Commands;
+using Raytha.Application.SitePages.Queries;
 using Raytha.Application.Themes.WebTemplates;
 using Raytha.Application.Themes.WebTemplates.Queries;
 using Raytha.Application.UserGroups;
@@ -409,6 +418,244 @@ public class RaythaFunctionApi_V1 : IRaythaFunctionApi_V1
                     RequestMethod = requestMethod,
                     QueryJson = queryJson,
                     PayloadJson = payloadJson,
+                }
+            )
+            .Result;
+    }
+
+    // SitePage methods
+    public IQueryResponseDto<ListResultDto<SitePageDto>> GetSitePages(
+        string search = "",
+        string orderBy = "",
+        int pageNumber = 1,
+        int pageSize = 50
+    )
+    {
+        return Mediator
+            .Send(
+                new GetSitePages.Query
+                {
+                    Search = search,
+                    OrderBy = orderBy,
+                    PageNumber = pageNumber,
+                    PageSize = pageSize,
+                }
+            )
+            .Result;
+    }
+
+    public IQueryResponseDto<SitePageDto> GetSitePageById(string sitePageId)
+    {
+        return Mediator.Send(new GetSitePageById.Query { Id = sitePageId }).Result;
+    }
+
+    public ICommandResponseDto<ShortGuid> CreateSitePage(
+        string title,
+        bool saveAsDraft,
+        string templateId
+    )
+    {
+        return Mediator
+            .Send(
+                new CreateSitePage.Command
+                {
+                    Title = title,
+                    SaveAsDraft = saveAsDraft,
+                    TemplateId = templateId,
+                }
+            )
+            .Result;
+    }
+
+    public ICommandResponseDto<ShortGuid> EditSitePage(
+        string sitePageId,
+        string title,
+        bool saveAsDraft,
+        string templateId
+    )
+    {
+        return Mediator
+            .Send(
+                new EditSitePage.Command
+                {
+                    Id = sitePageId,
+                    Title = title,
+                    SaveAsDraft = saveAsDraft,
+                    TemplateId = templateId,
+                }
+            )
+            .Result;
+    }
+
+    public ICommandResponseDto<ShortGuid> EditSitePageSettings(string sitePageId, string routePath)
+    {
+        return Mediator
+            .Send(new EditSitePageSettings.Command { Id = sitePageId, RoutePath = routePath })
+            .Result;
+    }
+
+    public ICommandResponseDto<ShortGuid> PublishSitePage(string sitePageId)
+    {
+        return Mediator.Send(new PublishSitePage.Command { Id = sitePageId }).Result;
+    }
+
+    public ICommandResponseDto<ShortGuid> UnpublishSitePage(string sitePageId)
+    {
+        return Mediator.Send(new UnpublishSitePage.Command { Id = sitePageId }).Result;
+    }
+
+    public ICommandResponseDto<ShortGuid> DeleteSitePage(string sitePageId)
+    {
+        return Mediator.Send(new DeleteSitePage.Command { Id = sitePageId }).Result;
+    }
+
+    // NavigationMenu methods
+    public IQueryResponseDto<ListResultDto<NavigationMenuDto>> GetNavigationMenus(
+        string search = "",
+        string orderBy = "",
+        int pageNumber = 1,
+        int pageSize = 50
+    )
+    {
+        return Mediator
+            .Send(
+                new GetNavigationMenus.Query
+                {
+                    Search = search,
+                    OrderBy = orderBy,
+                    PageNumber = pageNumber,
+                    PageSize = pageSize,
+                }
+            )
+            .Result;
+    }
+
+    public IQueryResponseDto<NavigationMenuDto> GetNavigationMenuById(string navigationMenuId)
+    {
+        return Mediator.Send(new GetNavigationMenuById.Query { Id = navigationMenuId }).Result;
+    }
+
+    public IQueryResponseDto<NavigationMenuDto> GetNavigationMenuByDeveloperName(
+        string developerName
+    )
+    {
+        return Mediator
+            .Send(new GetNavigationMenuByDeveloperName.Query { DeveloperName = developerName })
+            .Result;
+    }
+
+    public ICommandResponseDto<ShortGuid> CreateNavigationMenu(string label, string developerName)
+    {
+        return Mediator
+            .Send(new CreateNavigationMenu.Command { Label = label, DeveloperName = developerName })
+            .Result;
+    }
+
+    public ICommandResponseDto<ShortGuid> EditNavigationMenu(string navigationMenuId, string label)
+    {
+        return Mediator
+            .Send(new EditNavigationMenu.Command { Id = navigationMenuId, Label = label })
+            .Result;
+    }
+
+    public ICommandResponseDto<ShortGuid> DeleteNavigationMenu(string navigationMenuId)
+    {
+        return Mediator.Send(new DeleteNavigationMenu.Command { Id = navigationMenuId }).Result;
+    }
+
+    // NavigationMenuItem methods
+    public IQueryResponseDto<
+        IReadOnlyCollection<NavigationMenuItemDto>
+    > GetNavigationMenuItemsByNavigationMenuId(string navigationMenuId)
+    {
+        return Mediator
+            .Send(
+                new GetNavigationMenuItemsByNavigationMenuId.Query
+                {
+                    NavigationMenuId = navigationMenuId,
+                }
+            )
+            .Result;
+    }
+
+    public IQueryResponseDto<NavigationMenuItemDto> GetNavigationMenuItemById(
+        string navigationMenuItemId
+    )
+    {
+        return Mediator
+            .Send(new GetNavigationMenuItemById.Query { Id = navigationMenuItemId })
+            .Result;
+    }
+
+    public ICommandResponseDto<ShortGuid> CreateNavigationMenuItem(
+        string navigationMenuId,
+        string label,
+        string url,
+        bool isDisabled,
+        bool openInNewTab,
+        string cssClassName,
+        string parentNavigationMenuItemId
+    )
+    {
+        return Mediator
+            .Send(
+                new CreateNavigationMenuItem.Command
+                {
+                    NavigationMenuId = navigationMenuId,
+                    Label = label,
+                    Url = url,
+                    IsDisabled = isDisabled,
+                    OpenInNewTab = openInNewTab,
+                    CssClassName = cssClassName,
+                    ParentNavigationMenuItemId = string.IsNullOrEmpty(parentNavigationMenuItemId)
+                        ? null
+                        : (ShortGuid)parentNavigationMenuItemId,
+                }
+            )
+            .Result;
+    }
+
+    public ICommandResponseDto<ShortGuid> EditNavigationMenuItem(
+        string navigationMenuItemId,
+        string navigationMenuId,
+        string label,
+        string url,
+        bool isDisabled,
+        bool openInNewTab,
+        string cssClassName,
+        string parentNavigationMenuItemId
+    )
+    {
+        return Mediator
+            .Send(
+                new EditNavigationMenuItem.Command
+                {
+                    Id = navigationMenuItemId,
+                    NavigationMenuId = navigationMenuId,
+                    Label = label,
+                    Url = url,
+                    IsDisabled = isDisabled,
+                    OpenInNewTab = openInNewTab,
+                    CssClassName = cssClassName,
+                    ParentNavigationMenuItemId = string.IsNullOrEmpty(parentNavigationMenuItemId)
+                        ? null
+                        : (ShortGuid)parentNavigationMenuItemId,
+                }
+            )
+            .Result;
+    }
+
+    public ICommandResponseDto<ShortGuid> DeleteNavigationMenuItem(
+        string navigationMenuItemId,
+        string navigationMenuId
+    )
+    {
+        return Mediator
+            .Send(
+                new DeleteNavigationMenuItem.Command
+                {
+                    Id = navigationMenuItemId,
+                    NavigationMenuId = navigationMenuId,
                 }
             )
             .Result;
