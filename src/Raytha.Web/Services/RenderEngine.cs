@@ -116,7 +116,8 @@ public class RenderEngine : IRenderEngine
         context.SetValue("get_main_menu", GetMainMenu());
         context.SetValue("get_menu", GetMenuByDeveloperName());
         context.SetValue("raytha_function", RaythaFunction());
-        context.SetValue("section", RenderSection(context));
+        context.SetValue("render_section", RenderSectionFunction(context));
+        context.SetValue("get_section", GetSectionFunction(context));
 
         return template.Render(context);
     }
@@ -372,15 +373,26 @@ public class RenderEngine : IRenderEngine
 
     /// <summary>
     /// Renders widgets for a named section in a Site Page template.
-    /// Usage: {{ section("main") }} or {% for widget in section("sidebar") %}...{% endfor %}
+    /// Usage: {{ render_section("main") }}
+    ///        {{ render_section("main", wrap=false) }}
+    ///        {{ render_section("main", row_class="my-row", col_class="my-col") }}
     ///
     /// The function retrieves widgets from the SitePage.Widgets dictionary,
     /// sorts them by Row then Column, and renders each using its widget template.
-    /// Widgets are wrapped in Bootstrap row/column structure.
+    ///
+    /// Optional named arguments (ignored when wrap=false):
+    /// - wrap: Boolean (default: true). When true, widgets are wrapped in row/column structure.
+    ///         When false, widgets are rendered without any wrapper divs and all other args are ignored.
+    /// - row_class: CSS class for row divs (default: "row")
+    /// - col_class: CSS class for column divs. If not set, uses "col-md-{span}" based on widget's column span.
+    /// - row_id: ID attribute for row divs (default: none)
+    /// - col_id: ID attribute for column divs (default: none)
+    /// - row_attributes: Additional HTML attributes for row divs (default: none)
+    /// - col_attributes: Additional HTML attributes for column divs (default: none)
     ///
     /// For content-type templates (non-Site Pages), this function returns empty string.
     /// </summary>
-    public FunctionValue RenderSection(TemplateContext parentContext)
+    public FunctionValue RenderSectionFunction(TemplateContext parentContext)
     {
         return new FunctionValue(
             async (args, context) =>
@@ -420,27 +432,92 @@ public class RenderEngine : IRenderEngine
                     return new StringValue(string.Empty);
                 }
 
+                // Parse optional named arguments with defaults
+                var wrap = true;
+                var rowClass = "row";
+                string? colClass = null; // null = use default "col-md-{span}" based on widget
+                var rowId = "";
+                var colId = "";
+                var rowAttributes = "";
+                var colAttributes = "";
+
+                var argNames = args.Names.ToList();
+                for (int i = 1; i < args.Count; i++)
+                {
+                    var nameIndex = i - 1;
+                    if (nameIndex < argNames.Count && !string.IsNullOrEmpty(argNames[nameIndex]))
+                    {
+                        var argName = argNames[nameIndex];
+                        var argValue = args.At(i);
+
+                        if (argName.Equals("wrap", StringComparison.OrdinalIgnoreCase))
+                            wrap = argValue.ToBooleanValue();
+                        else if (argName.Equals("row_class", StringComparison.OrdinalIgnoreCase))
+                            rowClass = argValue.ToStringValue();
+                        else if (argName.Equals("col_class", StringComparison.OrdinalIgnoreCase))
+                            colClass = argValue.ToStringValue();
+                        else if (argName.Equals("row_id", StringComparison.OrdinalIgnoreCase))
+                            rowId = argValue.ToStringValue();
+                        else if (argName.Equals("col_id", StringComparison.OrdinalIgnoreCase))
+                            colId = argValue.ToStringValue();
+                        else if (
+                            argName.Equals("row_attributes", StringComparison.OrdinalIgnoreCase)
+                        )
+                            rowAttributes = argValue.ToStringValue();
+                        else if (
+                            argName.Equals("col_attributes", StringComparison.OrdinalIgnoreCase)
+                        )
+                            colAttributes = argValue.ToStringValue();
+                    }
+                }
+
                 // Sort widgets by Row, then by Column
                 var sortedWidgets = sectionWidgets
                     .OrderBy(w => w.Row)
                     .ThenBy(w => w.Column)
                     .ToList();
 
-                // Group widgets by Row for Bootstrap row structure
+                // Group widgets by Row for row structure
                 var widgetsByRow = sortedWidgets.GroupBy(w => w.Row).OrderBy(g => g.Key);
 
                 var htmlBuilder = new StringBuilder();
 
                 foreach (var rowGroup in widgetsByRow)
                 {
-                    htmlBuilder.AppendLine("<div class=\"row\">");
+                    if (wrap)
+                    {
+                        // Build row opening tag
+                        var rowTag = new StringBuilder("<div");
+                        if (!string.IsNullOrEmpty(rowClass))
+                            rowTag.Append($" class=\"{rowClass}\"");
+                        if (!string.IsNullOrEmpty(rowId))
+                            rowTag.Append($" id=\"{rowId}\"");
+                        if (!string.IsNullOrEmpty(rowAttributes))
+                            rowTag.Append($" {rowAttributes}");
+                        rowTag.Append(">");
+
+                        htmlBuilder.AppendLine(rowTag.ToString());
+                    }
 
                     foreach (var widget in rowGroup.OrderBy(w => w.Column))
                     {
-                        // Calculate Bootstrap column class
-                        var colClass = $"col-md-{widget.ColumnSpan}";
+                        if (wrap)
+                        {
+                            // Use provided col_class or default to Bootstrap responsive class
+                            var effectiveColClass = colClass ?? $"col-md-{widget.ColumnSpan}";
 
-                        htmlBuilder.AppendLine($"  <div class=\"{colClass}\">");
+                            // Build column opening tag
+                            var colTag = new StringBuilder("  <div");
+                            if (!string.IsNullOrEmpty(effectiveColClass))
+                                colTag.Append($" class=\"{effectiveColClass}\"");
+                            if (!string.IsNullOrEmpty(colId))
+                                colTag.Append($" id=\"{colId}\"");
+                            if (!string.IsNullOrEmpty(colAttributes))
+                                colTag.Append($" {colAttributes}");
+                            colTag.Append(">");
+
+                            htmlBuilder.AppendLine(colTag.ToString());
+                        }
 
                         try
                         {
@@ -488,17 +565,176 @@ public class RenderEngine : IRenderEngine
                         {
                             // Widget template not found or rendering error
                             htmlBuilder.AppendLine(
-                                $"    <!-- Widget rendering error: {widget.WidgetType} - {ex.Message} -->"
+                                $"<!-- Widget rendering error: {widget.WidgetType} - {ex.Message} -->"
                             );
                         }
 
-                        htmlBuilder.AppendLine("  </div>");
+                        if (wrap)
+                        {
+                            htmlBuilder.AppendLine("  </div>");
+                        }
                     }
 
-                    htmlBuilder.AppendLine("</div>");
+                    if (wrap)
+                    {
+                        htmlBuilder.AppendLine("</div>");
+                    }
                 }
 
                 return new StringValue(htmlBuilder.ToString());
+            }
+        );
+    }
+
+    /// <summary>
+    /// Returns raw widget data for a named section, allowing full control over rendering.
+    /// Usage: {% for widget in get_section("sidebar") %}...{% endfor %}
+    ///
+    /// Each widget object contains:
+    /// - id: Widget instance ID
+    /// - type: Widget type developer name
+    /// - content: Pre-rendered widget template HTML
+    /// - settings: Widget settings dictionary
+    /// - row: Row number
+    /// - column: Column number
+    /// - column_span: Bootstrap column span (1-12)
+    /// - css_class: Custom CSS class
+    /// - html_id: Custom HTML ID
+    /// - custom_attributes: Custom HTML attributes
+    /// - is_row_start: True if this widget starts a new row
+    /// - is_row_end: True if this widget ends its row
+    ///
+    /// For content-type templates (non-Site Pages), this function returns an empty array.
+    /// </summary>
+    public FunctionValue GetSectionFunction(TemplateContext parentContext)
+    {
+        return new FunctionValue(
+            async (args, context) =>
+            {
+                var sectionName = args.At(0).ToStringValue();
+
+                if (string.IsNullOrEmpty(sectionName))
+                {
+                    return new ArrayValue(new List<FluidValue>());
+                }
+
+                // Try to get SitePage data from ambient values
+                if (
+                    !context.AmbientValues.TryGetValue("SitePageWidgets", out var widgetsObj)
+                    || widgetsObj
+                        is not Dictionary<string, List<SitePageWidgetRenderData>> allWidgets
+                )
+                {
+                    // No Site Page widgets available - this is a content type template
+                    return new ArrayValue(new List<FluidValue>());
+                }
+
+                if (
+                    !context.AmbientValues.TryGetValue("ThemeId", out var themeIdObj)
+                    || themeIdObj is not Guid themeId
+                )
+                {
+                    return new ArrayValue(new List<FluidValue>());
+                }
+
+                // Get widgets for this section
+                if (
+                    !allWidgets.TryGetValue(sectionName, out var sectionWidgets)
+                    || !sectionWidgets.Any()
+                )
+                {
+                    return new ArrayValue(new List<FluidValue>());
+                }
+
+                // Sort widgets by Row, then by Column
+                var sortedWidgets = sectionWidgets
+                    .OrderBy(w => w.Row)
+                    .ThenBy(w => w.Column)
+                    .ToList();
+
+                // Group by row to determine row start/end flags
+                var widgetsByRow = sortedWidgets
+                    .GroupBy(w => w.Row)
+                    .OrderBy(g => g.Key)
+                    .ToDictionary(g => g.Key, g => g.OrderBy(w => w.Column).ToList());
+
+                var widgetArray = new List<FluidValue>();
+
+                foreach (var widget in sortedWidgets)
+                {
+                    var rowWidgets = widgetsByRow[widget.Row];
+                    var isRowStart = rowWidgets.First() == widget;
+                    var isRowEnd = rowWidgets.Last() == widget;
+
+                    string renderedContent;
+                    var settings = new Dictionary<string, object>();
+
+                    try
+                    {
+                        // Get the widget template
+                        var templateResponse = await _mediator.Send(
+                            new GetWidgetTemplateByDeveloperName.Query
+                            {
+                                DeveloperName = widget.WidgetType,
+                                ThemeId = themeId,
+                            }
+                        );
+
+                        var widgetTemplateContent = templateResponse.Result.Content;
+
+                        // Parse widget settings from JSON
+                        if (!string.IsNullOrEmpty(widget.SettingsJson))
+                        {
+                            using var doc = JsonDocument.Parse(widget.SettingsJson);
+                            settings = ConvertJsonElementToDictionary(doc.RootElement);
+                        }
+
+                        // Create render model for the widget
+                        var widgetModel = new
+                        {
+                            id = widget.Id,
+                            type = widget.WidgetType,
+                            settings = settings,
+                            row = widget.Row,
+                            column = widget.Column,
+                            columnSpan = widget.ColumnSpan,
+                            css_class = widget.CssClass,
+                            html_id = widget.HtmlId,
+                            custom_attributes = widget.CustomAttributes,
+                        };
+
+                        // Render the widget template
+                        renderedContent = RenderWidgetTemplate(widgetTemplateContent, widgetModel);
+                    }
+                    catch (Exception ex)
+                    {
+                        renderedContent =
+                            $"<!-- Widget rendering error: {widget.WidgetType} - {ex.Message} -->";
+                    }
+
+                    // Create widget object for template access
+                    var widgetObj = new ObjectValue(
+                        new
+                        {
+                            id = widget.Id,
+                            type = widget.WidgetType,
+                            content = renderedContent,
+                            settings = settings,
+                            row = widget.Row,
+                            column = widget.Column,
+                            column_span = widget.ColumnSpan,
+                            css_class = widget.CssClass ?? string.Empty,
+                            html_id = widget.HtmlId ?? string.Empty,
+                            custom_attributes = widget.CustomAttributes ?? string.Empty,
+                            is_row_start = isRowStart,
+                            is_row_end = isRowEnd,
+                        }
+                    );
+
+                    widgetArray.Add(widgetObj);
+                }
+
+                return new ArrayValue(widgetArray);
             }
         );
     }
@@ -531,7 +767,10 @@ public class RenderEngine : IRenderEngine
         // Register custom Liquid functions (same as main template rendering)
         widgetContext.SetValue("get_content_item_by_id", GetContentItemById());
         widgetContext.SetValue("get_content_items", GetContentItems());
-        widgetContext.SetValue("get_content_type_by_developer_name", GetContentTypeByDeveloperName());
+        widgetContext.SetValue(
+            "get_content_type_by_developer_name",
+            GetContentTypeByDeveloperName()
+        );
         widgetContext.SetValue("get_main_menu", GetMainMenu());
         widgetContext.SetValue("get_menu", GetMenuByDeveloperName());
         widgetContext.SetValue("raytha_function", RaythaFunction());

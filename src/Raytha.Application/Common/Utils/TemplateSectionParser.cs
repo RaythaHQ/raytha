@@ -7,18 +7,20 @@ namespace Raytha.Application.Common.Utils;
 /// </summary>
 public static class TemplateSectionParser
 {
-    // Patterns to match various section() function call syntaxes:
-    // {{ section "main" }}
-    // {{ section 'main' }}
-    // {{ section("main") }}
-    // {{ section('main') }}
+    // Patterns to match render_section() and get_section() function call syntaxes:
+    // {{ render_section("main") }}
+    // {{ render_section('main') }}
+    // {{ get_section("main") }}
+    // {{ get_section('main') }}
+    // {% for widget in get_section("sidebar") %}
     private static readonly Regex SectionPattern = new(
-        @"section\s*[\(""]?\s*['""]([^'""]+)['""][\)""]?\s*",
+        @"(?:render_section|get_section)\s*\(\s*['""]([^'""]+)['""]\s*",
         RegexOptions.Compiled | RegexOptions.IgnoreCase
     );
 
     /// <summary>
     /// Extracts all section names from a Liquid template string.
+    /// Looks for both render_section() and get_section() function calls.
     /// </summary>
     /// <param name="templateContent">The template content to parse</param>
     /// <returns>A list of unique section names found in the template</returns>
@@ -45,4 +47,3 @@ public static class TemplateSectionParser
         return sections.ToList();
     }
 }
-
