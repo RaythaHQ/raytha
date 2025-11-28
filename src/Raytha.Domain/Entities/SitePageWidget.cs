@@ -38,4 +38,19 @@ public class SitePageWidget
     /// Maps to Bootstrap col-md-{ColumnSpan}.
     /// </summary>
     public int ColumnSpan { get; set; } = 12;
+
+    /// <summary>
+    /// Optional CSS class(es) to add to the widget wrapper element.
+    /// </summary>
+    public string CssClass { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Optional HTML id attribute for the widget wrapper element.
+    /// </summary>
+    public string HtmlId { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Optional custom HTML attributes as a string (e.g., "data-aos='fade-up' data-delay='100'").
+    /// </summary>
+    public string CustomAttributes { get; set; } = string.Empty;
 }

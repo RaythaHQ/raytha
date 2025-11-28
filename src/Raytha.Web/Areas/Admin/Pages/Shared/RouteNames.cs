@@ -292,6 +292,7 @@ public static class RouteNames
         public const string Delete = "/SitePages/Delete";
         public const string Layout = "/SitePages/Layout";
         public const string EditWidget = "/SitePages/EditWidget";
+        public const string Revisions = "/SitePages/Revisions";
     }
 
     /// <summary>

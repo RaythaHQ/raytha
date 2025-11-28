@@ -30,4 +30,7 @@ public class SitePageWidgetRenderData
     public int Row { get; set; }
     public int Column { get; set; }
     public int ColumnSpan { get; set; } = 12;
+    public string CssClass { get; set; } = string.Empty;
+    public string HtmlId { get; set; } = string.Empty;
+    public string CustomAttributes { get; set; } = string.Empty;
 }

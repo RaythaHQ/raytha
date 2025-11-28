@@ -1,10 +1,16 @@
 @model Raytha.Web.Areas.Admin.Pages.SitePages.EditWidget
 
-<div class="mb-3">
-    <label class="form-label" asp-for="WysiwygForm.Content"></label>
-    <textarea class="form-control" asp-for="WysiwygForm.Content" rows="15"
-        placeholder="Enter HTML content..."></textarea>
-    <div class="form-text">You can enter HTML content directly. A WYSIWYG editor can be integrated later.</div>
+<div class="mb-3" id="wysiwyg-widget-content" 
+     data-field-type="wysiwyg"
+     data-developername="WysiwygForm_Content">
+    <div class="mb-3">
+        <label class="form-label" asp-for="WysiwygForm.Content">Content</label>
+        <div></div>
+        <textarea data-developername="WysiwygForm_Content"
+            id="WysiwygForm_Content"
+            asp-for="WysiwygForm.Content"
+            hidden></textarea>
+    </div>
 </div>
 
 <h6 class="mb-3 mt-4">Appearance</h6>

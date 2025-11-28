@@ -49,6 +49,9 @@ public class EditWidget : BaseAdminPageModel
     [BindProperty]
     public ContentListFormModel ContentListForm { get; set; }
 
+    [BindProperty]
+    public AdvancedMetaFormModel AdvancedMeta { get; set; } = new AdvancedMetaFormModel();
+
     // For content list widget - content types dropdown
     public IEnumerable<SelectListItem> ContentTypes { get; set; } = Enumerable.Empty<SelectListItem>();
 
@@ -102,6 +105,13 @@ public class EditWidget : BaseAdminPageModel
             if (widget != null)
             {
                 existingSettings = widget.SettingsJson ?? "{}";
+                // Load advanced meta fields
+                AdvancedMeta = new AdvancedMetaFormModel
+                {
+                    CssClass = widget.CssClass,
+                    HtmlId = widget.HtmlId,
+                    CustomAttributes = widget.CustomAttributes,
+                };
             }
         }
 
@@ -151,16 +161,25 @@ public class EditWidget : BaseAdminPageModel
                 Row = currentWidgets.Count,
                 Column = 0,
                 ColumnSpan = 12,
+                CssClass = AdvancedMeta?.CssClass ?? string.Empty,
+                HtmlId = AdvancedMeta?.HtmlId ?? string.Empty,
+                CustomAttributes = AdvancedMeta?.CustomAttributes ?? string.Empty,
             });
         }
         else
         {
-            // Update existing widget settings
+            // Update existing widget settings and meta fields
             var existingIndex = currentWidgets.FindIndex(w => w.Id == widgetId);
             if (existingIndex >= 0)
             {
                 var existing = currentWidgets[existingIndex];
-                currentWidgets[existingIndex] = existing with { SettingsJson = settingsJson };
+                currentWidgets[existingIndex] = existing with
+                {
+                    SettingsJson = settingsJson,
+                    CssClass = AdvancedMeta?.CssClass ?? string.Empty,
+                    HtmlId = AdvancedMeta?.HtmlId ?? string.Empty,
+                    CustomAttributes = AdvancedMeta?.CustomAttributes ?? string.Empty,
+                };
             }
         }
 
@@ -177,6 +196,9 @@ public class EditWidget : BaseAdminPageModel
                 Row = w.Row,
                 Column = w.Column,
                 ColumnSpan = w.ColumnSpan,
+                CssClass = w.CssClass,
+                HtmlId = w.HtmlId,
+                CustomAttributes = w.CustomAttributes,
             }),
         };
 
@@ -687,6 +709,18 @@ public class EditWidget : BaseAdminPageModel
 
         [Display(Name = "Background Color")]
         public string? BackgroundColor { get; set; }
+    }
+
+    public record AdvancedMetaFormModel
+    {
+        [Display(Name = "CSS Class")]
+        public string CssClass { get; set; } = string.Empty;
+
+        [Display(Name = "HTML ID")]
+        public string HtmlId { get; set; } = string.Empty;
+
+        [Display(Name = "Custom Attributes")]
+        public string CustomAttributes { get; set; } = string.Empty;
     }
 }
 

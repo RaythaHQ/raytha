@@ -1,9 +1,11 @@
 using System.Text.Json;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Raytha.Application.Common.Utils;
 using Raytha.Application.SitePages.Commands;
 using Raytha.Application.SitePages.Queries;
 using Raytha.Application.SitePages.Widgets;
+using Raytha.Application.Themes.WebTemplates.Queries;
 using Raytha.Domain.Entities;
 using Raytha.Web.Areas.Admin.Pages.Shared;
 using Raytha.Web.Areas.Admin.Pages.Shared.Models;
@@ -12,11 +14,17 @@ using Raytha.Web.Areas.Shared.Models;
 namespace Raytha.Web.Areas.Admin.Pages.SitePages;
 
 [Authorize(Policy = BuiltInSystemPermission.MANAGE_SITE_PAGES_PERMISSION)]
-public class Layout : BaseAdminPageModel
+public class Layout : BaseAdminPageModel, ISubActionViewModel
 {
     public SitePageViewModel SitePage { get; set; }
     public IEnumerable<WidgetTypeViewModel> AvailableWidgetTypes { get; set; }
     public string WidgetsJson { get; set; }
+    public IReadOnlyList<string> DetectedSections { get; set; } = new List<string>();
+    
+    // ISubActionViewModel properties
+    public string Id { get; set; }
+    public string? RoutePath { get; set; }
+    public string Title { get; set; }
 
     public async Task<IActionResult> OnGet(string id)
     {
@@ -67,6 +75,9 @@ public class Layout : BaseAdminPageModel
                             w.WidgetType,
                             w.SettingsJson
                         ),
+                        CssClass = w.CssClass,
+                        HtmlId = w.HtmlId,
+                        CustomAttributes = w.CustomAttributes,
                     })
                     .ToList()
         );
@@ -80,6 +91,24 @@ public class Layout : BaseAdminPageModel
             IsDraft = response.Result.IsDraft,
             Widgets = widgetsWithSummaries,
         };
+        
+        // ISubActionViewModel properties
+        Id = response.Result.Id;
+        Title = response.Result.Title;
+        RoutePath = response.Result.RoutePath;
+        
+        // Fetch template content and detect sections
+        var templateResponse = await Mediator.Send(new GetWebTemplateById.Query 
+        { 
+            Id = response.Result.WebTemplateId 
+        });
+        DetectedSections = TemplateSectionParser.ExtractSectionNames(templateResponse.Result.Content);
+        
+        // If no sections detected, default to "main"
+        if (DetectedSections.Count == 0)
+        {
+            DetectedSections = new List<string> { "main" };
+        }
 
         // Serialize widgets for JavaScript
         WidgetsJson = JsonSerializer.Serialize(
@@ -118,9 +147,27 @@ public class Layout : BaseAdminPageModel
                 Row = w.Row,
                 Column = w.Column,
                 ColumnSpan = w.ColumnSpan,
+                CssClass = w.CssClass,
+                HtmlId = w.HtmlId,
+                CustomAttributes = w.CustomAttributes,
             }),
         };
 
+        var response = await Mediator.Send(input);
+
+        if (response.Success)
+        {
+            return new JsonResult(new { success = true, isDraft = true });
+        }
+        else
+        {
+            return new JsonResult(new { success = false, errors = response.GetErrors() });
+        }
+    }
+
+    public async Task<IActionResult> OnPostPublish(string id)
+    {
+        var input = new PublishSitePage.Command { Id = id };
         var response = await Mediator.Send(input);
 
         if (response.Success)
@@ -130,6 +177,23 @@ public class Layout : BaseAdminPageModel
         else
         {
             return new JsonResult(new { success = false, errors = response.GetErrors() });
+        }
+    }
+
+    public async Task<IActionResult> OnPostDiscardDraft(string id)
+    {
+        var input = new DiscardDraftSitePage.Command { Id = id };
+        var response = await Mediator.Send(input);
+
+        if (response.Success)
+        {
+            SetSuccessMessage("Draft changes have been discarded.");
+            return RedirectToPage(RouteNames.SitePages.Layout, new { id });
+        }
+        else
+        {
+            SetErrorMessage("There was an error discarding the draft.", response.GetErrors());
+            return RedirectToPage(RouteNames.SitePages.Layout, new { id });
         }
     }
 
@@ -147,6 +211,9 @@ public class Layout : BaseAdminPageModel
         public int Row { get; init; }
         public int Column { get; init; }
         public int ColumnSpan { get; init; } = 12;
+        public string CssClass { get; init; } = string.Empty;
+        public string HtmlId { get; init; } = string.Empty;
+        public string CustomAttributes { get; init; } = string.Empty;
     }
 
     public record SitePageViewModel
@@ -170,6 +237,9 @@ public class Layout : BaseAdminPageModel
         public string DisplayName { get; init; }
         public string IconClass { get; init; }
         public string AdminSummary { get; init; }
+        public string CssClass { get; init; } = string.Empty;
+        public string HtmlId { get; init; } = string.Empty;
+        public string CustomAttributes { get; init; } = string.Empty;
     }
 
     public record WidgetTypeViewModel

@@ -41,6 +41,21 @@ public record SitePageWidgetDto
     /// </summary>
     public int ColumnSpan { get; init; } = 12;
 
+    /// <summary>
+    /// Optional CSS class(es) to add to the widget wrapper element.
+    /// </summary>
+    public string CssClass { get; init; } = string.Empty;
+
+    /// <summary>
+    /// Optional HTML id attribute for the widget wrapper element.
+    /// </summary>
+    public string HtmlId { get; init; } = string.Empty;
+
+    /// <summary>
+    /// Optional custom HTML attributes as a string.
+    /// </summary>
+    public string CustomAttributes { get; init; } = string.Empty;
+
     public static SitePageWidgetDto GetProjection(SitePageWidget entity)
     {
         if (entity == null)
@@ -54,6 +69,9 @@ public record SitePageWidgetDto
             Row = entity.Row,
             Column = entity.Column,
             ColumnSpan = entity.ColumnSpan,
+            CssClass = entity.CssClass ?? string.Empty,
+            HtmlId = entity.HtmlId ?? string.Empty,
+            CustomAttributes = entity.CustomAttributes ?? string.Empty,
         };
     }
 
@@ -70,6 +88,9 @@ public record SitePageWidgetDto
             Row = Row,
             Column = Column,
             ColumnSpan = ColumnSpan,
+            CssClass = CssClass ?? string.Empty,
+            HtmlId = HtmlId ?? string.Empty,
+            CustomAttributes = CustomAttributes ?? string.Empty,
         };
     }
 }

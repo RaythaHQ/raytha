@@ -10,6 +10,11 @@ Settings:
   - backgroundColor: Background color (default: #0d6efd)
   - textColor: Text color (default: #ffffff)
   - alignment: Text alignment - left, center, right (default: center)
+
+Advanced Meta Fields (available on all widgets):
+  - widget.css_class: Custom CSS classes
+  - widget.html_id: Custom HTML ID attribute
+  - widget.custom_attributes: Custom HTML attributes string
 {% endcomment %}
 
 {% assign bg_color = widget.settings.backgroundColor | default: '#0d6efd' %}
@@ -17,7 +22,9 @@ Settings:
 {% assign alignment = widget.settings.alignment | default: 'center' %}
 {% assign button_style = widget.settings.buttonStyle | default: 'light' %}
 
-<div class="cta-widget py-5 text-{{ alignment }}"
+<div class="cta-widget py-5 text-{{ alignment }}{% if widget.css_class %} {{ widget.css_class }}{% endif %}"
+     {% if widget.html_id %}id="{{ widget.html_id }}"{% endif %}
+     {{ widget.custom_attributes }}
      style="background-color: {{ bg_color }}; color: {{ text_color }};">
   <div class="py-4">
     {% if widget.settings.headline %}

@@ -62,8 +62,8 @@ public class SitePageActionViewResult : IActionResult
             PathBase = currentOrg.PathBase,
         };
 
-        // Convert widgets to render data format
-        var widgetsForRender = _sitePageDto.Widgets.ToDictionary(
+        // Convert PUBLISHED widgets to render data format (use published version for public rendering)
+        var widgetsForRender = _sitePageDto.PublishedWidgets.ToDictionary(
             kvp => kvp.Key,
             kvp =>
                 kvp.Value
@@ -75,6 +75,9 @@ public class SitePageActionViewResult : IActionResult
                         Row = w.Row,
                         Column = w.Column,
                         ColumnSpan = w.ColumnSpan,
+                        CssClass = w.CssClass,
+                        HtmlId = w.HtmlId,
+                        CustomAttributes = w.CustomAttributes,
                     })
                     .ToList()
         );

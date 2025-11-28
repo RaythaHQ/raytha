@@ -12,6 +12,11 @@ Settings:
   - buttonStyle: Button style - primary, secondary, outline-light, etc.
   - alignment: Text alignment - left, center, right
   - minHeight: Minimum height in pixels (default: 400)
+
+Advanced Meta Fields (available on all widgets):
+  - widget.css_class: Custom CSS classes
+  - widget.html_id: Custom HTML ID attribute
+  - widget.custom_attributes: Custom HTML attributes string
 {% endcomment %}
 
 {% assign bg_color = widget.settings.backgroundColor | default: '#0d6efd' %}
@@ -20,7 +25,9 @@ Settings:
 {% assign min_height = widget.settings.minHeight | default: 400 %}
 {% assign button_style = widget.settings.buttonStyle | default: 'light' %}
 
-<div class="hero-widget position-relative d-flex align-items-center justify-content-{{ alignment }}"
+<div class="hero-widget position-relative d-flex align-items-center justify-content-{{ alignment }}{% if widget.css_class %} {{ widget.css_class }}{% endif %}"
+     {% if widget.html_id %}id="{{ widget.html_id }}"{% endif %}
+     {{ widget.custom_attributes }}
      style="min-height: {{ min_height }}px; background-color: {{ bg_color }}; color: {{ text_color }};
             {% if widget.settings.backgroundImage %}background-image: url('{{ widget.settings.backgroundImage }}'); background-size: cover; background-position: center;{% endif %}">
   

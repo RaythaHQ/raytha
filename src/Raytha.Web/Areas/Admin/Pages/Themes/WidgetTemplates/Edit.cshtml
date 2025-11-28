@@ -58,20 +58,14 @@
                             This Liquid template defines how the <strong>@Model.Form.Label</strong> widget is rendered. 
                             Widget settings are available via <code>widget.settings</code>.
                         </div>
-                        <textarea class="form-control font-monospace @Model.HasError("Content")" 
-                                  asp-for="Form.Content" 
-                                  rows="25" 
-                                  required
-                                  style="font-size: 13px;"></textarea>
+                        <div id="editorContainer" style="height:600px;overflow: auto;"></div>
+                        <input type="hidden" asp-for="Form.Content" id="Form_Content">
                         <div class="invalid-feedback">@Model.ErrorMessageFor("Content")</div>
                     </div>
 
-                    <div class="d-flex justify-content-between align-items-center mt-4">
-                        <button type="submit" class="btn btn-success">Save changes</button>
-                        <a asp-page="@RouteNames.Themes.WidgetTemplates.Index" 
-                           asp-route-themeId="@Model.Form.ThemeId"
-                           class="btn btn-outline-secondary">Cancel</a>
-                    </div>
+                    <input type="hidden" asp-for="Form.Id">
+                    <input type="hidden" asp-for="Form.IsBuiltInTemplate">
+                    <button type="submit" class="btn btn-success mt-4">Publish changes</button>
                 </form>
             </div>
         </div>
@@ -106,4 +100,42 @@
 &#123;% endfor %&#125;</code></pre>
     </div>
 </div>
+
+<script type="module">
+    import { 
+        EditorState,
+        EditorView,
+        basicSetup,
+        html,
+        javascript,
+        css,
+        indentWithTab,
+        keymap
+    } from '/raytha_admin/lib/codemirror/codemirror-bundle.js';
+
+    // --- CodeMirror editor ---
+    const startState = EditorState.create({
+        doc: @Html.Raw(Json.Serialize(Model.Form.Content ?? string.Empty)),
+        extensions: [
+            basicSetup,
+            html({
+                matchClosingTags: true,
+                autoCloseTags: true,
+                codeLanguages: [javascript(), css()]
+            }),
+            keymap.of([indentWithTab]),
+            EditorView.updateListener.of((update) => {
+                if (update.docChanged) {
+                    const el = document.getElementById('Form_Content');
+                    if (el) el.value = view.state.doc.toString();
+                }
+            })
+        ],
+    });
+
+    const view = new EditorView({
+        state: startState,
+        parent: document.getElementById('editorContainer')
+    });
+</script>
 

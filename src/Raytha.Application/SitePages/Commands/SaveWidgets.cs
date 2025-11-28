@@ -61,6 +61,21 @@ public class SaveWidgets
         /// Number of columns this widget spans (1-12).
         /// </summary>
         public int ColumnSpan { get; init; } = 12;
+
+        /// <summary>
+        /// Optional CSS class(es) to add to the widget wrapper element.
+        /// </summary>
+        public string CssClass { get; init; } = string.Empty;
+
+        /// <summary>
+        /// Optional HTML id attribute for the widget wrapper element.
+        /// </summary>
+        public string HtmlId { get; init; } = string.Empty;
+
+        /// <summary>
+        /// Optional custom HTML attributes as a string.
+        /// </summary>
+        public string CustomAttributes { get; init; } = string.Empty;
     }
 
     public class Validator : AbstractValidator<Command>
@@ -162,8 +177,20 @@ public class SaveWidgets
         {
             var entity = _db.SitePages.First(p => p.Id == request.Id.Guid);
 
-            // Get current widgets dictionary
-            var currentWidgets = entity.Widgets;
+            // Get current widgets - if we have a draft, use that; otherwise start from published
+            Dictionary<string, List<SitePageWidget>> currentWidgets;
+            if (entity.IsDraft && !string.IsNullOrEmpty(entity._DraftWidgetsJson))
+            {
+                currentWidgets = entity.DraftWidgets;
+            }
+            else
+            {
+                // Start draft from published content
+                currentWidgets = entity.PublishedWidgets.ToDictionary(
+                    kvp => kvp.Key,
+                    kvp => kvp.Value.ToList()
+                );
+            }
 
             // Convert input to domain entities
             var sectionWidgets = request
@@ -175,14 +202,18 @@ public class SaveWidgets
                     Row = w.Row,
                     Column = w.Column,
                     ColumnSpan = w.ColumnSpan,
+                    CssClass = w.CssClass ?? string.Empty,
+                    HtmlId = w.HtmlId ?? string.Empty,
+                    CustomAttributes = w.CustomAttributes ?? string.Empty,
                 })
                 .ToList();
 
             // Update the section
             currentWidgets[request.SectionName] = sectionWidgets;
 
-            // Save back to entity
-            entity.Widgets = currentWidgets;
+            // Save to draft and mark as having draft changes
+            entity.DraftWidgets = currentWidgets;
+            entity.IsDraft = true;
 
             await _db.SaveChangesAsync(cancellationToken);
 

@@ -54,11 +54,17 @@ public record SitePageDto : BaseAuditableEntityDto
     public AuditableUserDto? LastModifierUser { get; init; }
 
     /// <summary>
-    /// Dictionary of widgets organized by section name.
-    /// Key = section developer name (e.g., "hero", "main", "sidebar")
-    /// Value = list of widgets for that section
+    /// Dictionary of current working widgets (draft if available, otherwise published).
+    /// Use for admin editing.
     /// </summary>
     public Dictionary<string, List<SitePageWidgetDto>> Widgets { get; init; } =
+        new Dictionary<string, List<SitePageWidgetDto>>();
+
+    /// <summary>
+    /// Dictionary of published widgets.
+    /// Use for public rendering.
+    /// </summary>
+    public Dictionary<string, List<SitePageWidgetDto>> PublishedWidgets { get; init; } =
         new Dictionary<string, List<SitePageWidgetDto>>();
 
     public static Expression<Func<SitePage, SitePageDto>> GetProjection()
@@ -88,6 +94,10 @@ public record SitePageDto : BaseAuditableEntityDto
             CreatorUser = AuditableUserDto.GetProjection(entity.CreatorUser),
             LastModifierUser = AuditableUserDto.GetProjection(entity.LastModifierUser),
             Widgets = entity.Widgets.ToDictionary(
+                kvp => kvp.Key,
+                kvp => kvp.Value.Select(SitePageWidgetDto.GetProjection).ToList()
+            ),
+            PublishedWidgets = entity.PublishedWidgets.ToDictionary(
                 kvp => kvp.Key,
                 kvp => kvp.Value.Select(SitePageWidgetDto.GetProjection).ToList()
             ),

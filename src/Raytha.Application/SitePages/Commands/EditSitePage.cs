@@ -6,6 +6,7 @@ using Raytha.Application.Common.Exceptions;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Models;
 using Raytha.Application.Common.Utils;
+using Raytha.Domain.Entities;
 
 namespace Raytha.Application.SitePages.Commands;
 
@@ -100,10 +101,29 @@ public class EditSitePage
 
             if (request.SaveAsDraft)
             {
+                // Save as draft - keep changes in draft state
                 entity.IsDraft = true;
             }
             else
             {
+                // Publish - create revision of current published state before publishing new content
+                if (!string.IsNullOrEmpty(entity._PublishedWidgetsJson))
+                {
+                    _db.SitePageRevisions.Add(
+                        new SitePageRevision
+                        {
+                            SitePageId = entity.Id,
+                            _PublishedWidgetsJson = entity._PublishedWidgetsJson,
+                        }
+                    );
+                }
+                
+                // Copy draft to published if there are draft changes
+                if (entity.IsDraft && !string.IsNullOrEmpty(entity._DraftWidgetsJson))
+                {
+                    entity._PublishedWidgetsJson = entity._DraftWidgetsJson;
+                    entity._DraftWidgetsJson = null;
+                }
                 entity.IsDraft = false;
                 entity.IsPublished = true;
             }

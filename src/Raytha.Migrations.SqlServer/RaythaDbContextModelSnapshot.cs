@@ -1091,10 +1091,13 @@ namespace Raytha.Migrations.SqlServer
                     b.Property<Guid>("WebTemplateId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<string>("_WidgetsJson")
-                        .IsRequired()
+                    b.Property<string>("_DraftWidgetsJson")
                         .HasColumnType("nvarchar(max)")
-                        .HasColumnName("_WidgetsJson");
+                        .HasColumnName("_DraftWidgetsJson");
+
+                    b.Property<string>("_PublishedWidgetsJson")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("_PublishedWidgetsJson");
 
                     b.HasKey("Id");
 
@@ -1108,6 +1111,42 @@ namespace Raytha.Migrations.SqlServer
                     b.HasIndex("WebTemplateId");
 
                     b.ToTable("SitePages");
+                });
+
+            modelBuilder.Entity("Raytha.Domain.Entities.SitePageRevision", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreationTime")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("CreatorUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("LastModificationTime")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("LastModifierUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("SitePageId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("_PublishedWidgetsJson")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("_PublishedWidgetsJson");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatorUserId");
+
+                    b.HasIndex("LastModifierUserId");
+
+                    b.HasIndex("SitePageId");
+
+                    b.ToTable("SitePageRevisions");
                 });
 
             modelBuilder.Entity("Raytha.Domain.Entities.Theme", b =>
@@ -2097,6 +2136,29 @@ namespace Raytha.Migrations.SqlServer
                     b.Navigation("Route");
 
                     b.Navigation("WebTemplate");
+                });
+
+            modelBuilder.Entity("Raytha.Domain.Entities.SitePageRevision", b =>
+                {
+                    b.HasOne("Raytha.Domain.Entities.User", "CreatorUser")
+                        .WithMany()
+                        .HasForeignKey("CreatorUserId");
+
+                    b.HasOne("Raytha.Domain.Entities.User", "LastModifierUser")
+                        .WithMany()
+                        .HasForeignKey("LastModifierUserId");
+
+                    b.HasOne("Raytha.Domain.Entities.SitePage", "SitePage")
+                        .WithMany()
+                        .HasForeignKey("SitePageId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("CreatorUser");
+
+                    b.Navigation("LastModifierUser");
+
+                    b.Navigation("SitePage");
                 });
 
             modelBuilder.Entity("Raytha.Domain.Entities.Theme", b =>

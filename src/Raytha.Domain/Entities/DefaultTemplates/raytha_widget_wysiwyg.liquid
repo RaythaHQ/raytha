@@ -5,6 +5,11 @@ Settings:
   - content: HTML content from WYSIWYG editor
   - backgroundColor: Background color (optional)
   - padding: Padding size - none, small, medium, large
+
+Advanced Meta Fields (available on all widgets):
+  - widget.css_class: Custom CSS classes
+  - widget.html_id: Custom HTML ID attribute
+  - widget.custom_attributes: Custom HTML attributes string
 {% endcomment %}
 
 {% assign padding_class = 'py-4' %}
@@ -17,7 +22,9 @@ Settings:
     {% assign padding_class = 'py-5' %}
 {% endcase %}
 
-<div class="wysiwyg-widget {{ padding_class }}"
+<div class="wysiwyg-widget {{ padding_class }}{% if widget.css_class %} {{ widget.css_class }}{% endif %}"
+     {% if widget.html_id %}id="{{ widget.html_id }}"{% endif %}
+     {{ widget.custom_attributes }}
      {% if widget.settings.backgroundColor %}style="background-color: {{ widget.settings.backgroundColor }};"{% endif %}>
   <div class="wysiwyg-content">
     {{ widget.settings.content }}

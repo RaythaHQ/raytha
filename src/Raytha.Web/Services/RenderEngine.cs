@@ -472,6 +472,9 @@ public class RenderEngine : IRenderEngine
                                 row = widget.Row,
                                 column = widget.Column,
                                 columnSpan = widget.ColumnSpan,
+                                css_class = widget.CssClass,
+                                html_id = widget.HtmlId,
+                                custom_attributes = widget.CustomAttributes,
                             };
 
                             // Render the widget template

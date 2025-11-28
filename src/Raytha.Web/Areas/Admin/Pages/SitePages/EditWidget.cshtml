@@ -1,5 +1,7 @@
 @page "/raytha/site-pages/{sitePageId}/widget/edit"
 @model Raytha.Web.Areas.Admin.Pages.SitePages.EditWidget
+@inject IFileStorageProviderSettings FileStorageSettings
+@inject ICurrentOrganization CurrentOrganization
 
 @{
     Layout = "SidebarLayout";
@@ -12,6 +14,8 @@
         RouteValues = new RouteValueDictionary { ["id"] = Model.SitePageId },
         Text = "Back to layout"
     };
+    
+    var isWysiwyg = Model.WidgetType == "wysiwyg";
 }
 
 <div class="row mb-4">
@@ -71,6 +75,38 @@
                             break;
                     }
 
+                    <!-- Advanced Meta Fields -->
+                    <div class="accordion mt-4" id="advancedAccordion">
+                        <div class="accordion-item">
+                            <h2 class="accordion-header" id="advancedHeading">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                                    data-bs-target="#advancedCollapse" aria-expanded="false" aria-controls="advancedCollapse">
+                                    <i class="bi bi-gear me-2"></i> Advanced
+                                </button>
+                            </h2>
+                            <div id="advancedCollapse" class="accordion-collapse collapse" aria-labelledby="advancedHeading"
+                                data-bs-parent="#advancedAccordion">
+                                <div class="accordion-body">
+                                    <div class="mb-3">
+                                        <label asp-for="AdvancedMeta.CssClass" class="form-label"></label>
+                                        <input asp-for="AdvancedMeta.CssClass" class="form-control" placeholder="e.g., my-custom-class another-class" />
+                                        <div class="form-text">Add custom CSS classes to the widget wrapper element.</div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label asp-for="AdvancedMeta.HtmlId" class="form-label"></label>
+                                        <input asp-for="AdvancedMeta.HtmlId" class="form-control" placeholder="e.g., my-section" />
+                                        <div class="form-text">Set a unique HTML ID for anchor links or JavaScript targeting.</div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label asp-for="AdvancedMeta.CustomAttributes" class="form-label"></label>
+                                        <input asp-for="AdvancedMeta.CustomAttributes" class="form-control" placeholder="e.g., data-aos=fade-up data-delay=100" />
+                                        <div class="form-text">Add custom HTML attributes (e.g., for animations or data attributes).</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="d-flex justify-content-between align-items-center mt-4 pt-3 border-top">
                         <button type="submit" class="btn btn-success">
                             <i class="bi bi-check-lg me-1"></i> Save Widget
@@ -85,3 +121,38 @@
         </div>
     </div>
 </div>
+
+@if (isWysiwyg)
+{
+    @section Scripts {
+        <!-- Load Uppy CSS -->
+        <link href="~/raytha_admin/lib/uppy/dist/uppy.min.css" rel="stylesheet">
+
+        <!-- Load TipTap WYSIWYG CSS -->
+        <link href="~/css/pages/content-items/wysiwyg.css" rel="stylesheet">
+
+        <!-- Global configuration for WYSIWYG -->
+        <script>
+            window.RaythaContentItemsConfig = {
+                pathBase: '@CurrentOrganization.PathBase',
+                maxFileSize: @FileStorageSettings.MaxFileSize,
+                allowedMimeTypes: '@FileStorageSettings.AllowedMimeTypes',
+                useDirectUploadToCloud: @FileStorageSettings.UseDirectUploadToCloud.ToString().ToLower(),
+                imageMediaItems: [],
+                videoMediaItems: []
+            };
+        </script>
+
+        <!-- Load WYSIWYG module for widget editor -->
+        <script type="module">
+            import { ready } from '/js/core/events.js';
+            import { initAllWysiwygFields } from '/js/pages/content-items/wysiwyg.js';
+
+            ready(() => {
+                const config = window.RaythaContentItemsConfig || {};
+                console.log('Initializing WYSIWYG for widget editor...', config);
+                initAllWysiwygFields(config);
+            });
+        </script>
+    }
+}

@@ -39,6 +39,7 @@ public interface IRaythaDbContext
     public DbSet<WebTemplateViewRelation> WebTemplateViewRelations { get; }
     public DbSet<WebTemplateContentItemRelation> WebTemplateContentItemRelations { get; }
     public DbSet<SitePage> SitePages { get; }
+    public DbSet<SitePageRevision> SitePageRevisions { get; }
     public DbSet<WidgetTemplate> WidgetTemplates { get; }
     public DbSet<WidgetTemplateRevision> WidgetTemplateRevisions { get; }
     public DbContext DbContext { get; }

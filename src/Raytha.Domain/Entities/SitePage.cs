@@ -45,44 +45,104 @@ public class SitePage : BaseAuditableEntity
     public virtual WebTemplate? WebTemplate { get; set; }
 
     /// <summary>
-    /// JSON-serialized dictionary of widgets by section name.
-    /// Key = section developer name (e.g., "hero", "main", "sidebar")
-    /// Value = ordered list of widgets for that section
+    /// JSON-serialized dictionary of draft widgets by section name.
+    /// This stores the current working version (edits before publishing).
     /// </summary>
-    public string _WidgetsJson { get; set; } = "{}";
-
-    private Dictionary<string, List<SitePageWidget>>? _widgetsDeserialized;
+    public string? _DraftWidgetsJson { get; set; }
 
     /// <summary>
-    /// Dictionary of widgets organized by section name.
-    /// Order of widgets in each list determines render order.
+    /// JSON-serialized dictionary of published widgets by section name.
+    /// This stores the live/published version shown to visitors.
+    /// </summary>
+    public string? _PublishedWidgetsJson { get; set; }
+
+    private Dictionary<string, List<SitePageWidget>>? _draftWidgetsDeserialized;
+    private Dictionary<string, List<SitePageWidget>>? _publishedWidgetsDeserialized;
+
+    /// <summary>
+    /// Dictionary of draft widgets organized by section name.
     /// </summary>
     [NotMapped]
-    public Dictionary<string, List<SitePageWidget>> Widgets
+    public Dictionary<string, List<SitePageWidget>> DraftWidgets
     {
         get
         {
-            if (_widgetsDeserialized == null)
+            if (_draftWidgetsDeserialized == null)
             {
-                _widgetsDeserialized =
+                _draftWidgetsDeserialized =
                     JsonSerializer.Deserialize<Dictionary<string, List<SitePageWidget>>>(
-                        _WidgetsJson ?? "{}"
+                        _DraftWidgetsJson ?? "{}"
                     ) ?? new Dictionary<string, List<SitePageWidget>>();
             }
-            return _widgetsDeserialized;
+            return _draftWidgetsDeserialized;
         }
         set
         {
-            _widgetsDeserialized = value;
-            _WidgetsJson = JsonSerializer.Serialize(value);
+            _draftWidgetsDeserialized = value;
+            _DraftWidgetsJson = JsonSerializer.Serialize(value);
         }
     }
 
     /// <summary>
-    /// Gets the widgets for a specific section.
+    /// Dictionary of published widgets organized by section name.
     /// </summary>
-    /// <param name="sectionName">The section developer name.</param>
-    /// <returns>List of widgets for the section, or empty list if section doesn't exist.</returns>
+    [NotMapped]
+    public Dictionary<string, List<SitePageWidget>> PublishedWidgets
+    {
+        get
+        {
+            if (_publishedWidgetsDeserialized == null)
+            {
+                _publishedWidgetsDeserialized =
+                    JsonSerializer.Deserialize<Dictionary<string, List<SitePageWidget>>>(
+                        _PublishedWidgetsJson ?? "{}"
+                    ) ?? new Dictionary<string, List<SitePageWidget>>();
+            }
+            return _publishedWidgetsDeserialized;
+        }
+        set
+        {
+            _publishedWidgetsDeserialized = value;
+            _PublishedWidgetsJson = JsonSerializer.Serialize(value);
+        }
+    }
+
+    /// <summary>
+    /// Gets the current working widgets - draft if available, otherwise published.
+    /// Use this for editing in the admin UI.
+    /// </summary>
+    [NotMapped]
+    public Dictionary<string, List<SitePageWidget>> Widgets
+    {
+        get => IsDraft ? DraftWidgets : PublishedWidgets;
+        set
+        {
+            if (IsDraft)
+            {
+                DraftWidgets = value;
+            }
+            else
+            {
+                PublishedWidgets = value;
+            }
+        }
+    }
+
+    /// <summary>
+    /// Gets the widgets for a specific section from the published version.
+    /// Use this for public rendering.
+    /// </summary>
+    public List<SitePageWidget> GetPublishedWidgetsForSection(string sectionName)
+    {
+        return PublishedWidgets.TryGetValue(sectionName, out var widgets)
+            ? widgets
+            : new List<SitePageWidget>();
+    }
+
+    /// <summary>
+    /// Gets the widgets for a specific section from the current working version.
+    /// Use this for admin preview/editing.
+    /// </summary>
     public List<SitePageWidget> GetWidgetsForSection(string sectionName)
     {
         return Widgets.TryGetValue(sectionName, out var widgets)
