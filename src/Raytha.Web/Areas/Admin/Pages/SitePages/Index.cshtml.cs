@@ -53,6 +53,7 @@ public class Index : BaseAdminPageModel, IHasListView<Index.SitePagesListItemVie
                 p.LastModificationTime
             ),
             LastModifierUser = p.LastModifierUser != null ? p.LastModifierUser.FullName : "N/A",
+            IsHomePage = CurrentOrganization.HomePageId == p.Id,
         });
 
         ListView = new ListViewModel<SitePagesListItemViewModel>(items, response.Result.TotalCount);
@@ -80,6 +81,9 @@ public class Index : BaseAdminPageModel, IHasListView<Index.SitePagesListItemVie
 
         [Display(Name = "Modified by")]
         public string LastModifierUser { get; init; }
+
+        // Helper property
+        public bool IsHomePage { get; init; }
     }
 }
 

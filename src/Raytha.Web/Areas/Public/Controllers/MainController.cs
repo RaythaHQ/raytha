@@ -1,4 +1,6 @@
 using CSharpVitamins;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization.Infrastructure;
 using Microsoft.AspNetCore.Mvc;
 using Raytha.Application.Common.Exceptions;
 using Raytha.Application.Common.Models.RenderModels;
@@ -12,12 +14,36 @@ using Raytha.Application.Themes.WebTemplates.Queries;
 using Raytha.Application.Views.Queries;
 using Raytha.Domain.Entities;
 using Raytha.Web.Areas.Public.DbViewEngine;
+using Raytha.Web.Authentication;
 
 namespace Raytha.Web.Areas.Public.Controllers;
 
 [Area("Public")]
 public class MainController : BaseController
 {
+    private IAuthorizationService _authorizationService;
+    protected IAuthorizationService AuthorizationService =>
+        _authorizationService ??= HttpContext.RequestServices.GetRequiredService<IAuthorizationService>();
+
+    private async Task<bool> CanPreviewSitePageDraftsAsync()
+    {
+        var result = await AuthorizationService.AuthorizeAsync(
+            User,
+            BuiltInSystemPermission.MANAGE_SITE_PAGES_PERMISSION
+        );
+        return result.Succeeded;
+    }
+
+    private async Task<bool> CanPreviewContentItemDraftsAsync(string contentTypeDeveloperName)
+    {
+        var result = await AuthorizationService.AuthorizeAsync(
+            User,
+            contentTypeDeveloperName,
+            ContentItemOperations.Edit
+        );
+        return result.Succeeded;
+    }
+
     [Route($"", Name = "emptyroute")]
     [Route("{*route}", Name = "defaultroute")]
     public async Task<IActionResult> Index(
@@ -40,7 +66,13 @@ public class MainController : BaseController
                         Id = CurrentOrganization.HomePageId.Value,
                     };
                     var response = await Mediator.Send(input);
-                    if (!response.Result.IsPublished)
+
+                    // Check for draft preview mode
+                    var previewDraft = Request.Query["previewDraft"] == "true"
+                        && await CanPreviewContentItemDraftsAsync(response.Result.ContentType.DeveloperName);
+
+                    // Only check IsPublished if NOT in draft preview mode
+                    if (!response.Result.IsPublished && !previewDraft)
                     {
                         return new ErrorActionViewResult(
                             BuiltInWebTemplate.Error404,
@@ -60,7 +92,8 @@ public class MainController : BaseController
 
                     var model = ContentItem_RenderModel.GetProjection(
                         response.Result,
-                        webTemplateResponse.Result.DeveloperName
+                        webTemplateResponse.Result.DeveloperName,
+                        previewDraft
                     );
                     var contentType = ContentType_RenderModel.GetProjection(
                         response.Result.ContentType
@@ -154,7 +187,13 @@ public class MainController : BaseController
                     var sitePage = await Mediator.Send(
                         new GetSitePageById.Query { Id = CurrentOrganization.HomePageId.Value }
                     );
-                    if (!sitePage.Result.IsPublished)
+
+                    // Check for draft preview mode
+                    var previewDraft = Request.Query["previewDraft"] == "true"
+                        && await CanPreviewSitePageDraftsAsync();
+
+                    // Only check IsPublished if NOT in draft preview mode
+                    if (!sitePage.Result.IsPublished && !previewDraft)
                     {
                         return new ErrorActionViewResult(
                             BuiltInWebTemplate.Error404,
@@ -177,7 +216,8 @@ public class MainController : BaseController
                         webTemplateResponse.Result,
                         model,
                         sitePage.Result,
-                        ViewData
+                        ViewData,
+                        previewDraft
                     );
                 }
                 throw new Exception("Unknown content type");
@@ -192,7 +232,13 @@ public class MainController : BaseController
                     var contentItem = await Mediator.Send(
                         new GetContentItemById.Query { Id = response.Result.ContentItemId.Value }
                     );
-                    if (!contentItem.Result.IsPublished)
+
+                    // Check for draft preview mode
+                    var previewDraft = Request.Query["previewDraft"] == "true"
+                        && await CanPreviewContentItemDraftsAsync(contentItem.Result.ContentType.DeveloperName);
+
+                    // Only check IsPublished if NOT in draft preview mode
+                    if (!contentItem.Result.IsPublished && !previewDraft)
                     {
                         return new ErrorActionViewResult(
                             BuiltInWebTemplate.Error404,
@@ -212,7 +258,8 @@ public class MainController : BaseController
 
                     var model = ContentItem_RenderModel.GetProjection(
                         contentItem.Result,
-                        webTemplateResponse.Result.DeveloperName
+                        webTemplateResponse.Result.DeveloperName,
+                        previewDraft
                     );
                     var contentType = ContentType_RenderModel.GetProjection(
                         contentItem.Result.ContentType
@@ -306,7 +353,13 @@ public class MainController : BaseController
                     var sitePage = await Mediator.Send(
                         new GetSitePageById.Query { Id = response.Result.SitePageId.Value }
                     );
-                    if (!sitePage.Result.IsPublished)
+
+                    // Check for draft preview mode
+                    var previewDraft = Request.Query["previewDraft"] == "true"
+                        && await CanPreviewSitePageDraftsAsync();
+
+                    // Only check IsPublished if NOT in draft preview mode
+                    if (!sitePage.Result.IsPublished && !previewDraft)
                     {
                         return new ErrorActionViewResult(
                             BuiltInWebTemplate.Error404,
@@ -329,7 +382,8 @@ public class MainController : BaseController
                         webTemplateResponse.Result,
                         model,
                         sitePage.Result,
-                        ViewData
+                        ViewData,
+                        previewDraft
                     );
                 }
                 throw new Exception("Unknown content type");

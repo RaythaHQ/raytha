@@ -19,18 +19,21 @@ public class SitePageActionViewResult : IActionResult
     private readonly SitePage_RenderModel _sitePage;
     private readonly SitePageDto _sitePageDto;
     private readonly ViewDataDictionary _viewDictionary;
+    private readonly bool _previewDraft;
 
     public SitePageActionViewResult(
         WebTemplateDto webTemplate,
         SitePage_RenderModel sitePage,
         SitePageDto sitePageDto,
-        ViewDataDictionary viewDictionary
+        ViewDataDictionary viewDictionary,
+        bool previewDraft = false
     )
     {
         _webTemplate = webTemplate;
         _sitePage = sitePage;
         _sitePageDto = sitePageDto;
         _viewDictionary = viewDictionary;
+        _previewDraft = previewDraft;
     }
 
     public string ContentType { get; set; } = "text/html";
@@ -62,8 +65,9 @@ public class SitePageActionViewResult : IActionResult
             PathBase = currentOrg.PathBase,
         };
 
-        // Convert PUBLISHED widgets to render data format (use published version for public rendering)
-        var widgetsForRender = _sitePageDto.PublishedWidgets.ToDictionary(
+        // Use draft widgets if previewing draft, otherwise use published widgets
+        var widgetsSource = _previewDraft ? _sitePageDto.Widgets : _sitePageDto.PublishedWidgets;
+        var widgetsForRender = widgetsSource.ToDictionary(
             kvp => kvp.Key,
             kvp =>
                 kvp.Value

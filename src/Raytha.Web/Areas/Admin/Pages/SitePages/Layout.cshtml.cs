@@ -5,6 +5,7 @@ using Raytha.Application.Common.Utils;
 using Raytha.Application.SitePages.Commands;
 using Raytha.Application.SitePages.Queries;
 using Raytha.Application.SitePages.Widgets;
+using Raytha.Application.Themes.WebTemplates;
 using Raytha.Application.Themes.WebTemplates.Queries;
 using Raytha.Domain.Entities;
 using Raytha.Web.Areas.Admin.Pages.Shared;
@@ -20,7 +21,8 @@ public class Layout : BaseAdminPageModel, ISubActionViewModel
     public IEnumerable<WidgetTypeViewModel> AvailableWidgetTypes { get; set; }
     public string WidgetsJson { get; set; }
     public IReadOnlyList<string> DetectedSections { get; set; } = new List<string>();
-    
+    public IReadOnlyList<string> OrphanedSections { get; set; } = new List<string>();
+
     // ISubActionViewModel properties
     public string Id { get; set; }
     public string? RoutePath { get; set; }
@@ -91,24 +93,31 @@ public class Layout : BaseAdminPageModel, ISubActionViewModel
             IsDraft = response.Result.IsDraft,
             Widgets = widgetsWithSummaries,
         };
-        
+
         // ISubActionViewModel properties
         Id = response.Result.Id;
         Title = response.Result.Title;
         RoutePath = response.Result.RoutePath;
-        
-        // Fetch template content and detect sections
-        var templateResponse = await Mediator.Send(new GetWebTemplateById.Query 
-        { 
-            Id = response.Result.WebTemplateId 
-        });
-        DetectedSections = TemplateSectionParser.ExtractSectionNames(templateResponse.Result.Content);
-        
+
+        // Fetch template content and detect sections from entire parent hierarchy
+        var templateResponse = await Mediator.Send(
+            new GetWebTemplateById.Query { Id = response.Result.WebTemplateId }
+        );
+        DetectedSections = ExtractSectionsFromTemplateHierarchy(templateResponse.Result);
+
         // If no sections detected, default to "main"
         if (DetectedSections.Count == 0)
         {
             DetectedSections = new List<string> { "main" };
         }
+
+        // Detect orphaned sections (sections with widgets that are not in the template)
+        // Only include sections that actually have widgets
+        var allWidgetSections = widgetsWithSummaries
+            .Where(kvp => kvp.Value.Any())
+            .Select(kvp => kvp.Key)
+            .ToList();
+        OrphanedSections = allWidgetSections.Where(s => !DetectedSections.Contains(s)).ToList();
 
         // Serialize widgets for JavaScript
         WidgetsJson = JsonSerializer.Serialize(
@@ -248,5 +257,36 @@ public class Layout : BaseAdminPageModel, ISubActionViewModel
         public string DisplayName { get; init; }
         public string Description { get; init; }
         public string IconClass { get; init; }
+    }
+
+    /// <summary>
+    /// Extracts all section names from a template and all its parent templates.
+    /// Templates in Raytha can inherit from parent templates, so sections may be defined
+    /// at any level in the hierarchy.
+    /// </summary>
+    private static IReadOnlyList<string> ExtractSectionsFromTemplateHierarchy(
+        WebTemplateDto? template
+    )
+    {
+        var allSections = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var current = template;
+
+        // Traverse up the parent chain (with a safety limit to prevent infinite loops)
+        var maxDepth = 5;
+        var depth = 0;
+
+        while (current != null && depth < maxDepth)
+        {
+            var sectionsInTemplate = TemplateSectionParser.ExtractSectionNames(current.Content);
+            foreach (var section in sectionsInTemplate)
+            {
+                allSections.Add(section);
+            }
+
+            current = current.ParentTemplate;
+            depth++;
+        }
+
+        return allSections.ToList();
     }
 }

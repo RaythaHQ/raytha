@@ -292,12 +292,12 @@ namespace Raytha.Migrations.Postgres
                 column: "ThemeId"
             );
 
-            // Add ManageSitePages permission (64) to super_admin and admin roles
+            // Add ManageSitePages permission (64) to super_admin, admin, and editor roles
             migrationBuilder.Sql(
                 @"
                 UPDATE ""Roles"" 
                 SET ""SystemPermissions"" = ""SystemPermissions"" | 64 
-                WHERE ""DeveloperName"" IN ('super_admin', 'admin');
+                WHERE ""DeveloperName"" IN ('super_admin', 'admin', 'editor');
             "
             );
         }
@@ -310,7 +310,7 @@ namespace Raytha.Migrations.Postgres
                 @"
                 UPDATE ""Roles"" 
                 SET ""SystemPermissions"" = ""SystemPermissions"" & ~64 
-                WHERE ""DeveloperName"" IN ('super_admin', 'admin');
+                WHERE ""DeveloperName"" IN ('super_admin', 'admin', 'editor');
             "
             );
 

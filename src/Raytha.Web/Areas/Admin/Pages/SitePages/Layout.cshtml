@@ -164,6 +164,17 @@
         .grid-stack-item.ui-draggable-dragging {
             z-index: 1000;
         }
+
+        .orphaned-grid {
+            background: #fff3cd !important;
+            border-color: #ffc107 !important;
+            min-height: 150px;
+        }
+
+        .orphaned-grid .grid-stack-item-content {
+            border-color: #ffc107;
+            background: #fffbf0;
+        }
     </style>
 }
 
@@ -220,7 +231,7 @@
                             class="btn btn-outline-secondary">
                             <i class="bi bi-pencil me-1"></i>Edit
                         </a>
-                        <a href="@(CurrentOrganization.WebsiteUrl.TrimEnd('/') + CurrentOrganization.PathBase)/@Model.SitePage.RoutePath"
+                        <a href="@(CurrentOrganization.WebsiteUrl.TrimEnd('/') + CurrentOrganization.PathBase)/@Model.SitePage.RoutePath?previewDraft=true"
                             target="_blank" class="btn btn-outline-secondary">
                             <i class="bi bi-box-arrow-up-right me-1"></i>Preview
                         </a>
@@ -241,6 +252,29 @@
                             <div class="empty-grid-message" id="emptyGridMessage-@sectionName">
                                 <i class="bi bi-plus-circle fs-1 d-block mb-2"></i>
                                 <p>Drag widgets from the panel to add them here</p>
+                            </div>
+                        </div>
+                    </div>
+                }
+
+                @foreach (var sectionName in Model.OrphanedSections)
+                {
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold text-warning">
+                            <i class="bi bi-exclamation-triangle me-1"></i>
+                            Section: <code>@sectionName</code>
+                            <span class="badge bg-warning text-dark ms-2">Orphaned</span>
+                        </label>
+                        <div class="alert alert-warning mb-2" role="alert">
+                            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                            <strong>Warning:</strong> This section no longer exists in the page template.
+                            Widgets in this section will not be displayed on the public site.
+                            Drag them to an active section above to preserve them.
+                        </div>
+                        <div class="position-relative">
+                            <div class="grid-stack gs-12 widget-grid orphaned-grid" id="widgetGrid-@sectionName"
+                                data-section="@sectionName" data-orphaned="true">
+                                <!-- Orphaned widgets will be rendered here -->
                             </div>
                         </div>
                     </div>
@@ -323,6 +357,8 @@
             const pageId = '@Model.SitePage.Id';
             const initialWidgets = @Html.Raw(Model.WidgetsJson);
             const sectionNames = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.DetectedSections));
+            const orphanedSectionNames = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.OrphanedSections));
+            const allSectionNames = [...sectionNames, ...orphanedSectionNames];
             let hasUnsavedChanges = false;
             let isDraft = @(Model.SitePage.IsDraft ? "true" : "false");
             const grids = {}; // Map of sectionName -> GridStack instance
@@ -340,7 +376,8 @@
             });
 
             function initGrids() {
-                sectionNames.forEach(function (sectionName) {
+                // Initialize grids for all sections including orphaned ones
+                allSectionNames.forEach(function (sectionName) {
                     const gridEl = document.getElementById('widgetGrid-' + sectionName);
                     if (!gridEl) return;
 
@@ -348,7 +385,7 @@
                         column: 12,
                         cellHeight: 100,
                         margin: 10,
-                        float: true,
+                        float: false, // Widgets compact vertically, no empty rows
                         disableOneColumnMode: true,
                         removable: false,
                         acceptWidgets: true,
@@ -381,7 +418,8 @@
             }
 
             function loadWidgets() {
-                sectionNames.forEach(function (sectionName) {
+                // Load widgets from all sections including orphaned ones
+                allSectionNames.forEach(function (sectionName) {
                     const widgets = initialWidgets[sectionName] || [];
                     widgets.forEach(function (widget) {
                         addWidgetToGrid(widget, sectionName);
@@ -575,8 +613,8 @@
 
             async function saveAllLayoutsAsDraft() {
                 try {
-                    // Save each section
-                    for (const sectionName of sectionNames) {
+                    // Save all sections including orphaned ones
+                    for (const sectionName of allSectionNames) {
                         await saveSectionLayout(sectionName);
                     }
                     markSaved();
@@ -594,9 +632,9 @@
                 publishBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Publishing...';
 
                 try {
-                    // First save any pending changes as draft
+                    // First save any pending changes as draft (including orphaned sections)
                     if (hasUnsavedChanges) {
-                        for (const sectionName of sectionNames) {
+                        for (const sectionName of allSectionNames) {
                             await saveSectionLayout(sectionName);
                         }
                     }
@@ -675,13 +713,13 @@
                 toast.className = 'position-fixed bottom-0 end-0 p-3';
                 toast.style.zIndex = '9999';
                 toast.innerHTML = `
-                                                            <div class="toast show align-items-center text-white bg-${type === 'success' ? 'success' : 'danger'}" role="alert">
-                                                                <div class="d-flex">
-                                                                    <div class="toast-body">${message}</div>
-                                                                    <button type="button" class="btn-close btn-close-white me-2 m-auto" onclick="this.closest('.position-fixed').remove()"></button>
-                                                                </div>
-                                                            </div>
-                                                        `;
+                                                                                <div class="toast show align-items-center text-white bg-${type === 'success' ? 'success' : 'danger'}" role="alert">
+                                                                                    <div class="d-flex">
+                                                                                        <div class="toast-body">${message}</div>
+                                                                                        <button type="button" class="btn-close btn-close-white me-2 m-auto" onclick="this.closest('.position-fixed').remove()"></button>
+                                                                                    </div>
+                                                                                </div>
+                                                                            `;
                 document.body.appendChild(toast);
                 setTimeout(() => toast.remove(), 3000);
             }
