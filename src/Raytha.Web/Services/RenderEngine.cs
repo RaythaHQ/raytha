@@ -455,13 +455,13 @@ public class RenderEngine : IRenderEngine
 
                             var widgetTemplateContent = templateResponse.Result.Content;
 
-                            // Parse widget settings from JSON
-                            var settings = !string.IsNullOrEmpty(widget.SettingsJson)
-                                ? JsonSerializer.Deserialize<Dictionary<string, object>>(
-                                    widget.SettingsJson,
-                                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
-                                )
-                                : new Dictionary<string, object>();
+                            // Parse widget settings from JSON using JsonDocument for proper type conversion
+                            var settings = new Dictionary<string, object>();
+                            if (!string.IsNullOrEmpty(widget.SettingsJson))
+                            {
+                                using var doc = JsonDocument.Parse(widget.SettingsJson);
+                                settings = ConvertJsonElementToDictionary(doc.RootElement);
+                            }
 
                             // Create render model for the widget
                             var widgetModel = new
@@ -587,5 +587,40 @@ public class RenderEngine : IRenderEngine
 
         var result = TimeZoneInfo.ConvertTime(localOffset, context.TimeZone);
         return new DateTimeValue(result);
+    }
+
+    /// <summary>
+    /// Recursively converts a JsonElement object to a Dictionary that Fluid/Liquid can work with.
+    /// This is necessary because JsonSerializer.Deserialize&lt;Dictionary&lt;string, object&gt;&gt;
+    /// doesn't recursively convert nested objects and arrays - they remain as JsonElement.
+    /// </summary>
+    private static Dictionary<string, object> ConvertJsonElementToDictionary(JsonElement element)
+    {
+        var dict = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var prop in element.EnumerateObject())
+        {
+            dict[prop.Name] = ConvertJsonValue(prop.Value);
+        }
+
+        return dict;
+    }
+
+    /// <summary>
+    /// Converts a JsonElement value to the appropriate .NET type.
+    /// </summary>
+    private static object ConvertJsonValue(JsonElement element)
+    {
+        return element.ValueKind switch
+        {
+            JsonValueKind.Object => ConvertJsonElementToDictionary(element),
+            JsonValueKind.Array => element.EnumerateArray().Select(ConvertJsonValue).ToList(),
+            JsonValueKind.String => element.GetString() ?? string.Empty,
+            JsonValueKind.Number => element.TryGetInt64(out var l) ? l : element.GetDouble(),
+            JsonValueKind.True => true,
+            JsonValueKind.False => false,
+            JsonValueKind.Null => null,
+            _ => element.ToString(),
+        };
     }
 }

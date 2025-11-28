@@ -24,6 +24,8 @@
     // FAQ handles its own TipTap initialization for dynamic items
     var needsTipTap = isWysiwyg || isImageText || isCard;
     var needsTipTapCss = needsTipTap || isFaq;
+    // Controls whether we need the Scripts section at all
+    var needsScripts = needsUppy || isFaq;
 }
 
 <div class="row mb-4">
@@ -137,11 +139,14 @@
     </div>
 </div>
 
-@if (needsUppy)
+@if (needsScripts)
 {
     @section Scripts {
-        <!-- Load Uppy CSS -->
-        <link href="~/raytha_admin/lib/uppy/dist/uppy.min.css" rel="stylesheet">
+        @if (needsUppy || needsTipTapCss)
+        {
+            <!-- Load Uppy CSS (needed for TipTap's image/video upload modals) -->
+            <link href="~/raytha_admin/lib/uppy/dist/uppy.min.css" rel="stylesheet">
+        }
 
         @if (needsTipTapCss)
         {
@@ -672,14 +677,16 @@
         {
             <!-- FAQ Widget Dynamic Items -->
             <script type="module">
-                import { ready } from '/js/core/events.js';
                 import { initWysiwygField } from '/js/pages/content-items/wysiwyg.js';
 
-                ready(async () => {
+                async function initFaqWidget() {
+                    console.log('Initializing FAQ widget...');
                     const config = window.RaythaContentItemsConfig || {};
                     const container = document.getElementById('faq-items-container');
                     const addButton = document.getElementById('add-faq-item');
                     const template = document.getElementById('faq-item-template');
+
+                    console.log('FAQ elements:', { container, addButton, template, config });
 
                     if (!container || !addButton || !template) {
                         console.error('FAQ elements not found');
@@ -688,11 +695,20 @@
 
                     // Track current index
                     let currentIndex = container.querySelectorAll('.faq-item').length;
+                    console.log('Initial FAQ item count:', currentIndex);
 
                     // Initialize existing FAQ item answer fields
                     const existingWrappers = container.querySelectorAll('.faq-answer-wrapper');
+                    console.log('Existing answer wrappers:', existingWrappers.length);
+
                     for (const wrapper of existingWrappers) {
-                        await initWysiwygField(wrapper, config);
+                        console.log('Initializing wrapper:', wrapper);
+                        try {
+                            await initWysiwygField(wrapper, config);
+                            console.log('Wrapper initialized successfully');
+                        } catch (err) {
+                            console.error('Error initializing wrapper:', err);
+                        }
                     }
 
                     // Attach remove handlers to existing items
@@ -700,19 +716,37 @@
 
                     // Add new FAQ item
                     addButton.addEventListener('click', async () => {
+                        console.log('Add FAQ item clicked, currentIndex:', currentIndex);
+
                         const html = template.innerHTML
                             .replace(/__INDEX__/g, currentIndex)
                             .replace(/__NUMBER__/g, currentIndex + 1);
 
+                        console.log('Generated HTML:', html.substring(0, 200) + '...');
+
                         const tempDiv = document.createElement('div');
                         tempDiv.innerHTML = html;
                         const newItem = tempDiv.firstElementChild;
+
+                        if (!newItem) {
+                            console.error('Failed to create new item from template');
+                            return;
+                        }
+
                         container.appendChild(newItem);
+                        console.log('New item appended to container');
 
                         // Initialize TipTap on the new answer field
                         const answerWrapper = newItem.querySelector('.faq-answer-wrapper');
+                        console.log('New answer wrapper:', answerWrapper);
+
                         if (answerWrapper) {
-                            await initWysiwygField(answerWrapper, config);
+                            try {
+                                await initWysiwygField(answerWrapper, config);
+                                console.log('New wrapper initialized');
+                            } catch (err) {
+                                console.error('Error initializing new wrapper:', err);
+                            }
                         }
 
                         // Attach remove handler
@@ -779,7 +813,18 @@
 
                         currentIndex = items.length;
                     }
-                });
+
+                    console.log('FAQ widget initialization complete');
+                }
+
+                // Run initialization
+                if (document.readyState === 'loading') {
+                    document.addEventListener('DOMContentLoaded', () => {
+                        initFaqWidget().catch(err => console.error('FAQ init error:', err));
+                    });
+                } else {
+                    initFaqWidget().catch(err => console.error('FAQ init error:', err));
+                }
             </script>
         }
     }
