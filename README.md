@@ -21,6 +21,7 @@ Raytha is a lightweight, versatile content management system built with .NET. Cr
 
 ## Features
 
+- **Site Pages & Page Builder** — Build landing pages with a drag-and-drop widget system. No code required.
 - **Custom Content Types** — Create and customize content structures without code changes
 - **Liquid Templates** — Edit templates directly in the platform using the Liquid templating engine
 - **Role-Based Access Control** — Design custom roles with granular permissions
