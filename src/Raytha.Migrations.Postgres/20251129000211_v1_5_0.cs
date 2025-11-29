@@ -338,7 +338,7 @@ namespace Raytha.Migrations.Postgres
                 @"
                 UPDATE ""Roles""
                 SET ""SystemPermissions"" = ""SystemPermissions"" | 64
-                WHERE ""DeveloperName"" IN ('super_admin', 'admin', 'editor')
+                WHERE ""DeveloperName"" IN ('super_admin', 'admin', 'editor');
             "
             );
         }
@@ -351,7 +351,7 @@ namespace Raytha.Migrations.Postgres
                 @"
                 UPDATE ""Roles""
                 SET ""SystemPermissions"" = ""SystemPermissions"" & ~64
-                WHERE ""DeveloperName"" IN ('super_admin', 'admin', 'editor')
+                WHERE ""DeveloperName"" IN ('super_admin', 'admin', 'editor');
             "
             );
 

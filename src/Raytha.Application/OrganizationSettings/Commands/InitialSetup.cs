@@ -124,6 +124,7 @@ public class InitialSetup
             InsertDefaultWidgetTemplates(defaultThemeId);
             InsertDefaultEmailTemplates();
             InsertDefaultAuthentications();
+            InsertDefaultNavigationMenu();
             await _db.SaveChangesAsync(cancellationToken);
 
             InsertDefaultSitePages(defaultThemeId);
@@ -552,6 +553,55 @@ public class InitialSetup
                 },
             };
             _db.AuthenticationSchemes.AddRange(list);
+        }
+
+        protected void InsertDefaultNavigationMenu()
+        {
+            var mainMenuId = Guid.NewGuid();
+            var mainMenu = new NavigationMenu
+            {
+                Id = mainMenuId,
+                Label = "Main menu",
+                DeveloperName = "mainmenu",
+                IsMainMenu = true,
+                NavigationMenuItems = new List<NavigationMenuItem>
+                {
+                    new NavigationMenuItem
+                    {
+                        Id = Guid.NewGuid(),
+                        Label = "Home",
+                        Url = "/home",
+                        IsDisabled = false,
+                        OpenInNewTab = false,
+                        CssClassName = "nav-link",
+                        Ordinal = 1,
+                        NavigationMenuId = mainMenuId,
+                    },
+                    new NavigationMenuItem
+                    {
+                        Id = Guid.NewGuid(),
+                        Label = "About",
+                        Url = "/about",
+                        IsDisabled = false,
+                        OpenInNewTab = false,
+                        CssClassName = "nav-link",
+                        Ordinal = 2,
+                        NavigationMenuId = mainMenuId,
+                    },
+                    new NavigationMenuItem
+                    {
+                        Id = Guid.NewGuid(),
+                        Label = "Posts",
+                        Url = "/posts",
+                        IsDisabled = false,
+                        OpenInNewTab = false,
+                        CssClassName = "nav-link",
+                        Ordinal = 3,
+                        NavigationMenuId = mainMenuId,
+                    },
+                },
+            };
+            _db.NavigationMenus.Add(mainMenu);
         }
 
         protected void InsertDefaultSitePages(Guid defaultThemeId)
