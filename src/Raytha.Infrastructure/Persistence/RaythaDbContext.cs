@@ -72,9 +72,10 @@ public class RaythaDbContext : DbContext, IRaythaDbContext, IDataProtectionKeyCo
     public DbSet<SitePageRevision> SitePageRevisions => Set<SitePageRevision>();
     public DbSet<WidgetTemplate> WidgetTemplates => Set<WidgetTemplate>();
     public DbSet<WidgetTemplateRevision> WidgetTemplateRevisions => Set<WidgetTemplateRevision>();
+    public DbSet<FailedLoginAttempt> FailedLoginAttempts => Set<FailedLoginAttempt>();
     public DbSet<DataProtectionKey> DataProtectionKeys { get; set; } = null!;
 
-    public DbContext DbContext => DbContext;
+    public DbContext DbContext => this;
 
     protected override void OnModelCreating(ModelBuilder builder)
     {

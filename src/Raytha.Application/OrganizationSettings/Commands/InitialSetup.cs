@@ -575,6 +575,8 @@ public class InitialSetup
                     IsEnabledForUsers = true,
                     AuthenticationSchemeType = AuthenticationSchemeType.EmailAndPassword,
                     LoginButtonText = "Login with your email and password",
+                    BruteForceProtectionMaxFailedAttempts = 10,
+                    BruteForceProtectionWindowInSeconds = 60,
                 },
                 new AuthenticationScheme
                 {

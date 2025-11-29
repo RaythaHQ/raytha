@@ -12,7 +12,7 @@ using Raytha.Infrastructure.Persistence;
 namespace Raytha.Migrations.Postgres
 {
     [DbContext(typeof(RaythaDbContext))]
-    [Migration("20251128012010_v1_5_0")]
+    [Migration("20251129000211_v1_5_0")]
     partial class v1_5_0
     {
         /// <inheritdoc />
@@ -122,6 +122,12 @@ namespace Raytha.Migrations.Postgres
 
                     b.Property<string>("AuthenticationSchemeType")
                         .HasColumnType("text");
+
+                    b.Property<int>("BruteForceProtectionMaxFailedAttempts")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("BruteForceProtectionWindowInSeconds")
+                        .HasColumnType("integer");
 
                     b.Property<DateTime>("CreationTime")
                         .HasColumnType("timestamp with time zone");
@@ -622,6 +628,30 @@ namespace Raytha.Migrations.Postgres
                     b.HasIndex("LastModifierUserId");
 
                     b.ToTable("EmailTemplateRevisions");
+                });
+
+            modelBuilder.Entity("Raytha.Domain.Entities.FailedLoginAttempt", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("EmailAddress")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("FailedAttemptCount")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("LastFailedAttemptAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EmailAddress")
+                        .IsUnique();
+
+                    b.ToTable("FailedLoginAttempts");
                 });
 
             modelBuilder.Entity("Raytha.Domain.Entities.JwtLogin", b =>
