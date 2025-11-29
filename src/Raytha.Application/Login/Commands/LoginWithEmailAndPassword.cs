@@ -5,6 +5,7 @@ using Mediator;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Models;
 using Raytha.Application.Common.Utils;
+using Raytha.Domain.Entities;
 using Raytha.Domain.ValueObjects;
 
 namespace Raytha.Application.Login.Commands;
@@ -32,6 +33,19 @@ public class LoginWithEmailAndPassword
                             p.AuthenticationSchemeType == AuthenticationSchemeType.EmailAndPassword
                         );
 
+                        // Cleanup stale failed login attempts (older than 2x window)
+                        var cleanupCutoff = DateTime.UtcNow.AddSeconds(
+                            -2 * authScheme.BruteForceProtectionWindowInSeconds
+                        );
+                        var staleAttempts = db
+                            .FailedLoginAttempts.Where(f => f.LastFailedAttemptAt < cleanupCutoff)
+                            .ToList();
+                        if (staleAttempts.Any())
+                        {
+                            db.DbContext.RemoveRange(staleAttempts);
+                            db.DbContext.SaveChanges();
+                        }
+
                         if (!authScheme.IsEnabledForUsers && !authScheme.IsEnabledForAdmins)
                         {
                             context.AddFailure(
@@ -53,6 +67,32 @@ public class LoginWithEmailAndPassword
                         var emailAddress = !string.IsNullOrWhiteSpace(request.EmailAddress)
                             ? request.EmailAddress.ToLower().Trim()
                             : null;
+
+                        // Check brute force lockout before proceeding
+                        var failedAttempt =
+                            emailAddress != null
+                                ? db.FailedLoginAttempts.FirstOrDefault(f =>
+                                    f.EmailAddress == emailAddress
+                                )
+                                : null;
+                        var windowStart = DateTime.UtcNow.AddSeconds(
+                            -authScheme.BruteForceProtectionWindowInSeconds
+                        );
+
+                        if (
+                            failedAttempt != null
+                            && failedAttempt.FailedAttemptCount
+                                >= authScheme.BruteForceProtectionMaxFailedAttempts
+                            && failedAttempt.LastFailedAttemptAt >= windowStart
+                        )
+                        {
+                            context.AddFailure(
+                                Constants.VALIDATION_SUMMARY,
+                                "Too many failed login attempts. Please try again later."
+                            );
+                            return;
+                        }
+
                         var entity =
                             emailAddress != null
                                 ? db.Users.FirstOrDefault(p =>
@@ -62,6 +102,7 @@ public class LoginWithEmailAndPassword
 
                         if (entity == null)
                         {
+                            RecordFailedAttempt(db, emailAddress, failedAttempt, windowStart);
                             context.AddFailure(
                                 Constants.VALIDATION_SUMMARY,
                                 "Invalid email or password."
@@ -103,6 +144,7 @@ public class LoginWithEmailAndPassword
                         );
                         if (!passwordsMatch)
                         {
+                            RecordFailedAttempt(db, emailAddress, failedAttempt, windowStart);
                             context.AddFailure(
                                 Constants.VALIDATION_SUMMARY,
                                 "Invalid email or password."
@@ -111,6 +153,44 @@ public class LoginWithEmailAndPassword
                         }
                     }
                 );
+        }
+
+        private static void RecordFailedAttempt(
+            IRaythaDbContext db,
+            string? emailAddress,
+            FailedLoginAttempt? existing,
+            DateTime windowStart
+        )
+        {
+            if (string.IsNullOrEmpty(emailAddress))
+                return;
+
+            if (existing == null)
+            {
+                db.FailedLoginAttempts.Add(
+                    new FailedLoginAttempt
+                    {
+                        Id = Guid.NewGuid(),
+                        EmailAddress = emailAddress,
+                        FailedAttemptCount = 1,
+                        LastFailedAttemptAt = DateTime.UtcNow,
+                    }
+                );
+            }
+            else if (existing.LastFailedAttemptAt < windowStart)
+            {
+                // Window expired, reset count
+                existing.FailedAttemptCount = 1;
+                existing.LastFailedAttemptAt = DateTime.UtcNow;
+            }
+            else
+            {
+                // Within window, increment count
+                existing.FailedAttemptCount++;
+                existing.LastFailedAttemptAt = DateTime.UtcNow;
+            }
+
+            db.DbContext.SaveChanges();
         }
     }
 
@@ -132,9 +212,18 @@ public class LoginWithEmailAndPassword
                 p.AuthenticationSchemeType == AuthenticationSchemeType.EmailAndPassword
             );
 
-            var entity = _db.Users.First(p =>
-                p.EmailAddress.ToLower() == request.EmailAddress.ToLower().Trim()
+            var emailAddress = request.EmailAddress.ToLower().Trim();
+
+            var entity = _db.Users.First(p => p.EmailAddress.ToLower() == emailAddress);
+
+            // Clear failed login attempts on successful login
+            var failedAttempt = _db.FailedLoginAttempts.FirstOrDefault(f =>
+                f.EmailAddress == emailAddress
             );
+            if (failedAttempt != null)
+            {
+                _db.FailedLoginAttempts.Remove(failedAttempt);
+            }
 
             entity.LastLoggedInTime = DateTime.UtcNow;
             entity.AuthenticationSchemeId = authScheme.Id;

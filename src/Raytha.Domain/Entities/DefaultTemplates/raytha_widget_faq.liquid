@@ -1,0 +1,70 @@
+{% comment %}
+FAQ Widget - Expandable accordion of questions and answers.
+
+Settings:
+  - headline: Section heading (optional)
+  - subheadline: Section subheading (optional)
+  - items: Array of FAQ items, each with:
+    - question: The question text
+    - answer: The answer text (HTML)
+  - backgroundColor: Background color (optional)
+  - expandFirst: Whether to expand the first item by default (default: true)
+
+Advanced Meta Fields (available on all widgets):
+  - widget.css_class: Custom CSS classes
+  - widget.html_id: Custom HTML ID attribute
+  - widget.custom_attributes: Custom HTML attributes string
+  - widget.row: Row position in section grid
+  - widget.column: Column position in row
+  - widget.column_span: Number of columns widget spans (1-12)
+{% endcomment %}
+
+{% assign expand_first = widget.settings.expandFirst | default: true %}
+
+<div class="faq-widget py-5{% if widget.css_class %} {{ widget.css_class }}{% endif %}"
+     {% if widget.html_id %}id="{{ widget.html_id }}"{% endif %}
+     {{ widget.custom_attributes }}
+     {% if widget.settings.backgroundColor %}style="background-color: {{ widget.settings.backgroundColor }};"{% endif %}>
+  
+  {% if widget.settings.headline or widget.settings.subheadline %}
+  <div class="text-center mb-5">
+    {% if widget.settings.headline %}
+    <h2 class="fw-bold mb-2">{{ widget.settings.headline }}</h2>
+    {% endif %}
+    {% if widget.settings.subheadline %}
+    <p class="text-secondary lead">{{ widget.settings.subheadline }}</p>
+    {% endif %}
+  </div>
+  {% endif %}
+  
+  <div class="accordion" id="faq-{{ widget.id }}">
+    {% for item in widget.settings.items %}
+    {% assign item_id = widget.id | append: '-' | append: forloop.index %}
+    {% assign is_first = false %}
+    {% if forloop.first and expand_first %}
+      {% assign is_first = true %}
+    {% endif %}
+    
+    <div class="accordion-item border-0 mb-3 shadow-sm rounded overflow-hidden">
+      <h3 class="accordion-header" id="heading-{{ item_id }}">
+        <button class="accordion-button {% unless is_first %}collapsed{% endunless %} fw-semibold" 
+                type="button" 
+                data-bs-toggle="collapse" 
+                data-bs-target="#collapse-{{ item_id }}" 
+                aria-expanded="{% if is_first %}true{% else %}false{% endif %}" 
+                aria-controls="collapse-{{ item_id }}">
+          {{ item.question }}
+        </button>
+      </h3>
+      <div id="collapse-{{ item_id }}" 
+           class="accordion-collapse collapse {% if is_first %}show{% endif %}" 
+           aria-labelledby="heading-{{ item_id }}" 
+           data-bs-parent="#faq-{{ widget.id }}">
+        <div class="accordion-body text-secondary">
+          {{ item.answer }}
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>

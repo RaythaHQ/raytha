@@ -256,11 +256,31 @@ public class BeginImportThemeFromUrl
                     currentMediaItemIndex++;
                 }
 
+                // Import widget templates
+                var widgetTemplates = new List<WidgetTemplate>();
+                if (themePackage.WidgetTemplates != null)
+                {
+                    foreach (var widgetTemplateFromJson in themePackage.WidgetTemplates)
+                    {
+                        var widgetTemplate = new WidgetTemplate
+                        {
+                            Id = Guid.NewGuid(),
+                            ThemeId = themeId,
+                            DeveloperName = widgetTemplateFromJson.DeveloperName,
+                            Label = widgetTemplateFromJson.Label,
+                            Content = widgetTemplateFromJson.Content,
+                            IsBuiltInTemplate = widgetTemplateFromJson.IsBuiltInTemplate,
+                        };
+                        widgetTemplates.Add(widgetTemplate);
+                    }
+                }
+
                 await _db.Themes.AddAsync(theme, cancellationToken);
                 await _db.WebTemplates.AddRangeAsync(
                     webTemplateDeveloperNamesWebTemplates.Values,
                     cancellationToken
                 );
+                await _db.WidgetTemplates.AddRangeAsync(widgetTemplates, cancellationToken);
                 await _db.MediaItems.AddRangeAsync(mediaItems, cancellationToken);
                 await _db.ThemeAccessToMediaItems.AddRangeAsync(
                     themeAccessToMediaItems,

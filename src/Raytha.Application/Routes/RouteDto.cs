@@ -10,6 +10,7 @@ public record RouteDto : BaseEntityDto
     public string Path { get; init; } = string.Empty;
     public ShortGuid ViewId { get; init; }
     public ShortGuid ContentItemId { get; init; }
+    public ShortGuid SitePageId { get; init; }
     public string PathType
     {
         get
@@ -21,6 +22,10 @@ public record RouteDto : BaseEntityDto
             else if (ContentItemId != ShortGuid.Empty)
             {
                 return Route.CONTENT_ITEM_TYPE;
+            }
+            else if (SitePageId != ShortGuid.Empty)
+            {
+                return Route.SITE_PAGE_TYPE;
             }
             else
             {
@@ -44,6 +49,7 @@ public record RouteDto : BaseEntityDto
             Id = entity.Id,
             ViewId = entity.ViewId,
             ContentItemId = entity.ContentItemId,
+            SitePageId = entity.SitePageId,
             Path = entity.Path,
         };
     }

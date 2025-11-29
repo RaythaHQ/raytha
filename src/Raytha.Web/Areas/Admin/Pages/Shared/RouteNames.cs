@@ -192,6 +192,16 @@ public static class RouteNames
         }
 
         /// <summary>
+        /// Route constants for theme widget templates management pages.
+        /// </summary>
+        public static class WidgetTemplates
+        {
+            public const string Index = "/Themes/WidgetTemplates/Index";
+            public const string Edit = "/Themes/WidgetTemplates/Edit";
+            public const string Revisions = "/Themes/WidgetTemplates/Revisions";
+        }
+
+        /// <summary>
         /// Route constants for theme template management pages.
         /// </summary>
         public static class Templates
@@ -269,6 +279,20 @@ public static class RouteNames
     public static class AuditLogs
     {
         public const string Index = "/AuditLogs/Index";
+    }
+
+    /// <summary>
+    /// Route constants for site page management pages.
+    /// </summary>
+    public static class SitePages
+    {
+        public const string Index = "/SitePages/Index";
+        public const string Create = "/SitePages/Create";
+        public const string Edit = "/SitePages/Edit";
+        public const string Delete = "/SitePages/Delete";
+        public const string Layout = "/SitePages/Layout";
+        public const string EditWidget = "/SitePages/EditWidget";
+        public const string Revisions = "/SitePages/Revisions";
     }
 
     /// <summary>

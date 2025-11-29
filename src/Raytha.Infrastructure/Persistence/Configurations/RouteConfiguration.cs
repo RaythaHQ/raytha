@@ -20,6 +20,12 @@ public class RouteConfiguration : IEntityTypeConfiguration<Route>
             .HasForeignKey<ContentItem>(b => b.RouteId)
             .OnDelete(DeleteBehavior.ClientCascade);
 
+        builder
+            .HasOne(p => p.SitePage)
+            .WithOne(p => p.Route)
+            .HasForeignKey<SitePage>(b => b.RouteId)
+            .OnDelete(DeleteBehavior.ClientCascade);
+
         builder.HasIndex(b => b.Path).IsUnique();
     }
 }

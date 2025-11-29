@@ -3,7 +3,9 @@ using CSharpVitamins;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.DataProtection;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.OpenApi;
+using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Security;
@@ -19,8 +21,19 @@ namespace Microsoft.Extensions.DependencyInjection;
 
 public static class ConfigureServices
 {
-    public static IServiceCollection AddWebUIServices(this IServiceCollection services)
+    public static IServiceCollection AddWebUIServices(
+        this IServiceCollection services,
+        IWebHostEnvironment environment
+    )
     {
+        // In development, use less restrictive cookie settings to allow non-HTTPS access
+        // from non-localhost hosts (e.g., http://machinename:8888). SameSite=None requires
+        // Secure, and Secure cookies are rejected from non-secure origins except localhost.
+        var cookieSecurePolicy = environment.IsDevelopment()
+            ? CookieSecurePolicy.SameAsRequest
+            : CookieSecurePolicy.Always;
+        var cookieSameSite = environment.IsDevelopment() ? SameSiteMode.Lax : SameSiteMode.None;
+
         services
             .AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
             .AddCookie(
@@ -30,8 +43,8 @@ public static class ConfigureServices
                     options.LoginPath = new PathString("/raytha/login-redirect");
                     options.Cookie.IsEssential = true;
                     options.Cookie.HttpOnly = true;
-                    options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
-                    options.Cookie.SameSite = SameSiteMode.None;
+                    options.Cookie.SecurePolicy = cookieSecurePolicy;
+                    options.Cookie.SameSite = cookieSameSite;
                     options.AccessDeniedPath = new PathString("/raytha/403");
                     options.ExpireTimeSpan = TimeSpan.FromDays(30);
                     options.EventsType = typeof(CustomCookieAuthenticationEvents);
@@ -71,6 +84,10 @@ public static class ConfigureServices
             options.AddPolicy(
                 BuiltInSystemPermission.MANAGE_MEDIA_ITEMS,
                 policy => policy.Requirements.Add(new ManageMediaItemsRequirement())
+            );
+            options.AddPolicy(
+                BuiltInSystemPermission.MANAGE_SITE_PAGES_PERMISSION,
+                policy => policy.Requirements.Add(new ManageSitePagesRequirement())
             );
             options.AddPolicy(
                 BuiltInContentTypePermission.CONTENT_TYPE_CONFIG_PERMISSION,
@@ -128,6 +145,11 @@ public static class ConfigureServices
                 RaythaApiAuthorizationHandler.POLICY_PREFIX
                     + BuiltInSystemPermission.MANAGE_CONTENT_TYPES_PERMISSION,
                 policy => policy.Requirements.Add(new ApiManageContentTypesRequirement())
+            );
+            options.AddPolicy(
+                RaythaApiAuthorizationHandler.POLICY_PREFIX
+                    + BuiltInSystemPermission.MANAGE_SITE_PAGES_PERMISSION,
+                policy => policy.Requirements.Add(new ApiManageSitePagesRequirement())
             );
             options.AddPolicy(
                 RaythaApiAuthorizationHandler.POLICY_PREFIX

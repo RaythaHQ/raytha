@@ -55,6 +55,16 @@
   <div class="container">
     <div class="row">
       <div class="col-lg-10 mx-auto">
+        <!-- Featured Image -->
+        {% if Target.PublishedContent.featured_image %}
+        <div class="mb-4">
+          <img src="{{ Target.PublishedContent.featured_image.Value | attachment_public_url }}" 
+               alt="{{ Target.PrimaryField }}" 
+               class="img-fluid rounded shadow-sm w-100"
+               style="max-height: 500px; object-fit: cover;">
+        </div>
+        {% endif %}
+        
         <div class="card border-0 shadow-sm">
           <div class="card-body p-4 p-lg-5">
             <article class="lh-lg">
@@ -88,7 +98,7 @@
             <i class="bi bi-collection text-primary"></i>
             More from {{ ContentType.LabelPlural }}
           </h3>
-          <a href="{{ PathBase }}/{{ ContentType.DeveloperName }}.html" class="btn btn-sm btn-outline-primary">
+          <a href="{{ PathBase }}/{{ ContentType.DeveloperName }}" class="btn btn-sm btn-outline-primary">
             View all <i class="bi bi-arrow-right ms-1"></i>
           </a>
         </div>
@@ -106,6 +116,12 @@
             {% if item.RoutePath != Target.RoutePath %}
             <div class="col-md-6 col-lg-4">
               <div class="card h-100 border-0 shadow-sm">
+                {% if item.PublishedContent.featured_image %}
+                <img src="{{ item.PublishedContent.featured_image.Value | attachment_public_url }}" 
+                     class="card-img-top" 
+                     alt="{{ item.PrimaryField }}"
+                     style="height: 150px; object-fit: cover;">
+                {% endif %}
                 <div class="card-body p-3">
                   <div class="d-flex align-items-center gap-2 mb-2">
                     <span class="badge bg-primary bg-opacity-10 text-primary small">
@@ -132,7 +148,7 @@
         {% else %}
         <div class="alert alert-light border d-flex align-items-center gap-2 mb-0">
           <i class="bi bi-info-circle text-primary"></i>
-          <span>Explore more content in the <a href="{{ PathBase }}/{{ ContentType.DeveloperName }}.html" class="fw-semibold">{{ ContentType.LabelPlural }}</a> section.</span>
+          <span>Explore more content in the <a href="{{ PathBase }}/{{ ContentType.DeveloperName }}" class="fw-semibold">{{ ContentType.LabelPlural }}</a> section.</span>
         </div>
         {% endif %}
       </div>

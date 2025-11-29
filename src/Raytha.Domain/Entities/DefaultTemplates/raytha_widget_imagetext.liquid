@@ -1,0 +1,67 @@
+{% comment %}
+Image + Text Widget - Image alongside text content, configurable layout.
+
+Settings:
+  - imageUrl: URL of the image
+  - imageAlt: Alt text for the image
+  - headline: Heading text
+  - content: Body content (HTML)
+  - imagePosition: left or right (default: left)
+  - buttonText: Optional button text
+  - buttonUrl: Optional button URL
+  - buttonStyle: Button style - primary, secondary, outline-primary, etc. (default: primary)
+  - backgroundColor: Background color (optional)
+
+Advanced Meta Fields (available on all widgets):
+  - widget.css_class: Custom CSS classes
+  - widget.html_id: Custom HTML ID attribute
+  - widget.custom_attributes: Custom HTML attributes string
+  - widget.row: Row position in section grid
+  - widget.column: Column position in row
+  - widget.column_span: Number of columns widget spans (1-12)
+{% endcomment %}
+
+{% assign image_position = widget.settings.imagePosition | default: 'left' %}
+{% assign button_style = widget.settings.buttonStyle | default: 'primary' %}
+{% assign image_order = 'order-1' %}
+{% assign text_order = 'order-2' %}
+{% if image_position == 'right' %}
+  {% assign image_order = 'order-2' %}
+  {% assign text_order = 'order-1' %}
+{% endif %}
+
+<div class="imagetext-widget py-5{% if widget.css_class %} {{ widget.css_class }}{% endif %}"
+     {% if widget.html_id %}id="{{ widget.html_id }}"{% endif %}
+     {{ widget.custom_attributes }}
+     {% if widget.settings.backgroundColor %}style="background-color: {{ widget.settings.backgroundColor }};"{% endif %}>
+  <div class="row align-items-center g-4">
+    <div class="col-lg-6 {{ image_order }}">
+      {% if widget.settings.imageUrl %}
+      <img src="{{ widget.settings.imageUrl }}" 
+           alt="{{ widget.settings.imageAlt | default: widget.settings.headline }}" 
+           class="img-fluid rounded shadow-sm">
+      {% else %}
+      <div class="bg-secondary bg-opacity-10 rounded d-flex align-items-center justify-content-center" style="min-height: 300px;">
+        <span class="text-muted">No image set</span>
+      </div>
+      {% endif %}
+    </div>
+    <div class="col-lg-6 {{ text_order }}">
+      {% if widget.settings.headline %}
+      <h2 class="fw-bold mb-3">{{ widget.settings.headline }}</h2>
+      {% endif %}
+      
+      {% if widget.settings.content %}
+      <div class="text-secondary mb-4">
+        {{ widget.settings.content }}
+      </div>
+      {% endif %}
+      
+      {% if widget.settings.buttonText and widget.settings.buttonUrl %}
+      <a href="{{ widget.settings.buttonUrl }}" class="btn btn-{{ button_style }}">
+        {{ widget.settings.buttonText }}
+      </a>
+      {% endif %}
+    </div>
+  </div>
+</div>

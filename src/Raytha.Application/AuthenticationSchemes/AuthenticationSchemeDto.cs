@@ -23,6 +23,8 @@ public record AuthenticationSchemeDto : BaseAuditableEntityDto
     public int MagicLinkExpiresInSeconds { get; init; }
     public bool JwtUseHighSecurity { get; init; }
     public string SamlIdpEntityId { get; init; } = string.Empty;
+    public int BruteForceProtectionMaxFailedAttempts { get; init; }
+    public int BruteForceProtectionWindowInSeconds { get; init; }
 
     public static Expression<Func<AuthenticationScheme, AuthenticationSchemeDto>> GetProjection()
     {
@@ -53,6 +55,8 @@ public record AuthenticationSchemeDto : BaseAuditableEntityDto
             MagicLinkExpiresInSeconds = entity.MagicLinkExpiresInSeconds,
             JwtUseHighSecurity = entity.JwtUseHighSecurity,
             SamlIdpEntityId = entity.SamlIdpEntityId,
+            BruteForceProtectionMaxFailedAttempts = entity.BruteForceProtectionMaxFailedAttempts,
+            BruteForceProtectionWindowInSeconds = entity.BruteForceProtectionWindowInSeconds,
         };
     }
 }

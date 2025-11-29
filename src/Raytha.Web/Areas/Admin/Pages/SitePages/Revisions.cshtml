@@ -1,0 +1,114 @@
+@page "/raytha/site-pages/edit/{id}/revisions"
+@model Raytha.Web.Areas.Admin.Pages.SitePages.Revisions
+
+@{
+    var pageTitle = "Revisions";
+    Layout = "SubActionLayout";
+    ViewData["Title"] = pageTitle;
+    ViewData["ActiveMenu"] = "Site Pages";
+    ViewData["ActiveSubMenu"] = "Revisions";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h5 class="mb-0">Revision History: @Model.SitePageTitle</h5>
+</div>
+
+@if (Model.ListView.TotalCount == 0)
+{
+    <div class="alert alert-info">
+        <i class="bi bi-info-circle me-2"></i>
+        No revisions found. Revisions are created each time you publish changes to this site page.
+    </div>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table table-centered table-nowrap mb-0 rounded">
+            <thead class="thead-light">
+                <tr>
+                    <th class="border-0 rounded-start">Action</th>
+                    @(await Html.PartialAsync("_Partials/TableColumnHeader", new BaseTableColumnHeaderViewModel()
+                    {
+                        Pagination = Model.ListView,
+                        PropertyName = "CreationTime",
+                        DisplayName = "Created at"
+                    }))
+                    <th class="border-0">View</th>
+                    <th class="border-0">Widgets</th>
+                    <th class="border-0 rounded-end">Created by</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model.ListView.Items)
+                {
+                    <tr>
+                        <td class="align-middle">
+                            <form method="post" asp-page="@RouteNames.SitePages.Revisions" 
+                                  asp-route-revisionId="@item.Id"
+                                  asp-page-handler="Revert" 
+                                  asp-route-id="@Model.Id"
+                                  onsubmit="return confirmRevert();">
+                                <button class="btn btn-sm btn-success">
+                                    <i class="bi bi-arrow-counterclockwise me-1"></i> Revert
+                                </button>
+                            </form>
+                        </td>
+                        <td class="align-middle">@item.CreationTime</td>
+                        <td class="align-middle">
+                            <button class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal"
+                                    data-bs-target="#modal-@item.Id">
+                                <i class="bi bi-eye me-1"></i> View
+                            </button>
+                        </td>
+                        <td class="align-middle">
+                            <span class="badge bg-secondary">@item.WidgetCount widget(s)</span>
+                        </td>
+                        <td class="align-middle">@item.CreatorUser</td>
+                    </tr>
+                    
+                    <!-- Modal for viewing revision content -->
+                    <div class="modal fade" id="modal-@item.Id" tabindex="-1" aria-labelledby="modal-label-@item.Id"
+                         aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="modal-label-@item.Id">
+                                        <i class="bi bi-clock-history me-2"></i>Revision from @item.CreationTime
+                                    </h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <p class="text-muted small mb-3">
+                                        This is a JSON snapshot of the widgets at this point in time.
+                                    </p>
+                                    <pre style="background-color: #f8f9fa; padding: 1rem; border-radius: 0.25rem; max-height: 500px; overflow-y: auto;"><code>@item.ContentAsJson</code></pre>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                    <form method="post" asp-page="@RouteNames.SitePages.Revisions" 
+                                          asp-route-revisionId="@item.Id"
+                                          asp-page-handler="Revert" 
+                                          asp-route-id="@Model.Id"
+                                          class="d-inline"
+                                          onsubmit="return confirmRevert();">
+                                        <button type="submit" class="btn btn-success">
+                                            <i class="bi bi-arrow-counterclockwise me-1"></i> Revert to this version
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </tbody>
+        </table>
+        <partial name="_Partials/TablePagination" model="@Model.ListView" />
+    </div>
+}
+
+<script>
+    function confirmRevert() {
+        return confirm("Are you sure you want to revert to this revision? This will replace the current content with the selected revision's content.");
+    }
+</script>
+

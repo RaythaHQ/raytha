@@ -77,6 +77,8 @@ public class Edit : BaseAdminPageModel
             SamlIdpEntityId = response.Result.SamlIdpEntityId,
             JwtUseHighSecurity = response.Result.JwtUseHighSecurity,
             MagicLinkExpiresInSeconds = response.Result.MagicLinkExpiresInSeconds,
+            BruteForceProtectionMaxFailedAttempts = response.Result.BruteForceProtectionMaxFailedAttempts,
+            BruteForceProtectionWindowInSeconds = response.Result.BruteForceProtectionWindowInSeconds,
         };
         IsBuiltInAuth = response.Result.IsBuiltInAuth;
         SupportedAuthenticationSchemeTypes = new SelectList(
@@ -104,6 +106,8 @@ public class Edit : BaseAdminPageModel
             SamlIdpEntityId = Form.SamlIdpEntityId,
             JwtUseHighSecurity = Form.JwtUseHighSecurity,
             MagicLinkExpiresInSeconds = Form.MagicLinkExpiresInSeconds,
+            BruteForceProtectionMaxFailedAttempts = Form.BruteForceProtectionMaxFailedAttempts,
+            BruteForceProtectionWindowInSeconds = Form.BruteForceProtectionWindowInSeconds,
         };
         var response = await Mediator.Send(input);
 
@@ -189,5 +193,11 @@ public class Edit : BaseAdminPageModel
 
         [Display(Name = "IdP entity id")]
         public string SamlIdpEntityId { get; init; }
+
+        [Display(Name = "Max failed login attempts")]
+        public int BruteForceProtectionMaxFailedAttempts { get; init; } = 10;
+
+        [Display(Name = "Lockout window (seconds)")]
+        public int BruteForceProtectionWindowInSeconds { get; init; } = 60;
     }
 }

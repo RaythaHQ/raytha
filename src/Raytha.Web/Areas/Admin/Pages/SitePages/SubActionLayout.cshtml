@@ -1,0 +1,117 @@
+@using Microsoft.AspNetCore.Mvc.TagHelpers
+@using Raytha.Web.Areas.Admin.Pages.SitePages
+@using Raytha.Application.Common.Interfaces
+@inject IAuthorizationService AuthorizationService
+@inject ICurrentOrganization CurrentOrganization
+@model ISubActionViewModel
+@{
+    Layout = "SidebarLayout";
+}
+
+@functions {
+    public string IsActivePage(string menuItem)
+    {
+        if ((string)ViewData["ActiveSubMenu"] == menuItem)
+        {
+            return "active";
+        }
+        return string.Empty;
+    }
+}
+
+<div class="row mb-4">
+    <partial name="_Partials/PageHeading" model='ViewData["Title"]' />
+    <div class="col-xxl-7 col-xl-8 col-lg-9 col-md-12">
+        <div class="card border-0 shadow mb-4">
+            <div class="card-body">
+                @RenderBody()
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-12">
+        <div class="card border-0 shadow mb-4">
+            <div class="card-body">
+                <div class="nav-wrapper position-relative">
+                    <ul class="nav nav-pills square nav-fill flex-column vertical-tab">
+                        <li class="nav-item">
+                            <a class="nav-link d-inline-flex align-items-center justify-content-center @IsActivePage("Edit")"
+                                asp-page="@RouteNames.SitePages.Edit" asp-route-id="@Model.Id">
+                                <svg class="icon icon-sm mx-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                                    xmlns="http://www.w3.org/2000/svg">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z">
+                                    </path>
+                                </svg>
+                                Edit site page
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link d-inline-flex align-items-center justify-content-center @IsActivePage("Layout")"
+                                asp-page="@RouteNames.SitePages.Layout" asp-route-id="@Model.Id">
+                                <svg class="icon icon-sm mx-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                                    xmlns="http://www.w3.org/2000/svg">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z">
+                                    </path>
+                                </svg>
+                                Edit layout
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link d-inline-flex align-items-center justify-content-center @IsActivePage("Revisions")"
+                                asp-page="@RouteNames.SitePages.Revisions" asp-route-id="@Model.Id">
+                                <svg class="icon icon-sm mx-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                                    xmlns="http://www.w3.org/2000/svg">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z">
+                                    </path>
+                                </svg>
+                                Revisions
+                            </a>
+                        </li>
+                        @if (!string.IsNullOrEmpty(Model.RoutePath))
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link d-inline-flex align-items-center justify-content-center"
+                                   href="@(CurrentOrganization.WebsiteUrl.TrimEnd('/') + CurrentOrganization.PathBase)/@Model.RoutePath?previewDraft=true"
+                                   target="_blank" rel="noopener noreferrer">
+                                    <svg class="icon icon-sm mx-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                                         xmlns="http://www.w3.org/2000/svg">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                              d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14">
+                                        </path>
+                                    </svg>
+                                    Preview
+                                </a>
+                            </li>
+                        }
+                        <li class="nav-item">
+                            <form method="post" asp-page="@RouteNames.SitePages.Delete" asp-route-id="@Model.Id"
+                                onsubmit="return confirm('Are you sure you want to delete this site page?');">
+                                <button
+                                    class="nav-link d-inline-flex align-items-center justify-content-center text-danger">
+                                    <svg class="icon icon-sm mx-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                                        xmlns="http://www.w3.org/2000/svg">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
+                                        </path>
+                                    </svg>
+                                    Delete site page
+                                </button>
+                            </form>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@* Render Scripts section from child pages *@
+@await RenderSectionAsync("Scripts", required: false)
+
+@* Render headstyles section from child pages *@
+@section headstyles {
+    @await RenderSectionAsync("headstyles", required: false)
+}
+

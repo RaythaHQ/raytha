@@ -1,0 +1,60 @@
+{% comment %}
+Hero Widget - Large banner with headline, subtext, and optional CTA button.
+
+Settings:
+  - headline: Main heading text
+  - subheadline: Secondary text below headline
+  - backgroundImage: URL for background image (optional)
+  - backgroundColor: Background color hex code (default: #0d6efd)
+  - textColor: Text color hex code (default: #ffffff)
+  - buttonText: CTA button text (optional)
+  - buttonUrl: CTA button link URL (optional)
+  - buttonStyle: Button style - primary, secondary, light, outline-light, etc. (default: light)
+  - alignment: Text alignment - left, center, right (default: center)
+  - minHeight: Minimum height in pixels (default: 400)
+
+Advanced Meta Fields (available on all widgets):
+  - widget.css_class: Custom CSS classes
+  - widget.html_id: Custom HTML ID attribute
+  - widget.custom_attributes: Custom HTML attributes string
+  - widget.row: Row position in section grid
+  - widget.column: Column position in row
+  - widget.column_span: Number of columns widget spans (1-12)
+{% endcomment %}
+
+{% assign bg_color = widget.settings.backgroundColor | default: '#0d6efd' %}
+{% assign text_color = widget.settings.textColor | default: '#ffffff' %}
+{% assign alignment = widget.settings.alignment | default: 'center' %}
+{% assign min_height = widget.settings.minHeight | default: 400 %}
+{% assign button_style = widget.settings.buttonStyle | default: 'light' %}
+
+<div class="hero-widget position-relative d-flex align-items-center justify-content-{{ alignment }}{% if widget.css_class %} {{ widget.css_class }}{% endif %}"
+     {% if widget.html_id %}id="{{ widget.html_id }}"{% endif %}
+     {{ widget.custom_attributes }}
+     style="min-height: {{ min_height }}px; background-color: {{ bg_color }}; color: {{ text_color }};
+            {% if widget.settings.backgroundImage %}background-image: url('{{ widget.settings.backgroundImage }}'); background-size: cover; background-position: center;{% endif %}">
+  
+  {% if widget.settings.backgroundImage %}
+  <div class="position-absolute top-0 start-0 w-100 h-100" style="background-color: rgba(0,0,0,0.4);"></div>
+  {% endif %}
+  
+  <div class="container position-relative py-5">
+    <div class="row justify-content-{{ alignment }}">
+      <div class="col-lg-8 text-{{ alignment }}">
+        {% if widget.settings.headline %}
+        <h1 class="display-4 fw-bold mb-3">{{ widget.settings.headline }}</h1>
+        {% endif %}
+        
+        {% if widget.settings.subheadline %}
+        <p class="lead mb-4 opacity-90">{{ widget.settings.subheadline }}</p>
+        {% endif %}
+        
+        {% if widget.settings.buttonText and widget.settings.buttonUrl %}
+        <a href="{{ widget.settings.buttonUrl }}" class="btn btn-{{ button_style }} btn-lg px-4">
+          {{ widget.settings.buttonText }}
+        </a>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>

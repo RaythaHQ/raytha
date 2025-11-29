@@ -16,4 +16,6 @@ public class AuthenticationScheme : BaseAuditableEntity
     public string? SignInUrl { get; set; }
     public string? LoginButtonText { get; set; }
     public string? SignOutUrl { get; set; }
+    public int BruteForceProtectionMaxFailedAttempts { get; set; } = 10;
+    public int BruteForceProtectionWindowInSeconds { get; set; } = 60;
 }

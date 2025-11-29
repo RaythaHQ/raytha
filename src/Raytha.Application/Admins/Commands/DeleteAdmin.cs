@@ -331,6 +331,34 @@ public class DeleteAdmin
             }
             _db.VerificationCodes.UpdateRange(verificationCodes);
 
+            var sitePages = _db.SitePages.Where(p =>
+                p.CreatorUserId == request.Id.Guid || p.LastModifierUserId == request.Id.Guid
+            );
+
+            if (sitePages.Any())
+            {
+                foreach (var sitePage in sitePages)
+                {
+                    sitePage.CreatorUserId = null;
+                    sitePage.LastModifierUserId = null;
+                }
+            }
+            _db.SitePages.UpdateRange(sitePages);
+
+            var sitePageRevisions = _db.SitePageRevisions.Where(p =>
+                p.CreatorUserId == request.Id.Guid || p.LastModifierUserId == request.Id.Guid
+            );
+
+            if (sitePageRevisions.Any())
+            {
+                foreach (var sitePageRevision in sitePageRevisions)
+                {
+                    sitePageRevision.CreatorUserId = null;
+                    sitePageRevision.LastModifierUserId = null;
+                }
+            }
+            _db.SitePageRevisions.UpdateRange(sitePageRevisions);
+
             var users = _db.Users.Where(p =>
                 p.CreatorUserId == request.Id.Guid || p.LastModifierUserId == request.Id.Guid
             );

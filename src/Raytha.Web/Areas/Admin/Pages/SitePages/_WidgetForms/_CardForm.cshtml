@@ -1,0 +1,114 @@
+@model Raytha.Web.Areas.Admin.Pages.SitePages.EditWidget
+
+<div class="mb-3">
+    <label class="form-label" asp-for="CardForm.Title"></label>
+    <input type="text" class="form-control" asp-for="CardForm.Title" placeholder="Enter card title">
+</div>
+
+<div class="mb-3" id="card-widget-description" 
+     data-field-type="wysiwyg"
+     data-developername="CardForm_Description">
+    <label class="form-label" asp-for="CardForm.Description"></label>
+    <div></div>
+    <textarea data-developername="CardForm_Description"
+        id="CardForm_Description"
+        asp-for="CardForm.Description"
+        hidden></textarea>
+</div>
+
+<h6 class="mb-3 mt-4">Image (Optional)</h6>
+
+<div class="row">
+    <div class="col-md-8 mb-3">
+        <label class="form-label" asp-for="CardForm.ImageUrl"></label>
+        
+        <!-- Tabs for URL or Upload -->
+        <ul class="nav nav-tabs mb-2" id="cardImageTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="card-url-tab" data-bs-toggle="tab" data-bs-target="#card-url-content" 
+                    type="button" role="tab" aria-controls="card-url-content" aria-selected="true">
+                    <i class="bi bi-link-45deg me-1"></i> URL
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="card-upload-tab" data-bs-toggle="tab" data-bs-target="#card-upload-content" 
+                    type="button" role="tab" aria-controls="card-upload-content" aria-selected="false">
+                    <i class="bi bi-upload me-1"></i> Upload
+                </button>
+            </li>
+        </ul>
+        
+        <div class="tab-content" id="cardImageTabContent">
+            <!-- URL Tab -->
+            <div class="tab-pane fade show active" id="card-url-content" role="tabpanel" aria-labelledby="card-url-tab">
+                <input type="url" class="form-control" id="CardForm_ImageUrl_Url" 
+                    placeholder="https://example.com/image.jpg">
+                <div class="form-text">Enter an image URL directly</div>
+            </div>
+            
+            <!-- Upload Tab -->
+            <div class="tab-pane fade" id="card-upload-content" role="tabpanel" aria-labelledby="card-upload-tab">
+                <div id="card-image-uppy"></div>
+                <div id="card-image-uppy-progress"></div>
+                <div id="card-image-file-info" hidden>
+                    <div class="d-flex align-items-center gap-2 p-2 bg-light rounded">
+                        <i class="bi bi-image fs-4 text-primary"></i>
+                        <span id="card-image-filename" class="flex-grow-1"></span>
+                        <button type="button" class="btn btn-sm btn-outline-danger" id="card-image-remove">
+                            <i class="bi bi-x-lg"></i> Remove
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Hidden field that stores the actual value -->
+        <input type="hidden" asp-for="CardForm.ImageUrl" id="CardForm_ImageUrl_Hidden">
+        
+        <!-- Preview -->
+        <div id="card-image-preview" class="mt-2" style="display: none;">
+            <img id="card-image-preview-img" src="" alt="Preview" class="img-thumbnail" style="max-height: 100px;">
+        </div>
+    </div>
+    <div class="col-md-4 mb-3">
+        <label class="form-label" asp-for="CardForm.ImageAlt"></label>
+        <input type="text" class="form-control" asp-for="CardForm.ImageAlt"
+            placeholder="Describe the image">
+    </div>
+</div>
+
+<h6 class="mb-3 mt-4">Button (Optional)</h6>
+
+<div class="row">
+    <div class="col-md-4 mb-3">
+        <label class="form-label" asp-for="CardForm.ButtonText"></label>
+        <input type="text" class="form-control" asp-for="CardForm.ButtonText" placeholder="Learn More">
+    </div>
+    <div class="col-md-4 mb-3">
+        <label class="form-label" asp-for="CardForm.ButtonUrl"></label>
+        <input type="text" class="form-control" asp-for="CardForm.ButtonUrl" placeholder="/page-url">
+    </div>
+    <div class="col-md-4 mb-3">
+        <label class="form-label" asp-for="CardForm.ButtonStyle"></label>
+        <select class="form-select" asp-for="CardForm.ButtonStyle">
+            <option value="primary">Primary</option>
+            <option value="secondary">Secondary</option>
+            <option value="outline-primary">Outline Primary</option>
+            <option value="link">Link</option>
+        </select>
+    </div>
+</div>
+
+<h6 class="mb-3 mt-4">Appearance</h6>
+
+<div class="mb-3">
+    <label class="form-label" asp-for="CardForm.BackgroundColor"></label>
+    <div class="input-group" style="max-width: 200px;">
+        <input type="color" class="form-control form-control-color"
+            value="@(Model.CardForm?.BackgroundColor ?? "#ffffff")"
+            onchange="document.getElementById('CardForm_BackgroundColor').value = this.value">
+        <input type="text" class="form-control" asp-for="CardForm.BackgroundColor" placeholder="#ffffff">
+    </div>
+    <div class="form-text">Leave empty for default card styling</div>
+</div>
+
