@@ -61,6 +61,6 @@ public class BuiltInWebTemplateTests
     [Test]
     public void ShouldMatchNumberOfSupportedTypes()
     {
-        BuiltInWebTemplate.Templates.Count().Should().Be(19);
+        BuiltInWebTemplate.Templates.Count().Should().Be(22);
     }
 }
