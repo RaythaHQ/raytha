@@ -17,7 +17,7 @@ namespace Raytha.Migrations.Postgres
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "10.0.0")
+                .HasAnnotation("ProductVersion", "8.0.10")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -1040,9 +1040,6 @@ namespace Raytha.Migrations.Postgres
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<Guid>("SitePageId")
-                        .HasColumnType("uuid");
-
                     b.Property<Guid>("ViewId")
                         .HasColumnType("uuid");
 
@@ -1052,98 +1049,6 @@ namespace Raytha.Migrations.Postgres
                         .IsUnique();
 
                     b.ToTable("Routes");
-                });
-
-            modelBuilder.Entity("Raytha.Domain.Entities.SitePage", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime>("CreationTime")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid?>("CreatorUserId")
-                        .HasColumnType("uuid");
-
-                    b.Property<bool>("IsDraft")
-                        .HasColumnType("boolean");
-
-                    b.Property<bool>("IsPublished")
-                        .HasColumnType("boolean");
-
-                    b.Property<DateTime?>("LastModificationTime")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid?>("LastModifierUserId")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("RouteId")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("Title")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<Guid>("WebTemplateId")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("_DraftWidgetsJson")
-                        .HasColumnType("jsonb")
-                        .HasColumnName("_DraftWidgetsJson");
-
-                    b.Property<string>("_PublishedWidgetsJson")
-                        .HasColumnType("jsonb")
-                        .HasColumnName("_PublishedWidgetsJson");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CreatorUserId");
-
-                    b.HasIndex("LastModifierUserId");
-
-                    b.HasIndex("RouteId")
-                        .IsUnique();
-
-                    b.HasIndex("WebTemplateId");
-
-                    b.ToTable("SitePages");
-                });
-
-            modelBuilder.Entity("Raytha.Domain.Entities.SitePageRevision", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime>("CreationTime")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid?>("CreatorUserId")
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime?>("LastModificationTime")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid?>("LastModifierUserId")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("SitePageId")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("_PublishedWidgetsJson")
-                        .HasColumnType("jsonb")
-                        .HasColumnName("_PublishedWidgetsJson");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CreatorUserId");
-
-                    b.HasIndex("LastModifierUserId");
-
-                    b.HasIndex("SitePageId");
-
-                    b.ToTable("SitePageRevisions");
                 });
 
             modelBuilder.Entity("Raytha.Domain.Entities.Theme", b =>
@@ -1606,91 +1511,6 @@ namespace Raytha.Migrations.Postgres
                     b.ToTable("WebTemplateViewRelations");
                 });
 
-            modelBuilder.Entity("Raytha.Domain.Entities.WidgetTemplate", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("Content")
-                        .HasColumnType("text");
-
-                    b.Property<DateTime>("CreationTime")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid?>("CreatorUserId")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("DeveloperName")
-                        .HasColumnType("text");
-
-                    b.Property<bool>("IsBuiltInTemplate")
-                        .HasColumnType("boolean");
-
-                    b.Property<string>("Label")
-                        .HasColumnType("text");
-
-                    b.Property<DateTime?>("LastModificationTime")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid?>("LastModifierUserId")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("ThemeId")
-                        .HasColumnType("uuid");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CreatorUserId");
-
-                    b.HasIndex("LastModifierUserId");
-
-                    b.HasIndex("ThemeId");
-
-                    b.HasIndex("DeveloperName", "ThemeId")
-                        .IsUnique();
-
-                    b.ToTable("WidgetTemplates");
-                });
-
-            modelBuilder.Entity("Raytha.Domain.Entities.WidgetTemplateRevision", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("Content")
-                        .HasColumnType("text");
-
-                    b.Property<DateTime>("CreationTime")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid?>("CreatorUserId")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("Label")
-                        .HasColumnType("text");
-
-                    b.Property<DateTime?>("LastModificationTime")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid?>("LastModifierUserId")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("WidgetTemplateId")
-                        .HasColumnType("uuid");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CreatorUserId");
-
-                    b.HasIndex("LastModifierUserId");
-
-                    b.HasIndex("WidgetTemplateId");
-
-                    b.ToTable("WidgetTemplateRevisions");
-                });
-
             modelBuilder.Entity("RoleUser", b =>
                 {
                     b.Property<Guid>("RolesId")
@@ -2105,60 +1925,6 @@ namespace Raytha.Migrations.Postgres
                     b.Navigation("LastModifierUser");
                 });
 
-            modelBuilder.Entity("Raytha.Domain.Entities.SitePage", b =>
-                {
-                    b.HasOne("Raytha.Domain.Entities.User", "CreatorUser")
-                        .WithMany()
-                        .HasForeignKey("CreatorUserId");
-
-                    b.HasOne("Raytha.Domain.Entities.User", "LastModifierUser")
-                        .WithMany()
-                        .HasForeignKey("LastModifierUserId");
-
-                    b.HasOne("Raytha.Domain.Entities.Route", "Route")
-                        .WithOne("SitePage")
-                        .HasForeignKey("Raytha.Domain.Entities.SitePage", "RouteId")
-                        .OnDelete(DeleteBehavior.ClientCascade)
-                        .IsRequired();
-
-                    b.HasOne("Raytha.Domain.Entities.WebTemplate", "WebTemplate")
-                        .WithMany()
-                        .HasForeignKey("WebTemplateId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("CreatorUser");
-
-                    b.Navigation("LastModifierUser");
-
-                    b.Navigation("Route");
-
-                    b.Navigation("WebTemplate");
-                });
-
-            modelBuilder.Entity("Raytha.Domain.Entities.SitePageRevision", b =>
-                {
-                    b.HasOne("Raytha.Domain.Entities.User", "CreatorUser")
-                        .WithMany()
-                        .HasForeignKey("CreatorUserId");
-
-                    b.HasOne("Raytha.Domain.Entities.User", "LastModifierUser")
-                        .WithMany()
-                        .HasForeignKey("LastModifierUserId");
-
-                    b.HasOne("Raytha.Domain.Entities.SitePage", "SitePage")
-                        .WithMany()
-                        .HasForeignKey("SitePageId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("CreatorUser");
-
-                    b.Navigation("LastModifierUser");
-
-                    b.Navigation("SitePage");
-                });
-
             modelBuilder.Entity("Raytha.Domain.Entities.Theme", b =>
                 {
                     b.HasOne("Raytha.Domain.Entities.User", "CreatorUser")
@@ -2390,52 +2156,6 @@ namespace Raytha.Migrations.Postgres
                     b.Navigation("WebTemplate");
                 });
 
-            modelBuilder.Entity("Raytha.Domain.Entities.WidgetTemplate", b =>
-                {
-                    b.HasOne("Raytha.Domain.Entities.User", "CreatorUser")
-                        .WithMany()
-                        .HasForeignKey("CreatorUserId");
-
-                    b.HasOne("Raytha.Domain.Entities.User", "LastModifierUser")
-                        .WithMany()
-                        .HasForeignKey("LastModifierUserId");
-
-                    b.HasOne("Raytha.Domain.Entities.Theme", "Theme")
-                        .WithMany()
-                        .HasForeignKey("ThemeId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("CreatorUser");
-
-                    b.Navigation("LastModifierUser");
-
-                    b.Navigation("Theme");
-                });
-
-            modelBuilder.Entity("Raytha.Domain.Entities.WidgetTemplateRevision", b =>
-                {
-                    b.HasOne("Raytha.Domain.Entities.User", "CreatorUser")
-                        .WithMany()
-                        .HasForeignKey("CreatorUserId");
-
-                    b.HasOne("Raytha.Domain.Entities.User", "LastModifierUser")
-                        .WithMany()
-                        .HasForeignKey("LastModifierUserId");
-
-                    b.HasOne("Raytha.Domain.Entities.WidgetTemplate", "WidgetTemplate")
-                        .WithMany("Revisions")
-                        .HasForeignKey("WidgetTemplateId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("CreatorUser");
-
-                    b.Navigation("LastModifierUser");
-
-                    b.Navigation("WidgetTemplate");
-                });
-
             modelBuilder.Entity("RoleUser", b =>
                 {
                     b.HasOne("Raytha.Domain.Entities.Role", null)
@@ -2520,9 +2240,6 @@ namespace Raytha.Migrations.Postgres
                     b.Navigation("ContentItem")
                         .IsRequired();
 
-                    b.Navigation("SitePage")
-                        .IsRequired();
-
                     b.Navigation("View")
                         .IsRequired();
                 });
@@ -2544,11 +2261,6 @@ namespace Raytha.Migrations.Postgres
                     b.Navigation("Revisions");
 
                     b.Navigation("TemplateAccessToModelDefinitions");
-                });
-
-            modelBuilder.Entity("Raytha.Domain.Entities.WidgetTemplate", b =>
-                {
-                    b.Navigation("Revisions");
                 });
 #pragma warning restore 612, 618
         }
