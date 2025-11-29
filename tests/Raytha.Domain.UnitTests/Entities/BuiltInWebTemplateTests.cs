@@ -26,6 +26,9 @@ public class BuiltInWebTemplateTests
     [TestCase("raytha_html_forgotpasswordcomplete")]
     [TestCase("raytha_html_forgotpassword_reset_link_sent")]
     [TestCase("raytha_html_forgotpasswordsuccess")]
+    [TestCase("raytha_html_page_fullwidth")]
+    [TestCase("raytha_html_page_sidebar")]
+    [TestCase("raytha_html_page_multi")]
     [Parallelizable(ParallelScope.All)]
     public void ShouldReturnCorrectDeveloperName(string developerName)
     {
