@@ -35,21 +35,47 @@ Raytha is a versatile and lightweight general purpose content management system.
 
 ⚡Raytha is available on [DockerHub](https://hub.docker.com/r/raythahq/raytha) and is designed to work out of the box with a single <strong>Docker container and Postgres</strong>, making it incredibly easy to deploy anywhere. With a docker-compose.yml file, you can get everything up and running in a minute.
 
-Simply download the docker-compose.yml file from the Raytha code repository.
+### Quick Start
 
-You can [download it here](https://github.com/raythahq/raytha/blob/main/docker-compose.yml) or copy it directly.
-
-Once you have the docker-compose.yml file, navigate to the directory where you saved it and run:
-
-```
-docker-compose up
+1. Clone or download the repository:
+```bash
+git clone https://github.com/RaythaHQ/raytha.git
+cd raytha
 ```
 
-On the <strong>first run</strong>, Raytha will automatically apply the migration scripts and set up the database. After the migration completes, you’ll be presented with a <strong>setup screen</strong> to configure the CMS.
+2. Copy the example environment file:
+```bash
+cp .env.example .env
+```
 
-<strong>Advanced Settings</strong>
+3. Start Raytha with Docker Compose:
+```bash
+docker-compose --env-file .env up
+```
 
-Raytha offers a plethora of environment variable settings that you can set to take advantage of additional functionality. If you want to set <strong>SMTP settings</strong> to ensure that Forgot Password and other similar emails are sent from Raytha, or use a <strong>cloud storage such as S3 or Azure Blob</strong>, then review the environment variables in the docker-compose.yml file.
+4. Open your browser to `http://localhost:5001` and complete the setup wizard.
+
+On the <strong>first run</strong>, Raytha will automatically apply the migration scripts and set up the database. After the migration completes, you'll be presented with a <strong>setup screen</strong> to configure the CMS.
+
+### Development Mode (HTTP without HTTPS)
+
+By default, Raytha enforces HTTPS in production environments. If you're running Raytha over HTTP in a non-localhost environment (e.g., a remote server or VM without SSL), you need to set the environment to Development mode:
+
+```bash
+ASPNETCORE_ENVIRONMENT=Development
+```
+
+This is already set in the `.env.example` file. For production deployments with proper SSL/TLS certificates, change this to `Production`.
+
+### Advanced Settings
+
+Raytha offers a plethora of environment variable settings that you can set to take advantage of additional functionality. Review the `.env.example` file for all available options including:
+
+- **SMTP settings** - For password reset and notification emails
+- **Cloud storage** - S3 or Azure Blob for file uploads
+- **Raytha Functions** - Configure serverless function settings
+
+You can also review the environment variables directly in the `docker-compose.yml` file.
 
 ## Why Raytha?
 
