@@ -1,11 +1,15 @@
-﻿IF OBJECT_ID(N'[__EFMigrationsHistory]') IS NULL BEGIN CREATE TABLE [__EFMigrationsHistory] (
-    [MigrationId] nvarchar(150) NOT NULL,
-    [ProductVersion] nvarchar(32) NOT NULL,
-    CONSTRAINT [PK___EFMigrationsHistory] PRIMARY KEY ([MigrationId])
-);
+﻿IF OBJECT_ID(N'[__EFMigrationsHistory]') IS NULL BEGIN
+    CREATE TABLE [__EFMigrationsHistory]
+    (
+        [MigrationId] nvarchar(150) NOT NULL,
+        [ProductVersion] nvarchar(32) NOT NULL,
+        CONSTRAINT [PK___EFMigrationsHistory] PRIMARY KEY ([MigrationId])
+    );
 END;
-GO BEGIN TRANSACTION;
-CREATE TABLE [AuditLogs] (
+GO
+BEGIN TRANSACTION;
+CREATE TABLE [AuditLogs]
+(
     [Id] uniqueidentifier NOT NULL,
     [EntityId] uniqueidentifier NULL,
     [Category] nvarchar(450) NOT NULL,
@@ -15,7 +19,8 @@ CREATE TABLE [AuditLogs] (
     [CreationTime] datetime2 NOT NULL,
     CONSTRAINT [PK_AuditLogs] PRIMARY KEY ([Id])
 );
-CREATE TABLE [BackgroundTasks] (
+CREATE TABLE [BackgroundTasks]
+(
     [Id] uniqueidentifier NOT NULL,
     [Name] nvarchar(max) NOT NULL,
     [Args] nvarchar(max) NULL,
@@ -30,26 +35,30 @@ CREATE TABLE [BackgroundTasks] (
     [TaskStep] int NOT NULL,
     CONSTRAINT [PK_BackgroundTasks] PRIMARY KEY ([Id])
 );
-CREATE TABLE [DataProtectionKeys] (
+CREATE TABLE [DataProtectionKeys]
+(
     [Id] int NOT NULL IDENTITY,
     [FriendlyName] nvarchar(max) NULL,
     [Xml] nvarchar(max) NULL,
     CONSTRAINT [PK_DataProtectionKeys] PRIMARY KEY ([Id])
 );
-CREATE TABLE [FailedLoginAttempts] (
+CREATE TABLE [FailedLoginAttempts]
+(
     [Id] uniqueidentifier NOT NULL,
     [EmailAddress] nvarchar(450) NOT NULL,
     [FailedAttemptCount] int NOT NULL,
     [LastFailedAttemptAt] datetime2 NOT NULL,
     CONSTRAINT [PK_FailedLoginAttempts] PRIMARY KEY ([Id])
 );
-CREATE TABLE [JwtLogins] (
+CREATE TABLE [JwtLogins]
+(
     [Id] uniqueidentifier NOT NULL,
     [Jti] nvarchar(450) NULL,
     [CreationTime] datetime2 NOT NULL,
     CONSTRAINT [PK_JwtLogins] PRIMARY KEY ([Id])
 );
-CREATE TABLE [OrganizationSettings] (
+CREATE TABLE [OrganizationSettings]
+(
     [Id] uniqueidentifier NOT NULL,
     [OrganizationName] nvarchar(max) NULL,
     [WebsiteUrl] nvarchar(max) NULL,
@@ -67,7 +76,8 @@ CREATE TABLE [OrganizationSettings] (
     [ActiveThemeId] uniqueidentifier NOT NULL,
     CONSTRAINT [PK_OrganizationSettings] PRIMARY KEY ([Id])
 );
-CREATE TABLE [Routes] (
+CREATE TABLE [Routes]
+(
     [Id] uniqueidentifier NOT NULL,
     [Path] nvarchar(450) NOT NULL,
     [ContentItemId] uniqueidentifier NOT NULL,
@@ -75,7 +85,8 @@ CREATE TABLE [Routes] (
     [SitePageId] uniqueidentifier NOT NULL,
     CONSTRAINT [PK_Routes] PRIMARY KEY ([Id])
 );
-CREATE TABLE [AuthenticationSchemes] (
+CREATE TABLE [AuthenticationSchemes]
+(
     [Id] uniqueidentifier NOT NULL,
     [IsBuiltInAuth] bit NOT NULL,
     [IsEnabledForUsers] bit NOT NULL,
@@ -99,7 +110,8 @@ CREATE TABLE [AuthenticationSchemes] (
     [LastModifierUserId] uniqueidentifier NULL,
     CONSTRAINT [PK_AuthenticationSchemes] PRIMARY KEY ([Id])
 );
-CREATE TABLE [Users] (
+CREATE TABLE [Users]
+(
     [Id] uniqueidentifier NOT NULL,
     [IsAdmin] bit NOT NULL,
     [IsActive] bit NOT NULL,
@@ -122,7 +134,8 @@ CREATE TABLE [Users] (
     CONSTRAINT [FK_Users_Users_CreatorUserId] FOREIGN KEY ([CreatorUserId]) REFERENCES [Users] ([Id]),
     CONSTRAINT [FK_Users_Users_LastModifierUserId] FOREIGN KEY ([LastModifierUserId]) REFERENCES [Users] ([Id])
 );
-CREATE TABLE [ApiKeys] (
+CREATE TABLE [ApiKeys]
+(
     [Id] uniqueidentifier NOT NULL,
     [ApiKeyHash] varbinary(900) NOT NULL,
     [UserId] uniqueidentifier NOT NULL,
@@ -132,7 +145,8 @@ CREATE TABLE [ApiKeys] (
     CONSTRAINT [FK_ApiKeys_Users_CreatorUserId] FOREIGN KEY ([CreatorUserId]) REFERENCES [Users] ([Id]),
     CONSTRAINT [FK_ApiKeys_Users_UserId] FOREIGN KEY ([UserId]) REFERENCES [Users] ([Id]) ON DELETE CASCADE
 );
-CREATE TABLE [ContentTypes] (
+CREATE TABLE [ContentTypes]
+(
     [Id] uniqueidentifier NOT NULL,
     [IsActive] bit NOT NULL,
     [LabelPlural] nvarchar(max) NULL,
@@ -152,7 +166,8 @@ CREATE TABLE [ContentTypes] (
     CONSTRAINT [FK_ContentTypes_Users_CreatorUserId] FOREIGN KEY ([CreatorUserId]) REFERENCES [Users] ([Id]),
     CONSTRAINT [FK_ContentTypes_Users_LastModifierUserId] FOREIGN KEY ([LastModifierUserId]) REFERENCES [Users] ([Id])
 );
-CREATE TABLE [EmailTemplates] (
+CREATE TABLE [EmailTemplates]
+(
     [Id] uniqueidentifier NOT NULL,
     [Subject] nvarchar(max) NULL,
     [DeveloperName] nvarchar(450) NULL,
@@ -168,7 +183,8 @@ CREATE TABLE [EmailTemplates] (
     CONSTRAINT [FK_EmailTemplates_Users_CreatorUserId] FOREIGN KEY ([CreatorUserId]) REFERENCES [Users] ([Id]),
     CONSTRAINT [FK_EmailTemplates_Users_LastModifierUserId] FOREIGN KEY ([LastModifierUserId]) REFERENCES [Users] ([Id])
 );
-CREATE TABLE [MediaItems] (
+CREATE TABLE [MediaItems]
+(
     [Id] uniqueidentifier NOT NULL,
     [Length] bigint NOT NULL,
     [FileName] nvarchar(max) NOT NULL,
@@ -183,7 +199,8 @@ CREATE TABLE [MediaItems] (
     CONSTRAINT [FK_MediaItems_Users_CreatorUserId] FOREIGN KEY ([CreatorUserId]) REFERENCES [Users] ([Id]),
     CONSTRAINT [FK_MediaItems_Users_LastModifierUserId] FOREIGN KEY ([LastModifierUserId]) REFERENCES [Users] ([Id])
 );
-CREATE TABLE [NavigationMenus] (
+CREATE TABLE [NavigationMenus]
+(
     [Id] uniqueidentifier NOT NULL,
     [Label] nvarchar(max) NOT NULL,
     [DeveloperName] nvarchar(450) NOT NULL,
@@ -196,7 +213,8 @@ CREATE TABLE [NavigationMenus] (
     CONSTRAINT [FK_NavigationMenus_Users_CreatorUserId] FOREIGN KEY ([CreatorUserId]) REFERENCES [Users] ([Id]),
     CONSTRAINT [FK_NavigationMenus_Users_LastModifierUserId] FOREIGN KEY ([LastModifierUserId]) REFERENCES [Users] ([Id])
 );
-CREATE TABLE [OneTimePasswords] (
+CREATE TABLE [OneTimePasswords]
+(
     [Id] varbinary(900) NOT NULL,
     [CreationTime] datetime2 NOT NULL,
     [ExpiresAt] datetime2 NOT NULL,
@@ -205,7 +223,8 @@ CREATE TABLE [OneTimePasswords] (
     CONSTRAINT [PK_OneTimePasswords] PRIMARY KEY ([Id]),
     CONSTRAINT [FK_OneTimePasswords_Users_UserId] FOREIGN KEY ([UserId]) REFERENCES [Users] ([Id]) ON DELETE CASCADE
 );
-CREATE TABLE [RaythaFunctions] (
+CREATE TABLE [RaythaFunctions]
+(
     [Id] uniqueidentifier NOT NULL,
     [Name] nvarchar(max) NOT NULL,
     [DeveloperName] nvarchar(450) NOT NULL,
@@ -220,7 +239,8 @@ CREATE TABLE [RaythaFunctions] (
     CONSTRAINT [FK_RaythaFunctions_Users_CreatorUserId] FOREIGN KEY ([CreatorUserId]) REFERENCES [Users] ([Id]),
     CONSTRAINT [FK_RaythaFunctions_Users_LastModifierUserId] FOREIGN KEY ([LastModifierUserId]) REFERENCES [Users] ([Id])
 );
-CREATE TABLE [Roles] (
+CREATE TABLE [Roles]
+(
     [Id] uniqueidentifier NOT NULL,
     [Label] nvarchar(max) NOT NULL,
     [DeveloperName] nvarchar(450) NOT NULL,
@@ -233,7 +253,8 @@ CREATE TABLE [Roles] (
     CONSTRAINT [FK_Roles_Users_CreatorUserId] FOREIGN KEY ([CreatorUserId]) REFERENCES [Users] ([Id]),
     CONSTRAINT [FK_Roles_Users_LastModifierUserId] FOREIGN KEY ([LastModifierUserId]) REFERENCES [Users] ([Id])
 );
-CREATE TABLE [Themes] (
+CREATE TABLE [Themes]
+(
     [Id] uniqueidentifier NOT NULL,
     [Title] nvarchar(max) NOT NULL,
     [DeveloperName] nvarchar(450) NOT NULL,
@@ -247,7 +268,8 @@ CREATE TABLE [Themes] (
     CONSTRAINT [FK_Themes_Users_CreatorUserId] FOREIGN KEY ([CreatorUserId]) REFERENCES [Users] ([Id]),
     CONSTRAINT [FK_Themes_Users_LastModifierUserId] FOREIGN KEY ([LastModifierUserId]) REFERENCES [Users] ([Id])
 );
-CREATE TABLE [UserGroups] (
+CREATE TABLE [UserGroups]
+(
     [Id] uniqueidentifier NOT NULL,
     [Label] nvarchar(max) NOT NULL,
     [DeveloperName] nvarchar(450) NOT NULL,
@@ -259,7 +281,8 @@ CREATE TABLE [UserGroups] (
     CONSTRAINT [FK_UserGroups_Users_CreatorUserId] FOREIGN KEY ([CreatorUserId]) REFERENCES [Users] ([Id]),
     CONSTRAINT [FK_UserGroups_Users_LastModifierUserId] FOREIGN KEY ([LastModifierUserId]) REFERENCES [Users] ([Id])
 );
-CREATE TABLE [VerificationCodes] (
+CREATE TABLE [VerificationCodes]
+(
     [Id] uniqueidentifier NOT NULL,
     [Code] uniqueidentifier NOT NULL,
     [ExpiresAt] datetime2 NOT NULL,
@@ -274,7 +297,8 @@ CREATE TABLE [VerificationCodes] (
     CONSTRAINT [FK_VerificationCodes_Users_CreatorUserId] FOREIGN KEY ([CreatorUserId]) REFERENCES [Users] ([Id]),
     CONSTRAINT [FK_VerificationCodes_Users_LastModifierUserId] FOREIGN KEY ([LastModifierUserId]) REFERENCES [Users] ([Id])
 );
-CREATE TABLE [ContentTypeFields] (
+CREATE TABLE [ContentTypeFields]
+(
     [Id] uniqueidentifier NOT NULL,
     [Label] nvarchar(max) NULL,
     [DeveloperName] nvarchar(max) NULL,
@@ -298,7 +322,8 @@ CREATE TABLE [ContentTypeFields] (
     CONSTRAINT [FK_ContentTypeFields_Users_CreatorUserId] FOREIGN KEY ([CreatorUserId]) REFERENCES [Users] ([Id]),
     CONSTRAINT [FK_ContentTypeFields_Users_LastModifierUserId] FOREIGN KEY ([LastModifierUserId]) REFERENCES [Users] ([Id])
 );
-CREATE TABLE [ContentItems] (
+CREATE TABLE [ContentItems]
+(
     [Id] uniqueidentifier NOT NULL,
     [IsPublished] bit NOT NULL,
     [IsDraft] bit NOT NULL,
@@ -316,7 +341,8 @@ CREATE TABLE [ContentItems] (
     CONSTRAINT [FK_ContentItems_Users_CreatorUserId] FOREIGN KEY ([CreatorUserId]) REFERENCES [Users] ([Id]),
     CONSTRAINT [FK_ContentItems_Users_LastModifierUserId] FOREIGN KEY ([LastModifierUserId]) REFERENCES [Users] ([Id])
 );
-CREATE TABLE [DeletedContentItems] (
+CREATE TABLE [DeletedContentItems]
+(
     [Id] uniqueidentifier NOT NULL,
     [_PublishedContent] nvarchar(max) NULL,
     [PrimaryField] nvarchar(max) NULL,
@@ -333,7 +359,8 @@ CREATE TABLE [DeletedContentItems] (
     CONSTRAINT [FK_DeletedContentItems_Users_CreatorUserId] FOREIGN KEY ([CreatorUserId]) REFERENCES [Users] ([Id]),
     CONSTRAINT [FK_DeletedContentItems_Users_LastModifierUserId] FOREIGN KEY ([LastModifierUserId]) REFERENCES [Users] ([Id])
 );
-CREATE TABLE [Views] (
+CREATE TABLE [Views]
+(
     [Id] uniqueidentifier NOT NULL,
     [Label] nvarchar(max) NULL,
     [DeveloperName] nvarchar(max) NULL,
@@ -357,7 +384,8 @@ CREATE TABLE [Views] (
     CONSTRAINT [FK_Views_Users_CreatorUserId] FOREIGN KEY ([CreatorUserId]) REFERENCES [Users] ([Id]),
     CONSTRAINT [FK_Views_Users_LastModifierUserId] FOREIGN KEY ([LastModifierUserId]) REFERENCES [Users] ([Id])
 );
-CREATE TABLE [EmailTemplateRevisions] (
+CREATE TABLE [EmailTemplateRevisions]
+(
     [Id] uniqueidentifier NOT NULL,
     [Subject] nvarchar(max) NULL,
     [Content] nvarchar(max) NULL,
@@ -373,7 +401,8 @@ CREATE TABLE [EmailTemplateRevisions] (
     CONSTRAINT [FK_EmailTemplateRevisions_Users_CreatorUserId] FOREIGN KEY ([CreatorUserId]) REFERENCES [Users] ([Id]),
     CONSTRAINT [FK_EmailTemplateRevisions_Users_LastModifierUserId] FOREIGN KEY ([LastModifierUserId]) REFERENCES [Users] ([Id])
 );
-CREATE TABLE [NavigationMenuItems] (
+CREATE TABLE [NavigationMenuItems]
+(
     [Id] uniqueidentifier NOT NULL,
     [Label] nvarchar(max) NOT NULL,
     [Url] nvarchar(max) NOT NULL,
@@ -393,7 +422,8 @@ CREATE TABLE [NavigationMenuItems] (
     CONSTRAINT [FK_NavigationMenuItems_Users_CreatorUserId] FOREIGN KEY ([CreatorUserId]) REFERENCES [Users] ([Id]),
     CONSTRAINT [FK_NavigationMenuItems_Users_LastModifierUserId] FOREIGN KEY ([LastModifierUserId]) REFERENCES [Users] ([Id])
 );
-CREATE TABLE [NavigationMenuRevisions] (
+CREATE TABLE [NavigationMenuRevisions]
+(
     [Id] uniqueidentifier NOT NULL,
     [NavigationMenuItemsJson] nvarchar(max) NOT NULL,
     [NavigationMenuId] uniqueidentifier NOT NULL,
@@ -406,7 +436,8 @@ CREATE TABLE [NavigationMenuRevisions] (
     CONSTRAINT [FK_NavigationMenuRevisions_Users_CreatorUserId] FOREIGN KEY ([CreatorUserId]) REFERENCES [Users] ([Id]),
     CONSTRAINT [FK_NavigationMenuRevisions_Users_LastModifierUserId] FOREIGN KEY ([LastModifierUserId]) REFERENCES [Users] ([Id])
 );
-CREATE TABLE [RaythaFunctionRevisions] (
+CREATE TABLE [RaythaFunctionRevisions]
+(
     [Id] uniqueidentifier NOT NULL,
     [Code] nvarchar(max) NOT NULL,
     [RaythaFunctionId] uniqueidentifier NOT NULL,
@@ -419,7 +450,8 @@ CREATE TABLE [RaythaFunctionRevisions] (
     CONSTRAINT [FK_RaythaFunctionRevisions_Users_CreatorUserId] FOREIGN KEY ([CreatorUserId]) REFERENCES [Users] ([Id]),
     CONSTRAINT [FK_RaythaFunctionRevisions_Users_LastModifierUserId] FOREIGN KEY ([LastModifierUserId]) REFERENCES [Users] ([Id])
 );
-CREATE TABLE [ContentTypeRolePermission] (
+CREATE TABLE [ContentTypeRolePermission]
+(
     [Id] uniqueidentifier NOT NULL,
     [ContentTypeId] uniqueidentifier NOT NULL,
     [ContentTypePermissions] int NOT NULL,
@@ -434,14 +466,16 @@ CREATE TABLE [ContentTypeRolePermission] (
     CONSTRAINT [FK_ContentTypeRolePermission_Users_CreatorUserId] FOREIGN KEY ([CreatorUserId]) REFERENCES [Users] ([Id]),
     CONSTRAINT [FK_ContentTypeRolePermission_Users_LastModifierUserId] FOREIGN KEY ([LastModifierUserId]) REFERENCES [Users] ([Id])
 );
-CREATE TABLE [RoleUser] (
+CREATE TABLE [RoleUser]
+(
     [RolesId] uniqueidentifier NOT NULL,
     [UsersId] uniqueidentifier NOT NULL,
     CONSTRAINT [PK_RoleUser] PRIMARY KEY ([RolesId], [UsersId]),
     CONSTRAINT [FK_RoleUser_Roles_RolesId] FOREIGN KEY ([RolesId]) REFERENCES [Roles] ([Id]) ON DELETE CASCADE,
     CONSTRAINT [FK_RoleUser_Users_UsersId] FOREIGN KEY ([UsersId]) REFERENCES [Users] ([Id]) ON DELETE CASCADE
 );
-CREATE TABLE [ThemeAccessToMediaItems] (
+CREATE TABLE [ThemeAccessToMediaItems]
+(
     [Id] uniqueidentifier NOT NULL,
     [ThemeId] uniqueidentifier NOT NULL,
     [MediaItemId] uniqueidentifier NOT NULL,
@@ -449,7 +483,8 @@ CREATE TABLE [ThemeAccessToMediaItems] (
     CONSTRAINT [FK_ThemeAccessToMediaItems_MediaItems_MediaItemId] FOREIGN KEY ([MediaItemId]) REFERENCES [MediaItems] ([Id]) ON DELETE CASCADE,
     CONSTRAINT [FK_ThemeAccessToMediaItems_Themes_ThemeId] FOREIGN KEY ([ThemeId]) REFERENCES [Themes] ([Id]) ON DELETE CASCADE
 );
-CREATE TABLE [WebTemplates] (
+CREATE TABLE [WebTemplates]
+(
     [Id] uniqueidentifier NOT NULL,
     [ThemeId] uniqueidentifier NOT NULL,
     [IsBaseLayout] bit NOT NULL,
@@ -469,7 +504,8 @@ CREATE TABLE [WebTemplates] (
     CONSTRAINT [FK_WebTemplates_Users_LastModifierUserId] FOREIGN KEY ([LastModifierUserId]) REFERENCES [Users] ([Id]),
     CONSTRAINT [FK_WebTemplates_WebTemplates_ParentTemplateId] FOREIGN KEY ([ParentTemplateId]) REFERENCES [WebTemplates] ([Id])
 );
-CREATE TABLE [WidgetTemplates] (
+CREATE TABLE [WidgetTemplates]
+(
     [Id] uniqueidentifier NOT NULL,
     [ThemeId] uniqueidentifier NOT NULL,
     [Label] nvarchar(max) NULL,
@@ -485,14 +521,16 @@ CREATE TABLE [WidgetTemplates] (
     CONSTRAINT [FK_WidgetTemplates_Users_CreatorUserId] FOREIGN KEY ([CreatorUserId]) REFERENCES [Users] ([Id]),
     CONSTRAINT [FK_WidgetTemplates_Users_LastModifierUserId] FOREIGN KEY ([LastModifierUserId]) REFERENCES [Users] ([Id])
 );
-CREATE TABLE [UserUserGroup] (
+CREATE TABLE [UserUserGroup]
+(
     [UserGroupsId] uniqueidentifier NOT NULL,
     [UsersId] uniqueidentifier NOT NULL,
     CONSTRAINT [PK_UserUserGroup] PRIMARY KEY ([UserGroupsId], [UsersId]),
     CONSTRAINT [FK_UserUserGroup_UserGroups_UserGroupsId] FOREIGN KEY ([UserGroupsId]) REFERENCES [UserGroups] ([Id]) ON DELETE CASCADE,
     CONSTRAINT [FK_UserUserGroup_Users_UsersId] FOREIGN KEY ([UsersId]) REFERENCES [Users] ([Id]) ON DELETE CASCADE
 );
-CREATE TABLE [ContentItemRevisions] (
+CREATE TABLE [ContentItemRevisions]
+(
     [Id] uniqueidentifier NOT NULL,
     [_PublishedContent] nvarchar(max) NULL,
     [ContentItemId] uniqueidentifier NOT NULL,
@@ -505,14 +543,16 @@ CREATE TABLE [ContentItemRevisions] (
     CONSTRAINT [FK_ContentItemRevisions_Users_CreatorUserId] FOREIGN KEY ([CreatorUserId]) REFERENCES [Users] ([Id]),
     CONSTRAINT [FK_ContentItemRevisions_Users_LastModifierUserId] FOREIGN KEY ([LastModifierUserId]) REFERENCES [Users] ([Id])
 );
-CREATE TABLE [UserView] (
+CREATE TABLE [UserView]
+(
     [FavoriteViewsId] uniqueidentifier NOT NULL,
     [UserFavoritesId] uniqueidentifier NOT NULL,
     CONSTRAINT [PK_UserView] PRIMARY KEY ([FavoriteViewsId], [UserFavoritesId]),
     CONSTRAINT [FK_UserView_Users_UserFavoritesId] FOREIGN KEY ([UserFavoritesId]) REFERENCES [Users] ([Id]) ON DELETE CASCADE,
     CONSTRAINT [FK_UserView_Views_FavoriteViewsId] FOREIGN KEY ([FavoriteViewsId]) REFERENCES [Views] ([Id]) ON DELETE CASCADE
 );
-CREATE TABLE [WebTemplateAccessToModelDefinitions] (
+CREATE TABLE [WebTemplateAccessToModelDefinitions]
+(
     [Id] uniqueidentifier NOT NULL,
     [WebTemplateId] uniqueidentifier NOT NULL,
     [ContentTypeId] uniqueidentifier NOT NULL,
@@ -520,7 +560,8 @@ CREATE TABLE [WebTemplateAccessToModelDefinitions] (
     CONSTRAINT [FK_WebTemplateAccessToModelDefinitions_ContentTypes_ContentTypeId] FOREIGN KEY ([ContentTypeId]) REFERENCES [ContentTypes] ([Id]) ON DELETE CASCADE,
     CONSTRAINT [FK_WebTemplateAccessToModelDefinitions_WebTemplates_WebTemplateId] FOREIGN KEY ([WebTemplateId]) REFERENCES [WebTemplates] ([Id]) ON DELETE CASCADE
 );
-CREATE TABLE [WebTemplateContentItemRelations] (
+CREATE TABLE [WebTemplateContentItemRelations]
+(
     [Id] uniqueidentifier NOT NULL,
     [WebTemplateId] uniqueidentifier NOT NULL,
     [ContentItemId] uniqueidentifier NOT NULL,
@@ -528,7 +569,8 @@ CREATE TABLE [WebTemplateContentItemRelations] (
     CONSTRAINT [FK_WebTemplateContentItemRelations_ContentItems_ContentItemId] FOREIGN KEY ([ContentItemId]) REFERENCES [ContentItems] ([Id]) ON DELETE CASCADE,
     CONSTRAINT [FK_WebTemplateContentItemRelations_WebTemplates_WebTemplateId] FOREIGN KEY ([WebTemplateId]) REFERENCES [WebTemplates] ([Id]) ON DELETE CASCADE
 );
-CREATE TABLE [WebTemplateRevisions] (
+CREATE TABLE [WebTemplateRevisions]
+(
     [Id] uniqueidentifier NOT NULL,
     [Label] nvarchar(max) NULL,
     [Content] nvarchar(max) NULL,
@@ -545,7 +587,8 @@ CREATE TABLE [WebTemplateRevisions] (
     CONSTRAINT [FK_WebTemplateRevisions_Users_LastModifierUserId] FOREIGN KEY ([LastModifierUserId]) REFERENCES [Users] ([Id]),
     CONSTRAINT [FK_WebTemplateRevisions_WebTemplates_WebTemplateId] FOREIGN KEY ([WebTemplateId]) REFERENCES [WebTemplates] ([Id]) ON DELETE CASCADE
 );
-CREATE TABLE [WebTemplateViewRelations] (
+CREATE TABLE [WebTemplateViewRelations]
+(
     [Id] uniqueidentifier NOT NULL,
     [WebTemplateId] uniqueidentifier NOT NULL,
     [ViewId] uniqueidentifier NOT NULL,
@@ -553,7 +596,8 @@ CREATE TABLE [WebTemplateViewRelations] (
     CONSTRAINT [FK_WebTemplateViewRelations_Views_ViewId] FOREIGN KEY ([ViewId]) REFERENCES [Views] ([Id]) ON DELETE CASCADE,
     CONSTRAINT [FK_WebTemplateViewRelations_WebTemplates_WebTemplateId] FOREIGN KEY ([WebTemplateId]) REFERENCES [WebTemplates] ([Id]) ON DELETE CASCADE
 );
-CREATE TABLE [SitePages] (
+CREATE TABLE [SitePages]
+(
     [Id] uniqueidentifier NOT NULL,
     [Title] nvarchar(max) NOT NULL,
     [IsPublished] bit NOT NULL,
@@ -572,7 +616,8 @@ CREATE TABLE [SitePages] (
     CONSTRAINT [FK_SitePages_Users_LastModifierUserId] FOREIGN KEY ([LastModifierUserId]) REFERENCES [Users] ([Id]),
     CONSTRAINT [FK_SitePages_WebTemplates_WebTemplateId] FOREIGN KEY ([WebTemplateId]) REFERENCES [WebTemplates] ([Id]) ON DELETE CASCADE
 );
-CREATE TABLE [WidgetTemplateRevisions] (
+CREATE TABLE [WidgetTemplateRevisions]
+(
     [Id] uniqueidentifier NOT NULL,
     [Label] nvarchar(max) NULL,
     [Content] nvarchar(max) NULL,
@@ -586,7 +631,8 @@ CREATE TABLE [WidgetTemplateRevisions] (
     CONSTRAINT [FK_WidgetTemplateRevisions_Users_LastModifierUserId] FOREIGN KEY ([LastModifierUserId]) REFERENCES [Users] ([Id]),
     CONSTRAINT [FK_WidgetTemplateRevisions_WidgetTemplates_WidgetTemplateId] FOREIGN KEY ([WidgetTemplateId]) REFERENCES [WidgetTemplates] ([Id]) ON DELETE CASCADE
 );
-CREATE TABLE [SitePageRevisions] (
+CREATE TABLE [SitePageRevisions]
+(
     [Id] uniqueidentifier NOT NULL,
     [_PublishedWidgetsJson] nvarchar(max) NULL,
     [SitePageId] uniqueidentifier NOT NULL,
@@ -725,15 +771,17 @@ ADD CONSTRAINT [FK_AuthenticationSchemes_Users_CreatorUserId] FOREIGN KEY ([Crea
 ALTER TABLE [AuthenticationSchemes]
 ADD CONSTRAINT [FK_AuthenticationSchemes_Users_LastModifierUserId] FOREIGN KEY ([LastModifierUserId]) REFERENCES [Users] ([Id]);
 -- Insert default theme (like Postgres does)
-INSERT INTO [Themes] (
-        [Id],
-        [Title],
-        [DeveloperName],
-        [IsExportable],
-        [Description],
-        [CreationTime]
+INSERT INTO [Themes]
+    (
+    [Id],
+    [Title],
+    [DeveloperName],
+    [IsExportable],
+    [Description],
+    [CreationTime]
     )
-VALUES (
+VALUES
+    (
         'e31cb739-c764-4423-9f45-9dc6f3365766',
         N'Raytha default theme',
         N'raytha_default_theme',
@@ -742,21 +790,37 @@ VALUES (
         GETUTCDATE()
     );
 -- Record all migrations as applied
-INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
-VALUES (N'20221230221303_v0_9_0', N'10.0.0');
-INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
-VALUES (N'20230211205159_v1_0_0', N'10.0.0');
-INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
-VALUES (N'20230521175706_v1_1_0', N'10.0.0');
-INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
-VALUES (N'20240314124844_v1_2_0', N'10.0.0');
-INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
-VALUES (N'20240502121207_v1_3_0', N'10.0.0');
-INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
-VALUES (N'20241116192521_v1_4_0', N'10.0.0');
-INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
-VALUES (N'20241212094439_v1_4_1', N'10.0.0');
-INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
-VALUES (N'20251129154657_v1_5_0', N'10.0.0');
+INSERT INTO [__EFMigrationsHistory]
+    ([MigrationId], [ProductVersion])
+VALUES
+    (N'20221230221303_v0_9_0', N'10.0.0');
+INSERT INTO [__EFMigrationsHistory]
+    ([MigrationId], [ProductVersion])
+VALUES
+    (N'20230211205159_v1_0_0', N'10.0.0');
+INSERT INTO [__EFMigrationsHistory]
+    ([MigrationId], [ProductVersion])
+VALUES
+    (N'20230521175706_v1_1_0', N'10.0.0');
+INSERT INTO [__EFMigrationsHistory]
+    ([MigrationId], [ProductVersion])
+VALUES
+    (N'20240314124844_v1_2_0', N'10.0.0');
+INSERT INTO [__EFMigrationsHistory]
+    ([MigrationId], [ProductVersion])
+VALUES
+    (N'20240502121207_v1_3_0', N'10.0.0');
+INSERT INTO [__EFMigrationsHistory]
+    ([MigrationId], [ProductVersion])
+VALUES
+    (N'20241116192521_v1_4_0', N'10.0.0');
+INSERT INTO [__EFMigrationsHistory]
+    ([MigrationId], [ProductVersion])
+VALUES
+    (N'20241212094439_v1_4_1', N'10.0.0');
+INSERT INTO [__EFMigrationsHistory]
+    ([MigrationId], [ProductVersion])
+VALUES
+    (N'20251129154657_v1_5_0', N'10.0.0');
 COMMIT;
 GO
