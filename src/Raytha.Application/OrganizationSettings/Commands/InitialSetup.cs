@@ -557,6 +557,12 @@ public class InitialSetup
 
         protected void InsertDefaultNavigationMenu()
         {
+            // Skip if main menu already exists (may have been created by older migrations)
+            if (_db.NavigationMenus.Any(nm => nm.DeveloperName == "mainmenu"))
+            {
+                return;
+            }
+
             var mainMenuId = Guid.NewGuid();
             var mainMenu = new NavigationMenu
             {
