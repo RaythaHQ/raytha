@@ -14,8 +14,7 @@
 }
 
 @section headstyles {
-    <link href="https://cdn.jsdelivr.net/npm/gridstack@10.0.0/dist/gridstack.min.css" rel="stylesheet" />
-    <link href="https://cdn.jsdelivr.net/npm/gridstack@10.0.0/dist/gridstack-extra.min.css" rel="stylesheet" />
+    <link href="~/raytha_admin/lib/gridstack/gridstack.min.css" rel="stylesheet" />
     <style>
         .gs-12>.grid-stack-item {
             width: 8.333%;
@@ -351,7 +350,7 @@
 </template>
 
 @section Scripts {
-    <script src="https://cdn.jsdelivr.net/npm/gridstack@10.0.0/dist/gridstack-all.min.js"></script>
+    <script src="~/raytha_admin/lib/gridstack/gridstack-all.min.js"></script>
     <script>
         (function () {
             const pageId = '@Model.SitePage.Id';
@@ -365,6 +364,14 @@
             let activeSection = sectionNames[0] || 'main';
             let saveTimeout = null;
             let isInitialLoad = true; // Prevent auto-save during initial widget load
+
+            // Override GridStack's default renderCB to use innerHTML instead of textContent
+            // This is needed because GridStack 12.x defaults to textContent which escapes HTML
+            GridStack.renderCB = function(contentEl, widget) {
+                if (contentEl && widget?.content) {
+                    contentEl.innerHTML = widget.content;
+                }
+            };
 
             // Initialize on DOM ready
             document.addEventListener('DOMContentLoaded', function () {
