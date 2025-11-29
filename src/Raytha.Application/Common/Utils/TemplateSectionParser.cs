@@ -18,9 +18,23 @@ public static class TemplateSectionParser
         RegexOptions.Compiled | RegexOptions.IgnoreCase
     );
 
+    // Pattern to match Liquid comments: {% comment %}...{% endcomment %}
+    private static readonly Regex LiquidCommentPattern = new(
+        @"\{%\s*comment\s*%\}.*?\{%\s*endcomment\s*%\}",
+        RegexOptions.Compiled | RegexOptions.IgnoreCase | RegexOptions.Singleline
+    );
+
+    // Pattern to match HTML comments: <!-- ... -->
+    private static readonly Regex HtmlCommentPattern = new(
+        @"<!--.*?-->",
+        RegexOptions.Compiled | RegexOptions.Singleline
+    );
+
     /// <summary>
     /// Extracts all section names from a Liquid template string.
     /// Looks for both render_section() and get_section() function calls.
+    /// Comments (HTML and Liquid) are stripped before parsing to avoid
+    /// matching section names mentioned in documentation.
     /// </summary>
     /// <param name="templateContent">The template content to parse</param>
     /// <returns>A list of unique section names found in the template</returns>
@@ -29,7 +43,11 @@ public static class TemplateSectionParser
         if (string.IsNullOrWhiteSpace(templateContent))
             return Array.Empty<string>();
 
-        var matches = SectionPattern.Matches(templateContent);
+        // Strip comments before parsing to avoid matching documentation examples
+        var contentWithoutComments = LiquidCommentPattern.Replace(templateContent, string.Empty);
+        contentWithoutComments = HtmlCommentPattern.Replace(contentWithoutComments, string.Empty);
+
+        var matches = SectionPattern.Matches(contentWithoutComments);
         var sections = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
         foreach (Match match in matches)

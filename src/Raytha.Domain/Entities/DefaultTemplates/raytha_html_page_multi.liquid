@@ -1,0 +1,41 @@
+<!--
+  Multi-Section Page Template
+  
+  A flexible layout with multiple distinct sections, ideal for:
+    - Marketing/landing pages
+    - Feature showcase pages
+    - Product pages
+  
+  Available sections:
+    - hero: Full-width hero/banner at the top
+    - features: Feature highlights section
+    - content: Main content area
+    - cta: Call-to-action section
+  
+  Usage: {{ render_section("section_name") }}
+-->
+
+<!-- Hero Section - Full Width -->
+<section class="hero-section">
+  {{ render_section("hero") }}
+</section>
+
+<!-- Features Section -->
+<section class="features-section py-5 bg-light">
+  <div class="container py-4">
+    {{ render_section("features") }}
+  </div>
+</section>
+
+<!-- Content Section -->
+<section class="content-section py-5">
+  <div class="container py-4">
+    {{ render_section("content") }}
+  </div>
+</section>
+
+<!-- CTA Section - Full Width -->
+<section class="cta-section">
+  {{ render_section("cta") }}
+</section>
+

@@ -1,62 +1,52 @@
 {% comment %}
-  Card Widget Template
-  
-  Available variables:
-    widget.title        - Card title
-    widget.description  - Card description/content (HTML)
-    widget.image_url    - Card image URL (optional)
-    widget.image_alt    - Image alt text (optional)
-    widget.button_text  - Button/link text (optional)
-    widget.button_url   - Button/link URL (optional)
-    widget.button_style - Button style: primary, secondary, outline-primary, link
-    widget.background_color - Background color (optional)
-    widget.css_class    - Custom CSS class (optional)
-    widget.html_id      - Custom HTML ID (optional)
-    widget.custom_attributes - Custom HTML attributes (optional)
+Card Widget - Single card with image, title, description, and CTA button.
+
+Settings:
+  - title: Card title
+  - description: Card description/content (HTML)
+  - imageUrl: Card image URL (optional)
+  - imageAlt: Image alt text (optional)
+  - buttonText: Button/link text (optional)
+  - buttonUrl: Button/link URL (optional)
+  - buttonStyle: Button style - primary, secondary, outline-primary, link (default: primary)
+  - backgroundColor: Background color (optional)
+
+Advanced Meta Fields (available on all widgets):
+  - widget.css_class: Custom CSS classes
+  - widget.html_id: Custom HTML ID attribute
+  - widget.custom_attributes: Custom HTML attributes string
+  - widget.row: Row position in section grid
+  - widget.column: Column position in row
+  - widget.column_span: Number of columns widget spans (1-12)
 {% endcomment %}
 
-<div class="raytha-widget-card{% if widget.css_class %} {{ widget.css_class }}{% endif %}"
+{% assign button_style = widget.settings.buttonStyle | default: 'primary' %}
+
+<div class="card-widget{% if widget.css_class %} {{ widget.css_class }}{% endif %}"
      {% if widget.html_id %}id="{{ widget.html_id }}"{% endif %}
-     {% if widget.custom_attributes %}{{ widget.custom_attributes }}{% endif %}
-     {% if widget.background_color %}style="background-color: {{ widget.background_color }};"{% endif %}>
+     {{ widget.custom_attributes }}
+     {% if widget.settings.backgroundColor %}style="background-color: {{ widget.settings.backgroundColor }};"{% endif %}>
   <div class="card h-100 border-0 shadow-sm">
-    {% if widget.image_url %}
-    <img src="{{ widget.image_url }}" 
+    {% if widget.settings.imageUrl %}
+    <img src="{{ widget.settings.imageUrl }}" 
          class="card-img-top" 
-         alt="{{ widget.image_alt | default: widget.title }}">
+         alt="{{ widget.settings.imageAlt | default: widget.settings.title }}"
+         style="height: 200px; object-fit: cover;">
     {% endif %}
     <div class="card-body d-flex flex-column">
-      {% if widget.title %}
-      <h5 class="card-title">{{ widget.title }}</h5>
+      {% if widget.settings.title %}
+      <h5 class="card-title fw-semibold">{{ widget.settings.title }}</h5>
       {% endif %}
-      {% if widget.description %}
-      <div class="card-text flex-grow-1">{{ widget.description }}</div>
+      {% if widget.settings.description %}
+      <div class="card-text text-secondary flex-grow-1 mb-3">{{ widget.settings.description }}</div>
       {% endif %}
-      {% if widget.button_text and widget.button_url %}
-      <div class="mt-3">
-        <a href="{{ widget.button_url }}" class="btn btn-{{ widget.button_style | default: 'primary' }}">
-          {{ widget.button_text }}
+      {% if widget.settings.buttonText and widget.settings.buttonUrl %}
+      <div class="mt-auto">
+        <a href="{{ widget.settings.buttonUrl }}" class="btn btn-{{ button_style }}">
+          {{ widget.settings.buttonText }}
         </a>
       </div>
       {% endif %}
     </div>
   </div>
 </div>
-
-<style>
-.raytha-widget-card {
-  padding: 1rem 0;
-}
-.raytha-widget-card .card {
-  max-width: 400px;
-  margin: 0 auto;
-}
-.raytha-widget-card .card-img-top {
-  object-fit: cover;
-  height: 200px;
-}
-.raytha-widget-card .card-text {
-  color: #6c757d;
-}
-</style>
-

@@ -9,8 +9,16 @@ Settings:
   - imagePosition: left or right (default: left)
   - buttonText: Optional button text
   - buttonUrl: Optional button URL
-  - buttonStyle: Button style - primary, secondary, outline-primary, etc.
+  - buttonStyle: Button style - primary, secondary, outline-primary, etc. (default: primary)
   - backgroundColor: Background color (optional)
+
+Advanced Meta Fields (available on all widgets):
+  - widget.css_class: Custom CSS classes
+  - widget.html_id: Custom HTML ID attribute
+  - widget.custom_attributes: Custom HTML attributes string
+  - widget.row: Row position in section grid
+  - widget.column: Column position in row
+  - widget.column_span: Number of columns widget spans (1-12)
 {% endcomment %}
 
 {% assign image_position = widget.settings.imagePosition | default: 'left' %}
@@ -22,7 +30,9 @@ Settings:
   {% assign text_order = 'order-1' %}
 {% endif %}
 
-<div class="imagetext-widget py-5"
+<div class="imagetext-widget py-5{% if widget.css_class %} {{ widget.css_class }}{% endif %}"
+     {% if widget.html_id %}id="{{ widget.html_id }}"{% endif %}
+     {{ widget.custom_attributes }}
      {% if widget.settings.backgroundColor %}style="background-color: {{ widget.settings.backgroundColor }};"{% endif %}>
   <div class="row align-items-center g-4">
     <div class="col-lg-6 {{ image_order }}">
@@ -55,4 +65,3 @@ Settings:
     </div>
   </div>
 </div>
-

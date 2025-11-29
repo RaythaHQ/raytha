@@ -1,0 +1,34 @@
+<!--
+  Sidebar Page Template
+  
+  A two-column layout with main content and sidebar, ideal for:
+    - About pages
+    - Blog-style pages
+    - Pages with supplementary content
+  
+  Available sections:
+    - main: Primary content area (8 columns)
+    - sidebar: Secondary content area (4 columns)
+  
+  Usage: {{ render_section("main") }} and {{ render_section("sidebar") }}
+-->
+
+<!-- Two Column Layout with Sidebar -->
+<section class="page-section py-5">
+  <div class="container py-4">
+    <div class="row g-5">
+      <!-- Main Content (8 columns) -->
+      <div class="col-lg-8">
+        {{ render_section("main") }}
+      </div>
+      
+      <!-- Sidebar (4 columns) -->
+      <div class="col-lg-4">
+        <div class="sidebar sticky-lg-top" style="top: 2rem;">
+          {{ render_section("sidebar") }}
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+

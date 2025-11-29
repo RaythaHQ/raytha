@@ -9,12 +9,22 @@ Settings:
   - maxWidth: Maximum width in pixels (optional)
   - caption: Optional caption text below embed
   - backgroundColor: Background color (optional)
+
+Advanced Meta Fields (available on all widgets):
+  - widget.css_class: Custom CSS classes
+  - widget.html_id: Custom HTML ID attribute
+  - widget.custom_attributes: Custom HTML attributes string
+  - widget.row: Row position in section grid
+  - widget.column: Column position in row
+  - widget.column_span: Number of columns widget spans (1-12)
 {% endcomment %}
 
 {% assign embed_type = widget.settings.embedType | default: 'iframe' %}
 {% assign aspect_ratio = widget.settings.aspectRatio | default: '16x9' %}
 
-<div class="embed-widget py-4"
+<div class="embed-widget py-4{% if widget.css_class %} {{ widget.css_class }}{% endif %}"
+     {% if widget.html_id %}id="{{ widget.html_id }}"{% endif %}
+     {{ widget.custom_attributes }}
      {% if widget.settings.backgroundColor %}style="background-color: {{ widget.settings.backgroundColor }};"{% endif %}>
   
   <div class="embed-container" 
@@ -42,4 +52,3 @@ Settings:
     {% endif %}
   </div>
 </div>
-

@@ -9,14 +9,17 @@ Settings:
   - textColor: Text color hex code (default: #ffffff)
   - buttonText: CTA button text (optional)
   - buttonUrl: CTA button link URL (optional)
-  - buttonStyle: Button style - primary, secondary, outline-light, etc.
-  - alignment: Text alignment - left, center, right
+  - buttonStyle: Button style - primary, secondary, light, outline-light, etc. (default: light)
+  - alignment: Text alignment - left, center, right (default: center)
   - minHeight: Minimum height in pixels (default: 400)
 
 Advanced Meta Fields (available on all widgets):
   - widget.css_class: Custom CSS classes
   - widget.html_id: Custom HTML ID attribute
   - widget.custom_attributes: Custom HTML attributes string
+  - widget.row: Row position in section grid
+  - widget.column: Column position in row
+  - widget.column_span: Number of columns widget spans (1-12)
 {% endcomment %}
 
 {% assign bg_color = widget.settings.backgroundColor | default: '#0d6efd' %}
@@ -55,4 +58,3 @@ Advanced Meta Fields (available on all widgets):
     </div>
   </div>
 </div>
-

@@ -9,11 +9,21 @@ Settings:
     - answer: The answer text (HTML)
   - backgroundColor: Background color (optional)
   - expandFirst: Whether to expand the first item by default (default: true)
+
+Advanced Meta Fields (available on all widgets):
+  - widget.css_class: Custom CSS classes
+  - widget.html_id: Custom HTML ID attribute
+  - widget.custom_attributes: Custom HTML attributes string
+  - widget.row: Row position in section grid
+  - widget.column: Column position in row
+  - widget.column_span: Number of columns widget spans (1-12)
 {% endcomment %}
 
 {% assign expand_first = widget.settings.expandFirst | default: true %}
 
-<div class="faq-widget py-5"
+<div class="faq-widget py-5{% if widget.css_class %} {{ widget.css_class }}{% endif %}"
+     {% if widget.html_id %}id="{{ widget.html_id }}"{% endif %}
+     {{ widget.custom_attributes }}
      {% if widget.settings.backgroundColor %}style="background-color: {{ widget.settings.backgroundColor }};"{% endif %}>
   
   {% if widget.settings.headline or widget.settings.subheadline %}
@@ -58,4 +68,3 @@ Settings:
     {% endfor %}
   </div>
 </div>
-

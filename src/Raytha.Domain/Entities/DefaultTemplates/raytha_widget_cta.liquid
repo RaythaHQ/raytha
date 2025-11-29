@@ -6,7 +6,7 @@ Settings:
   - content: Supporting text (HTML)
   - buttonText: Button label
   - buttonUrl: Button link URL
-  - buttonStyle: Button style - primary, secondary, light, etc. (default: primary)
+  - buttonStyle: Button style - primary, secondary, light, etc. (default: light)
   - backgroundColor: Background color (default: #0d6efd)
   - textColor: Text color (default: #ffffff)
   - alignment: Text alignment - left, center, right (default: center)
@@ -15,6 +15,9 @@ Advanced Meta Fields (available on all widgets):
   - widget.css_class: Custom CSS classes
   - widget.html_id: Custom HTML ID attribute
   - widget.custom_attributes: Custom HTML attributes string
+  - widget.row: Row position in section grid
+  - widget.column: Column position in row
+  - widget.column_span: Number of columns widget spans (1-12)
 {% endcomment %}
 
 {% assign bg_color = widget.settings.backgroundColor | default: '#0d6efd' %}
@@ -26,13 +29,13 @@ Advanced Meta Fields (available on all widgets):
      {% if widget.html_id %}id="{{ widget.html_id }}"{% endif %}
      {{ widget.custom_attributes }}
      style="background-color: {{ bg_color }}; color: {{ text_color }};">
-  <div class="py-4">
+  <div class="container py-4">
     {% if widget.settings.headline %}
     <h2 class="fw-bold mb-3">{{ widget.settings.headline }}</h2>
     {% endif %}
     
     {% if widget.settings.content %}
-    <div class="lead mb-4 opacity-90" style="max-width: 600px; {% if alignment == 'center' %}margin-left: auto; margin-right: auto;{% endif %}">
+    <div class="lead mb-4 opacity-90" style="max-width: 700px; {% if alignment == 'center' %}margin-left: auto; margin-right: auto;{% endif %}">
       {{ widget.settings.content }}
     </div>
     {% endif %}
@@ -44,4 +47,3 @@ Advanced Meta Fields (available on all widgets):
     {% endif %}
   </div>
 </div>
-

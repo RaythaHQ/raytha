@@ -16,6 +16,14 @@ Settings:
   - linkText: Text for "View all" link (optional)
   - linkUrl: URL for "View all" link (optional)
   - backgroundColor: Background color (optional)
+
+Advanced Meta Fields (available on all widgets):
+  - widget.css_class: Custom CSS classes
+  - widget.html_id: Custom HTML ID attribute
+  - widget.custom_attributes: Custom HTML attributes string
+  - widget.row: Row position in section grid
+  - widget.column: Column position in row
+  - widget.column_span: Number of columns widget spans (1-12)
 {% endcomment %}
 
 {% assign page_size = widget.settings.pageSize | default: 3 %}
@@ -33,7 +41,9 @@ Settings:
   {% endif %}
 {% endif %}
 
-<div class="contentlist-widget py-5"
+<div class="contentlist-widget py-5{% if widget.css_class %} {{ widget.css_class }}{% endif %}"
+     {% if widget.html_id %}id="{{ widget.html_id }}"{% endif %}
+     {{ widget.custom_attributes }}
      {% if widget.settings.backgroundColor %}style="background-color: {{ widget.settings.backgroundColor }};"{% endif %}>
   
   {% if widget.settings.headline or widget.settings.subheadline or widget.settings.linkUrl %}
@@ -57,9 +67,9 @@ Settings:
   
   {% if items and items.Items.size > 0 %}
     {% if display_style == 'cards' %}
-    <div class="d-flex flex-wrap" style="gap: 1.5rem;">
+    <div class="row g-4">
       {% for item in items.Items %}
-      <div class="contentlist-card" style="flex: 1 1 300px; max-width: 400px;">
+      <div class="col-md-6 col-lg-4">
         <div class="card h-100 border-0 shadow-sm">
           {% if show_image and item.PublishedContent.featured_image %}
           <img src="{{ item.PublishedContent.featured_image.Value | attachment_public_url }}" 

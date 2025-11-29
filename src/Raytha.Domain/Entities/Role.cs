@@ -39,12 +39,8 @@ public class BuiltInRole : ValueObject
     public static BuiltInRole SuperAdmin =>
         new("Super Admin", "super_admin", BuiltInSystemPermission.AllPermissionsAsEnum);
     public static BuiltInRole Admin =>
-        new(
-            "Admin",
-            "admin",
-            BuiltInSystemPermission.AllPermissionsAsEnum
-        );
-    public static BuiltInRole Editor => new("Editor", "editor", SystemPermissions.None);
+        new("Admin", "admin", BuiltInSystemPermission.AllPermissionsAsEnum);
+    public static BuiltInRole Editor => new("Editor", "editor", SystemPermissions.ManageSitePages);
 
     public string DefaultLabel { get; private set; } = string.Empty;
     public string DeveloperName { get; private set; } = string.Empty;

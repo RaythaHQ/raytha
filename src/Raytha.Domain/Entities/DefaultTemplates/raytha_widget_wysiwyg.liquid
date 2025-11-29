@@ -4,12 +4,15 @@ WYSIWYG Widget - Rich text content block.
 Settings:
   - content: HTML content from WYSIWYG editor
   - backgroundColor: Background color (optional)
-  - padding: Padding size - none, small, medium, large
+  - padding: Padding size - none, small, medium, large (default: medium)
 
 Advanced Meta Fields (available on all widgets):
   - widget.css_class: Custom CSS classes
   - widget.html_id: Custom HTML ID attribute
   - widget.custom_attributes: Custom HTML attributes string
+  - widget.row: Row position in section grid
+  - widget.column: Column position in row
+  - widget.column_span: Number of columns widget spans (1-12)
 {% endcomment %}
 
 {% assign padding_class = 'py-4' %}
@@ -30,4 +33,3 @@ Advanced Meta Fields (available on all widgets):
     {{ widget.settings.content }}
   </div>
 </div>
-

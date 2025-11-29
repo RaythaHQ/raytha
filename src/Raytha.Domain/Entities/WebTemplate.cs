@@ -53,6 +53,12 @@ public class BuiltInWebTemplate : ValueObject
     public static BuiltInWebTemplate Error500 =>
         new("Error, something broke", "raytha_html_error_500", true);
     public static BuiltInWebTemplate HomePage => new("Home", "raytha_html_home", false);
+    public static BuiltInWebTemplate PageFullWidth =>
+        new("Page - Full Width", "raytha_html_page_fullwidth", false);
+    public static BuiltInWebTemplate PageSidebar =>
+        new("Page - With Sidebar", "raytha_html_page_sidebar", false);
+    public static BuiltInWebTemplate PageMultiSection =>
+        new("Page - Multi Section", "raytha_html_page_multi", false);
     public static BuiltInWebTemplate ContentItemListViewPage =>
         new("Content item list view", "raytha_html_content_item_list", false);
     public static BuiltInWebTemplate ContentItemDetailViewPage =>
@@ -123,6 +129,9 @@ public class BuiltInWebTemplate : ValueObject
             yield return Error404;
             yield return Error500;
             yield return HomePage;
+            yield return PageFullWidth;
+            yield return PageSidebar;
+            yield return PageMultiSection;
             yield return ContentItemListViewPage;
             yield return ContentItemDetailViewPage;
             yield return UserRegistrationForm;
