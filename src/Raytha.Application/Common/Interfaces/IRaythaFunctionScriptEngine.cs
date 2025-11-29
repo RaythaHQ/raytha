@@ -21,4 +21,11 @@ public interface IRaythaFunctionScriptEngine
         TimeSpan executeTimeout,
         CancellationToken cancellationToken
     );
+    public Task<object> EvaluateInternal(
+        string code,
+        string methodName,
+        string argsJson,
+        TimeSpan executeTimeout,
+        CancellationToken cancellationToken
+    );
 }

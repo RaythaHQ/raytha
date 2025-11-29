@@ -31,7 +31,8 @@ public record ContentItem_RenderModel : IInsertTemplateVariable
 
     public static ContentItem_RenderModel GetProjection(
         ContentItemDto entity,
-        string templateDeveloperName
+        string templateDeveloperName,
+        bool previewDraft = false
     )
     {
         return new ContentItem_RenderModel
@@ -44,7 +45,7 @@ public record ContentItem_RenderModel : IInsertTemplateVariable
             Template = templateDeveloperName,
             ContentType = ContentType_RenderModel.GetProjection(entity.ContentType),
             PrimaryField = entity.PrimaryField,
-            PublishedContent = entity.PublishedContent,
+            PublishedContent = previewDraft ? entity.DraftContent : entity.PublishedContent,
             RoutePath = entity.RoutePath,
         };
     }

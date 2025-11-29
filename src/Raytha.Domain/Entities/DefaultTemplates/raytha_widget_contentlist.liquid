@@ -1,0 +1,146 @@
+{% comment %}
+Content List Widget - Displays a list of content items from a content type.
+
+Settings:
+  - headline: Section heading (optional)
+  - subheadline: Section subheading (optional)
+  - contentType: Developer name of content type to query
+  - viewId: View ID to use for filtering/ordering (optional)
+  - filter: Additional OData filter expression (optional)
+  - orderBy: Order by expression - OData format (optional, overrides view)
+  - pageSize: Number of items to display (default: 3)
+  - displayStyle: Display style - cards, list, compact (default: cards)
+  - showImage: Show featured image if available (default: true)
+  - showDate: Show creation date (default: true)
+  - showExcerpt: Show content excerpt (default: true)
+  - linkText: Text for "View all" link (optional)
+  - linkUrl: URL for "View all" link (optional)
+  - backgroundColor: Background color (optional)
+
+Advanced Meta Fields (available on all widgets):
+  - widget.css_class: Custom CSS classes
+  - widget.html_id: Custom HTML ID attribute
+  - widget.custom_attributes: Custom HTML attributes string
+  - widget.row: Row position in section grid
+  - widget.column: Column position in row
+  - widget.column_span: Number of columns widget spans (1-12)
+{% endcomment %}
+
+{% assign page_size = widget.settings.pageSize | default: 3 %}
+{% assign order_by = widget.settings.orderBy %}
+{% assign display_style = widget.settings.displayStyle | default: 'cards' %}
+{% assign show_image = widget.settings.showImage | default: true %}
+{% assign show_date = widget.settings.showDate | default: true %}
+{% assign show_excerpt = widget.settings.showExcerpt | default: true %}
+
+{% if widget.settings.contentType %}
+  {% if widget.settings.viewId %}
+    {% assign items = get_content_items(ContentType=widget.settings.contentType, ViewId=widget.settings.viewId, Filter=widget.settings.filter, OrderBy=order_by, PageSize=page_size) %}
+  {% else %}
+    {% assign items = get_content_items(ContentType=widget.settings.contentType, Filter=widget.settings.filter, OrderBy=order_by, PageSize=page_size) %}
+  {% endif %}
+{% endif %}
+
+<div class="contentlist-widget py-5{% if widget.css_class %} {{ widget.css_class }}{% endif %}"
+     {% if widget.html_id %}id="{{ widget.html_id }}"{% endif %}
+     {{ widget.custom_attributes }}
+     {% if widget.settings.backgroundColor %}style="background-color: {{ widget.settings.backgroundColor }};"{% endif %}>
+  
+  {% if widget.settings.headline or widget.settings.subheadline or widget.settings.linkUrl %}
+  <div class="d-flex flex-wrap align-items-center justify-content-between mb-4">
+    <div>
+      {% if widget.settings.headline %}
+      <h2 class="fw-bold mb-1">{{ widget.settings.headline }}</h2>
+      {% endif %}
+      {% if widget.settings.subheadline %}
+      <p class="text-secondary mb-0">{{ widget.settings.subheadline }}</p>
+      {% endif %}
+    </div>
+    {% if widget.settings.linkUrl %}
+    <a href="{{ widget.settings.linkUrl }}" class="btn btn-outline-primary">
+      {{ widget.settings.linkText | default: 'View all' }}
+      <i class="bi bi-arrow-right ms-1"></i>
+    </a>
+    {% endif %}
+  </div>
+  {% endif %}
+  
+  {% if items and items.Items.size > 0 %}
+    {% if display_style == 'cards' %}
+    <div class="row g-4">
+      {% for item in items.Items %}
+      <div class="col-md-6 col-lg-4">
+        <div class="card h-100 border-0 shadow-sm">
+          {% if show_image and item.PublishedContent.featured_image %}
+          <img src="{{ item.PublishedContent.featured_image.Value | attachment_public_url }}" 
+               class="card-img-top" 
+               alt="{{ item.PrimaryField }}"
+               style="height: 200px; object-fit: cover;">
+          {% endif %}
+          <div class="card-body d-flex flex-column">
+            {% if show_date %}
+            <small class="text-muted d-block mb-2">
+              {{ item.CreationTime | organization_time: "%B %e, %Y" }}
+            </small>
+            {% endif %}
+            <h5 class="card-title fw-semibold">
+              <a href="{{ PathBase }}/{{ item.RoutePath }}" class="text-decoration-none text-dark stretched-link">
+                {{ item.PrimaryField }}
+              </a>
+            </h5>
+            {% if show_excerpt and item.PublishedContent.content %}
+            <p class="card-text text-secondary small flex-grow-1">
+              {{ item.PublishedContent.content.Text | strip_html | truncate: 100, "..." }}
+            </p>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    
+    {% elsif display_style == 'list' %}
+    <div class="list-group list-group-flush">
+      {% for item in items.Items %}
+      <a href="{{ PathBase }}/{{ item.RoutePath }}" class="list-group-item list-group-item-action py-3">
+        <div class="d-flex justify-content-between align-items-start">
+          <div>
+            <h6 class="mb-1 fw-semibold">{{ item.PrimaryField }}</h6>
+            {% if show_excerpt and item.PublishedContent.content %}
+            <p class="mb-0 text-secondary small">
+              {{ item.PublishedContent.content.Text | strip_html | truncate: 150, "..." }}
+            </p>
+            {% endif %}
+          </div>
+          {% if show_date %}
+          <small class="text-muted text-nowrap ms-3">
+            {{ item.CreationTime | organization_time: "%b %e, %Y" }}
+          </small>
+          {% endif %}
+        </div>
+      </a>
+      {% endfor %}
+    </div>
+    
+    {% elsif display_style == 'compact' %}
+    <ul class="list-unstyled mb-0">
+      {% for item in items.Items %}
+      <li class="{% unless forloop.last %}mb-2 pb-2 border-bottom{% endunless %}">
+        <a href="{{ PathBase }}/{{ item.RoutePath }}" class="text-decoration-none d-flex justify-content-between align-items-center">
+          <span class="fw-medium">{{ item.PrimaryField }}</span>
+          {% if show_date %}
+          <small class="text-muted">{{ item.CreationTime | organization_time: "%b %e" }}</small>
+          {% endif %}
+        </a>
+      </li>
+      {% endfor %}
+    </ul>
+    {% endif %}
+    
+  {% else %}
+  <div class="alert alert-light border d-flex align-items-center gap-2 mb-0">
+    <i class="bi bi-info-circle text-primary"></i>
+    <span>No content items found{% if widget.settings.contentType %} for "{{ widget.settings.contentType }}"{% endif %}.</span>
+  </div>
+  {% endif %}
+</div>

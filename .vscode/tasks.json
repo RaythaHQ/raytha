@@ -7,6 +7,7 @@
             "type": "process",
             "args": [
                 "build",
+                "--no-restore",
                 "--configuration",
                 "Debug",
                 "${workspaceFolder}/src/Raytha.Web/Raytha.Web.csproj"

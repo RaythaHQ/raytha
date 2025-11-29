@@ -1,0 +1,39 @@
+@model Raytha.Web.Areas.Admin.Pages.SitePages.EditWidget
+
+<div class="mb-3" id="wysiwyg-widget-content" 
+     data-field-type="wysiwyg"
+     data-developername="WysiwygForm_Content">
+    <div class="mb-3">
+        <label class="form-label" asp-for="WysiwygForm.Content">Content</label>
+        <div></div>
+        <textarea data-developername="WysiwygForm_Content"
+            id="WysiwygForm_Content"
+            asp-for="WysiwygForm.Content"
+            hidden></textarea>
+    </div>
+</div>
+
+<h6 class="mb-3 mt-4">Appearance</h6>
+
+<div class="row">
+    <div class="col-md-6 mb-3">
+        <label class="form-label" asp-for="WysiwygForm.BackgroundColor"></label>
+        <div class="input-group">
+            <input type="color" class="form-control form-control-color"
+                value="@(Model.WysiwygForm?.BackgroundColor ?? "#ffffff")"
+                onchange="document.getElementById('WysiwygForm_BackgroundColor').value = this.value">
+            <input type="text" class="form-control" asp-for="WysiwygForm.BackgroundColor" placeholder="#ffffff"
+                style="max-width: 120px;">
+        </div>
+        <div class="form-text">Leave empty for transparent</div>
+    </div>
+    <div class="col-md-6 mb-3">
+        <label class="form-label" asp-for="WysiwygForm.Padding"></label>
+        <select class="form-select" asp-for="WysiwygForm.Padding">
+            <option value="none">None</option>
+            <option value="small">Small</option>
+            <option value="medium">Medium</option>
+            <option value="large">Large</option>
+        </select>
+    </div>
+</div>

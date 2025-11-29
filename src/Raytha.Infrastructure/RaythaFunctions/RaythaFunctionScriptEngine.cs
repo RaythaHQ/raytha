@@ -1,15 +1,15 @@
-﻿using CSharpVitamins;
+﻿using System.Text.Json;
 using Microsoft.ClearScript;
 using Microsoft.ClearScript.JavaScript;
 using Microsoft.ClearScript.V8;
 using Raytha.Application.Common.Exceptions;
 using Raytha.Application.Common.Interfaces;
-using Raytha.Domain.Common;
 
 namespace Raytha.Infrastructure.RaythaFunctions;
 
 public class RaythaFunctionScriptEngine : IRaythaFunctionScriptEngine
 {
+    private readonly IV8EnginePool _enginePool;
     private readonly IRaythaFunctionApi_V1 _raythaFunctionApiV1;
     private readonly IEmailer _emailer;
     private readonly ICurrentOrganization _currentOrganization;
@@ -17,6 +17,7 @@ public class RaythaFunctionScriptEngine : IRaythaFunctionScriptEngine
     private readonly IRaythaFunctionsHttpClient _httpClient;
 
     public RaythaFunctionScriptEngine(
+        IV8EnginePool enginePool,
         IRaythaFunctionApi_V1 raythaFunctionApiV1,
         IEmailer emailer,
         ICurrentOrganization currentOrganization,
@@ -24,6 +25,7 @@ public class RaythaFunctionScriptEngine : IRaythaFunctionScriptEngine
         IRaythaFunctionsHttpClient httpClient
     )
     {
+        _enginePool = enginePool;
         _raythaFunctionApiV1 = raythaFunctionApiV1;
         _emailer = emailer;
         _currentOrganization = currentOrganization;
@@ -38,84 +40,21 @@ public class RaythaFunctionScriptEngine : IRaythaFunctionScriptEngine
         CancellationToken cancellationToken
     )
     {
-        var _engine = new V8ScriptEngine();
-        _engine.AddHostObject("API_V1", _raythaFunctionApiV1);
-        _engine.AddHostObject("CurrentOrganization", _currentOrganization);
-        _engine.AddHostObject("CurrentUser", _currentUser);
-        _engine.AddHostObject("Emailer", _emailer);
-        _engine.AddHostObject("HttpClient", _httpClient);
-
-        _engine.AddHostType(typeof(JavaScriptExtensions));
-        _engine.AddHostType(typeof(Enumerable));
-        _engine.AddHostType(typeof(ShortGuid));
-        _engine.AddHostType(typeof(Guid));
-        _engine.AddHostType(typeof(Convert));
-        _engine.AddHostType(typeof(EmailMessage));
-        _engine.AddHostType(typeof(List<>));
-        _engine.AddHostType(typeof(Dictionary<,>));
-        _engine.AddHostType(typeof(KeyValuePair<,>));
-        _engine.AddHostType(typeof(HashSet<>));
-        _engine.AddHostType(typeof(Queue<>));
-        _engine.AddHostType(typeof(Stack<>));
-        _engine.AddHostType(typeof(DateTime));
-        _engine.AddHostType(typeof(DateTimeOffset));
-        _engine.AddHostType(typeof(DateOnly));
-        _engine.AddHostType(typeof(TimeOnly));
-        _engine.AddHostType(typeof(TimeSpan));
-        _engine.AddHostType(typeof(Math));
-        _engine.AddHostType(typeof(decimal));
-        _engine.AddHostType(typeof(char));
-        _engine.AddHostType(typeof(Random));
-        _engine.AddHostType(typeof(Uri));
-        _engine.AddHostType(typeof(UriBuilder));
-        _engine.AddHostType(typeof(System.Text.RegularExpressions.Regex));
-        _engine.AddHostType(typeof(System.Text.StringBuilder));
-        _engine.AddHostType(typeof(System.Text.Encoding));
-        _engine.AddHostType(typeof(StringComparison));
-        _engine.AddHostType(typeof(System.Diagnostics.Stopwatch));
-        _engine.AddHostType(typeof(BitConverter));
-        _engine.AddHostType(typeof(Tuple));
-        _engine.AddHostType(typeof(ValueTuple));
-
-        _engine.Execute(
-            @"
-        class JsonResult {
-          constructor(obj) {
-            this.body = obj;
-            this.contentType = 'application/json';
-          }
-        }
-
-        class HtmlResult {
-          constructor(html) {
-            this.body = html;
-            this.contentType = 'text/html';
-          }
-        }
-
-        class RedirectResult {
-          constructor(url) {
-            this.body = url;
-            this.contentType = 'redirectToUrl';
-          }
-        }
-
-        class StatusCodeResult {
-          constructor(statusCode, error) {
-            this.statusCode = statusCode;
-            this.body = error;
-            this.contentType = 'statusCode';
-          }
-        }"
-        );
-
+        V8ScriptEngine engine = _enginePool.Rent();
         try
         {
-            _engine.Execute(code);
-            return await Task.Run(
+            // Add per-request host objects
+            engine.AddHostObject("API_V1", _raythaFunctionApiV1);
+            engine.AddHostObject("CurrentOrganization", _currentOrganization);
+            engine.AddHostObject("CurrentUser", _currentUser);
+            engine.AddHostObject("Emailer", _emailer);
+            engine.AddHostObject("HttpClient", _httpClient);
+
+            engine.Execute(code);
+            var scriptResult = await Task.Run(
                     async () =>
                     {
-                        var result = _engine.Evaluate(method);
+                        var result = engine.Evaluate(method);
 
                         // The script can be synchronous or asynchronous, so this simple solution is used to convert the result
                         // Source: https://github.com/microsoft/ClearScript/issues/366
@@ -131,6 +70,9 @@ public class RaythaFunctionScriptEngine : IRaythaFunctionScriptEngine
                     cancellationToken
                 )
                 .WaitAsync(executeTimeout, cancellationToken);
+
+            // Marshal the result to a .NET object before disposing the engine
+            return MarshalResult(engine, scriptResult);
         }
         catch (TimeoutException)
         {
@@ -142,6 +84,118 @@ public class RaythaFunctionScriptEngine : IRaythaFunctionScriptEngine
         {
             throw new RaythaFunctionScriptException(exception.ErrorDetails);
         }
+        finally
+        {
+            _enginePool.Return(engine);
+        }
+    }
+
+    private static readonly JsonSerializerOptions JsonOptions = new()
+    {
+        PropertyNamingPolicy = null,
+        WriteIndented = false,
+    };
+
+    /// <summary>
+    /// Converts the JavaScript result object to a .NET object so it can be safely
+    /// used after the V8 engine is disposed.
+    /// </summary>
+    private static object MarshalResult(V8ScriptEngine engine, object scriptResult)
+    {
+        if (scriptResult == null || scriptResult is Undefined)
+        {
+            return null;
+        }
+
+        // Store the result in a temp variable so we can use JSON.stringify on it
+        engine.Script.__marshalTemp = scriptResult;
+
+        try
+        {
+            // Check if this is a structured result (JsonResult, HtmlResult, etc.)
+            var contentType = engine.Evaluate("__marshalTemp.contentType") as string;
+
+            if (!string.IsNullOrEmpty(contentType))
+            {
+                var result = new RaythaFunctionResult { contentType = contentType };
+
+                // Get the body value
+                var bodyValue = engine.Evaluate("__marshalTemp.body");
+
+                if (bodyValue is null or Undefined)
+                {
+                    result.body = null;
+                }
+                else if (bodyValue is string bodyString)
+                {
+                    result.body = bodyString;
+                }
+                else if (bodyValue is ScriptObject)
+                {
+                    // Pure JavaScript object - use JS JSON.stringify
+                    var bodyJson = engine.Evaluate("JSON.stringify(__marshalTemp.body)") as string;
+                    if (!string.IsNullOrEmpty(bodyJson))
+                    {
+                        result.body = JsonSerializer.Deserialize<JsonElement>(bodyJson);
+                    }
+                }
+                else
+                {
+                    // .NET object (e.g., from API_V1 calls) - use .NET serializer
+                    // This properly handles IEnumerable, complex DTOs, etc.
+                    var bodyJson = JsonSerializer.Serialize(bodyValue, JsonOptions);
+                    result.body = JsonSerializer.Deserialize<JsonElement>(bodyJson);
+                }
+
+                // Get statusCode if present
+                var statusCodeValue = engine.Evaluate("__marshalTemp.statusCode");
+                if (statusCodeValue is int sc)
+                {
+                    result.statusCode = sc;
+                }
+                else if (statusCodeValue is double scd)
+                {
+                    result.statusCode = (int)scd;
+                }
+
+                return result;
+            }
+        }
+        catch
+        {
+            // Not a structured result, fall through
+        }
+
+        // For non-structured results, return primitives directly or serialize objects
+        if (scriptResult is string or int or double or bool)
+        {
+            return scriptResult;
+        }
+
+        // Try to serialize unknown objects
+        try
+        {
+            if (scriptResult is ScriptObject)
+            {
+                var json = engine.Evaluate("JSON.stringify(__marshalTemp)") as string;
+                if (!string.IsNullOrEmpty(json))
+                {
+                    return JsonSerializer.Deserialize<JsonElement>(json);
+                }
+            }
+            else
+            {
+                // .NET object
+                var json = JsonSerializer.Serialize(scriptResult, JsonOptions);
+                return JsonSerializer.Deserialize<JsonElement>(json);
+            }
+        }
+        catch
+        {
+            // Fall back to string representation
+        }
+
+        return scriptResult?.ToString();
     }
 
     public async Task<object> EvaluateGet(
@@ -174,5 +228,16 @@ public class RaythaFunctionScriptEngine : IRaythaFunctionScriptEngine
     )
     {
         await Evaluate(code, $"run({payload})", executeTimeout, cancellationToken);
+    }
+
+    public async Task<object> EvaluateInternal(
+        string code,
+        string methodName,
+        string argsJson,
+        TimeSpan executeTimeout,
+        CancellationToken cancellationToken
+    )
+    {
+        return await Evaluate(code, $"{methodName}({argsJson})", executeTimeout, cancellationToken);
     }
 }

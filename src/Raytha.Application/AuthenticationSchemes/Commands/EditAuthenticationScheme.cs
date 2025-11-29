@@ -32,6 +32,8 @@ public class EditAuthenticationScheme
         [JsonIgnore]
         public string SamlIdpEntityId { get; init; } = null!;
         public string AuthenticationSchemeType { get; init; } = null!;
+        public int BruteForceProtectionMaxFailedAttempts { get; init; }
+        public int BruteForceProtectionWindowInSeconds { get; init; }
     }
 
     public class Validator : AbstractValidator<Command>
@@ -68,6 +70,18 @@ public class EditAuthenticationScheme
                 .LessThanOrEqualTo(604800)
                 .When(p =>
                     p.AuthenticationSchemeType == AuthenticationSchemeType.MagicLink.DeveloperName
+                );
+            RuleFor(x => x.BruteForceProtectionMaxFailedAttempts)
+                .GreaterThanOrEqualTo(1)
+                .WithMessage("Max failed attempts must be at least 1.")
+                .When(p =>
+                    p.AuthenticationSchemeType == AuthenticationSchemeType.EmailAndPassword.DeveloperName
+                );
+            RuleFor(x => x.BruteForceProtectionWindowInSeconds)
+                .GreaterThanOrEqualTo(60)
+                .WithMessage("Window must be at least 60 seconds.")
+                .When(p =>
+                    p.AuthenticationSchemeType == AuthenticationSchemeType.EmailAndPassword.DeveloperName
                 );
             RuleFor(x => x)
                 .Custom(
@@ -125,6 +139,8 @@ public class EditAuthenticationScheme
             entity.MagicLinkExpiresInSeconds = request.MagicLinkExpiresInSeconds;
             entity.JwtUseHighSecurity = request.JwtUseHighSecurity;
             entity.SamlIdpEntityId = request.SamlIdpEntityId;
+            entity.BruteForceProtectionMaxFailedAttempts = request.BruteForceProtectionMaxFailedAttempts;
+            entity.BruteForceProtectionWindowInSeconds = request.BruteForceProtectionWindowInSeconds;
 
             await _db.SaveChangesAsync(cancellationToken);
 

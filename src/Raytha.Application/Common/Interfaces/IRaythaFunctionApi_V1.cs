@@ -3,7 +3,10 @@ using Raytha.Application.Common.Models;
 using Raytha.Application.ContentItems;
 using Raytha.Application.ContentTypes;
 using Raytha.Application.MediaItems;
+using Raytha.Application.NavigationMenuItems;
+using Raytha.Application.NavigationMenus;
 using Raytha.Application.Routes;
+using Raytha.Application.SitePages;
 using Raytha.Application.Themes.WebTemplates;
 using Raytha.Application.UserGroups;
 using Raytha.Application.Users;
@@ -120,5 +123,77 @@ public interface IRaythaFunctionApi_V1
         string requestMethod,
         string queryJson,
         string payloadJson
+    );
+
+    // SitePage methods
+    public IQueryResponseDto<ListResultDto<SitePageDto>> GetSitePages(
+        string search = "",
+        string orderBy = "",
+        int pageNumber = 1,
+        int pageSize = 50
+    );
+    public IQueryResponseDto<SitePageDto> GetSitePageById(string sitePageId);
+    public ICommandResponseDto<ShortGuid> CreateSitePage(
+        string title,
+        bool saveAsDraft,
+        string templateId
+    );
+    public ICommandResponseDto<ShortGuid> EditSitePage(
+        string sitePageId,
+        string title,
+        bool saveAsDraft,
+        string templateId
+    );
+    public ICommandResponseDto<ShortGuid> EditSitePageSettings(
+        string sitePageId,
+        string routePath
+    );
+    public ICommandResponseDto<ShortGuid> PublishSitePage(string sitePageId);
+    public ICommandResponseDto<ShortGuid> UnpublishSitePage(string sitePageId);
+    public ICommandResponseDto<ShortGuid> DeleteSitePage(string sitePageId);
+
+    // NavigationMenu methods
+    public IQueryResponseDto<ListResultDto<NavigationMenuDto>> GetNavigationMenus(
+        string search = "",
+        string orderBy = "",
+        int pageNumber = 1,
+        int pageSize = 50
+    );
+    public IQueryResponseDto<NavigationMenuDto> GetNavigationMenuById(string navigationMenuId);
+    public IQueryResponseDto<NavigationMenuDto> GetNavigationMenuByDeveloperName(
+        string developerName
+    );
+    public ICommandResponseDto<ShortGuid> CreateNavigationMenu(string label, string developerName);
+    public ICommandResponseDto<ShortGuid> EditNavigationMenu(string navigationMenuId, string label);
+    public ICommandResponseDto<ShortGuid> DeleteNavigationMenu(string navigationMenuId);
+
+    // NavigationMenuItem methods
+    public IQueryResponseDto<IReadOnlyCollection<NavigationMenuItemDto>>
+        GetNavigationMenuItemsByNavigationMenuId(string navigationMenuId);
+    public IQueryResponseDto<NavigationMenuItemDto> GetNavigationMenuItemById(
+        string navigationMenuItemId
+    );
+    public ICommandResponseDto<ShortGuid> CreateNavigationMenuItem(
+        string navigationMenuId,
+        string label,
+        string url,
+        bool isDisabled,
+        bool openInNewTab,
+        string cssClassName,
+        string parentNavigationMenuItemId
+    );
+    public ICommandResponseDto<ShortGuid> EditNavigationMenuItem(
+        string navigationMenuItemId,
+        string navigationMenuId,
+        string label,
+        string url,
+        bool isDisabled,
+        bool openInNewTab,
+        string cssClassName,
+        string parentNavigationMenuItemId
+    );
+    public ICommandResponseDto<ShortGuid> DeleteNavigationMenuItem(
+        string navigationMenuItemId,
+        string navigationMenuId
     );
 }

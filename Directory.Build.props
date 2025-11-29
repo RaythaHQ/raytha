@@ -2,6 +2,19 @@
   <PropertyGroup>
     <!-- Suppress all warnings, only show errors -->
     <WarningLevel>0</WarningLevel>
+    
+    <!-- Enable parallel compilation -->
+    <BuildInParallel>true</BuildInParallel>
+    
+    <!-- Faster incremental builds -->
+    <Deterministic>true</Deterministic>
+    
+    <!-- Skip analyzers during build (run separately in CI) -->
+    <RunAnalyzersDuringBuild>false</RunAnalyzersDuringBuild>
+    <RunAnalyzersDuringLiveAnalysis>true</RunAnalyzersDuringLiveAnalysis>
+    
+    <!-- Disable XML doc generation in Debug -->
+    <GenerateDocumentationFile Condition="'$(Configuration)' == 'Debug'">false</GenerateDocumentationFile>
   </PropertyGroup>
 </Project>
 

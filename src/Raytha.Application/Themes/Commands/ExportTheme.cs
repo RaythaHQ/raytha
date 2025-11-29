@@ -7,6 +7,7 @@ using Raytha.Application.Common.Models;
 using Raytha.Application.Common.Utils;
 using Raytha.Application.MediaItems;
 using Raytha.Application.Themes.WebTemplates;
+using Raytha.Application.Themes.WidgetTemplates;
 
 namespace Raytha.Application.Themes.Commands;
 
@@ -73,6 +74,10 @@ public class ExportTheme
                     cancellationToken
                 );
 
+            var widgetTemplates = await _db
+                .WidgetTemplates.Where(wt => wt.ThemeId == theme.Id)
+                .ToListAsync(cancellationToken);
+
             var mediaItems = theme.ThemeAccessToMediaItems.Select(tm => tm.MediaItem!).ToList();
             var mediaItemJsonTasks = mediaItems.Select(async mi =>
                 MediaItemJson.GetProjection(
@@ -87,6 +92,7 @@ public class ExportTheme
             var themePackage = new ThemeJson
             {
                 WebTemplates = theme.WebTemplates.Select(WebTemplateJson.GetProjection),
+                WidgetTemplates = widgetTemplates.Select(WidgetTemplateJson.GetProjection),
                 MediaItems = await Task.WhenAll(mediaItemJsonTasks),
             };
 

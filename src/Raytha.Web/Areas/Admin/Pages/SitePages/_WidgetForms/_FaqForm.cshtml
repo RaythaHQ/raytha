@@ -1,0 +1,104 @@
+@model Raytha.Web.Areas.Admin.Pages.SitePages.EditWidget
+
+<h6 class="mb-3">Section Header</h6>
+
+<div class="row">
+    <div class="col-md-6 mb-3">
+        <label class="form-label" asp-for="FaqForm.Headline"></label>
+        <input type="text" class="form-control" asp-for="FaqForm.Headline"
+            placeholder="e.g., Frequently Asked Questions">
+    </div>
+    <div class="col-md-6 mb-3">
+        <label class="form-label" asp-for="FaqForm.Subheadline"></label>
+        <input type="text" class="form-control" asp-for="FaqForm.Subheadline" placeholder="Optional subheadline">
+    </div>
+</div>
+
+<h6 class="mb-3 mt-4">Options</h6>
+
+<div class="row">
+    <div class="col-md-6 mb-3">
+        <div class="form-check">
+            <input class="form-check-input" type="checkbox" asp-for="FaqForm.ExpandFirst" id="expandFirstCheck">
+            <label class="form-check-label" for="expandFirstCheck">
+                Expand first item by default
+            </label>
+        </div>
+    </div>
+    <div class="col-md-6 mb-3">
+        <label class="form-label" asp-for="FaqForm.BackgroundColor"></label>
+        <div class="input-group">
+            <input type="color" class="form-control form-control-color"
+                value="@(Model.FaqForm?.BackgroundColor ?? "#ffffff")"
+                onchange="document.getElementById('FaqForm_BackgroundColor').value = this.value">
+            <input type="text" class="form-control" asp-for="FaqForm.BackgroundColor" placeholder="#ffffff">
+        </div>
+    </div>
+</div>
+
+<h6 class="mb-3 mt-4">FAQ Items</h6>
+
+<div id="faq-items-container">
+    @if (Model.FaqForm?.Items != null)
+    {
+        for (var i = 0; i < Model.FaqForm.Items.Count; i++)
+        {
+            var item = Model.FaqForm.Items[i];
+            <div class="faq-item card mb-3" data-index="@i">
+                <div class="card-header d-flex justify-content-between align-items-center py-2">
+                    <span class="fw-semibold">FAQ Item #<span class="item-number">@(i + 1)</span></span>
+                    <button type="button" class="btn btn-sm btn-outline-danger remove-faq-item" title="Remove item">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label">Question</label>
+                        <input type="text" class="form-control faq-question" name="FaqForm.Items[@i].Question"
+                            value="@item.Question" placeholder="Enter the question">
+                    </div>
+                    <div class="faq-answer-wrapper" data-field-type="wysiwyg" data-developername="FaqForm_Items_@(i)_Answer">
+                        <div class="mb-3">
+                            <label class="form-label">Answer</label>
+                            <div></div>
+                            <textarea data-developername="FaqForm_Items_@(i)_Answer" id="FaqForm_Items_@(i)_Answer"
+                        name="FaqForm.Items[@i].Answer" hidden>@item.Answer</textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    }
+</div>
+
+<button type="button" class="btn btn-outline-primary" id="add-faq-item">
+    <i class="bi bi-plus-lg me-1"></i> Add Another FAQ Item
+</button>
+
+<!-- Template for new FAQ items (hidden) -->
+<template id="faq-item-template">
+    <div class="faq-item card mb-3" data-index="__INDEX__">
+        <div class="card-header d-flex justify-content-between align-items-center py-2">
+            <span class="fw-semibold">FAQ Item #<span class="item-number">__NUMBER__</span></span>
+            <button type="button" class="btn btn-sm btn-outline-danger remove-faq-item" title="Remove item">
+                <i class="bi bi-trash"></i>
+            </button>
+        </div>
+        <div class="card-body">
+            <div class="mb-3">
+                <label class="form-label">Question</label>
+                <input type="text" class="form-control faq-question" name="FaqForm.Items[__INDEX__].Question"
+                    placeholder="Enter the question">
+            </div>
+            <div class="faq-answer-wrapper" data-field-type="wysiwyg"
+                data-developername="FaqForm_Items___INDEX___Answer">
+                <div class="mb-3">
+                    <label class="form-label">Answer</label>
+                    <div></div>
+                    <textarea data-developername="FaqForm_Items___INDEX___Answer" id="FaqForm_Items___INDEX___Answer"
+                        name="FaqForm.Items[__INDEX__].Answer" hidden></textarea>
+                </div>
+            </div>
+        </div>
+    </div>
+</template>

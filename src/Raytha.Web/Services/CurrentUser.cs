@@ -58,8 +58,30 @@ public class CurrentUser : ICurrentUser
                 c.Type == RaythaClaimTypes.AuthenticationScheme
             )
             ?.Value;
-    public string RemoteIpAddress =>
-        _httpContextAccessor?.HttpContext.Connection.RemoteIpAddress.MapToIPv4().ToString();
+    public string RemoteIpAddress
+    {
+        get
+        {
+            var context = _httpContextAccessor?.HttpContext;
+            if (context == null) return null;
+
+            // Check Cloudflare header first
+            var cfConnectingIp = context.Request.Headers["CF-Connecting-IP"].FirstOrDefault();
+            if (!string.IsNullOrEmpty(cfConnectingIp))
+                return cfConnectingIp;
+
+            // Check X-Forwarded-For (set by most reverse proxies)
+            var forwardedFor = context.Request.Headers["X-Forwarded-For"].FirstOrDefault();
+            if (!string.IsNullOrEmpty(forwardedFor))
+            {
+                // X-Forwarded-For can contain multiple IPs, the first is the original client
+                return forwardedFor.Split(',')[0].Trim();
+            }
+
+            // Fall back to connection IP
+            return context.Connection.RemoteIpAddress?.MapToIPv4().ToString();
+        }
+    }
     public bool IsAdmin =>
         _httpContextAccessor
             ?.HttpContext.User.Claims.FirstOrDefault(c => c.Type == RaythaClaimTypes.IsAdmin)

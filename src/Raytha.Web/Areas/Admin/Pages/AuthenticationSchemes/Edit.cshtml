@@ -74,6 +74,27 @@
                             </div>
                         </div>
                     }
+                    @if (Model.Form.AuthenticationSchemeType == "email_and_password")
+                    {
+                        <div class="col-lg-12">
+                            <div class="mb-3">
+                                <label class="form-label raytha-required" asp-for="Form.BruteForceProtectionMaxFailedAttempts"></label>
+                                <input type="number" class="form-control @Model.HasError("BruteForceProtectionMaxFailedAttempts")"
+                                       asp-for="Form.BruteForceProtectionMaxFailedAttempts" min="1">
+                                <div class="invalid-feedback">@Model.ErrorMessageFor("BruteForceProtectionMaxFailedAttempts")</div>
+                                <div class="form-text">Maximum number of failed login attempts before the account is temporarily locked.</div>
+                            </div>
+                        </div>
+                        <div class="col-lg-12">
+                            <div class="mb-3">
+                                <label class="form-label raytha-required" asp-for="Form.BruteForceProtectionWindowInSeconds"></label>
+                                <input type="number" class="form-control @Model.HasError("BruteForceProtectionWindowInSeconds")"
+                                       asp-for="Form.BruteForceProtectionWindowInSeconds" min="60">
+                                <div class="invalid-feedback">@Model.ErrorMessageFor("BruteForceProtectionWindowInSeconds")</div>
+                                <div class="form-text">Time window in seconds during which failed attempts are counted. Minimum is 60 seconds.</div>
+                            </div>
+                        </div>
+                    }
                     @if (Model.Form.AuthenticationSchemeType == "jwt")
                     {
                         <div class="col-lg-12">

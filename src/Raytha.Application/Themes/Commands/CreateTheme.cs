@@ -6,6 +6,7 @@ using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Models;
 using Raytha.Application.Common.Utils;
 using Raytha.Domain.Entities;
+using Raytha.Domain.ValueObjects;
 
 namespace Raytha.Application.Themes.Commands;
 
@@ -85,6 +86,7 @@ public class CreateTheme
                 mediaItems = await InsertDefaultMediaItemsAsync(themeId, cancellationToken);
 
             await InsertDefaultWebTemplates(themeId, mediaItems, cancellationToken);
+            await InsertDefaultWidgetTemplates(themeId, cancellationToken);
 
             await _db.SaveChangesAsync(cancellationToken);
 
@@ -99,7 +101,7 @@ public class CreateTheme
             var mediaItems = new List<MediaItem>();
             var themeAccessToMediaItems = new List<ThemeAccessToMediaItem>();
 
-            var defaultThemeAssetsPath = Path.Combine("wwwroot", "raytha_default_2024", "assets");
+            var defaultThemeAssetsPath = Path.Combine("wwwroot", "raytha_default_2026", "assets");
             if (!Directory.Exists(defaultThemeAssetsPath))
                 throw new DirectoryNotFoundException(
                     $"Path '{defaultThemeAssetsPath}' does not exist."
@@ -200,6 +202,9 @@ public class CreateTheme
                     "favicon.ico",
                     "bootstrap.min.css",
                     "bootstrap.bundle.min.js",
+                    "bootstrap-icons.min.css",
+                    "bootstrap-icons.woff2",
+                    "bootstrap-icons.woff",
                 };
 
                 foreach (var fileName in baseLayoutFileNames)
@@ -296,6 +301,31 @@ public class CreateTheme
             }
 
             await _db.WebTemplates.AddRangeAsync(defaultWebTemplates, cancellationToken);
+        }
+
+        private async Task InsertDefaultWidgetTemplates(
+            Guid themeId,
+            CancellationToken cancellationToken
+        )
+        {
+            var defaultWidgetTemplates = new List<WidgetTemplate>();
+
+            foreach (var widgetType in BuiltInWidgetType.WidgetTypes)
+            {
+                var widgetTemplate = new WidgetTemplate
+                {
+                    Id = Guid.NewGuid(),
+                    ThemeId = themeId,
+                    Label = widgetType.DisplayName,
+                    DeveloperName = widgetType.DeveloperName,
+                    Content = widgetType.DefaultTemplateContent,
+                    IsBuiltInTemplate = true,
+                };
+
+                defaultWidgetTemplates.Add(widgetTemplate);
+            }
+
+            await _db.WidgetTemplates.AddRangeAsync(defaultWidgetTemplates, cancellationToken);
         }
     }
 }

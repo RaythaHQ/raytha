@@ -133,6 +133,10 @@ public class BeginDuplicateTheme
                 .Where(wt => wt.ThemeId == themeId.Guid)
                 .ToArrayAsync(cancellationToken);
 
+            var originalThemeWidgetTemplates = await _db
+                .WidgetTemplates.Where(wt => wt.ThemeId == themeId.Guid)
+                .ToArrayAsync(cancellationToken);
+
             job.TaskStep = 2;
             job.StatusInfo = "Duplicate media items";
             _db.BackgroundTasks.Update(job);
@@ -340,6 +344,24 @@ public class BeginDuplicateTheme
                 webTemplateViewRelations,
                 cancellationToken
             );
+
+            // Duplicate widget templates
+            var widgetTemplates = new List<WidgetTemplate>();
+            foreach (var originalWidgetTemplate in originalThemeWidgetTemplates)
+            {
+                var widgetTemplate = new WidgetTemplate
+                {
+                    Id = Guid.NewGuid(),
+                    ThemeId = entity.Id,
+                    Label = originalWidgetTemplate.Label,
+                    DeveloperName = originalWidgetTemplate.DeveloperName,
+                    Content = originalWidgetTemplate.Content,
+                    IsBuiltInTemplate = originalWidgetTemplate.IsBuiltInTemplate,
+                };
+                widgetTemplates.Add(widgetTemplate);
+            }
+
+            await _db.WidgetTemplates.AddRangeAsync(widgetTemplates, cancellationToken);
 
             job.TaskStep = 4;
             job.StatusInfo = "Duplicate theme is finished.";

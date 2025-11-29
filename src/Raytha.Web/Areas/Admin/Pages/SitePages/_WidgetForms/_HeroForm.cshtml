@@ -1,0 +1,132 @@
+@model Raytha.Web.Areas.Admin.Pages.SitePages.EditWidget
+
+<h6 class="mb-3">Content</h6>
+
+<div class="mb-3">
+    <label class="form-label" asp-for="HeroForm.Headline"></label>
+    <input type="text" class="form-control" asp-for="HeroForm.Headline" placeholder="Enter headline text">
+</div>
+
+<div class="mb-3">
+    <label class="form-label" asp-for="HeroForm.Subheadline"></label>
+    <textarea class="form-control" asp-for="HeroForm.Subheadline" rows="2" placeholder="Enter subheadline text"></textarea>
+</div>
+
+<h6 class="mb-3 mt-4">Appearance</h6>
+
+<div class="row">
+    <div class="col-md-6 mb-3">
+        <label class="form-label" asp-for="HeroForm.BackgroundColor"></label>
+        <div class="input-group">
+            <input type="color" class="form-control form-control-color" asp-for="HeroForm.BackgroundColor">
+            <input type="text" class="form-control" asp-for="HeroForm.BackgroundColor" style="max-width: 120px;">
+        </div>
+    </div>
+    <div class="col-md-6 mb-3">
+        <label class="form-label" asp-for="HeroForm.TextColor"></label>
+        <div class="input-group">
+            <input type="color" class="form-control form-control-color" asp-for="HeroForm.TextColor">
+            <input type="text" class="form-control" asp-for="HeroForm.TextColor" style="max-width: 120px;">
+        </div>
+    </div>
+</div>
+
+<div class="mb-3">
+    <label class="form-label" asp-for="HeroForm.BackgroundImage"></label>
+    
+    <!-- Tabs for URL or Upload -->
+    <ul class="nav nav-tabs mb-2" id="backgroundImageTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="url-tab" data-bs-toggle="tab" data-bs-target="#url-content" 
+                type="button" role="tab" aria-controls="url-content" aria-selected="true">
+                <i class="bi bi-link-45deg me-1"></i> URL
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="upload-tab" data-bs-toggle="tab" data-bs-target="#upload-content" 
+                type="button" role="tab" aria-controls="upload-content" aria-selected="false">
+                <i class="bi bi-upload me-1"></i> Upload
+            </button>
+        </li>
+    </ul>
+    
+    <div class="tab-content" id="backgroundImageTabContent">
+        <!-- URL Tab -->
+        <div class="tab-pane fade show active" id="url-content" role="tabpanel" aria-labelledby="url-tab">
+            <input type="url" class="form-control" id="HeroForm_BackgroundImage_Url" 
+                placeholder="https://example.com/image.jpg">
+            <div class="form-text">Enter an image URL directly</div>
+        </div>
+        
+        <!-- Upload Tab -->
+        <div class="tab-pane fade" id="upload-content" role="tabpanel" aria-labelledby="upload-tab">
+            <div id="hero-background-uppy"></div>
+            <div id="hero-background-uppy-progress"></div>
+            <div id="hero-background-file-info" hidden>
+                <div class="d-flex align-items-center gap-2 p-2 bg-light rounded">
+                    <i class="bi bi-image fs-4 text-primary"></i>
+                    <span id="hero-background-filename" class="flex-grow-1"></span>
+                    <button type="button" class="btn btn-sm btn-outline-danger" id="hero-background-remove">
+                        <i class="bi bi-x-lg"></i> Remove
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Hidden field that stores the actual value -->
+    <input type="hidden" asp-for="HeroForm.BackgroundImage" id="HeroForm_BackgroundImage_Hidden">
+    
+    <!-- Preview -->
+    <div id="hero-background-preview" class="mt-2" style="display: none;">
+        <img id="hero-background-preview-img" src="" alt="Preview" class="img-thumbnail" style="max-height: 100px;">
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6 mb-3">
+        <label class="form-label" asp-for="HeroForm.Alignment"></label>
+        <select class="form-select" asp-for="HeroForm.Alignment">
+            <option value="left">Left</option>
+            <option value="center">Center</option>
+            <option value="right">Right</option>
+        </select>
+    </div>
+    <div class="col-md-6 mb-3">
+        <label class="form-label" asp-for="HeroForm.MinHeight"></label>
+        <div class="input-group">
+            <input type="number" class="form-control" asp-for="HeroForm.MinHeight" min="100" max="1000">
+            <span class="input-group-text">px</span>
+        </div>
+    </div>
+</div>
+
+<h6 class="mb-3 mt-4">Call to Action Button (Optional)</h6>
+
+<div class="row">
+    <div class="col-md-6 mb-3">
+        <label class="form-label" asp-for="HeroForm.ButtonText"></label>
+        <input type="text" class="form-control" asp-for="HeroForm.ButtonText" placeholder="e.g., Learn More">
+    </div>
+    <div class="col-md-6 mb-3">
+        <label class="form-label" asp-for="HeroForm.ButtonUrl"></label>
+        <input type="text" class="form-control" asp-for="HeroForm.ButtonUrl" placeholder="/about or https://...">
+    </div>
+</div>
+
+<div class="mb-3">
+    <label class="form-label" asp-for="HeroForm.ButtonStyle"></label>
+    <select class="form-select" asp-for="HeroForm.ButtonStyle">
+        <option value="primary">Primary (Blue)</option>
+        <option value="secondary">Secondary (Gray)</option>
+        <option value="success">Success (Green)</option>
+        <option value="danger">Danger (Red)</option>
+        <option value="warning">Warning (Yellow)</option>
+        <option value="info">Info (Cyan)</option>
+        <option value="light">Light</option>
+        <option value="dark">Dark</option>
+        <option value="outline-primary">Outline Primary</option>
+        <option value="outline-light">Outline Light</option>
+    </select>
+</div>
+

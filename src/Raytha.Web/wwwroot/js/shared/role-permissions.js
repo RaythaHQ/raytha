@@ -4,6 +4,7 @@
  * 
  * This module manages the complex logic where:
  * - System "content_types" permission disables all content type permissions
+ * - System "system_settings" and "administrators" permissions are intertwined (checking one checks both)
  * - Content type "edit" permission requires "read" permission
  * - Content type "config" permission requires both "read" and "edit" permissions
  */
@@ -72,13 +73,40 @@ class RolePermissionsManager {
    */
   handleSystemPermissionChange(event) {
     const permission = event.target.dataset.permission;
+    const isChecked = event.target.checked;
     
     if (permission === 'content_types') {
-      if (event.target.checked) {
+      if (isChecked) {
         this.disableAllContentTypePermissions();
       } else {
         this.enableAllContentTypePermissions();
       }
+    }
+    
+    // Intertwined permissions: system_settings and administrators must always match
+    if (permission === 'system_settings' || permission === 'administrators') {
+      this.syncIntertwinedPermissions(isChecked);
+    }
+  }
+  
+  /**
+   * Sync intertwined system permissions (system_settings and administrators)
+   * When one is checked/unchecked, the other must match
+   * @param {boolean} isChecked - Whether the permission is checked
+   */
+  syncIntertwinedPermissions(isChecked) {
+    const systemSettingsCheckbox = this.systemPermissionCheckboxes.find(
+      cb => cb.dataset.permission === 'system_settings'
+    );
+    const administratorsCheckbox = this.systemPermissionCheckboxes.find(
+      cb => cb.dataset.permission === 'administrators'
+    );
+    
+    if (systemSettingsCheckbox) {
+      systemSettingsCheckbox.checked = isChecked;
+    }
+    if (administratorsCheckbox) {
+      administratorsCheckbox.checked = isChecked;
     }
   }
 
@@ -129,8 +157,12 @@ class RolePermissionsManager {
         this.setPermission(contentTypeId, 'edit', false, false);
         this.setPermission(contentTypeId, 'config', false, false);
       } else if (sourcePermission === 'edit') {
-        // When unchecking Edit, uncheck Config
+        // When unchecking Edit, uncheck Config and enable Read
         this.setPermission(contentTypeId, 'config', false, false);
+        this.setPermission(contentTypeId, 'read', null, false); // Enable read without changing checked state
+      } else if (sourcePermission === 'config') {
+        // When unchecking Config, enable Edit (read stays disabled if edit is checked)
+        this.setPermission(contentTypeId, 'edit', null, false);
       }
     }
   }

@@ -1,0 +1,49 @@
+{% comment %}
+Call to Action Widget - Prominent CTA block with heading, text, and button.
+
+Settings:
+  - headline: Main heading
+  - content: Supporting text (HTML)
+  - buttonText: Button label
+  - buttonUrl: Button link URL
+  - buttonStyle: Button style - primary, secondary, light, etc. (default: light)
+  - backgroundColor: Background color (default: #0d6efd)
+  - textColor: Text color (default: #ffffff)
+  - alignment: Text alignment - left, center, right (default: center)
+
+Advanced Meta Fields (available on all widgets):
+  - widget.css_class: Custom CSS classes
+  - widget.html_id: Custom HTML ID attribute
+  - widget.custom_attributes: Custom HTML attributes string
+  - widget.row: Row position in section grid
+  - widget.column: Column position in row
+  - widget.column_span: Number of columns widget spans (1-12)
+{% endcomment %}
+
+{% assign bg_color = widget.settings.backgroundColor | default: '#0d6efd' %}
+{% assign text_color = widget.settings.textColor | default: '#ffffff' %}
+{% assign alignment = widget.settings.alignment | default: 'center' %}
+{% assign button_style = widget.settings.buttonStyle | default: 'light' %}
+
+<div class="cta-widget py-5 text-{{ alignment }}{% if widget.css_class %} {{ widget.css_class }}{% endif %}"
+     {% if widget.html_id %}id="{{ widget.html_id }}"{% endif %}
+     {{ widget.custom_attributes }}
+     style="background-color: {{ bg_color }}; color: {{ text_color }};">
+  <div class="container py-4">
+    {% if widget.settings.headline %}
+    <h2 class="fw-bold mb-3">{{ widget.settings.headline }}</h2>
+    {% endif %}
+    
+    {% if widget.settings.content %}
+    <div class="lead mb-4 opacity-90" style="max-width: 700px; {% if alignment == 'center' %}margin-left: auto; margin-right: auto;{% endif %}">
+      {{ widget.settings.content }}
+    </div>
+    {% endif %}
+    
+    {% if widget.settings.buttonText and widget.settings.buttonUrl %}
+    <a href="{{ widget.settings.buttonUrl }}" class="btn btn-{{ button_style }} btn-lg px-5">
+      {{ widget.settings.buttonText }}
+    </a>
+    {% endif %}
+  </div>
+</div>

@@ -1,3 +1,4 @@
+using System.Text.Json;
 using CSharpVitamins;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -6,18 +7,27 @@ using Raytha.Application.AuditLogs.Commands;
 using Raytha.Application.AuditLogs.Queries;
 using Raytha.Application.AuthenticationSchemes.Commands;
 using Raytha.Application.Common.Utils;
+using Raytha.Application.ContentItems.Commands;
+using Raytha.Application.ContentTypes.Commands;
 using Raytha.Application.EmailTemplates.Commands;
 using Raytha.Application.Login.Commands;
 using Raytha.Application.MediaItems.Commands;
+using Raytha.Application.NavigationMenuItems.Commands;
+using Raytha.Application.NavigationMenus.Commands;
 using Raytha.Application.OrganizationSettings.Commands;
+using Raytha.Application.RaythaFunctions.Commands;
 using Raytha.Application.Roles.Commands;
+using Raytha.Application.SitePages.Commands;
+using Raytha.Application.Themes.Commands;
+using Raytha.Application.Themes.WebTemplates.Commands;
+using Raytha.Application.Themes.WidgetTemplates.Commands;
 using Raytha.Application.UserGroups.Commands;
 using Raytha.Application.Users.Commands;
+using Raytha.Application.Views.Commands;
 using Raytha.Domain.Entities;
 using Raytha.Web.Areas.Admin.Pages.Shared;
 using Raytha.Web.Areas.Admin.Pages.Shared.Models;
 using Raytha.Web.Areas.Shared.Models;
-using System.Text.Json;
 
 namespace Raytha.Web.Areas.Admin.Pages.AuditLogs;
 
@@ -37,15 +47,42 @@ public class Index : BaseAdminPageModel
             {
                 //Admins
                 new CreateAdmin.Command().GetLogName(),
+                new CreateApiKey.Command().GetLogName(),
                 new DeleteAdmin.Command().GetLogName(),
+                new DeleteApiKey.Command().GetLogName(),
                 new EditAdmin.Command().GetLogName(),
                 new RemoveAdminAccess.Command().GetLogName(),
                 new Application.Admins.Commands.ResetPassword.Command().GetLogName(),
                 new Application.Admins.Commands.SetIsActive.Command().GetLogName(),
+                //AuditLogs
+                new ClearAllAuditLogs.Command().GetLogName(),
                 //AuthenticationSchemes
                 new CreateAuthenticationScheme.Command().GetLogName(),
                 new DeleteAuthenticationScheme.Command().GetLogName(),
                 new EditAuthenticationScheme.Command().GetLogName(),
+                //ContentItems
+                new CreateContentItem.Command().GetLogName(),
+                new DeleteContentItem.Command().GetLogName(),
+                new DeleteAlreadyDeletedContentItem.Command().GetLogName(),
+                new DiscardDraftContentItem.Command().GetLogName(),
+                new EditContentItem.Command().GetLogName(),
+                new EditContentItemSettings.Command().GetLogName(),
+                new RestoreContentItem.Command().GetLogName(),
+                new RevertContentItem.Command().GetLogName(),
+                new Application.ContentItems.Commands.SetAsHomePage.Command().GetLogName(),
+                new UnpublishContentItem.Command().GetLogName(),
+                new BeginExportContentItemsToCsv.Command().GetLogName(),
+                new BeginImportContentItemsFromCsv.Command().GetLogName(),
+                //ContentTypes
+                new CreateContentType.Command().GetLogName(),
+                new CreateContentTypeField.Command().GetLogName(),
+                new DeleteContentTypeField.Command().GetLogName(),
+                new EditContentType.Command().GetLogName(),
+                new EditContentTypeField.Command().GetLogName(),
+                new ReorderContentTypeField.Command().GetLogName(),
+                //Email-Templates
+                new EditEmailTemplate.Command().GetLogName(),
+                new RevertEmailTemplate.Command().GetLogName(),
                 //Login
                 new BeginForgotPassword.Command().GetLogName(),
                 new BeginLoginWithMagicLink.Command().GetLogName(),
@@ -60,17 +97,111 @@ public class Index : BaseAdminPageModel
                 //MediaItems
                 CreateMediaItem.Command.Empty().GetLogName(),
                 new DeleteMediaItem.Command().GetLogName(),
+                //NavigationMenus
+                new CreateNavigationMenu.Command
+                {
+                    Label = string.Empty,
+                    DeveloperName = string.Empty,
+                }.GetLogName(),
+                new CreateNavigationMenuRevision.Command
+                {
+                    NavigationMenuId = string.Empty,
+                }.GetLogName(),
+                new DeleteNavigationMenu.Command().GetLogName(),
+                new EditNavigationMenu.Command { Label = string.Empty }.GetLogName(),
+                new RevertNavigationMenu.Command().GetLogName(),
+                new SetAsMainMenu.Command().GetLogName(),
+                //NavigationMenuItems
+                new CreateNavigationMenuItem.Command
+                {
+                    NavigationMenuId = string.Empty,
+                    Label = string.Empty,
+                    Url = string.Empty,
+                }.GetLogName(),
+                new DeleteNavigationMenuItem.Command
+                {
+                    NavigationMenuId = string.Empty,
+                }.GetLogName(),
+                new EditNavigationMenuItem.Command
+                {
+                    NavigationMenuId = string.Empty,
+                    Label = string.Empty,
+                    Url = string.Empty,
+                }.GetLogName(),
+                new ReorderNavigationMenuItems.Command().GetLogName(),
                 //OrganizationSettings
                 new EditConfiguration.Command().GetLogName(),
                 new EditSmtp.Command().GetLogName(),
                 new InitialSetup.Command().GetLogName(),
+                //RaythaFunctions
+                new CreateRaythaFunction.Command
+                {
+                    Name = string.Empty,
+                    DeveloperName = string.Empty,
+                    TriggerType = string.Empty,
+                    Code = string.Empty,
+                }.GetLogName(),
+                new DeleteRaythaFunction.Command().GetLogName(),
+                new EditRaythaFunction.Command
+                {
+                    Name = string.Empty,
+                    TriggerType = string.Empty,
+                    Code = string.Empty,
+                }.GetLogName(),
+                new RevertRaythaFunction.Command().GetLogName(),
                 //Roles
                 new CreateRole.Command().GetLogName(),
                 new DeleteRole.Command().GetLogName(),
                 new EditRole.Command().GetLogName(),
-                //Email-Templates
-                new EditEmailTemplate.Command().GetLogName(),
-                new RevertEmailTemplate.Command().GetLogName(),
+                //SitePages
+                new CreateSitePage.Command().GetLogName(),
+                new DeleteSitePage.Command().GetLogName(),
+                new DeleteWidget.Command().GetLogName(),
+                new DiscardDraftSitePage.Command().GetLogName(),
+                new EditSitePage.Command().GetLogName(),
+                new EditSitePageSettings.Command().GetLogName(),
+                new EditWidget.Command().GetLogName(),
+                new PublishSitePage.Command().GetLogName(),
+                new RevertSitePage.Command().GetLogName(),
+                new SaveWidgets.Command().GetLogName(),
+                new SetSitePageAsHomePage.Command().GetLogName(),
+                new UnpublishSitePage.Command().GetLogName(),
+                //Themes
+                new CreateTheme.Command
+                {
+                    Title = string.Empty,
+                    DeveloperName = string.Empty,
+                    Description = string.Empty,
+                    InsertDefaultThemeMediaItems = false,
+                }.GetLogName(),
+                new DeleteTheme.Command().GetLogName(),
+                new EditTheme.Command
+                {
+                    Title = string.Empty,
+                    Description = string.Empty,
+                }.GetLogName(),
+                new ExportTheme.Command { DeveloperName = string.Empty }.GetLogName(),
+                new SetAsActiveTheme.Command().GetLogName(),
+                new ToggleThemeExportability.Command { IsExportable = false }.GetLogName(),
+                new BeginDuplicateTheme.Command
+                {
+                    PathBase = string.Empty,
+                    ThemeId = string.Empty,
+                    Title = string.Empty,
+                    DeveloperName = string.Empty,
+                    Description = string.Empty,
+                }.GetLogName(),
+                new BeginImportThemeFromUrl.Command
+                {
+                    Title = string.Empty,
+                    DeveloperName = string.Empty,
+                    Description = string.Empty,
+                    Url = string.Empty,
+                }.GetLogName(),
+                new BeginMatchWebTemplates.Command
+                {
+                    MatchedWebTemplateDeveloperNames = new Dictionary<string, string>(),
+                }.GetLogName(),
                 //UserGroups
                 new CreateUserGroup.Command().GetLogName(),
                 new DeleteUserGroup.Command().GetLogName(),
@@ -81,6 +212,48 @@ public class Index : BaseAdminPageModel
                 new EditUser.Command().GetLogName(),
                 new Application.Users.Commands.ResetPassword.Command().GetLogName(),
                 new Application.Users.Commands.SetIsActive.Command().GetLogName(),
+                //Views
+                new CreateView.Command().GetLogName(),
+                new DeleteView.Command().GetLogName(),
+                new EditFilter.Command().GetLogName(),
+                new EditPublicSettings.Command().GetLogName(),
+                new EditView.Command().GetLogName(),
+                new Application.Views.Commands.SetAsHomePage.Command().GetLogName(),
+                //WebTemplates
+                new CreateWebTemplate.Command
+                {
+                    ThemeId = string.Empty,
+                    DeveloperName = string.Empty,
+                    Label = string.Empty,
+                    Content = string.Empty,
+                    TemplateAccessToModelDefinitions = Enumerable.Empty<ShortGuid>(),
+                }.GetLogName(),
+                new CreateWebTemplateByDeveloperName.Command
+                {
+                    DeveloperName = string.Empty,
+                    Label = string.Empty,
+                    Content = string.Empty,
+                }.GetLogName(),
+                new DeleteWebTemplate.Command().GetLogName(),
+                new EditWebTemplate.Command
+                {
+                    Label = string.Empty,
+                    Content = string.Empty,
+                    TemplateAccessToModelDefinitions = Enumerable.Empty<ShortGuid>(),
+                }.GetLogName(),
+                new EditWebTemplateByDeveloperName.Command
+                {
+                    Label = string.Empty,
+                    Content = string.Empty,
+                }.GetLogName(),
+                new RevertWebTemplate.Command().GetLogName(),
+                //WidgetTemplates
+                new EditWidgetTemplate.Command
+                {
+                    Label = string.Empty,
+                    Content = string.Empty,
+                }.GetLogName(),
+                new RevertWidgetTemplate.Command().GetLogName(),
             };
 
             logCategories.Sort();
@@ -220,10 +393,10 @@ public class Index : BaseAdminPageModel
         try
         {
             var jsonDocument = JsonDocument.Parse(json);
-            return JsonSerializer.Serialize(jsonDocument, new JsonSerializerOptions
-            {
-                WriteIndented = true
-            });
+            return JsonSerializer.Serialize(
+                jsonDocument,
+                new JsonSerializerOptions { WriteIndented = true }
+            );
         }
         catch
         {

@@ -1,0 +1,67 @@
+@model Raytha.Web.Areas.Admin.Pages.SitePages.EditWidget
+
+<h6 class="mb-3">Embed Settings</h6>
+
+<div class="mb-3">
+    <label class="form-label" asp-for="EmbedForm.EmbedType"></label>
+    <select class="form-select" asp-for="EmbedForm.EmbedType" id="embedTypeSelect">
+        <option value="iframe">Iframe (URL)</option>
+        <option value="html">Raw HTML</option>
+    </select>
+</div>
+
+<div class="mb-3" id="iframeUrlGroup">
+    <label class="form-label" asp-for="EmbedForm.IframeUrl"></label>
+    <input type="url" class="form-control" asp-for="EmbedForm.IframeUrl" 
+           placeholder="https://www.youtube.com/embed/...">
+    <div class="form-text">Enter the embed URL (YouTube, Vimeo, maps, etc.)</div>
+</div>
+
+<div class="mb-3" id="htmlContentGroup" style="display: none;">
+    <label class="form-label" asp-for="EmbedForm.HtmlContent"></label>
+    <div id="embedHtmlEditorContainer" style="height: 300px; border: 1px solid #dee2e6; border-radius: 0.375rem; overflow: auto;"></div>
+    <input type="hidden" asp-for="EmbedForm.HtmlContent" id="EmbedForm_HtmlContent_Hidden">
+    <div class="form-text text-warning">
+        <i class="bi bi-exclamation-triangle me-1"></i>
+        Be careful with raw HTML - only embed trusted content
+    </div>
+</div>
+
+<h6 class="mb-3 mt-4">Display Options</h6>
+
+<div class="row">
+    <div class="col-md-6 mb-3">
+        <label class="form-label" asp-for="EmbedForm.AspectRatio"></label>
+        <select class="form-select" asp-for="EmbedForm.AspectRatio">
+            <option value="16x9">16:9 (Widescreen)</option>
+            <option value="4x3">4:3 (Standard)</option>
+            <option value="1x1">1:1 (Square)</option>
+            <option value="21x9">21:9 (Ultrawide)</option>
+        </select>
+    </div>
+    <div class="col-md-6 mb-3">
+        <label class="form-label" asp-for="EmbedForm.MaxWidth"></label>
+        <div class="input-group">
+            <input type="number" class="form-control" asp-for="EmbedForm.MaxWidth" 
+                   min="200" max="2000" placeholder="Auto">
+            <span class="input-group-text">px</span>
+        </div>
+        <div class="form-text">Leave empty for full width</div>
+    </div>
+</div>
+
+<div class="mb-3">
+    <label class="form-label" asp-for="EmbedForm.Caption"></label>
+    <input type="text" class="form-control" asp-for="EmbedForm.Caption" 
+           placeholder="Optional caption below embed">
+</div>
+
+<div class="mb-3">
+    <label class="form-label" asp-for="EmbedForm.BackgroundColor"></label>
+    <div class="input-group" style="max-width: 200px;">
+        <input type="color" class="form-control form-control-color" 
+               value="@(Model.EmbedForm?.BackgroundColor ?? "#ffffff")"
+               onchange="document.getElementById('EmbedForm_BackgroundColor').value = this.value">
+        <input type="text" class="form-control" asp-for="EmbedForm.BackgroundColor" placeholder="#ffffff">
+    </div>
+</div>

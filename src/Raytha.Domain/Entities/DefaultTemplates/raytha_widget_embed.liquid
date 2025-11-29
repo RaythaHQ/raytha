@@ -1,0 +1,54 @@
+{% comment %}
+Embed Widget - Embed external content via iframe or raw HTML/script.
+
+Settings:
+  - embedType: Type of embed - iframe, html (default: iframe)
+  - iframeUrl: URL for iframe embed
+  - htmlContent: Raw HTML/script content (use with caution)
+  - aspectRatio: Aspect ratio - 16x9, 4x3, 1x1, 21x9 (default: 16x9)
+  - maxWidth: Maximum width in pixels (optional)
+  - caption: Optional caption text below embed
+  - backgroundColor: Background color (optional)
+
+Advanced Meta Fields (available on all widgets):
+  - widget.css_class: Custom CSS classes
+  - widget.html_id: Custom HTML ID attribute
+  - widget.custom_attributes: Custom HTML attributes string
+  - widget.row: Row position in section grid
+  - widget.column: Column position in row
+  - widget.column_span: Number of columns widget spans (1-12)
+{% endcomment %}
+
+{% assign embed_type = widget.settings.embedType | default: 'iframe' %}
+{% assign aspect_ratio = widget.settings.aspectRatio | default: '16x9' %}
+
+<div class="embed-widget py-4{% if widget.css_class %} {{ widget.css_class }}{% endif %}"
+     {% if widget.html_id %}id="{{ widget.html_id }}"{% endif %}
+     {{ widget.custom_attributes }}
+     {% if widget.settings.backgroundColor %}style="background-color: {{ widget.settings.backgroundColor }};"{% endif %}>
+  
+  <div class="embed-container" 
+       {% if widget.settings.maxWidth %}style="max-width: {{ widget.settings.maxWidth }}px; margin: 0 auto;"{% endif %}>
+    
+    {% if embed_type == 'iframe' and widget.settings.iframeUrl %}
+    <div class="ratio ratio-{{ aspect_ratio }}">
+      <iframe src="{{ widget.settings.iframeUrl }}" 
+              allowfullscreen 
+              loading="lazy"
+              class="rounded shadow-sm"></iframe>
+    </div>
+    {% elsif embed_type == 'html' and widget.settings.htmlContent %}
+    <div class="embed-html">
+      {{ widget.settings.htmlContent }}
+    </div>
+    {% else %}
+    <div class="bg-secondary bg-opacity-10 rounded d-flex align-items-center justify-content-center" style="min-height: 200px;">
+      <span class="text-muted">No embed content configured</span>
+    </div>
+    {% endif %}
+    
+    {% if widget.settings.caption %}
+    <p class="text-center text-muted mt-3 mb-0 small">{{ widget.settings.caption }}</p>
+    {% endif %}
+  </div>
+</div>

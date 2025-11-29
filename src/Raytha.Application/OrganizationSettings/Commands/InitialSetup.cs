@@ -70,10 +70,6 @@ public class InitialSetup
 
     public class Handler : IRequestHandler<Command, CommandResponseDto<ShortGuid>>
     {
-        private const string PAGES_NAME_PLURAL = "Pages";
-        private const string PAGES_NAME_SINGULAR = "Page";
-        private const string PAGES_DEVELOPER_NAME = "pages";
-
         private const string POSTS_NAME_PLURAL = "Posts";
         private const string POSTS_NAME_SINGULAR = "Post";
         private const string POSTS_DEVELOPER_NAME = "posts";
@@ -82,16 +78,15 @@ public class InitialSetup
         private const string TITLE_FIELD_DEVELOPER_NAME = "title";
         private const string CONTENT_FIELD_LABEL = "Content";
         private const string CONTENT_FIELD_DEVELOPER_NAME = "content";
+        private const string FEATURED_IMAGE_FIELD_LABEL = "Featured Image";
+        private const string FEATURED_IMAGE_FIELD_DEVELOPER_NAME = "featured_image";
 
-        private const string DEFAULT_THEME_DEVELOPER_NAME = "raytha_default_2024";
+        private const string DEFAULT_THEME_DEVELOPER_NAME = "raytha_default_2026";
 
-        Guid pageTypeGuid = Guid.NewGuid();
         Guid postTypeGuid = Guid.NewGuid();
-
-        Guid pageTitleFieldGuid = Guid.NewGuid();
         Guid postsTitleFieldGuid = Guid.NewGuid();
-
-        Guid homePageGuid = Guid.NewGuid();
+        Guid homeSitePageGuid = Guid.NewGuid();
+        Guid aboutSitePageGuid = Guid.NewGuid();
         Guid orgSettingsGuid = Guid.NewGuid();
 
         private readonly IRaythaDbContext _db;
@@ -126,11 +121,13 @@ public class InitialSetup
                 defaultThemeId
             );
             InsertDefaultWebTemplates(mediaItemObjectKeys, defaultThemeId);
+            InsertDefaultWidgetTemplates(defaultThemeId);
             InsertDefaultEmailTemplates();
             InsertDefaultAuthentications();
+            InsertDefaultNavigationMenu();
             await _db.SaveChangesAsync(cancellationToken);
 
-            InsertDefaultPages();
+            InsertDefaultSitePages(defaultThemeId);
             InsertDefaultPosts();
             InsertDefaultViews();
             SetPrimaryFieldsOnContentTypes();
@@ -174,11 +171,6 @@ public class InitialSetup
                 {
                     new ContentTypeRolePermission
                     {
-                        ContentTypeId = pageTypeGuid,
-                        ContentTypePermissions = BuiltInContentTypePermission.AllPermissionsAsEnum,
-                    },
-                    new ContentTypeRolePermission
-                    {
                         ContentTypeId = postTypeGuid,
                         ContentTypePermissions = BuiltInContentTypePermission.AllPermissionsAsEnum,
                     },
@@ -196,11 +188,6 @@ public class InitialSetup
                 {
                     new ContentTypeRolePermission
                     {
-                        ContentTypeId = pageTypeGuid,
-                        ContentTypePermissions = BuiltInContentTypePermission.AllPermissionsAsEnum,
-                    },
-                    new ContentTypeRolePermission
-                    {
                         ContentTypeId = postTypeGuid,
                         ContentTypePermissions = BuiltInContentTypePermission.AllPermissionsAsEnum,
                     },
@@ -216,11 +203,6 @@ public class InitialSetup
                 SystemPermissions = BuiltInRole.Editor.DefaultSystemPermission,
                 ContentTypeRolePermissions = new List<ContentTypeRolePermission>
                 {
-                    new ContentTypeRolePermission
-                    {
-                        ContentTypeId = pageTypeGuid,
-                        ContentTypePermissions = BuiltInContentTypePermission.AllPermissionsAsEnum,
-                    },
                     new ContentTypeRolePermission
                     {
                         ContentTypeId = postTypeGuid,
@@ -248,28 +230,6 @@ public class InitialSetup
 
         protected void InsertDefaultContentTypeFields()
         {
-            var titlePageField = new ContentTypeField
-            {
-                Id = pageTitleFieldGuid,
-                Label = TITLE_FIELD_LABEL,
-                DeveloperName = TITLE_FIELD_DEVELOPER_NAME,
-                ContentTypeId = pageTypeGuid,
-                FieldOrder = 1,
-                FieldType = BaseFieldType.SingleLineText,
-            };
-            _db.ContentTypeFields.Add(titlePageField);
-
-            var contentPageField = new ContentTypeField
-            {
-                Id = Guid.NewGuid(),
-                Label = CONTENT_FIELD_LABEL,
-                DeveloperName = CONTENT_FIELD_DEVELOPER_NAME,
-                ContentTypeId = pageTypeGuid,
-                FieldOrder = 2,
-                FieldType = BaseFieldType.Wysiwyg,
-            };
-            _db.ContentTypeFields.Add(contentPageField);
-
             var titlePostField = new ContentTypeField
             {
                 Id = postsTitleFieldGuid,
@@ -291,22 +251,21 @@ public class InitialSetup
                 FieldType = BaseFieldType.Wysiwyg,
             };
             _db.ContentTypeFields.Add(contentPostField);
+
+            var featuredImageField = new ContentTypeField
+            {
+                Id = Guid.NewGuid(),
+                Label = FEATURED_IMAGE_FIELD_LABEL,
+                DeveloperName = FEATURED_IMAGE_FIELD_DEVELOPER_NAME,
+                ContentTypeId = postTypeGuid,
+                FieldOrder = 3,
+                FieldType = BaseFieldType.Attachment,
+            };
+            _db.ContentTypeFields.Add(featuredImageField);
         }
 
         protected void InsertDefaultContentTypes()
         {
-            var pageContentType = new ContentType
-            {
-                Id = pageTypeGuid,
-                LabelPlural = PAGES_NAME_PLURAL,
-                LabelSingular = PAGES_NAME_SINGULAR,
-                DeveloperName = PAGES_DEVELOPER_NAME,
-                IsActive = true,
-                IsDeleted = false,
-                DefaultRouteTemplate = "{PrimaryField}",
-            };
-            _db.ContentTypes.Add(pageContentType);
-
             var postContentType = new ContentType
             {
                 Id = postTypeGuid,
@@ -407,6 +366,9 @@ public class InitialSetup
                 "favicon.ico",
                 "bootstrap.min.css",
                 "bootstrap.bundle.min.js",
+                "bootstrap-icons.min.css",
+                "bootstrap-icons.woff2",
+                "bootstrap-icons.woff",
             };
 
             var list = new List<WebTemplate>();
@@ -467,15 +429,21 @@ public class InitialSetup
 
                 var templateAccess = new List<WebTemplateAccessToModelDefinition>
                 {
-                    new WebTemplateAccessToModelDefinition { ContentTypeId = pageTypeGuid },
                     new WebTemplateAccessToModelDefinition { ContentTypeId = postTypeGuid },
                 };
 
                 var standardTemplatesForContentTypes = new List<string>
                 {
-                    BuiltInWebTemplate.HomePage,
                     BuiltInWebTemplate.ContentItemDetailViewPage,
                     BuiltInWebTemplate.ContentItemListViewPage,
+                };
+
+                var sitePageTemplates = new List<string>
+                {
+                    BuiltInWebTemplate.HomePage,
+                    BuiltInWebTemplate.PageFullWidth,
+                    BuiltInWebTemplate.PageSidebar,
+                    BuiltInWebTemplate.PageMultiSection,
                 };
 
                 var loginTemplates = new List<string>
@@ -498,16 +466,11 @@ public class InitialSetup
                     template.TemplateAccessToModelDefinitions = templateAccess;
                     template.IsBuiltInTemplate = false;
                     template.AllowAccessForNewContentTypes = true;
-
-                    if (templateToBuild.DeveloperName == BuiltInWebTemplate.HomePage.DeveloperName)
-                    {
-                        template.Content = template.Content.Replace(
-                            homePageMediaItem,
-                            mediaItems
-                                .First(mi => mi.FileName.Contains(homePageMediaItem))
-                                .ObjectKey
-                        );
-                    }
+                }
+                else if (sitePageTemplates.Contains(templateToBuild))
+                {
+                    // Site Page templates - not linked to content types
+                    template.IsBuiltInTemplate = false;
                 }
                 else if (loginTemplates.Contains(templateToBuild))
                 {
@@ -518,6 +481,27 @@ public class InitialSetup
             }
 
             _db.WebTemplates.AddRange(list);
+        }
+
+        protected void InsertDefaultWidgetTemplates(Guid defaultThemeId)
+        {
+            var list = new List<WidgetTemplate>();
+
+            foreach (var widgetType in BuiltInWidgetType.WidgetTypes)
+            {
+                var template = new WidgetTemplate
+                {
+                    Id = Guid.NewGuid(),
+                    ThemeId = defaultThemeId,
+                    Label = widgetType.DisplayName,
+                    DeveloperName = widgetType.DeveloperName,
+                    Content = widgetType.DefaultTemplateContent,
+                    IsBuiltInTemplate = true,
+                };
+                list.Add(template);
+            }
+
+            _db.WidgetTemplates.AddRange(list);
         }
 
         protected void InsertDefaultEmailTemplates()
@@ -553,6 +537,8 @@ public class InitialSetup
                     IsEnabledForUsers = true,
                     AuthenticationSchemeType = AuthenticationSchemeType.EmailAndPassword,
                     LoginButtonText = "Login with your email and password",
+                    BruteForceProtectionMaxFailedAttempts = 10,
+                    BruteForceProtectionWindowInSeconds = 60,
                 },
                 new AuthenticationScheme
                 {
@@ -569,98 +555,342 @@ public class InitialSetup
             _db.AuthenticationSchemes.AddRange(list);
         }
 
-        protected void InsertDefaultPages()
+        protected void InsertDefaultNavigationMenu()
         {
-            dynamic homePageContent = new ExpandoObject();
-            homePageContent.title = "Home";
-            var homePagePath = $"{((string)homePageContent.title).ToUrlSlug()}";
-            homePageContent.content =
-                @"
-<div><!--block-->Welcome to our website! We are currently in the process of building and designing our new online home. We apologize for any inconvenience this may cause and appreciate your patience as we work to bring you the best possible experience. In the meantime, please feel free to contact us with any questions or inquiries you may have. We are always happy to help. Thank you for visiting and please check back soon for updates on our progress.&nbsp;</div>";
-            var homePage = new ContentItem
+            // Skip if main menu already exists (may have been created by older migrations)
+            if (_db.NavigationMenus.Any(nm => nm.DeveloperName == "mainmenu"))
             {
-                Id = homePageGuid,
-                DraftContent = homePageContent,
-                PublishedContent = homePageContent,
-                IsPublished = true,
-                IsDraft = false,
-                ContentTypeId = pageTypeGuid,
-                Route = new Route { ContentItemId = homePageGuid, Path = homePagePath },
+                return;
+            }
+
+            var mainMenuId = Guid.NewGuid();
+            var mainMenu = new NavigationMenu
+            {
+                Id = mainMenuId,
+                Label = "Main menu",
+                DeveloperName = "mainmenu",
+                IsMainMenu = true,
+                NavigationMenuItems = new List<NavigationMenuItem>
+                {
+                    new NavigationMenuItem
+                    {
+                        Id = Guid.NewGuid(),
+                        Label = "Home",
+                        Url = "/home",
+                        IsDisabled = false,
+                        OpenInNewTab = false,
+                        CssClassName = "nav-link",
+                        Ordinal = 1,
+                        NavigationMenuId = mainMenuId,
+                    },
+                    new NavigationMenuItem
+                    {
+                        Id = Guid.NewGuid(),
+                        Label = "About",
+                        Url = "/about",
+                        IsDisabled = false,
+                        OpenInNewTab = false,
+                        CssClassName = "nav-link",
+                        Ordinal = 2,
+                        NavigationMenuId = mainMenuId,
+                    },
+                    new NavigationMenuItem
+                    {
+                        Id = Guid.NewGuid(),
+                        Label = "Posts",
+                        Url = "/posts",
+                        IsDisabled = false,
+                        OpenInNewTab = false,
+                        CssClassName = "nav-link",
+                        Ordinal = 3,
+                        NavigationMenuId = mainMenuId,
+                    },
+                },
             };
+            _db.NavigationMenus.Add(mainMenu);
+        }
 
-            _db.ContentItems.Add(homePage);
-
-            var homePageTemplateId = _db
+        protected void InsertDefaultSitePages(Guid defaultThemeId)
+        {
+            // Get the Home template ID
+            var homeTemplateId = _db
                 .WebTemplates.Where(wt =>
                     wt.DeveloperName == BuiltInWebTemplate.HomePage.DeveloperName
+                    && wt.ThemeId == defaultThemeId
                 )
                 .Select(wt => wt.Id)
                 .First();
 
-            var homePageWebTemplateContentItemRelation = new WebTemplateContentItemRelation
+            // Get the Sidebar template ID for About page
+            var sidebarTemplateId = _db
+                .WebTemplates.Where(wt =>
+                    wt.DeveloperName == BuiltInWebTemplate.PageSidebar.DeveloperName
+                    && wt.ThemeId == defaultThemeId
+                )
+                .Select(wt => wt.Id)
+                .First();
+
+            // ==================== HOME PAGE ====================
+            var homeWidgets = new Dictionary<string, List<SitePageWidget>>
             {
-                Id = Guid.NewGuid(),
-                WebTemplateId = homePageTemplateId,
-                ContentItemId = homePageGuid,
+                ["hero"] = new List<SitePageWidget>
+                {
+                    new SitePageWidget
+                    {
+                        Id = Guid.NewGuid(),
+                        WidgetType = BuiltInWidgetType.Hero.DeveloperName,
+                        SettingsJson = System.Text.Json.JsonSerializer.Serialize(
+                            new
+                            {
+                                headline = "Welcome to Raytha",
+                                subheadline = "You've successfully installed your new content management system. Head to the Admin Panel to start building something amazing.",
+                                backgroundColor = "#0d6efd",
+                                textColor = "#ffffff",
+                                buttonText = "Admin Panel",
+                                buttonUrl = "/raytha",
+                                buttonStyle = "light",
+                                alignment = "center",
+                                minHeight = 450,
+                            }
+                        ),
+                        Row = 0,
+                        Column = 0,
+                        ColumnSpan = 12,
+                    },
+                },
+                ["features"] = new List<SitePageWidget>
+                {
+                    new SitePageWidget
+                    {
+                        Id = Guid.NewGuid(),
+                        WidgetType = BuiltInWidgetType.Wysiwyg.DeveloperName,
+                        SettingsJson = System.Text.Json.JsonSerializer.Serialize(
+                            new
+                            {
+                                content = @"<div class=""text-center mb-5"">
+<span class=""badge bg-primary bg-opacity-10 text-primary px-3 py-2 rounded-pill mb-3"">
+  <i class=""bi bi-stars me-1""></i>Features
+</span>
+<h2 class=""display-6 fw-bold text-dark"">Everything you need</h2>
+<p class=""lead text-secondary col-lg-8 mx-auto"">Raytha gives you complete control over your content and templates with powerful, developer-friendly features.</p>
+</div>
+<div class=""row g-4"">
+  <div class=""col-md-6 col-lg-3"">
+    <div class=""card h-100 border-0 shadow-sm"">
+      <div class=""card-body text-center p-4"">
+        <div class=""bg-primary bg-opacity-10 text-primary rounded-circle d-inline-flex align-items-center justify-content-center p-3 mb-3"" style=""width: 64px; height: 64px;"">
+          <i class=""bi bi-collection fs-2""></i>
+        </div>
+        <h5 class=""card-title fw-semibold"">Custom Content Types</h5>
+        <p class=""card-text text-secondary small"">Define exactly how your content is structured with flexible custom fields.</p>
+      </div>
+    </div>
+  </div>
+  <div class=""col-md-6 col-lg-3"">
+    <div class=""card h-100 border-0 shadow-sm"">
+      <div class=""card-body text-center p-4"">
+        <div class=""bg-success bg-opacity-10 text-success rounded-circle d-inline-flex align-items-center justify-content-center p-3 mb-3"" style=""width: 64px; height: 64px;"">
+          <i class=""bi bi-code-slash fs-2""></i>
+        </div>
+        <h5 class=""card-title fw-semibold"">Liquid Templates</h5>
+        <p class=""card-text text-secondary small"">Build dynamic pages with the powerful Liquid templating engine.</p>
+      </div>
+    </div>
+  </div>
+  <div class=""col-md-6 col-lg-3"">
+    <div class=""card h-100 border-0 shadow-sm"">
+      <div class=""card-body text-center p-4"">
+        <div class=""bg-info bg-opacity-10 text-info rounded-circle d-inline-flex align-items-center justify-content-center p-3 mb-3"" style=""width: 64px; height: 64px;"">
+          <i class=""bi bi-shield-check fs-2""></i>
+        </div>
+        <h5 class=""card-title fw-semibold"">User Management</h5>
+        <p class=""card-text text-secondary small"">Built-in authentication and role-based access control.</p>
+      </div>
+    </div>
+  </div>
+  <div class=""col-md-6 col-lg-3"">
+    <div class=""card h-100 border-0 shadow-sm"">
+      <div class=""card-body text-center p-4"">
+        <div class=""bg-warning bg-opacity-10 text-warning rounded-circle d-inline-flex align-items-center justify-content-center p-3 mb-3"" style=""width: 64px; height: 64px;"">
+          <i class=""bi bi-lightning-charge fs-2""></i>
+        </div>
+        <h5 class=""card-title fw-semibold"">Fast & Flexible</h5>
+        <p class=""card-text text-secondary small"">Built with .NET for performance and adaptability.</p>
+      </div>
+    </div>
+  </div>
+</div>",
+                                padding = "medium",
+                            }
+                        ),
+                        Row = 0,
+                        Column = 0,
+                        ColumnSpan = 12,
+                    },
+                },
+                ["content"] = new List<SitePageWidget>
+                {
+                    new SitePageWidget
+                    {
+                        Id = Guid.NewGuid(),
+                        WidgetType = BuiltInWidgetType.ContentList.DeveloperName,
+                        SettingsJson = System.Text.Json.JsonSerializer.Serialize(
+                            new
+                            {
+                                headline = "Latest Posts",
+                                subheadline = "Check out our recent articles and updates",
+                                contentType = POSTS_DEVELOPER_NAME,
+                                pageSize = 3,
+                                displayStyle = "cards",
+                                showImage = true,
+                                showDate = true,
+                                showExcerpt = true,
+                                linkText = "View all posts",
+                                linkUrl = "/posts",
+                            }
+                        ),
+                        Row = 0,
+                        Column = 0,
+                        ColumnSpan = 12,
+                    },
+                },
+                ["cta"] = new List<SitePageWidget>
+                {
+                    new SitePageWidget
+                    {
+                        Id = Guid.NewGuid(),
+                        WidgetType = BuiltInWidgetType.CTA.DeveloperName,
+                        SettingsJson = System.Text.Json.JsonSerializer.Serialize(
+                            new
+                            {
+                                headline = "Ready to get started?",
+                                content = "Explore the Admin Panel to create content types, add content, and customize your templates.",
+                                buttonText = "Launch Admin Panel",
+                                buttonUrl = "/raytha",
+                                buttonStyle = "light",
+                                backgroundColor = "#212529",
+                                textColor = "#ffffff",
+                                alignment = "center",
+                            }
+                        ),
+                        Row = 0,
+                        Column = 0,
+                        ColumnSpan = 12,
+                    },
+                },
             };
 
-            _db.WebTemplateContentItemRelations.Add(homePageWebTemplateContentItemRelation);
-
-            dynamic aboutPageContent = new ExpandoObject();
-            aboutPageContent.title = "About";
-            var aboutPagePath = $"{((string)aboutPageContent.title).ToUrlSlug()}";
-            var aboutHtml =
-                @"<div class=""mb-4 text-muted small""><p>The following content is default typography elements for your convenience while you style your new website.</p></div><h1 class=""mb-3"">h1. heading2</h1><h2 class=""mb-3"">h2. heading</h2><h3 class=""mb-3"">h3. heading</h3><h4 class=""mb-2"">h4. heading</h4><h5 class=""mb-2"">h5. heading</h5><h6 class=""mb-4 text-uppercase text-muted"">h6. heading</h6><p class=""lead"">This is a normal paragraph of text with some <strong>bold</strong>, <em>italic</em>, <u>underlined</u>, <mark>highlighted</mark>, small print, <code>inline code</code>, H<sub>2</sub>O, and E = mc<sup>2</sup>.</p><p>Here is a link to <a href=""https://raytha.com"" target=""_blank"" rel=""noopener"" class=""link-primary"">raytha.com</a> inside a paragraph.</p><div class=""mb-4""><p><strong>Lorem ipsum dolor sit amet</strong>, <em>consectetur adipiscing elit. Aenean facilisis</em>, <s>nisl ac efficitur viverra, augue mauris rutrum magna</s>, ut placerat nisi odio id quam. Pellentesque quis augue sed lorem sollicitudin faucibus vel ut eros. Suspendisse vitae libero urna. Sed sit amet nunc condimentum, consequat leo imperdiet, sollicitudin erat. Vestibulum ex odio, vulputate eget lacus quis, mollis volutpat tortor. Vestibulum consectetur arcu nec urna placerat, in tempor purus porta. Pellentesque ligula risus, volutpat sit amet facilisis vitae, maximus ac enim. Duis arcu urna, sodales non ex vel, pharetra commodo lorem.</p></div><figure class=""mb-4""><blockquote class=""blockquote""><p>Mauris leo magna, rutrum sit amet nunc at, sollicitudin venenatis elit. Nam id purus vel purus fermentum semper quis porta purus. Ut malesuada, dolor sed condimentum lacinia, nunc sapien tristique lorem, ac consequat sapien augue a sem. Vivamus ac venenatis massa. Phasellus in rhoncus nulla. Pellentesque tincidunt cursus urna, sed tincidunt nulla.</p></blockquote><figcaption class=""blockquote-footer"">Example blockquote caption</figcaption></figure><hr class=""my-4""><ul class=""list-group mb-4""><li class=""list-group-item""><p>Unordered list item 1</p></li><li class=""list-group-item""><p>Unordered list item 2</p></li><li class=""list-group-item""><p>Unordered list item 3</p><ul class=""list-group list-group-flush mt-2""><li class=""list-group-item""><p>Nested unordered item A</p></li><li class=""list-group-item""><p>Nested unordered item B</p></li></ul></li></ul><ol class=""list-group list-group-numbered mb-4""><li class=""list-group-item""><p>Ordered list item 1</p></li><li class=""list-group-item""><p>Ordered list item 2</p></li><li class=""list-group-item""><p>Ordered list item 3</p><ol class=""list-group list-group-numbered list-group-flush mt-2""><li class=""list-group-item""><p>Nested ordered item i</p></li><li class=""list-group-item""><p>Nested ordered item ii</p></li></ol></li></ol><p>Definition Term 1</p><p>Definition for the first term, showing how description lists render.</p><p>Definition Term 2</p><p>Another description for testing spacing and typography.</p><pre class=""bg-light p-3 rounded mb-3""><code>{
-  ""example"": ""code"",
-  ""anotherKey"": 123,
-  ""nested"": {
-    ""value"": true
-  }
-}</code></pre><pre class=""bg-dark text-white p-3 rounded mb-4""><code>
-// Example syntax-like block
-function greet(name) {
-  console.log(""Hello, "" + name + ""!"");
-}
-greet(""World"");
-</code></pre><table class=""table table-bordered table-striped table-hover mb-4""><tbody><tr><th colspan=""1"" rowspan=""1""><p>Column A</p></th><th colspan=""1"" rowspan=""1""><p>Column B</p></th><th colspan=""1"" rowspan=""1""><p>Column C</p></th></tr><tr><td colspan=""1"" rowspan=""1""><p>Row 1, A</p></td><td colspan=""1"" rowspan=""1""><p>Row 1, B</p></td><td colspan=""1"" rowspan=""1""><p>Row 1, C</p></td></tr><tr><td colspan=""1"" rowspan=""1""><p>Row 2, A</p></td><td colspan=""1"" rowspan=""1""><p>Row 2, B</p></td><td colspan=""1"" rowspan=""1""><p>Row 2, C</p></td></tr><tr><td colspan=""1"" rowspan=""1""><p>Row 3, A</p></td><td colspan=""1"" rowspan=""1""><p>Row 3, B</p></td><td colspan=""1"" rowspan=""1""><p>Row 3, C</p></td></tr></tbody></table><p class=""mb-4""><button class=""btn btn-primary me-2"" type=""button"">Primary Button</button> <button class=""btn btn-secondary me-2"" type=""button"">Disabled Button</button> <a href=""#"" class=""btn btn-outline-primary"">Link-styled Button</a></p><p class=""mb-4""><a href=""http://raytha.com""><img src=""/raytha_default_2023/assets/images/color_logo_nobg.svg"" alt=""Raytha logo placeholder for testing"" width=""400"" class=""img-fluid""></a></p><div class=""alert alert-warning mb-4"" role=""alert""><p>This is a Bootstrap warning alert for testing.</p></div><div class=""row row-cols-1 row-cols-md-3 g-4 mb-4""><div class=""col""><div class=""card h-100""><div class=""card-header""><p>Card Header 1</p></div><div class=""card-body""><h5 class=""card-title"">Card title 1</h5><p class=""card-text"">Some quick example text to build on the card title and make up the bulk of the card's content.</p><p><a href=""#"" class=""btn btn-sm btn-primary"">Go somewhere</a></p></div><div class=""card-footer text-muted""><p>Footer text</p></div></div></div><div class=""col""><div class=""card h-100""><p><img src=""/raytha_default_2023/assets/images/color_logo_nobg.svg"" alt=""Card image"" class=""img-fluid card-img-top""></p><div class=""card-body""><h5 class=""card-title"">Card with image</h5><p class=""card-text"">This card has an image on top and supporting text below as a natural lead-in to additional content.</p></div><div class=""card-footer text-muted""><p>Updated 3 mins ago</p></div></div></div><div class=""col""><div class=""card h-100 border-info""><div class=""card-body""><h5 class=""card-title text-info"">Info-styled card</h5><p class=""card-text"">Use this card to test border utilities and contextual text colors with Bootstrap.</p><p><button class=""btn btn-outline-info btn-sm"" type=""button"">Action</button></p></div></div></div></div><div class=""accordion mb-4"" id=""exampleAccordion""><div class=""accordion-item""><h2 class=""accordion-header"" id=""headingOne""><button class=""accordion-button"" aria-expanded=""true"" aria-controls=""collapseOne"" data-bs-toggle=""collapse"" data-bs-target=""#collapseOne"" type=""button"">Accordion Item #1</button></h2><div class=""accordion-collapse collapse show"" id=""collapseOne"" aria-labelledby=""headingOne"" data-bs-parent=""#exampleAccordion""><div class=""accordion-body""><p><strong>This is the first item's accordion body.</strong> It is shown by default until the collapse plugin adds the appropriate classes that we use to style each element. Customize this to test your typography and spacing.</p></div></div></div><div class=""accordion-item""><h2 class=""accordion-header"" id=""headingTwo""><button class=""accordion-button collapsed"" aria-expanded=""false"" aria-controls=""collapseTwo"" data-bs-toggle=""collapse"" data-bs-target=""#collapseTwo"" type=""button"">Accordion Item #2</button></h2><div class=""accordion-collapse collapse"" id=""collapseTwo"" aria-labelledby=""headingTwo"" data-bs-parent=""#exampleAccordion""><div class=""accordion-body""><p>This is the second item's accordion body. You can put any HTML here, including <code>&lt;code&gt;</code>, lists, or inline elements.</p></div></div></div><div class=""accordion-item""><h2 class=""accordion-header"" id=""headingThree""><button class=""accordion-button collapsed"" aria-expanded=""false"" aria-controls=""collapseThree"" data-bs-toggle=""collapse"" data-bs-target=""#collapseThree"" type=""button"">Accordion Item #3</button></h2><div class=""accordion-collapse collapse"" id=""collapseThree"" aria-labelledby=""headingThree"" data-bs-parent=""#exampleAccordion""><div class=""accordion-body""><p>Use this third item to test how your theme handles multiple collapsed sections and transitions.</p></div></div></div></div><ul class=""nav nav-tabs mb-0 border-0"" id=""exampleTabs"" role=""tablist""><li class=""nav-item"" role=""presentation""><p><button class=""nav-link active"" id=""tab-one"" role=""tab"" aria-controls=""tab-pane-one"" data-bs-toggle=""tab"" data-bs-target=""#tab-pane-one"" type=""button"">Tab One</button></p></li><li class=""nav-item"" role=""presentation""><p><button class=""nav-link"" id=""tab-two"" role=""tab"" aria-controls=""tab-pane-two"" data-bs-toggle=""tab"" data-bs-target=""#tab-pane-two"" type=""button"">Tab Two</button></p></li><li class=""nav-item"" role=""presentation""><p><button class=""nav-link"" id=""tab-three"" role=""tab"" aria-controls=""tab-pane-three"" data-bs-toggle=""tab"" data-bs-target=""#tab-pane-three"" type=""button"">Tab Three</button></p></li></ul><div class=""tab-content border p-3"" id=""exampleTabsContent""><div class=""tab-pane fade show active"" id=""tab-pane-one"" role=""tabpanel"" aria-labelledby=""tab-one""><p>Content for tab one. Use this to test active tab styling and spacing.</p></div><div class=""tab-pane fade"" id=""tab-pane-two"" role=""tabpanel"" aria-labelledby=""tab-two""><p>Content for tab two. Add whatever markup you want here to test typography.</p></div><div class=""tab-pane fade"" id=""tab-pane-three"" role=""tabpanel"" aria-labelledby=""tab-three""><p>Content for tab three. Check transitions, visibility, and theme colors.</p></div></div><style>.nav-tabs { height: 40px!important; }</style>";
-            aboutPageContent.content = aboutHtml;
-            var anotherPageId = Guid.NewGuid();
-            var anotherPage = new ContentItem
+            var homePage = new SitePage
             {
-                Id = anotherPageId,
-                DraftContent = aboutPageContent,
-                PublishedContent = aboutPageContent,
+                Id = homeSitePageGuid,
+                Title = "Home",
                 IsPublished = true,
                 IsDraft = false,
-                ContentTypeId = pageTypeGuid,
-                Route = new Route { ContentItemId = anotherPageId, Path = aboutPagePath },
+                WebTemplateId = homeTemplateId,
+                Route = new Route { SitePageId = homeSitePageGuid, Path = "home" },
+                PublishedWidgets = homeWidgets,
+                DraftWidgets = homeWidgets,
+            };
+            _db.SitePages.Add(homePage);
+
+            // ==================== ABOUT PAGE ====================
+            var aboutHtml =
+                @"<div class=""mb-4 text-muted small""><p>The following content is default typography elements for your convenience while you style your new website.</p></div><h1 class=""mb-3"">h1. heading</h1><h2 class=""mb-3"">h2. heading</h2><h3 class=""mb-3"">h3. heading</h3><h4 class=""mb-2"">h4. heading</h4><h5 class=""mb-2"">h5. heading</h5><h6 class=""mb-4 text-uppercase text-muted"">h6. heading</h6><p class=""lead"">This is a normal paragraph of text with some <strong>bold</strong>, <em>italic</em>, <u>underlined</u>, <mark>highlighted</mark>, small print, <code>inline code</code>, H<sub>2</sub>O, and E = mc<sup>2</sup>.</p><p>Here is a link to <a href=""https://raytha.com"" target=""_blank"" rel=""noopener"" class=""link-primary"">raytha.com</a> inside a paragraph.</p><div class=""mb-4""><p><strong>Lorem ipsum dolor sit amet</strong>, <em>consectetur adipiscing elit. Aenean facilisis</em>, <s>nisl ac efficitur viverra, augue mauris rutrum magna</s>, ut placerat nisi odio id quam. Pellentesque quis augue sed lorem sollicitudin faucibus vel ut eros. Suspendisse vitae libero urna. Sed sit amet nunc condimentum, consequat leo imperdiet, sollicitudin erat. Vestibulum ex odio, vulputate eget lacus quis, mollis volutpat tortor.</p></div><figure class=""mb-4""><blockquote class=""blockquote""><p>Mauris leo magna, rutrum sit amet nunc at, sollicitudin venenatis elit. Nam id purus vel purus fermentum semper quis porta purus. Ut malesuada, dolor sed condimentum lacinia, nunc sapien tristique lorem, ac consequat sapien augue a sem.</p></blockquote><figcaption class=""blockquote-footer"">Example blockquote caption</figcaption></figure><hr class=""my-4""><ul class=""list-group mb-4""><li class=""list-group-item""><p>Unordered list item 1</p></li><li class=""list-group-item""><p>Unordered list item 2</p></li><li class=""list-group-item""><p>Unordered list item 3</p></li></ul><ol class=""list-group list-group-numbered mb-4""><li class=""list-group-item""><p>Ordered list item 1</p></li><li class=""list-group-item""><p>Ordered list item 2</p></li><li class=""list-group-item""><p>Ordered list item 3</p></li></ol><pre class=""bg-light p-3 rounded mb-3""><code>{
+  ""example"": ""code"",
+  ""anotherKey"": 123
+}</code></pre><table class=""table table-bordered table-striped table-hover mb-4""><tbody><tr><th colspan=""1"" rowspan=""1""><p>Column A</p></th><th colspan=""1"" rowspan=""1""><p>Column B</p></th><th colspan=""1"" rowspan=""1""><p>Column C</p></th></tr><tr><td colspan=""1"" rowspan=""1""><p>Row 1, A</p></td><td colspan=""1"" rowspan=""1""><p>Row 1, B</p></td><td colspan=""1"" rowspan=""1""><p>Row 1, C</p></td></tr><tr><td colspan=""1"" rowspan=""1""><p>Row 2, A</p></td><td colspan=""1"" rowspan=""1""><p>Row 2, B</p></td><td colspan=""1"" rowspan=""1""><p>Row 2, C</p></td></tr></tbody></table><p class=""mb-4""><button class=""btn btn-primary me-2"" type=""button"">Primary Button</button> <button class=""btn btn-secondary me-2"" type=""button"">Secondary Button</button> <a href=""#"" class=""btn btn-outline-primary"">Link Button</a></p><div class=""alert alert-warning mb-4"" role=""alert""><p>This is a Bootstrap warning alert for testing.</p></div>";
+
+            var aboutWidgets = new Dictionary<string, List<SitePageWidget>>
+            {
+                ["main"] = new List<SitePageWidget>
+                {
+                    new SitePageWidget
+                    {
+                        Id = Guid.NewGuid(),
+                        WidgetType = BuiltInWidgetType.Wysiwyg.DeveloperName,
+                        SettingsJson = System.Text.Json.JsonSerializer.Serialize(
+                            new
+                            {
+                                content = @"<h1 class=""display-5 fw-bold mb-4"">About Us</h1>
+<p class=""lead"">Welcome to our site! This is a sample About page demonstrating the Site Pages feature with a two-column layout.</p>
+<hr class=""my-4"">" + aboutHtml,
+                                padding = "medium",
+                            }
+                        ),
+                        Row = 0,
+                        Column = 0,
+                        ColumnSpan = 12,
+                    },
+                },
+                ["sidebar"] = new List<SitePageWidget>
+                {
+                    new SitePageWidget
+                    {
+                        Id = Guid.NewGuid(),
+                        WidgetType = BuiltInWidgetType.Card.DeveloperName,
+                        SettingsJson = System.Text.Json.JsonSerializer.Serialize(
+                            new
+                            {
+                                title = "Get Started",
+                                description = "Ready to explore? Head to the Admin Panel to customize your site.",
+                                buttonText = "Admin Panel",
+                                buttonUrl = "/raytha",
+                                buttonStyle = "primary",
+                            }
+                        ),
+                        Row = 0,
+                        Column = 0,
+                        ColumnSpan = 12,
+                    },
+                    new SitePageWidget
+                    {
+                        Id = Guid.NewGuid(),
+                        WidgetType = BuiltInWidgetType.ContentList.DeveloperName,
+                        SettingsJson = System.Text.Json.JsonSerializer.Serialize(
+                            new
+                            {
+                                headline = "Recent Posts",
+                                contentType = POSTS_DEVELOPER_NAME,
+                                pageSize = 5,
+                                displayStyle = "compact",
+                                showDate = true,
+                                showExcerpt = false,
+                            }
+                        ),
+                        Row = 1,
+                        Column = 0,
+                        ColumnSpan = 12,
+                    },
+                },
             };
 
-            _db.ContentItems.Add(anotherPage);
+            var aboutPage = new SitePage
+            {
+                Id = aboutSitePageGuid,
+                Title = "About",
+                IsPublished = true,
+                IsDraft = false,
+                WebTemplateId = sidebarTemplateId,
+                Route = new Route { SitePageId = aboutSitePageGuid, Path = "about" },
+                PublishedWidgets = aboutWidgets,
+                DraftWidgets = aboutWidgets,
+            };
+            _db.SitePages.Add(aboutPage);
+        }
 
-            var aboutPageTemplateId = _db
+        protected void InsertDefaultPosts()
+        {
+            var postTemplateId = _db
                 .WebTemplates.Where(wt =>
                     wt.DeveloperName == BuiltInWebTemplate.ContentItemDetailViewPage.DeveloperName
                 )
                 .Select(wt => wt.Id)
                 .First();
 
-            var aboutPageWebTemplateContentItemRelation = new WebTemplateContentItemRelation
-            {
-                Id = Guid.NewGuid(),
-                WebTemplateId = aboutPageTemplateId,
-                ContentItemId = anotherPageId,
-            };
-
-            _db.WebTemplateContentItemRelations.Add(aboutPageWebTemplateContentItemRelation);
-        }
-
-        protected void InsertDefaultPosts()
-        {
-            dynamic postContent = new ExpandoObject();
-            postContent.title = "Hello World!";
-            var homePagePath = $"{((string)postContent.title).ToUrlSlug()}";
-            postContent.content =
+            // Post 1: Hello World!
+            dynamic post1Content = new ExpandoObject();
+            post1Content.title = "Hello World!";
+            post1Content.content =
                 @"
 <div><!--block-->If you're reading this, it means you've successfully installed your CMS and created your first blog post. Congratulations!<br><br></div>
 <div><!--block-->This is the ""Hello World"" of the blogging world - the first post that many bloggers create to test out their new platform. Now that everything is up and running, it's time to start creating and sharing your content with the world.<br><br></div>
@@ -669,73 +899,171 @@ greet(""World"");
 <div><!--block--><br></div>
 <div><!--block-->As you start to use your CMS and create more posts, don't be afraid to experiment and try out new things. The best way to learn is by doing, so have fun and see what you can create!</div>
 ";
-            var postId = Guid.NewGuid();
-            var post = new ContentItem
+            var post1Id = Guid.NewGuid();
+            var post1 = new ContentItem
             {
-                Id = postId,
-                DraftContent = postContent,
-                PublishedContent = postContent,
+                Id = post1Id,
+                DraftContent = post1Content,
+                PublishedContent = post1Content,
                 IsPublished = true,
                 IsDraft = false,
                 ContentTypeId = postTypeGuid,
-                Route = new Route { ContentItemId = postId, Path = homePagePath },
+                Route = new Route
+                {
+                    ContentItemId = post1Id,
+                    Path = $"{((string)post1Content.title).ToUrlSlug()}",
+                },
             };
+            _db.ContentItems.Add(post1);
+            _db.WebTemplateContentItemRelations.Add(
+                new WebTemplateContentItemRelation
+                {
+                    Id = Guid.NewGuid(),
+                    WebTemplateId = postTemplateId,
+                    ContentItemId = post1Id,
+                }
+            );
 
-            _db.ContentItems.Add(post);
-
-            var postTemplateId = _db
-                .WebTemplates.Where(wt =>
-                    wt.DeveloperName == BuiltInWebTemplate.ContentItemDetailViewPage.DeveloperName
-                )
-                .Select(wt => wt.Id)
-                .First();
-
-            var webTemplateContentItemRelation = new WebTemplateContentItemRelation
+            // Post 2: Getting Started with Raytha
+            dynamic post2Content = new ExpandoObject();
+            post2Content.title = "Getting Started with Raytha";
+            post2Content.content =
+                @"
+<div><!--block-->Welcome to Raytha! This guide will help you get up and running quickly with your new content management system.<br><br></div>
+<h3><!--block-->Key Concepts</h3>
+<div><!--block-->Raytha is built around a few core concepts:<br><br></div>
+<ul>
+<li><!--block--><strong>Content Types</strong> - Define the structure of your content (like Posts, Products, or Events)</li>
+<li><!--block--><strong>Views</strong> - Create different ways to display your content lists</li>
+<li><!--block--><strong>Templates</strong> - Control the look and feel using Liquid templates</li>
+<li><!--block--><strong>Site Pages</strong> - Build standalone pages with drag-and-drop widgets</li>
+</ul>
+<div><!--block--><br></div>
+<h3><!--block-->Next Steps</h3>
+<div><!--block-->Explore the admin panel to discover all the features available to you. Start by creating a new content type or customizing the default templates to match your brand.</div>
+";
+            var post2Id = Guid.NewGuid();
+            var post2 = new ContentItem
             {
-                Id = Guid.NewGuid(),
-                WebTemplateId = postTemplateId,
-                ContentItemId = postId,
+                Id = post2Id,
+                DraftContent = post2Content,
+                PublishedContent = post2Content,
+                IsPublished = true,
+                IsDraft = false,
+                ContentTypeId = postTypeGuid,
+                Route = new Route
+                {
+                    ContentItemId = post2Id,
+                    Path = $"{((string)post2Content.title).ToUrlSlug()}",
+                },
             };
+            _db.ContentItems.Add(post2);
+            _db.WebTemplateContentItemRelations.Add(
+                new WebTemplateContentItemRelation
+                {
+                    Id = Guid.NewGuid(),
+                    WebTemplateId = postTemplateId,
+                    ContentItemId = post2Id,
+                }
+            );
 
-            _db.WebTemplateContentItemRelations.Add(webTemplateContentItemRelation);
+            // Post 3: Customizing Your Templates
+            dynamic post3Content = new ExpandoObject();
+            post3Content.title = "Customizing Your Templates";
+            post3Content.content =
+                @"
+<div><!--block-->Raytha uses the Liquid templating language, making it easy to customize how your content is displayed.<br><br></div>
+<h3><!--block-->Template Basics</h3>
+<div><!--block-->Templates in Raytha consist of:<br><br></div>
+<ul>
+<li><!--block--><strong>Base Layouts</strong> - The overall page structure (header, footer, navigation)</li>
+<li><!--block--><strong>Page Templates</strong> - Templates for content item detail views and list views</li>
+<li><!--block--><strong>Widget Templates</strong> - Templates for individual widgets on Site Pages</li>
+</ul>
+<div><!--block--><br></div>
+<h3><!--block-->Getting Started with Customization</h3>
+<div><!--block-->Navigate to <strong>Design &gt; Templates</strong> in the admin panel to view and edit your templates. You can use Liquid tags like <code>{{ Target.Title }}</code> to output content fields, and <code>{% if condition %}</code> for conditional logic.<br><br></div>
+<div><!--block-->For more advanced customization, check out the <a href=""https://shopify.github.io/liquid/"" target=""_blank"">Liquid documentation</a>.</div>
+";
+            var post3Id = Guid.NewGuid();
+            var post3 = new ContentItem
+            {
+                Id = post3Id,
+                DraftContent = post3Content,
+                PublishedContent = post3Content,
+                IsPublished = true,
+                IsDraft = false,
+                ContentTypeId = postTypeGuid,
+                Route = new Route
+                {
+                    ContentItemId = post3Id,
+                    Path = $"{((string)post3Content.title).ToUrlSlug()}",
+                },
+            };
+            _db.ContentItems.Add(post3);
+            _db.WebTemplateContentItemRelations.Add(
+                new WebTemplateContentItemRelation
+                {
+                    Id = Guid.NewGuid(),
+                    WebTemplateId = postTemplateId,
+                    ContentItemId = post3Id,
+                }
+            );
+
+            // Post 4: Managing Content Types
+            dynamic post4Content = new ExpandoObject();
+            post4Content.title = "Managing Content Types";
+            post4Content.content =
+                @"
+<div><!--block-->Content Types are the building blocks of your Raytha site. They define what kind of content you can create and manage.<br><br></div>
+<h3><!--block-->What is a Content Type?</h3>
+<div><!--block-->A Content Type is like a blueprint for your content. For example, a ""Blog Post"" content type might have fields for Title, Content, Featured Image, and Author. An ""Event"" content type might have Date, Location, and Description fields.<br><br></div>
+<h3><!--block-->Creating a Content Type</h3>
+<div><!--block-->To create a new Content Type:<br><br></div>
+<ol>
+<li><!--block-->Go to <strong>Content</strong> in the admin panel</li>
+<li><!--block-->Click <strong>Create Content Type</strong></li>
+<li><!--block-->Give it a name and developer name</li>
+<li><!--block-->Add the fields you need</li>
+</ol>
+<div><!--block--><br></div>
+<h3><!--block-->Field Types</h3>
+<div><!--block-->Raytha supports many field types including Single Line Text, Long Text, WYSIWYG Editor, Number, Date, Checkbox, Dropdown, Attachment, and more. Choose the right field type based on the kind of data you want to store.</div>
+";
+            var post4Id = Guid.NewGuid();
+            var post4 = new ContentItem
+            {
+                Id = post4Id,
+                DraftContent = post4Content,
+                PublishedContent = post4Content,
+                IsPublished = true,
+                IsDraft = false,
+                ContentTypeId = postTypeGuid,
+                Route = new Route
+                {
+                    ContentItemId = post4Id,
+                    Path = $"{((string)post4Content.title).ToUrlSlug()}",
+                },
+            };
+            _db.ContentItems.Add(post4);
+            _db.WebTemplateContentItemRelations.Add(
+                new WebTemplateContentItemRelation
+                {
+                    Id = Guid.NewGuid(),
+                    WebTemplateId = postTemplateId,
+                    ContentItemId = post4Id,
+                }
+            );
         }
 
         protected void InsertDefaultViews()
         {
-            var defaultPageViewId = Guid.NewGuid();
-            var defaultPageView = new View
-            {
-                Id = defaultPageViewId,
-                Label = $"All {PAGES_NAME_PLURAL.ToLower()}",
-                DeveloperName = PAGES_DEVELOPER_NAME,
-                ContentTypeId = pageTypeGuid,
-                Columns = new[]
-                {
-                    BuiltInContentTypeField.PrimaryField.DeveloperName,
-                    BuiltInContentTypeField.CreationTime.DeveloperName,
-                    BuiltInContentTypeField.Template,
-                },
-                Route = new Route { Path = PAGES_DEVELOPER_NAME, ViewId = defaultPageViewId },
-                IsPublished = true,
-            };
-
-            _db.Views.Add(defaultPageView);
-
             var listViewTemplateId = _db
                 .WebTemplates.Where(wt =>
                     wt.DeveloperName == BuiltInWebTemplate.ContentItemListViewPage.DeveloperName
                 )
                 .Select(wt => wt.Id)
                 .First();
-
-            var pagesWebTemplateViewRelation = new WebTemplateViewRelation
-            {
-                Id = Guid.NewGuid(),
-                WebTemplateId = listViewTemplateId,
-                ViewId = defaultPageViewId,
-            };
-
-            _db.WebTemplateViewRelations.Add(pagesWebTemplateViewRelation);
 
             var defaultPostsViewId = Guid.NewGuid();
             var defaultPostsView = new View
@@ -770,17 +1098,15 @@ greet(""World"");
             var contentTypes = _db.ContentTypes.Where(p => true);
             foreach (var contentType in contentTypes)
             {
-                contentType.PrimaryFieldId =
-                    contentType.DeveloperName == PAGES_DEVELOPER_NAME
-                        ? pageTitleFieldGuid
-                        : postsTitleFieldGuid;
+                contentType.PrimaryFieldId = postsTitleFieldGuid;
             }
         }
 
         protected void SetHomePage()
         {
             var orgSettings = _db.OrganizationSettings.First();
-            orgSettings.HomePageId = homePageGuid;
+            orgSettings.HomePageId = homeSitePageGuid;
+            orgSettings.HomePageType = Route.SITE_PAGE_TYPE;
         }
     }
 }

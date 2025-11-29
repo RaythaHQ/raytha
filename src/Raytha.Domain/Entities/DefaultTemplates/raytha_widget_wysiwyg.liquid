@@ -1,0 +1,35 @@
+{% comment %}
+WYSIWYG Widget - Rich text content block.
+
+Settings:
+  - content: HTML content from WYSIWYG editor
+  - backgroundColor: Background color (optional)
+  - padding: Padding size - none, small, medium, large (default: medium)
+
+Advanced Meta Fields (available on all widgets):
+  - widget.css_class: Custom CSS classes
+  - widget.html_id: Custom HTML ID attribute
+  - widget.custom_attributes: Custom HTML attributes string
+  - widget.row: Row position in section grid
+  - widget.column: Column position in row
+  - widget.column_span: Number of columns widget spans (1-12)
+{% endcomment %}
+
+{% assign padding_class = 'py-4' %}
+{% case widget.settings.padding %}
+  {% when 'none' %}
+    {% assign padding_class = '' %}
+  {% when 'small' %}
+    {% assign padding_class = 'py-2' %}
+  {% when 'large' %}
+    {% assign padding_class = 'py-5' %}
+{% endcase %}
+
+<div class="wysiwyg-widget {{ padding_class }}{% if widget.css_class %} {{ widget.css_class }}{% endif %}"
+     {% if widget.html_id %}id="{{ widget.html_id }}"{% endif %}
+     {{ widget.custom_attributes }}
+     {% if widget.settings.backgroundColor %}style="background-color: {{ widget.settings.backgroundColor }};"{% endif %}>
+  <div class="wysiwyg-content">
+    {{ widget.settings.content }}
+  </div>
+</div>

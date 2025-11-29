@@ -1,4 +1,6 @@
 using CSharpVitamins;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization.Infrastructure;
 using Microsoft.AspNetCore.Mvc;
 using Raytha.Application.Common.Exceptions;
 using Raytha.Application.Common.Models.RenderModels;
@@ -6,17 +8,42 @@ using Raytha.Application.ContentItems;
 using Raytha.Application.ContentItems.Queries;
 using Raytha.Application.ContentTypes;
 using Raytha.Application.Routes.Queries;
+using Raytha.Application.SitePages.Queries;
 using Raytha.Application.Themes.Queries;
 using Raytha.Application.Themes.WebTemplates.Queries;
 using Raytha.Application.Views.Queries;
 using Raytha.Domain.Entities;
 using Raytha.Web.Areas.Public.DbViewEngine;
+using Raytha.Web.Authentication;
 
 namespace Raytha.Web.Areas.Public.Controllers;
 
 [Area("Public")]
 public class MainController : BaseController
 {
+    private IAuthorizationService _authorizationService;
+    protected IAuthorizationService AuthorizationService =>
+        _authorizationService ??= HttpContext.RequestServices.GetRequiredService<IAuthorizationService>();
+
+    private async Task<bool> CanPreviewSitePageDraftsAsync()
+    {
+        var result = await AuthorizationService.AuthorizeAsync(
+            User,
+            BuiltInSystemPermission.MANAGE_SITE_PAGES_PERMISSION
+        );
+        return result.Succeeded;
+    }
+
+    private async Task<bool> CanPreviewContentItemDraftsAsync(string contentTypeDeveloperName)
+    {
+        var result = await AuthorizationService.AuthorizeAsync(
+            User,
+            contentTypeDeveloperName,
+            ContentItemOperations.Edit
+        );
+        return result.Succeeded;
+    }
+
     [Route($"", Name = "emptyroute")]
     [Route("{*route}", Name = "defaultroute")]
     public async Task<IActionResult> Index(
@@ -39,7 +66,13 @@ public class MainController : BaseController
                         Id = CurrentOrganization.HomePageId.Value,
                     };
                     var response = await Mediator.Send(input);
-                    if (!response.Result.IsPublished)
+
+                    // Check for draft preview mode
+                    var previewDraft = Request.Query["previewDraft"] == "true"
+                        && await CanPreviewContentItemDraftsAsync(response.Result.ContentType.DeveloperName);
+
+                    // Only check IsPublished if NOT in draft preview mode
+                    if (!response.Result.IsPublished && !previewDraft)
                     {
                         return new ErrorActionViewResult(
                             BuiltInWebTemplate.Error404,
@@ -59,7 +92,8 @@ public class MainController : BaseController
 
                     var model = ContentItem_RenderModel.GetProjection(
                         response.Result,
-                        webTemplateResponse.Result.DeveloperName
+                        webTemplateResponse.Result.DeveloperName,
+                        previewDraft
                     );
                     var contentType = ContentType_RenderModel.GetProjection(
                         response.Result.ContentType
@@ -148,6 +182,44 @@ public class MainController : BaseController
                         ViewData
                     );
                 }
+                else if (CurrentOrganization.HomePageType == Domain.Entities.Route.SITE_PAGE_TYPE)
+                {
+                    var sitePage = await Mediator.Send(
+                        new GetSitePageById.Query { Id = CurrentOrganization.HomePageId.Value }
+                    );
+
+                    // Check for draft preview mode
+                    var previewDraft = Request.Query["previewDraft"] == "true"
+                        && await CanPreviewSitePageDraftsAsync();
+
+                    // Only check IsPublished if NOT in draft preview mode
+                    if (!sitePage.Result.IsPublished && !previewDraft)
+                    {
+                        return new ErrorActionViewResult(
+                            BuiltInWebTemplate.Error404,
+                            404,
+                            new GenericError_RenderModel(),
+                            ViewData
+                        );
+                    }
+
+                    var webTemplateResponse = await Mediator.Send(
+                        new GetWebTemplateById.Query { Id = sitePage.Result.WebTemplateId }
+                    );
+
+                    var model = SitePage_RenderModel.GetProjection(
+                        sitePage.Result,
+                        webTemplateResponse.Result.DeveloperName
+                    );
+
+                    return new SitePageActionViewResult(
+                        webTemplateResponse.Result,
+                        model,
+                        sitePage.Result,
+                        ViewData,
+                        previewDraft
+                    );
+                }
                 throw new Exception("Unknown content type");
             }
             else
@@ -160,7 +232,13 @@ public class MainController : BaseController
                     var contentItem = await Mediator.Send(
                         new GetContentItemById.Query { Id = response.Result.ContentItemId.Value }
                     );
-                    if (!contentItem.Result.IsPublished)
+
+                    // Check for draft preview mode
+                    var previewDraft = Request.Query["previewDraft"] == "true"
+                        && await CanPreviewContentItemDraftsAsync(contentItem.Result.ContentType.DeveloperName);
+
+                    // Only check IsPublished if NOT in draft preview mode
+                    if (!contentItem.Result.IsPublished && !previewDraft)
                     {
                         return new ErrorActionViewResult(
                             BuiltInWebTemplate.Error404,
@@ -180,7 +258,8 @@ public class MainController : BaseController
 
                     var model = ContentItem_RenderModel.GetProjection(
                         contentItem.Result,
-                        webTemplateResponse.Result.DeveloperName
+                        webTemplateResponse.Result.DeveloperName,
+                        previewDraft
                     );
                     var contentType = ContentType_RenderModel.GetProjection(
                         contentItem.Result.ContentType
@@ -267,6 +346,44 @@ public class MainController : BaseController
                         modelAsList,
                         contentType,
                         ViewData
+                    );
+                }
+                else if (response.Result.PathType == Domain.Entities.Route.SITE_PAGE_TYPE)
+                {
+                    var sitePage = await Mediator.Send(
+                        new GetSitePageById.Query { Id = response.Result.SitePageId.Value }
+                    );
+
+                    // Check for draft preview mode
+                    var previewDraft = Request.Query["previewDraft"] == "true"
+                        && await CanPreviewSitePageDraftsAsync();
+
+                    // Only check IsPublished if NOT in draft preview mode
+                    if (!sitePage.Result.IsPublished && !previewDraft)
+                    {
+                        return new ErrorActionViewResult(
+                            BuiltInWebTemplate.Error404,
+                            404,
+                            new GenericError_RenderModel(),
+                            ViewData
+                        );
+                    }
+
+                    var webTemplateResponse = await Mediator.Send(
+                        new GetWebTemplateById.Query { Id = sitePage.Result.WebTemplateId }
+                    );
+
+                    var model = SitePage_RenderModel.GetProjection(
+                        sitePage.Result,
+                        webTemplateResponse.Result.DeveloperName
+                    );
+
+                    return new SitePageActionViewResult(
+                        webTemplateResponse.Result,
+                        model,
+                        sitePage.Result,
+                        ViewData,
+                        previewDraft
                     );
                 }
                 throw new Exception("Unknown content type");

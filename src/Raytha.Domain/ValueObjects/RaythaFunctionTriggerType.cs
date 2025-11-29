@@ -21,6 +21,8 @@ public class RaythaFunctionTriggerType : ValueObject
     }
 
     public static RaythaFunctionTriggerType HttpRequest => new("Http request", "http_request");
+    public static RaythaFunctionTriggerType LiquidTemplate =>
+        new("Liquid template", "liquid_template");
     public static RaythaFunctionTriggerType ContentItemCreated =>
         new("Content item created", "content_item_created");
     public static RaythaFunctionTriggerType ContentItemUpdated =>
@@ -46,6 +48,7 @@ public class RaythaFunctionTriggerType : ValueObject
         get
         {
             yield return HttpRequest;
+            yield return LiquidTemplate;
             yield return ContentItemCreated;
             yield return ContentItemUpdated;
             yield return ContentItemDeleted;
