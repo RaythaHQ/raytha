@@ -1,0 +1,80 @@
+<!--
+category: Content Management
+title: Content Types
+description: Create and configure content types to define the structure of your content
+sortOrder: 1
+icon: bi-collection
+-->
+
+<h1>Content Types</h1>
+<p class="lead">Content Types define the structure and organization of your content. Think of them as blueprints for your content items.</p>
+
+<h2>What is a Content Type?</h2>
+<p>A Content Type is a template that defines:</p>
+<ul>
+  <li>What fields are available (title, content, image, etc.)</li>
+  <li>How content items are organized</li>
+  <li>URL patterns for public pages</li>
+</ul>
+
+<p>Examples: Blog Posts, Products, Events, Team Members, FAQs</p>
+
+<h2>Viewing Content Types</h2>
+<p>Navigate to any content type in the sidebar to see its items. Click the gear icon or go to <strong>Settings</strong> to manage the content type itself.</p>
+
+<img src="https://placehold.co/800x400?text=Content+Types+List" alt="Content Types List" class="img-fluid my-3 border rounded">
+
+<h2>Creating a Content Type</h2>
+<ol>
+  <li>Go to <strong>Settings</strong> &gt; <strong>Content Types</strong></li>
+  <li>Click <strong>Create Content Type</strong></li>
+  <li>Fill in the required fields:
+    <ul>
+      <li><strong>Label (Singular)</strong>: e.g., "Product"</li>
+      <li><strong>Label (Plural)</strong>: e.g., "Products"</li>
+      <li><strong>Developer Name</strong>: URL-safe identifier (e.g., "products")</li>
+    </ul>
+  </li>
+  <li>Click <strong>Create</strong></li>
+</ol>
+
+<img src="https://placehold.co/800x450?text=Create+Content+Type+Form" alt="Create Content Type Form" class="img-fluid my-3 border rounded">
+
+<h2>Content Type Settings</h2>
+<p>After creating a content type, configure these settings:</p>
+
+<h3>General Settings</h3>
+<ul>
+  <li><strong>Active</strong>: Enable/disable the content type</li>
+  <li><strong>Description</strong>: Internal notes about the content type's purpose</li>
+</ul>
+
+<h3>Route Template</h3>
+<p>Define how URLs are generated for content items:</p>
+<ul>
+  <li><code>{PrimaryField}</code> - The item's primary field value (usually title)</li>
+  <li><code>{CurrentYear}</code> - Four-digit year</li>
+  <li><code>{CurrentMonth}</code> - Two-digit month</li>
+</ul>
+
+<p>Example: <code>{CurrentYear}/{CurrentMonth}/{PrimaryField}</code> creates URLs like <code>/2024/03/my-article-title</code></p>
+
+<img src="https://placehold.co/800x400?text=Content+Type+Settings" alt="Content Type Settings" class="img-fluid my-3 border rounded">
+
+<h2>Primary Field</h2>
+<p>The primary field is used as the main identifier for content items. It appears in:</p>
+<ul>
+  <li>Admin list views</li>
+  <li>URL generation</li>
+  <li>Search results</li>
+</ul>
+
+<p>Set the primary field in the content type's configuration after adding fields.</p>
+
+<h2>Deleting a Content Type</h2>
+<div class="alert alert-warning">
+  <strong>Warning:</strong> Deleting a content type will move all its content items to the trash. This action affects your public website.
+</div>
+
+<p>To delete: Go to the content type settings and click <strong>Delete</strong>. You'll be asked to confirm.</p>
+

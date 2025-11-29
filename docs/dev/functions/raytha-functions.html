@@ -1,0 +1,251 @@
+<!--
+category: Functions
+title: Raytha Functions
+description: Write custom JavaScript functions that execute on triggers
+sortOrder: 1
+icon: bi-lightning
+-->
+
+<h1>Raytha Functions</h1>
+<p class="lead">Write custom JavaScript functions that execute in response to triggers like HTTP requests, scheduled tasks, or system events.</p>
+
+<h2>What are Raytha Functions?</h2>
+<p>Raytha Functions allow you to extend Raytha with custom server-side logic:</p>
+<ul>
+  <li>Create custom API endpoints</li>
+  <li>Process webhooks from external services</li>
+  <li>Run scheduled background tasks</li>
+  <li>Execute code on content events</li>
+</ul>
+
+<h2>Accessing Raytha Functions</h2>
+<p>Navigate to <strong>Settings</strong> &gt; <strong>Raytha Functions</strong>.</p>
+
+<img src="https://placehold.co/800x400?text=Raytha+Functions+List" alt="Raytha Functions List" class="img-fluid my-3 border rounded">
+
+<h2>Creating a Function</h2>
+<ol>
+  <li>Click <strong>Create Function</strong></li>
+  <li>Enter:
+    <ul>
+      <li><strong>Name</strong>: Display name</li>
+      <li><strong>Developer Name</strong>: URL-safe identifier</li>
+      <li><strong>Trigger Type</strong>: When the function executes</li>
+    </ul>
+  </li>
+  <li>Write your JavaScript code</li>
+  <li>Click <strong>Create</strong></li>
+</ol>
+
+<img src="https://placehold.co/800x500?text=Create+Function+Form" alt="Create Function Form" class="img-fluid my-3 border rounded">
+
+<h2>Trigger Types</h2>
+
+<table class="table">
+  <thead>
+    <tr>
+      <th>Trigger</th>
+      <th>Description</th>
+      <th>Use Case</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>HTTP</strong></td>
+      <td>Triggered via HTTP request</td>
+      <td>Custom APIs, webhooks</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>Function Structure</h2>
+<p>Every function must export a default async handler:</p>
+
+<pre><code>export default async function(payload, context) {
+  // Your code here
+  
+  return {
+    statusCode: 200,
+    body: JSON.stringify({ message: "Success" }),
+    headers: {
+      "Content-Type": "application/json"
+    }
+  };
+}</code></pre>
+
+<h3>Parameters</h3>
+
+<h4>payload</h4>
+<p>Contains request data (for HTTP triggers):</p>
+<pre><code>payload.method       // HTTP method (GET, POST, etc.)
+payload.path         // Request path
+payload.query        // Query parameters object
+payload.headers      // Request headers
+payload.body         // Request body (parsed if JSON)</code></pre>
+
+<h4>context</h4>
+<p>Provides Raytha utilities and data:</p>
+<pre><code>context.organization  // Organization settings
+context.log()         // Logging function</code></pre>
+
+<h2>Return Value</h2>
+<p>Return an object with:</p>
+<pre><code>return {
+  statusCode: 200,           // HTTP status code
+  body: "Response content",  // Response body (string)
+  headers: {                 // Response headers
+    "Content-Type": "application/json"
+  }
+};</code></pre>
+
+<h2>Example: Simple JSON API</h2>
+
+<pre><code>export default async function(payload, context) {
+  const { method, query } = payload;
+  
+  if (method !== 'GET') {
+    return {
+      statusCode: 405,
+      body: JSON.stringify({ error: "Method not allowed" }),
+      headers: { "Content-Type": "application/json" }
+    };
+  }
+  
+  const data = {
+    timestamp: new Date().toISOString(),
+    organization: context.organization.OrganizationName,
+    query: query
+  };
+  
+  return {
+    statusCode: 200,
+    body: JSON.stringify(data),
+    headers: { "Content-Type": "application/json" }
+  };
+}</code></pre>
+
+<h2>Example: Webhook Handler</h2>
+
+<pre><code>export default async function(payload, context) {
+  const { method, body, headers } = payload;
+  
+  // Verify webhook signature (example)
+  const signature = headers['x-webhook-signature'];
+  if (!signature) {
+    return {
+      statusCode: 401,
+      body: JSON.stringify({ error: "Missing signature" }),
+      headers: { "Content-Type": "application/json" }
+    };
+  }
+  
+  // Process webhook payload
+  context.log(`Received webhook: ${JSON.stringify(body)}`);
+  
+  // Handle different event types
+  const eventType = body.event;
+  switch (eventType) {
+    case 'payment.completed':
+      // Handle payment
+      break;
+    case 'subscription.cancelled':
+      // Handle cancellation
+      break;
+    default:
+      context.log(`Unknown event type: ${eventType}`);
+  }
+  
+  return {
+    statusCode: 200,
+    body: JSON.stringify({ received: true }),
+    headers: { "Content-Type": "application/json" }
+  };
+}</code></pre>
+
+<h2>Example: Form Handler</h2>
+
+<pre><code>export default async function(payload, context) {
+  const { method, body } = payload;
+  
+  if (method !== 'POST') {
+    return {
+      statusCode: 405,
+      body: "Method not allowed",
+      headers: { "Content-Type": "text/plain" }
+    };
+  }
+  
+  // Validate required fields
+  const { name, email, message } = body;
+  if (!name || !email || !message) {
+    return {
+      statusCode: 400,
+      body: JSON.stringify({ error: "Missing required fields" }),
+      headers: { "Content-Type": "application/json" }
+    };
+  }
+  
+  // Process the form (e.g., send email, save to database)
+  context.log(`Contact form submission from ${email}`);
+  
+  return {
+    statusCode: 200,
+    body: JSON.stringify({ success: true, message: "Form submitted" }),
+    headers: { "Content-Type": "application/json" }
+  };
+}</code></pre>
+
+<h2>Accessing Function Endpoints</h2>
+<p>HTTP-triggered functions are accessible at:</p>
+<pre><code>https://yoursite.com/raytha/functions/execute/{developer_name}</code></pre>
+
+<h2>Activating Functions</h2>
+<p>Functions must be set to <strong>Active</strong> to execute. Toggle the active status in the function settings.</p>
+
+<h2>Logging</h2>
+<p>Use <code>context.log()</code> to write debug information:</p>
+<pre><code>context.log("Processing request...");
+context.log(`User ID: ${userId}`);</code></pre>
+
+<p>Logs are viewable in the function's execution history.</p>
+
+<h2>Error Handling</h2>
+<pre><code>export default async function(payload, context) {
+  try {
+    // Your code
+    const result = await someOperation();
+    
+    return {
+      statusCode: 200,
+      body: JSON.stringify(result),
+      headers: { "Content-Type": "application/json" }
+    };
+  } catch (error) {
+    context.log(`Error: ${error.message}`);
+    
+    return {
+      statusCode: 500,
+      body: JSON.stringify({ error: "Internal server error" }),
+      headers: { "Content-Type": "application/json" }
+    };
+  }
+}</code></pre>
+
+<h2>Revisions</h2>
+<p>Function code changes are tracked. Use <strong>Revisions</strong> to view history and restore previous versions.</p>
+
+<h2>Limitations</h2>
+<ul>
+  <li>Execution timeout: Functions have a maximum execution time</li>
+  <li>Memory: Limited memory allocation per execution</li>
+  <li>External HTTP requests may be restricted based on configuration</li>
+</ul>
+
+<h2>Security Considerations</h2>
+<ul>
+  <li>Validate all input data</li>
+  <li>Use authentication for sensitive endpoints</li>
+  <li>Don't expose secrets in responses</li>
+  <li>Rate limit endpoints if needed</li>
+</ul>
+

@@ -1,0 +1,198 @@
+<!--
+category: Templates
+title: Liquid Template Basics
+description: Introduction to the Liquid templating language
+sortOrder: 1
+icon: bi-braces
+-->
+
+<h1>Liquid Template Basics</h1>
+<p class="lead">Raytha uses the Liquid templating language to render dynamic content. Learn the fundamentals of Liquid syntax.</p>
+
+<h2>What is Liquid?</h2>
+<p>Liquid is a template language created by Shopify. It's safe, customer-facing, and easy to learn. Raytha uses Liquid for:</p>
+<ul>
+  <li>Web templates (page layouts)</li>
+  <li>Widget templates (Site Page widgets)</li>
+  <li>Email templates</li>
+</ul>
+
+<h2>Basic Syntax</h2>
+<p>Liquid has three main components:</p>
+
+<h3>Objects (Output)</h3>
+<p>Output data using double curly braces:</p>
+<pre><code>{{ Target.Title }}
+{{ CurrentOrganization.OrganizationName }}</code></pre>
+
+<h3>Tags (Logic)</h3>
+<p>Control flow and logic using curly braces with percent signs:</p>
+<pre><code>{% if Target.IsPublished %}
+  &lt;span&gt;Published&lt;/span&gt;
+{% endif %}</code></pre>
+
+<h3>Filters</h3>
+<p>Modify output using the pipe character:</p>
+<pre><code>{{ Target.Title | upcase }}
+{{ Target.CreationTime | date: "%B %d, %Y" }}</code></pre>
+
+<h2>Conditional Logic</h2>
+
+<h3>if / elsif / else</h3>
+<pre><code>{% if Target.IsPublished %}
+  &lt;span class="badge bg-success"&gt;Published&lt;/span&gt;
+{% elsif Target.IsDraft %}
+  &lt;span class="badge bg-warning"&gt;Draft&lt;/span&gt;
+{% else %}
+  &lt;span class="badge bg-secondary"&gt;Unknown&lt;/span&gt;
+{% endif %}</code></pre>
+
+<h3>unless</h3>
+<pre><code>{% unless Target.IsPublished %}
+  &lt;span&gt;Not yet published&lt;/span&gt;
+{% endunless %}</code></pre>
+
+<h3>case / when</h3>
+<pre><code>{% case Target.Status %}
+  {% when 'draft' %}
+    &lt;span&gt;In Progress&lt;/span&gt;
+  {% when 'published' %}
+    &lt;span&gt;Live&lt;/span&gt;
+  {% else %}
+    &lt;span&gt;Unknown&lt;/span&gt;
+{% endcase %}</code></pre>
+
+<h2>Operators</h2>
+
+<table class="table table-sm">
+  <thead>
+    <tr>
+      <th>Operator</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr><td><code>==</code></td><td>Equals</td></tr>
+    <tr><td><code>!=</code></td><td>Not equals</td></tr>
+    <tr><td><code>&gt;</code></td><td>Greater than</td></tr>
+    <tr><td><code>&lt;</code></td><td>Less than</td></tr>
+    <tr><td><code>&gt;=</code></td><td>Greater than or equal</td></tr>
+    <tr><td><code>&lt;=</code></td><td>Less than or equal</td></tr>
+    <tr><td><code>or</code></td><td>Logical or</td></tr>
+    <tr><td><code>and</code></td><td>Logical and</td></tr>
+    <tr><td><code>contains</code></td><td>String/array contains value</td></tr>
+  </tbody>
+</table>
+
+<h2>Loops</h2>
+
+<h3>for Loop</h3>
+<pre><code>{% for item in Target.Items %}
+  &lt;div&gt;{{ item.PrimaryField }}&lt;/div&gt;
+{% endfor %}</code></pre>
+
+<h3>Loop Variables</h3>
+<pre><code>{% for item in Target.Items %}
+  {{ forloop.index }}      // 1, 2, 3...
+  {{ forloop.index0 }}     // 0, 1, 2...
+  {{ forloop.first }}      // true on first iteration
+  {{ forloop.last }}       // true on last iteration
+  {{ forloop.length }}     // total items
+{% endfor %}</code></pre>
+
+<h3>Loop with limit and offset</h3>
+<pre><code>{% for item in Target.Items limit:5 %}
+  // First 5 items
+{% endfor %}
+
+{% for item in Target.Items offset:2 %}
+  // Skip first 2 items
+{% endfor %}</code></pre>
+
+<h3>else in Loops</h3>
+<pre><code>{% for item in Target.Items %}
+  &lt;div&gt;{{ item.PrimaryField }}&lt;/div&gt;
+{% else %}
+  &lt;p&gt;No items found.&lt;/p&gt;
+{% endfor %}</code></pre>
+
+<h2>Variables</h2>
+
+<h3>assign</h3>
+<pre><code>{% assign page_title = Target.Title %}
+&lt;h1&gt;{{ page_title }}&lt;/h1&gt;</code></pre>
+
+<h3>capture</h3>
+<pre><code>{% capture full_name %}{{ Target.FirstName }} {{ Target.LastName }}{% endcapture %}
+&lt;p&gt;Welcome, {{ full_name }}&lt;/p&gt;</code></pre>
+
+<h2>Common Filters</h2>
+
+<h3>String Filters</h3>
+<pre><code>{{ "hello" | upcase }}          // HELLO
+{{ "HELLO" | downcase }}        // hello
+{{ "hello" | capitalize }}      // Hello
+{{ "hello world" | truncate: 8 }} // hello...
+{{ "  hello  " | strip }}       // hello
+{{ "hello" | append: " world" }} // hello world
+{{ "hello" | prepend: "say " }} // say hello
+{{ "hello" | replace: "e", "a" }} // hallo
+{{ "hello-world" | split: "-" }} // ["hello", "world"]</code></pre>
+
+<h3>HTML Filters</h3>
+<pre><code>{{ Target.Content | escape }}    // HTML escape
+{{ Target.Content | strip_html }} // Remove HTML tags
+{{ Target.Url | url_encode }}    // URL encode</code></pre>
+
+<h3>Number Filters</h3>
+<pre><code>{{ 4.5 | round }}     // 5
+{{ 4.5 | ceil }}      // 5
+{{ 4.5 | floor }}     // 4
+{{ 1000 | plus: 5 }}  // 1005
+{{ 10 | minus: 3 }}   // 7
+{{ 5 | times: 2 }}    // 10
+{{ 10 | divided_by: 3 }} // 3</code></pre>
+
+<h3>Array Filters</h3>
+<pre><code>{{ Target.Items | size }}         // Count items
+{{ Target.Items | first }}        // First item
+{{ Target.Items | last }}         // Last item
+{{ Target.Items | join: ", " }}   // Join with comma
+{{ Target.Items | sort: "Title" }} // Sort by property
+{{ Target.Items | reverse }}      // Reverse order</code></pre>
+
+<h3>Date Filters</h3>
+<pre><code>{{ Target.CreationTime | date: "%B %d, %Y" }}  // January 15, 2024
+{{ Target.CreationTime | date: "%Y-%m-%d" }}   // 2024-01-15
+{{ "now" | date: "%H:%M" }}                    // Current time</code></pre>
+
+<h2>Default Values</h2>
+<pre><code>{{ Target.Subtitle | default: "No subtitle" }}</code></pre>
+
+<h2>Checking for Blank/Empty</h2>
+<pre><code>{% if Target.Description != blank %}
+  {{ Target.Description }}
+{% endif %}
+
+{% if Target.Items.size > 0 %}
+  // Has items
+{% endif %}</code></pre>
+
+<h2>Comments</h2>
+<pre><code>{% comment %}
+  This won't be rendered in the output
+{% endcomment %}</code></pre>
+
+<h2>Raw Output</h2>
+<p>Output Liquid code without processing:</p>
+<pre><code>{% raw %}
+  {{ this will not be processed }}
+{% endraw %}</code></pre>
+
+<h2>Template Inheritance</h2>
+<p>Inherit from a base layout:</p>
+<pre><code>{% layout "raytha_html_base_layout" %}</code></pre>
+
+<p>In the parent template, render child content:</p>
+<pre><code>{{ content_for_layout }}</code></pre>
+

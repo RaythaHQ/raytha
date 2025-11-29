@@ -1,0 +1,132 @@
+<!--
+category: Settings
+title: SMTP Settings
+description: Configure email delivery settings
+sortOrder: 2
+icon: bi-mailbox
+-->
+
+<h1>SMTP Settings</h1>
+<p class="lead">Configure your email server settings to enable password resets, welcome emails, and other system notifications.</p>
+
+<h2>Accessing SMTP Settings</h2>
+<p>Navigate to <strong>Settings</strong> &gt; <strong>SMTP</strong>.</p>
+
+<img src="https://placehold.co/800x450?text=SMTP+Settings+Page" alt="SMTP Settings" class="img-fluid my-3 border rounded">
+
+<h2>Configuration Methods</h2>
+<p>SMTP can be configured two ways:</p>
+
+<h3>1. Environment Variables (Recommended)</h3>
+<p>Set SMTP credentials as server environment variables. This is more secure and allows different settings per environment.</p>
+
+<h3>2. Database Settings</h3>
+<p>Configure SMTP in the admin panel. Use the <strong>Override System Settings</strong> toggle to use database settings instead of environment variables.</p>
+
+<h2>SMTP Fields</h2>
+
+<table class="table">
+  <thead>
+    <tr>
+      <th>Field</th>
+      <th>Description</th>
+      <th>Example</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>SMTP Host</strong></td>
+      <td>Mail server address</td>
+      <td><code>smtp.sendgrid.net</code></td>
+    </tr>
+    <tr>
+      <td><strong>SMTP Port</strong></td>
+      <td>Server port</td>
+      <td><code>587</code> (TLS) or <code>465</code> (SSL)</td>
+    </tr>
+    <tr>
+      <td><strong>SMTP Username</strong></td>
+      <td>Authentication username</td>
+      <td><code>apikey</code></td>
+    </tr>
+    <tr>
+      <td><strong>SMTP Password</strong></td>
+      <td>Authentication password or API key</td>
+      <td>(your API key)</td>
+    </tr>
+    <tr>
+      <td><strong>Default From Address</strong></td>
+      <td>Sender email address</td>
+      <td><code>noreply@example.com</code></td>
+    </tr>
+    <tr>
+      <td><strong>Default From Name</strong></td>
+      <td>Sender display name</td>
+      <td><code>My Website</code></td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>Common Email Services</h2>
+
+<h3>SendGrid</h3>
+<pre><code>Host: smtp.sendgrid.net
+Port: 587
+Username: apikey
+Password: (your SendGrid API key)</code></pre>
+
+<h3>Mailgun</h3>
+<pre><code>Host: smtp.mailgun.org
+Port: 587
+Username: (your Mailgun SMTP username)
+Password: (your Mailgun SMTP password)</code></pre>
+
+<h3>Amazon SES</h3>
+<pre><code>Host: email-smtp.us-east-1.amazonaws.com
+Port: 587
+Username: (your SES SMTP username)
+Password: (your SES SMTP password)</code></pre>
+
+<h3>Gmail (Development Only)</h3>
+<pre><code>Host: smtp.gmail.com
+Port: 587
+Username: (your email)
+Password: (app password, not regular password)</code></pre>
+
+<div class="alert alert-warning">
+  <strong>Note:</strong> Gmail has sending limits and requires app passwords. Use a dedicated email service for production.
+</div>
+
+<h2>Override System Settings</h2>
+<p>When enabled, the database SMTP settings override any environment variables. This is useful for:</p>
+<ul>
+  <li>Testing different email configurations</li>
+  <li>Environments without access to server settings</li>
+</ul>
+
+<img src="https://placehold.co/600x150?text=Override+System+Settings+Toggle" alt="Override Toggle" class="img-fluid my-3 border rounded">
+
+<h2>Testing Email</h2>
+<p>To verify your SMTP configuration works:</p>
+<ol>
+  <li>Create a test administrator account</li>
+  <li>Check if the welcome email arrives</li>
+  <li>Or use the forgot password flow</li>
+</ol>
+
+<h2>Troubleshooting</h2>
+
+<h3>Emails not sending</h3>
+<ul>
+  <li>Verify SMTP credentials are correct</li>
+  <li>Check firewall allows outbound connections on the SMTP port</li>
+  <li>Confirm the from address is verified with your email provider</li>
+</ul>
+
+<h3>Emails going to spam</h3>
+<ul>
+  <li>Set up SPF and DKIM records for your domain</li>
+  <li>Use a reputable email service</li>
+  <li>Ensure the from address domain matches your website</li>
+</ul>
+

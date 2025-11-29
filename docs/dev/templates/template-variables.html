@@ -1,0 +1,234 @@
+<!--
+category: Templates
+title: Template Variables Reference
+description: Complete reference of available Liquid variables and objects
+sortOrder: 2
+icon: bi-book
+-->
+
+<h1>Template Variables Reference</h1>
+<p class="lead">Complete reference of all Liquid variables and objects available in Raytha templates.</p>
+
+<h2>Global Variables</h2>
+<p>Available in all templates:</p>
+
+<h3>CurrentOrganization</h3>
+<pre><code>{{ CurrentOrganization.OrganizationName }}
+{{ CurrentOrganization.WebsiteUrl }}
+{{ CurrentOrganization.TimeZone }}
+{{ CurrentOrganization.DateFormat }}
+{{ CurrentOrganization.HomePageType }}
+{{ CurrentOrganization.HomePageId }}</code></pre>
+
+<h3>CurrentUser</h3>
+<pre><code>{{ CurrentUser.IsAuthenticated }}
+{{ CurrentUser.Id }}
+{{ CurrentUser.FirstName }}
+{{ CurrentUser.LastName }}
+{{ CurrentUser.EmailAddress }}
+{{ CurrentUser.UserGroups }}  // Array of group developer names</code></pre>
+
+<h3>MainMenu</h3>
+<pre><code>{% for item in CurrentOrganization.MainMenu.Items %}
+  {{ item.Label }}
+  {{ item.Url }}
+  {{ item.OpenInNewTab }}
+  {{ item.CssClassName }}
+  {{ item.IsDisabled }}
+  {% for child in item.Children %}
+    {{ child.Label }}
+  {% endfor %}
+{% endfor %}</code></pre>
+
+<h2>Content Item Detail Templates</h2>
+<p>Available when rendering a single content item:</p>
+
+<h3>Target (Content Item)</h3>
+<pre><code>{{ Target.Id }}
+{{ Target.PrimaryField }}
+{{ Target.IsPublished }}
+{{ Target.IsDraft }}
+{{ Target.CreationTime }}
+{{ Target.LastModificationTime }}
+{{ Target.RoutePath }}</code></pre>
+
+<h3>PublishedContent (Custom Fields)</h3>
+<p>Access custom fields via <code>Target.PublishedContent</code>:</p>
+<pre><code>{{ Target.PublishedContent.title }}
+{{ Target.PublishedContent.content }}
+{{ Target.PublishedContent.featured_image }}
+{{ Target.PublishedContent.category }}</code></pre>
+
+<h3>Field Types</h3>
+<table class="table table-sm">
+  <thead>
+    <tr>
+      <th>Field Type</th>
+      <th>Access Pattern</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr><td>Single Line Text</td><td><code>{{ Target.PublishedContent.field_name }}</code></td></tr>
+    <tr><td>Long Text / WYSIWYG</td><td><code>{{ Target.PublishedContent.field_name }}</code></td></tr>
+    <tr><td>Number</td><td><code>{{ Target.PublishedContent.field_name }}</code></td></tr>
+    <tr><td>Date</td><td><code>{{ Target.PublishedContent.field_name | date: "%Y-%m-%d" }}</code></td></tr>
+    <tr><td>Checkbox</td><td><code>{% if Target.PublishedContent.field_name == true %}</code></td></tr>
+    <tr><td>Dropdown</td><td><code>{{ Target.PublishedContent.field_name }}</code></td></tr>
+    <tr><td>Multiple Select</td><td><code>{% for val in Target.PublishedContent.field_name %}{{ val }}{% endfor %}</code></td></tr>
+    <tr><td>Attachment</td><td><code>{{ Target.PublishedContent.field_name | raytha_attachment_url }}</code></td></tr>
+  </tbody>
+</table>
+
+<h3>Relationships</h3>
+<pre><code>// One-to-One Relationship
+{{ Target.PublishedContent.author.PrimaryField }}
+{{ Target.PublishedContent.author.PublishedContent.bio }}
+
+// One-to-Many Relationship
+{% for item in Target.PublishedContent.related_posts %}
+  {{ item.PrimaryField }}
+{% endfor %}</code></pre>
+
+<h2>Content Item List Templates (Views)</h2>
+<p>Available when rendering a view/list:</p>
+
+<h3>Target (View)</h3>
+<pre><code>{{ Target.Label }}
+{{ Target.DeveloperName }}
+{{ Target.TotalCount }}
+{{ Target.PageSize }}
+{{ Target.PageNumber }}
+{{ Target.TotalPages }}</code></pre>
+
+<h3>Items Array</h3>
+<pre><code>{% for item in Target.Items %}
+  {{ item.Id }}
+  {{ item.PrimaryField }}
+  {{ item.RoutePath }}
+  {{ item.CreationTime }}
+  {{ item.PublishedContent.custom_field }}
+{% endfor %}</code></pre>
+
+<h3>Pagination</h3>
+<pre><code>{% if Target.HasPreviousPage %}
+  &lt;a href="?pageNumber={{ Target.PageNumber | minus: 1 }}"&gt;Previous&lt;/a&gt;
+{% endif %}
+
+{% if Target.HasNextPage %}
+  &lt;a href="?pageNumber={{ Target.PageNumber | plus: 1 }}"&gt;Next&lt;/a&gt;
+{% endif %}</code></pre>
+
+<h2>Site Page Templates</h2>
+<p>Available when rendering a Site Page:</p>
+
+<h3>Target (Site Page)</h3>
+<pre><code>{{ Target.Id }}
+{{ Target.Title }}
+{{ Target.IsPublished }}
+{{ Target.RoutePath }}</code></pre>
+
+<h3>Rendering Widget Zones</h3>
+<pre><code>{{ render_zone "hero" }}
+{{ render_zone "main" }}
+{{ render_zone "sidebar" }}</code></pre>
+
+<h2>Widget Templates</h2>
+<p>Each widget type has its own Target context:</p>
+
+<h3>Hero Widget</h3>
+<pre><code>{{ Target.headline }}
+{{ Target.subheadline }}
+{{ Target.backgroundColor }}
+{{ Target.textColor }}
+{{ Target.buttonText }}
+{{ Target.buttonUrl }}
+{{ Target.buttonStyle }}
+{{ Target.alignment }}
+{{ Target.minHeight }}
+{{ Target.backgroundImage }}</code></pre>
+
+<h3>WYSIWYG Widget</h3>
+<pre><code>{{ Target.content }}
+{{ Target.padding }}</code></pre>
+
+<h3>Card Widget</h3>
+<pre><code>{{ Target.title }}
+{{ Target.description }}
+{{ Target.imageUrl }}
+{{ Target.buttonText }}
+{{ Target.buttonUrl }}
+{{ Target.buttonStyle }}</code></pre>
+
+<h3>CTA Widget</h3>
+<pre><code>{{ Target.headline }}
+{{ Target.content }}
+{{ Target.buttonText }}
+{{ Target.buttonUrl }}
+{{ Target.buttonStyle }}
+{{ Target.backgroundColor }}
+{{ Target.textColor }}
+{{ Target.alignment }}</code></pre>
+
+<h3>Content List Widget</h3>
+<pre><code>{{ Target.headline }}
+{{ Target.subheadline }}
+{{ Target.contentType }}
+{{ Target.pageSize }}
+{{ Target.displayStyle }}
+{{ Target.showImage }}
+{{ Target.showDate }}
+{{ Target.showExcerpt }}
+{{ Target.linkText }}
+{{ Target.linkUrl }}
+
+{% for item in Target.items %}
+  {{ item.Id }}
+  {{ item.PrimaryField }}
+  {{ item.RoutePath }}
+  {{ item.CreationTime }}
+  {{ item.PublishedContent.field_name }}
+{% endfor %}</code></pre>
+
+<h2>Raytha-Specific Filters</h2>
+
+<h3>raytha_attachment_url</h3>
+<p>Get the public URL for an attachment:</p>
+<pre><code>&lt;img src="{{ Target.PublishedContent.image | raytha_attachment_url }}" alt="..."&gt;</code></pre>
+
+<h3>get_navigation_menu</h3>
+<p>Retrieve a navigation menu by developer name:</p>
+<pre><code>{% assign footer = 'footer_menu' | get_navigation_menu %}
+{% for item in footer.Items %}
+  &lt;a href="{{ item.Url }}"&gt;{{ item.Label }}&lt;/a&gt;
+{% endfor %}</code></pre>
+
+<h2>Email Template Variables</h2>
+
+<h3>All Email Templates</h3>
+<pre><code>{{ CurrentOrganization.OrganizationName }}
+{{ CurrentOrganization.WebsiteUrl }}</code></pre>
+
+<h3>User-Related Emails</h3>
+<pre><code>{{ Payload.FirstName }}
+{{ Payload.LastName }}
+{{ Payload.EmailAddress }}</code></pre>
+
+<h3>Password Reset</h3>
+<pre><code>{{ Payload.NewPassword }}
+{{ Payload.LoginUrl }}</code></pre>
+
+<h3>Magic Link</h3>
+<pre><code>{{ Payload.MagicLinkUrl }}
+{{ Payload.ExpiresAt }}</code></pre>
+
+<h2>Query Parameters</h2>
+<p>Access URL query parameters in templates:</p>
+<pre><code>{{ QueryParams.search }}
+{{ QueryParams.page }}
+{{ QueryParams.sort }}</code></pre>
+
+<h2>Request Information</h2>
+<pre><code>{{ Request.Path }}
+{{ Request.QueryString }}
+{{ Request.Host }}</code></pre>
+

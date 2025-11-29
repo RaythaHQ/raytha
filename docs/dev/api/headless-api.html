@@ -1,0 +1,474 @@
+<!--
+category: API
+title: Headless API
+description: Use the REST API to access content programmatically
+sortOrder: 1
+icon: bi-braces-asterisk
+-->
+
+<h1>Headless API</h1>
+<p class="lead">Access your Raytha content programmatically using the REST API. Build custom frontends, mobile apps, or
+    integrate with external systems.</p>
+
+<h2>Overview</h2>
+<p>Raytha provides a full REST API for headless content delivery and management:</p>
+<ul>
+    <li>Retrieve content items, types, and views</li>
+    <li>Create, update, and delete content</li>
+    <li>Manage media files</li>
+    <li>Access users and user groups</li>
+    <li>Manage templates and themes</li>
+</ul>
+
+<h2>API Base URL</h2>
+<pre><code>https://yoursite.com/raytha/api/v1</code></pre>
+
+<h2>Authentication</h2>
+<p>All API requests require an API key passed in the <code>X-Api-Key</code> header:</p>
+
+<pre><code>curl -X GET "https://yoursite.com/raytha/api/v1/content-items/posts" \
+  -H "X-Api-Key: your-api-key-here"</code></pre>
+
+<h2>Creating an API Key</h2>
+<ol>
+    <li>Go to <strong>Settings</strong> &gt; <strong>Administrators</strong></li>
+    <li>Click on an administrator account</li>
+    <li>Click <strong>API Keys</strong></li>
+    <li>Click <strong>Generate New Key</strong></li>
+    <li>Copy the key immediately (it's only shown once)</li>
+</ol>
+
+<img src="https://placehold.co/800x400?text=Generate+API+Key+Screen" alt="Generate API Key"
+    class="img-fluid my-3 border rounded">
+
+<div class="alert alert-warning">
+    <strong>Important:</strong> API keys inherit the permissions of the administrator they belong to. Create dedicated
+    admin accounts with appropriate roles for API access.
+</div>
+
+<h2>API Endpoints</h2>
+
+<h3>Content Items</h3>
+<table class="table table-sm">
+    <thead>
+        <tr>
+            <th>Method</th>
+            <th>Endpoint</th>
+            <th>Description</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><code>GET</code></td>
+            <td><code>/content-items/{contentType}</code></td>
+            <td>List content items</td>
+        </tr>
+        <tr>
+            <td><code>GET</code></td>
+            <td><code>/content-items/{contentType}/{id}</code></td>
+            <td>Get content item by ID</td>
+        </tr>
+        <tr>
+            <td><code>GET</code></td>
+            <td><code>/content-items/{contentType}/path/{path}</code></td>
+            <td>Get content item by URL path</td>
+        </tr>
+        <tr>
+            <td><code>POST</code></td>
+            <td><code>/content-items/{contentType}</code></td>
+            <td>Create content item</td>
+        </tr>
+        <tr>
+            <td><code>PUT</code></td>
+            <td><code>/content-items/{contentType}/{id}</code></td>
+            <td>Update content item</td>
+        </tr>
+        <tr>
+            <td><code>DELETE</code></td>
+            <td><code>/content-items/{contentType}/{id}</code></td>
+            <td>Delete content item</td>
+        </tr>
+        <tr>
+            <td><code>POST</code></td>
+            <td><code>/content-items/{contentType}/{id}/publish</code></td>
+            <td>Publish content item</td>
+        </tr>
+        <tr>
+            <td><code>POST</code></td>
+            <td><code>/content-items/{contentType}/{id}/unpublish</code></td>
+            <td>Unpublish content item</td>
+        </tr>
+    </tbody>
+</table>
+
+<h3>Content Types</h3>
+<table class="table table-sm">
+    <thead>
+        <tr>
+            <th>Method</th>
+            <th>Endpoint</th>
+            <th>Description</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><code>GET</code></td>
+            <td><code>/content-types</code></td>
+            <td>List all content types</td>
+        </tr>
+        <tr>
+            <td><code>GET</code></td>
+            <td><code>/content-types/{developerName}</code></td>
+            <td>Get content type details</td>
+        </tr>
+        <tr>
+            <td><code>GET</code></td>
+            <td><code>/content-types/{developerName}/fields</code></td>
+            <td>Get content type fields</td>
+        </tr>
+    </tbody>
+</table>
+
+<h3>Site Pages</h3>
+<table class="table table-sm">
+    <thead>
+        <tr>
+            <th>Method</th>
+            <th>Endpoint</th>
+            <th>Description</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><code>GET</code></td>
+            <td><code>/site-pages</code></td>
+            <td>List all site pages</td>
+        </tr>
+        <tr>
+            <td><code>GET</code></td>
+            <td><code>/site-pages/{id}</code></td>
+            <td>Get site page by ID</td>
+        </tr>
+    </tbody>
+</table>
+
+<h3>Media Items</h3>
+<table class="table table-sm">
+    <thead>
+        <tr>
+            <th>Method</th>
+            <th>Endpoint</th>
+            <th>Description</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><code>GET</code></td>
+            <td><code>/media-items</code></td>
+            <td>List media files</td>
+        </tr>
+        <tr>
+            <td><code>GET</code></td>
+            <td><code>/media-items/{id}</code></td>
+            <td>Get media item details</td>
+        </tr>
+        <tr>
+            <td><code>POST</code></td>
+            <td><code>/media-items</code></td>
+            <td>Upload a file</td>
+        </tr>
+    </tbody>
+</table>
+
+<h3>Users</h3>
+<table class="table table-sm">
+    <thead>
+        <tr>
+            <th>Method</th>
+            <th>Endpoint</th>
+            <th>Description</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><code>GET</code></td>
+            <td><code>/users</code></td>
+            <td>List public users</td>
+        </tr>
+        <tr>
+            <td><code>GET</code></td>
+            <td><code>/users/{id}</code></td>
+            <td>Get user by ID</td>
+        </tr>
+        <tr>
+            <td><code>POST</code></td>
+            <td><code>/users</code></td>
+            <td>Create user</td>
+        </tr>
+        <tr>
+            <td><code>PUT</code></td>
+            <td><code>/users/{id}</code></td>
+            <td>Update user</td>
+        </tr>
+    </tbody>
+</table>
+
+<h3>Navigation Menus</h3>
+<table class="table table-sm">
+    <thead>
+        <tr>
+            <th>Method</th>
+            <th>Endpoint</th>
+            <th>Description</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><code>GET</code></td>
+            <td><code>/menus</code></td>
+            <td>List navigation menus</td>
+        </tr>
+        <tr>
+            <td><code>GET</code></td>
+            <td><code>/menus/{developerName}</code></td>
+            <td>Get menu with items</td>
+        </tr>
+    </tbody>
+</table>
+
+<h2>Query Parameters</h2>
+<p>List endpoints support these query parameters:</p>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Parameter</th>
+            <th>Description</th>
+            <th>Example</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><code>pageNumber</code></td>
+            <td>Page number (1-based)</td>
+            <td><code>?pageNumber=2</code></td>
+        </tr>
+        <tr>
+            <td><code>pageSize</code></td>
+            <td>Items per page (max 50)</td>
+            <td><code>?pageSize=25</code></td>
+        </tr>
+        <tr>
+            <td><code>search</code></td>
+            <td>Search text</td>
+            <td><code>?search=hello</code></td>
+        </tr>
+        <tr>
+            <td><code>filter</code></td>
+            <td>Filter expression</td>
+            <td><code>?filter=status eq 'published'</code></td>
+        </tr>
+        <tr>
+            <td><code>orderBy</code></td>
+            <td>Sort field and direction</td>
+            <td><code>?orderBy=CreationTime desc</code></td>
+        </tr>
+        <tr>
+            <td><code>viewId</code></td>
+            <td>Use a view's filters</td>
+            <td><code>?viewId=abc123</code></td>
+        </tr>
+    </tbody>
+</table>
+
+<h2>Example: List Content Items</h2>
+
+<h3>Request</h3>
+<pre><code>curl -X GET "https://yoursite.com/raytha/api/v1/content-items/posts?pageSize=10&orderBy=CreationTime desc" \
+  -H "X-Api-Key: your-api-key-here"</code></pre>
+
+<h3>Response</h3>
+<pre><code>{
+  "success": true,
+  "result": {
+    "items": [
+      {
+        "id": "abc123",
+        "primaryField": "My First Post",
+        "isPublished": true,
+        "isDraft": false,
+        "routePath": "2024/01/my-first-post",
+        "creationTime": "2024-01-15T10:30:00Z",
+        "publishedContent": {
+          "title": "My First Post",
+          "content": "&lt;p&gt;Post content here...&lt;/p&gt;",
+          "featured_image": "media/abc123/image.jpg"
+        }
+      }
+    ],
+    "totalCount": 42,
+    "pageNumber": 1,
+    "pageSize": 10,
+    "totalPages": 5
+  }
+}</code></pre>
+
+<h2>Example: Create Content Item</h2>
+
+<h3>Request</h3>
+<pre><code>curl -X POST "https://yoursite.com/raytha/api/v1/content-items/posts" \
+  -H "X-Api-Key: your-api-key-here" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "saveAsDraft": false,
+    "content": {
+      "title": "New Blog Post",
+      "content": "&lt;p&gt;This is my new post content.&lt;/p&gt;",
+      "featured_image": ""
+    }
+  }'</code></pre>
+
+<h3>Response</h3>
+<pre><code>{
+  "success": true,
+  "result": "xyz789"
+}</code></pre>
+
+<h2>Example: Upload Media</h2>
+
+<h3>Request</h3>
+<pre><code>curl -X POST "https://yoursite.com/raytha/api/v1/media-items" \
+  -H "X-Api-Key: your-api-key-here" \
+  -F "file=@/path/to/image.jpg"</code></pre>
+
+<h3>Response</h3>
+<pre><code>{
+  "success": true,
+  "result": {
+    "id": "media123",
+    "fileName": "image.jpg",
+    "objectKey": "media/media123/image.jpg",
+    "contentType": "image/jpeg",
+    "length": 102400
+  }
+}</code></pre>
+
+<h2>Error Responses</h2>
+<p>Errors return an appropriate HTTP status code with details:</p>
+
+<pre><code>{
+  "success": false,
+  "error": "Content item not found",
+  "errorCode": "NOT_FOUND"
+}</code></pre>
+
+<table class="table table-sm">
+    <thead>
+        <tr>
+            <th>Status Code</th>
+            <th>Description</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><code>400</code></td>
+            <td>Bad request (validation error)</td>
+        </tr>
+        <tr>
+            <td><code>401</code></td>
+            <td>Unauthorized (missing or invalid API key)</td>
+        </tr>
+        <tr>
+            <td><code>403</code></td>
+            <td>Forbidden (insufficient permissions)</td>
+        </tr>
+        <tr>
+            <td><code>404</code></td>
+            <td>Resource not found</td>
+        </tr>
+        <tr>
+            <td><code>500</code></td>
+            <td>Internal server error</td>
+        </tr>
+    </tbody>
+</table>
+
+<h2>Permissions</h2>
+<p>API keys inherit permissions from their administrator. Ensure the admin account has appropriate roles:</p>
+
+<ul>
+    <li><strong>Content Type Permissions</strong>: Read, Create, Edit, Delete per content type</li>
+    <li><strong>Manage Users</strong>: Required for user endpoints</li>
+    <li><strong>Manage Templates</strong>: Required for template/theme endpoints</li>
+    <li><strong>Manage Site Pages</strong>: Required for site page endpoints</li>
+</ul>
+
+<h2>Rate Limiting</h2>
+<p>API requests may be rate limited based on server configuration. Implement appropriate retry logic with exponential
+    backoff.</p>
+
+<h2>OpenAPI/Swagger</h2>
+<p>Interactive API documentation is available at:</p>
+<pre><code>https://yoursite.com/raytha/api/swagger</code></pre>
+
+<img src="https://placehold.co/800x450?text=Swagger+API+Documentation" alt="Swagger Documentation"
+    class="img-fluid my-3 border rounded">
+
+<h2>SDK Examples</h2>
+
+<h3>JavaScript/Node.js</h3>
+<pre><code>const API_BASE = 'https://yoursite.com/raytha/api/v1';
+const API_KEY = 'your-api-key';
+
+async function getContentItems(contentType) {
+  const response = await fetch(`${API_BASE}/content-items/${contentType}`, {
+    headers: {
+      'X-Api-Key': API_KEY
+    }
+  });
+  return response.json();
+}
+
+// Usage
+const posts = await getContentItems('posts');
+console.log(posts.result.items);</code></pre>
+
+<h3>Python</h3>
+<pre><code>import requests
+
+API_BASE = 'https://yoursite.com/raytha/api/v1'
+API_KEY = 'your-api-key'
+
+headers = {'X-Api-Key': API_KEY}
+
+def get_content_items(content_type):
+    response = requests.get(
+        f'{API_BASE}/content-items/{content_type}',
+        headers=headers
+    )
+    return response.json()
+
+# Usage
+posts = get_content_items('posts')
+print(posts['result']['items'])</code></pre>
+
+<h3>C# / .NET</h3>
+<pre><code>using System.Net.Http;
+using System.Text.Json;
+
+var client = new HttpClient();
+client.BaseAddress = new Uri("https://yoursite.com/raytha/api/v1/");
+client.DefaultRequestHeaders.Add("X-Api-Key", "your-api-key");
+
+var response = await client.GetAsync("content-items/posts");
+var json = await response.Content.ReadAsStringAsync();
+var result = JsonSerializer.Deserialize&lt;ApiResponse&gt;(json);</code></pre>
+
+<h2>Best Practices</h2>
+<ul>
+    <li>Store API keys securely (environment variables, secrets manager)</li>
+    <li>Use dedicated admin accounts for API access with minimal permissions</li>
+    <li>Implement caching for frequently accessed content</li>
+    <li>Handle pagination for large result sets</li>
+    <li>Use webhooks or polling for content change notifications</li>
+</ul>

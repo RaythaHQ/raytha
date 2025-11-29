@@ -1,0 +1,136 @@
+<!--
+category: Content Management
+title: Content Type Fields
+description: Add and configure fields like text, WYSIWYG, attachments, and relationships
+sortOrder: 2
+icon: bi-input-cursor-text
+-->
+
+<h1>Content Type Fields</h1>
+<p class="lead">Fields define what data can be stored in each content item. Add fields to capture text, images, dates, and more.</p>
+
+<h2>Managing Fields</h2>
+<ol>
+  <li>Navigate to your content type</li>
+  <li>Click <strong>Fields</strong> in the submenu</li>
+  <li>Click <strong>Create Field</strong> to add a new field</li>
+</ol>
+
+<img src="https://placehold.co/800x400?text=Fields+List+View" alt="Fields List View" class="img-fluid my-3 border rounded">
+
+<h2>Field Types</h2>
+
+<table class="table">
+  <thead>
+    <tr>
+      <th>Type</th>
+      <th>Description</th>
+      <th>Use Case</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>Single Line Text</strong></td>
+      <td>Short text input</td>
+      <td>Titles, names, short descriptions</td>
+    </tr>
+    <tr>
+      <td><strong>Long Text</strong></td>
+      <td>Multi-line plain text</td>
+      <td>Summaries, excerpts</td>
+    </tr>
+    <tr>
+      <td><strong>WYSIWYG</strong></td>
+      <td>Rich text editor with formatting</td>
+      <td>Article content, descriptions</td>
+    </tr>
+    <tr>
+      <td><strong>Number</strong></td>
+      <td>Numeric values</td>
+      <td>Prices, quantities, ratings</td>
+    </tr>
+    <tr>
+      <td><strong>Date</strong></td>
+      <td>Date picker</td>
+      <td>Event dates, publish dates</td>
+    </tr>
+    <tr>
+      <td><strong>Checkbox</strong></td>
+      <td>True/false toggle</td>
+      <td>Featured flag, active status</td>
+    </tr>
+    <tr>
+      <td><strong>Dropdown</strong></td>
+      <td>Single selection from list</td>
+      <td>Categories, status</td>
+    </tr>
+    <tr>
+      <td><strong>Multiple Select</strong></td>
+      <td>Multiple selections from list</td>
+      <td>Tags, features</td>
+    </tr>
+    <tr>
+      <td><strong>Attachment</strong></td>
+      <td>File upload</td>
+      <td>Images, documents, downloads</td>
+    </tr>
+    <tr>
+      <td><strong>One-to-One Relation</strong></td>
+      <td>Link to single content item</td>
+      <td>Author, category</td>
+    </tr>
+    <tr>
+      <td><strong>One-to-Many Relation</strong></td>
+      <td>Link to multiple content items</td>
+      <td>Related posts, gallery items</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>Creating a Field</h2>
+<ol>
+  <li>Click <strong>Create Field</strong></li>
+  <li>Enter the field details:
+    <ul>
+      <li><strong>Label</strong>: Display name (e.g., "Featured Image")</li>
+      <li><strong>Developer Name</strong>: Code identifier (e.g., "featured_image")</li>
+      <li><strong>Field Type</strong>: Select from dropdown</li>
+      <li><strong>Required</strong>: Whether the field must have a value</li>
+      <li><strong>Description</strong>: Help text shown to editors</li>
+    </ul>
+  </li>
+  <li>Click <strong>Create</strong></li>
+</ol>
+
+<img src="https://placehold.co/800x450?text=Create+Field+Form" alt="Create Field Form" class="img-fluid my-3 border rounded">
+
+<h2>Dropdown and Multiple Select Options</h2>
+<p>For dropdown and multiple select fields, define the available choices:</p>
+<ol>
+  <li>Enter each option on a new line</li>
+  <li>Format: <code>value|Display Label</code> or just <code>value</code></li>
+</ol>
+
+<pre><code>draft|Draft
+published|Published
+archived|Archived</code></pre>
+
+<img src="https://placehold.co/800x300?text=Dropdown+Choices+Configuration" alt="Dropdown Choices" class="img-fluid my-3 border rounded">
+
+<h2>Relationship Fields</h2>
+<p>Link content items together:</p>
+<ul>
+  <li><strong>One-to-One</strong>: Select a single related item (e.g., Post → Author)</li>
+  <li><strong>One-to-Many</strong>: Select multiple related items (e.g., Product → Related Products)</li>
+</ul>
+
+<p>When creating a relationship field, select the <strong>Related Content Type</strong> to link to.</p>
+
+<h2>Field Order</h2>
+<p>Drag and drop fields in the list to reorder them. The order determines how fields appear in the content editor.</p>
+
+<h2>Deleting Fields</h2>
+<div class="alert alert-warning">
+  <strong>Warning:</strong> Deleting a field removes all data stored in that field across all content items. This cannot be undone.
+</div>
+
