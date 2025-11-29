@@ -101,7 +101,7 @@ public class CreateTheme
             var mediaItems = new List<MediaItem>();
             var themeAccessToMediaItems = new List<ThemeAccessToMediaItem>();
 
-            var defaultThemeAssetsPath = Path.Combine("wwwroot", "raytha_default_2024", "assets");
+            var defaultThemeAssetsPath = Path.Combine("wwwroot", "raytha_default_2026", "assets");
             if (!Directory.Exists(defaultThemeAssetsPath))
                 throw new DirectoryNotFoundException(
                     $"Path '{defaultThemeAssetsPath}' does not exist."
@@ -202,6 +202,9 @@ public class CreateTheme
                     "favicon.ico",
                     "bootstrap.min.css",
                     "bootstrap.bundle.min.js",
+                    "bootstrap-icons.min.css",
+                    "bootstrap-icons.woff2",
+                    "bootstrap-icons.woff",
                 };
 
                 foreach (var fileName in baseLayoutFileNames)

@@ -81,7 +81,7 @@ public class InitialSetup
         private const string FEATURED_IMAGE_FIELD_LABEL = "Featured Image";
         private const string FEATURED_IMAGE_FIELD_DEVELOPER_NAME = "featured_image";
 
-        private const string DEFAULT_THEME_DEVELOPER_NAME = "raytha_default_2024";
+        private const string DEFAULT_THEME_DEVELOPER_NAME = "raytha_default_2026";
 
         Guid postTypeGuid = Guid.NewGuid();
         Guid postsTitleFieldGuid = Guid.NewGuid();
@@ -365,6 +365,9 @@ public class InitialSetup
                 "favicon.ico",
                 "bootstrap.min.css",
                 "bootstrap.bundle.min.js",
+                "bootstrap-icons.min.css",
+                "bootstrap-icons.woff2",
+                "bootstrap-icons.woff",
             };
 
             var list = new List<WebTemplate>();
