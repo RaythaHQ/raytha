@@ -1,0 +1,115 @@
+<!--
+category: Design & Templates
+title: Web Templates
+description: Customize page layouts using Liquid templates
+sortOrder: 2
+icon: bi-code-slash
+-->
+
+<h1>Web Templates</h1>
+<p class="lead">Web templates control how your content is displayed on the public website. Use the Liquid templating language to create dynamic layouts.</p>
+
+<h2>What is a Web Template?</h2>
+<p>Web templates are HTML files with Liquid code that:</p>
+<ul>
+  <li>Define page layouts and structure</li>
+  <li>Display content from content items</li>
+  <li>Include navigation, headers, and footers</li>
+  <li>Handle lists and detail pages</li>
+</ul>
+
+<h2>Accessing Web Templates</h2>
+<ol>
+  <li>Go to <strong>Design</strong> &gt; <strong>Themes</strong></li>
+  <li>Click on your active theme</li>
+  <li>Click <strong>Web Templates</strong></li>
+</ol>
+
+<img src="../../images/web-templates-list.png" alt="Web Templates List" class="img-fluid my-3 border rounded">
+
+<h2>Template Types</h2>
+
+<h3>Base Layouts</h3>
+<p>Parent templates that define the overall page structure (header, footer, navigation). Other templates inherit from these.</p>
+
+<h3>Page Templates</h3>
+<p>Templates for specific page types:</p>
+<ul>
+  <li><strong>Content Item Detail</strong>: Displays a single content item</li>
+  <li><strong>Content Item List</strong>: Displays a view/list of items</li>
+  <li><strong>Home Page</strong>: Landing page template</li>
+  <li><strong>Error Pages</strong>: 404, 403, 500 error pages</li>
+  <li><strong>Site Page Templates</strong>: Templates for Site Pages with widget zones</li>
+</ul>
+
+<h3>Login Templates</h3>
+<p>Templates for authentication pages: login, registration, password reset.</p>
+
+<h2>Editing a Template</h2>
+<ol>
+  <li>Click on a template to open the editor</li>
+  <li>Modify the HTML and Liquid code</li>
+  <li>Click <strong>Save</strong></li>
+</ol>
+
+<img src="https://placehold.co/800x500?text=Template+Editor" alt="Template Editor" class="img-fluid my-3 border rounded">
+
+<h2>Template Inheritance</h2>
+<p>Templates can inherit from a parent template using:</p>
+
+<pre><code>{% layout "raytha_html_base_layout" %}</code></pre>
+
+<p>The parent template uses <code>{{ content_for_layout }}</code> to render child content.</p>
+
+<h2>Basic Liquid Syntax</h2>
+
+<h3>Output Variables</h3>
+<pre><code>{{ Target.Title }}
+{{ Target.PublishedContent.description }}</code></pre>
+
+<h3>Conditionals</h3>
+<pre><code>{% if Target.IsPublished %}
+  &lt;span class="badge bg-success"&gt;Published&lt;/span&gt;
+{% endif %}</code></pre>
+
+<h3>Loops</h3>
+<pre><code>{% for item in Target.Items %}
+  &lt;h2&gt;{{ item.PrimaryField }}&lt;/h2&gt;
+{% endfor %}</code></pre>
+
+<h2>Assigning Templates to Content</h2>
+<p>Templates must be assigned to content types or views:</p>
+<ol>
+  <li>Go to the template's settings</li>
+  <li>Under <strong>Access</strong>, select which content types can use this template</li>
+  <li>Enable <strong>Allow for new content types</strong> to automatically include future types</li>
+</ol>
+
+<img src="../../images/web-template-editor.png" alt="Template Access Settings" class="img-fluid my-3 border rounded">
+
+<h2>Revisions</h2>
+<p>Each time you save a template, a revision is created. To restore a previous version:</p>
+<ol>
+  <li>Open the template</li>
+  <li>Click <strong>Revisions</strong></li>
+  <li>Select a version and click <strong>Restore</strong></li>
+</ol>
+
+<h2>Creating a Template</h2>
+<ol>
+  <li>Click <strong>Create Template</strong></li>
+  <li>Enter:
+    <ul>
+      <li><strong>Label</strong>: Display name</li>
+      <li><strong>Developer Name</strong>: Unique identifier</li>
+      <li><strong>Parent Template</strong>: Template to inherit from</li>
+    </ul>
+  </li>
+  <li>Add your HTML and Liquid code</li>
+  <li>Click <strong>Create</strong></li>
+</ol>
+
+<div class="alert alert-info">
+  <strong>Tip:</strong> See the Developer Guide for detailed Liquid template documentation and available variables.
+</div>
+

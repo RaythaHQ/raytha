@@ -1,0 +1,124 @@
+<!--
+category: Settings
+title: Authentication Schemes
+description: Enable login methods including email/password, magic link, SAML, and JWT
+sortOrder: 3
+icon: bi-key
+-->
+
+<h1>Authentication Schemes</h1>
+<p class="lead">Configure how administrators and public users log in to your website. Enable multiple authentication methods including passwords, magic links, SAML, and JWT.</p>
+
+<h2>Accessing Authentication Schemes</h2>
+<p>Navigate to <strong>Settings</strong> &gt; <strong>Authentication Schemes</strong>.</p>
+
+<img src="https://placehold.co/800x400?text=Authentication+Schemes+List" alt="Authentication Schemes List" class="img-fluid my-3 border rounded">
+
+<h2>Built-in Schemes</h2>
+
+<h3>Email and Password</h3>
+<p>Traditional username/password authentication.</p>
+<ul>
+  <li><strong>For Admins</strong>: Enable/disable admin login with email and password</li>
+  <li><strong>For Users</strong>: Enable/disable public user login</li>
+  <li><strong>Brute Force Protection</strong>: Lock accounts after failed attempts</li>
+</ul>
+
+<h3>Magic Link</h3>
+<p>Passwordless login via email link.</p>
+<ul>
+  <li>User requests login link via email</li>
+  <li>Link expires after configured time (default: 15 minutes)</li>
+  <li>No password required</li>
+</ul>
+
+<img src="https://placehold.co/800x400?text=Authentication+Scheme+Settings" alt="Scheme Settings" class="img-fluid my-3 border rounded">
+
+<h2>Editing a Scheme</h2>
+<ol>
+  <li>Click on the authentication scheme</li>
+  <li>Configure settings:
+    <ul>
+      <li><strong>Enabled for Admins</strong>: Allow admin panel login</li>
+      <li><strong>Enabled for Users</strong>: Allow public user login</li>
+      <li><strong>Login Button Text</strong>: Text shown on login page</li>
+    </ul>
+  </li>
+  <li>Click <strong>Save</strong></li>
+</ol>
+
+<h2>Brute Force Protection</h2>
+<p>Protect against password guessing attacks:</p>
+
+<table class="table">
+  <tbody>
+    <tr>
+      <td><strong>Max Failed Attempts</strong></td>
+      <td>Number of attempts before lockout (default: 10)</td>
+    </tr>
+    <tr>
+      <td><strong>Window (Seconds)</strong></td>
+      <td>Time period for counting attempts (default: 60)</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>After exceeding attempts, users must wait for the window to reset.</p>
+
+<h2>Creating Custom Schemes</h2>
+<p>Add external authentication providers:</p>
+
+<ol>
+  <li>Click <strong>Create Authentication Scheme</strong></li>
+  <li>Select the type:
+    <ul>
+      <li><strong>SAML</strong>: Enterprise single sign-on</li>
+      <li><strong>JWT</strong>: Token-based authentication</li>
+    </ul>
+  </li>
+  <li>Configure provider-specific settings</li>
+  <li>Click <strong>Create</strong></li>
+</ol>
+
+<img src="https://placehold.co/800x450?text=Create+Authentication+Scheme" alt="Create Scheme" class="img-fluid my-3 border rounded">
+
+<h2>SAML Configuration</h2>
+<p>For enterprise identity providers (Okta, Azure AD, etc.):</p>
+<ul>
+  <li><strong>IdP Entity ID</strong>: Identity provider identifier</li>
+  <li><strong>Sign-In URL</strong>: SSO login endpoint</li>
+  <li><strong>Sign-Out URL</strong>: SSO logout endpoint</li>
+  <li><strong>Certificate</strong>: X.509 certificate from IdP</li>
+</ul>
+
+<div class="alert alert-info">
+  <strong>Tip:</strong> See the Developer Guide for detailed SAML configuration instructions.
+</div>
+
+<h2>JWT Configuration</h2>
+<p>For custom token-based authentication:</p>
+<ul>
+  <li><strong>Secret Key</strong>: Key for validating JWT signatures</li>
+  <li><strong>High Security Mode</strong>: Additional validation requirements</li>
+</ul>
+
+<div class="alert alert-info">
+  <strong>Tip:</strong> See the Developer Guide for detailed JWT configuration instructions.
+</div>
+
+<h2>Login Page</h2>
+<p>The login page automatically displays buttons for all enabled authentication schemes.</p>
+
+<img src="../../images/authentication-schemes-list.png" alt="Login Page" class="img-fluid my-3 border rounded">
+
+<h2>Deleting a Scheme</h2>
+<ol>
+  <li>Open the authentication scheme</li>
+  <li>Click <strong>Delete</strong></li>
+  <li>Confirm deletion</li>
+</ol>
+
+<div class="alert alert-warning">
+  <strong>Warning:</strong> Users who only have this authentication method will lose access. Built-in schemes cannot be deleted.
+</div>
+

@@ -1,0 +1,124 @@
+<!--
+category: Users & Permissions
+title: Public Users
+description: Manage front-end user accounts and user groups
+sortOrder: 3
+icon: bi-people
+-->
+
+<h1>Public Users</h1>
+<p class="lead">Manage user accounts for your public website. Create user groups and control access to protected content.</p>
+
+<h2>What are Public Users?</h2>
+<p>Public users are separate from administrators. They:</p>
+<ul>
+  <li>Can register on your public website</li>
+  <li>Log in to access protected content</li>
+  <li>Have profiles managed through the admin panel</li>
+  <li>Cannot access the admin panel</li>
+</ul>
+
+<h2>Accessing Users</h2>
+<p>Navigate to <strong>Users</strong> in the left sidebar.</p>
+
+<img src="../../images/users-list.png" alt="Users List" class="img-fluid my-3 border rounded">
+
+<h2>Creating a User</h2>
+<ol>
+  <li>Click <strong>Create User</strong></li>
+  <li>Enter:
+    <ul>
+      <li><strong>First Name</strong> and <strong>Last Name</strong></li>
+      <li><strong>Email Address</strong></li>
+      <li><strong>User Groups</strong>: Optional group membership</li>
+    </ul>
+  </li>
+  <li>Click <strong>Create</strong></li>
+</ol>
+
+<p>The user receives a welcome email to set their password.</p>
+
+<img src="../../images/create-user-form.png" alt="Create User Form" class="img-fluid my-3 border rounded">
+
+<h2>User Registration</h2>
+<p>If enabled, users can self-register on your website. Configure registration in <strong>Settings</strong> &gt; <strong>Authentication Schemes</strong>.</p>
+
+<h2>Editing a User</h2>
+<ol>
+  <li>Click on the user's name</li>
+  <li>Modify their details or groups</li>
+  <li>Click <strong>Save</strong></li>
+</ol>
+
+<h2>User Status</h2>
+<ul>
+  <li><strong>Active</strong>: Can log in normally</li>
+  <li><strong>Inactive</strong>: Cannot log in</li>
+  <li><strong>Email Verified</strong>: Has confirmed their email address</li>
+</ul>
+
+<h2>Resetting User Password</h2>
+<ol>
+  <li>Open the user's profile</li>
+  <li>Click <strong>Reset Password</strong></li>
+  <li>They'll receive an email to set a new password</li>
+</ol>
+
+<h2>User Groups</h2>
+<p>Organize users into groups for easier management and access control.</p>
+
+<h3>Creating a User Group</h3>
+<ol>
+  <li>Go to <strong>Users</strong> &gt; <strong>User Groups</strong></li>
+  <li>Click <strong>Create User Group</strong></li>
+  <li>Enter:
+    <ul>
+      <li><strong>Label</strong>: Display name</li>
+      <li><strong>Developer Name</strong>: Identifier for templates</li>
+    </ul>
+  </li>
+  <li>Click <strong>Create</strong></li>
+</ol>
+
+<img src="../../images/user-groups-list.png" alt="User Groups" class="img-fluid my-3 border rounded">
+
+<h3>Assigning Users to Groups</h3>
+<ol>
+  <li>Edit the user</li>
+  <li>Select groups from the <strong>User Groups</strong> list</li>
+  <li>Click <strong>Save</strong></li>
+</ol>
+
+<h2>Using Groups in Templates</h2>
+<p>Check group membership in your Liquid templates:</p>
+
+<pre><code>{% if CurrentUser.IsAuthenticated %}
+  {% if CurrentUser.UserGroups contains 'premium_members' %}
+    &lt;!-- Premium content --&gt;
+  {% endif %}
+{% endif %}</code></pre>
+
+<h2>Deactivating a User</h2>
+<ol>
+  <li>Open the user's profile</li>
+  <li>Click <strong>Deactivate</strong></li>
+</ol>
+
+<p>Deactivated users cannot log in. Click <strong>Activate</strong> to restore access.</p>
+
+<h2>Deleting a User</h2>
+<ol>
+  <li>Open the user's profile</li>
+  <li>Click <strong>Delete</strong></li>
+  <li>Confirm deletion</li>
+</ol>
+
+<div class="alert alert-warning">
+  <strong>Warning:</strong> Deleting a user is permanent and removes all their data.
+</div>
+
+<h2>Searching Users</h2>
+<p>Use the search box to find users by name or email. Filter by status or user group.</p>
+
+<img src="https://placehold.co/800x300?text=User+Search+and+Filter" alt="User Search" class="img-fluid my-3 border rounded">
+

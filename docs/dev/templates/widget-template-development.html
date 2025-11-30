@@ -1,0 +1,249 @@
+<!--
+category: Templates
+title: Widget Template Development
+description: Create custom widget templates with Liquid
+sortOrder: 3
+icon: bi-puzzle-fill
+-->
+
+<h1>Widget Template Development</h1>
+<p class="lead">Learn how to create and customize widget templates for Site Pages using Liquid.</p>
+
+<h2>How Widget Templates Work</h2>
+<p>When a widget is added to a Site Page:</p>
+<ol>
+  <li>The user configures widget settings (headline, colors, content, etc.)</li>
+  <li>Settings are stored as JSON in the database</li>
+  <li>When the page renders, settings are passed to the widget template as <code>Target</code></li>
+  <li>The Liquid template outputs HTML based on those settings</li>
+</ol>
+
+<img src="https://placehold.co/800x300?text=Widget+Template+Flow+Diagram" alt="Widget Template Flow" class="img-fluid my-3 border rounded">
+
+<h2>Accessing Widget Settings</h2>
+<p>All settings configured by the user are available via the <code>Target</code> object:</p>
+
+<pre><code>{{ Target.headline }}
+{{ Target.buttonText }}
+{{ Target.backgroundColor }}</code></pre>
+
+<h2>Template Structure Best Practices</h2>
+
+<h3>1. Check for Blank Values</h3>
+<pre><code>{% if Target.headline != blank %}
+  &lt;h2&gt;{{ Target.headline }}&lt;/h2&gt;
+{% endif %}</code></pre>
+
+<h3>2. Provide Default Values</h3>
+<pre><code>&lt;section style="background-color: {{ Target.backgroundColor | default: '#ffffff' }};"&gt;
+  ...
+&lt;/section&gt;</code></pre>
+
+<h3>3. Escape User Content</h3>
+<pre><code>&lt;h1&gt;{{ Target.headline | escape }}&lt;/h1&gt;</code></pre>
+
+<h3>4. Use Semantic HTML</h3>
+<pre><code>&lt;article class="card"&gt;
+  &lt;header&gt;
+    &lt;h3&gt;{{ Target.title }}&lt;/h3&gt;
+  &lt;/header&gt;
+  &lt;div class="card-body"&gt;
+    {{ Target.description }}
+  &lt;/div&gt;
+&lt;/article&gt;</code></pre>
+
+<h2>Complete Hero Widget Example</h2>
+
+<pre><code>&lt;section class="hero-widget" style="
+  background-color: {{ Target.backgroundColor | default: '#0d6efd' }};
+  color: {{ Target.textColor | default: '#ffffff' }};
+  min-height: {{ Target.minHeight | default: 400 }}px;
+  {% if Target.backgroundImage != blank %}
+  background-image: url('{{ Target.backgroundImage }}');
+  background-size: cover;
+  background-position: center;
+  {% endif %}
+"&gt;
+  &lt;div class="container py-5"&gt;
+    &lt;div class="row justify-content-center"&gt;
+      &lt;div class="col-lg-8 text-{{ Target.alignment | default: 'center' }}"&gt;
+        
+        {% if Target.headline != blank %}
+          &lt;h1 class="display-4 fw-bold mb-3"&gt;
+            {{ Target.headline | escape }}
+          &lt;/h1&gt;
+        {% endif %}
+        
+        {% if Target.subheadline != blank %}
+          &lt;p class="lead mb-4"&gt;
+            {{ Target.subheadline | escape }}
+          &lt;/p&gt;
+        {% endif %}
+        
+        {% if Target.buttonText != blank %}
+          &lt;a href="{{ Target.buttonUrl | default: '#' }}" 
+             class="btn btn-{{ Target.buttonStyle | default: 'light' }} btn-lg"
+             {% if Target.buttonOpenNewTab %}target="_blank" rel="noopener"{% endif %}&gt;
+            {{ Target.buttonText | escape }}
+          &lt;/a&gt;
+        {% endif %}
+        
+      &lt;/div&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+&lt;/section&gt;</code></pre>
+
+<h2>Content List Widget Example</h2>
+<p>The Content List widget includes fetched content items:</p>
+
+<pre><code>&lt;section class="content-list-widget py-5"&gt;
+  &lt;div class="container"&gt;
+    
+    {% if Target.headline != blank %}
+      &lt;div class="text-center mb-5"&gt;
+        &lt;h2 class="display-6 fw-bold"&gt;{{ Target.headline | escape }}&lt;/h2&gt;
+        {% if Target.subheadline != blank %}
+          &lt;p class="lead text-muted"&gt;{{ Target.subheadline | escape }}&lt;/p&gt;
+        {% endif %}
+      &lt;/div&gt;
+    {% endif %}
+    
+    {% if Target.items.size &gt; 0 %}
+      {% if Target.displayStyle == 'cards' %}
+        &lt;div class="row g-4"&gt;
+          {% for item in Target.items %}
+            &lt;div class="col-md-6 col-lg-4"&gt;
+              &lt;article class="card h-100 shadow-sm"&gt;
+                
+                {% if Target.showImage and item.PublishedContent.featured_image != blank %}
+                  &lt;img src="{{ item.PublishedContent.featured_image | raytha_attachment_url }}" 
+                       class="card-img-top" 
+                       alt="{{ item.PrimaryField | escape }}"&gt;
+                {% endif %}
+                
+                &lt;div class="card-body"&gt;
+                  &lt;h5 class="card-title"&gt;
+                    &lt;a href="/{{ item.RoutePath }}" class="text-decoration-none stretched-link"&gt;
+                      {{ item.PrimaryField | escape }}
+                    &lt;/a&gt;
+                  &lt;/h5&gt;
+                  
+                  {% if Target.showDate %}
+                    &lt;p class="text-muted small mb-2"&gt;
+                      {{ item.CreationTime | date: "%B %d, %Y" }}
+                    &lt;/p&gt;
+                  {% endif %}
+                  
+                  {% if Target.showExcerpt and item.PublishedContent.content != blank %}
+                    &lt;p class="card-text"&gt;
+                      {{ item.PublishedContent.content | strip_html | truncate: 120 }}
+                    &lt;/p&gt;
+                  {% endif %}
+                &lt;/div&gt;
+                
+              &lt;/article&gt;
+            &lt;/div&gt;
+          {% endfor %}
+        &lt;/div&gt;
+      {% else %}
+        &lt;!-- Compact list style --&gt;
+        &lt;ul class="list-group"&gt;
+          {% for item in Target.items %}
+            &lt;li class="list-group-item d-flex justify-content-between align-items-center"&gt;
+              &lt;a href="/{{ item.RoutePath }}" class="text-decoration-none"&gt;
+                {{ item.PrimaryField | escape }}
+              &lt;/a&gt;
+              {% if Target.showDate %}
+                &lt;span class="text-muted small"&gt;
+                  {{ item.CreationTime | date: "%b %d, %Y" }}
+                &lt;/span&gt;
+              {% endif %}
+            &lt;/li&gt;
+          {% endfor %}
+        &lt;/ul&gt;
+      {% endif %}
+      
+      {% if Target.linkText != blank %}
+        &lt;div class="text-center mt-4"&gt;
+          &lt;a href="{{ Target.linkUrl | default: '#' }}" class="btn btn-primary"&gt;
+            {{ Target.linkText | escape }}
+          &lt;/a&gt;
+        &lt;/div&gt;
+      {% endif %}
+      
+    {% else %}
+      &lt;p class="text-center text-muted py-4"&gt;No items to display.&lt;/p&gt;
+    {% endif %}
+    
+  &lt;/div&gt;
+&lt;/section&gt;</code></pre>
+
+<h2>Dynamic CSS Classes</h2>
+<p>Build dynamic classes based on settings:</p>
+
+<pre><code>{% assign alignment_class = 'text-' | append: Target.alignment | default: 'text-center' %}
+{% assign padding_class = '' %}
+{% case Target.padding %}
+  {% when 'small' %}{% assign padding_class = 'py-2' %}
+  {% when 'medium' %}{% assign padding_class = 'py-4' %}
+  {% when 'large' %}{% assign padding_class = 'py-5' %}
+{% endcase %}
+
+&lt;div class="{{ alignment_class }} {{ padding_class }}"&gt;
+  {{ Target.content }}
+&lt;/div&gt;</code></pre>
+
+<h2>Handling Different Button Styles</h2>
+<pre><code>{% assign btn_class = 'btn' %}
+{% case Target.buttonStyle %}
+  {% when 'primary' %}
+    {% assign btn_class = btn_class | append: ' btn-primary' %}
+  {% when 'secondary' %}
+    {% assign btn_class = btn_class | append: ' btn-secondary' %}
+  {% when 'outline' %}
+    {% assign btn_class = btn_class | append: ' btn-outline-primary' %}
+  {% else %}
+    {% assign btn_class = btn_class | append: ' btn-light' %}
+{% endcase %}
+
+&lt;a href="{{ Target.buttonUrl }}" class="{{ btn_class }}"&gt;
+  {{ Target.buttonText }}
+&lt;/a&gt;</code></pre>
+
+<h2>Testing Widget Templates</h2>
+<ol>
+  <li>Create or edit a Site Page</li>
+  <li>Add a widget of the type you're developing</li>
+  <li>Fill in various setting combinations</li>
+  <li>Preview the page to see the rendered output</li>
+  <li>Test edge cases: empty values, very long text, special characters</li>
+</ol>
+
+<h2>Common Pitfalls</h2>
+
+<h3>Not handling empty values</h3>
+<pre><code>// Bad - renders empty tags
+&lt;h1&gt;{{ Target.headline }}&lt;/h1&gt;
+
+// Good - conditional rendering
+{% if Target.headline != blank %}
+  &lt;h1&gt;{{ Target.headline }}&lt;/h1&gt;
+{% endif %}</code></pre>
+
+<h3>Forgetting to escape user content</h3>
+<pre><code>// Bad - XSS vulnerability
+&lt;h1&gt;{{ Target.headline }}&lt;/h1&gt;
+
+// Good - escaped
+&lt;h1&gt;{{ Target.headline | escape }}&lt;/h1&gt;</code></pre>
+
+<h3>Hardcoded values instead of settings</h3>
+<pre><code>// Bad - not customizable
+&lt;section style="background-color: #0d6efd;"&gt;
+
+// Good - uses setting with fallback
+&lt;section style="background-color: {{ Target.backgroundColor | default: '#0d6efd' }};"&gt;</code></pre>
+
+<h2>Revisions</h2>
+<p>Widget template changes are tracked. Use the Revisions feature in the admin to roll back if needed.</p>
+

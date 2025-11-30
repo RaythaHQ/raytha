@@ -1,0 +1,156 @@
+<!--
+category: Design & Templates
+title: Widget Templates
+description: Customize how widgets render on Site Pages
+sortOrder: 4
+icon: bi-puzzle
+-->
+
+<h1>Widget Templates</h1>
+<p class="lead">Widget templates control how individual widgets are rendered on Site Pages. Customize the HTML output for Hero, Card, CTA, and other widget types.</p>
+
+<h2>What are Widget Templates?</h2>
+<p>When you add a widget to a Site Page, the widget template determines how it's displayed. Each widget type has its own template that you can customize.</p>
+
+<h2>Accessing Widget Templates</h2>
+<ol>
+  <li>Go to <strong>Design</strong> &gt; <strong>Themes</strong></li>
+  <li>Click on your active theme</li>
+  <li>Click <strong>Widget Templates</strong></li>
+</ol>
+
+<img src="../../images/widget-templates-list.png" alt="Widget Templates List" class="img-fluid my-3 border rounded">
+
+<h2>Built-in Widget Types</h2>
+
+<table class="table">
+  <thead>
+    <tr>
+      <th>Widget</th>
+      <th>Developer Name</th>
+      <th>Purpose</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>Hero</strong></td>
+      <td><code>hero</code></td>
+      <td>Large banner sections with headline and CTA</td>
+    </tr>
+    <tr>
+      <td><strong>WYSIWYG</strong></td>
+      <td><code>wysiwyg</code></td>
+      <td>Rich text content blocks</td>
+    </tr>
+    <tr>
+      <td><strong>Card</strong></td>
+      <td><code>card</code></td>
+      <td>Bordered content cards with image and button</td>
+    </tr>
+    <tr>
+      <td><strong>CTA</strong></td>
+      <td><code>cta</code></td>
+      <td>Call-to-action sections</td>
+    </tr>
+    <tr>
+      <td><strong>Content List</strong></td>
+      <td><code>content_list</code></td>
+      <td>Dynamic lists of content items</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>Editing a Widget Template</h2>
+<ol>
+  <li>Click on a widget template</li>
+  <li>Modify the Liquid code in the editor</li>
+  <li>Click <strong>Save</strong></li>
+</ol>
+
+<img src="https://placehold.co/800x500?text=Widget+Template+Editor" alt="Widget Template Editor" class="img-fluid my-3 border rounded">
+
+<h2>Accessing Widget Settings</h2>
+<p>Widget settings are available through the <code>Target</code> object:</p>
+
+<pre><code>{{ Target.headline }}
+{{ Target.content }}
+{{ Target.buttonText }}
+{{ Target.backgroundColor }}</code></pre>
+
+<h2>Example: Hero Widget</h2>
+<pre><code>&lt;section style="background-color: {{ Target.backgroundColor | default: '#0d6efd' }}; 
+                color: {{ Target.textColor | default: '#ffffff' }}; 
+                min-height: {{ Target.minHeight | default: 400 }}px;"&gt;
+  &lt;div class="container py-5 text-{{ Target.alignment | default: 'center' }}"&gt;
+    {% if Target.headline != blank %}
+      &lt;h1 class="display-4 fw-bold"&gt;{{ Target.headline }}&lt;/h1&gt;
+    {% endif %}
+    
+    {% if Target.subheadline != blank %}
+      &lt;p class="lead"&gt;{{ Target.subheadline }}&lt;/p&gt;
+    {% endif %}
+    
+    {% if Target.buttonText != blank %}
+      &lt;a href="{{ Target.buttonUrl }}" class="btn btn-{{ Target.buttonStyle }}"&gt;
+        {{ Target.buttonText }}
+      &lt;/a&gt;
+    {% endif %}
+  &lt;/div&gt;
+&lt;/section&gt;</code></pre>
+
+<h2>Example: Content List Widget</h2>
+<p>The Content List widget includes a <code>Target.items</code> array:</p>
+
+<pre><code>&lt;div class="row"&gt;
+  {% for item in Target.items %}
+    &lt;div class="col-md-4"&gt;
+      &lt;div class="card"&gt;
+        &lt;div class="card-body"&gt;
+          &lt;h5&gt;{{ item.PrimaryField }}&lt;/h5&gt;
+          &lt;p&gt;{{ item.PublishedContent.content | strip_html | truncate: 100 }}&lt;/p&gt;
+          &lt;a href="/{{ item.RoutePath }}"&gt;Read more&lt;/a&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+  {% endfor %}
+&lt;/div&gt;</code></pre>
+
+<h2>Common Settings by Widget</h2>
+
+<h3>Hero</h3>
+<ul>
+  <li><code>Target.headline</code>, <code>Target.subheadline</code></li>
+  <li><code>Target.backgroundColor</code>, <code>Target.textColor</code></li>
+  <li><code>Target.buttonText</code>, <code>Target.buttonUrl</code>, <code>Target.buttonStyle</code></li>
+  <li><code>Target.alignment</code>, <code>Target.minHeight</code></li>
+</ul>
+
+<h3>Card</h3>
+<ul>
+  <li><code>Target.title</code>, <code>Target.description</code></li>
+  <li><code>Target.imageUrl</code></li>
+  <li><code>Target.buttonText</code>, <code>Target.buttonUrl</code></li>
+</ul>
+
+<h3>Content List</h3>
+<ul>
+  <li><code>Target.headline</code>, <code>Target.subheadline</code></li>
+  <li><code>Target.contentType</code>, <code>Target.pageSize</code></li>
+  <li><code>Target.items</code> (array of content items)</li>
+</ul>
+
+<h2>Best Practices</h2>
+<ul>
+  <li>Use the <code>default</code> filter for fallback values</li>
+  <li>Check for blank values before rendering: <code>{% if Target.headline != blank %}</code></li>
+  <li>Escape user content: <code>{{ Target.title | escape }}</code></li>
+  <li>Test widgets with various content lengths</li>
+</ul>
+
+<h2>Revisions</h2>
+<p>Widget templates support revisions. Click <strong>Revisions</strong> to view or restore previous versions.</p>
+
+<div class="alert alert-info">
+  <strong>Tip:</strong> See the Developer Guide for a complete reference of widget template variables and advanced techniques.
+</div>
+

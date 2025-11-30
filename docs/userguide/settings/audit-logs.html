@@ -1,0 +1,119 @@
+<!--
+category: Settings
+title: Audit Logs
+description: View activity logs and track changes made in the admin panel
+sortOrder: 4
+icon: bi-journal-text
+-->
+
+<h1>Audit Logs</h1>
+<p class="lead">Track all administrative activity in your Raytha installation. Monitor who did what and when for security and troubleshooting.</p>
+
+<h2>Accessing Audit Logs</h2>
+<p>Navigate to <strong>Settings</strong> &gt; <strong>Audit Logs</strong>.</p>
+
+<img src="../../images/audit-logs-list.png" alt="Audit Logs List" class="img-fluid my-3 border rounded">
+
+<h2>What's Logged</h2>
+<p>Audit logs capture administrative actions including:</p>
+
+<ul>
+  <li><strong>Content</strong>: Creating, editing, publishing, deleting content items</li>
+  <li><strong>Users</strong>: Creating, modifying, deleting users and admins</li>
+  <li><strong>Settings</strong>: Configuration changes</li>
+  <li><strong>Templates</strong>: Template modifications</li>
+  <li><strong>Authentication</strong>: Login attempts and password resets</li>
+  <li><strong>Site Pages</strong>: Page creation and widget changes</li>
+</ul>
+
+<h2>Log Entry Details</h2>
+<p>Each log entry includes:</p>
+
+<table class="table">
+  <tbody>
+    <tr>
+      <td><strong>Timestamp</strong></td>
+      <td>When the action occurred</td>
+    </tr>
+    <tr>
+      <td><strong>User Email</strong></td>
+      <td>Who performed the action</td>
+    </tr>
+    <tr>
+      <td><strong>Category</strong></td>
+      <td>Type of action (e.g., ContentItems, Users)</td>
+    </tr>
+    <tr>
+      <td><strong>IP Address</strong></td>
+      <td>Origin of the request</td>
+    </tr>
+    <tr>
+      <td><strong>Request Details</strong></td>
+      <td>Specific action and parameters</td>
+    </tr>
+  </tbody>
+</table>
+
+<img src="../../images/audit-log-entry-detail.png" alt="Log Entry Detail" class="img-fluid my-3 border rounded">
+
+<h2>Filtering Logs</h2>
+<p>Use filters to find specific activity:</p>
+
+<h3>By Category</h3>
+<p>Filter by action type:</p>
+<ul>
+  <li>ContentItems</li>
+  <li>ContentTypes</li>
+  <li>Users</li>
+  <li>Administrators</li>
+  <li>Templates</li>
+  <li>Settings</li>
+  <li>SitePages</li>
+</ul>
+
+<h3>By Date Range</h3>
+<p>Select start and end dates to narrow results.</p>
+
+<h3>By User</h3>
+<p>Search by user email to see a specific admin's activity.</p>
+
+<img src="../../images/audit-log-filters.png" alt="Log Filters" class="img-fluid my-3 border rounded">
+
+<h2>Viewing Request Details</h2>
+<p>Click on any log entry to see the full request payload, including:</p>
+<ul>
+  <li>Action performed</li>
+  <li>Entity ID affected</li>
+  <li>Before/after values (for updates)</li>
+  <li>Request parameters</li>
+</ul>
+
+<h2>Use Cases</h2>
+
+<h3>Security Monitoring</h3>
+<ul>
+  <li>Track failed login attempts</li>
+  <li>Monitor admin account changes</li>
+  <li>Identify suspicious activity patterns</li>
+</ul>
+
+<h3>Troubleshooting</h3>
+<ul>
+  <li>Find who made a specific change</li>
+  <li>Determine when content was modified</li>
+  <li>Debug configuration issues</li>
+</ul>
+
+<h3>Compliance</h3>
+<ul>
+  <li>Maintain activity records</li>
+  <li>Demonstrate access controls</li>
+  <li>Support audit requirements</li>
+</ul>
+
+<h2>Retention</h2>
+<p>Audit logs are retained indefinitely by default. For high-volume sites, consider implementing log archival through database maintenance.</p>
+
+<h2>Permissions</h2>
+<p>Only administrators with the <strong>Manage Audit Logs</strong> permission can view audit logs.</p>
+

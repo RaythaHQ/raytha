@@ -1,0 +1,217 @@
+<!--
+category: Deployment
+title: Environment Variables
+description: Configure Raytha using environment variables
+sortOrder: 2
+icon: bi-sliders
+-->
+
+<h1>Environment Variables</h1>
+<p class="lead">Configure Raytha's database, storage, email, and other settings using environment variables.</p>
+
+<h2>Setting Environment Variables</h2>
+<p>Environment variables can be set in multiple ways:</p>
+<ul>
+  <li>Docker: <code>-e VARIABLE=value</code> or in docker-compose.yml</li>
+  <li>Linux: <code>export VARIABLE=value</code> or in <code>/etc/environment</code></li>
+  <li>Windows: System Properties or PowerShell</li>
+  <li>Azure/AWS: App settings or Secrets Manager</li>
+</ul>
+
+<h2>Required Variables</h2>
+
+<table class="table">
+  <thead>
+    <tr>
+      <th>Variable</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>RAYTHA_DATABASE_PROVIDER</code></td>
+      <td><code>SqlServer</code> or <code>Postgres</code></td>
+    </tr>
+    <tr>
+      <td><code>RAYTHA_CONNECTION_STRING</code></td>
+      <td>Database connection string</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>Database Configuration</h2>
+
+<h3>PostgreSQL</h3>
+<pre><code>RAYTHA_DATABASE_PROVIDER=Postgres
+RAYTHA_CONNECTION_STRING=Host=localhost;Database=raytha;Username=postgres;Password=secret</code></pre>
+
+<h3>SQL Server</h3>
+<pre><code>RAYTHA_DATABASE_PROVIDER=SqlServer
+RAYTHA_CONNECTION_STRING=Server=localhost;Database=raytha;User Id=sa;Password=secret;TrustServerCertificate=True</code></pre>
+
+<h2>File Storage</h2>
+
+<table class="table">
+  <thead>
+    <tr>
+      <th>Variable</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>RAYTHA_FILE_STORAGE_PROVIDER</code></td>
+      <td><code>Local</code>, <code>AzureBlob</code>, or <code>S3</code></td>
+    </tr>
+  </tbody>
+</table>
+
+<h3>Local Storage</h3>
+<pre><code>RAYTHA_FILE_STORAGE_PROVIDER=Local</code></pre>
+<p>Files are stored in <code>wwwroot/uploads</code>.</p>
+
+<h3>Azure Blob Storage</h3>
+<pre><code>RAYTHA_FILE_STORAGE_PROVIDER=AzureBlob
+RAYTHA_AZURE_BLOB_CONNECTION_STRING=DefaultEndpointsProtocol=https;AccountName=myaccount;AccountKey=...
+RAYTHA_AZURE_BLOB_CONTAINER=raytha-media
+RAYTHA_AZURE_BLOB_CUSTOM_DOMAIN=https://cdn.example.com  # Optional CDN</code></pre>
+
+<h3>Amazon S3</h3>
+<pre><code>RAYTHA_FILE_STORAGE_PROVIDER=S3
+RAYTHA_S3_ACCESS_KEY=AKIAIOSFODNN7EXAMPLE
+RAYTHA_S3_SECRET_KEY=wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
+RAYTHA_S3_BUCKET=raytha-media
+RAYTHA_S3_REGION=us-east-1
+RAYTHA_S3_USE_CDN=false  # Set true if using CloudFront
+RAYTHA_S3_CDN_URL=https://d123.cloudfront.net  # If using CDN</code></pre>
+
+<h2>Email (SMTP)</h2>
+
+<table class="table">
+  <thead>
+    <tr>
+      <th>Variable</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>RAYTHA_SMTP_HOST</code></td>
+      <td>SMTP server address</td>
+    </tr>
+    <tr>
+      <td><code>RAYTHA_SMTP_PORT</code></td>
+      <td>SMTP port (usually 587)</td>
+    </tr>
+    <tr>
+      <td><code>RAYTHA_SMTP_USERNAME</code></td>
+      <td>SMTP authentication username</td>
+    </tr>
+    <tr>
+      <td><code>RAYTHA_SMTP_PASSWORD</code></td>
+      <td>SMTP authentication password</td>
+    </tr>
+    <tr>
+      <td><code>RAYTHA_SMTP_DEFAULT_FROM_ADDRESS</code></td>
+      <td>Sender email address</td>
+    </tr>
+    <tr>
+      <td><code>RAYTHA_SMTP_DEFAULT_FROM_NAME</code></td>
+      <td>Sender display name</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3>Example</h3>
+<pre><code>RAYTHA_SMTP_HOST=smtp.sendgrid.net
+RAYTHA_SMTP_PORT=587
+RAYTHA_SMTP_USERNAME=apikey
+RAYTHA_SMTP_PASSWORD=SG.xxxx
+RAYTHA_SMTP_DEFAULT_FROM_ADDRESS=noreply@example.com
+RAYTHA_SMTP_DEFAULT_FROM_NAME=My Website</code></pre>
+
+<h2>Application Settings</h2>
+
+<table class="table">
+  <thead>
+    <tr>
+      <th>Variable</th>
+      <th>Description</th>
+      <th>Default</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>ASPNETCORE_ENVIRONMENT</code></td>
+      <td>Environment name</td>
+      <td><code>Production</code></td>
+    </tr>
+    <tr>
+      <td><code>RAYTHA_PATHBASE</code></td>
+      <td>URL path prefix (for subdirectory hosting)</td>
+      <td><em>empty</em></td>
+    </tr>
+    <tr>
+      <td><code>ASPNETCORE_URLS</code></td>
+      <td>URLs to listen on</td>
+      <td><code>http://+:8080</code></td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>Security Variables</h2>
+
+<table class="table">
+  <thead>
+    <tr>
+      <th>Variable</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>RAYTHA_DATA_PROTECTION_KEYS_PATH</code></td>
+      <td>Path for encryption keys (for multi-instance deployments)</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>Example: Complete Production Configuration</h2>
+
+<pre><code># Database
+RAYTHA_DATABASE_PROVIDER=Postgres
+RAYTHA_CONNECTION_STRING=Host=db.example.com;Database=raytha;Username=raytha_user;Password=secret
+
+# Storage
+RAYTHA_FILE_STORAGE_PROVIDER=S3
+RAYTHA_S3_ACCESS_KEY=AKIAIOSFODNN7EXAMPLE
+RAYTHA_S3_SECRET_KEY=wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
+RAYTHA_S3_BUCKET=my-raytha-media
+RAYTHA_S3_REGION=us-east-1
+
+# Email
+RAYTHA_SMTP_HOST=smtp.sendgrid.net
+RAYTHA_SMTP_PORT=587
+RAYTHA_SMTP_USERNAME=apikey
+RAYTHA_SMTP_PASSWORD=SG.your_api_key
+RAYTHA_SMTP_DEFAULT_FROM_ADDRESS=noreply@example.com
+RAYTHA_SMTP_DEFAULT_FROM_NAME=My Website
+
+# Application
+ASPNETCORE_ENVIRONMENT=Production
+ASPNETCORE_URLS=http://+:8080</code></pre>
+
+<h2>Secrets Management</h2>
+<p>For sensitive values like passwords and API keys:</p>
+<ul>
+  <li><strong>Docker Secrets</strong>: Use Docker swarm secrets</li>
+  <li><strong>Azure Key Vault</strong>: Reference secrets from Key Vault</li>
+  <li><strong>AWS Secrets Manager</strong>: Use IAM roles and secrets</li>
+  <li><strong>HashiCorp Vault</strong>: External secrets management</li>
+</ul>
+
+<p>Avoid committing secrets to source control. Use <code>.env</code> files only for development.</p>
+
+<h2>Validation</h2>
+<p>Raytha validates required variables on startup. Missing or invalid configuration produces clear error messages in the logs.</p>
+

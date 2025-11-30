@@ -1,0 +1,185 @@
+<!--
+category: Deployment
+title: Docker Deployment
+description: Deploy Raytha using Docker and Docker Compose
+sortOrder: 1
+icon: bi-box-seam
+-->
+
+<h1>Docker Deployment</h1>
+<p class="lead">Deploy Raytha using Docker containers for consistent, reproducible deployments across any environment.</p>
+
+<h2>Prerequisites</h2>
+<ul>
+  <li>Docker Engine 20.10+</li>
+  <li>Docker Compose v2+</li>
+  <li>A database (SQL Server or PostgreSQL)</li>
+</ul>
+
+<h2>Docker Image</h2>
+<p>The official Raytha Docker image is available on Docker Hub:</p>
+
+<pre><code>docker pull raythahq/raytha:latest</code></pre>
+
+<h2>Quick Start with Docker Compose</h2>
+<p>Create a <code>docker-compose.yml</code> file:</p>
+
+<pre><code>version: '3.8'
+
+services:
+  raytha:
+    image: raythahq/raytha:latest
+    ports:
+      - "8080:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - RAYTHA_DATABASE_PROVIDER=Postgres
+      - RAYTHA_CONNECTION_STRING=Host=db;Database=raytha;Username=postgres;Password=yourpassword
+      - RAYTHA_PATHBASE=
+    depends_on:
+      - db
+
+  db:
+    image: postgres:15
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=yourpassword
+      - POSTGRES_DB=raytha
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:</code></pre>
+
+<p>Start the containers:</p>
+
+<pre><code>docker-compose up -d</code></pre>
+
+<p>Access Raytha at <code>http://localhost:8080</code> and complete the setup wizard.</p>
+
+<img src="https://placehold.co/800x400?text=Docker+Compose+Running" alt="Docker Compose" class="img-fluid my-3 border rounded">
+
+<h2>SQL Server Configuration</h2>
+<p>To use SQL Server instead of PostgreSQL:</p>
+
+<pre><code>version: '3.8'
+
+services:
+  raytha:
+    image: raythahq/raytha:latest
+    ports:
+      - "8080:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - RAYTHA_DATABASE_PROVIDER=SqlServer
+      - RAYTHA_CONNECTION_STRING=Server=db;Database=raytha;User Id=sa;Password=YourStrong@Password;TrustServerCertificate=True
+    depends_on:
+      - db
+
+  db:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    environment:
+      - ACCEPT_EULA=Y
+      - MSSQL_SA_PASSWORD=YourStrong@Password
+    volumes:
+      - mssql_data:/var/opt/mssql
+
+volumes:
+  mssql_data:</code></pre>
+
+<h2>Production Configuration</h2>
+<p>For production deployments, add these considerations:</p>
+
+<h3>Persistent Storage</h3>
+<p>Mount a volume for uploaded files (if using local storage):</p>
+
+<pre><code>services:
+  raytha:
+    volumes:
+      - raytha_files:/app/wwwroot/uploads</code></pre>
+
+<h3>HTTPS/TLS</h3>
+<p>Use a reverse proxy (nginx, Traefik, Caddy) for SSL termination:</p>
+
+<pre><code>services:
+  traefik:
+    image: traefik:v2.10
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./traefik.yml:/etc/traefik/traefik.yml
+      - ./certs:/certs
+
+  raytha:
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.raytha.rule=Host(`yourdomain.com`)"
+      - "traefik.http.routers.raytha.tls=true"</code></pre>
+
+<h3>External Database</h3>
+<p>For production, use a managed database service:</p>
+
+<pre><code>environment:
+  - RAYTHA_CONNECTION_STRING=Host=your-database.region.rds.amazonaws.com;Database=raytha;Username=admin;Password=secret</code></pre>
+
+<h2>Cloud Storage</h2>
+<p>Configure cloud storage for media files:</p>
+
+<h3>Azure Blob Storage</h3>
+<pre><code>environment:
+  - RAYTHA_FILE_STORAGE_PROVIDER=AzureBlob
+  - RAYTHA_AZURE_BLOB_CONNECTION_STRING=DefaultEndpointsProtocol=https;AccountName=...
+  - RAYTHA_AZURE_BLOB_CONTAINER=raytha-media</code></pre>
+
+<h3>Amazon S3</h3>
+<pre><code>environment:
+  - RAYTHA_FILE_STORAGE_PROVIDER=S3
+  - RAYTHA_S3_ACCESS_KEY=AKIA...
+  - RAYTHA_S3_SECRET_KEY=...
+  - RAYTHA_S3_BUCKET=raytha-media
+  - RAYTHA_S3_REGION=us-east-1</code></pre>
+
+<h2>Health Checks</h2>
+<p>Add health checks for container orchestration:</p>
+
+<pre><code>services:
+  raytha:
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3</code></pre>
+
+<h2>Scaling</h2>
+<p>Raytha can run multiple instances behind a load balancer. Ensure:</p>
+<ul>
+  <li>All instances share the same database</li>
+  <li>Use external storage (Azure/S3) for media</li>
+  <li>Configure data protection keys for shared cookie validation</li>
+</ul>
+
+<h2>Updating</h2>
+<p>To update to a new version:</p>
+
+<pre><code>docker-compose pull
+docker-compose up -d</code></pre>
+
+<p>Database migrations run automatically on startup.</p>
+
+<h2>Troubleshooting</h2>
+
+<h3>View logs</h3>
+<pre><code>docker-compose logs -f raytha</code></pre>
+
+<h3>Access container shell</h3>
+<pre><code>docker-compose exec raytha /bin/bash</code></pre>
+
+<h3>Database connection issues</h3>
+<ul>
+  <li>Verify the database container is running</li>
+  <li>Check connection string format</li>
+  <li>Ensure database accepts connections from the Raytha container</li>
+</ul>
+

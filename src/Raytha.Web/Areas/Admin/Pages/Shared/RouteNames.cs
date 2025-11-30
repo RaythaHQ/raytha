@@ -199,6 +199,7 @@ public static class RouteNames
             public const string Index = "/Themes/WidgetTemplates/Index";
             public const string Edit = "/Themes/WidgetTemplates/Edit";
             public const string Revisions = "/Themes/WidgetTemplates/Revisions";
+            public const string Reset = "/Themes/WidgetTemplates/Reset";
         }
 
         /// <summary>

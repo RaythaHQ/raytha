@@ -1,0 +1,108 @@
+<!--
+category: Navigation
+title: Navigation Menus
+description: Create and manage navigation menus for your website
+sortOrder: 1
+icon: bi-list
+-->
+
+<h1>Navigation Menus</h1>
+<p class="lead">Create and organize navigation menus to help visitors find their way around your website.</p>
+
+<h2>Accessing Navigation Menus</h2>
+<p>Navigate to <strong>Navigation</strong> in the left sidebar.</p>
+
+<img src="../../images/menus-list.png" alt="Navigation Menus List" class="img-fluid my-3 border rounded">
+
+<h2>Main Menu</h2>
+<p>One menu is designated as the <strong>Main Menu</strong>, typically used for primary site navigation. The main menu is accessible in templates via the <code>CurrentOrganization.MainMenu</code> variable.</p>
+
+<h2>Creating a Menu</h2>
+<ol>
+  <li>Click <strong>Create Navigation Menu</strong></li>
+  <li>Enter:
+    <ul>
+      <li><strong>Label</strong>: Display name (e.g., "Footer Links")</li>
+      <li><strong>Developer Name</strong>: Identifier for templates</li>
+    </ul>
+  </li>
+  <li>Click <strong>Create</strong></li>
+</ol>
+
+<img src="../../images/create-menu-form.png" alt="Create Menu Form" class="img-fluid my-3 border rounded">
+
+<h2>Adding Menu Items</h2>
+<ol>
+  <li>Open a navigation menu</li>
+  <li>Click <strong>Create Menu Item</strong></li>
+  <li>Enter:
+    <ul>
+      <li><strong>Label</strong>: Display text</li>
+      <li><strong>URL</strong>: Link destination (absolute or relative)</li>
+      <li><strong>Open in New Tab</strong>: Optional</li>
+      <li><strong>CSS Class</strong>: Optional styling class</li>
+    </ul>
+  </li>
+  <li>Click <strong>Create</strong></li>
+</ol>
+
+<img src="../../images/create-menu-item-form.png" alt="Create Menu Item Form" class="img-fluid my-3 border rounded">
+
+<h2>Managing Menu Items</h2>
+
+<h3>Reordering</h3>
+<p>Drag and drop menu items to change their order.</p>
+
+<h3>Nested Items (Dropdowns)</h3>
+<p>Create dropdown menus by setting a <strong>Parent Item</strong> when creating or editing a menu item.</p>
+
+<img src="../../images/main-menu-items.png" alt="Nested Menu Items" class="img-fluid my-3 border rounded">
+
+<h3>Editing</h3>
+<p>Click on any menu item to edit its label, URL, or other settings.</p>
+
+<h3>Disabling</h3>
+<p>Toggle <strong>Disabled</strong> to hide an item without deleting it.</p>
+
+<h3>Deleting</h3>
+<p>Click <strong>Delete</strong> to remove a menu item. Child items will also be removed.</p>
+
+<h2>Setting the Main Menu</h2>
+<ol>
+  <li>Open the menu you want as primary</li>
+  <li>Click <strong>Set as Main Menu</strong></li>
+</ol>
+
+<img src="../../images/main-menu-items.png" alt="Set as Main Menu" class="img-fluid my-3 border rounded">
+
+<h2>Using Menus in Templates</h2>
+<p>Access menus in your Liquid templates:</p>
+
+<h3>Main Menu</h3>
+<pre><code>{% for item in CurrentOrganization.MainMenu.Items %}
+  &lt;a href="{{ item.Url }}"&gt;{{ item.Label }}&lt;/a&gt;
+{% endfor %}</code></pre>
+
+<h3>Specific Menu by Developer Name</h3>
+<pre><code>{% assign footer_menu = 'footer_links' | get_navigation_menu %}
+{% for item in footer_menu.Items %}
+  &lt;a href="{{ item.Url }}"&gt;{{ item.Label }}&lt;/a&gt;
+{% endfor %}</code></pre>
+
+<h2>Menu Item Properties</h2>
+<p>Available in templates:</p>
+<ul>
+  <li><code>item.Label</code> - Display text</li>
+  <li><code>item.Url</code> - Link destination</li>
+  <li><code>item.OpenInNewTab</code> - Boolean</li>
+  <li><code>item.CssClassName</code> - CSS class</li>
+  <li><code>item.IsDisabled</code> - Boolean</li>
+  <li><code>item.Children</code> - Nested items</li>
+</ul>
+
+<h2>Revisions</h2>
+<p>Click <strong>Revisions</strong> to view and restore previous versions of your menu configuration.</p>
+
+<h2>Deleting a Menu</h2>
+<p>Open the menu and click <strong>Delete</strong>. You cannot delete the main menu while it's set as primary.</p>
+

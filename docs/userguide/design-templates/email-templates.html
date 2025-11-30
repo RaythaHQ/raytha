@@ -1,0 +1,129 @@
+<!--
+category: Design & Templates
+title: Email Templates
+description: Customize system emails for password resets and notifications
+sortOrder: 3
+icon: bi-envelope
+-->
+
+<h1>Email Templates</h1>
+<p class="lead">Customize the emails Raytha sends for password resets, magic link logins, and user notifications.</p>
+
+<h2>Accessing Email Templates</h2>
+<p>Navigate to <strong>Design</strong> &gt; <strong>Email Templates</strong> to see all system emails.</p>
+
+<img src="../../images/email-templates-list.png" alt="Email Templates List" class="img-fluid my-3 border rounded">
+
+<h2>Built-in Email Templates</h2>
+
+<table class="table">
+  <thead>
+    <tr>
+      <th>Template</th>
+      <th>Purpose</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>Admin Password Reset</strong></td>
+      <td>Sent when an admin requests a password reset</td>
+    </tr>
+    <tr>
+      <td><strong>Admin Welcome</strong></td>
+      <td>Sent when a new admin account is created</td>
+    </tr>
+    <tr>
+      <td><strong>User Password Reset</strong></td>
+      <td>Sent when a public user requests password reset</td>
+    </tr>
+    <tr>
+      <td><strong>User Welcome</strong></td>
+      <td>Sent when a new public user registers</td>
+    </tr>
+    <tr>
+      <td><strong>Magic Link Login</strong></td>
+      <td>Sent for passwordless login requests</td>
+    </tr>
+    <tr>
+      <td><strong>Email Verification</strong></td>
+      <td>Sent to verify email addresses</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>Editing an Email Template</h2>
+<ol>
+  <li>Click on a template to open the editor</li>
+  <li>Modify the following:
+    <ul>
+      <li><strong>Subject</strong>: Email subject line (supports variables)</li>
+      <li><strong>Content</strong>: HTML body of the email</li>
+      <li><strong>CC</strong>: Optional carbon copy addresses</li>
+      <li><strong>BCC</strong>: Optional blind carbon copy addresses</li>
+    </ul>
+  </li>
+  <li>Click <strong>Save</strong></li>
+</ol>
+
+<img src="https://placehold.co/800x500?text=Email+Template+Editor" alt="Email Template Editor" class="img-fluid my-3 border rounded">
+
+<h2>Available Variables</h2>
+<p>Use these Liquid variables in your email templates:</p>
+
+<h3>All Templates</h3>
+<pre><code>{{ CurrentOrganization.OrganizationName }}
+{{ CurrentOrganization.WebsiteUrl }}</code></pre>
+
+<h3>User Templates</h3>
+<pre><code>{{ Payload.FirstName }}
+{{ Payload.LastName }}
+{{ Payload.EmailAddress }}</code></pre>
+
+<h3>Password Reset</h3>
+<pre><code>{{ Payload.NewPassword }}
+{{ Payload.LoginUrl }}</code></pre>
+
+<h3>Magic Link</h3>
+<pre><code>{{ Payload.MagicLinkUrl }}
+{{ Payload.ExpiresAt }}</code></pre>
+
+<h2>Inserting Variables</h2>
+<p>Click the <strong>Insert Variable</strong> button above the editor to see available variables and insert them at your cursor position.</p>
+
+<img src="https://placehold.co/600x300?text=Insert+Variable+Menu" alt="Insert Variable Menu" class="img-fluid my-3 border rounded">
+
+<h2>Email Styling Tips</h2>
+<ul>
+  <li>Use inline CSS for best email client compatibility</li>
+  <li>Keep layouts simple—avoid complex CSS</li>
+  <li>Test emails in multiple clients (Gmail, Outlook, etc.)</li>
+  <li>Include a plain text version link or keep HTML simple</li>
+</ul>
+
+<h2>Example Template</h2>
+<pre><code>&lt;html&gt;
+&lt;body style="font-family: Arial, sans-serif; padding: 20px;"&gt;
+  &lt;h1&gt;Welcome to {{ CurrentOrganization.OrganizationName }}&lt;/h1&gt;
+  &lt;p&gt;Hello {{ Payload.FirstName }},&lt;/p&gt;
+  &lt;p&gt;Your account has been created. Click below to set your password:&lt;/p&gt;
+  &lt;p&gt;
+    &lt;a href="{{ Payload.LoginUrl }}" 
+       style="background: #0d6efd; color: white; padding: 10px 20px; 
+              text-decoration: none; border-radius: 4px;"&gt;
+      Set Password
+    &lt;/a&gt;
+  &lt;/p&gt;
+&lt;/body&gt;
+&lt;/html&gt;</code></pre>
+
+<h2>Revisions</h2>
+<p>Email templates support revisions. Click <strong>Revisions</strong> to view or restore previous versions.</p>
+
+<h2>Testing Emails</h2>
+<p>To test email delivery:</p>
+<ol>
+  <li>Ensure SMTP is configured in <strong>Settings</strong> &gt; <strong>SMTP</strong></li>
+  <li>Trigger the email action (e.g., create a test user)</li>
+  <li>Check the recipient's inbox</li>
+</ol>
+

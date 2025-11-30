@@ -1,0 +1,90 @@
+<!--
+category: Settings
+title: Site Configuration
+description: Configure organization name, URL, timezone, and homepage
+sortOrder: 1
+icon: bi-gear
+-->
+
+<h1>Site Configuration</h1>
+<p class="lead">Configure your website's basic settings including organization name, URL, timezone, and homepage.</p>
+
+<h2>Accessing Configuration</h2>
+<p>Navigate to <strong>Settings</strong> &gt; <strong>Configuration</strong>.</p>
+
+<img src="https://placehold.co/800x500?text=Site+Configuration+Page" alt="Site Configuration" class="img-fluid my-3 border rounded">
+
+<h2>Organization Settings</h2>
+
+<h3>Organization Name</h3>
+<p>Your organization or website name. Displayed in:</p>
+<ul>
+  <li>Admin panel header</li>
+  <li>Email templates (via <code>{{ CurrentOrganization.OrganizationName }}</code>)</li>
+  <li>Public templates</li>
+</ul>
+
+<h3>Website URL</h3>
+<p>The public URL of your website (e.g., <code>https://example.com</code>). Used for:</p>
+<ul>
+  <li>Generating absolute URLs in emails</li>
+  <li>Redirects and canonical URLs</li>
+</ul>
+
+<h2>Date & Time Settings</h2>
+
+<h3>Timezone</h3>
+<p>Select your timezone from the dropdown. Affects:</p>
+<ul>
+  <li>Date display in admin panel</li>
+  <li>Scheduled content (if applicable)</li>
+  <li>Timestamps in templates</li>
+</ul>
+
+<h3>Date Format</h3>
+<p>Choose how dates are displayed throughout the system.</p>
+
+<img src="https://placehold.co/600x200?text=Timezone+and+Date+Format" alt="Timezone Settings" class="img-fluid my-3 border rounded">
+
+<h2>Homepage Settings</h2>
+<p>Configure what displays when visitors access your root URL (<code>/</code>).</p>
+
+<h3>Homepage Type</h3>
+<ul>
+  <li><strong>Site Page</strong>: Use a Site Page as your homepage</li>
+  <li><strong>Content Item</strong>: Use a specific content item</li>
+  <li><strong>View</strong>: Use a content type view (list page)</li>
+</ul>
+
+<h3>Selecting the Homepage</h3>
+<ol>
+  <li>Choose the <strong>Home Page Type</strong></li>
+  <li>Select the specific page, item, or view from the dropdown</li>
+  <li>Click <strong>Save</strong></li>
+</ol>
+
+<img src="../../images/homepage-selection.png" alt="Homepage Selection" class="img-fluid my-3 border rounded">
+
+<h2>Active Theme</h2>
+<p>Select which theme renders your public website. Only published themes appear in the dropdown.</p>
+
+<ol>
+  <li>Select a theme from <strong>Active Theme</strong></li>
+  <li>Click <strong>Save</strong></li>
+</ol>
+
+<div class="alert alert-warning">
+  <strong>Note:</strong> Changing the active theme immediately affects your public website. Test new themes thoroughly before switching.
+</div>
+
+<h2>Saving Changes</h2>
+<p>Click <strong>Save</strong> at the bottom of the page. Changes take effect immediately.</p>
+
+<h2>Configuration in Templates</h2>
+<p>Access these settings in your Liquid templates:</p>
+
+<pre><code>{{ CurrentOrganization.OrganizationName }}
+{{ CurrentOrganization.WebsiteUrl }}
+{{ CurrentOrganization.TimeZone }}
+{{ CurrentOrganization.DateFormat }}</code></pre>
+

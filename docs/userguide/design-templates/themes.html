@@ -1,0 +1,102 @@
+<!--
+category: Design & Templates
+title: Themes
+description: Manage themes and switch between different visual designs
+sortOrder: 1
+icon: bi-palette
+-->
+
+<h1>Themes</h1>
+<p class="lead">Themes contain all the visual elements of your website: templates, styles, and media assets. Manage multiple themes and switch between them.</p>
+
+<h2>What is a Theme?</h2>
+<p>A theme is a collection of:</p>
+<ul>
+  <li><strong>Web Templates</strong>: Liquid templates that render pages</li>
+  <li><strong>Widget Templates</strong>: Templates for Site Page widgets</li>
+  <li><strong>Media Assets</strong>: CSS, JavaScript, images, and fonts</li>
+</ul>
+
+<h2>Viewing Themes</h2>
+<p>Navigate to <strong>Design</strong> &gt; <strong>Themes</strong> to see all available themes.</p>
+
+<img src="../../images/themes-list.png" alt="Themes List" class="img-fluid my-3 border rounded">
+
+<h2>Active Theme</h2>
+<p>Only one theme can be active at a time. The active theme is used to render your public website.</p>
+
+<p>To change the active theme:</p>
+<ol>
+  <li>Go to <strong>Settings</strong> &gt; <strong>Configuration</strong></li>
+  <li>Select the theme from the <strong>Active Theme</strong> dropdown</li>
+  <li>Click <strong>Save</strong></li>
+</ol>
+
+<img src="../../images/themes-list.png" alt="Active Theme Selection" class="img-fluid my-3 border rounded">
+
+<h2>Creating a Theme</h2>
+<ol>
+  <li>Go to <strong>Design</strong> &gt; <strong>Themes</strong></li>
+  <li>Click <strong>Create Theme</strong></li>
+  <li>Enter:
+    <ul>
+      <li><strong>Title</strong>: Display name</li>
+      <li><strong>Developer Name</strong>: Unique identifier</li>
+      <li><strong>Description</strong>: Notes about the theme</li>
+    </ul>
+  </li>
+  <li>Click <strong>Create</strong></li>
+</ol>
+
+<p>New themes start empty. You'll need to create web templates and upload assets.</p>
+
+<h2>Theme Contents</h2>
+<p>Click a theme to manage its contents:</p>
+
+<h3>Web Templates</h3>
+<p>Liquid templates that control page layouts. Each theme has its own set of templates.</p>
+
+<h3>Widget Templates</h3>
+<p>Templates that render widgets on Site Pages (Hero, Card, CTA, etc.).</p>
+
+<h3>Media</h3>
+<p>Upload CSS files, JavaScript, images, and fonts specifically for this theme.</p>
+
+<img src="../../images/theme-contents-view.png" alt="Theme Contents" class="img-fluid my-3 border rounded">
+
+<h2>Exporting a Theme</h2>
+<p>Export a theme as a ZIP file to backup or transfer to another Raytha installation:</p>
+<ol>
+  <li>Open the theme</li>
+  <li>Click <strong>Export</strong></li>
+  <li>Download the generated ZIP file</li>
+</ol>
+
+<div class="alert alert-info">
+  <strong>Note:</strong> Exported themes include templates and references to media, but media files must be re-uploaded on import.
+</div>
+
+<h2>Importing a Theme</h2>
+<ol>
+  <li>Go to <strong>Design</strong> &gt; <strong>Themes</strong></li>
+  <li>Click <strong>Import Theme</strong></li>
+  <li>Select the ZIP file</li>
+  <li>Click <strong>Import</strong></li>
+</ol>
+
+<h2>Duplicating a Theme</h2>
+<p>Create a copy of an existing theme to customize:</p>
+<ol>
+  <li>Open the theme you want to copy</li>
+  <li>Click <strong>Duplicate</strong></li>
+  <li>Enter a new name and developer name</li>
+  <li>Click <strong>Create</strong></li>
+</ol>
+
+<h2>Deleting a Theme</h2>
+<div class="alert alert-warning">
+  <strong>Warning:</strong> You cannot delete the active theme. Switch to a different theme first.
+</div>
+
+<p>Deleting a theme removes all its templates and associated media.</p>
+

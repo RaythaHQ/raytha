@@ -1,0 +1,163 @@
+<!--
+category: Users & Permissions
+title: Roles & Permissions
+description: Configure roles and control access to features and content types
+sortOrder: 2
+icon: bi-shield-check
+-->
+
+<h1>Roles & Permissions</h1>
+<p class="lead">Create roles to control what administrators can access. Assign system permissions and content type permissions to each role.</p>
+
+<h2>Accessing Roles</h2>
+<p>Navigate to <strong>Settings</strong> &gt; <strong>Roles</strong>.</p>
+
+<img src="../../images/roles-list.png" alt="Roles List" class="img-fluid my-3 border rounded">
+
+<h2>Built-in Roles</h2>
+
+<table class="table">
+  <thead>
+    <tr>
+      <th>Role</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>Super Admin</strong></td>
+      <td>Full access to all features and content</td>
+    </tr>
+    <tr>
+      <td><strong>Admin</strong></td>
+      <td>Full access to all features and content</td>
+    </tr>
+    <tr>
+      <td><strong>Editor</strong></td>
+      <td>Manage content items and site pages</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>Creating a Role</h2>
+<ol>
+  <li>Click <strong>Create Role</strong></li>
+  <li>Enter:
+    <ul>
+      <li><strong>Label</strong>: Display name (e.g., "Content Manager")</li>
+      <li><strong>Developer Name</strong>: Identifier (e.g., "content_manager")</li>
+    </ul>
+  </li>
+  <li>Select permissions</li>
+  <li>Click <strong>Create</strong></li>
+</ol>
+
+<img src="../../images/create-role-form.png" alt="Create Role Form" class="img-fluid my-3 border rounded">
+
+<h2>System Permissions</h2>
+<p>Control access to admin features:</p>
+
+<table class="table">
+  <thead>
+    <tr>
+      <th>Permission</th>
+      <th>Allows</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>Manage System Settings</strong></td>
+      <td>Edit site configuration, SMTP, authentication schemes</td>
+    </tr>
+    <tr>
+      <td><strong>Manage Administrators</strong></td>
+      <td>Create, edit, and delete admin accounts</td>
+    </tr>
+    <tr>
+      <td><strong>Manage Users</strong></td>
+      <td>Manage public user accounts and groups</td>
+    </tr>
+    <tr>
+      <td><strong>Manage Content Types</strong></td>
+      <td>Create and configure content types and fields</td>
+    </tr>
+    <tr>
+      <td><strong>Manage Templates</strong></td>
+      <td>Edit themes, web templates, and email templates</td>
+    </tr>
+    <tr>
+      <td><strong>Manage Site Pages</strong></td>
+      <td>Create and edit site pages with widgets</td>
+    </tr>
+    <tr>
+      <td><strong>Manage Audit Logs</strong></td>
+      <td>View activity and audit logs</td>
+    </tr>
+  </tbody>
+</table>
+
+<img src="../../images/system-permissions-checkboxes.png" alt="System Permissions" class="img-fluid my-3 border rounded">
+
+<h2>Content Type Permissions</h2>
+<p>Control access to each content type separately:</p>
+
+<table class="table">
+  <thead>
+    <tr>
+      <th>Permission</th>
+      <th>Allows</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>Read</strong></td>
+      <td>View content items in the admin</td>
+    </tr>
+    <tr>
+      <td><strong>Edit</strong></td>
+      <td>Modify existing content items</td>
+    </tr>
+    <tr>
+      <td><strong>Create</strong></td>
+      <td>Create new content items</td>
+    </tr>
+    <tr>
+      <td><strong>Delete</strong></td>
+      <td>Delete content items</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>Example: A "Blog Editor" role might have full permissions for Posts but read-only for Products.</p>
+
+<img src="../../images/content-type-permissions-grid.png" alt="Content Type Permissions" class="img-fluid my-3 border rounded">
+
+<h2>Editing a Role</h2>
+<ol>
+  <li>Click on the role name</li>
+  <li>Modify permissions as needed</li>
+  <li>Click <strong>Save</strong></li>
+</ol>
+
+<h2>Assigning Roles to Administrators</h2>
+<p>Administrators can have multiple roles. Their effective permissions are the combination of all assigned roles.</p>
+
+<p>To assign roles:</p>
+<ol>
+  <li>Go to <strong>Settings</strong> &gt; <strong>Administrators</strong></li>
+  <li>Edit the administrator</li>
+  <li>Select roles from the list</li>
+  <li>Click <strong>Save</strong></li>
+</ol>
+
+<h2>Deleting a Role</h2>
+<ol>
+  <li>Open the role</li>
+  <li>Click <strong>Delete</strong></li>
+  <li>Confirm deletion</li>
+</ol>
+
+<div class="alert alert-warning">
+  <strong>Note:</strong> Built-in roles (Super Admin, Admin, Editor) cannot be deleted. Administrators with a deleted role lose those permissions.
+</div>
+

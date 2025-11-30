@@ -1,0 +1,112 @@
+<!--
+category: Content Management
+title: Views
+description: Create filtered and sorted views of your content for the public website
+sortOrder: 4
+icon: bi-grid-3x3
+-->
+
+<h1>Views</h1>
+<p class="lead">Views are filtered, sorted lists of content items that can be displayed on your public website. Create multiple views to show different subsets of your content.</p>
+
+<h2>What is a View?</h2>
+<p>A View defines:</p>
+<ul>
+  <li>Which content items to display (filters)</li>
+  <li>How items are sorted</li>
+  <li>Which columns/fields to show</li>
+  <li>The public URL path</li>
+  <li>Pagination settings</li>
+</ul>
+
+<p>Example: A "Recent Posts" view showing the 10 most recent published blog posts.</p>
+
+<h2>Managing Views</h2>
+<ol>
+  <li>Navigate to a content type</li>
+  <li>Click <strong>Views</strong> in the submenu</li>
+</ol>
+
+<img src="../../images/views-list.png" alt="Views List" class="img-fluid my-3 border rounded">
+
+<h2>Creating a View</h2>
+<ol>
+  <li>Click <strong>Create View</strong></li>
+  <li>Enter the view details:
+    <ul>
+      <li><strong>Label</strong>: Display name (e.g., "All Posts")</li>
+      <li><strong>Developer Name</strong>: URL path (e.g., "posts")</li>
+      <li><strong>Description</strong>: Internal notes</li>
+    </ul>
+  </li>
+  <li>Click <strong>Create</strong></li>
+</ol>
+
+<img src="../../images/create-view-form.png" alt="Create View Form" class="img-fluid my-3 border rounded">
+
+<h2>Configuring Columns</h2>
+<p>Select which fields appear in the view:</p>
+<ol>
+  <li>Go to the view's settings</li>
+  <li>Check/uncheck fields under <strong>Columns</strong></li>
+  <li>Drag to reorder columns</li>
+</ol>
+
+<p>Common columns include:</p>
+<ul>
+  <li>Primary field (title)</li>
+  <li>Creation time</li>
+  <li>Custom fields from your content type</li>
+</ul>
+
+<img src="https://placehold.co/800x400?text=View+Columns+Configuration" alt="View Columns" class="img-fluid my-3 border rounded">
+
+<h2>Setting Filters</h2>
+<p>Filter which items appear in the view:</p>
+<ol>
+  <li>Click <strong>Filter</strong></li>
+  <li>Add filter conditions:
+    <ul>
+      <li>Select a field</li>
+      <li>Choose an operator (equals, contains, greater than, etc.)</li>
+      <li>Enter the value</li>
+    </ul>
+  </li>
+  <li>Add multiple conditions with AND/OR logic</li>
+</ol>
+
+<p>Example: Show only items where "Status equals Published" AND "Category equals News"</p>
+
+<img src="https://placehold.co/800x350?text=View+Filter+Builder" alt="View Filter Builder" class="img-fluid my-3 border rounded">
+
+<h2>Sorting</h2>
+<p>Define the default sort order:</p>
+<ol>
+  <li>Click <strong>Sort</strong></li>
+  <li>Select the field to sort by</li>
+  <li>Choose ascending or descending</li>
+  <li>Add additional sort fields if needed</li>
+</ol>
+
+<h2>Pagination Settings</h2>
+<ul>
+  <li><strong>Default Items Per Page</strong>: How many items show by default</li>
+  <li><strong>Max Items Per Page</strong>: Maximum allowed via query parameter</li>
+  <li><strong>Ignore Client Query Params</strong>: Prevent URL-based filtering/sorting</li>
+</ul>
+
+<h2>Publishing a View</h2>
+<p>Views must be published to appear on your website:</p>
+<ol>
+  <li>Open the view</li>
+  <li>Toggle <strong>Published</strong> to on</li>
+  <li>Assign a web template to render the view</li>
+</ol>
+
+<p>The view will be accessible at the URL path you specified (e.g., <code>/posts</code>).</p>
+
+<img src="https://placehold.co/800x350?text=View+Publish+Settings" alt="View Publish Settings" class="img-fluid my-3 border rounded">
+
+<h2>Template Assignment</h2>
+<p>Each view needs a web template to render its content. Go to <strong>Settings</strong> in the view menu to select which template displays this view on the public website.</p>
+

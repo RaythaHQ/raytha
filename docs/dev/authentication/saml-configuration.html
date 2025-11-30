@@ -1,0 +1,274 @@
+<!--
+category: Authentication
+title: SAML Authentication
+description: Configure SAML 2.0 single sign-on with identity providers
+sortOrder: 2
+icon: bi-shield-lock
+-->
+
+<h1>SAML Authentication</h1>
+<p class="lead">Configure SAML 2.0 single sign-on to integrate with enterprise identity providers like Okta, Azure AD, OneLogin, and others.</p>
+
+<h2>What is SAML?</h2>
+<p>SAML (Security Assertion Markup Language) is an enterprise standard for exchanging authentication data. It enables:</p>
+<ul>
+  <li>Single sign-on from corporate identity providers</li>
+  <li>Centralized user management</li>
+  <li>Enterprise-grade security</li>
+</ul>
+
+<h2>How It Works</h2>
+<ol>
+  <li>User clicks "Login with [Provider]" on Raytha</li>
+  <li>Raytha redirects to your Identity Provider (IdP)</li>
+  <li>User authenticates with IdP (if not already logged in)</li>
+  <li>IdP sends SAML assertion back to Raytha</li>
+  <li>Raytha validates assertion and creates session</li>
+</ol>
+
+<img src="https://placehold.co/800x400?text=SAML+Authentication+Flow" alt="SAML Authentication Flow" class="img-fluid my-3 border rounded">
+
+<h2>Creating a SAML Authentication Scheme</h2>
+<ol>
+  <li>Go to <strong>Settings</strong> &gt; <strong>Authentication Schemes</strong></li>
+  <li>Click <strong>Create Authentication Scheme</strong></li>
+  <li>Select <strong>SAML</strong> as the type</li>
+  <li>Configure the settings below</li>
+  <li>Click <strong>Create</strong></li>
+</ol>
+
+<img src="../../images/saml-configuration-form.png" alt="SAML Configuration Form" class="img-fluid my-3 border rounded">
+
+<h2>Configuration Settings</h2>
+
+<table class="table">
+  <thead>
+    <tr>
+      <th>Setting</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>Label</strong></td>
+      <td>Display name on login page (e.g., "Login with Okta")</td>
+    </tr>
+    <tr>
+      <td><strong>Developer Name</strong></td>
+      <td>Unique identifier for this scheme</td>
+    </tr>
+    <tr>
+      <td><strong>IdP Entity ID</strong></td>
+      <td>Identity provider's entity identifier</td>
+    </tr>
+    <tr>
+      <td><strong>Sign-In URL</strong></td>
+      <td>IdP's SSO login endpoint</td>
+    </tr>
+    <tr>
+      <td><strong>Sign-Out URL</strong></td>
+      <td>IdP's logout endpoint (optional)</td>
+    </tr>
+    <tr>
+      <td><strong>Certificate</strong></td>
+      <td>X.509 certificate from IdP for signature validation</td>
+    </tr>
+    <tr>
+      <td><strong>Enabled for Admins</strong></td>
+      <td>Allow admin panel login</td>
+    </tr>
+    <tr>
+      <td><strong>Enabled for Users</strong></td>
+      <td>Allow public user login</td>
+    </tr>
+    <tr>
+      <td><strong>Login Button Text</strong></td>
+      <td>Text displayed on login button</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>Raytha Service Provider Details</h2>
+<p>Provide these values to your Identity Provider:</p>
+
+<table class="table">
+  <thead>
+    <tr>
+      <th>Setting</th>
+      <th>Value</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>SP Entity ID</strong></td>
+      <td><code>https://yoursite.com</code></td>
+    </tr>
+    <tr>
+      <td><strong>ACS URL</strong></td>
+      <td><code>https://yoursite.com/account/login/saml/{developer_name}/acs</code></td>
+    </tr>
+    <tr>
+      <td><strong>Name ID Format</strong></td>
+      <td><code>urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress</code></td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>Required SAML Attributes</h2>
+<p>Your IdP must send these attributes in the SAML assertion:</p>
+
+<table class="table table-sm">
+  <thead>
+    <tr>
+      <th>Attribute</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>NameID</code></td>
+      <td>User's email address (or unique identifier)</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3>Optional Attributes</h3>
+<table class="table table-sm">
+  <thead>
+    <tr>
+      <th>Attribute</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>firstName</code> or <code>givenName</code></td>
+      <td>User's first name</td>
+    </tr>
+    <tr>
+      <td><code>lastName</code> or <code>surname</code></td>
+      <td>User's last name</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>Provider-Specific Setup</h2>
+
+<h3>Okta</h3>
+<ol>
+  <li>In Okta Admin, go to <strong>Applications</strong> &gt; <strong>Create App Integration</strong></li>
+  <li>Select <strong>SAML 2.0</strong></li>
+  <li>Configure:
+    <ul>
+      <li><strong>Single sign-on URL</strong>: Your Raytha ACS URL</li>
+      <li><strong>Audience URI</strong>: Your Raytha SP Entity ID</li>
+      <li><strong>Name ID format</strong>: EmailAddress</li>
+    </ul>
+  </li>
+  <li>Copy the IdP metadata to configure Raytha</li>
+</ol>
+
+<img src="https://placehold.co/800x400?text=Okta+SAML+Configuration" alt="Okta Configuration" class="img-fluid my-3 border rounded">
+
+<h3>Azure AD (Microsoft Entra ID)</h3>
+<ol>
+  <li>In Azure Portal, go to <strong>Enterprise Applications</strong></li>
+  <li>Create a new application &gt; <strong>Non-gallery application</strong></li>
+  <li>Go to <strong>Single sign-on</strong> &gt; <strong>SAML</strong></li>
+  <li>Configure:
+    <ul>
+      <li><strong>Identifier (Entity ID)</strong>: Your Raytha SP Entity ID</li>
+      <li><strong>Reply URL</strong>: Your Raytha ACS URL</li>
+    </ul>
+  </li>
+  <li>Download the Certificate (Base64) and copy the Login URL</li>
+</ol>
+
+<img src="https://placehold.co/800x400?text=Azure+AD+SAML+Configuration" alt="Azure AD Configuration" class="img-fluid my-3 border rounded">
+
+<h3>OneLogin</h3>
+<ol>
+  <li>In OneLogin, go to <strong>Applications</strong> &gt; <strong>Add App</strong></li>
+  <li>Search for "SAML Test Connector (IdP)"</li>
+  <li>Configure:
+    <ul>
+      <li><strong>Audience</strong>: Your Raytha SP Entity ID</li>
+      <li><strong>ACS URL</strong>: Your Raytha ACS URL</li>
+    </ul>
+  </li>
+  <li>Go to <strong>SSO</strong> tab to get IdP details</li>
+</ol>
+
+<h3>Google Workspace</h3>
+<ol>
+  <li>In Google Admin Console, go to <strong>Apps</strong> &gt; <strong>SAML Apps</strong></li>
+  <li>Click <strong>Add App</strong> &gt; <strong>Add custom SAML app</strong></li>
+  <li>Configure:
+    <ul>
+      <li><strong>ACS URL</strong>: Your Raytha ACS URL</li>
+      <li><strong>Entity ID</strong>: Your Raytha SP Entity ID</li>
+      <li><strong>Name ID format</strong>: EMAIL</li>
+    </ul>
+  </li>
+</ol>
+
+<h2>Certificate Format</h2>
+<p>Paste the X.509 certificate including the BEGIN and END markers:</p>
+<pre><code>-----BEGIN CERTIFICATE-----
+MIIDpDCCAoygAwIBAgIGAX...
+...certificate content...
+-----END CERTIFICATE-----</code></pre>
+
+<h2>User Provisioning</h2>
+<p>When a SAML login occurs:</p>
+<ul>
+  <li>If user exists (by SSO ID or email): Session is created</li>
+  <li>If user doesn't exist: User is created with SAML attribute data</li>
+</ul>
+
+<h2>Testing</h2>
+<ol>
+  <li>Create the SAML authentication scheme</li>
+  <li>Enable it for admins or users</li>
+  <li>Go to the login page</li>
+  <li>Click the SAML login button</li>
+  <li>Authenticate with your IdP</li>
+  <li>Verify you're logged in to Raytha</li>
+</ol>
+
+<h2>Troubleshooting</h2>
+
+<h3>Invalid signature</h3>
+<ul>
+  <li>Verify certificate is correctly copied</li>
+  <li>Check certificate hasn't expired</li>
+  <li>Ensure no whitespace issues in certificate</li>
+</ul>
+
+<h3>User not found/created</h3>
+<ul>
+  <li>Verify NameID is being sent as email</li>
+  <li>Check attribute mapping in IdP</li>
+</ul>
+
+<h3>Redirect loop</h3>
+<ul>
+  <li>Verify ACS URL is correct</li>
+  <li>Check Entity ID matches exactly</li>
+</ul>
+
+<h3>Certificate errors</h3>
+<ul>
+  <li>Use Base64-encoded certificate (not binary)</li>
+  <li>Include BEGIN/END markers</li>
+  <li>Check for hidden characters</li>
+</ul>
+
+<h2>Security Considerations</h2>
+<ul>
+  <li>Use HTTPS for all SAML endpoints</li>
+  <li>Regularly rotate IdP certificates</li>
+  <li>Review and audit SAML assertions</li>
+  <li>Configure session timeouts appropriately</li>
+</ul>
+

@@ -17,7 +17,13 @@
 <nav class="navbar navbar-expand-lg navbar-light raytha-view-nav raytha-border-top">
     <div class="container-fluid d-flex justify-content-between align-items-center">
         @(await Html.PartialAsync("_Partials/BackToList", back))
-        <div class="d-flex align-items-center">
+        <div class="d-flex align-items-center gap-2">
+            <a asp-page="@RouteNames.Themes.WidgetTemplates.Reset" 
+               asp-route-themeId="@Model.ListView.ThemeId"
+               class="btn btn-outline-warning">
+                <i class="bi bi-arrow-counterclockwise me-1"></i>
+                Reset widget templates
+            </a>
             <form class="d-flex" asp-page="@RouteNames.Themes.WidgetTemplates.Index"
                 asp-route-themeId="@Model.ListView.ThemeId" method="get">
                 <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search" name="search"
