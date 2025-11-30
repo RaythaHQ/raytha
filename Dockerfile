@@ -10,6 +10,7 @@ COPY ["src/Raytha.Migrations.SqlServer/Raytha.Migrations.SqlServer.csproj", "src
 COPY ["src/Raytha.Migrations.Postgres/Raytha.Migrations.Postgres.csproj", "src/Raytha.Migrations.Postgres/"]
 COPY ["src/Raytha.Web/Raytha.Web.csproj", "src/Raytha.Web/"]
 COPY ["tests/Raytha.Domain.UnitTests/Raytha.Domain.UnitTests.csproj", "tests/Raytha.Domain.UnitTests/"]
+COPY ["tests/Raytha.Application.UnitTests/Raytha.Application.UnitTests.csproj", "tests/Raytha.Application.UnitTests/"]
 COPY ["Raytha.sln", ""]
 
 ARG DOTNET_RESTORE_CLI_ARGS=
