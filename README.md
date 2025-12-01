@@ -12,9 +12,15 @@ Raytha is a lightweight, versatile content management system built with .NET. Cr
 **[Website](https://raytha.com) · [Documentation](https://docs.raytha.com) · [User Guide](https://raytha.com/user-guide) · [YouTube](https://www.youtube.com/channel/UCuQtF2WwODs2DfZ4pV-2SfA)**
 
 <details>
-<summary>Watch a 2-minute demo</summary>
+<summary>Watch a 40 second demo</summary>
 
-[![Quick demo](https://user-images.githubusercontent.com/777005/232171420-35104db8-4c19-46b5-bbe0-87e4b19316fe.mp4)](https://user-images.githubusercontent.com/777005/232171420-35104db8-4c19-46b5-bbe0-87e4b19316fe.mp4)
+[![Quick demo]()](https://github.com/user-attachments/assets/1723a191-e4ee-4f1f-aa45-612c3ab57405)
+
+
+
+
+
+
 </details>
 
 ![Screenshot](https://user-images.githubusercontent.com/777005/232172756-4c1ffd34-ea4f-4dbd-bffc-8a7a22ef9e75.png)
