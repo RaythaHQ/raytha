@@ -20,7 +20,7 @@ using Raytha.Application.Login.Queries;
 using Raytha.Domain.Entities;
 using Raytha.Domain.ValueObjects;
 using Raytha.Web.Areas.Public.DbViewEngine;
-using Raytha.Web.Areas.Public.Views.Login;
+using Raytha.Web.Areas.Public.Models;
 
 namespace Raytha.Web.Areas.Public.Controllers;
 

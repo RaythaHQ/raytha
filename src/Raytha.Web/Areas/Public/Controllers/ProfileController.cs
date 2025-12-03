@@ -10,7 +10,7 @@ using Raytha.Application.Login.Commands;
 using Raytha.Application.Users;
 using Raytha.Domain.Entities;
 using Raytha.Web.Areas.Public.DbViewEngine;
-using Raytha.Web.Areas.Public.Views.Profile;
+using Raytha.Web.Areas.Public.Models;
 
 namespace Raytha.Web.Areas.Public.Controllers;
 
