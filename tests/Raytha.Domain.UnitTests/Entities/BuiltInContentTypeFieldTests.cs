@@ -16,6 +16,7 @@ public class BuiltInContentTypeFieldTests
     [TestCase("IsDraft")]
     [TestCase("IsPublished")]
     [TestCase("Template")]
+    [TestCase("RoutePath")]
     [Parallelizable(ParallelScope.All)]
     public void ShouldReturnCorrectDeveloperName(string developerName)
     {
@@ -33,6 +34,7 @@ public class BuiltInContentTypeFieldTests
     [TestCase("IsDraft", "Is draft")]
     [TestCase("IsPublished", "Is published")]
     [TestCase("Template", "Template")]
+    [TestCase("RoutePath", "Route Path")]
     [Parallelizable(ParallelScope.All)]
     public void ToStringShouldMatchLabel(string developerName, string label)
     {
@@ -68,6 +70,6 @@ public class BuiltInContentTypeFieldTests
     [Test]
     public void ShouldMatchNumberOfSupportedTypes()
     {
-        BuiltInContentTypeField.ReservedContentTypeFields.Count().Should().Be(9);
+        BuiltInContentTypeField.ReservedContentTypeFields.Count().Should().Be(10);
     }
 }
