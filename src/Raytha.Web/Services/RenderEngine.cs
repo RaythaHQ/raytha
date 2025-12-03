@@ -132,7 +132,7 @@ public class RenderEngine : IRenderEngine
         return new StringValue(relativeUrlBuilder.MediaRedirectToFileUrl(input.ToStringValue()));
     }
 
-    private static ValueTask<FluidValue> AttachmentPublicUrl(
+    private static async ValueTask<FluidValue> AttachmentPublicUrl(
         FluidValue input,
         FilterArguments arguments,
         TemplateContext context
@@ -143,28 +143,44 @@ public class RenderEngine : IRenderEngine
 
         var fileStorageProvider = (IFileStorageProvider)
             context.AmbientValues["FileStorageProvider"];
-        return new StringValue(
-            fileStorageProvider
-                .GetDownloadUrlAsync(input.ToStringValue(), FileStorageUtility.GetDefaultExpiry())
-                .Result
-        );
+        var downloadUrl = await fileStorageProvider
+            .GetDownloadUrlAsync(input.ToStringValue(), FileStorageUtility.GetDefaultExpiry())
+            .ConfigureAwait(false);
+        return new StringValue(downloadUrl);
     }
 
-    private static ValueTask<FluidValue> GroupBy(
+    private static async ValueTask<FluidValue> GroupBy(
         FluidValue input,
         FilterArguments property,
         TemplateContext context
     )
     {
         var groupByProperty = property.At(0).ToStringValue();
-        var groups = input
-            .Enumerate(context)
-            .GroupBy(p => ApplyGroupBy(p, groupByProperty, context));
-        var result = new List<FluidValue>();
-        foreach (var group in groups)
+        if (string.IsNullOrWhiteSpace(groupByProperty))
         {
-            result.Add(new ObjectValue(new { key = group.Key, items = group.ToList() }));
+            return new ArrayValue(Array.Empty<FluidValue>());
         }
+
+        var buckets = new Dictionary<string, List<FluidValue>>(StringComparer.Ordinal);
+        foreach (var item in input.Enumerate(context))
+        {
+            var key = await ApplyGroupByAsync(item, groupByProperty, context).ConfigureAwait(false);
+
+            if (!buckets.TryGetValue(key, out var values))
+            {
+                values = new List<FluidValue>();
+                buckets[key] = values;
+            }
+
+            values.Add(item);
+        }
+
+        var result = new List<FluidValue>(buckets.Count);
+        foreach (var bucket in buckets)
+        {
+            result.Add(new ObjectValue(new { key = bucket.Key, items = bucket.Value }));
+        }
+
         return new ArrayValue(result);
     }
 
@@ -778,23 +794,42 @@ public class RenderEngine : IRenderEngine
         return template.Render(widgetContext);
     }
 
-    private static string ApplyGroupBy(
+    private static async Task<string> ApplyGroupByAsync(
         FluidValue p,
         string groupByProperty,
         TemplateContext context
     )
     {
-        if (groupByProperty.StartsWith("PublishedContent") && groupByProperty.Contains("."))
+        if (string.IsNullOrWhiteSpace(groupByProperty))
         {
-            var developerName = groupByProperty.Split(".").ElementAt(1);
-            return p.GetValueAsync("PublishedContent", context)
-                .Result.GetValueAsync(developerName, context)
-                .Result.ToStringValue();
+            return string.Empty;
         }
-        else
+
+        if (
+            groupByProperty.StartsWith("PublishedContent", StringComparison.Ordinal)
+            && groupByProperty.Contains(".")
+        )
         {
-            return p.GetValueAsync(groupByProperty, context).Result.ToStringValue();
+            var developerName = groupByProperty
+                .Split('.', StringSplitOptions.RemoveEmptyEntries)
+                .ElementAtOrDefault(1);
+
+            if (string.IsNullOrEmpty(developerName))
+            {
+                return string.Empty;
+            }
+
+            var publishedContent = await p
+                .GetValueAsync("PublishedContent", context)
+                .ConfigureAwait(false);
+            var developerValue = await publishedContent
+                .GetValueAsync(developerName, context)
+                .ConfigureAwait(false);
+            return developerValue.ToStringValue();
         }
+
+        var value = await p.GetValueAsync(groupByProperty, context).ConfigureAwait(false);
+        return value.ToStringValue();
     }
 
     private static ValueTask<FluidValue> LocalDateFilter(

@@ -1,4 +1,6 @@
-﻿using System.Text.Json;
+﻿using System.Net.Http;
+using System.Text.Json;
+using Microsoft.Extensions.Http;
 using CSharpVitamins;
 using FluentValidation;
 using Mediator;
@@ -171,8 +173,7 @@ public class BeginImportContentItemsFromCsv
         private readonly ICurrentOrganization _currentOrganization;
         private readonly IFileStorageProviderSettings _fileStorageProviderSettings;
         private readonly ISecurityConfiguration _securityConfiguration;
-
-        private static HttpClient httpClient = new HttpClient();
+        private readonly HttpClient _httpClient;
 
         public BackgroundTask(
             IRaythaDbContext db,
@@ -180,7 +181,8 @@ public class BeginImportContentItemsFromCsv
             IFileStorageProvider fileStorageProvider,
             IFileStorageProviderSettings fileStorageProviderSettings,
             ICurrentOrganization currentOrganization,
-            ISecurityConfiguration securityConfiguration
+            ISecurityConfiguration securityConfiguration,
+            IHttpClientFactory httpClientFactory
         )
         {
             _db = db;
@@ -189,6 +191,9 @@ public class BeginImportContentItemsFromCsv
             _currentOrganization = currentOrganization;
             _fileStorageProviderSettings = fileStorageProviderSettings;
             _securityConfiguration = securityConfiguration;
+            _httpClient = httpClientFactory.CreateClient(
+                nameof(BeginImportContentItemsFromCsv)
+            );
         }
 
         public async Task Execute(Guid jobId, JsonElement args, CancellationToken cancellationToken)
@@ -600,7 +605,7 @@ public class BeginImportContentItemsFromCsv
                 throw new Exception(urlError);
             }
 
-            var response = await httpClient.GetAsync(fileUrl);
+            var response = await _httpClient.GetAsync(fileUrl, cancellationToken);
 
             if (response == null)
                 throw new Exception($"Unable to retrieve file from {fileUrl}. Reason unknown.");
@@ -613,7 +618,7 @@ public class BeginImportContentItemsFromCsv
             string fileName = Path.GetFileName(fileUrl);
             string contentType = response?.Content?.Headers?.ContentType?.ToString() ?? "Unknown";
             var memoryStream = new MemoryStream();
-            await response.Content.CopyToAsync(memoryStream);
+            await response.Content.CopyToAsync(memoryStream, cancellationToken);
 
             var fileBytes = memoryStream.ToArray();
             if (fileBytes.Length <= 0)

@@ -1,7 +1,5 @@
-using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
-using Microsoft.Extensions.Primitives;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Models.RenderModels;
 using Raytha.Application.Common.Utils;
@@ -41,10 +39,10 @@ public class SitePageActionViewResult : IActionResult
     public async Task ExecuteResultAsync(ActionContext context)
     {
         var httpContext = context.HttpContext;
-        var renderer = httpContext.RequestServices.GetRequiredService<IRenderEngine>();
-        var currentOrg = httpContext.RequestServices.GetRequiredService<ICurrentOrganization>();
-        var currentUser = httpContext.RequestServices.GetRequiredService<ICurrentUser>();
-        var antiforgery = httpContext.RequestServices.GetRequiredService<IAntiforgery>();
+        var services = DbActionResultHelper.ResolveServices(httpContext);
+        var antiforgeryToken = services.Antiforgery
+            ?.GetAndStoreTokens(httpContext)
+            .RequestToken;
 
         httpContext.Response.StatusCode = 200;
         httpContext.Response.ContentType = ContentType;
@@ -56,13 +54,13 @@ public class SitePageActionViewResult : IActionResult
 
         var renderModel = new Wrapper_RenderModel
         {
-            CurrentOrganization = CurrentOrganization_RenderModel.GetProjection(currentOrg),
-            CurrentUser = CurrentUser_RenderModel.GetProjection(currentUser),
+            CurrentOrganization = CurrentOrganization_RenderModel.GetProjection(services.CurrentOrganization),
+            CurrentUser = CurrentUser_RenderModel.GetProjection(services.CurrentUser),
             Target = _sitePage,
-            QueryParams = QueryCollectionToDictionary(httpContext.Request.Query),
-            RequestVerificationToken = antiforgery.GetAndStoreTokens(httpContext).RequestToken,
+            QueryParams = DbActionResultHelper.ToQueryDictionary(httpContext.Request.Query),
+            RequestVerificationToken = antiforgeryToken,
             ViewData = _viewDictionary,
-            PathBase = currentOrg.PathBase,
+            PathBase = services.CurrentOrganization.PathBase,
         };
 
         // Use draft widgets if previewing draft, otherwise use published widgets
@@ -89,25 +87,15 @@ public class SitePageActionViewResult : IActionResult
         await using (var sw = new StreamWriter(httpContext.Response.Body))
         {
             // Use the overload that supports Site Page widgets
-            var body = renderer.RenderAsHtml(
+            var body = services.Renderer.RenderAsHtml(
                 sourceWithParents,
                 renderModel,
-                currentOrg.ActiveThemeId,
+                services.CurrentOrganization.ActiveThemeId,
                 widgetsForRender
             );
             await sw.WriteAsync(body);
         }
     }
 
-    private static Dictionary<string, string> QueryCollectionToDictionary(IQueryCollection query)
-    {
-        var dict = new Dictionary<string, string>();
-        foreach (var key in query.Keys)
-        {
-            query.TryGetValue(key, out StringValues value);
-            dict.Add(key, value!);
-        }
-        return dict;
-    }
 }
 

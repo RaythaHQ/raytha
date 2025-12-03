@@ -15,6 +15,7 @@ using Raytha.Web.Authentication;
 using Raytha.Web.Filters;
 using Raytha.Web.Middlewares;
 using Raytha.Web.Services;
+using Raytha.Web.Areas.Admin.Pages.SitePages;
 using RaythaZero.Web.Services;
 
 namespace Microsoft.Extensions.DependencyInjection;
@@ -198,6 +199,7 @@ public static class ConfigureServices
         services.AddScoped<ICurrentUser, CurrentUser>();
         services.AddScoped<ICurrentOrganization, CurrentOrganization>();
         services.AddScoped<IRelativeUrlBuilder, RelativeUrlBuilder>();
+        services.AddScoped<ISitePageTemplateOptionsProvider, SitePageTemplateOptionsProvider>();
         services.AddScoped<IRenderEngine, RenderEngine>();
         services.AddScoped<IContentTypeInRoutePath, ContentTypeInRoutePath>();
         services.AddSingleton<IFileStorageProviderSettings, FileStorageProviderSettings>();

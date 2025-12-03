@@ -1,11 +1,26 @@
-﻿namespace Raytha.Application.Common.Utils;
+﻿using System;
+using System.IO;
+using System.Linq;
+using System.Net.Http;
+using System.Threading;
+using System.Threading.Tasks;
+
+namespace Raytha.Application.Common.Utils;
 
 public static class FileDownloadUtility
 {
-    public static async Task<FileInfo> DownloadFile(string fileUrl)
+    public static async Task<FileInfo?> DownloadFile(
+        HttpClient httpClient,
+        string fileUrl,
+        CancellationToken cancellationToken = default
+    )
     {
-        var client = new HttpClient();
-        var response = await client.GetAsync(fileUrl);
+        if (httpClient == null)
+        {
+            throw new ArgumentNullException(nameof(httpClient));
+        }
+
+        using var response = await httpClient.GetAsync(fileUrl, cancellationToken);
 
         if (!response.IsSuccessStatusCode)
             throw new Exception(
@@ -13,7 +28,7 @@ public static class FileDownloadUtility
             );
 
         string contentType =
-            response.Content.Headers.ContentType.ToString() ?? "application/octet-stream";
+            response.Content.Headers.ContentType?.ToString() ?? "application/octet-stream";
         bool isValidMimeType = FileStorageUtility
             .GetAllowedFileExtensionsFromConfig(FileStorageUtility.DEFAULT_ALLOWED_MIMETYPES)
             .Any(s => s.Contains(contentType.Split('/')[0]));
@@ -28,8 +43,8 @@ public static class FileDownloadUtility
                 ) ?? ".bin";
 
             var memoryStream = new MemoryStream();
-            await response.Content.CopyToAsync(memoryStream);
-            var fileInfo = new FileInfo()
+            await response.Content.CopyToAsync(memoryStream, cancellationToken);
+            var fileInfo = new FileInfo
             {
                 FileMemoryStream = memoryStream,
                 FileExt = fileExt,
@@ -37,8 +52,8 @@ public static class FileDownloadUtility
             };
             return fileInfo;
         }
-        else
-            return null;
+
+        return null;
     }
 
     public class FileInfo

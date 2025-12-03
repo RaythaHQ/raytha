@@ -1,4 +1,6 @@
-﻿using System.Text.Json;
+﻿using System.Net.Http;
+using System.Text.Json;
+using Microsoft.Extensions.Http;
 using CSharpVitamins;
 using FluentValidation;
 using Mediator;
@@ -91,13 +93,17 @@ public class BeginImportThemeFromUrl
     {
         private readonly IRaythaDbContext _db;
         private readonly IFileStorageProvider _fileStorageProvider;
+        private readonly HttpClient _httpClient;
 
-        private static readonly HttpClient _httpClient = new HttpClient();
-
-        public BackgroundTask(IRaythaDbContext db, IFileStorageProvider fileStorageProvider)
+        public BackgroundTask(
+            IRaythaDbContext db,
+            IFileStorageProvider fileStorageProvider,
+            IHttpClientFactory httpClientFactory
+        )
         {
             _db = db;
             _fileStorageProvider = fileStorageProvider;
+            _httpClient = httpClientFactory.CreateClient(nameof(BeginImportThemeFromUrl));
         }
 
         public async Task Execute(Guid jobId, JsonElement args, CancellationToken cancellationToken)

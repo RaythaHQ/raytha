@@ -1,10 +1,8 @@
 using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
 using Raytha.Application.SitePages.Commands;
 using Raytha.Application.SitePages.Queries;
-using Raytha.Application.Themes.WebTemplates.Queries;
 using Raytha.Domain.Entities;
 using Raytha.Web.Areas.Admin.Pages.Shared;
 using Raytha.Web.Areas.Admin.Pages.Shared.Models;
@@ -13,12 +11,15 @@ using Raytha.Web.Areas.Shared.Models;
 namespace Raytha.Web.Areas.Admin.Pages.SitePages;
 
 [Authorize(Policy = BuiltInSystemPermission.MANAGE_SITE_PAGES_PERMISSION)]
-public class Edit : BaseAdminPageModel, ISubActionViewModel
+public class Edit : SitePageTemplatePageModel, ISubActionViewModel
 {
+    public Edit(ISitePageTemplateOptionsProvider templateOptionsProvider)
+        : base(templateOptionsProvider)
+    {
+    }
+
     [BindProperty]
     public FormModel Form { get; set; }
-
-    public IEnumerable<SelectListItem> AvailableTemplates { get; set; }
     public string Id { get; set; }
     public string? RoutePath { get; set; }
     public string Title { get; set; }
@@ -48,7 +49,7 @@ public class Edit : BaseAdminPageModel, ISubActionViewModel
             }
         );
 
-        await LoadTemplates();
+        await LoadTemplateOptionsAsync(HttpContext.RequestAborted);
 
         Form = new FormModel
         {
@@ -192,7 +193,7 @@ public class Edit : BaseAdminPageModel, ISubActionViewModel
 
     private async Task ReloadPageData(string id)
     {
-        await LoadTemplates();
+        await LoadTemplateOptionsAsync(HttpContext.RequestAborted);
         var pageResponse = await Mediator.Send(new GetSitePageById.Query { Id = id });
         
         // For ISubActionViewModel
@@ -211,17 +212,6 @@ public class Edit : BaseAdminPageModel, ISubActionViewModel
         LastModifiedBy = pageResponse.Result.LastModifierUser?.FullName ?? "N/A";
     }
 
-    private async Task LoadTemplates()
-    {
-        var templatesResponse = await Mediator.Send(
-            new GetWebTemplates.Query { ThemeId = CurrentOrganization.ActiveThemeId }
-        );
-
-        AvailableTemplates = templatesResponse.Result.Items
-            .Where(t => !t.IsBaseLayout)
-            .Select(t => new SelectListItem { Value = t.Id, Text = t.Label })
-            .ToList();
-    }
 
     public record FormModel
     {

@@ -1,9 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
 using Raytha.Application.SitePages.Commands;
-using Raytha.Application.Themes.WebTemplates.Queries;
 using Raytha.Domain.Entities;
 using Raytha.Web.Areas.Admin.Pages.Shared;
 using Raytha.Web.Areas.Admin.Pages.Shared.Models;
@@ -12,12 +10,15 @@ using Raytha.Web.Areas.Shared.Models;
 namespace Raytha.Web.Areas.Admin.Pages.SitePages;
 
 [Authorize(Policy = BuiltInSystemPermission.MANAGE_SITE_PAGES_PERMISSION)]
-public class Create : BaseAdminPageModel
+public class Create : SitePageTemplatePageModel
 {
+    public Create(ISitePageTemplateOptionsProvider templateOptionsProvider)
+        : base(templateOptionsProvider)
+    {
+    }
+
     [BindProperty]
     public FormModel Form { get; set; }
-
-    public IEnumerable<SelectListItem> AvailableTemplates { get; set; }
 
     public async Task<IActionResult> OnGet()
     {
@@ -37,7 +38,7 @@ public class Create : BaseAdminPageModel
             }
         );
 
-        await LoadTemplates();
+        await LoadTemplateOptionsAsync(HttpContext.RequestAborted);
 
         Form = new FormModel { SaveAsDraft = false };
 
@@ -66,21 +67,9 @@ public class Create : BaseAdminPageModel
                 "There was an error creating this site page. See the error below.",
                 response.GetErrors()
             );
-            await LoadTemplates();
+            await LoadTemplateOptionsAsync(HttpContext.RequestAborted);
             return Page();
         }
-    }
-
-    private async Task LoadTemplates()
-    {
-        var templatesResponse = await Mediator.Send(
-            new GetWebTemplates.Query { ThemeId = CurrentOrganization.ActiveThemeId }
-        );
-
-        AvailableTemplates = templatesResponse.Result.Items
-            .Where(t => !t.IsBaseLayout)
-            .Select(t => new SelectListItem { Value = t.Id, Text = t.Label })
-            .ToList();
     }
 
     public record FormModel
