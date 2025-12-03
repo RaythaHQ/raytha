@@ -29,10 +29,9 @@ public class ExecuteRaythaFunction
                 .Custom(
                     (request, context) =>
                     {
+                        var developerName = request.DeveloperName.ToDeveloperName(allowDot: true);
                         var raythaFunction = db
-                            .RaythaFunctions.Where(rf =>
-                                rf.DeveloperName == request.DeveloperName.ToDeveloperName()
-                            )
+                            .RaythaFunctions.Where(rf => rf.DeveloperName == developerName)
                             .Select(rf => new { rf.IsActive, rf.TriggerType })
                             .FirstOrDefault();
 
@@ -42,7 +41,7 @@ public class ExecuteRaythaFunction
                             // which could otherwise allow unauthenticated code execution if the function were later reactivated.
                             context.AddFailure(
                                 "IsActive",
-                                $"A function with the developer name {request.DeveloperName} do not exist."
+                                $"A function with the developer name {developerName} does not exist."
                             );
                         }
                         else if (
@@ -89,9 +88,10 @@ public class ExecuteRaythaFunction
             CancellationToken cancellationToken
         )
         {
+            var developerName = request.DeveloperName.ToDeveloperName(allowDot: true);
             var code = await _db
                 .RaythaFunctions.Where(rf =>
-                    rf.DeveloperName == request.DeveloperName.ToDeveloperName()
+                    rf.DeveloperName == developerName
                     && rf.TriggerType == RaythaFunctionTriggerType.HttpRequest
                 )
                 .Select(rf => rf.Code)

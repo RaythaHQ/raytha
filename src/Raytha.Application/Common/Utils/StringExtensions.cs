@@ -7,12 +7,33 @@ namespace Raytha.Application.Common.Utils;
 
 public static class StringExtensions
 {
-    public static string ToDeveloperName(this string source)
+    /// <summary>
+    /// Converts a string to a developer name format (lowercase, alphanumeric, underscores).
+    /// </summary>
+    /// <param name="source">The source string to convert.</param>
+    /// <param name="allowDot">When true, preserves dots in the output (useful for Raytha function routes like feed.xml).</param>
+    public static string ToDeveloperName(this string source, bool allowDot = false)
     {
         if (string.IsNullOrEmpty(source))
             return string.Empty;
         source = source.ToLower().Trim();
-        source = Regex.Replace(source, "[^a-zA-Z0-9]", "_");
+
+        if (allowDot)
+        {
+            // Allow alphanumeric and dots, convert everything else to underscore
+            source = Regex.Replace(source, @"[^a-zA-Z0-9.]", "_");
+            // Remove multiple consecutive underscores
+            source = Regex.Replace(source, @"_{2,}", "_");
+            // Remove multiple consecutive dots (security)
+            source = Regex.Replace(source, @"\.{2,}", ".");
+            // Trim leading/trailing underscores and dots
+            source = source.Trim('_', '.');
+        }
+        else
+        {
+            source = Regex.Replace(source, "[^a-zA-Z0-9]", "_");
+        }
+
         return source;
     }
 
@@ -98,11 +119,14 @@ public static class StringExtensions
 
     static readonly Regex WordDelimiters = new Regex(@"[\s—–]", RegexOptions.Compiled);
 
-    // characters that are not valid
-    static readonly Regex InvalidChars = new Regex(@"[^_/a-zA-Z0-9\-]", RegexOptions.Compiled);
+    // characters that are not valid (now allows . for file extensions)
+    static readonly Regex InvalidChars = new Regex(@"[^_/a-zA-Z0-9.\-]", RegexOptions.Compiled);
 
     // multiple hyphens
     static readonly Regex MultipleHyphens = new Regex(@"-{2,}", RegexOptions.Compiled);
+
+    // multiple dots
+    static readonly Regex MultipleDots = new Regex(@"\.{2,}", RegexOptions.Compiled);
 
     public static string ToUrlSlug(this string value)
     {
@@ -121,8 +145,50 @@ public static class StringExtensions
         // replace multiple hyphens (-) with a single hyphen
         value = MultipleHyphens.Replace(value, "-");
 
-        // trim hyphens (-) from ends
-        return value.Trim().Trim('-', '/');
+        // replace multiple dots (..) with a single dot (security)
+        value = MultipleDots.Replace(value, ".");
+
+        // trim hyphens (-), dots (.), and slashes (/) from ends
+        return value.Trim().Trim('-', '/', '.');
+    }
+
+    /// <summary>
+    /// Validates that a route path is secure and well-formed.
+    /// Rules:
+    /// - No ".." segments (directory traversal)
+    /// - No segment starting with "." except in the last segment's filename
+    /// - Dots are only allowed in the last path segment
+    /// </summary>
+    public static bool IsValidRoutePath(this string path)
+    {
+        if (string.IsNullOrWhiteSpace(path))
+            return false;
+
+        var segments = path.Split('/', StringSplitOptions.RemoveEmptyEntries);
+
+        for (int i = 0; i < segments.Length; i++)
+        {
+            var segment = segments[i];
+            bool isLastSegment = i == segments.Length - 1;
+
+            // No empty segments after trimming
+            if (string.IsNullOrWhiteSpace(segment))
+                return false;
+
+            // No ".." segments (directory traversal)
+            if (segment == "..")
+                return false;
+
+            // No segment starting with "." (hidden files/folders) except in last segment's filename
+            if (segment.StartsWith('.'))
+                return false;
+
+            // Dots only allowed in the last segment (for file extensions like .txt, .xml)
+            if (!isLastSegment && segment.Contains('.'))
+                return false;
+        }
+
+        return true;
     }
 
     /// See: http://www.siao2.com/2007/05/14/2629747.aspx

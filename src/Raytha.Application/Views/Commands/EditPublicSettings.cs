@@ -81,7 +81,15 @@ public class EditPublicSettings
                         {
                             context.AddFailure(
                                 "RoutePath",
-                                "Invalid route path. Must be letters, numbers, and dashes"
+                                "Invalid route path. Must be letters, numbers, dashes, and dots (dots only allowed in the last segment for file extensions like .txt or .xml)"
+                            );
+                            return;
+                        }
+                        if (!slugifiedPath.IsValidRoutePath())
+                        {
+                            context.AddFailure(
+                                "RoutePath",
+                                "Invalid route path. Dots are only allowed in the last segment (e.g., robots.txt). No '..' segments or leading dots allowed."
                             );
                             return;
                         }
@@ -92,7 +100,7 @@ public class EditPublicSettings
                         {
                             context.AddFailure(
                                 "RoutePath",
-                                $"The route path {request.RoutePath.ToUrlSlug()} already exists."
+                                $"The route path {slugifiedPath} already exists."
                             );
                             return;
                         }

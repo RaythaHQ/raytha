@@ -15,14 +15,17 @@ import { toDeveloperName } from '/js/core/utils.js';
  * @param {string|HTMLInputElement} devNameInput - Developer name input element or selector
  * @param {Object} options - Options
  * @param {boolean} options.onlyIfEmpty - Only sync if developer name was initially empty (default: true)
+ * @param {boolean} options.allowDot - When true, preserves dots in output (useful for Raytha function routes like feed.xml)
  * @returns {Function} - Cleanup function to remove listeners
  */
 export const bindDeveloperNameSync = (labelInput, devNameInput, options = {}) => {
     const defaults = {
         onlyIfEmpty: true,
+        allowDot: false,
     };
 
     const opts = { ...defaults, ...options };
+    const devNameOptions = { allowDot: opts.allowDot };
 
     const labelEl = typeof labelInput === 'string' ? $(labelInput) : labelInput;
     const devNameEl = typeof devNameInput === 'string' ? $(devNameInput) : devNameInput;
@@ -37,7 +40,7 @@ export const bindDeveloperNameSync = (labelInput, devNameInput, options = {}) =>
 
     // Check initial state - if dev name has a value that's different from what it should be, user overrode it
     if (opts.onlyIfEmpty && devNameEl.value.trim()) {
-        const initialSlug = toDeveloperName(labelEl.value);
+        const initialSlug = toDeveloperName(labelEl.value, devNameOptions);
         if (devNameEl.value !== initialSlug) {
             userOverrode = true;
         }
@@ -54,7 +57,7 @@ export const bindDeveloperNameSync = (labelInput, devNameInput, options = {}) =>
     // Handle label input event
     const handleLabelInput = () => {
         if (!userOverrode) {
-            devNameEl.value = toDeveloperName(labelEl.value);
+            devNameEl.value = toDeveloperName(labelEl.value, devNameOptions);
         }
     };
 
@@ -84,8 +87,9 @@ export const initDeveloperNameSync = (root = document) => {
     labelInputs.forEach(labelInput => {
         const targetSelector = labelInput.getAttribute('data-sync-to');
         const onlyIfEmpty = labelInput.getAttribute('data-sync-only-if-empty') !== 'false';
+        const allowDot = labelInput.getAttribute('data-sync-allow-dot') === 'true';
 
-        bindDeveloperNameSync(labelInput, targetSelector, { onlyIfEmpty });
+        bindDeveloperNameSync(labelInput, targetSelector, { onlyIfEmpty, allowDot });
     });
 };
 

@@ -41,14 +41,11 @@ public class CreateRaythaFunction
                 .Custom(
                     (request, context) =>
                     {
-                        if (
-                            db.RaythaFunctions.Any(p =>
-                                p.DeveloperName == request.DeveloperName.ToDeveloperName()
-                            )
-                        )
+                        var developerName = request.DeveloperName.ToDeveloperName(allowDot: true);
+                        if (db.RaythaFunctions.Any(p => p.DeveloperName == developerName))
                             context.AddFailure(
                                 "DeveloperName",
-                                $"A function with the developer name {request.DeveloperName.ToDeveloperName()} already exists."
+                                $"A function with the developer name {developerName} already exists."
                             );
                     }
                 );
@@ -73,7 +70,7 @@ public class CreateRaythaFunction
             {
                 Id = Guid.NewGuid(),
                 Name = request.Name,
-                DeveloperName = request.DeveloperName.ToDeveloperName(),
+                DeveloperName = request.DeveloperName.ToDeveloperName(allowDot: true),
                 TriggerType = RaythaFunctionTriggerType.From(request.TriggerType),
                 IsActive = request.IsActive,
                 Code = request.Code,

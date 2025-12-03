@@ -27,8 +27,9 @@ public class GetRaythaFunctionByDeveloperName
             CancellationToken cancellationToken
         )
         {
+            var developerName = request.DeveloperName.ToDeveloperName(allowDot: true);
             var entity = _db.RaythaFunctions.FirstOrDefault(
-                rf => rf.DeveloperName == request.DeveloperName.ToDeveloperName()
+                rf => rf.DeveloperName == developerName
             );
 
             if (entity == null)

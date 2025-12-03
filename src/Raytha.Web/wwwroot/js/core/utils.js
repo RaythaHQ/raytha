@@ -123,22 +123,39 @@ export const slugify = (str) => {
  * Used for auto-generating developer names from labels.
  * Converts "My Content Type" to "my_content_type"
  * @param {string} label - Label text
- * @returns {string} - Developer name (lowercase, underscores, alphanumeric only)
+ * @param {Object} options - Options
+ * @param {boolean} options.allowDot - When true, preserves dots in output (useful for Raytha function routes like feed.xml)
+ * @returns {string} - Developer name (lowercase, underscores, alphanumeric only, optionally with dots)
  */
-export const toDeveloperName = (label) => {
+export const toDeveloperName = (label, options = {}) => {
   if (!label) return '';
   
-  return label
+  const { allowDot = false } = options;
+  
+  let result = label
     .toLowerCase()
     .normalize('NFKD')                // Handle accents
     .replace(/[\u0300-\u036f]/g, '')  // Strip diacritics
-    .replace(/[^a-z0-9\s_-]/g, '')    // Keep only alphanumeric, space, underscore, hyphen
-    .trim()
-    .replace(/\s+/g, '_')             // Replace spaces with underscores
-    .replace(/-+/g, '_')              // Replace hyphens with underscores
-    .replace(/_+/g, '_')              // Collapse multiple underscores
-    .replace(/^_|_$/g, '')            // Remove leading/trailing underscores
-    .substring(0, 128);               // Max length 128 characters
+    .trim();
+  
+  if (allowDot) {
+    result = result
+      .replace(/[^a-z0-9.\s_-]/g, '') // Keep alphanumeric, dot, space, underscore, hyphen
+      .replace(/\s+/g, '_')           // Replace spaces with underscores
+      .replace(/-+/g, '_')            // Replace hyphens with underscores
+      .replace(/_+/g, '_')            // Collapse multiple underscores
+      .replace(/\.+/g, '.')           // Collapse multiple dots (security)
+      .replace(/^[_.]+|[_.]+$/g, ''); // Remove leading/trailing underscores and dots
+  } else {
+    result = result
+      .replace(/[^a-z0-9\s_-]/g, '')  // Keep only alphanumeric, space, underscore, hyphen
+      .replace(/\s+/g, '_')           // Replace spaces with underscores
+      .replace(/-+/g, '_')            // Replace hyphens with underscores
+      .replace(/_+/g, '_')            // Collapse multiple underscores
+      .replace(/^_|_$/g, '');         // Remove leading/trailing underscores
+  }
+  
+  return result.substring(0, 128);    // Max length 128 characters
 };
 
 /**
