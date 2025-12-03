@@ -55,6 +55,8 @@ public class Execute : BaseAdminPageModel
                     new JsonSerializerOptions { PropertyNamingPolicy = null, WriteIndented = true }
                 ),
                 "text/html" => Content(result.body, result.contentType),
+                "application/xml" => Content(result.body, result.contentType),
+                "text/xml" => Content(result.body, result.contentType),
                 "redirectToUrl" => Redirect(result.body),
                 "statusCode" => StatusCode(result.statusCode, result.body),
                 _ => throw new NotSupportedException(),
