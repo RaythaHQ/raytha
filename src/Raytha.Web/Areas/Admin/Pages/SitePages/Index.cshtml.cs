@@ -67,7 +67,7 @@ public class Index : BaseAdminPageModel, IHasListView<Index.SitePagesListItemVie
         [Display(Name = "Title")]
         public string Title { get; init; }
 
-        [Display(Name = "URL Path")]
+        [Display(Name = "Route Path")]
         public string RoutePath { get; init; }
 
         [Display(Name = "Published")]

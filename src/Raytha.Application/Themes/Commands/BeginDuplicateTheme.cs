@@ -1,4 +1,6 @@
-﻿using System.Text.Json;
+﻿using System.Net.Http;
+using System.Text.Json;
+using Microsoft.Extensions.Http;
 using CSharpVitamins;
 using FluentValidation;
 using Mediator;
@@ -89,11 +91,17 @@ public class BeginDuplicateTheme
     {
         private readonly IRaythaDbContext _db;
         private readonly IFileStorageProvider _fileStorageProvider;
+        private readonly IHttpClientFactory _httpClientFactory;
 
-        public BackgroundTask(IRaythaDbContext db, IFileStorageProvider fileStorageProvider)
+        public BackgroundTask(
+            IRaythaDbContext db,
+            IFileStorageProvider fileStorageProvider,
+            IHttpClientFactory httpClientFactory
+        )
         {
             _db = db;
             _fileStorageProvider = fileStorageProvider;
+            _httpClientFactory = httpClientFactory;
         }
 
         public async Task Execute(Guid jobId, JsonElement args, CancellationToken cancellationToken)
@@ -146,6 +154,8 @@ public class BeginDuplicateTheme
                 originalThemeMediaItems.Length + originalThemeWebTemplates.Length;
             var currentIndex = 1;
 
+            var mediaDownloadClient = _httpClientFactory.CreateClient(nameof(BeginDuplicateTheme));
+
             foreach (var originalThemeMediaItem in originalThemeMediaItems)
             {
                 var downloadUrl = await _fileStorageProvider.GetDownloadUrlAsync(
@@ -157,7 +167,15 @@ public class BeginDuplicateTheme
                     downloadUrl = $"{pathBase}{downloadUrl}";
                 }
 
-                var fileInfo = await FileDownloadUtility.DownloadFile(downloadUrl);
+                var fileInfo = await FileDownloadUtility.DownloadFile(
+                    mediaDownloadClient,
+                    downloadUrl,
+                    cancellationToken
+                );
+                if (fileInfo == null)
+                {
+                    throw new Exception($"Unable to download file from {downloadUrl}.");
+                }
                 var id = ShortGuid.NewGuid();
                 var objectKey = FileStorageUtility.CreateObjectKeyFromIdAndFileName(
                     id,

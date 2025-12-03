@@ -51,15 +51,15 @@ public class RaythaFunctionsHttpClient : IRaythaFunctionsHttpClient
         bool json = true
     )
     {
+        using var request = new HttpRequestMessage(method, url);
+
         if (headers != null)
         {
             foreach (var header in headers)
             {
-                _httpClient.DefaultRequestHeaders.Add(header.Key, (string)header.Value);
+                request.Headers.TryAddWithoutValidation(header.Key, header.Value?.ToString());
             }
         }
-
-        var request = new HttpRequestMessage(method, url);
 
         if (body != null)
         {
@@ -74,12 +74,13 @@ public class RaythaFunctionsHttpClient : IRaythaFunctionsHttpClient
             else
             {
                 IEnumerable<KeyValuePair<string, string>> bodyAsKv = body.Select(
-                    kvp => new KeyValuePair<string, string>(kvp.Key, kvp.Value.ToString())
+                    kvp => new KeyValuePair<string, string>(kvp.Key, kvp.Value?.ToString() ?? string.Empty)
                 );
                 request.Content = new FormUrlEncodedContent(bodyAsKv);
             }
         }
 
+        // Use synchronous Send to avoid deadlocks in the V8 script engine context
         var response = _httpClient.Send(request);
 
         if (!response.IsSuccessStatusCode)
@@ -87,8 +88,8 @@ public class RaythaFunctionsHttpClient : IRaythaFunctionsHttpClient
             throw new Exception($"Request failed with status code {response.StatusCode}");
         }
 
-        var content = response.Content.ReadAsStringAsync().Result;
-
-        return content;
+        // Read content synchronously
+        using var reader = new StreamReader(response.Content.ReadAsStream());
+        return reader.ReadToEnd();
     }
 }

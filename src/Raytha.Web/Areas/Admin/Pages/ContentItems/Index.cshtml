@@ -414,7 +414,23 @@
                             {
                                 if (item.FieldValues.ContainsKey(column))
                                 {
-                                    <td>@item.FieldValues[column]</td>
+                                    if (column == "RoutePath")
+                                    {
+                                        <td>
+                                            @if (item.FieldValues.ContainsKey("IsPublished") && item.FieldValues["IsPublished"] == "Yes")
+                                            {
+                                                <a href="/@item.FieldValues[column]" target="_blank"><code>/@item.FieldValues[column]</code></a>
+                                            }
+                                            else
+                                            {
+                                                <code>/@item.FieldValues[column]</code>
+                                            }
+                                        </td>
+                                    }
+                                    else
+                                    {
+                                        <td>@item.FieldValues[column]</td>
+                                    }
                                 }
                                 else
                                 {

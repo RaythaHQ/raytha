@@ -46,35 +46,19 @@ public class RelativeUrlBuilder : IRelativeUrlBuilder
         );
 
     public string MediaRedirectToFileUrl(string objectKey) =>
-        ResolveUrlIfHttpContextAccessExists(
-            "MediaItems",
-            "RedirectToFileUrlByObjectKey",
-            new { area = "Admin", objectKey }
-        );
+        ResolveUrlByRouteName("mediaitemsredirecttofileurlbyobjectkey", new { objectKey });
 
     public string MediaPublicFileUrl(string objectKey) =>
-        ResolveUrlIfHttpContextAccessExists(
-            "MediaItems",
-            "RedirectToFileUrlByObjectKey",
-            new { area = "Admin", objectKey }
-        );
+        ResolveUrlByRouteName("mediaitemsredirecttofileurlbyobjectkey", new { objectKey });
 
     public string MediaCloudUploadPresignUrl() =>
-        ResolveUrlIfHttpContextAccessExists(
-            "MediaItems",
-            "CloudUploadPresignRequest",
-            new { area = "Admin" }
-        );
+        ResolveUrlByRouteName("mediaitemspresignuploadurl", null);
 
     public string MediaCloudUploadCreateAfterUploadUrl() =>
-        ResolveUrlIfHttpContextAccessExists(
-            "MediaItems",
-            "CloudUploadCreateAfterUpload",
-            new { area = "Admin" }
-        );
+        ResolveUrlByRouteName("mediaitemscreateafterupload", null);
 
     public string MediaDirectUploadUrl() =>
-        ResolveUrlIfHttpContextAccessExists("MediaItems", "DirectUpload", new { area = "Admin" });
+        ResolveUrlByRouteName("mediaitemslocalstorageupload", null);
 
     public string MediaFileLocalStorageUrl(string objectKey) =>
         GetBaseUrl() + $"/_static-files/{objectKey}";
@@ -151,6 +135,22 @@ public class RelativeUrlBuilder : IRelativeUrlBuilder
                 values: values
             );
             return url;
+        }
+    }
+
+    private string ResolveUrlByRouteName(string routeName, object? values)
+    {
+        if (_httpContextAccessor.HttpContext == null)
+        {
+            return _generator.GetPathByName(routeName, values: values) ?? string.Empty;
+        }
+        else
+        {
+            return _generator.GetUriByName(
+                _httpContextAccessor.HttpContext,
+                routeName,
+                values: values
+            ) ?? string.Empty;
         }
     }
 

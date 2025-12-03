@@ -1,4 +1,4 @@
-namespace Raytha.Web.Areas.Public.Views.Login;
+namespace Raytha.Web.Areas.Public.Models;
 
 public class LoginWithEmailAndPasswordViewModel
 {
@@ -36,3 +36,4 @@ public class CreateUserViewModel
     public string Password { get; set; }
     public string ConfirmPassword { get; set; }
 }
+

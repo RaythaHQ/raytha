@@ -1,4 +1,6 @@
-﻿using CSharpVitamins;
+﻿using System;
+using System.Threading.Tasks;
+using CSharpVitamins;
 using Mediator;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Models;
@@ -54,20 +56,18 @@ public class RaythaFunctionApi_V1 : IRaythaFunctionApi_V1
         int pageSize = 50
     )
     {
-        return Mediator
-            .Send(
-                new GetContentItems.Query
-                {
-                    ContentType = contentTypeDeveloperName,
-                    ViewId = viewId,
-                    Search = search,
-                    Filter = filter,
-                    OrderBy = orderBy,
-                    PageNumber = pageNumber,
-                    PageSize = pageSize,
-                }
-            )
-            .Result;
+        return Send(
+            new GetContentItems.Query
+            {
+                ContentType = contentTypeDeveloperName,
+                ViewId = viewId,
+                Search = search,
+                Filter = filter,
+                OrderBy = orderBy,
+                PageNumber = pageNumber,
+                PageSize = pageSize,
+            }
+        );
     }
 
     public IQueryResponseDto<ListResultDto<DeletedContentItemDto>> GetDeletedContentItems(
@@ -78,23 +78,21 @@ public class RaythaFunctionApi_V1 : IRaythaFunctionApi_V1
         int pageSize = 50
     )
     {
-        return Mediator
-            .Send(
-                new GetDeletedContentItems.Query
-                {
-                    DeveloperName = contentTypeDeveloperName,
-                    Search = search,
-                    OrderBy = orderBy,
-                    PageNumber = pageNumber,
-                    PageSize = pageSize,
-                }
-            )
-            .Result;
+        return Send(
+            new GetDeletedContentItems.Query
+            {
+                DeveloperName = contentTypeDeveloperName,
+                Search = search,
+                OrderBy = orderBy,
+                PageNumber = pageNumber,
+                PageSize = pageSize,
+            }
+        );
     }
 
     public IQueryResponseDto<ContentItemDto> GetContentItemById(string contentItemId)
     {
-        return Mediator.Send(new GetContentItemById.Query { Id = contentItemId }).Result;
+        return Send(new GetContentItemById.Query { Id = contentItemId });
     }
 
     public ICommandResponseDto<ShortGuid> CreateContentItem(
@@ -104,17 +102,15 @@ public class RaythaFunctionApi_V1 : IRaythaFunctionApi_V1
         IDictionary<string, object> content
     )
     {
-        return Mediator
-            .Send(
-                new CreateContentItem.Command
-                {
-                    ContentTypeDeveloperName = contentTypeDeveloperName,
-                    Content = content.ToDictionary(entry => entry.Key, entry => entry.Value),
-                    SaveAsDraft = saveAsDraft,
-                    TemplateId = templateId,
-                }
-            )
-            .Result;
+        return Send(
+            new CreateContentItem.Command
+            {
+                ContentTypeDeveloperName = contentTypeDeveloperName,
+                Content = content.ToDictionary(entry => entry.Key, entry => entry.Value),
+                SaveAsDraft = saveAsDraft,
+                TemplateId = templateId,
+            }
+        );
     }
 
     public ICommandResponseDto<ShortGuid> EditContentItem(
@@ -123,16 +119,14 @@ public class RaythaFunctionApi_V1 : IRaythaFunctionApi_V1
         IDictionary<string, object> content
     )
     {
-        return Mediator
-            .Send(
-                new EditContentItem.Command
-                {
-                    Id = contentItemId,
-                    SaveAsDraft = saveAsDraft,
-                    Content = content.ToDictionary(entry => entry.Key, entry => entry.Value),
-                }
-            )
-            .Result;
+        return Send(
+            new EditContentItem.Command
+            {
+                Id = contentItemId,
+                SaveAsDraft = saveAsDraft,
+                Content = content.ToDictionary(entry => entry.Key, entry => entry.Value),
+            }
+        );
     }
 
     public ICommandResponseDto<ShortGuid> EditContentItemSettings(
@@ -141,31 +135,29 @@ public class RaythaFunctionApi_V1 : IRaythaFunctionApi_V1
         string routePath
     )
     {
-        return Mediator
-            .Send(
-                new EditContentItemSettings.Command
-                {
-                    Id = contentItemId,
-                    TemplateId = templateId,
-                    RoutePath = routePath,
-                }
-            )
-            .Result;
+        return Send(
+            new EditContentItemSettings.Command
+            {
+                Id = contentItemId,
+                TemplateId = templateId,
+                RoutePath = routePath,
+            }
+        );
     }
 
     public ICommandResponseDto<ShortGuid> UnpublishContentItem(string contentItemId)
     {
-        return Mediator.Send(new UnpublishContentItem.Command { Id = contentItemId }).Result;
+        return Send(new UnpublishContentItem.Command { Id = contentItemId });
     }
 
     public ICommandResponseDto<ShortGuid> DeleteContentItem(string contentItemId)
     {
-        return Mediator.Send(new DeleteContentItem.Command { Id = contentItemId }).Result;
+        return Send(new DeleteContentItem.Command { Id = contentItemId });
     }
 
     public IQueryResponseDto<RouteDto> GetRouteByPath(string routePath)
     {
-        return Mediator.Send(new GetRouteByPath.Query { Path = routePath }).Result;
+        return Send(new GetRouteByPath.Query { Path = routePath });
     }
 
     public IQueryResponseDto<ListResultDto<ContentTypeDto>> GetContentTypes(
@@ -175,28 +167,24 @@ public class RaythaFunctionApi_V1 : IRaythaFunctionApi_V1
         int pageSize = 50
     )
     {
-        return Mediator
-            .Send(
-                new GetContentTypes.Query
-                {
-                    Search = search,
-                    OrderBy = orderBy,
-                    PageNumber = pageNumber,
-                    PageSize = pageSize,
-                }
-            )
-            .Result;
+        return Send(
+            new GetContentTypes.Query
+            {
+                Search = search,
+                OrderBy = orderBy,
+                PageNumber = pageNumber,
+                PageSize = pageSize,
+            }
+        );
     }
 
     public IQueryResponseDto<ContentTypeDto> GetContentTypeByDeveloperName(
         string contentTypeDeveloperName
     )
     {
-        return Mediator
-            .Send(
-                new GetContentTypeByDeveloperName.Query { DeveloperName = contentTypeDeveloperName }
-            )
-            .Result;
+        return Send(
+            new GetContentTypeByDeveloperName.Query { DeveloperName = contentTypeDeveloperName }
+        );
     }
 
     public IQueryResponseDto<ListResultDto<MediaItemDto>> GetMediaItems(
@@ -206,26 +194,26 @@ public class RaythaFunctionApi_V1 : IRaythaFunctionApi_V1
         int pageSize = 50
     )
     {
-        return Mediator
-            .Send(
-                new GetMediaItems.Query
-                {
-                    Search = search,
-                    OrderBy = orderBy,
-                    PageNumber = pageNumber,
-                    PageSize = pageSize,
-                }
-            )
-            .Result;
+        return Send(
+            new GetMediaItems.Query
+            {
+                Search = search,
+                OrderBy = orderBy,
+                PageNumber = pageNumber,
+                PageSize = pageSize,
+            }
+        );
     }
 
     public IQueryResponseDto<string> GetMediaItemUrlByObjectKey(string objectKey)
     {
-        return new QueryResponseDto<string>(
-            FileStorageProvider
+        return ExecuteSync(async () =>
+        {
+            var downloadUrl = await FileStorageProvider
                 .GetDownloadUrlAsync(objectKey, FileStorageUtility.GetDefaultExpiry())
-                .Result
-        );
+                .ConfigureAwait(false);
+            return new QueryResponseDto<string>(downloadUrl);
+        });
     }
 
     public IQueryResponseDto<ListResultDto<UserGroupDto>> GetUserGroups(
@@ -235,39 +223,35 @@ public class RaythaFunctionApi_V1 : IRaythaFunctionApi_V1
         int pageSize = 50
     )
     {
-        return Mediator
-            .Send(
-                new GetUserGroups.Query
-                {
-                    Search = search,
-                    OrderBy = orderBy,
-                    PageNumber = pageNumber,
-                    PageSize = pageSize,
-                }
-            )
-            .Result;
+        return Send(
+            new GetUserGroups.Query
+            {
+                Search = search,
+                OrderBy = orderBy,
+                PageNumber = pageNumber,
+                PageSize = pageSize,
+            }
+        );
     }
 
     public IQueryResponseDto<UserGroupDto> GetUserGroupById(string userGroupId)
     {
-        return Mediator.Send(new GetUserGroupById.Query { Id = userGroupId }).Result;
+        return Send(new GetUserGroupById.Query { Id = userGroupId });
     }
 
     public ICommandResponseDto<ShortGuid> CreateUserGroup(string developerName, string label)
     {
-        return Mediator
-            .Send(new CreateUserGroup.Command { DeveloperName = developerName, Label = label })
-            .Result;
+        return Send(new CreateUserGroup.Command { DeveloperName = developerName, Label = label });
     }
 
     public ICommandResponseDto<ShortGuid> EditUserGroup(string userGroupId, string label)
     {
-        return Mediator.Send(new EditUserGroup.Command { Id = userGroupId, Label = label }).Result;
+        return Send(new EditUserGroup.Command { Id = userGroupId, Label = label });
     }
 
     public ICommandResponseDto<ShortGuid> DeleteUserGroup(string userGroupId)
     {
-        return Mediator.Send(new DeleteUserGroup.Command { Id = userGroupId }).Result;
+        return Send(new DeleteUserGroup.Command { Id = userGroupId });
     }
 
     public IQueryResponseDto<ListResultDto<UserDto>> GetUsers(
@@ -277,22 +261,20 @@ public class RaythaFunctionApi_V1 : IRaythaFunctionApi_V1
         int pageSize = 50
     )
     {
-        return Mediator
-            .Send(
-                new GetUsers.Query
-                {
-                    Search = search,
-                    OrderBy = orderBy,
-                    PageNumber = pageNumber,
-                    PageSize = pageSize,
-                }
-            )
-            .Result;
+        return Send(
+            new GetUsers.Query
+            {
+                Search = search,
+                OrderBy = orderBy,
+                PageNumber = pageNumber,
+                PageSize = pageSize,
+            }
+        );
     }
 
     public IQueryResponseDto<UserDto> GetUserById(string userId)
     {
-        return Mediator.Send(new GetUserById.Query { Id = userId }).Result;
+        return Send(new GetUserById.Query { Id = userId });
     }
 
     public ICommandResponseDto<ShortGuid> CreateUser(
@@ -308,18 +290,16 @@ public class RaythaFunctionApi_V1 : IRaythaFunctionApi_V1
         {
             userGroupsAsEnum.Add(userGroups[index]);
         }
-        return Mediator
-            .Send(
-                new CreateUser.Command
-                {
-                    EmailAddress = emailAddress,
-                    FirstName = firstName,
-                    LastName = lastName,
-                    SendEmail = sendEmail,
-                    UserGroups = userGroupsAsEnum,
-                }
-            )
-            .Result;
+        return Send(
+            new CreateUser.Command
+            {
+                EmailAddress = emailAddress,
+                FirstName = firstName,
+                LastName = lastName,
+                SendEmail = sendEmail,
+                UserGroups = userGroupsAsEnum,
+            }
+        );
     }
 
     public ICommandResponseDto<ShortGuid> EditUser(
@@ -335,23 +315,21 @@ public class RaythaFunctionApi_V1 : IRaythaFunctionApi_V1
         {
             userGroupsAsEnum.Add(userGroups[index]);
         }
-        return Mediator
-            .Send(
-                new EditUser.Command
-                {
-                    Id = userId,
-                    EmailAddress = emailAddress,
-                    FirstName = firstName,
-                    LastName = lastName,
-                    UserGroups = userGroupsAsEnum,
-                }
-            )
-            .Result;
+        return Send(
+            new EditUser.Command
+            {
+                Id = userId,
+                EmailAddress = emailAddress,
+                FirstName = firstName,
+                LastName = lastName,
+                UserGroups = userGroupsAsEnum,
+            }
+        );
     }
 
     public ICommandResponseDto<ShortGuid> DeleteUser(string userId)
     {
-        return Mediator.Send(new DeleteUser.Command { Id = userId }).Result;
+        return Send(new DeleteUser.Command { Id = userId });
     }
 
     public ICommandResponseDto<ShortGuid> ResetPassword(
@@ -360,22 +338,20 @@ public class RaythaFunctionApi_V1 : IRaythaFunctionApi_V1
         string newPassword
     )
     {
-        return Mediator
-            .Send(
-                new ResetPassword.Command
-                {
-                    Id = userId,
-                    SendEmail = sendEmail,
-                    NewPassword = newPassword,
-                    ConfirmNewPassword = newPassword,
-                }
-            )
-            .Result;
+        return Send(
+            new ResetPassword.Command
+            {
+                Id = userId,
+                SendEmail = sendEmail,
+                NewPassword = newPassword,
+                ConfirmNewPassword = newPassword,
+            }
+        );
     }
 
     public ICommandResponseDto<ShortGuid> SetIsActive(string userId, bool isActive)
     {
-        return Mediator.Send(new SetIsActive.Command { Id = userId, IsActive = isActive }).Result;
+        return Send(new SetIsActive.Command { Id = userId, IsActive = isActive });
     }
 
     public IQueryResponseDto<ListResultDto<WebTemplateDto>> GetWebTemplates(
@@ -385,22 +361,20 @@ public class RaythaFunctionApi_V1 : IRaythaFunctionApi_V1
         int pageSize = 50
     )
     {
-        return Mediator
-            .Send(
-                new GetWebTemplates.Query
-                {
-                    Search = search,
-                    OrderBy = orderBy,
-                    PageNumber = pageNumber,
-                    PageSize = pageSize,
-                }
-            )
-            .Result;
+        return Send(
+            new GetWebTemplates.Query
+            {
+                Search = search,
+                OrderBy = orderBy,
+                PageNumber = pageNumber,
+                PageSize = pageSize,
+            }
+        );
     }
 
     public IQueryResponseDto<WebTemplateDto> GetWebTemplateById(string webTemplateId)
     {
-        return Mediator.Send(new GetWebTemplateById.Query { Id = webTemplateId }).Result;
+        return Send(new GetWebTemplateById.Query { Id = webTemplateId });
     }
 
     public ICommandResponseDto<object> ExecuteRaythaFunction(
@@ -410,17 +384,15 @@ public class RaythaFunctionApi_V1 : IRaythaFunctionApi_V1
         string payloadJson
     )
     {
-        return Mediator
-            .Send(
-                new ExecuteRaythaFunction.Command
-                {
-                    DeveloperName = developerName,
-                    RequestMethod = requestMethod,
-                    QueryJson = queryJson,
-                    PayloadJson = payloadJson,
-                }
-            )
-            .Result;
+        return Send(
+            new ExecuteRaythaFunction.Command
+            {
+                DeveloperName = developerName,
+                RequestMethod = requestMethod,
+                QueryJson = queryJson,
+                PayloadJson = payloadJson,
+            }
+        );
     }
 
     // SitePage methods
@@ -431,22 +403,20 @@ public class RaythaFunctionApi_V1 : IRaythaFunctionApi_V1
         int pageSize = 50
     )
     {
-        return Mediator
-            .Send(
-                new GetSitePages.Query
-                {
-                    Search = search,
-                    OrderBy = orderBy,
-                    PageNumber = pageNumber,
-                    PageSize = pageSize,
-                }
-            )
-            .Result;
+        return Send(
+            new GetSitePages.Query
+            {
+                Search = search,
+                OrderBy = orderBy,
+                PageNumber = pageNumber,
+                PageSize = pageSize,
+            }
+        );
     }
 
     public IQueryResponseDto<SitePageDto> GetSitePageById(string sitePageId)
     {
-        return Mediator.Send(new GetSitePageById.Query { Id = sitePageId }).Result;
+        return Send(new GetSitePageById.Query { Id = sitePageId });
     }
 
     public ICommandResponseDto<ShortGuid> CreateSitePage(
@@ -455,16 +425,14 @@ public class RaythaFunctionApi_V1 : IRaythaFunctionApi_V1
         string templateId
     )
     {
-        return Mediator
-            .Send(
-                new CreateSitePage.Command
-                {
-                    Title = title,
-                    SaveAsDraft = saveAsDraft,
-                    TemplateId = templateId,
-                }
-            )
-            .Result;
+        return Send(
+            new CreateSitePage.Command
+            {
+                Title = title,
+                SaveAsDraft = saveAsDraft,
+                TemplateId = templateId,
+            }
+        );
     }
 
     public ICommandResponseDto<ShortGuid> EditSitePage(
@@ -474,39 +442,35 @@ public class RaythaFunctionApi_V1 : IRaythaFunctionApi_V1
         string templateId
     )
     {
-        return Mediator
-            .Send(
-                new EditSitePage.Command
-                {
-                    Id = sitePageId,
-                    Title = title,
-                    SaveAsDraft = saveAsDraft,
-                    TemplateId = templateId,
-                }
-            )
-            .Result;
+        return Send(
+            new EditSitePage.Command
+            {
+                Id = sitePageId,
+                Title = title,
+                SaveAsDraft = saveAsDraft,
+                TemplateId = templateId,
+            }
+        );
     }
 
     public ICommandResponseDto<ShortGuid> EditSitePageSettings(string sitePageId, string routePath)
     {
-        return Mediator
-            .Send(new EditSitePageSettings.Command { Id = sitePageId, RoutePath = routePath })
-            .Result;
+        return Send(new EditSitePageSettings.Command { Id = sitePageId, RoutePath = routePath });
     }
 
     public ICommandResponseDto<ShortGuid> PublishSitePage(string sitePageId)
     {
-        return Mediator.Send(new PublishSitePage.Command { Id = sitePageId }).Result;
+        return Send(new PublishSitePage.Command { Id = sitePageId });
     }
 
     public ICommandResponseDto<ShortGuid> UnpublishSitePage(string sitePageId)
     {
-        return Mediator.Send(new UnpublishSitePage.Command { Id = sitePageId }).Result;
+        return Send(new UnpublishSitePage.Command { Id = sitePageId });
     }
 
     public ICommandResponseDto<ShortGuid> DeleteSitePage(string sitePageId)
     {
-        return Mediator.Send(new DeleteSitePage.Command { Id = sitePageId }).Result;
+        return Send(new DeleteSitePage.Command { Id = sitePageId });
     }
 
     // NavigationMenu methods
@@ -517,50 +481,44 @@ public class RaythaFunctionApi_V1 : IRaythaFunctionApi_V1
         int pageSize = 50
     )
     {
-        return Mediator
-            .Send(
-                new GetNavigationMenus.Query
-                {
-                    Search = search,
-                    OrderBy = orderBy,
-                    PageNumber = pageNumber,
-                    PageSize = pageSize,
-                }
-            )
-            .Result;
+        return Send(
+            new GetNavigationMenus.Query
+            {
+                Search = search,
+                OrderBy = orderBy,
+                PageNumber = pageNumber,
+                PageSize = pageSize,
+            }
+        );
     }
 
     public IQueryResponseDto<NavigationMenuDto> GetNavigationMenuById(string navigationMenuId)
     {
-        return Mediator.Send(new GetNavigationMenuById.Query { Id = navigationMenuId }).Result;
+        return Send(new GetNavigationMenuById.Query { Id = navigationMenuId });
     }
 
     public IQueryResponseDto<NavigationMenuDto> GetNavigationMenuByDeveloperName(
         string developerName
     )
     {
-        return Mediator
-            .Send(new GetNavigationMenuByDeveloperName.Query { DeveloperName = developerName })
-            .Result;
+        return Send(new GetNavigationMenuByDeveloperName.Query { DeveloperName = developerName });
     }
 
     public ICommandResponseDto<ShortGuid> CreateNavigationMenu(string label, string developerName)
     {
-        return Mediator
-            .Send(new CreateNavigationMenu.Command { Label = label, DeveloperName = developerName })
-            .Result;
+        return Send(
+            new CreateNavigationMenu.Command { Label = label, DeveloperName = developerName }
+        );
     }
 
     public ICommandResponseDto<ShortGuid> EditNavigationMenu(string navigationMenuId, string label)
     {
-        return Mediator
-            .Send(new EditNavigationMenu.Command { Id = navigationMenuId, Label = label })
-            .Result;
+        return Send(new EditNavigationMenu.Command { Id = navigationMenuId, Label = label });
     }
 
     public ICommandResponseDto<ShortGuid> DeleteNavigationMenu(string navigationMenuId)
     {
-        return Mediator.Send(new DeleteNavigationMenu.Command { Id = navigationMenuId }).Result;
+        return Send(new DeleteNavigationMenu.Command { Id = navigationMenuId });
     }
 
     // NavigationMenuItem methods
@@ -568,23 +526,19 @@ public class RaythaFunctionApi_V1 : IRaythaFunctionApi_V1
         IReadOnlyCollection<NavigationMenuItemDto>
     > GetNavigationMenuItemsByNavigationMenuId(string navigationMenuId)
     {
-        return Mediator
-            .Send(
-                new GetNavigationMenuItemsByNavigationMenuId.Query
-                {
-                    NavigationMenuId = navigationMenuId,
-                }
-            )
-            .Result;
+        return Send(
+            new GetNavigationMenuItemsByNavigationMenuId.Query
+            {
+                NavigationMenuId = navigationMenuId,
+            }
+        );
     }
 
     public IQueryResponseDto<NavigationMenuItemDto> GetNavigationMenuItemById(
         string navigationMenuItemId
     )
     {
-        return Mediator
-            .Send(new GetNavigationMenuItemById.Query { Id = navigationMenuItemId })
-            .Result;
+        return Send(new GetNavigationMenuItemById.Query { Id = navigationMenuItemId });
     }
 
     public ICommandResponseDto<ShortGuid> CreateNavigationMenuItem(
@@ -597,22 +551,20 @@ public class RaythaFunctionApi_V1 : IRaythaFunctionApi_V1
         string parentNavigationMenuItemId
     )
     {
-        return Mediator
-            .Send(
-                new CreateNavigationMenuItem.Command
-                {
-                    NavigationMenuId = navigationMenuId,
-                    Label = label,
-                    Url = url,
-                    IsDisabled = isDisabled,
-                    OpenInNewTab = openInNewTab,
-                    CssClassName = cssClassName,
-                    ParentNavigationMenuItemId = string.IsNullOrEmpty(parentNavigationMenuItemId)
-                        ? null
-                        : (ShortGuid)parentNavigationMenuItemId,
-                }
-            )
-            .Result;
+        return Send(
+            new CreateNavigationMenuItem.Command
+            {
+                NavigationMenuId = navigationMenuId,
+                Label = label,
+                Url = url,
+                IsDisabled = isDisabled,
+                OpenInNewTab = openInNewTab,
+                CssClassName = cssClassName,
+                ParentNavigationMenuItemId = string.IsNullOrEmpty(parentNavigationMenuItemId)
+                    ? null
+                    : (ShortGuid)parentNavigationMenuItemId,
+            }
+        );
     }
 
     public ICommandResponseDto<ShortGuid> EditNavigationMenuItem(
@@ -626,23 +578,21 @@ public class RaythaFunctionApi_V1 : IRaythaFunctionApi_V1
         string parentNavigationMenuItemId
     )
     {
-        return Mediator
-            .Send(
-                new EditNavigationMenuItem.Command
-                {
-                    Id = navigationMenuItemId,
-                    NavigationMenuId = navigationMenuId,
-                    Label = label,
-                    Url = url,
-                    IsDisabled = isDisabled,
-                    OpenInNewTab = openInNewTab,
-                    CssClassName = cssClassName,
-                    ParentNavigationMenuItemId = string.IsNullOrEmpty(parentNavigationMenuItemId)
-                        ? null
-                        : (ShortGuid)parentNavigationMenuItemId,
-                }
-            )
-            .Result;
+        return Send(
+            new EditNavigationMenuItem.Command
+            {
+                Id = navigationMenuItemId,
+                NavigationMenuId = navigationMenuId,
+                Label = label,
+                Url = url,
+                IsDisabled = isDisabled,
+                OpenInNewTab = openInNewTab,
+                CssClassName = cssClassName,
+                ParentNavigationMenuItemId = string.IsNullOrEmpty(parentNavigationMenuItemId)
+                    ? null
+                    : (ShortGuid)parentNavigationMenuItemId,
+            }
+        );
     }
 
     public ICommandResponseDto<ShortGuid> DeleteNavigationMenuItem(
@@ -650,14 +600,22 @@ public class RaythaFunctionApi_V1 : IRaythaFunctionApi_V1
         string navigationMenuId
     )
     {
-        return Mediator
-            .Send(
-                new DeleteNavigationMenuItem.Command
-                {
-                    Id = navigationMenuItemId,
-                    NavigationMenuId = navigationMenuId,
-                }
-            )
-            .Result;
+        return Send(
+            new DeleteNavigationMenuItem.Command
+            {
+                Id = navigationMenuItemId,
+                NavigationMenuId = navigationMenuId,
+            }
+        );
+    }
+
+    private TResponse Send<TResponse>(IRequest<TResponse> request)
+    {
+        return ExecuteSync(async () => await Mediator.Send(request).ConfigureAwait(false));
+    }
+
+    private static T ExecuteSync<T>(Func<Task<T>> operation)
+    {
+        return Task.Run(operation).GetAwaiter().GetResult();
     }
 }

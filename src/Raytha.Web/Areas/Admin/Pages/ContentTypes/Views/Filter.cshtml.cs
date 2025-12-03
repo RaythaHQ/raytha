@@ -111,6 +111,7 @@ public class Filter : BaseContentTypeContextPageModel
             .ReservedContentTypeFields.Where(p =>
                 p.DeveloperName != BuiltInContentTypeField.CreatorUser
                 && p.DeveloperName != BuiltInContentTypeField.LastModifierUser
+                && p.DeveloperName != BuiltInContentTypeField.RoutePath
             )
             .Select(p => new ViewsFilterContentTypeField_ViewModel
             {

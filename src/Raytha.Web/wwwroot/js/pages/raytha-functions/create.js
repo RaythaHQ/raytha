@@ -14,7 +14,8 @@ import { bindDeveloperNameSync } from '/js/shared/developer-name-sync.js';
  * Note: CodeMirror initialization is handled inline via import map.
  */
 function initRaythaFunctionCreate() {
-    bindDeveloperNameSync('#Form_Name', '#Form_DeveloperName');
+    // Allow dots in Raytha function developer names for routes like feed.xml, robots.txt
+    bindDeveloperNameSync('#Form_Name', '#Form_DeveloperName', { allowDot: true });
 }
 
 document.addEventListener('DOMContentLoaded', initRaythaFunctionCreate);

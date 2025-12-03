@@ -18,6 +18,7 @@ using Raytha.Application;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Utils;
 using Raytha.Infrastructure.Persistence;
+using Raytha.Web.Areas.Admin.Endpoints;
 using Raytha.Web.Middlewares;
 using Scalar.AspNetCore;
 
@@ -133,6 +134,7 @@ public class Startup
         {
             endpoints.MapRazorPages();
             endpoints.MapControllers();
+            endpoints.MapMediaItemsEndpoints();
             endpoints.MapOpenApi("/raytha/api/{documentName}/swagger.json");
 
             endpoints.MapScalarApiReference(

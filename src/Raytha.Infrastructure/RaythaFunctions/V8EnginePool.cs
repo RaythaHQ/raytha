@@ -117,6 +117,13 @@ public class V8EnginePool : IV8EnginePool
           }
         }
 
+        class XmlResult {
+          constructor(xml) {
+            this.body = xml;
+            this.contentType = 'application/xml';
+          }
+        }
+
         class RedirectResult {
           constructor(url) {
             this.body = url;

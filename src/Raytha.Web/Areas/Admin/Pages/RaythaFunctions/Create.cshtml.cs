@@ -94,13 +94,14 @@ public class Create : BaseAdminPageModel
  * For Trigger Type: Http trigger
  * Receives a get request at /raytha/functions/execute/{developerName}
  * @param {IQueryCollection} query passed in from .NET's Request.Query
- * @returns {object} of type JsonResult, HtmlResult, RedirectResult, or StatusCodeResult
+ * @returns {object} of type JsonResult, HtmlResult, XmlResult, RedirectResult, or StatusCodeResult
  */
 function get(query) {
     return new JsonResult({ success: true });
     //example 1: return new HtmlResult(""<p>Hello World</p>"");
-    //example 2: return new RedirectResult(""https://raytha.com"");
-    //example 3: return new StatusCodeResult(404, ""Not Found"");
+    //example 2: return new XmlResult(""<root><message>Hello World</message></root>"");
+    //example 3: return new RedirectResult(""https://raytha.com"");
+    //example 4: return new StatusCodeResult(404, ""Not Found"");
 }
 
 /** 
@@ -108,13 +109,14 @@ function get(query) {
  * Receives a post request at /raytha/functions/execute/{developerName}
  * @param {IFormCollection} payload passed in from .NET's Request.Form
  * @param {IQueryCollection} query passed in from .NET's Request.Query
- * @returns {object} of type JsonResult, HtmlResult, RedirectResult, or StatusCodeResult
+ * @returns {object} of type JsonResult, HtmlResult, XmlResult, RedirectResult, or StatusCodeResult
  */
 function post(payload, query) {
     return new JsonResult({ success: true });
     //example 1: return new HtmlResult(""<p>Hello World</p>"");
-    //example 2: return new RedirectResult(""https://raytha.com"");
-    //example 3: return new StatusCodeResult(404, ""Not Found"");
+    //example 2: return new XmlResult(""<root><message>Hello World</message></root>"");
+    //example 3: return new RedirectResult(""https://raytha.com"");
+    //example 4: return new StatusCodeResult(404, ""Not Found"");
 }
 
 /**

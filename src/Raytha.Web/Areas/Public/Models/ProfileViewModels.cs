@@ -1,4 +1,4 @@
-﻿namespace Raytha.Web.Areas.Public.Views.Profile;
+namespace Raytha.Web.Areas.Public.Models;
 
 public class ChangePasswordViewModel : FormSubmitViewModel
 {
@@ -39,3 +39,4 @@ public class FormSubmitViewModel : IFormValidation
         return ValidationFailures?.FirstOrDefault(p => p.Key == propertyName).Value;
     }
 }
+

@@ -1,13 +1,8 @@
-using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Primitives;
-using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Models.RenderModels;
 using Raytha.Application.Common.Utils;
 using Raytha.Application.ContentTypes;
@@ -40,10 +35,10 @@ public class ContentItemActionViewResult : IActionResult
     public async Task ExecuteResultAsync(ActionContext context)
     {
         var httpContext = context.HttpContext;
-        var renderer = httpContext.RequestServices.GetRequiredService<IRenderEngine>();
-        var currentOrg = httpContext.RequestServices.GetRequiredService<ICurrentOrganization>();
-        var currentUser = httpContext.RequestServices.GetRequiredService<ICurrentUser>();
-        var antiforgery = httpContext.RequestServices.GetRequiredService<IAntiforgery>();
+        var services = DbActionResultHelper.ResolveServices(httpContext);
+        var antiforgeryToken = services.Antiforgery
+            ?.GetAndStoreTokens(httpContext)
+            .RequestToken;
 
         httpContext.Response.StatusCode = 200;
         httpContext.Response.ContentType = ContentType;
@@ -55,32 +50,20 @@ public class ContentItemActionViewResult : IActionResult
 
         var renderModel = new Wrapper_RenderModel
         {
-            CurrentOrganization = CurrentOrganization_RenderModel.GetProjection(currentOrg),
-            CurrentUser = CurrentUser_RenderModel.GetProjection(currentUser),
+            CurrentOrganization = CurrentOrganization_RenderModel.GetProjection(services.CurrentOrganization),
+            CurrentUser = CurrentUser_RenderModel.GetProjection(services.CurrentUser),
             ContentType = _contentType,
             Target = _target,
-            QueryParams = QueryCollectionToDictionary(httpContext.Request.Query),
-            RequestVerificationToken = antiforgery.GetAndStoreTokens(httpContext).RequestToken,
+            QueryParams = DbActionResultHelper.ToQueryDictionary(httpContext.Request.Query),
+            RequestVerificationToken = antiforgeryToken,
             ViewData = _viewDictionary,
-            PathBase = currentOrg.PathBase,
+            PathBase = services.CurrentOrganization.PathBase,
         };
 
         await using (var sw = new StreamWriter(httpContext.Response.Body))
         {
-            var body = renderer.RenderAsHtml(sourceWithParents, renderModel);
+            var body = services.Renderer.RenderAsHtml(sourceWithParents, renderModel);
             await sw.WriteAsync(body);
         }
-    }
-
-    Dictionary<string, string> QueryCollectionToDictionary(IQueryCollection query)
-    {
-        var dict = new Dictionary<string, string>();
-        foreach (var key in query.Keys)
-        {
-            StringValues value = string.Empty;
-            query.TryGetValue(key, out @value);
-            dict.Add(key, @value);
-        }
-        return dict;
     }
 }

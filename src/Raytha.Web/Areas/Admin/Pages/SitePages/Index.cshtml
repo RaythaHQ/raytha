@@ -28,7 +28,7 @@
                             IsFirst = true,
                             DisplayName = ViewModelExtensions.GetDisplayName<Index.SitePagesListItemViewModel>(p => p.Title)
                         }))
-                        <th class="border-0">URL Path</th>
+                        <th class="border-0">Route Path</th>
                         @(await Html.PartialAsync("_Partials/TableColumnHeader", new BaseTableColumnHeaderViewModel()
                         {
                             Pagination = Model.ListView,
@@ -56,7 +56,14 @@
                                 <a asp-page="@RouteNames.SitePages.Edit" asp-route-id="@item.Id">@item.Title</a>
                             </td>
                             <td>
-                                <code>/@item.RoutePath</code>
+                                @if (item.IsPublished == "Yes")
+                                {
+                                    <a href="/@item.RoutePath" target="_blank"><code>/@item.RoutePath</code></a>
+                                }
+                                else
+                                {
+                                    <code>/@item.RoutePath</code>
+                                }
                             </td>
                             <td>
                                 @if (item.IsPublished == "Yes")

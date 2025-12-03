@@ -16,6 +16,7 @@ public static class ConfigureServices
 {
     public static IServiceCollection AddApplicationServices(this IServiceCollection services)
     {
+        services.AddHttpClient();
         services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly());
         services.AddMediator(options =>
         {
