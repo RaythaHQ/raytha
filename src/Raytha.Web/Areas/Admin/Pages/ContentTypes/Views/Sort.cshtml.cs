@@ -172,7 +172,9 @@ public class Sort : BaseContentTypeContextPageModel
             .ToList();
 
         var builtInListItems = BuiltInContentTypeField
-            .ReservedContentTypeFields.Select(p => new SortColumnListItemViewModel
+            .ReservedContentTypeFields
+            .Where(p => p.DeveloperName != BuiltInContentTypeField.RoutePath)
+            .Select(p => new SortColumnListItemViewModel
             {
                 Label = p.Label,
                 DeveloperName = p.DeveloperName,

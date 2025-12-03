@@ -55,6 +55,7 @@ public class FieldValueConverter
             { BuiltInContentTypeField.IsDraft, item.IsDraft.YesOrNo() },
             { BuiltInContentTypeField.PrimaryField, item.PrimaryField },
             { "Template", templateLabel },
+            { BuiltInContentTypeField.RoutePath, item.RoutePath ?? string.Empty },
         };
 
         //Content type fields

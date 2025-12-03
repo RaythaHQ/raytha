@@ -73,6 +73,8 @@ public class BuiltInContentTypeField : ValueObject
         new("Is published", "IsPublished", BaseFieldType.Checkbox);
     public static BuiltInContentTypeField Template =>
         new("Template", "Template", BaseFieldType.SingleLineText);
+    public static BuiltInContentTypeField RoutePath =>
+        new("Route Path", "RoutePath", BaseFieldType.SingleLineText);
 
     public string Label { get; private set; } = string.Empty;
     public string DeveloperName { get; private set; } = string.Empty;
@@ -106,6 +108,7 @@ public class BuiltInContentTypeField : ValueObject
             yield return IsDraft;
             yield return IsPublished;
             yield return Template;
+            yield return RoutePath;
         }
     }
 
