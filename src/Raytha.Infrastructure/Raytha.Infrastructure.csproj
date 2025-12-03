@@ -8,6 +8,9 @@
     <Configurations>Debug;Release;Debug without JS</Configurations>
   </PropertyGroup>
   <ItemGroup>
+    <InternalsVisibleTo Include="Raytha.Infrastructure.UnitTests" />
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="..\Raytha.Application\Raytha.Application.csproj" />
   </ItemGroup>
   <ItemGroup>
