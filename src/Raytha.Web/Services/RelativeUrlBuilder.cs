@@ -22,28 +22,26 @@ public class RelativeUrlBuilder : IRelativeUrlBuilder
         _currentOrganization = currentOrganization;
     }
 
+    // Admin login routes are literal Razor page routes under /raytha (see Areas/Admin/Pages/Login),
+    // built by path rather than by page name so they survive the admin UI moving to the SPA.
     public string AdminLoginUrl(string returnUrl = "") =>
-        ResolveUrlIfHttpContextAccessExists(
-            "/Login/LoginWithEmailAndPassword",
-            new { area = "Admin", returnUrl }
-        );
+        AdminPath("/raytha/login", returnUrl);
 
     public string AdminLoginWithMagicLinkCompleteUrl(string token, string returnUrl = "") =>
-        ResolveUrlIfHttpContextAccessExists(
-            "/Login/LoginWithMagicLinkComplete",
-            new
-            {
-                area = "Admin",
-                token,
-                returnUrl,
-            }
-        );
+        AdminPath($"/raytha/login/magic-link/complete/{Uri.EscapeDataString(token)}", returnUrl);
 
     public string AdminForgotPasswordCompleteUrl(string token) =>
-        ResolveUrlIfHttpContextAccessExists(
-            "/Login/ForgotPasswordComplete",
-            new { area = "Admin", token }
-        );
+        AdminPath($"/raytha/login/forgot-password/complete/{Uri.EscapeDataString(token)}");
+
+    private string AdminPath(string path, string returnUrl = "")
+    {
+        var url = GetBaseUrl() + path;
+        if (!string.IsNullOrEmpty(returnUrl))
+        {
+            url = QueryHelpers.AddQueryString(url, "returnUrl", returnUrl);
+        }
+        return url;
+    }
 
     public string MediaRedirectToFileUrl(string objectKey) =>
         ResolveUrlByRouteName("mediaitemsredirecttofileurlbyobjectkey", new { objectKey });
@@ -161,13 +159,10 @@ public class RelativeUrlBuilder : IRelativeUrlBuilder
         string returnUrl = ""
     )
     {
-        var routeValues = new { area, developerName };
-
-        string callbackUrl = _generator.GetUriByRouteValues(
-            _httpContextAccessor.HttpContext,
-            "AdminLoginWithJwt",
-            routeValues
-        );
+        var prefix = string.Equals(area, "Public", StringComparison.OrdinalIgnoreCase)
+            ? "/account"
+            : "/raytha";
+        var callbackUrl = GetBaseUrl() + $"{prefix}/login/jwt/{developerName}";
         if (!string.IsNullOrEmpty(returnUrl))
         {
             var parametersToAdd = new Dictionary<string, string> { { "returnUrl", returnUrl } };
@@ -189,13 +184,10 @@ public class RelativeUrlBuilder : IRelativeUrlBuilder
         string returnUrl = ""
     )
     {
-        var routeValues = new { area, developerName };
-
-        var acsUrl = _generator.GetUriByRouteValues(
-            _httpContextAccessor.HttpContext,
-            "AdminLoginWithSaml",
-            routeValues
-        );
+        var prefix = string.Equals(area, "Public", StringComparison.OrdinalIgnoreCase)
+            ? "/account"
+            : "/raytha";
+        var acsUrl = GetBaseUrl() + $"{prefix}/login/saml/{developerName}";
         var samlRequest = SamlUtility.GetSamlRequestAsBase64(acsUrl, samlIdpEntityId);
         var parametersToAdd = new Dictionary<string, string> { { "SAMLRequest", samlRequest } };
 

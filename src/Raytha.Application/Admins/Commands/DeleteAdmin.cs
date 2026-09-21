@@ -5,9 +5,11 @@ using Raytha.Application.Common.Exceptions;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Models;
 using Raytha.Application.Common.Utils;
+using Raytha.Application.Webhooks;
 
 namespace Raytha.Application.Admins.Commands;
 
+[WebhookEvent("admin.deleted", DisplayName = "Administrator deleted", Group = "Administrators")]
 public class DeleteAdmin
 {
     public record Command : LoggableEntityRequest<CommandResponseDto<ShortGuid>> { }

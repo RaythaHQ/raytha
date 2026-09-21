@@ -6,9 +6,11 @@ using Raytha.Application.Common.Exceptions;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Models;
 using Raytha.Application.Common.Utils;
+using Raytha.Application.Webhooks;
 
 namespace Raytha.Application.SitePages.Commands;
 
+[WebhookEvent("site_page.deleted", DisplayName = "Site page deleted", Group = "Site pages")]
 public class DeleteSitePage
 {
     public record Command : LoggableEntityRequest<CommandResponseDto<ShortGuid>> { }

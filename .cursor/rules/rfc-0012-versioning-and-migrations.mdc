@@ -1,0 +1,100 @@
+---
+description: The VERSION file, the bump/check scripts, migration naming, and the v2_0_0 baseline
+alwaysApply: true
+---
+
+# RFC-0012: Versioning and Migrations
+
+Status: Active
+
+## Abstract
+
+`VERSION` at the repo root is the product version. MSBuild reads it into the
+assembly version, `/healthz` reports it, and `tools/check-version.py` requires it
+to describe the code in the same commit. Adding an EF migration bumps MINOR;
+everything else bumps PATCH.
+
+## 1. The VERSION File
+
+- `VERSION` holds `MAJOR.MINOR.PATCH` and nothing else. Current baseline: `2.0.0`.
+- `Directory.Build.props` reads it into `Version`, `AssemblyVersion`,
+  `FileVersion`, and `InformationalVersion`, so every project shares it.
+  `CurrentVersion` reads it back from the assembly at runtime; there is no second
+  place to edit a version.
+- `/healthz` and `/healthz/ready` include `version`. A running instance whose
+  reported version does not match the checked-out `VERSION` is a stale build.
+
+## 2. Bump Rules
+
+- **MINOR + reset PATCH** when the change adds a new migration file under
+  `**/Persistence/Migrations/*.cs` (ignoring `*.Designer.cs` and
+  `*ModelSnapshot.cs`).
+- **PATCH** for every other releasable change.
+- **MAJOR** is a human decision. The scripts never touch it.
+- `VERSION` itself and `docs/supply-chain/sbom.cdx.json` do not count as
+  releasable changes; a commit touching only those skips validation.
+
+```bash
+python3 tools/bump-version.py --kind patch --write   # or --kind minor
+python3 tools/bump-version.py --before <sha> --after <sha> --print-kind
+python3 tools/check-version.py --before origin/dev --after HEAD
+python3 tools/bump-version.py --self-test
+```
+
+- The bumped `VERSION` MUST be committed with the change it describes. CI's
+  `version` job runs `check-version.py` on pull requests, and
+  `./tools/ci-local.sh` runs it against `origin/dev` before you push.
+- If `check-version.py` says the expected version is 2.0.5 and you wrote 2.1.0,
+  fix `VERSION` — do not edit the script.
+
+## 3. Migration Naming
+
+- Migration name is the release that carries it: `v2_0_0`, then `v2_1_0`. Do not
+  name a migration after what it changes.
+- Migrations live in `src/Raytha.Infrastructure/Persistence/Migrations`
+  (RFC-0001 §4).
+
+```bash
+dotnet ef migrations add v2_1_0 \
+  --project src/Raytha.Infrastructure \
+  --startup-project src/Raytha.Web
+```
+
+- Because a new migration forces the MINOR bump, the migration name and the new
+  `VERSION` MUST agree. `v2_1_0` with `VERSION` 2.0.6 is wrong.
+- `PersistenceConventionTests` asserts the `v2_0_0` migration exists. That is the
+  2.0 baseline; do not delete or rewrite it to tidy history.
+- Migrations MUST be additive and safe to run against a live 1.5.0 database.
+  Dropping or renaming a column that existing content depends on needs a
+  deliberate two-step (add, backfill, then remove in a later release).
+
+## 4. SQL Scripts
+
+`db/Postgres/` carries the operator-facing SQL, and a schema change MUST update
+it in the same commit:
+
+| File | Purpose |
+|---|---|
+| `FreshCreateOnLatestVersion.sql` | Full schema at the current version |
+| `v1_5_0_to_v2_0_0.sql` | Upgrade from the previous release |
+| `v1_4_1_to_v1_5_0.sql`, `v1_4_0_to_v1_4_1.sql` | Historical upgrades, frozen |
+
+```bash
+dotnet ef migrations script v1_5_0 v2_0_0 \
+  --project src/Raytha.Infrastructure \
+  --startup-project src/Raytha.Web \
+  --output db/Postgres/v1_5_0_to_v2_0_0.sql
+```
+
+- Historical scripts are frozen. A new release gets a new
+  `v<previous>_to_v<new>.sql`.
+- Operators who cannot run migrations at startup apply these by hand, so a
+  missing or stale script is a broken upgrade, not a paperwork problem.
+
+## 5. Applying Migrations
+
+- `APPLY_PENDING_MIGRATIONS=true` migrates on startup. It is the default for
+  Docker Compose and `./tools/dev.sh`.
+- Production MAY leave it false and apply the SQL script during deploy. Either
+  path MUST end at the same schema — that is what the generated script
+  guarantees.

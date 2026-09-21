@@ -5,9 +5,11 @@ using Microsoft.EntityFrameworkCore;
 using Raytha.Application.Common.Exceptions;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Models;
+using Raytha.Application.Webhooks;
 
 namespace Raytha.Application.MediaItems.Commands;
 
+[WebhookEvent("media_item.deleted", DisplayName = "Media item deleted", Group = "Media")]
 public class DeleteMediaItem
 {
     public record Command : LoggableEntityRequest<CommandResponseDto<ShortGuid>> { }

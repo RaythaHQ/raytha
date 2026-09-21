@@ -1,27 +1,31 @@
 {
-    // Use IntelliSense to learn about possible attributes.
-    // Hover to view descriptions of existing attributes.
-    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
-    "version": "0.2.0",
-    "configurations": [
-        {
-            "name": ".NET Core Launch",
-            "type": "coreclr",
-            "request": "launch",
-            "preLaunchTask": "build:Debug",
-            "program": "${workspaceFolder}/src/Raytha.Web/bin/Debug/net10.0/Raytha.Web.dll",
-            "args": [],
-            "cwd": "${workspaceFolder}/src/Raytha.Web",
-            "console": "integratedTerminal",
-            "stopAtEntry": false,
-            "env": {
-                "ASPNETCORE_ENVIRONMENT": "Development"
-            }
-        },
-        {
-            "name": ".NET Core Attach",
-            "type": "coreclr",
-            "request": "attach"
-        }
-    ]
+  "version": "2.0.0",
+  "configurations": [
+    {
+      "name": "Raytha.Web",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "pre-debug",
+      "program": "${workspaceFolder}/src/Raytha.Web/bin/Debug/net10.0/Raytha.Web.dll",
+      "args": [],
+      "cwd": "${workspaceFolder}/src/Raytha.Web",
+      "console": "integratedTerminal",
+      "stopAtEntry": false,
+      "env": {
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "ASPNETCORE_URLS": "http://0.0.0.0:5200",
+        "ConnectionStrings__DefaultConnection": "Host=localhost;Port=5433;Username=postgres;Password=changeme;Database=raytha",
+        "APPLY_PENDING_MIGRATIONS": "true",
+        "SMTP_HOST": "localhost",
+        "SMTP_PORT": "1025",
+        "AdminSpa__DevServerUrl": "http://localhost:5203",
+        "AdminSpa__AutoStart": "true"
+      }
+    },
+    {
+      "name": ".NET Core Attach",
+      "type": "coreclr",
+      "request": "attach"
+    }
+  ]
 }

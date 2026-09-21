@@ -1,0 +1,77 @@
+<Project>
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+    <CentralPackageTransitivePinningEnabled>false</CentralPackageTransitivePinningEnabled>
+  </PropertyGroup>
+
+  <ItemGroup Label="Application">
+    <PackageVersion Include="CSharpVitamins.ShortGuid" Version="2.0.0" />
+    <PackageVersion Include="DotNetEnv" Version="3.2.0" />
+    <PackageVersion Include="FluentValidation.DependencyInjectionExtensions" Version="12.1.0" />
+    <PackageVersion Include="Fluid.Core" Version="2.31.0" />
+    <PackageVersion Include="Fluid.ViewEngine" Version="2.31.0" />
+    <PackageVersion Include="LumenWorksCsvReader2" Version="4.4.0" />
+    <PackageVersion Include="Mediator.Abstractions" Version="3.0.2" />
+    <PackageVersion Include="Mediator.SourceGenerator" Version="3.0.2" />
+    <PackageVersion Include="System.IdentityModel.Tokens.Jwt" Version="8.14.0" />
+    <PackageVersion Include="System.Linq.Async" Version="6.0.3" />
+    <PackageVersion Include="System.Linq.Dynamic.Core" Version="1.6.10" />
+    <PackageVersion Include="System.Security.Cryptography.Xml" Version="10.0.0" />
+    <PackageVersion Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.0" />
+    <PackageVersion Include="TimeZoneConverter" Version="7.2.0" />
+    <PackageVersion Include="TimeZoneNames" Version="7.0.0" />
+  </ItemGroup>
+
+  <ItemGroup Label="Data">
+    <PackageVersion Include="AspNetCore.HealthChecks.Npgsql" Version="9.0.0" />
+    <PackageVersion Include="Dapper.SqlBuilder" Version="2.1.66" />
+    <PackageVersion Include="Microsoft.AspNetCore.DataProtection.EntityFrameworkCore" Version="10.0.0" />
+    <PackageVersion Include="Microsoft.AspNetCore.OData" Version="9.4.1" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore" Version="10.0.0" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.0" />
+    <PackageVersion Include="Microsoft.Extensions.Diagnostics.HealthChecks" Version="10.0.0" />
+    <PackageVersion Include="Microsoft.Extensions.Http" Version="10.0.0" />
+    <PackageVersion Include="Microsoft.OData.Core" Version="8.4.3" />
+    <PackageVersion Include="Npgsql" Version="10.0.0" />
+    <PackageVersion Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.0" />
+  </ItemGroup>
+
+  <ItemGroup Label="Storage">
+    <PackageVersion Include="AWSSDK.S3" Version="3.7.416.13" />
+    <PackageVersion Include="Azure.Storage.Blobs" Version="12.24.0" />
+  </ItemGroup>
+
+  <ItemGroup Label="Functions">
+    <PackageVersion Include="Microsoft.ClearScript.V8" Version="7.5.0" />
+    <PackageVersion Include="Microsoft.ClearScript.V8.Native.linux-x64" Version="7.5.0" />
+    <PackageVersion Include="Microsoft.ClearScript.V8.Native.win-x64" Version="7.5.0" />
+  </ItemGroup>
+
+  <ItemGroup Label="Hosting">
+    <PackageVersion Include="Microsoft.AspNetCore.OpenApi" Version="10.0.0" />
+    <PackageVersion Include="Scalar.AspNetCore" Version="2.10.3" />
+    <PackageVersion Include="Yarp.ReverseProxy" Version="2.3.0" />
+  </ItemGroup>
+
+  <ItemGroup Label="Observability">
+    <PackageVersion Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="1.17.0" />
+    <PackageVersion Include="OpenTelemetry.Extensions.Hosting" Version="1.17.0" />
+    <PackageVersion Include="OpenTelemetry.Instrumentation.AspNetCore" Version="1.17.0" />
+    <PackageVersion Include="OpenTelemetry.Instrumentation.Http" Version="1.17.0" />
+    <PackageVersion Include="Sentry.AspNetCore" Version="6.8.0" />
+    <PackageVersion Include="Serilog.AspNetCore" Version="9.0.0" />
+    <PackageVersion Include="Serilog.Sinks.Grafana.Loki" Version="8.3.0" />
+    <PackageVersion Include="Serilog.Sinks.OpenTelemetry" Version="4.2.0" />
+  </ItemGroup>
+
+  <ItemGroup Label="Testing">
+    <PackageVersion Include="coverlet.collector" Version="6.0.4" />
+    <PackageVersion Include="FluentAssertions" Version="8.8.0" />
+    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.14.0" />
+    <PackageVersion Include="MockQueryable.Moq" Version="7.0.0" />
+    <PackageVersion Include="Moq" Version="4.20.72" />
+    <PackageVersion Include="NUnit" Version="4.3.2" />
+    <PackageVersion Include="NUnit.Analyzers" Version="4.7.0" />
+    <PackageVersion Include="NUnit3TestAdapter" Version="5.0.0" />
+  </ItemGroup>
+</Project>

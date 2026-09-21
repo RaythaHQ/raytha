@@ -1,7 +1,7 @@
 using System.Data;
 using Dapper;
-using Microsoft.Extensions.Configuration;
 using Raytha.Application.Common.Interfaces;
+using Raytha.Domain.Entities;
 
 namespace Raytha.Infrastructure.Persistence;
 
@@ -11,31 +11,38 @@ namespace Raytha.Infrastructure.Persistence;
 public class RaythaRawDbCommands : IRaythaRawDbCommands
 {
     private readonly IDbConnection _db;
-    private readonly IConfiguration _configuration;
 
-    public RaythaRawDbCommands(IDbConnection db, IConfiguration configuration)
+    public RaythaRawDbCommands(IDbConnection db)
     {
         _db = db;
-        _configuration = configuration;
     }
 
     public async Task ClearAuditLogsAsync(CancellationToken cancellationToken = default)
     {
-        var dbProvider = DbProviderHelper.GetDatabaseProviderTypeFromConnectionString(
-            _configuration.GetConnectionString("DefaultConnection")
+        await _db.ExecuteAsync("TRUNCATE TABLE \"AuditLogs\"");
+    }
+
+    public async Task ClearEmailLogsAsync(CancellationToken cancellationToken = default)
+    {
+        await _db.ExecuteAsync("TRUNCATE TABLE \"EmailLogs\"");
+    }
+
+    public async Task ClearWebhookDeliveriesAsync(CancellationToken cancellationToken = default)
+    {
+        await _db.ExecuteAsync("TRUNCATE TABLE \"WebhookDeliveries\"");
+    }
+
+    public async Task<int> ClearCompletedBackgroundTasksAsync(
+        CancellationToken cancellationToken = default
+    )
+    {
+        return await _db.ExecuteAsync(
+            "DELETE FROM \"BackgroundTasks\" WHERE \"Status\" IN (@complete, @error)",
+            new
+            {
+                complete = BackgroundTaskStatus.Complete.DeveloperName,
+                error = BackgroundTaskStatus.Error.DeveloperName,
+            }
         );
-
-        string query = string.Empty;
-        if (dbProvider == DatabaseProviderType.Postgres)
-        {
-            query = "TRUNCATE TABLE \"AuditLogs\"";
-        }
-        else
-        {
-            query = "TRUNCATE TABLE AuditLogs";
-        }
-
-        await _db.ExecuteAsync(query);
     }
 }
-

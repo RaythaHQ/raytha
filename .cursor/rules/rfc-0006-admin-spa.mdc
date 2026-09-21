@@ -1,0 +1,130 @@
+---
+description: Admin is a React SPA at /raytha talking to /raytha/api/admin and /raytha/api/auth over a cookie session
+globs: "src/admin/**,src/Raytha.Web/Areas/Admin/**,src/Raytha.Web/AdminSpa/**"
+alwaysApply: false
+---
+
+# RFC-0006: Admin SPA
+
+Status: Active
+
+## Abstract
+
+The Raytha admin is a React single-page app served at `/raytha` from
+`src/Raytha.Web/wwwroot/raytha`. It authenticates with the same cookie as the
+rest of the host and talks only to `/raytha/api/auth` and `/raytha/api/admin`.
+New admin work goes into the SPA, not into the Razor admin pages.
+
+## 1. Workspace
+
+`src/admin` is a pnpm workspace (pnpm 11, Node 24):
+
+| Package | Role |
+|---|---|
+| `apps/shell` (`@raytha/shell`) | The admin app: router, pages, layout |
+| `packages/api` (`@raytha/api`) | Typed fetch client, session cache, response/error types |
+| `packages/ui` (`@raytha/ui`) | Shared components, the only place with Vitest tests today |
+
+- HTTP calls MUST go through `@raytha/api`. Raw `fetch` in a page or component
+  is FORBIDDEN — that client owns base paths, JSON headers, error mapping, and
+  the session cache the route guards read.
+- Shared visual components belong in `@raytha/ui`. A component copied into
+  `apps/shell` because it was faster is a defect.
+- TypeScript is strict; `any` and non-null assertions need a stated reason.
+  `pnpm typecheck` and `pnpm lint` MUST pass (RFC-0007).
+
+## 2. Routing
+
+- TanStack Router with `basepath: "/raytha"` and `trailingSlash: "never"`. URLs
+  look like `/raytha/users`, `/raytha/content-types/new`; the dashboard is
+  `/raytha` with no trailing slash.
+- Server-owned paths under `/raytha` are listed once in
+  `AdminSpaExtensions.ServerPathPrefixes` and mirrored in the Vite dev proxy
+  (`apps/shell/vite.config.ts`). Adding a server path means editing **both**, or
+  the route works in one environment and 404s in the other.
+- The SPA fallback is `MapGet("/raytha/{**path}")`, deliberately not
+  `MapFallback`, so it sits below literal-segment endpoints and above the public
+  site's `{*route}` catch-all. Do not convert it to `MapFallback`.
+- Data loading is TanStack Query. Query keys MUST include every input that
+  changes the result (ids, page, search, sort), and mutations MUST invalidate the
+  lists they affect rather than mutating cache by hand.
+
+## 3. Admin API
+
+- Endpoints live in `src/Raytha.Web/Areas/Admin/Api`, one static class per
+  resource, wired from `AdminApiEndpoints.MapAdminApi`.
+- The `/raytha/api/admin` group requires `RaythaClaimTypes.IsAdmin`; each
+  resource group narrows further with the same `BuiltInSystemPermission` or
+  content-type policy the Razor admin used (RFC-0008). An endpoint with no
+  `RequireAuthorization` inherits the group's — never add `AllowAnonymous` to an
+  admin resource.
+- Endpoints MUST be thin: bind, send through `ISender`, shape with
+  `AdminResults`. Business logic belongs in a handler (RFC-0002).
+- List endpoints bind `[AsParameters] PagedQuery`
+  (`?pageNumber=&pageSize=&orderBy=&search=`) and return via
+  `AdminResults.Paged` (RFC-0010).
+- Verbs: `GET` collection and item, `POST` create, `PUT` full update, `DELETE`
+  remove, `POST /{id}/{action}` for state changes (`suspend`, `restore`,
+  `reset-password`). Ids in paths are `ShortGuid` strings.
+- Errors are RFC 7807 problem details — every `/raytha/api/*` path answers with
+  `application/problem+json`, produced by `AdminResults` or
+  `ExceptionsMiddleware`. Do not invent a bespoke error envelope.
+- `/raytha/api/auth` owns sign-in, sign-out, `me`, schemes, magic link, forgot
+  password, and first-run setup. Only `me` requires an admin claim.
+
+## 4. Auth and Mutations
+
+- Authentication is the host's cookie session; sign-in through
+  `POST /raytha/api/auth/login` issues the same principal as the Razor admin
+  login, and `CustomCookieAuthenticationEvents` hydrates the full claim set on
+  the next request. The SPA MUST NOT store tokens in `localStorage`.
+- Under `/raytha/api`, an unauthenticated request gets a status code, not an HTML
+  redirect. Route guards use the cached session from `@raytha/api`
+  (`isAuthenticated`), backed by `GET /raytha/api/auth/me`.
+- Mutating requests (`POST`, `PUT`, `PATCH`) to `/raytha/api/admin` and
+  `/raytha/api/auth` MUST send `Content-Type: application/json`.
+  `JsonRequestGuardMiddleware` answers 415 otherwise; that guard is what replaces
+  antiforgery tokens for these endpoints, so form-encoded admin mutations are
+  FORBIDDEN.
+- Permission-gated UI reads `permissions` from `me` via `hasPermission`. Hiding a
+  control is presentation only — the server-side policy is the control.
+
+## 5. Build and Commit
+
+- Development: `./tools/dev.sh` runs the host on `http://localhost:5200` and
+  auto-starts Vite on `5203`; the host proxies SPA paths to Vite so HMR works.
+  `AdminSpa__AutoStart=false` serves the committed bundle instead.
+- Production: Vite builds to `src/Raytha.Web/wwwroot/raytha`
+  (`base: "/raytha/"`, so assets resolve under `/raytha/assets/…`).
+- **The built bundle is committed.** After changing anything under `src/admin`,
+  run `pnpm build` in `src/admin` and stage `src/Raytha.Web/wwwroot/raytha` in
+  the same commit. CI fails on a stale bundle
+  (`git diff --exit-code -- src/Raytha.Web/wwwroot/raytha`).
+- Do not hand-edit files in `wwwroot/raytha`.
+
+## 6. Razor Admin
+
+The Razor admin pages under `Areas/Admin/Pages` still exist for parity during
+the 2.0 transition, and which one answers a given `/raytha` path is decided by
+route precedence, not by configuration:
+
+- In Development with Vite running, the dev proxy runs before routing and is
+  authoritative for every SPA path, so you see the React app.
+- Serving the committed bundle instead (`AdminSpa__AutoStart=false`, or any
+  non-Development environment), Razor wins wherever it has a route. That includes
+  `/raytha` itself, every literal Razor page, and — because `ContentItems` maps
+  `/raytha/{contentTypeDeveloperName}/{viewId?}` — every remaining one- and
+  two-segment path, since a parameter segment outranks the SPA's `{**path}`
+  catch-all. Measured against a signed-in admin on the bundle, `/raytha` returns
+  the Razor dashboard and `/raytha/webhooks` redirects to `/raytha/error/404`;
+  no current SPA route renders.
+
+Consequences to plan around: the SPA is a Development-through-Vite experience
+today, and a page that works under `pnpm dev` is shadowed in a built deployment.
+Retiring a Razor page (or narrowing that content-items route) is what hands a URL
+to the SPA. The `admin_spa` flag in the catalog (RFC-0009) is a placeholder for
+that cutover and gates nothing today — do not write code that assumes it does.
+
+Fixes MAY be applied to the Razor admin; new features MUST be built in the SPA.
+Do not add a Razor admin page for something the SPA should own, and remember that
+adding one silently takes a URL away from the SPA.

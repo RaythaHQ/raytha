@@ -1,0 +1,95 @@
+---
+description: Command, query, handler, and validator structure in Raytha.Application via Mediator
+globs: "src/Raytha.Application/**/*.cs"
+alwaysApply: false
+---
+
+# RFC-0002: CQRS
+
+Status: Active
+
+## Abstract
+
+Every use case in `Raytha.Application` is one file containing a static outer
+class with nested `Command` or `Query`, `Validator`, and `Handler` types,
+dispatched through Mediator (source-generated, `ISender`).
+
+## 1. File Shape
+
+- One use case per file, named after the outer class: `CreateUser.cs`,
+  `GetContentItems.cs`.
+- Commands live in `<Feature>/Commands/`, queries in `<Feature>/Queries/`.
+  Namespace matches the folder (`Raytha.Application.Users.Commands`).
+- The outer type MUST be a plain class used only as a namespace for the nested
+  types. It MUST NOT hold state or logic.
+
+```csharp
+public class CreateUser
+{
+    public record Command : LoggableRequest<CommandResponseDto<ShortGuid>> { }
+    public class Validator : AbstractValidator<Command> { }
+    public class Handler : IRequestHandler<Command, CommandResponseDto<ShortGuid>> { }
+}
+```
+
+## 2. Commands
+
+- Commands MUST be `record` types with `init`-only properties.
+- Commands MUST derive from `LoggableRequest<T>` or `LoggableEntityRequest<T>`
+  so `AuditBehavior` writes an audit row. `ApplicationConventionTests` fails
+  any new `Command` that does not — the exemption list in that test is closed to
+  new entries without a stated reason.
+- Commands return `CommandResponseDto<T>`, usually `CommandResponseDto<ShortGuid>`
+  for the affected id.
+- A command that should fire a webhook carries `[WebhookEvent("resource.action")]`
+  (RFC-0011).
+
+## 3. Queries
+
+- Queries MUST be read-only. A query handler MUST NOT call `SaveChangesAsync`.
+- Single-entity queries take `GetEntityByIdInputDto`; list queries derive from
+  `GetPagedEntitiesInputDto` (`PageNumber`, `PageSize`, `Search`, `OrderBy`).
+- Queries return `QueryResponseDto<T>`, with `ListResultDto<T>` for pages.
+- Each list query owns its default ordering and its allowlist of sortable
+  columns. An unknown `OrderBy` MUST fall back to that default rather than
+  reaching the database as raw SQL.
+
+## 4. Validators
+
+- Input validation is FluentValidation only, in the nested `Validator`.
+  `ValidationBehavior` runs it before the handler, so handlers MUST NOT
+  re-validate shape.
+- A validator MAY inject `IRaythaDbContext` for uniqueness and existence
+  checks. Keep those reads cheap.
+- Validators MUST NOT mutate state or send email.
+
+## 5. Handlers
+
+- Handlers implement `IRequestHandler<TRequest, TResponse>` and return
+  `ValueTask<TResponse>` (Mediator, not MediatR).
+- Handlers take dependencies through the constructor as interfaces from
+  `Common/Interfaces`. A handler MUST NOT resolve services from a container or
+  reach for `HttpContext`.
+- One `SaveChangesAsync` per command handler. Work that must succeed together
+  goes in one call; work that may lag (email, webhooks, indexing) goes to a
+  background task via `IBackgroundTaskQueue`.
+- Handlers MUST NOT call another handler through `ISender`. Extract the shared
+  logic instead.
+- Handlers throw `NotFoundException` / `ForbiddenAccessException` from
+  `Common/Exceptions` for missing or unauthorized entities. Do not return a
+  success DTO describing a failure.
+
+## 6. Pipeline
+
+`AddApplicationServices` registers behaviors in order: unhandled exception
+logging, validation, audit, webhook publish. New behaviors MUST be registered
+there and MUST be ordered deliberately — a behavior that runs after
+`ValidationBehavior` never sees an invalid request.
+
+## 7. Callers
+
+- `Raytha.Web` calls use cases only through `ISender`. Controllers, Razor pages,
+  and minimal-API endpoints MUST NOT touch `IRaythaDbContext` (RFC-0004).
+- Background tasks implement `IExecuteBackgroundTask` and MUST be registered in
+  `AddApplicationServices`; `ApplicationConventionTests` enforces it, because an
+  unregistered task fails only when first dequeued.

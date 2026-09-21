@@ -4,10 +4,12 @@ using Microsoft.EntityFrameworkCore;
 using Raytha.Application.Common.Exceptions;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Models;
+using Raytha.Application.Webhooks;
 using Raytha.Domain.Entities;
 
 namespace Raytha.Application.SitePages.Commands;
 
+[WebhookEvent("site_page.published", DisplayName = "Site page published", Group = "Site pages")]
 public class PublishSitePage
 {
     public record Command : LoggableEntityRequest<CommandResponseDto<ShortGuid>> { }

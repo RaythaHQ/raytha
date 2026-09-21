@@ -1,0 +1,84 @@
+---
+description: All data access goes through IRaythaDbContext; EF Core mapping, query, and transaction rules
+globs: "src/Raytha.Application/**/*.cs,src/Raytha.Infrastructure/**/*.cs"
+alwaysApply: false
+---
+
+# RFC-0004: Data Access
+
+Status: Active
+
+## Abstract
+
+Application code reads and writes through `IRaythaDbContext`. There is no
+repository layer, no second context, and no raw connection outside
+`Raytha.Infrastructure`.
+
+## 1. IRaythaDbContext
+
+- Handlers and validators MUST depend on `IRaythaDbContext`, never on
+  `RaythaDbContext`. The concrete context exists for EF tooling, migrations, and
+  the composition root.
+- Every new entity MUST get a `DbSet<T>` on the interface and on the context.
+  `PersistenceConventionTests` fails a `DbSet` that exists on only one side.
+- `IRaythaDbContext.DbContext` is an escape hatch for EF APIs the interface does
+  not expose (change tracking, `Entry`, explicit transactions). Use it
+  deliberately and keep it out of query code.
+- `Raytha.Web` MUST NOT inject `IRaythaDbContext`. Web code sends a command or
+  query through `ISender` (RFC-0002).
+
+## 2. Mapping
+
+- Mapping lives in `src/Raytha.Infrastructure/Persistence/Configurations`, one
+  `IEntityTypeConfiguration<T>` per entity. `PersistenceConventionTests` requires
+  each configuration to target a `Raytha.Domain` entity.
+- Every configuration MUST be picked up by `ApplyConfigurationsFromAssembly`;
+  do not configure entities inline in `OnModelCreating`.
+- Postgres types are chosen explicitly where it matters: `timestamp with time
+  zone` for instants, `jsonb` for field values and other documents, `text` over
+  `varchar(n)` unless a length is a real constraint.
+- Indexes that a list query depends on MUST be declared in the configuration and
+  carried by a migration. A query that sorts or filters on an unindexed column in
+  a table that grows (content items, audit logs, webhook deliveries, email logs)
+  is a defect.
+
+## 3. Queries
+
+- Read paths MUST be `AsNoTracking()`.
+- Project to a DTO in the query (`Select`) rather than materializing entities and
+  mapping afterwards. Do not return `IQueryable` out of a handler.
+- Paged queries MUST apply `Skip`/`Take` in SQL and MUST count with a separate
+  `CountAsync`. Filtering or paging in memory is FORBIDDEN.
+- Include only the navigations the response needs. `Include` chains that pull a
+  revision graph to render a list are a defect.
+- Cancellation tokens MUST be passed to every async EF call.
+- Dynamic filtering over custom content-type fields goes through the JSON query
+  engine in `Raytha.Infrastructure/JsonQueryEngine`. Hand-built SQL string
+  concatenation from user input is FORBIDDEN.
+
+## 4. Writes
+
+- One `SaveChangesAsync(cancellationToken)` per command handler.
+- Multi-statement work that must be atomic and cannot be one `SaveChangesAsync`
+  uses an explicit transaction through `IRaythaDbContext.DbContext.Database`.
+  Nested or overlapping transactions are FORBIDDEN.
+- Auditing, timestamps, and soft delete are applied by the context's
+  interceptors. Handlers MUST NOT set `CreationTime`, `LastModificationTime`, or
+  `IsDeleted` by hand.
+- Bulk deletes and updates (`ExecuteDeleteAsync`, `ExecuteUpdateAsync`) bypass
+  interceptors and domain events. They are allowed only for maintenance paths
+  (log trimming, delivery cleanup) and MUST be commented with why.
+
+## 5. Raw SQL and Dapper
+
+- Raw SQL and Dapper are allowed only inside `Raytha.Infrastructure`, and only
+  with parameters. String interpolation of user input into SQL is FORBIDDEN.
+- Postgres-specific SQL MUST NOT leak into `Raytha.Application`
+  (`LayerDependencyTests` blocks the package references that would let it).
+
+## 6. Migrations
+
+See RFC-0001 §4 for placement and RFC-0012 for naming and the `VERSION` bump. A
+migration that changes shape MUST also be reflected in
+`db/Postgres/FreshCreateOnLatestVersion.sql` and a `v<old>_to_v<new>.sql` upgrade
+script for operators who apply SQL by hand.

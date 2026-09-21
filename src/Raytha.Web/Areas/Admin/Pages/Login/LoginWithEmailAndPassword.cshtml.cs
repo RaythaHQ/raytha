@@ -64,7 +64,7 @@ public class LoginWithEmailAndPassword : BaseAdminLoginPageModel
             }
             else
             {
-                return RedirectToPage(RouteNames.Dashboard.Index);
+                return RedirectToDashboard();
             }
         }
         else

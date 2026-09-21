@@ -5,9 +5,11 @@ using Microsoft.EntityFrameworkCore;
 using Raytha.Application.Common.Exceptions;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Models;
+using Raytha.Application.Webhooks;
 
 namespace Raytha.Application.Admins.Commands;
 
+[WebhookEvent("admin.updated", DisplayName = "Administrator updated", Group = "Administrators")]
 public class EditAdmin
 {
     public record Command : LoggableEntityRequest<CommandResponseDto<ShortGuid>>

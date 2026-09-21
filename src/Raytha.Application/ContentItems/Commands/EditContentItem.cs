@@ -7,11 +7,13 @@ using Raytha.Application.Common.Exceptions;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Models;
 using Raytha.Application.Common.Utils;
+using Raytha.Application.Webhooks;
 using Raytha.Domain.Entities;
 using Raytha.Domain.Events;
 
 namespace Raytha.Application.ContentItems.Commands;
 
+[WebhookEvent("content_item.updated", DisplayName = "Content item updated", Group = "Content")]
 public class EditContentItem
 {
     public record Command : LoggableEntityRequest<CommandResponseDto<ShortGuid>>

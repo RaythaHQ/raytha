@@ -1,0 +1,7 @@
+packages:
+  - apps/*
+  - packages/*
+
+# sass-embedded optionally depends on this native watcher; Vite does not need it.
+allowBuilds:
+  "@parcel/watcher": false

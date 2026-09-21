@@ -1,0 +1,82 @@
+---
+description: NUnit test projects, what must be tested, and the architecture tests that enforce the other RFCs
+globs: "tests/**/*.cs,src/admin/packages/ui/**/*.test.ts,src/admin/packages/ui/**/*.test.tsx"
+alwaysApply: false
+---
+
+# RFC-0007: Testing
+
+Status: Active
+
+## Abstract
+
+.NET tests are NUnit with FluentAssertions, one project per layer plus an
+architecture project. Admin tests are Vitest in `@raytha/ui`. The architecture
+tests are how the other RFCs stop being suggestions.
+
+## 1. Projects
+
+| Project | Covers |
+|---|---|
+| `tests/Raytha.Domain.UnitTests` | Entity behavior, value objects, field types |
+| `tests/Raytha.Application.UnitTests` | Validators, handlers, utilities |
+| `tests/Raytha.Infrastructure.UnitTests` | JSON query engine, file storage, feature-flag store, services |
+| `tests/Raytha.Architecture.Tests` | Layer boundaries and codebase conventions |
+
+- NUnit 4 (`[TestFixture]`, `[Test]`) with FluentAssertions. Do not introduce a
+  second test framework or assertion library.
+- Test names read as a sentence about behavior:
+  `Commands_that_mutate_state_are_auditable`, not `Test1` or `HandlerWorks`.
+- Tests MUST NOT hit a real Postgres instance, network, or SMTP server. Use fakes
+  and in-memory doubles; a test that needs a live database is an integration test
+  and needs a decision first, not a hidden dependency.
+- Every `dotnet test Raytha.sln` run MUST pass before pushing (RFC-0012,
+  `pre-push-ci`).
+
+## 2. What Must Be Tested
+
+- A new value object or field type: construction, equality, validation, JSON
+  round-trip.
+- A new validator: each rule that can fail, including the custom database checks.
+- A handler with real branching (permissions, revisions, ordering, soft delete):
+  the branches. A handler that only maps fields does not need a test for the
+  mapping.
+- A bug fix: a test that fails before the fix. No test, no fix.
+- A new `@raytha/ui` component: render plus the interaction it exists for.
+  `jest-axe` is available and accessibility regressions SHOULD be caught there.
+
+## 3. Architecture Tests
+
+These run in the normal test pass and MUST stay green:
+
+- `LayerDependencyTests` — the dependency direction and forbidden package
+  references from RFC-0001.
+- `PersistenceConventionTests` — `DbSet` parity between `IRaythaDbContext` and
+  `RaythaDbContext`, entity configurations targeting domain entities, and the
+  presence of the `v2_0_0` migration.
+- `ApplicationConventionTests` — background tasks registered for DI, commands
+  auditable, webhook event names unique and dot-namespaced, `[WebhookEvent]`
+  types declaring a nested Mediator command, catalog discovery, and the webhook
+  publish behavior being registered.
+
+Rules:
+
+- Do not weaken an architecture test to make a change pass. Change the code, or
+  amend the RFC and the test together with a reason (RFC-0000 §4).
+- `AuditExemptCommands` in `ApplicationConventionTests` is a closed list of
+  pre-2.0 exceptions. Adding to it requires a stated reason in the PR.
+- A new convention worth enforcing SHOULD become an architecture test rather than
+  a paragraph nobody reads.
+
+## 4. Admin Tests
+
+```bash
+cd src/admin
+pnpm lint         # eslint, including react-hooks and jsx-a11y
+pnpm test         # Vitest in @raytha/ui
+pnpm typecheck    # every workspace package
+pnpm build        # must be run and the bundle committed (RFC-0006)
+```
+
+`apps/shell` has no test runner today. A page with logic worth testing SHOULD
+have that logic extracted into `@raytha/ui` or `@raytha/api`, where it can be.

@@ -1,0 +1,20 @@
+{
+  "name": "raytha-admin",
+  "private": true,
+  "packageManager": "pnpm@11.9.0",
+  "scripts": {
+    "dev": "pnpm --filter @raytha/shell dev",
+    "build": "pnpm --filter @raytha/shell build",
+    "typecheck": "pnpm -r typecheck",
+    "lint": "eslint .",
+    "test": "pnpm --filter @raytha/ui test"
+  },
+  "devDependencies": {
+    "eslint": "^10.8.0",
+    "eslint-plugin-jsx-a11y": "^6.10.2",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "globals": "^17.9.0",
+    "typescript": "~6.0.3",
+    "typescript-eslint": "^8.66.0"
+  }
+}

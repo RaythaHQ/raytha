@@ -1,0 +1,59 @@
+.simple-editor-wrapper {
+  --tt-toolbar-height: 44px;
+  --tt-theme-text: var(--tt-gray-light-900);
+
+  width: 100%;
+  min-height: 22rem;
+  overflow: auto;
+  border: 1px solid var(--border, var(--tt-gray-light-200));
+  border-radius: 0.75rem;
+  background: var(--card, #fff);
+  color: var(--tt-theme-text);
+}
+
+.simple-editor-search-and-replace {
+  position: absolute;
+  top: calc(var(--tt-toolbar-height) + 0.5rem);
+  right: 0.5rem;
+  z-index: 51;
+  max-height: calc(100% - var(--tt-toolbar-height) - 1rem);
+}
+
+.simple-editor-wrapper {
+  position: relative;
+}
+
+.simple-editor-content {
+  width: 100%;
+  min-height: 16rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.simple-editor-content .tiptap.ProseMirror.simple-editor {
+  flex: 1;
+  min-height: 16rem;
+  padding: 1.25rem 1.5rem 2rem;
+  outline: none;
+}
+
+.simple-editor-content .tiptap.ProseMirror.simple-editor p.is-editor-empty:first-child::before {
+  color: var(--muted-foreground, #6b7280);
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  pointer-events: none;
+}
+
+@media screen and (max-width: 480px) {
+  .simple-editor-search-and-replace {
+    top: 0.5rem;
+    left: 0.5rem;
+    right: 0.5rem;
+    width: auto;
+  }
+
+  .simple-editor-content .tiptap.ProseMirror.simple-editor {
+    padding: 1rem 1rem 2rem;
+  }
+}

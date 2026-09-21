@@ -10,7 +10,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Utils;
-using Raytha.Web.Areas.Admin.Pages.Shared;
 
 namespace Raytha.Web.Areas.Public.Controllers;
 
@@ -106,10 +105,7 @@ public class BaseController : Controller
         }
         if (!CurrentOrganization.InitialSetupComplete)
         {
-            context.Result = new RedirectToPageResult(
-                RouteNames.Setup.Index,
-                new { area = "Admin" }
-            );
+            context.Result = new RedirectResult($"{CurrentOrganization.PathBase}/raytha/setup");
         }
     }
 }

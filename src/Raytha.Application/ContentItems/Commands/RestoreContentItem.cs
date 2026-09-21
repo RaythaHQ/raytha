@@ -5,10 +5,12 @@ using Microsoft.EntityFrameworkCore;
 using Raytha.Application.Common.Exceptions;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Models;
+using Raytha.Application.Webhooks;
 using Raytha.Domain.Entities;
 
 namespace Raytha.Application.ContentItems.Commands;
 
+[WebhookEvent("content_item.restored", DisplayName = "Content item restored", Group = "Content")]
 public class RestoreContentItem
 {
     public record Command : LoggableEntityRequest<CommandResponseDto<ShortGuid>> { }

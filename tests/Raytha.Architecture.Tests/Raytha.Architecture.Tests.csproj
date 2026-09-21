@@ -1,0 +1,31 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="coverlet.collector" />
+    <PackageReference Include="FluentAssertions" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="NUnit" />
+    <PackageReference Include="NUnit.Analyzers" />
+    <PackageReference Include="NUnit3TestAdapter" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="NUnit.Framework" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Raytha.Domain\Raytha.Domain.csproj" />
+    <ProjectReference Include="..\..\src\Raytha.Application\Raytha.Application.csproj" />
+    <ProjectReference Include="..\..\src\Raytha.Infrastructure\Raytha.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\src\Raytha.Web\Raytha.Web.csproj" />
+  </ItemGroup>
+
+</Project>

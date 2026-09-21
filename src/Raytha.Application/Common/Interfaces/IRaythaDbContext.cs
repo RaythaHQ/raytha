@@ -43,6 +43,10 @@ public interface IRaythaDbContext
     public DbSet<WidgetTemplate> WidgetTemplates { get; }
     public DbSet<WidgetTemplateRevision> WidgetTemplateRevisions { get; }
     public DbSet<FailedLoginAttempt> FailedLoginAttempts { get; }
+    public DbSet<Webhook> Webhooks { get; }
+    public DbSet<WebhookDelivery> WebhookDeliveries { get; }
+    public DbSet<FeatureFlag> FeatureFlags { get; }
+    public DbSet<EmailLog> EmailLogs { get; }
     public DbContext DbContext { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken);

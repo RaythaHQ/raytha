@@ -1,0 +1,16 @@
+.tiptap-link-input {
+  font-size: 0.875rem;
+  border: none;
+
+  /* Clamp the input */
+  min-width: 12rem;
+  padding-right: 0;
+
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  &:focus {
+    text-overflow: clip;
+    overflow: visible;
+  }
+}

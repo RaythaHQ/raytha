@@ -1,3 +1,21 @@
+> **Superseded by the RFCs in `.cursor/rules/`.** Start at
+> `rfc-0000-index.mdc`; those rules are what agents load and what review
+> enforces. This document is kept as background — the long-form reasoning behind
+> the same patterns — but it was written for Raytha 1.x and is stale in at least
+> these ways:
+>
+> - **Section 3 (Razor Pages) and Section 9 (no JS frameworks)** no longer
+>   describe the admin. The admin is a React SPA at `/raytha` (RFC-0006). Those
+>   sections still apply to the public site (RFC-0005).
+> - **Section 5** predates Postgres-only persistence and the current migration
+>   naming (RFC-0001, RFC-0004, RFC-0012).
+> - **Section 11** predates the current rate limiting, ProblemDetails, and
+>   security headers (RFC-0008).
+> - Nothing here covers webhooks, feature flags, or the `VERSION` bump rules
+>   (RFC-0009, RFC-0011, RFC-0012).
+>
+> Where this file and an RFC disagree, the RFC wins.
+
 # .NET 10 Clean Architecture Standards for Raytha
 
 **Version:** 1.0  
@@ -81,7 +99,7 @@ Raytha implements Clean Architecture principles through a layered approach where
 - **Responsibilities:**
   - EF Core `DbContext` implementation (`RaythaDbContext`)
   - Entity configurations (Fluent API)
-  - Database migrations (via `Raytha.Migrations.SqlServer` and `Raytha.Migrations.Postgres`)
+  - Database migrations (Postgres-only, in `Raytha.Infrastructure`)
   - File storage implementations (`LocalFileStorageProvider`, `AzureBlobFileStorageProvider`, `S3FileStorageProvider`)
   - Email service implementation
   - Background task queue implementation
@@ -718,29 +736,23 @@ public class ContentItemConfiguration : IEntityTypeConfiguration<ContentItem>
 
 ### Migrations
 
-**Raytha uses two migration projects:**
-- `Raytha.Migrations.SqlServer` – SQL Server migrations
-- `Raytha.Migrations.Postgres` – PostgreSQL migrations
+**Raytha is Postgres-only.** Migrations live in `src/Raytha.Infrastructure/Persistence/Migrations/`.
 
 **Rules:**
 - **Never** edit generated migration files manually (except for custom SQL)
-- **Always** generate migrations for both databases
 - **Test** migrations on local database before committing
-- Include migration SQL script in `db/` folder for production deployments
+- Include migration SQL script in `db/Postgres/` for production deployments
 - Use descriptive migration names (e.g., `v1_4_1`)
 - Migrations run automatically on startup if `APPLY_PENDING_MIGRATIONS=true`
 
 **Commands:**
 
 ```bash
-# Add migration (SQL Server)
-dotnet ef migrations add v1_5_0 --project src/Raytha.Migrations.SqlServer --startup-project src/Raytha.Web
-
-# Add migration (Postgres)
-dotnet ef migrations add v1_5_0 --project src/Raytha.Migrations.Postgres --startup-project src/Raytha.Web
+# Add migration
+dotnet ef migrations add v1_5_0 --project src/Raytha.Infrastructure --startup-project src/Raytha.Web
 
 # Generate SQL script
-dotnet ef migrations script --project src/Raytha.Migrations.SqlServer --startup-project src/Raytha.Web --output db/SqlServer/v1_4_1_to_v1_5_0.sql
+dotnet ef migrations script --project src/Raytha.Infrastructure --startup-project src/Raytha.Web --output db/Postgres/v1_4_1_to_v1_5_0.sql
 ```
 
 ### Query Performance

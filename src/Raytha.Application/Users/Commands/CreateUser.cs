@@ -4,12 +4,14 @@ using Mediator;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Models;
 using Raytha.Application.Common.Utils;
+using Raytha.Application.Webhooks;
 using Raytha.Domain.Entities;
 using Raytha.Domain.Events;
 using Raytha.Domain.ValueObjects;
 
 namespace Raytha.Application.Users.Commands;
 
+[WebhookEvent("user.created", DisplayName = "User created", Group = "Users")]
 public class CreateUser
 {
     public record Command : LoggableRequest<CommandResponseDto<ShortGuid>>

@@ -5,10 +5,12 @@ using Microsoft.EntityFrameworkCore;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Models;
 using Raytha.Application.Common.Utils;
+using Raytha.Application.Webhooks;
 using Raytha.Domain.Entities;
 
 namespace Raytha.Application.SitePages.Commands;
 
+[WebhookEvent("site_page.created", DisplayName = "Site page created", Group = "Site pages")]
 public class CreateSitePage
 {
     public record Command : LoggableRequest<CommandResponseDto<ShortGuid>>

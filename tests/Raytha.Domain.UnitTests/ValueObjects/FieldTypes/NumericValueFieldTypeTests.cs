@@ -79,7 +79,7 @@ public class NumericValueFieldTypeTests
     }
 
     [Test]
-    public void SqlServerOrderByExpression_ShouldReturnCorrectSql()
+    public void OrderByExpression_ShouldReturnCorrectSql()
     {
         // Arrange
         var type = new NumberFieldType();
@@ -89,24 +89,7 @@ public class NumericValueFieldTypeTests
         var order = "ASC";
 
         // Act
-        var result = type.SqlServerOrderByExpression(table, column, key, order);
-
-        // Assert
-        result.Should().Be($" CASE WHEN ISNUMERIC(JSON_VALUE({table}.{column}, '$.{key}')) = 1 THEN CAST(JSON_VALUE({table}.{column}, '$.{key}') AS decimal) ELSE NULL END {order}, JSON_VALUE({table}.{column}, '$.{key}') {order} ");
-    }
-
-    [Test]
-    public void PostgresOrderByExpression_ShouldReturnCorrectSql()
-    {
-        // Arrange
-        var type = new NumberFieldType();
-        var table = "t";
-        var column = "c";
-        var key = "k";
-        var order = "ASC";
-
-        // Act
-        var result = type.PostgresOrderByExpression(table, column, key, order);
+        var result = type.OrderByExpression(table, column, key, order);
 
         // Assert
         result.Should().Be($" CASE WHEN ({table}.\"{column}\"->>'{key}') ~ '^[0-9]+(\\.[0-9]+)?$' THEN ({table}.\"{column}\"->> '{key}')::decimal ELSE NULL END {order}, {table}.\"{column}\"->>'{key}' {order} ");

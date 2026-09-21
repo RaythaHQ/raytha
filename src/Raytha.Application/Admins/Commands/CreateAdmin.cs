@@ -5,12 +5,14 @@ using Microsoft.EntityFrameworkCore;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Models;
 using Raytha.Application.Common.Utils;
+using Raytha.Application.Webhooks;
 using Raytha.Domain.Entities;
 using Raytha.Domain.Events;
 using Raytha.Domain.ValueObjects;
 
 namespace Raytha.Application.Admins.Commands;
 
+[WebhookEvent("admin.created", DisplayName = "Administrator created", Group = "Administrators")]
 public class CreateAdmin
 {
     public record Command : LoggableRequest<CommandResponseDto<ShortGuid>>

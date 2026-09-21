@@ -8,8 +8,8 @@
     <Configurations>Debug;Release;Debug without JS</Configurations>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="CSharpVitamins.ShortGuid" Version="2.0.0" />
-    <PackageReference Include="Mediator.Abstractions" Version="3.0.0" />
+    <PackageReference Include="CSharpVitamins.ShortGuid" />
+    <PackageReference Include="Mediator.Abstractions" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Entities\DefaultTemplates\*">

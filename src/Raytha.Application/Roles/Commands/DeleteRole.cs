@@ -6,10 +6,12 @@ using Raytha.Application.Common.Exceptions;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Models;
 using Raytha.Application.Common.Utils;
+using Raytha.Application.Webhooks;
 using Raytha.Domain.Entities;
 
 namespace Raytha.Application.Roles.Commands;
 
+[WebhookEvent("role.deleted", DisplayName = "Role deleted", Group = "Roles")]
 public class DeleteRole
 {
     public record Command : LoggableEntityRequest<CommandResponseDto<ShortGuid>> { }

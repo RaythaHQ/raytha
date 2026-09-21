@@ -1,0 +1,81 @@
+---
+description: Clean Architecture layer boundaries, Postgres-only persistence, and migration placement
+alwaysApply: true
+---
+
+# RFC-0001: Architecture
+
+Status: Active
+
+## Abstract
+
+Raytha is one ASP.NET Core host over four projects. Dependencies point inward:
+`Raytha.Web` → `Raytha.Infrastructure` → `Raytha.Application` → `Raytha.Domain`.
+Postgres is the only supported database.
+
+## 1. Layers
+
+| Project | Owns | MUST NOT reference |
+|---|---|---|
+| `src/Raytha.Domain` | Entities, value objects, domain events, domain exceptions | Any other layer; EF Core, Npgsql, ASP.NET Core |
+| `src/Raytha.Application` | Commands, queries, handlers, validators, DTOs, interfaces, pipeline behaviors | Infrastructure, Web, Npgsql, Dapper, ASP.NET Core |
+| `src/Raytha.Infrastructure` | EF Core `RaythaDbContext`, migrations, file storage, background tasks, feature-flag store, health checks, Raytha Functions runtime | Web |
+| `src/Raytha.Web` | Public controllers and views, admin API, admin SPA hosting, REST API v1, middleware, observability | — |
+
+- `Raytha.Application` MAY reference EF Core abstractions, because
+  `IRaythaDbContext` exposes `DbSet<T>`. The Npgsql provider and Dapper are
+  infrastructure-only.
+- Serilog, OpenTelemetry, and Sentry MUST stay in `Raytha.Web`.
+- `src/admin` is the React admin workspace (RFC-0006). It is not a .NET layer.
+
+`tests/Raytha.Architecture.Tests/LayerDependencyTests.cs` enforces every row
+above. A new package reference that breaks a boundary fails the build, not
+review.
+
+## 2. Composition
+
+- Each layer exposes one `ConfigureServices.cs` extension
+  (`AddApplicationServices`, `AddInfrastructureServices`, `AddWebUIServices`).
+  Registration for a layer's types MUST live there, not in `Startup`.
+- `Startup.Configure` owns middleware order. The order that matters:
+  exception handler → status-code pages → HTTPS/HSTS (non-Development) → admin
+  SPA dev proxy → static files → security headers → admin API JSON guard →
+  routing → rate limiter → authentication → authorization → endpoints.
+- Cross-layer contracts live in `Raytha.Application/Common/Interfaces`. The
+  Application layer defines the interface; Infrastructure implements it.
+
+## 3. Postgres Only
+
+- Postgres 17 is the only supported database. SQL Server support was removed in
+  2.0. New code MUST NOT reintroduce a provider abstraction, conditional
+  provider branches, or a second set of migrations.
+- Provider-specific SQL (`jsonb`, `ILIKE`, `citext`, the JSON query engine)
+  belongs in `Raytha.Infrastructure` only.
+- Reference SQL for manual installs and upgrades lives in `db/Postgres/`
+  (RFC-0012).
+
+## 4. Migrations
+
+- EF migrations MUST live in `src/Raytha.Infrastructure/Persistence/Migrations`.
+
+```bash
+dotnet ef migrations add v2_1_0 \
+  --project src/Raytha.Infrastructure \
+  --startup-project src/Raytha.Web
+```
+
+- A migration is named after the release that carries it (`v1_5_0`, `v2_0_0`),
+  not after what it changes.
+- `APPLY_PENDING_MIGRATIONS=true` applies pending migrations at startup. It is
+  the default for Docker Compose and `./tools/dev.sh`; production deployments
+  MAY instead run the generated SQL script.
+- Adding a migration bumps MINOR. See RFC-0012.
+
+## 5. Health and Configuration
+
+- `/healthz` is liveness and runs no checks. `/healthz/ready` runs checks
+  tagged `HealthCheckTags.Ready` (Postgres, file storage). New dependencies
+  that would block serving traffic MUST add a readiness check with that tag.
+- Configuration keys are read through `IConfiguration` in `Startup` or a typed
+  options class; secrets MUST NOT be committed. `.env.example` documents every
+  supported environment variable.

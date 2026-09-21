@@ -1,17 +1,21 @@
 ﻿using System;
 using System.Data;
-using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using Npgsql;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Utils;
+using Raytha.Application.FeatureFlags;
+using Raytha.Application.Maintenance;
 using Raytha.Infrastructure.BackgroundTasks;
 using Raytha.Infrastructure.Configurations;
+using Raytha.Infrastructure.FeatureFlags;
 using Raytha.Infrastructure.FileStorage;
+using Raytha.Infrastructure.Health;
 using Raytha.Infrastructure.JsonQueryEngine.Postgres;
-using Raytha.Infrastructure.JsonQueryEngine.SqlServer;
+using Raytha.Infrastructure.Maintenance;
 using Raytha.Infrastructure.Persistence;
 using Raytha.Infrastructure.Persistence.Interceptors;
 using Raytha.Infrastructure.RaythaFunctions;
@@ -28,64 +32,37 @@ public static class ConfigureServices
     {
         var dbConnectionString = configuration.GetConnectionString("DefaultConnection");
 
-        var dbProviderType = DbProviderHelper.GetDatabaseProviderTypeFromConnectionString(
-            dbConnectionString
-        );
-
         services.AddScoped<AuditableEntitySaveChangesInterceptor>();
 
-        if (dbProviderType == DatabaseProviderType.Postgres)
+        services.AddDbContext<RaythaDbContext>(options =>
         {
-            services.AddDbContext<RaythaDbContext>(options =>
-            {
-                options.UseNpgsql(
-                    dbConnectionString,
-                    npgsqlOptions =>
-                    {
-                        npgsqlOptions.EnableRetryOnFailure(maxRetryCount: 5);
-                        npgsqlOptions.MigrationsAssembly("Raytha.Migrations.Postgres");
-                    }
-                );
-            });
-            services.AddTransient<IRaythaDbJsonQueryEngine, RaythaDbPostgresJsonQueryEngine>();
-            services.AddTransient<IDbConnection>(_ => new NpgsqlConnection(dbConnectionString));
-            services.AddScoped<IRaythaDbContext>(provider =>
-                provider.GetRequiredService<RaythaDbContext>()
+            options.UseNpgsql(
+                dbConnectionString,
+                npgsqlOptions =>
+                {
+                    npgsqlOptions.EnableRetryOnFailure(maxRetryCount: 5);
+                }
             );
+        });
+        services.AddTransient<IRaythaDbJsonQueryEngine, RaythaDbPostgresJsonQueryEngine>();
+        services.AddTransient<IDbConnection>(_ => new NpgsqlConnection(dbConnectionString));
+        services.AddScoped<IRaythaDbContext>(provider =>
+            provider.GetRequiredService<RaythaDbContext>()
+        );
 
-            // Health checks for PostgreSQL
-            services
-                .AddHealthChecks()
-                .AddNpgSql(dbConnectionString, name: "postgres", timeout: TimeSpan.FromSeconds(5));
-        }
-        else
-        {
-            services.AddDbContext<RaythaDbContext>(options =>
-            {
-                options.UseSqlServer(
-                    dbConnectionString,
-                    sqlServerOptions =>
-                    {
-                        sqlServerOptions.EnableRetryOnFailure(maxRetryCount: 5);
-                        sqlServerOptions.MigrationsAssembly("Raytha.Migrations.SqlServer");
-                    }
-                );
-            });
-            services.AddTransient<IRaythaDbJsonQueryEngine, RaythaDbSqlServerJsonQueryEngine>();
-            services.AddTransient<IDbConnection>(_ => new SqlConnection(dbConnectionString));
-            services.AddScoped<IRaythaDbContext>(provider =>
-                provider.GetRequiredService<RaythaDbContext>()
+        // Readiness checks are tagged "ready"; /healthz (liveness) runs no checks at all.
+        services
+            .AddHealthChecks()
+            .AddNpgSql(
+                dbConnectionString,
+                name: "postgres",
+                timeout: TimeSpan.FromSeconds(5),
+                tags: new[] { HealthCheckTags.Ready }
+            )
+            .AddCheck<FileStorageHealthCheck>(
+                FileStorageHealthCheck.Name,
+                tags: new[] { HealthCheckTags.Ready }
             );
-
-            // Health checks for SQL Server
-            services
-                .AddHealthChecks()
-                .AddSqlServer(
-                    dbConnectionString,
-                    name: "sqlserver",
-                    timeout: TimeSpan.FromSeconds(5)
-                );
-        }
 
         services.AddSingleton<
             ICurrentOrganizationConfiguration,
@@ -95,10 +72,18 @@ public static class ConfigureServices
         services.AddSingleton<ISecurityConfiguration, SecurityConfiguration>();
         services.AddScoped<IEmailerConfiguration, EmailerConfiguration>();
 
-        services.AddScoped<IEmailer, Emailer>();
+        // IEmailer is decorated so every send attempt lands in the EmailLogs table.
+        services.AddScoped<Emailer>();
+        services.AddScoped<IEmailer>(provider => new EmailLoggingEmailer(
+            provider.GetRequiredService<Emailer>(),
+            provider.GetRequiredService<IServiceScopeFactory>(),
+            provider.GetRequiredService<ILogger<EmailLoggingEmailer>>()
+        ));
         services.AddTransient<IBackgroundTaskDb, BackgroundTaskDb>();
         services.AddTransient<IRaythaRawDbInfo, RaythaRawDbInfo>();
         services.AddTransient<IRaythaRawDbCommands, RaythaRawDbCommands>();
+        services.AddScoped<IFeatureFlagStore, EfFeatureFlagStore>();
+        services.AddScoped<IMaintenanceQueryService, MaintenanceQueryService>();
 
         //file storage provider
         var fileStorageProvider = configuration[FileStorageUtility.CONFIG_NAME]

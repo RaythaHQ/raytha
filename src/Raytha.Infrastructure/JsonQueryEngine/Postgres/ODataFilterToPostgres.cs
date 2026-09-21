@@ -115,7 +115,7 @@ internal class ODataFilterToPostgres : AbstractODataFilterToSql
                         )
                         .DeveloperName;
                     whereClause.Append(
-                        chosenColumnAsCustomField.FieldType.PostgresLikeJsonValue(
+                        chosenColumnAsCustomField.FieldType.LikeJsonValue(
                             $"{RawSqlColumn.RELATED_ITEM_COLUMN_NAME}_{indexOfRelatedObject}",
                             RawSqlColumn.PublishedContent.Name,
                             relatedObjPrimaryFieldName,
@@ -134,7 +134,7 @@ internal class ODataFilterToPostgres : AbstractODataFilterToSql
                         );
 
                     whereClause.Append(
-                        chosenColumnAsCustomField.FieldType.PostgresLikeJsonValue(
+                        chosenColumnAsCustomField.FieldType.LikeJsonValue(
                             RawSqlColumn.SOURCE_ITEM_COLUMN_NAME,
                             RawSqlColumn.PublishedContent.Name,
                             realFieldName,
@@ -145,7 +145,7 @@ internal class ODataFilterToPostgres : AbstractODataFilterToSql
                 else
                 {
                     whereClause.Append(
-                        chosenColumnAsCustomField.FieldType.PostgresLikeJsonValue(
+                        chosenColumnAsCustomField.FieldType.LikeJsonValue(
                             RawSqlColumn.SOURCE_ITEM_COLUMN_NAME,
                             RawSqlColumn.PublishedContent.Name,
                             realFieldName,
@@ -190,7 +190,7 @@ internal class ODataFilterToPostgres : AbstractODataFilterToSql
                         )
                         .DeveloperName;
                     whereClause.Append(
-                        chosenColumnAsCustomField.FieldType.PostgresSingleJsonValue(
+                        chosenColumnAsCustomField.FieldType.SingleJsonValue(
                             $"{RawSqlColumn.RELATED_ITEM_COLUMN_NAME}_{indexOfRelatedObject}",
                             RawSqlColumn.PublishedContent.Name,
                             relatedObjPrimaryFieldName
@@ -200,7 +200,7 @@ internal class ODataFilterToPostgres : AbstractODataFilterToSql
                 else if (chosenColumnAsCustomField.FieldType.DeveloperName == BaseFieldType.Date)
                 {
                     whereClause.Append(
-                        chosenColumnAsCustomField.FieldType.PostgresSingleJsonValue(
+                        chosenColumnAsCustomField.FieldType.SingleJsonValue(
                             RawSqlColumn.SOURCE_ITEM_COLUMN_NAME,
                             RawSqlColumn.PublishedContent.Name,
                             realFieldName,
@@ -211,7 +211,7 @@ internal class ODataFilterToPostgres : AbstractODataFilterToSql
                 else
                 {
                     whereClause.Append(
-                        chosenColumnAsCustomField.FieldType.PostgresSingleJsonValue(
+                        chosenColumnAsCustomField.FieldType.SingleJsonValue(
                             RawSqlColumn.SOURCE_ITEM_COLUMN_NAME,
                             RawSqlColumn.PublishedContent.Name,
                             realFieldName

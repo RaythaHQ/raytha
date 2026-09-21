@@ -79,28 +79,9 @@ public class DateFieldTypeTests
     }
 
     [Test]
-    [TestCase("MM/dd/yyyy", 101, "ASC")]
-    [TestCase("dd/MM/yyyy", 103, "DESC")]
-    [TestCase("unknown", 0, "ASC")]
-    public void SqlServerOrderByExpression_ShouldReturnCorrectSql(string dateFormat, int expectedStyle, string order)
-    {
-        // Arrange
-        var type = new DateFieldType();
-        var table = "t";
-        var column = "c";
-        var key = "k";
-
-        // Act
-        var result = type.SqlServerOrderByExpression(table, column, key, dateFormat, order);
-
-        // Assert
-        result.Should().Be($" TRY_CONVERT(datetime, JSON_VALUE({table}.{column}, '$.{key}'), {expectedStyle}) {order} ");
-    }
-
-    [Test]
     [TestCase("MM/DD/YYYY", "ASC")]
     [TestCase("DD/MM/YYYY", "DESC")]
-    public void PostgresOrderByExpression_ShouldReturnCorrectSql(string dateFormat, string order)
+    public void OrderByExpression_ShouldReturnCorrectSql(string dateFormat, string order)
     {
         // Arrange
         var type = new DateFieldType();
@@ -109,7 +90,7 @@ public class DateFieldTypeTests
         var key = "k";
 
         // Act
-        var result = type.PostgresOrderByExpression(table, column, key, dateFormat, order);
+        var result = type.OrderByExpression(table, column, key, dateFormat, order);
 
         // Assert
         var expected = $@"

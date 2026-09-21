@@ -1,0 +1,65 @@
+---
+description: Admin list search, sort, and page state MUST live in the URL and survive detail navigation
+globs: "src/admin/**/*.ts,src/admin/**/*.tsx,src/Raytha.Web/Areas/Admin/Api/**/*.cs"
+alwaysApply: false
+---
+
+# RFC-0010: Admin List Query State
+
+Status: Active
+
+## Abstract
+
+Search, sort, and page are part of an admin list's route, not component state.
+A list URL MUST be hard-linkable, and leaving a list for a detail or create page
+and coming back MUST restore the same query.
+
+## 1. Source of Truth
+
+- The **applied** list query MUST live in the list URL's search string. Default
+  and empty values MUST be omitted, so a pristine list is a clean URL.
+- Keys match the server contract bound by `PagedQuery`, so the URL and the API
+  request stay one mapping:
+
+| Key | Meaning | Omit when |
+|---|---|---|
+| `search` | free-text search | empty |
+| `pageNumber` | 1-based page | 1 |
+| `pageSize` | rows per page | list default (server default 50, max 1000) |
+| `orderBy` | server-side sort expression | list's natural order |
+
+  List-specific filters use their own explicit keys (`contentType`, `status`,
+  `from`, `to`). Do not pack several filters into one opaque parameter.
+- Draft input (typed but not applied) MAY stay in component state. Writing the
+  URL on every keystroke is FORBIDDEN — debounce, then write once.
+- Changing search, sort, or a filter MUST reset `pageNumber` to 1. A request for
+  page 7 of a 2-page result is a bug the user sees as an empty table.
+- Secrets and tokens MUST NOT appear in a list query string (RFC-0008 §7).
+
+## 2. Server Side
+
+- Sorting and paging are server-side, always. `PagedQuery` clamps
+  `pageNumber` to at least 1 and `pageSize` to 1..1000; `orderBy` stays null when
+  omitted so each Application query keeps its own default ordering (RFC-0002 §3).
+- Each list query allowlists the columns it can sort by. An unknown `orderBy`
+  MUST fall back to that list's default rather than returning 400 or reaching the
+  database as raw SQL.
+- List responses go through `AdminResults.Paged`, which echoes the paging the
+  server actually applied. The SPA MUST render from that, not from what it asked
+  for.
+
+## 3. Client Side
+
+- A list page reads its query from the router's search params and passes them
+  into the TanStack Query key. Two different queries MUST NOT share a cache key
+  (RFC-0006 §2).
+- Column headers write `orderBy` into the URL on click: first click applies the
+  column's natural direction, second click flips it, third clears back to the
+  list default.
+- One mechanism per list. A list that keeps sort in the URL and search in
+  `sessionStorage` is a defect.
+- "Back to list" links from detail, create, and edit pages MUST carry the list's
+  search params. Navigating to the bare list path from the sidebar or a command
+  palette is a deliberate reset to defaults.
+- List params MUST NOT be copied onto entity URLs
+  (`/raytha/users/abc123?pageNumber=3` is wrong).

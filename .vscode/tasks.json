@@ -1,18 +1,32 @@
 {
-    "version": "2.0.0",
-    "tasks": [
-        {
-            "label": "build:Debug",
-            "command": "dotnet",
-            "type": "process",
-            "args": [
-                "build",
-                "--no-restore",
-                "--configuration",
-                "Debug",
-                "${workspaceFolder}/src/Raytha.Web/Raytha.Web.csproj"
-            ],
-            "problemMatcher": "$msCompile"
-        }
-    ]
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "compose-up",
+      "type": "shell",
+      "command": "./tools/compose-up.sh",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "build-host",
+      "command": "dotnet",
+      "type": "process",
+      "args": [
+        "build",
+        "--configuration",
+        "Debug",
+        "${workspaceFolder}/src/Raytha.Web/Raytha.Web.csproj"
+      ],
+      "problemMatcher": "$msCompile"
+    },
+    {
+      "label": "pre-debug",
+      "dependsOn": ["compose-up", "build-host"],
+      "dependsOrder": "sequence",
+      "problemMatcher": []
+    }
+  ]
 }

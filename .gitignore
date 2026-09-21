@@ -79,6 +79,15 @@ publish/
 packages/
 ## TODO: If the tool you use requires repositories.config, also uncomment the next line
 !packages/repositories.config
+# Admin SPA workspace packages (not NuGet)
+!src/admin/packages/
+!src/admin/packages/**
+
+# verify-raytha skill scratch (ports, cookies, browser profile)
+.cursor/skills/verify-raytha/runs/
+
+# local-only agent notes (credentials). never commit.
+.cursor/rules/local.mdc
 
 # Windows Azure Build Output
 csx/

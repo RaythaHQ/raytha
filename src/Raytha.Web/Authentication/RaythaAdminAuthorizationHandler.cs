@@ -73,8 +73,10 @@ public class RaythaAdminAuthorizationHandler : IAuthorizationHandler
         {
             if (requirement is IsAdminRequirement)
             {
+                // Keep evaluating: endpoint groups stack IsAdmin with a permission policy, and
+                // returning here would leave the permission requirement unevaluated (403).
                 context.Succeed(requirement);
-                return Task.CompletedTask;
+                continue;
             }
 
             if (requirement is ManageUsersRequirement)
@@ -195,7 +197,8 @@ public class RaythaAdminAuthorizationHandler : IAuthorizationHandler
                         ) as string;
 
                     if (
-                        contentTypePermissionsClaims.Contains(
+                        !string.IsNullOrEmpty(contentTypeDeveloperName)
+                        && contentTypePermissionsClaims.Contains(
                             $"{contentTypeDeveloperName.ToDeveloperName()}_{permission}"
                         )
                     )

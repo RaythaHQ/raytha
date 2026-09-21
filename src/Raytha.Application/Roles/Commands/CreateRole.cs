@@ -4,10 +4,12 @@ using Mediator;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Models;
 using Raytha.Application.Common.Utils;
+using Raytha.Application.Webhooks;
 using Raytha.Domain.Entities;
 
 namespace Raytha.Application.Roles.Commands;
 
+[WebhookEvent("role.created", DisplayName = "Role created", Group = "Roles")]
 public class CreateRole
 {
     public record Command : LoggableRequest<CommandResponseDto<ShortGuid>>

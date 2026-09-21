@@ -5,11 +5,13 @@ using Microsoft.EntityFrameworkCore;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Models;
 using Raytha.Application.Common.Utils;
+using Raytha.Application.Webhooks;
 using Raytha.Domain.Entities;
 using Raytha.Domain.ValueObjects.FieldTypes;
 
 namespace Raytha.Application.ContentTypes.Commands;
 
+[WebhookEvent("content_type.created", DisplayName = "Content type created", Group = "Content types")]
 public class CreateContentType
 {
     public record Command : LoggableRequest<CommandResponseDto<ShortGuid>>

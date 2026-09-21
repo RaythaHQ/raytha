@@ -8,22 +8,29 @@
     <RootNamespace>Raytha.Web</RootNamespace>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Fluid.Core" Version="2.31.0" />
-    <PackageReference Include="Fluid.ViewEngine" Version="2.31.0" />
-    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.0" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.0">
+    <PackageReference Include="DotNetEnv" />
+    <PackageReference Include="Fluid.Core" />
+    <PackageReference Include="Fluid.ViewEngine" />
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
-    <PackageReference Include="Scalar.AspNetCore" Version="2.10.3" />
+    <PackageReference Include="Scalar.AspNetCore" />
+    <PackageReference Include="Yarp.ReverseProxy" />
+  </ItemGroup>
+  <ItemGroup Label="Observability">
+    <PackageReference Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" />
+    <PackageReference Include="OpenTelemetry.Extensions.Hosting" />
+    <PackageReference Include="OpenTelemetry.Instrumentation.AspNetCore" />
+    <PackageReference Include="OpenTelemetry.Instrumentation.Http" />
+    <PackageReference Include="Sentry.AspNetCore" />
+    <PackageReference Include="Serilog.AspNetCore" />
+    <PackageReference Include="Serilog.Sinks.Grafana.Loki" />
+    <PackageReference Include="Serilog.Sinks.OpenTelemetry" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Raytha.Application\Raytha.Application.csproj" />
     <ProjectReference Include="..\Raytha.Infrastructure\Raytha.Infrastructure.csproj" />
-    <ProjectReference Include="..\Raytha.Migrations.Postgres\Raytha.Migrations.Postgres.csproj" />
-    <ProjectReference Include="..\Raytha.Migrations.SqlServer\Raytha.Migrations.SqlServer.csproj" />
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Areas\Admin\Pages\Views\" />
   </ItemGroup>
 </Project>

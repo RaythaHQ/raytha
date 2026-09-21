@@ -1,0 +1,78 @@
+---
+description: Outbound webhooks are declared with [WebhookEvent] on commands and signed with HMAC-SHA256 in X-Raytha-Signature
+globs: "src/Raytha.Application/Webhooks/**,src/Raytha.Application/**/Commands/*.cs"
+alwaysApply: false
+---
+
+# RFC-0011: Webhooks
+
+Status: Active
+
+## Abstract
+
+A webhook event is declared by putting `[WebhookEvent("resource.action")]` on a
+command. The Mediator pipeline publishes it after the command succeeds, and
+deliveries are signed with HMAC-SHA256 and retried in the background.
+
+## 1. Declaring an Event
+
+- Annotate the outer command class (or the nested `Command` record) with
+  `[WebhookEvent("resource.action")]`, optionally with `DisplayName` and `Group`
+  for the admin event picker.
+- Event names MUST match `^[a-z][a-z0-9_]*\.[a-z][a-z0-9_]*$` —
+  `content_item.created`, `user.created` — and MUST be unique across the
+  codebase. `ApplicationConventionTests` enforces both, plus that an annotated
+  type declares a nested Mediator `Command`.
+- An event name is a published contract for receivers. Renaming one is a
+  breaking change; add a new event instead.
+- `WebhookEventCatalog` discovers events by reflection. Do not maintain a second
+  hand-written list, and do not register an event that no command raises.
+- Only annotate commands. Queries MUST NOT fire webhooks.
+
+## 2. Publishing
+
+- `WebhookPublishBehavior` runs after the handler and publishes only when the
+  response reports success. A failed command MUST NOT emit an event.
+- Publishing is gated by the `webhooks` feature flag (RFC-0009). Disabled means
+  skipped, not failed.
+- A publish failure is logged and swallowed — it MUST NOT fail the command that
+  triggered it. Do not "fix" that by rethrowing.
+- The payload is `{ result, request, requestType }`, with the request serialized
+  and any property whose name contains `password`, `secret`, `token`, `apikey`,
+  or `api_key` stripped. New command properties that carry credentials MUST be
+  named so that redaction catches them, or kept off the command entirely.
+- Delivery is enqueued as a background task; publishing MUST NOT make an outbound
+  HTTP call inline.
+
+## 3. Signing
+
+Every delivery is a `POST` of the JSON payload with:
+
+| Header | Value |
+|---|---|
+| `X-Raytha-Signature` | `sha256=<lowercase hex>` — HMAC-SHA256 of the raw body, keyed by the webhook secret |
+| `X-Raytha-Event` | the event name |
+| `X-Raytha-Delivery` | the delivery id, for receiver-side idempotency |
+| `X-Raytha-Timestamp` | attempt time, round-trip format |
+
+- Signing MUST go through `WebhookSigner`. It signs the exact bytes that are
+  sent, so changing serialization after signing breaks verification.
+- Secrets are generated with `WebhookSigner.GenerateSecret()` (32 random bytes,
+  hex) and returned once in `CreatedWebhookDto`. Never expose a secret again
+  (RFC-0008 §7).
+- Verification uses `WebhookSigner.Verify`, which is a fixed-time comparison.
+  String equality on signatures is FORBIDDEN.
+
+## 4. Delivery and Retry
+
+- Each attempt is a `WebhookDelivery` row: attempt count, last attempt, next
+  retry, response status, error. Delivery history is the operator's debugging
+  surface — keep it accurate.
+- `DeliverWebhookTask` retries with capped exponential backoff up to the
+  webhook's `MaxAttempts`, honoring its `TimeoutSeconds`. Those are per-webhook
+  settings; do not hardcode either.
+- Requests go through the named `raytha-webhooks` `HttpClient`. New outbound
+  webhook traffic MUST use it rather than constructing an `HttpClient`.
+- Webhook URLs are operator-supplied and reach the network from the server. They
+  are subject to the same internal-URL policy as other outbound fetches
+  (RFC-0008 §6).

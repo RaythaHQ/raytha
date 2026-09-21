@@ -2,7 +2,6 @@
 using Mediator;
 using Microsoft.AspNetCore.DataProtection.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Domain.Entities;
 using Raytha.Infrastructure.Common;
@@ -14,20 +13,17 @@ public class RaythaDbContext : DbContext, IRaythaDbContext, IDataProtectionKeyCo
 {
     private readonly IMediator _mediator;
     private readonly AuditableEntitySaveChangesInterceptor _auditableEntitySaveChangesInterceptor;
-    private readonly IConfiguration _configuration;
 
     public RaythaDbContext(DbContextOptions<RaythaDbContext> options)
         : base(options) { }
 
     public RaythaDbContext(
         DbContextOptions<RaythaDbContext> options,
-        IConfiguration configuration,
         IMediator mediator,
         AuditableEntitySaveChangesInterceptor auditableEntitySaveChangesInterceptor
     )
         : base(options)
     {
-        _configuration = configuration;
         _mediator = mediator;
         _auditableEntitySaveChangesInterceptor = auditableEntitySaveChangesInterceptor;
     }
@@ -73,44 +69,26 @@ public class RaythaDbContext : DbContext, IRaythaDbContext, IDataProtectionKeyCo
     public DbSet<WidgetTemplate> WidgetTemplates => Set<WidgetTemplate>();
     public DbSet<WidgetTemplateRevision> WidgetTemplateRevisions => Set<WidgetTemplateRevision>();
     public DbSet<FailedLoginAttempt> FailedLoginAttempts => Set<FailedLoginAttempt>();
+    public DbSet<Webhook> Webhooks => Set<Webhook>();
+    public DbSet<WebhookDelivery> WebhookDeliveries => Set<WebhookDelivery>();
+    public DbSet<FeatureFlag> FeatureFlags => Set<FeatureFlag>();
+    public DbSet<EmailLog> EmailLogs => Set<EmailLog>();
     public DbSet<DataProtectionKey> DataProtectionKeys { get; set; } = null!;
 
     public DbContext DbContext => this;
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
-        builder.ApplyConfigurationsFromAssembly(
-            Assembly.GetExecutingAssembly(),
-            p =>
-                p.GetInterfaces()
-                    .All(c =>
-                        c.Name != typeof(ISqlServerConfiguration).Name
-                        && c.Name != typeof(IPostgresConfiguration).Name
-                    )
-        );
-        var dbProvider = DbProviderHelper.GetDatabaseProviderTypeFromConnectionString(
-            _configuration.GetConnectionString("DefaultConnection")
-        );
-        if (dbProvider == DatabaseProviderType.Postgres)
-        {
-            builder.ApplyConfigurationsFromAssembly(
-                Assembly.GetExecutingAssembly(),
-                p => p.GetInterfaces().Any(c => c.Name == typeof(IPostgresConfiguration).Name)
-            );
-        }
-        else
-        {
-            builder.ApplyConfigurationsFromAssembly(
-                Assembly.GetExecutingAssembly(),
-                p => p.GetInterfaces().Any(c => c.Name == typeof(ISqlServerConfiguration).Name)
-            );
-        }
+        builder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());
         base.OnModelCreating(builder);
     }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
-        optionsBuilder.AddInterceptors(_auditableEntitySaveChangesInterceptor);
+        if (_auditableEntitySaveChangesInterceptor != null)
+        {
+            optionsBuilder.AddInterceptors(_auditableEntitySaveChangesInterceptor);
+        }
     }
 
     public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)

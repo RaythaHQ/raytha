@@ -4,9 +4,11 @@ using Microsoft.EntityFrameworkCore;
 using Raytha.Application.Common.Exceptions;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Models;
+using Raytha.Application.Webhooks;
 
 namespace Raytha.Application.SitePages.Commands;
 
+[WebhookEvent("site_page.unpublished", DisplayName = "Site page unpublished", Group = "Site pages")]
 public class UnpublishSitePage
 {
     public record Command : LoggableEntityRequest<CommandResponseDto<ShortGuid>> { }

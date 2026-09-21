@@ -1,10 +1,12 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
+using System.Text.Json;
 using System.Threading.Tasks;
 using Mediator;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Http;
 using Raytha.Application.Common.Security;
 using Raytha.Application.Common.Utils;
 using Raytha.Application.Login.Queries;
@@ -18,6 +20,61 @@ public class CustomCookieAuthenticationEvents : CookieAuthenticationEvents
     public CustomCookieAuthenticationEvents(IMediator mediator)
     {
         _mediator = mediator;
+    }
+
+    /// <summary>
+    /// The admin SPA and any other JSON client under <c>/raytha/api</c> need status codes, not
+    /// redirects to the login page.
+    /// </summary>
+    private static bool IsApiRequest(HttpRequest request) =>
+        request.Path.StartsWithSegments("/raytha/api");
+
+    public override Task RedirectToLogin(RedirectContext<CookieAuthenticationOptions> context)
+    {
+        if (!IsApiRequest(context.Request))
+        {
+            return base.RedirectToLogin(context);
+        }
+
+        return WriteProblem(
+            context.Response,
+            StatusCodes.Status401Unauthorized,
+            "Unauthorized",
+            "You must sign in to access this resource."
+        );
+    }
+
+    public override Task RedirectToAccessDenied(RedirectContext<CookieAuthenticationOptions> context)
+    {
+        if (!IsApiRequest(context.Request))
+        {
+            return base.RedirectToAccessDenied(context);
+        }
+
+        return WriteProblem(
+            context.Response,
+            StatusCodes.Status403Forbidden,
+            "Forbidden",
+            "You do not have permission to access this resource."
+        );
+    }
+
+    private static Task WriteProblem(HttpResponse response, int status, string title, string detail)
+    {
+        response.StatusCode = status;
+        response.ContentType = "application/problem+json";
+        response.Headers.CacheControl = "no-store";
+        return response.WriteAsync(
+            JsonSerializer.Serialize(
+                new
+                {
+                    type = $"https://httpstatuses.io/{status}",
+                    title,
+                    status,
+                    detail,
+                }
+            )
+        );
     }
 
     public override async Task ValidatePrincipal(CookieValidatePrincipalContext context)

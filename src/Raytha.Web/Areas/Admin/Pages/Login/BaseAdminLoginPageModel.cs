@@ -2,6 +2,7 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Raytha.Application.AuthenticationSchemes;
 using Raytha.Application.Common.Models;
 using Raytha.Application.Common.Security;
@@ -73,6 +74,14 @@ public class BaseAdminLoginPageModel : BaseAdminPageModel
     protected bool HasLocalRedirect(string returnUrl)
     {
         return !string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl);
+    }
+
+    /// <summary>
+    /// The admin dashboard is served by the React SPA at /raytha, not a Razor page.
+    /// </summary>
+    protected IActionResult RedirectToDashboard()
+    {
+        return Redirect($"{CurrentOrganization.PathBase}/raytha");
     }
 
     protected bool OnlyHasSingleSignOnEnabled(ListResultDto<AuthenticationSchemeDto> result)

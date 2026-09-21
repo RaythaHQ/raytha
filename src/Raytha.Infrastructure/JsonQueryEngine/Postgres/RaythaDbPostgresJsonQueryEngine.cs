@@ -532,7 +532,7 @@ internal class RaythaDbPostgresJsonQueryEngine
                             )
                             .DeveloperName.ToDeveloperName();
                         sqlBuilder.OrderBy(
-                            columnAsContentTypeField.FieldType.PostgresOrderByExpression(
+                            columnAsContentTypeField.FieldType.OrderByExpression(
                                 $"{RawSqlColumn.RELATED_ITEM_COLUMN_NAME}_{indexOfRelatedObject}",
                                 RawSqlColumn.PublishedContent.Name,
                                 relatedObjPrimaryFieldName,
@@ -543,7 +543,7 @@ internal class RaythaDbPostgresJsonQueryEngine
                     else if (columnAsContentTypeField.FieldType.DeveloperName == BaseFieldType.Date)
                     {
                         sqlBuilder.OrderBy(
-                            columnAsContentTypeField.FieldType.PostgresOrderByExpression(
+                            columnAsContentTypeField.FieldType.OrderByExpression(
                                 RawSqlColumn.SOURCE_ITEM_COLUMN_NAME,
                                 RawSqlColumn.PublishedContent.Name,
                                 columnAsContentTypeField.DeveloperName,
@@ -555,7 +555,7 @@ internal class RaythaDbPostgresJsonQueryEngine
                     else
                     {
                         sqlBuilder.OrderBy(
-                            columnAsContentTypeField.FieldType.PostgresOrderByExpression(
+                            columnAsContentTypeField.FieldType.OrderByExpression(
                                 RawSqlColumn.SOURCE_ITEM_COLUMN_NAME,
                                 RawSqlColumn.PublishedContent.Name,
                                 columnAsContentTypeField.DeveloperName,
@@ -575,7 +575,7 @@ internal class RaythaDbPostgresJsonQueryEngine
                         if (reservedField.DeveloperName == BuiltInContentTypeField.PrimaryField)
                         {
                             sqlBuilder.OrderBy(
-                                reservedField.FieldType.PostgresOrderByExpression(
+                                reservedField.FieldType.OrderByExpression(
                                     RawSqlColumn.SOURCE_ITEM_COLUMN_NAME,
                                     RawSqlColumn.PublishedContent.Name,
                                     PrimaryFieldDeveloperName,

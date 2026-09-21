@@ -1,0 +1,15 @@
+/* The React Dashboard wrapper sets inline: true, but Uppy's default overlay
+ * still mounts. When --modal wins (or setOptions drops inline), that overlay
+ * is position:fixed and dims the whole admin shell. Keep the widget in-flow. */
+.raytha-file-upload .uppy-Dashboard-overlay {
+  display: none !important;
+}
+
+.raytha-file-upload .uppy-Dashboard--modal {
+  z-index: auto;
+}
+
+.raytha-file-upload .uppy-Dashboard--modal .uppy-Dashboard-inner {
+  position: relative;
+  z-index: auto;
+}

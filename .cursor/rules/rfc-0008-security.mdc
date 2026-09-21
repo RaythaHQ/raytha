@@ -1,0 +1,116 @@
+---
+description: Authorization policies, rate limits, ProblemDetails responses, security headers, and secret handling
+alwaysApply: true
+---
+
+# RFC-0008: Security
+
+Status: Active
+
+## Abstract
+
+Every admin surface is authorized by a named policy, auth endpoints are rate
+limited, `/raytha/api/*` errors are RFC 7807 problem details, and a fixed set of
+security headers is applied in `Startup`. None of these are optional for new
+code.
+
+## 1. Authorization
+
+- Authentication is a single cookie scheme (`HttpOnly`, `Secure` outside
+  Development, 30-day expiry), with claims hydrated per request by
+  `CustomCookieAuthenticationEvents`.
+- Policies are registered once in `AddWebUIServices`:
+  `RaythaClaimTypes.IsAdmin`, the `BuiltInSystemPermission.*` policies, the
+  `BuiltInContentTypePermission.*` policies, and an `Api`-prefixed mirror of each
+  for API-key callers (`RaythaApiAuthorizationHandler.POLICY_PREFIX`).
+- Every admin endpoint, controller, and page MUST carry a policy. The
+  `/raytha/api/admin` group requires `IsAdmin`; each resource group narrows to its
+  permission. `AllowAnonymous` on an admin resource is FORBIDDEN.
+- Authorization decisions MUST use these policies. Checking
+  `User.IsInRole("admin")`, comparing email addresses, or re-deriving permissions
+  in a handler is FORBIDDEN.
+- Content-type permissions are per content type. A new content-scoped endpoint
+  MUST use `ContentTypePermissionRequirement`, not a system-wide permission.
+- Hiding a control in the SPA is presentation. The server policy is the control
+  (RFC-0006 §4).
+
+## 2. Rate Limits
+
+- `RateLimiting` applies a global partitioned limiter: a sliding window of
+  `AUTH_RATE_LIMIT_PER_MINUTE` (default 30) per client IP over
+  `/raytha/api/auth`, `/raytha/login`, and `/account/login`. Everything else is
+  unlimited.
+- A new authentication, password-reset, magic-link, or code-verification path MUST
+  be reachable under one of those prefixes, or MUST be added to
+  `RateLimiting.AuthPathPrefixes`. A new unlimited credential endpoint is a
+  defect.
+- Rejections answer 429 with `Retry-After`, as problem details under
+  `/raytha/api` and plain text elsewhere.
+- Rate limiting is not a substitute for lockout: `FailedLoginAttempt` records
+  still gate repeat failures for a single account.
+
+## 3. Error Responses
+
+- Every `/raytha/api/*` response for a failure MUST be
+  `application/problem+json` with `type`, `title`, `status`, `detail`, and
+  `instance`. Use `AdminResults` helpers or let `ExceptionsMiddleware` do it.
+- Problem details MUST NOT leak internals: no stack traces, SQL, connection
+  strings, or file paths outside Development.
+- Validation failures map to 400 with per-field errors, missing entities to 404,
+  policy failures to 403, and an unauthenticated API request to 401 — never an
+  HTML login redirect under `/raytha/api`.
+- Non-API paths keep the HTML error pages via
+  `UseStatusCodePagesWithReExecute("/raytha/error/{0}")`.
+
+## 4. Headers and Transport
+
+Applied in `Startup.Configure`; do not remove or weaken:
+
+| Header | Value |
+|---|---|
+| `X-Content-Type-Options` | `nosniff` everywhere |
+| `X-Frame-Options` | `DENY` under `/raytha`, `SAMEORIGIN` elsewhere |
+| `Referrer-Policy` | `strict-origin-when-cross-origin` |
+| `Content-Security-Policy` | `default-src 'none'; …; sandbox` on `/_static-files` uploads |
+
+- Outside Development with `ENFORCE_HTTPS` (default true), HTTPS redirection and
+  HSTS are on. Do not disable them to work around a proxy — fix the forwarded
+  headers.
+- There is deliberately no global CSP, because site builders author their own
+  HTML. Adding one is a breaking change and needs a decision, not a commit.
+
+## 5. CSRF
+
+- Razor forms use antiforgery tokens.
+- The cookie-authenticated admin API instead requires
+  `Content-Type: application/json` on `POST`/`PUT`/`PATCH`
+  (`JsonRequestGuardMiddleware`, 415 otherwise). That is what makes a cross-site
+  form POST impossible, so accepting form-encoded bodies on
+  `/raytha/api/admin` or `/raytha/api/auth` is FORBIDDEN.
+
+## 6. Input, Uploads, and Outbound Requests
+
+- User input reaching SQL MUST go through EF parameters or the JSON query engine
+  (RFC-0004 §5).
+- Uploads are constrained by `FILE_STORAGE_ALLOWED_MIMETYPES`,
+  `FILE_STORAGE_MAX_FILE_SIZE`, and `FILE_STORAGE_MAX_TOTAL_DISK_SPACE`, and are
+  served only from `/_static-files` with the CSP above. Do not serve an upload
+  from a path that inherits the site's origin trust.
+- Server-side fetches of user-supplied URLs respect
+  `ALLOW_INTERNAL_URL_IMPORTS` (default false). New outbound-fetch features MUST
+  honor it — that flag is the SSRF guard.
+- Raytha Functions run sandboxed with `RAYTHA_FUNCTIONS_TIMEOUT` and active-count
+  limits. Do not widen the sandbox to make a function convenient.
+- Outbound webhooks are signed; see RFC-0011.
+
+## 7. Secrets
+
+- Secrets MUST NOT be committed: no connection strings, SMTP credentials, cloud
+  keys, or webhook secrets in source, `appsettings*.json`, tests, or fixtures.
+  `.env` is gitignored; `.env.example` holds placeholders only.
+- Secrets MUST NOT appear in URLs, query strings, audit log payloads, or client
+  logs. A webhook signing secret is returned exactly once, in
+  `CreatedWebhookDto` at creation; `WebhookDto` MUST NOT carry it, and no read
+  endpoint may expose it afterwards.
+- Log at the right level and redact identity beyond what an operator needs. A
+  password, token, or full API key in a log line is a defect.

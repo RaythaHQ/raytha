@@ -27,29 +27,7 @@ public class DateFieldType : BaseFieldType
         return new DateTimeFieldValue(value);
     }
 
-    public override string SqlServerSingleJsonValue(params string[] args)
-    {
-        int sqlDateOutput = args[3] switch
-        {
-            "MM/dd/yyyy" => 101,
-            "dd/MM/yyyy" => 103,
-            _ => 0,
-        };
-        return $" TRY_CONVERT(datetime, JSON_VALUE({args[0]}.{args[1]}, '$.{args[2]}'), {sqlDateOutput}) ";
-    }
-
-    public override string SqlServerOrderByExpression(params string[] args)
-    {
-        int sqlDateOutput = args[3] switch
-        {
-            "MM/dd/yyyy" => 101,
-            "dd/MM/yyyy" => 103,
-            _ => 0,
-        };
-        return $" TRY_CONVERT(datetime, JSON_VALUE({args[0]}.{args[1]}, '$.{args[2]}'), {sqlDateOutput}) {args[4]} ";
-    }
-
-    public override string PostgresSingleJsonValue(params string[] args)
+    public override string SingleJsonValue(params string[] args)
     {
         string dateFormat = args[3].ToUpper(); //US or UK format
         return $@"
@@ -59,7 +37,7 @@ public class DateFieldType : BaseFieldType
         )";
     }
 
-    public override string PostgresOrderByExpression(params string[] args)
+    public override string OrderByExpression(params string[] args)
     {
         string dateFormat = args[3].ToUpper(); //US or UK format
         string sortOrder = args[4]?.ToUpper() == "DESC" ? "DESC" : "ASC"; // Default to ASC if not provided

@@ -1,0 +1,17 @@
+{
+  "rsc": false,
+  "tsx": true,
+  "aliases": {
+    "components": "@/components",
+    "contexts": "@/contexts",
+    "hooks": "@/hooks",
+    "tiptapIcons": "@/components/tiptap-icons",
+    "lib": "@/lib",
+    "tiptapExtensions": "@/components/tiptap-extension",
+    "tiptapNodes": "@/components/tiptap-node",
+    "tiptapUi": "@/components/tiptap-ui",
+    "tiptapUiPrimitives": "@/components/tiptap-ui-primitive",
+    "tiptapUiUtils": "@/components/tiptap-ui-utils",
+    "styles": "@/styles"
+  }
+}

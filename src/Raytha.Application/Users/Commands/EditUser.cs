@@ -5,10 +5,12 @@ using Microsoft.EntityFrameworkCore;
 using Raytha.Application.Common.Exceptions;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Models;
+using Raytha.Application.Webhooks;
 using Raytha.Domain.Entities;
 
 namespace Raytha.Application.Users.Commands;
 
+[WebhookEvent("user.updated", DisplayName = "User updated", Group = "Users")]
 public class EditUser
 {
     public record Command : LoggableEntityRequest<CommandResponseDto<ShortGuid>>

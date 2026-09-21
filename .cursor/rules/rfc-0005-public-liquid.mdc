@@ -1,0 +1,73 @@
+---
+description: The public site stays Razor MVC controllers rendering database-stored Liquid templates through Fluid
+globs: "src/Raytha.Web/Areas/Public/**,src/Raytha.Web/Services/RenderEngine.cs,src/Raytha.Web/Areas/Shared/**"
+alwaysApply: false
+---
+
+# RFC-0005: Public Site (Razor + Fluid)
+
+Status: Active
+
+## Abstract
+
+The public site is server-rendered by MVC controllers in
+`src/Raytha.Web/Areas/Public`, which resolve a route to a content item, view, or
+site page and render a Liquid template stored in the database through Fluid. The
+admin SPA rewrite (RFC-0006) does not extend to the public site, and MUST NOT.
+
+## 1. Boundaries
+
+- Public URLs are owned by `MainController`'s catch-all routes (`""` /
+  `{*route}`), with `LoginController` and `ProfileController` handling account
+  paths. Everything under `/raytha` belongs to the admin (RFC-0006).
+- New public behavior MUST be a controller action plus a template change. Do not
+  add a React island, a client-side router, or a JSON endpoint to render a public
+  page.
+- Public controllers get data through `ISender` only (RFC-0002, RFC-0004).
+
+## 2. Rendering
+
+- Templates are Liquid, stored as `WebTemplate` / `SitePage` / `WidgetTemplate`
+  rows and rendered by `Services/RenderEngine.cs` (Fluid). Templates are content,
+  edited in the admin by site builders — treat them as data, not as source files.
+- The `DbViewEngine` action results (`ContentItemActionViewResult`,
+  `SitePageActionViewResult`, `AccountActionViewResult`,
+  `ErrorActionViewResult`) are how a controller hands a resolved entity to the
+  render engine. New renderable surfaces SHOULD follow that pattern rather than
+  calling the render engine directly.
+- Anything a template can reach MUST be a render model from
+  `Raytha.Application/Common/Models/RenderModels`. Passing an EF entity, a
+  `DbContext`, or a service into the Liquid context is FORBIDDEN — it would hand
+  site builders arbitrary database access.
+- New Liquid filters and tags are registered once in `RenderEngine`. A filter
+  MUST be side-effect free and MUST NOT perform unbounded work; templates are
+  rendered per request.
+- The parsed-template cache in `RenderEngine` is keyed by template content. A
+  change that makes rendering depend on per-request state MUST NOT be cached
+  under that key.
+
+## 3. Output Safety
+
+- Liquid escapes by default. Emitting raw HTML from user-supplied content is
+  allowed only where a site builder has explicitly authored it, and MUST NOT be
+  introduced for data that comes from public form input.
+- Public responses carry `X-Frame-Options: SAMEORIGIN` (admin gets `DENY`) so
+  site builders can embed their own content. Do not tighten framing for public
+  pages in a way that breaks existing sites.
+- User uploads are served from `/_static-files` with a restrictive CSP and
+  sandbox. Do not serve uploads from another path or relax those headers.
+
+## 4. JavaScript on the Public Site
+
+- Public templates ship plain JavaScript authored by site builders. The host
+  MUST NOT require a build step for public pages, and MUST NOT add a framework
+  runtime to them.
+- Assets the host owns live under `wwwroot/css`, `wwwroot/js`, and the bundled
+  default themes (`wwwroot/raytha_default_*`). `wwwroot/raytha` is the admin
+  bundle and is off-limits here.
+
+## 5. REST API v1
+
+`Areas/Api` serves the public headless API under `/raytha/api/v1`, authenticated
+by `X-API-KEY`. It is a separate surface from the admin API: changes to admin
+endpoints MUST NOT change v1 response shapes, which are a published contract.

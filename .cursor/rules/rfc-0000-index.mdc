@@ -1,0 +1,51 @@
+---
+description: RFC catalog and normative keyword conventions for all Raytha rules
+alwaysApply: true
+---
+
+# RFC-0000: Rule Index and Conventions
+
+Status: Active
+
+## Abstract
+
+Raytha engineering rules are numbered RFCs under `.cursor/rules/`. This
+document lists them and defines the keyword convention they share.
+
+## 1. Normative Keywords
+
+The key words MUST, MUST NOT, SHOULD, SHOULD NOT, and MAY in these RFCs are to
+be interpreted as described in RFC 2119. MUST-level rules are enforced in
+review and, where possible, by `tests/Raytha.Architecture.Tests`; deviating
+from a SHOULD requires a stated reason in the PR.
+
+## 2. Catalog
+
+- RFC-0001 Architecture — Clean Architecture layers, Postgres-only persistence
+- RFC-0002 CQRS — command/query/handler/validator structure via Mediator
+- RFC-0003 Domain — entities, value objects, domain events
+- RFC-0004 Data Access — `IRaythaDbContext` and EF Core patterns
+- RFC-0005 Public Site — Razor controllers plus Fluid/Liquid templates
+- RFC-0006 Admin SPA — React at `/raytha`, admin API, cookie auth
+- RFC-0007 Testing — NUnit projects and architecture tests
+- RFC-0008 Security — authorization policies, rate limits, ProblemDetails, headers
+- RFC-0009 Feature Flags — code-defined catalog, fail-closed evaluation
+- RFC-0010 Admin List Query — list state lives in the URL
+- RFC-0011 Webhooks — `[WebhookEvent]` commands and HMAC signing
+- RFC-0012 Versioning and Migrations — `VERSION`, bump/check scripts, `v2_0_0`
+
+`pre-push-ci.mdc` is not an RFC; it points at the pre-push CI skill.
+
+## 3. Scope
+
+These rules describe Raytha 2.0 (`VERSION` 2.0.0 and later). Pre-2.0 code that
+predates a rule is grandfathered where an RFC says so explicitly; new and
+touched code follows the rule.
+
+## 4. Amending a Rule
+
+- Changing a MUST MUST come with the code and tests that make it true, in the
+  same change.
+- New RFCs take the next free number and MUST be added to the catalog above.
+- `.cursor/standards.md` is the pre-2.0 long-form standards document. It is
+  background reading; where it disagrees with an RFC, the RFC wins.

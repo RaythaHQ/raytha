@@ -11,23 +11,20 @@
     <ProjectReference Include="..\Raytha.Domain\Raytha.Domain.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="LumenWorksCsvReader2" Version="4.4.0" />
-    <PackageReference Include="Microsoft.Extensions.Http" Version="10.0.0" />
-    <PackageReference
-      Include="Microsoft.Extensions.DependencyInjection.Abstractions"
-      Version="10.0.0"
-    />
-    <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="12.1.0" />
-    <PackageReference Include="Mediator.SourceGenerator" Version="3.0.0">
+    <PackageReference Include="LumenWorksCsvReader2" />
+    <PackageReference Include="Microsoft.Extensions.Http" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" />
+    <PackageReference Include="FluentValidation.DependencyInjectionExtensions" />
+    <PackageReference Include="Mediator.SourceGenerator">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
-    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.0" />
-    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.14.0" />
-    <PackageReference Include="System.Linq.Async" Version="6.0.3" />
-    <PackageReference Include="System.Linq.Dynamic.Core" Version="1.6.10" />
-    <PackageReference Include="System.Security.Cryptography.Xml" Version="10.0.0" />
-    <PackageReference Include="TimeZoneConverter" Version="7.2.0" />
-    <PackageReference Include="TimeZoneNames" Version="7.0.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" />
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt" />
+    <PackageReference Include="System.Linq.Async" />
+    <PackageReference Include="System.Linq.Dynamic.Core" />
+    <PackageReference Include="System.Security.Cryptography.Xml" />
+    <PackageReference Include="TimeZoneConverter" />
+    <PackageReference Include="TimeZoneNames" />
   </ItemGroup>
 </Project>

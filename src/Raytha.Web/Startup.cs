@@ -11,13 +11,17 @@ using Microsoft.AspNetCore.OpenApi;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 using Raytha.Application;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Utils;
+using Raytha.Infrastructure.Health;
 using Raytha.Infrastructure.Persistence;
+using Raytha.Web.AdminSpa;
+using Raytha.Web.Areas.Admin.Api;
 using Raytha.Web.Areas.Admin.Endpoints;
 using Raytha.Web.Middlewares;
 using Scalar.AspNetCore;
@@ -50,6 +54,7 @@ public class Startup
         services.AddApplicationServices();
         services.AddInfrastructureServices(Configuration);
         services.AddWebUIServices(Environment);
+        services.AddRaythaRateLimiting(Configuration);
     }
 
     public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
@@ -80,16 +85,39 @@ public class Startup
             app.UseHsts();
         }
 
+        // Development: hand SPA navigations and assets under /raytha to Vite before the stale
+        // bundle in wwwroot/raytha or a Razor page can answer. No-op outside Development.
+        app.UseAdminSpaDevProxy(env);
+
         app.UseStaticFiles();
 
         // Security: Add a small set of conservative security headers to all responses to reduce
         // common classes of browser-based attacks (MIME sniffing, clickjacking, and referrer leakage)
         // without constraining existing content or introducing a breaking Content-Security-Policy.
+        // Admin (/raytha) responses must never be framed at all; public pages keep SAMEORIGIN so
+        // site builders can still embed their own content.
         app.Use(
             async (context, next) =>
             {
+                // UsePathBase strips the prefix, but tolerate either form.
+                var isAdminPath =
+                    context.Request.Path.StartsWithSegments(
+                        "/raytha",
+                        StringComparison.OrdinalIgnoreCase
+                    )
+                    || (
+                        !string.IsNullOrEmpty(pathBase)
+                        && context.Request.Path.StartsWithSegments(
+                            $"{pathBase}/raytha",
+                            StringComparison.OrdinalIgnoreCase
+                        )
+                    );
+
                 context.Response.Headers.TryAdd("X-Content-Type-Options", "nosniff");
-                context.Response.Headers.TryAdd("X-Frame-Options", "SAMEORIGIN");
+                context.Response.Headers.TryAdd(
+                    "X-Frame-Options",
+                    isAdminPath ? "DENY" : "SAMEORIGIN"
+                );
                 context.Response.Headers.TryAdd(
                     "Referrer-Policy",
                     "strict-origin-when-cross-origin"
@@ -126,7 +154,9 @@ public class Startup
             );
         }
 
+        app.UseAdminApiJsonGuard();
         app.UseRouting();
+        app.UseRateLimiter();
         app.UseAuthentication();
         app.UseAuthorization();
 
@@ -135,6 +165,8 @@ public class Startup
             endpoints.MapRazorPages();
             endpoints.MapControllers();
             endpoints.MapMediaItemsEndpoints();
+            endpoints.MapAdminApi();
+            endpoints.MapAdminSpaFallback(env);
             endpoints.MapOpenApi("/raytha/api/{documentName}/swagger.json");
 
             endpoints.MapScalarApiReference(
@@ -160,38 +192,67 @@ public class Startup
                 }
             );
 
+            // Liveness: the process is up and can serve a response. Runs no checks so a
+            // degraded dependency never causes an orchestrator to restart a healthy pod.
             endpoints.MapHealthChecks(
                 "/healthz",
                 new HealthCheckOptions
                 {
-                    ResponseWriter = async (ctx, report) =>
-                    {
-                        ctx.Response.ContentType = "application/json";
+                    Predicate = _ => false,
+                    ResponseWriter = WriteHealthResponse,
+                }
+            );
 
-                        var currentVersion =
-                            ctx.RequestServices.GetRequiredService<ICurrentVersion>();
-
-                        var json = JsonSerializer.Serialize(
-                            new
-                            {
-                                version = currentVersion.Version,
-                                status = report.Status.ToString(),
-                                checks = report.Entries.Select(e => new
-                                {
-                                    name = e.Key,
-                                    status = e.Value.Status.ToString(),
-                                    error = e.Value.Exception?.Message,
-                                    duration = e.Value.Duration.ToString(),
-                                }),
-                            },
-                            new JsonSerializerOptions { WriteIndented = true }
-                        );
-                        await ctx.Response.WriteAsync(json);
-                    },
+            // Readiness: Postgres and the file storage provider must both answer.
+            endpoints.MapHealthChecks(
+                "/healthz/ready",
+                new HealthCheckOptions
+                {
+                    Predicate = check => check.Tags.Contains(HealthCheckTags.Ready),
+                    ResponseWriter = WriteHealthResponse,
                 }
             );
         });
 
+        ApplyPendingMigrationsIfConfigured(app);
+    }
+
+    private static readonly JsonSerializerOptions HealthJsonOptions = new()
+    {
+        WriteIndented = true,
+    };
+
+    private static Task WriteHealthResponse(HttpContext ctx, HealthReport report)
+    {
+        ctx.Response.ContentType = "application/json";
+
+        var currentVersion = ctx.RequestServices.GetRequiredService<ICurrentVersion>();
+        var environment = ctx.RequestServices.GetRequiredService<IWebHostEnvironment>();
+
+        var json = JsonSerializer.Serialize(
+            new
+            {
+                version = currentVersion.Version,
+                environment = environment.EnvironmentName,
+                status = report.Status.ToString(),
+                totalDuration = report.TotalDuration.ToString(),
+                checks = report.Entries.Select(e => new
+                {
+                    name = e.Key,
+                    status = e.Value.Status.ToString(),
+                    description = e.Value.Description,
+                    error = e.Value.Exception?.Message,
+                    duration = e.Value.Duration.ToString(),
+                    data = e.Value.Data.Count > 0 ? e.Value.Data : null,
+                }),
+            },
+            HealthJsonOptions
+        );
+        return ctx.Response.WriteAsync(json);
+    }
+
+    private void ApplyPendingMigrationsIfConfigured(IApplicationBuilder app)
+    {
         bool applyMigrationsOnStartup = Convert.ToBoolean(
             Configuration["APPLY_PENDING_MIGRATIONS"] ?? "false"
         );
