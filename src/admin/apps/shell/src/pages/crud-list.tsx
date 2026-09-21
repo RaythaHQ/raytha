@@ -1,14 +1,9 @@
 import type { EntityRef, JsonObject, PagedResult } from "@raytha/api";
 import { formatError, hasPermission } from "@raytha/api";
 import {
-  Button,
+  buttonVariants,
   Checkbox,
   ConfirmDialog,
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
   EmptyState,
   FormField,
   Input,
@@ -17,6 +12,8 @@ import {
   ListStatus,
   PageHeader,
   QueryGate,
+  RowActions,
+  SortableTableHead,
   Table,
   TableBody,
   TableCell,
@@ -25,11 +22,26 @@ import {
   TableRow,
   Textarea,
   toast,
+  type RowAction,
+  type SortDirection,
 } from "@raytha/ui";
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useLocation, useNavigate } from "@tanstack/react-router";
 import { Inbox } from "lucide-react";
-import { useState, type FormEvent, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useDocumentTitle } from "../lib/document-title";
+import {
+  compactListQuery,
+  listApiParams,
+  listHref,
+  listQueryFromSearchString,
+  listQueryKey,
+  nextOrderBy,
+  parseOrderBy,
+  rememberListQuery,
+  type ListQuery,
+} from "../lib/list-query";
+import { pluralize } from "./entity";
 
 export type FormValue = string | boolean;
 
@@ -45,6 +57,8 @@ export type CreateField = {
 export type ListColumn = {
   header: string;
   cell: (entity: EntityRef) => ReactNode;
+  sortKey?: string;
+  naturalDir?: SortDirection;
 };
 
 type ListFn = (params?: Record<string, string | number | boolean | undefined>) => Promise<PagedResult<EntityRef>>;
@@ -69,64 +83,63 @@ export function CrudListPage({
   title,
   description,
   queryKey,
+  listKey,
   noun,
   list,
-  create,
   remove,
   createPermission,
   createLabel,
-  createFields,
-  buildCreatePayload,
-  extraCreateFields,
+  createTo,
+  createParams,
   columns,
   rowActions,
+  canDelete,
   emptyHint,
   actions,
 }: {
   title: string;
   description?: string;
   queryKey: string[];
+  listKey: string;
   noun: string;
   list: ListFn;
-  create?: (input: JsonObject) => Promise<EntityRef>;
   remove?: (id: string) => Promise<void>;
   createPermission?: string;
   createLabel?: string;
-  createFields?: CreateField[];
-  buildCreatePayload?: (form: Record<string, FormValue>) => JsonObject;
-  extraCreateFields?: (form: Record<string, FormValue>, setForm: (next: Record<string, FormValue>) => void) => ReactNode;
+  createTo?: string;
+  createParams?: Record<string, string>;
   columns: ListColumn[];
-  rowActions?: (entity: EntityRef, helpers: { requestDelete: (id: string) => void }) => ReactNode;
+  rowActions?: (entity: EntityRef, helpers: { requestDelete: (id: string) => void }) => RowAction[];
+  canDelete?: (entity: EntityRef) => boolean;
   emptyHint?: string;
   actions?: ReactNode;
 }) {
   useDocumentTitle([title]);
   const queryClient = useQueryClient();
-  const [search, setSearch] = useState("");
-  const [createOpen, setCreateOpen] = useState(false);
-  const [form, setForm] = useState<Record<string, FormValue>>(() => emptyForm(createFields ?? []));
+  const navigate = useNavigate();
+  const location = useLocation();
+  const applied = listQueryFromSearchString(location.searchStr);
+  const [draftSearch, setDraftSearch] = useState(applied.search ?? "");
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const nounPlural = pluralize(noun);
+  const appliedKey = listQueryKey(applied);
 
-  const query = useQuery({
-    queryKey: [...queryKey, search],
-    queryFn: () => list({ search: search || undefined, pageSize: 50 }),
-    placeholderData: keepPreviousData,
+  useEffect(() => {
+    setDraftSearch(applied.search ?? "");
+  }, [applied.search]);
+
+  useEffect(() => {
+    rememberListQuery(listKey, applied);
+  }, [listKey, appliedKey]);
+
+  useDebouncedSearchWrite(draftSearch, applied, (next) => {
+    writeListSearch(navigate, next);
   });
 
-  const createMutation = useMutation({
-    mutationFn: (input: JsonObject) => {
-      if (!create) {
-        throw new Error("Create is not available.");
-      }
-      return create(input);
-    },
-    onSuccess: () => {
-      toast.success(`${capitalize(noun)} created`);
-      void queryClient.invalidateQueries({ queryKey });
-      setCreateOpen(false);
-      setForm(emptyForm(createFields ?? []));
-    },
-    onError: (error) => toast.error(formatError(error)),
+  const query = useQuery({
+    queryKey: [...queryKey, appliedKey],
+    queryFn: () => list(listApiParams(applied)),
+    placeholderData: keepPreviousData,
   });
 
   const deleteMutation = useMutation({
@@ -144,26 +157,9 @@ export function CrudListPage({
     onError: (error) => toast.error(formatError(error)),
   });
 
-  const canCreate = Boolean(create && createFields) && (createPermission ? hasPermission(createPermission) : true);
-
-  const handleCreate = (event: FormEvent) => {
-    event.preventDefault();
-    const payload = buildCreatePayload ? buildCreatePayload(form) : formToJson(form);
-    createMutation.mutate(payload);
-  };
-
-  const setField = (key: string, value: FormValue, autoFrom?: string) => {
-    setForm((current) => {
-      const next: Record<string, FormValue> = { ...current, [key]: value };
-      if (autoFrom && typeof value === "string") {
-        const existing = current[autoFrom];
-        if (typeof existing === "string" && (existing === "" || existing === toAutoName(String(current[key] ?? "")))) {
-          next[autoFrom] = toAutoName(value);
-        }
-      }
-      return next;
-    });
-  };
+  const canCreate = Boolean(createTo) && (createPermission ? hasPermission(createPermission) : true);
+  const sort = parseOrderBy(applied.orderBy);
+  const showActions = Boolean(remove || rowActions);
 
   return (
     <div className="space-y-6">
@@ -174,10 +170,10 @@ export function CrudListPage({
           canCreate || actions ? (
             <>
               {actions}
-              {canCreate ? (
-                <Button type="button" onClick={() => setCreateOpen(true)}>
+              {canCreate && createTo ? (
+                <a href={listHref(createTo, createParams)} className={buttonVariants()}>
                   {createLabel ?? `New ${noun}`}
-                </Button>
+                </a>
               ) : null}
             </>
           ) : undefined
@@ -189,94 +185,89 @@ export function CrudListPage({
             toolbar={
               <>
                 <ListSearch
-                  value={search}
-                  onChange={(event) => setSearch(event.target.value)}
-                  placeholder={`Search ${noun}s`}
-                  aria-label={`Search ${noun}s`}
+                  value={draftSearch}
+                  onChange={(event) => setDraftSearch(event.target.value)}
+                  placeholder={`Search ${nounPlural}`}
+                  aria-label={`Search ${nounPlural}`}
                 />
-                <ListStatus total={data.totalCount} page={data.pageNumber} noun={`${noun}s`} />
+                <ListStatus
+                  total={data.totalCount}
+                  page={data.pageNumber}
+                  noun={data.totalCount === 1 ? noun : nounPlural}
+                />
               </>
             }
           >
             {data.items.length === 0 ? (
               <EmptyState
                 icon={Inbox}
-                title={`No ${noun}s`}
-                hint={emptyHint ?? (search ? "Nothing matches that search." : `No ${noun}s yet.`)}
+                title={`No ${nounPlural}`}
+                hint={emptyHint ?? (applied.search ? "Nothing matches that search." : `No ${nounPlural} yet.`)}
               />
             ) : (
               <Table flush aria-label={title}>
                 <TableHeader>
                   <TableRow>
-                    {columns.map((column) => (
-                      <TableHead key={column.header}>{column.header}</TableHead>
-                    ))}
-                    {(remove || rowActions) && <TableHead className="w-40">Actions</TableHead>}
+                    {columns.map((column) =>
+                      column.sortKey ? (
+                        <SortableTableHead
+                          key={column.header}
+                          column={column.sortKey}
+                          label={column.header}
+                          sort={sort.column}
+                          dir={sort.dir}
+                          naturalDir={column.naturalDir}
+                          onSort={(columnKey, naturalDir) => {
+                            writeListSearch(navigate, {
+                              ...applied,
+                              pageNumber: 1,
+                              orderBy: nextOrderBy(applied.orderBy, columnKey, naturalDir),
+                            });
+                          }}
+                        />
+                      ) : (
+                        <TableHead key={column.header}>{column.header}</TableHead>
+                      ),
+                    )}
+                    {showActions ? <TableHead className="w-12"><span className="sr-only">Actions</span></TableHead> : null}
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {data.items.map((item) => (
-                    <TableRow key={item.id}>
-                      {columns.map((column) => (
-                        <TableCell key={column.header}>{column.cell(item)}</TableCell>
-                      ))}
-                      {(remove || rowActions) && (
-                        <TableCell>
-                          <div className="flex flex-wrap items-center gap-2">
-                            {rowActions?.(item, { requestDelete: setDeleteId })}
-                            {remove && (
-                              <Button type="button" variant="ghost" size="sm" onClick={() => setDeleteId(item.id)}>
-                                Delete
-                              </Button>
-                            )}
-                          </div>
-                        </TableCell>
-                      )}
-                    </TableRow>
-                  ))}
+                  {data.items.map((item) => {
+                    const extra = rowActions?.(item, { requestDelete: setDeleteId }) ?? [];
+                    const allowDelete = Boolean(remove) && (canDelete ? canDelete(item) : true);
+                    const actions: RowAction[] = [
+                      ...extra,
+                      ...(allowDelete
+                        ? [
+                            {
+                              id: "delete",
+                              label: "Delete",
+                              destructive: true,
+                              onSelect: () => setDeleteId(item.id),
+                            } satisfies RowAction,
+                          ]
+                        : []),
+                    ];
+                    return (
+                      <TableRow key={item.id}>
+                        {columns.map((column) => (
+                          <TableCell key={column.header}>{column.cell(item)}</TableCell>
+                        ))}
+                        {showActions ? (
+                          <TableCell>
+                            <RowActions actions={actions} />
+                          </TableCell>
+                        ) : null}
+                      </TableRow>
+                    );
+                  })}
                 </TableBody>
               </Table>
             )}
           </ListPanel>
         )}
       </QueryGate>
-
-      {create && createFields && (
-        <Dialog
-          open={createOpen}
-          onOpenChange={(open) => {
-            setCreateOpen(open);
-            if (!open) {
-              setForm(emptyForm(createFields));
-            }
-          }}
-        >
-          <form onSubmit={handleCreate}>
-            <DialogHeader>
-              <DialogTitle>{createLabel ?? `New ${noun}`}</DialogTitle>
-            </DialogHeader>
-            <DialogContent className="space-y-4">
-              {createFields.map((field) => (
-                <CreateFieldControl
-                  key={field.key}
-                  field={field}
-                  value={form[field.key] ?? (field.type === "checkbox" ? false : "")}
-                  onChange={(value) => setField(field.key, value, field.autoDeveloperNameFrom)}
-                />
-              ))}
-              {extraCreateFields?.(form, setForm)}
-            </DialogContent>
-            <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setCreateOpen(false)}>
-                Cancel
-              </Button>
-              <Button type="submit" loading={createMutation.isPending}>
-                Create
-              </Button>
-            </DialogFooter>
-          </form>
-        </Dialog>
-      )}
 
       <ConfirmDialog
         open={deleteId !== null}
@@ -298,7 +289,7 @@ export function CrudListPage({
   );
 }
 
-function CreateFieldControl({
+export function CreateFieldControl({
   field,
   value,
   onChange,
@@ -344,14 +335,39 @@ function CreateFieldControl({
   );
 }
 
-function capitalize(value: string): string {
-  return value.charAt(0).toUpperCase() + value.slice(1);
+function useDebouncedSearchWrite(
+  draftSearch: string,
+  applied: ListQuery,
+  write: (next: ListQuery) => void,
+) {
+  const writeRef = useRef(write);
+  writeRef.current = write;
+  const appliedSearch = applied.search ?? "";
+
+  useEffect(() => {
+    if (draftSearch === appliedSearch) {
+      return;
+    }
+    const handle = window.setTimeout(() => {
+      writeRef.current({
+        ...applied,
+        search: draftSearch.trim() ? draftSearch : undefined,
+        pageNumber: 1,
+      });
+    }, 300);
+    return () => window.clearTimeout(handle);
+  }, [draftSearch, appliedSearch, applied]);
 }
 
-function toAutoName(value: string): string {
-  return value
-    .trim()
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "_")
-    .replace(/^_+|_+$/g, "");
+function writeListSearch(navigate: ReturnType<typeof useNavigate>, query: ListQuery) {
+  const search = compactListQuery(query);
+  void navigate({
+    to: ".",
+    search,
+    replace: true,
+  });
+}
+
+function capitalize(value: string): string {
+  return value.charAt(0).toUpperCase() + value.slice(1);
 }

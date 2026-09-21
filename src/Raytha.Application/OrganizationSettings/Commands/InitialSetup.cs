@@ -7,6 +7,7 @@ using Microsoft.EntityFrameworkCore;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Models;
 using Raytha.Application.Common.Utils;
+using Raytha.Application.Themes.Commands;
 using Raytha.Domain.Entities;
 using Raytha.Domain.ValueObjects;
 using Raytha.Domain.ValueObjects.FieldTypes;
@@ -92,16 +93,19 @@ public class InitialSetup
         private readonly IRaythaDbContext _db;
         private readonly IEmailerConfiguration _emailerConfiguration;
         private readonly IFileStorageProvider _fileStorageProvider;
+        private readonly ISender _sender;
 
         public Handler(
             IRaythaDbContext db,
             IEmailerConfiguration emailerConfiguration,
-            IFileStorageProvider fileStorageProvider
+            IFileStorageProvider fileStorageProvider,
+            ISender sender
         )
         {
             _db = db;
             _emailerConfiguration = emailerConfiguration;
             _fileStorageProvider = fileStorageProvider;
+            _sender = sender;
         }
 
         public async ValueTask<CommandResponseDto<ShortGuid>> Handle(
@@ -133,6 +137,8 @@ public class InitialSetup
             SetPrimaryFieldsOnContentTypes();
             SetHomePage();
             await _db.SaveChangesAsync(cancellationToken);
+
+            await _sender.Send(new EnsureDefaultThemeContent.Command(), cancellationToken);
 
             return new CommandResponseDto<ShortGuid>(orgSettingsGuid);
         }
@@ -361,6 +367,11 @@ public class InitialSetup
             Guid defaultThemeId
         )
         {
+            if (_db.WebTemplates.Any(wt => wt.ThemeId == defaultThemeId))
+            {
+                return;
+            }
+
             var baseLayoutFileNames = new[]
             {
                 "favicon.ico",
@@ -485,6 +496,11 @@ public class InitialSetup
 
         protected void InsertDefaultWidgetTemplates(Guid defaultThemeId)
         {
+            if (_db.WidgetTemplates.Any(wt => wt.ThemeId == defaultThemeId))
+            {
+                return;
+            }
+
             var list = new List<WidgetTemplate>();
 
             foreach (var widgetType in BuiltInWidgetType.WidgetTypes)

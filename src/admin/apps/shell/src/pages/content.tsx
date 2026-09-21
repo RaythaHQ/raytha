@@ -1,19 +1,21 @@
 import { adminApi, formatError, hasPermission, platformPermissions } from "@raytha/api";
 import type { EntityRef } from "@raytha/api";
 import { Badge, Button, Card, CardContent, FormField, Input, PageHeader, Textarea, toast } from "@raytha/ui";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { Link, useNavigate, useParams } from "@tanstack/react-router";
 import { useState, type FormEvent } from "react";
 import { CrudListPage } from "./crud-list";
 import { entityFields, formatWhen, readBoolean, readString, toDeveloperName } from "./entity";
 import { ContentTypeNav } from "./content/nav";
+import { ListBackLink } from "../components/list-back-link";
 import { useDocumentTitle } from "../lib/document-title";
 
 export function ContentTypesPage() {
   return (
     <CrudListPage
       title="Content types"
-      queryKey={["content-types"]}
+        queryKey={["content-types"]}
+      listKey="content-types"
       noun="content type"
       list={adminApi.contentTypes.list}
       createPermission={platformPermissions.contentTypes}
@@ -40,33 +42,28 @@ export function ContentTypesPage() {
       rowActions={(entity) => {
         const developerName = readString(entityFields(entity), "developerName");
         if (!developerName) {
-          return null;
+          return [];
         }
-        return (
-          <>
-            <Link
-              to="/content/$developerName/views"
-              params={{ developerName }}
-              className="text-sm text-primary hover:underline"
-            >
-              Views
-            </Link>
-            <Link
-              to="/content-types/$developerName/fields"
-              params={{ developerName }}
-              className="text-sm text-primary hover:underline"
-            >
-              Fields
-            </Link>
-            <Link
-              to="/content-types/$developerName/configuration"
-              params={{ developerName }}
-              className="text-sm text-primary hover:underline"
-            >
-              Settings
-            </Link>
-          </>
-        );
+        return [
+          {
+            id: "views",
+            label: "Views",
+            to: "/content/$developerName/views",
+            params: { developerName },
+          },
+          {
+            id: "fields",
+            label: "Fields",
+            to: "/content-types/$developerName/fields",
+            params: { developerName },
+          },
+          {
+            id: "settings",
+            label: "Settings",
+            to: "/content-types/$developerName/configuration",
+            params: { developerName },
+          },
+        ];
       }}
       actions={
         hasPermission(platformPermissions.contentTypes) ? (
@@ -115,6 +112,7 @@ export function NewContentTypePage() {
   return (
     <div className="space-y-6">
       <PageHeader title="New content type" description="Label and developer name are required. A default route template is applied." />
+      <ListBackLink to="/content-types" listKey="content-types" label="content types" />
       <Card>
         <CardContent className="space-y-4 pt-6">
           <form className="space-y-4" onSubmit={handleSubmit}>
@@ -172,7 +170,15 @@ export function NewContentTypePage() {
 export function ContentItemsPage() {
   const params = useParams({ strict: false });
   const developerName = typeof params.developerName === "string" ? params.developerName : "";
-  useDocumentTitle([developerName || "Content items"]);
+  const contentTypeQuery = useQuery({
+    queryKey: ["content-types", developerName],
+    queryFn: () => adminApi.contentTypes.byDeveloperName(developerName),
+    enabled: developerName.length > 0,
+  });
+  const contentTypeFields = contentTypeQuery.data ? entityFields(contentTypeQuery.data) : {};
+  const title =
+    readString(contentTypeFields, "labelPlural", "labelSingular") || developerName || "Content items";
+  useDocumentTitle([title]);
 
   if (!developerName) {
     return (
@@ -189,12 +195,16 @@ export function ContentItemsPage() {
     <div className="space-y-6">
       <ContentTypeNav developerName={developerName} />
       <CrudListPage
-        title={developerName}
+        title={title}
         description="Items for this content type."
         queryKey={["content-items", developerName]}
+        listKey={`content-items:${developerName}`}
         noun="item"
         list={items.list}
         remove={items.remove}
+        createTo="/content/$developerName/new"
+        createParams={{ developerName }}
+        createLabel="New item"
         columns={[
           {
             header: "Title",
@@ -213,26 +223,15 @@ export function ContentItemsPage() {
             header: "Status",
             cell: (entity) => <ItemStatus entity={entity} />,
           },
-          { header: "Updated", cell: (entity) => formatWhen(entityFields(entity).lastModificationTime) || "—" },
+          {
+            header: "Updated",
+            cell: (entity) => {
+              const fields = entityFields(entity);
+              return formatWhen(fields.lastModificationTime) || formatWhen(fields.creationTime) || "—";
+            },
+          },
         ]}
-        rowActions={(entity) => (
-          <Link
-            to="/content/$developerName/items/$id"
-            params={{ developerName, id: entity.id }}
-            className="text-sm text-primary hover:underline"
-          >
-            Edit
-          </Link>
-        )}
-        actions={
-          <Link
-            to="/content/$developerName/new"
-            params={{ developerName }}
-            className="inline-flex h-10 items-center rounded-lg bg-primary px-4 text-sm font-medium text-primary-foreground shadow-card hover:bg-brand-600"
-          >
-            New item
-          </Link>
-        }
+        rowActions={() => []}
       />
     </div>
   );

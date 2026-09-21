@@ -16,6 +16,8 @@ import {
 import type {
   AdminSetupStatus,
   BackgroundTaskDetail,
+  AuthenticationSchemeRequest,
+  ConfigurationOptions,
   DuplicateThemeInput,
   EmailTemplateDetail,
   EntityRef,
@@ -33,6 +35,7 @@ import type {
   MenuItemDetail,
   PagedResult,
   PlatformVersion,
+  RolePermissionCatalog,
   ThemeMediaItem,
 } from "./types";
 
@@ -343,7 +346,10 @@ export const adminApi = {
   users: crud<EntityRef>("/raytha/api/admin/users"),
   userGroups: crud<EntityRef>("/raytha/api/admin/user-groups"),
   admins: crud<EntityRef>("/raytha/api/admin/admins"),
-  roles: crud<EntityRef>("/raytha/api/admin/roles"),
+  roles: {
+    ...crud<EntityRef>("/raytha/api/admin/roles"),
+    permissions: () => apiFetch<RolePermissionCatalog>("/raytha/api/admin/roles/permissions"),
+  },
 
   contentTypes: {
     ...crud<EntityRef>("/raytha/api/admin/content-types"),
@@ -611,12 +617,25 @@ export const adminApi = {
         body: "{}",
       }).then(parseIdResponse),
   },
-  authSchemes: crud<EntityRef>("/raytha/api/admin/authentication-schemes"),
+  authSchemes: {
+    ...crud<EntityRef>("/raytha/api/admin/authentication-schemes"),
+    createScheme: (input: AuthenticationSchemeRequest) =>
+      apiFetch<EntityRef>("/raytha/api/admin/authentication-schemes", {
+        method: "POST",
+        body: JSON.stringify(input),
+      }),
+    updateScheme: (id: string, input: AuthenticationSchemeRequest) =>
+      apiFetch<EntityRef>(`/raytha/api/admin/authentication-schemes/${id}`, {
+        method: "PUT",
+        body: JSON.stringify(input),
+      }),
+  },
 
   configuration: {
-    get: () => apiFetch<JsonObject & MediaConfig>("/raytha/api/admin/configuration"),
+    get: () => apiFetch<JsonObject>("/raytha/api/admin/configuration"),
     update: (input: JsonObject) =>
       apiFetch<JsonObject>("/raytha/api/admin/configuration", { method: "PUT", body: JSON.stringify(input) }),
+    options: () => apiFetch<ConfigurationOptions>("/raytha/api/admin/configuration/options"),
   },
   smtp: {
     get: () => apiFetch<JsonObject>("/raytha/api/admin/smtp"),
@@ -648,14 +667,9 @@ export const adminApi = {
       ),
   },
 
-  webhooks: crud<EntityRef>("/raytha/api/admin/webhooks"),
-  featureFlags: {
-    list: () => apiFetch<EntityRef[]>("/raytha/api/admin/feature-flags"),
-    set: (key: string, enabled: boolean) =>
-      apiFetch<void>(`/raytha/api/admin/feature-flags/${encodeURIComponent(key)}`, {
-        method: "PUT",
-        body: JSON.stringify({ isEnabled: enabled }),
-      }),
+  webhooks: {
+    ...crud<EntityRef>("/raytha/api/admin/webhooks"),
+    events: () => apiFetch<unknown>("/raytha/api/admin/webhooks/events"),
   },
   emailLog: {
     list: (params?: Record<string, string | number | boolean | undefined>) =>
@@ -664,7 +678,11 @@ export const adminApi = {
   },
   maintenance: {
     snapshot: () => apiFetch<JsonObject>("/raytha/api/admin/maintenance"),
-    clearCache: () => apiFetch<void>("/raytha/api/admin/maintenance/cache/clear", { method: "POST" }),
+    enqueueTask: (input: { steps: number; delayMs: number }) =>
+      apiFetch<IdResponse>("/raytha/api/admin/maintenance/tasks", {
+        method: "POST",
+        body: JSON.stringify(input),
+      }),
   },
   version: () => apiFetch<PlatformVersion>("/raytha/api/admin/version"),
 };

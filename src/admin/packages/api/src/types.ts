@@ -12,7 +12,14 @@ export interface LoginResponse {
   requiresTwoFactor?: boolean;
 }
 
-export type AuthSchemeType = "email_and_password" | "magic_link" | "saml" | "oidc" | string;
+export type AuthSchemeType = "email_and_password" | "magic_link" | "jwt" | "saml";
+
+export const AUTH_SCHEME_TYPES: readonly AuthSchemeType[] = [
+  "email_and_password",
+  "magic_link",
+  "jwt",
+  "saml",
+];
 
 export interface LoginScheme {
   label: string;
@@ -42,8 +49,48 @@ export interface ProblemDetails {
 
 export interface MediaConfig {
   useDirectUploadToCloud: boolean;
-  maxUploadBytes?: number;
+  maxUploadBytes: number;
+  allowedMimeTypes: string;
+  fileStorageProvider: string;
 }
+
+export type ConfigOption = {
+  value: string;
+  label: string;
+};
+
+export type ConfigurationOptions = {
+  timeZones: ConfigOption[];
+  dateFormats: ConfigOption[];
+};
+
+export type PermissionOption = {
+  label: string;
+  developerName: string;
+};
+
+export type RolePermissionCatalog = {
+  systemPermissions: PermissionOption[];
+  contentTypePermissions: PermissionOption[];
+};
+
+export type AuthenticationSchemeRequest = {
+  label: string;
+  developerName?: string;
+  authenticationSchemeType: AuthSchemeType;
+  loginButtonText?: string;
+  signInUrl?: string;
+  signOutUrl?: string;
+  isEnabledForUsers: boolean;
+  isEnabledForAdmins: boolean;
+  jwtSecretKey?: string;
+  jwtUseHighSecurity: boolean;
+  samlCertificate?: string;
+  samlIdpEntityId?: string;
+  magicLinkExpiresInSeconds: number;
+  bruteForceProtectionMaxFailedAttempts: number;
+  bruteForceProtectionWindowInSeconds: number;
+};
 
 export interface PlatformVersion {
   version: string;

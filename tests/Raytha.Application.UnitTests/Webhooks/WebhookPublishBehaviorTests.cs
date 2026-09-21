@@ -6,7 +6,6 @@ using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using Raytha.Application.Common.Behaviors;
 using Raytha.Application.Common.Models;
-using Raytha.Application.FeatureFlags;
 using Raytha.Application.Users.Commands;
 using Raytha.Application.Webhooks;
 using Raytha.Application.Webhooks.Commands;
@@ -16,16 +15,11 @@ namespace Raytha.Application.UnitTests.Webhooks;
 public class WebhookPublishBehaviorTests
 {
     private Mock<IWebhookEventPublisher> _publisher = null!;
-    private Mock<IFeatureFlagService> _featureFlags = null!;
 
     [SetUp]
     public void Setup()
     {
         _publisher = new Mock<IWebhookEventPublisher>();
-        _featureFlags = new Mock<IFeatureFlagService>();
-        _featureFlags
-            .Setup(f => f.IsEnabledAsync(RaythaFeatureFlags.Webhooks, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(true);
     }
 
     [Test]
@@ -51,7 +45,6 @@ public class WebhookPublishBehaviorTests
     {
         var behavior = new WebhookPublishBehavior<CreateUser.Command, CommandResponseDto<ShortGuid>>(
             _publisher.Object,
-            _featureFlags.Object,
             NullLogger<WebhookPublishBehavior<CreateUser.Command, CommandResponseDto<ShortGuid>>>.Instance
         );
         var id = ShortGuid.NewGuid();
@@ -79,7 +72,6 @@ public class WebhookPublishBehaviorTests
     {
         var behavior = new WebhookPublishBehavior<CreateUser.Command, CommandResponseDto<ShortGuid>>(
             _publisher.Object,
-            _featureFlags.Object,
             NullLogger<WebhookPublishBehavior<CreateUser.Command, CommandResponseDto<ShortGuid>>>.Instance
         );
 
@@ -96,32 +88,10 @@ public class WebhookPublishBehaviorTests
     }
 
     [Test]
-    public async Task Handle_DoesNotPublish_WhenWebhooksFlagIsOff()
-    {
-        _featureFlags
-            .Setup(f => f.IsEnabledAsync(RaythaFeatureFlags.Webhooks, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(false);
-        var behavior = new WebhookPublishBehavior<CreateUser.Command, CommandResponseDto<ShortGuid>>(
-            _publisher.Object,
-            _featureFlags.Object,
-            NullLogger<WebhookPublishBehavior<CreateUser.Command, CommandResponseDto<ShortGuid>>>.Instance
-        );
-
-        await behavior.Handle(
-            new CreateUser.Command(),
-            (_, _) => ValueTask.FromResult(new CommandResponseDto<ShortGuid>(ShortGuid.NewGuid())),
-            CancellationToken.None
-        );
-
-        _publisher.VerifyNoOtherCalls();
-    }
-
-    [Test]
     public async Task Handle_IgnoresUnannotatedCommands()
     {
         var behavior = new WebhookPublishBehavior<TestWebhook.Command, CommandResponseDto<ShortGuid>>(
             _publisher.Object,
-            _featureFlags.Object,
             NullLogger<WebhookPublishBehavior<TestWebhook.Command, CommandResponseDto<ShortGuid>>>.Instance
         );
 
@@ -132,7 +102,6 @@ public class WebhookPublishBehaviorTests
         );
 
         _publisher.VerifyNoOtherCalls();
-        _featureFlags.VerifyNoOtherCalls();
     }
 
     [Test]
@@ -143,7 +112,6 @@ public class WebhookPublishBehaviorTests
             .ThrowsAsync(new InvalidOperationException("boom"));
         var behavior = new WebhookPublishBehavior<CreateUser.Command, CommandResponseDto<ShortGuid>>(
             _publisher.Object,
-            _featureFlags.Object,
             NullLogger<WebhookPublishBehavior<CreateUser.Command, CommandResponseDto<ShortGuid>>>.Instance
         );
         var id = ShortGuid.NewGuid();

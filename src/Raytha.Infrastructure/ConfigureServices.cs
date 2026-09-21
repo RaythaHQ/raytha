@@ -7,11 +7,9 @@ using Microsoft.Extensions.Logging;
 using Npgsql;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Utils;
-using Raytha.Application.FeatureFlags;
 using Raytha.Application.Maintenance;
 using Raytha.Infrastructure.BackgroundTasks;
 using Raytha.Infrastructure.Configurations;
-using Raytha.Infrastructure.FeatureFlags;
 using Raytha.Infrastructure.FileStorage;
 using Raytha.Infrastructure.Health;
 using Raytha.Infrastructure.JsonQueryEngine.Postgres;
@@ -82,7 +80,6 @@ public static class ConfigureServices
         services.AddTransient<IBackgroundTaskDb, BackgroundTaskDb>();
         services.AddTransient<IRaythaRawDbInfo, RaythaRawDbInfo>();
         services.AddTransient<IRaythaRawDbCommands, RaythaRawDbCommands>();
-        services.AddScoped<IFeatureFlagStore, EfFeatureFlagStore>();
         services.AddScoped<IMaintenanceQueryService, MaintenanceQueryService>();
 
         //file storage provider

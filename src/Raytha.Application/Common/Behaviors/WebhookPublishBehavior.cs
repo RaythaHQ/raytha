@@ -3,7 +3,6 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using Mediator;
 using Microsoft.Extensions.Logging;
-using Raytha.Application.FeatureFlags;
 using Raytha.Application.Webhooks;
 
 namespace Raytha.Application.Common.Behaviors;
@@ -31,17 +30,14 @@ public sealed class WebhookPublishBehavior<TMessage, TResponse>
     };
 
     private readonly IWebhookEventPublisher _publisher;
-    private readonly IFeatureFlagService _featureFlags;
     private readonly ILogger<WebhookPublishBehavior<TMessage, TResponse>> _logger;
 
     public WebhookPublishBehavior(
         IWebhookEventPublisher publisher,
-        IFeatureFlagService featureFlags,
         ILogger<WebhookPublishBehavior<TMessage, TResponse>> logger
     )
     {
         _publisher = publisher;
-        _featureFlags = featureFlags;
         _logger = logger;
     }
 
@@ -60,13 +56,6 @@ public sealed class WebhookPublishBehavior<TMessage, TResponse>
 
         try
         {
-            if (
-                !await _featureFlags.IsEnabledAsync(RaythaFeatureFlags.Webhooks, cancellationToken)
-            )
-            {
-                return response;
-            }
-
             var payload = BuildPayload(message, response);
             await _publisher.PublishAsync(Attribute.EventName, payload, cancellationToken);
         }

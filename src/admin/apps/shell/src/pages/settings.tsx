@@ -1,7 +1,6 @@
 import { adminApi, formatError, patchSession } from "@raytha/api";
 import type { JsonObject } from "@raytha/api";
 import {
-  Badge,
   Button,
   Card,
   CardContent,
@@ -9,11 +8,13 @@ import {
   CardHeader,
   CardTitle,
   Checkbox,
+  FileUpload,
   FormField,
   Input,
   Label,
   PageHeader,
   QueryGate,
+  Select,
   Tabs,
   TabsContent,
   TabsList,
@@ -21,26 +22,27 @@ import {
   toast,
 } from "@raytha/ui";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Link, Navigate } from "@tanstack/react-router";
 import { useState, type FormEvent } from "react";
+import { BackgroundTaskStatus } from "../components/background-task-status";
 import { RichTextEditor } from "../components/rich-text-editor";
-import { CrudListPage } from "./crud-list";
-import { entityFields, formatCell, humanizeKey, isRecord, jsonBoolean, jsonNumber, jsonString, readBoolean, readString } from "./entity";
+import { formatCell, humanizeKey, isRecord, jsonBoolean, jsonNumber, jsonString } from "./entity";
 import { useDocumentTitle } from "../lib/document-title";
 
 export function MaintenancePage() {
   useDocumentTitle(["Maintenance"]);
-  const queryClient = useQueryClient();
   const query = useQuery({
     queryKey: ["maintenance"],
     queryFn: () => adminApi.maintenance.snapshot(),
   });
   const [html, setHtml] = useState("<p>Try the editor.</p>");
+  const [taskId, setTaskId] = useState<string | null>(null);
 
-  const clearCache = useMutation({
-    mutationFn: () => adminApi.maintenance.clearCache(),
-    onSuccess: () => {
-      toast.success("Cache cleared");
-      void queryClient.invalidateQueries({ queryKey: ["maintenance"] });
+  const enqueue = useMutation({
+    mutationFn: () => adminApi.maintenance.enqueueTask({ steps: 5, delayMs: 400 }),
+    onSuccess: (result) => {
+      toast.success(`Task ${result.id} started`);
+      setTaskId(result.id);
     },
     onError: (error) => toast.error(formatError(error)),
   });
@@ -51,12 +53,41 @@ export function MaintenancePage() {
         title="Maintenance"
         description="Platform snapshot and editor playground."
         actions={
-          <Button type="button" variant="outline" loading={clearCache.isPending} onClick={() => clearCache.mutate()}>
-            Clear cache
-          </Button>
+          <Link to="/background-tasks" className="text-sm text-primary hover:underline">
+            Background tasks
+          </Link>
         }
       />
       <QueryGate query={query}>{(data) => <SnapshotCards data={data} />}</QueryGate>
+      <Card>
+        <CardHeader>
+          <CardTitle>Background task test</CardTitle>
+          <CardDescription>Enqueue a short sample task and watch its status.</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <Button type="button" loading={enqueue.isPending} onClick={() => enqueue.mutate()}>
+            Run sample task
+          </Button>
+          {taskId ? <BackgroundTaskStatus taskId={taskId} /> : null}
+        </CardContent>
+      </Card>
+      <Card>
+        <CardHeader>
+          <CardTitle>File upload</CardTitle>
+          <CardDescription>Uppy talks to media config and local or cloud storage.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <FileUpload
+            height={220}
+            onUploaded={(files) => {
+              const first = files[0];
+              if (first) {
+                toast.success(`Uploaded ${first.name}`);
+              }
+            }}
+          />
+        </CardContent>
+      </Card>
       <Card>
         <CardHeader>
           <CardTitle>Rich text editor</CardTitle>
@@ -133,6 +164,14 @@ export function ConfigurationPage() {
 
 function ConfigurationForm({ data }: { data: JsonObject }) {
   const queryClient = useQueryClient();
+  const optionsQuery = useQuery({
+    queryKey: ["configuration-options"],
+    queryFn: () => adminApi.configuration.options(),
+  });
+  const smtpQuery = useQuery({
+    queryKey: ["smtp"],
+    queryFn: () => adminApi.smtp.get(),
+  });
   const [organizationName, setOrganizationName] = useState(jsonString(data, "organizationName"));
   const [websiteUrl, setWebsiteUrl] = useState(jsonString(data, "websiteUrl"));
   const [timeZone, setTimeZone] = useState(jsonString(data, "timeZone"));
@@ -140,20 +179,53 @@ function ConfigurationForm({ data }: { data: JsonObject }) {
   const [smtpDefaultFromAddress, setSmtpDefaultFromAddress] = useState(jsonString(data, "smtpDefaultFromAddress"));
   const [smtpDefaultFromName, setSmtpDefaultFromName] = useState(jsonString(data, "smtpDefaultFromName"));
 
+  const smtp = smtpQuery.data ?? {};
+  const [smtpOverrideSystem, setSmtpOverrideSystem] = useState(jsonBoolean(smtp, "smtpOverrideSystem"));
+  const [smtpHost, setSmtpHost] = useState(jsonString(smtp, "smtpHost"));
+  const [smtpPort, setSmtpPort] = useState(String(jsonNumber(smtp, "smtpPort") ?? ""));
+  const [smtpUsername, setSmtpUsername] = useState(jsonString(smtp, "smtpUsername"));
+  const [smtpPassword, setSmtpPassword] = useState("");
+  const smtpReady = smtpQuery.isSuccess;
+  const [smtpHydrated, setSmtpHydrated] = useState(false);
+  if (smtpReady && !smtpHydrated) {
+    setSmtpOverrideSystem(jsonBoolean(smtp, "smtpOverrideSystem"));
+    setSmtpHost(jsonString(smtp, "smtpHost"));
+    setSmtpPort(String(jsonNumber(smtp, "smtpPort") ?? ""));
+    setSmtpUsername(jsonString(smtp, "smtpUsername"));
+    setSmtpHydrated(true);
+  }
+  const hasPassword = jsonBoolean(smtp, "hasSmtpPassword");
+
   const mutation = useMutation({
-    mutationFn: () =>
-      adminApi.configuration.update({
+    mutationFn: async () => {
+      await adminApi.configuration.update({
         organizationName,
         websiteUrl,
         timeZone,
         dateFormat,
         smtpDefaultFromAddress,
         smtpDefaultFromName,
-      }),
+      });
+      await adminApi.smtp.update({
+        smtpOverrideSystem,
+        smtpHost,
+        smtpPort: smtpPort ? Number(smtpPort) : undefined,
+        smtpUsername,
+        smtpPassword,
+      });
+    },
     onSuccess: () => {
       toast.success("Configuration saved");
+      setSmtpPassword("");
       void queryClient.invalidateQueries({ queryKey: ["configuration"] });
+      void queryClient.invalidateQueries({ queryKey: ["smtp"] });
     },
+    onError: (error) => toast.error(formatError(error)),
+  });
+
+  const sendTest = useMutation({
+    mutationFn: () => adminApi.smtp.sendTest(),
+    onSuccess: () => toast.success("Test email sent"),
     onError: (error) => toast.error(formatError(error)),
   });
 
@@ -161,6 +233,9 @@ function ConfigurationForm({ data }: { data: JsonObject }) {
     event.preventDefault();
     mutation.mutate();
   };
+
+  const timeZones = optionsQuery.data?.timeZones ?? [];
+  const dateFormats = optionsQuery.data?.dateFormats ?? [];
 
   return (
     <Card>
@@ -177,10 +252,28 @@ function ConfigurationForm({ data }: { data: JsonObject }) {
             )}
           </FormField>
           <FormField label="Time zone" required htmlFor="time-zone">
-            {(control) => <Input {...control} value={timeZone} onChange={(event) => setTimeZone(event.target.value)} />}
+            {(control) => (
+              <Select {...control} value={timeZone} onChange={(event) => setTimeZone(event.target.value)}>
+                <option value="">Select a time zone</option>
+                {timeZones.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </Select>
+            )}
           </FormField>
           <FormField label="Date format" required htmlFor="date-format">
-            {(control) => <Input {...control} value={dateFormat} onChange={(event) => setDateFormat(event.target.value)} />}
+            {(control) => (
+              <Select {...control} value={dateFormat} onChange={(event) => setDateFormat(event.target.value)}>
+                <option value="">Select a date format</option>
+                {dateFormats.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </Select>
+            )}
           </FormField>
           <FormField label="Default from address" required htmlFor="from-address">
             {(control) => (
@@ -201,72 +294,7 @@ function ConfigurationForm({ data }: { data: JsonObject }) {
               />
             )}
           </FormField>
-          <Button type="submit" loading={mutation.isPending}>
-            Save
-          </Button>
-        </form>
-      </CardContent>
-    </Card>
-  );
-}
-
-export function SmtpPage() {
-  useDocumentTitle(["SMTP"]);
-  const query = useQuery({
-    queryKey: ["smtp"],
-    queryFn: () => adminApi.smtp.get(),
-  });
-
-  return (
-    <div className="space-y-6">
-      <PageHeader title="SMTP" description="Outbound email settings." />
-      <QueryGate query={query}>{(data) => <SmtpForm data={data} />}</QueryGate>
-    </div>
-  );
-}
-
-function SmtpForm({ data }: { data: JsonObject }) {
-  const queryClient = useQueryClient();
-  const [smtpOverrideSystem, setSmtpOverrideSystem] = useState(jsonBoolean(data, "smtpOverrideSystem"));
-  const [smtpHost, setSmtpHost] = useState(jsonString(data, "smtpHost"));
-  const [smtpPort, setSmtpPort] = useState(String(jsonNumber(data, "smtpPort") ?? ""));
-  const [smtpUsername, setSmtpUsername] = useState(jsonString(data, "smtpUsername"));
-  const [smtpPassword, setSmtpPassword] = useState("");
-  const hasPassword = jsonBoolean(data, "hasSmtpPassword");
-
-  const save = useMutation({
-    mutationFn: () =>
-      adminApi.smtp.update({
-        smtpOverrideSystem,
-        smtpHost,
-        smtpPort: smtpPort ? Number(smtpPort) : undefined,
-        smtpUsername,
-        smtpPassword,
-      }),
-    onSuccess: () => {
-      toast.success("SMTP settings saved");
-      setSmtpPassword("");
-      void queryClient.invalidateQueries({ queryKey: ["smtp"] });
-    },
-    onError: (error) => toast.error(formatError(error)),
-  });
-
-  const sendTest = useMutation({
-    mutationFn: () => adminApi.smtp.sendTest(),
-    onSuccess: () => toast.success("Test email sent"),
-    onError: (error) => toast.error(formatError(error)),
-  });
-
-  const handleSubmit = (event: FormEvent) => {
-    event.preventDefault();
-    save.mutate();
-  };
-
-  return (
-    <Card>
-      <CardContent className="pt-6">
-        <form className="space-y-4" onSubmit={handleSubmit}>
-          {jsonBoolean(data, "missingSmtpEnvironmentVariables") && (
+          {jsonBoolean(smtp, "missingSmtpEnvironmentVariables") && (
             <p className="rounded-lg border border-warning/40 bg-warning/10 px-3 py-2 text-sm">
               Server SMTP environment variables are missing. Override is required.
             </p>
@@ -302,7 +330,7 @@ function SmtpForm({ data }: { data: JsonObject }) {
             )}
           </FormField>
           <div className="flex gap-2">
-            <Button type="submit" loading={save.isPending}>
+            <Button type="submit" loading={mutation.isPending}>
               Save
             </Button>
             <Button type="button" variant="outline" loading={sendTest.isPending} onClick={() => sendTest.mutate()}>
@@ -315,39 +343,8 @@ function SmtpForm({ data }: { data: JsonObject }) {
   );
 }
 
-export function AuthenticationPage() {
-  return (
-    <CrudListPage
-      title="Authentication"
-      description="Sign-in schemes for admins and users."
-      queryKey={["auth-schemes"]}
-      noun="scheme"
-      list={adminApi.authSchemes.list}
-      columns={[
-        { header: "Label", cell: (entity) => readString(entityFields(entity), "label") || entity.id },
-        { header: "Developer name", cell: (entity) => readString(entityFields(entity), "developerName") },
-        { header: "Type", cell: (entity) => formatCell(entityFields(entity).authenticationSchemeType) || "—" },
-        {
-          header: "Admins",
-          cell: (entity) =>
-            readBoolean(entityFields(entity), "isEnabledForAdmins") ? (
-              <Badge variant="success">On</Badge>
-            ) : (
-              <Badge variant="secondary">Off</Badge>
-            ),
-        },
-        {
-          header: "Users",
-          cell: (entity) =>
-            readBoolean(entityFields(entity), "isEnabledForUsers") ? (
-              <Badge variant="success">On</Badge>
-            ) : (
-              <Badge variant="secondary">Off</Badge>
-            ),
-        },
-      ]}
-    />
-  );
+export function SmtpPage() {
+  return <Navigate to="/settings/configuration" replace />;
 }
 
 export function ProfilePage() {

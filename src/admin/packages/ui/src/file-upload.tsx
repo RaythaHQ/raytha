@@ -80,8 +80,8 @@ export function FileUpload({
     }
 
     let cancelled = false;
-    adminApi.configuration
-      .get()
+    adminApi.media
+      .config()
       .then((data) => {
         if (cancelled) {
           return;
@@ -90,7 +90,7 @@ export function FileUpload({
           setCloudMode(data.useDirectUploadToCloud);
         }
         if (maxFileSizeBytes == null) {
-          setFetchedLimitBytes(data.maxUploadBytes ?? 100 * 1024 * 1024);
+          setFetchedLimitBytes(data.maxUploadBytes);
         }
       })
       .catch(() => {

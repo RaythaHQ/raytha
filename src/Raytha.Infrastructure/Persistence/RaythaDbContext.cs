@@ -71,7 +71,6 @@ public class RaythaDbContext : DbContext, IRaythaDbContext, IDataProtectionKeyCo
     public DbSet<FailedLoginAttempt> FailedLoginAttempts => Set<FailedLoginAttempt>();
     public DbSet<Webhook> Webhooks => Set<Webhook>();
     public DbSet<WebhookDelivery> WebhookDeliveries => Set<WebhookDelivery>();
-    public DbSet<FeatureFlag> FeatureFlags => Set<FeatureFlag>();
     public DbSet<EmailLog> EmailLogs => Set<EmailLog>();
     public DbSet<DataProtectionKey> DataProtectionKeys { get; set; } = null!;
 

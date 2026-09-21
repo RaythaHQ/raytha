@@ -7,7 +7,6 @@ using Raytha.Application.Common.Shared;
 using Raytha.Application.ContentItems;
 using Raytha.Application.ContentItems.Commands;
 using Raytha.Application.ContentItems.EventHandlers;
-using Raytha.Application.FeatureFlags;
 using Raytha.Application.Maintenance.Commands;
 using Raytha.Application.Themes.Commands;
 using Raytha.Application.Webhooks;
@@ -36,9 +35,6 @@ public static class ConfigureServices
         services.AddScoped<IWebhookEventPublisher, WebhookEventPublisher>();
         services.AddScoped<DeliverWebhookTask>();
         services.AddHttpClient(DeliverWebhookTask.HttpClientName);
-
-        // Feature flags (store is registered by Infrastructure)
-        services.AddScoped<IFeatureFlagService, FeatureFlagService>();
 
         // Maintenance
         services.AddScoped<DemoProgressTask>();

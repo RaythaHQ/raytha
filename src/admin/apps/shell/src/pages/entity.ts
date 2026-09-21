@@ -101,3 +101,36 @@ export function formatWhen(value: unknown): string {
   }
   return date.toLocaleString();
 }
+
+/** Light English pluralization for list chrome (search, counts, empty states). */
+export function pluralize(noun: string): string {
+  const trimmed = noun.trim();
+  if (trimmed.length === 0) {
+    return trimmed;
+  }
+  if (trimmed.includes(" ")) {
+    const parts = trimmed.split(/\s+/);
+    const last = parts.at(-1) ?? trimmed;
+    return [...parts.slice(0, -1), pluralize(last)].join(" ");
+  }
+  if (/[^aeiou]y$/i.test(trimmed)) {
+    return `${trimmed.slice(0, -1)}ies`;
+  }
+  if (/(?:s|x|z|ch|sh)$/i.test(trimmed)) {
+    return `${trimmed}es`;
+  }
+  return `${trimmed}s`;
+}
+
+/** Turns `Login.Commands.LoginWithEmailAndPassword` into a readable label. */
+export function humanizeAuditCategory(category: string): string {
+  const leaf = category.split(".").filter(Boolean).at(-1) ?? category;
+  const spaced = leaf
+    .replace(/([a-z])([A-Z])/g, "$1 $2")
+    .replace(/_/g, " ")
+    .trim();
+  if (spaced.length === 0) {
+    return category;
+  }
+  return spaced.charAt(0).toUpperCase() + spaced.slice(1).toLowerCase();
+}

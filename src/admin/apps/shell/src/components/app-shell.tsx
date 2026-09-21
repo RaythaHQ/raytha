@@ -20,7 +20,6 @@ import {
   ClipboardList,
   ExternalLink,
   FileText,
-  Flag,
   HardDrive,
   KeyRound,
   LayoutDashboard,
@@ -30,15 +29,12 @@ import {
   Mail,
   Mails,
   Menu,
-  Monitor,
-  Moon,
   PanelLeftClose,
   PanelLeftOpen,
   Plus,
   ScrollText,
   Search,
   Settings,
-  Sun,
   UserRound,
   Users,
   UsersRound,
@@ -49,7 +45,6 @@ import {
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useDocumentTitle } from "../lib/document-title";
-import { persistTheme, readThemePreference, type ThemePreference } from "../lib/theme";
 
 const SIDEBAR_KEY = "raytha.sidebar.collapsed";
 const SETTINGS_KEY = "raytha.sidebar.settings";
@@ -90,17 +85,15 @@ const AFTER_CONTENT_NAV: NavItem[] = [
   { to: "/audit-log", label: "Audit Log", icon: ScrollText },
   { to: "/webhooks", label: "Webhooks", icon: Webhook },
   { to: "/email-log", label: "Email Log", icon: Mail },
-  { to: "/feature-flags", label: "Feature Flags", icon: Flag },
-  { to: "/background-tasks", label: "Background Tasks", icon: HardDrive },
   { to: "/media", label: "Media", icon: Image },
 ];
 
 const SETTINGS_NAV: NavItem[] = [
   { to: "/settings/admins", label: "Admins", icon: UsersRound },
+  { to: "/settings/roles", label: "Roles", icon: KeyRound },
   { to: "/settings/configuration", label: "Configuration", icon: Settings },
   { to: "/settings/authentication", label: "Authentication", icon: KeyRound },
-  { to: "/settings/smtp", label: "SMTP", icon: Mail },
-  { to: "/settings/roles", label: "Roles", icon: KeyRound },
+  { to: "/maintenance", label: "Maintenance", icon: HardDrive },
 ];
 
 const ALL_NAV: NavItem[] = [
@@ -108,7 +101,6 @@ const ALL_NAV: NavItem[] = [
   { to: "/content-types/new", label: "New Content Type", icon: Plus },
   ...AFTER_CONTENT_NAV,
   ...SETTINGS_NAV,
-  { to: "/maintenance", label: "Maintenance", icon: HardDrive },
   { to: "/profile", label: "My Profile", icon: UserRound },
 ];
 
@@ -272,44 +264,8 @@ function SidebarContent({
             )}
           </div>
         )}
-
-        <ul className="mt-1 space-y-0.5">
-          <NavLinkItem
-            item={{ to: "/maintenance", label: "Maintenance", icon: HardDrive }}
-            collapsed={collapsed}
-            pathname={pathname}
-            onNavigate={onNavigate}
-          />
-        </ul>
       </nav>
     </div>
-  );
-}
-
-function ThemeMenu() {
-  const [preference, setPreference] = useState<ThemePreference>(() => readThemePreference());
-
-  const apply = (next: ThemePreference) => {
-    setPreference(next);
-    persistTheme(next);
-  };
-
-  return (
-    <>
-      <DropdownMenuLabel>Theme</DropdownMenuLabel>
-      <DropdownMenuItem onSelect={() => apply("light")}>
-        <Sun />
-        Light{preference === "light" ? " ·" : ""}
-      </DropdownMenuItem>
-      <DropdownMenuItem onSelect={() => apply("dark")}>
-        <Moon />
-        Dark{preference === "dark" ? " ·" : ""}
-      </DropdownMenuItem>
-      <DropdownMenuItem onSelect={() => apply("system")}>
-        <Monitor />
-        System{preference === "system" ? " ·" : ""}
-      </DropdownMenuItem>
-    </>
   );
 }
 
@@ -434,10 +390,10 @@ export function AppShell() {
     return [{ label: "Dashboard", to: "/" }, { label: match?.label ?? pathname.replace(/^\//, "") }];
   }, [pathname]);
 
-  useDocumentTitle(breadcrumbs.map((crumb) => crumb.label));
+  useDocumentTitle([breadcrumbs.at(-1)?.label ?? "Dashboard"]);
 
   return (
-    <div className="flex min-h-screen bg-background">
+    <div className="flex min-h-screen min-w-0 overflow-x-hidden bg-background">
       <a
         href="#main"
         className="sr-only focus:not-sr-only focus:absolute focus:left-0 focus:top-0 focus:z-50 focus:bg-primary focus:px-4 focus:py-2 focus:text-primary-foreground"
@@ -477,8 +433,8 @@ export function AppShell() {
         </div>
       )}
 
-      <div className={cn("flex min-h-screen flex-1 flex-col transition-[margin] duration-200", collapsed ? "lg:ml-16" : "lg:ml-64")}>
-        <header className="sticky top-0 z-20 flex h-16 items-center gap-3 border-b border-border bg-card/85 px-4 backdrop-blur-md lg:px-6">
+      <div className={cn("flex min-h-screen min-w-0 flex-1 flex-col transition-[margin] duration-200", collapsed ? "lg:ml-16" : "lg:ml-64")}>
+        <header className="sticky top-0 z-20 flex h-16 min-w-0 items-center gap-3 border-b border-border bg-card/85 px-4 backdrop-blur-md lg:px-6">
           <button
             type="button"
             aria-label="Open navigation"
@@ -561,8 +517,6 @@ export function AppShell() {
                   <UserRound />
                   My Profile
                 </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <ThemeMenu />
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onSelect={() => void handleLogout()}>
                   <LogOut />

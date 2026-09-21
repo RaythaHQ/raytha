@@ -45,7 +45,6 @@ public interface IRaythaDbContext
     public DbSet<FailedLoginAttempt> FailedLoginAttempts { get; }
     public DbSet<Webhook> Webhooks { get; }
     public DbSet<WebhookDelivery> WebhookDeliveries { get; }
-    public DbSet<FeatureFlag> FeatureFlags { get; }
     public DbSet<EmailLog> EmailLogs { get; }
     public DbContext DbContext { get; }
 

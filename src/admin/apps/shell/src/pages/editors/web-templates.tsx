@@ -7,11 +7,6 @@ import {
   CardContent,
   Checkbox,
   ConfirmDialog,
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
   EmptyState,
   FormField,
   Input,
@@ -33,6 +28,7 @@ import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tansta
 import { Link, useNavigate, useParams } from "@tanstack/react-router";
 import { Inbox } from "lucide-react";
 import { useEffect, useState, type FormEvent } from "react";
+import { ListBackLink } from "../../components/list-back-link";
 import { useDocumentTitle } from "../../lib/document-title";
 import { entityFields, readString, toDeveloperName } from "../entity";
 import { CodeEditor } from "./code-editor";
@@ -41,10 +37,8 @@ import { RevisionsPanel } from "./revisions-panel";
 export function WebTemplatesListPage() {
   const params = useParams({ strict: false });
   const themeId = "themeId" in params && typeof params.themeId === "string" ? params.themeId : "";
-  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
-  const [createOpen, setCreateOpen] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
   const query = useQuery({
@@ -82,17 +76,18 @@ export function WebTemplatesListPage() {
         description="HTML + Liquid templates for this theme."
         actions={
           hasPermission(platformPermissions.templates) ? (
-            <Button type="button" onClick={() => setCreateOpen(true)}>
+            <Link
+              to="/themes/$themeId/web-templates/new"
+              params={{ themeId }}
+              className="inline-flex h-10 items-center rounded-lg bg-primary px-4 text-sm font-medium text-primary-foreground shadow-card hover:bg-brand-600"
+            >
               New template
-            </Button>
+            </Link>
           ) : undefined
         }
       />
+      <ListBackLink to="/themes" listKey="themes" label="themes" />
       <p className="text-sm">
-        <Link to="/themes" className="text-primary hover:underline">
-          Back to themes
-        </Link>
-        {" · "}
         <Link to="/themes/$themeId/widget-templates" params={{ themeId }} className="text-primary hover:underline">
           Widget templates
         </Link>
@@ -157,14 +152,6 @@ export function WebTemplatesListPage() {
           </ListPanel>
         )}
       </QueryGate>
-      <CreateWebTemplateDialog
-        themeId={themeId}
-        open={createOpen}
-        onOpenChange={setCreateOpen}
-        onCreated={(id) => {
-          void navigate({ to: "/themes/$themeId/web-templates/$id", params: { themeId, id } });
-        }}
-      />
       <ConfirmDialog
         open={deleteId !== null}
         onOpenChange={(open) => {
@@ -306,11 +293,12 @@ function WebTemplateEditor({
           </Button>
         }
       />
-      <p className="text-sm">
-        <Link to="/themes/$themeId/web-templates" params={{ themeId }} className="text-primary hover:underline">
-          Back to web templates
-        </Link>
-      </p>
+      <ListBackLink
+        to="/themes/$themeId/web-templates"
+        params={{ themeId }}
+        listKey={`web-templates:${themeId}`}
+        label="web templates"
+      />
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_18rem]">
         <Card>
           <CardContent className="space-y-4 pt-6">
@@ -393,17 +381,11 @@ function WebTemplateEditor({
   );
 }
 
-function CreateWebTemplateDialog({
-  themeId,
-  open,
-  onOpenChange,
-  onCreated,
-}: {
-  themeId: string;
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  onCreated: (id: string) => void;
-}) {
+export function NewWebTemplatePage() {
+  const params = useParams({ strict: false });
+  const themeId = "themeId" in params && typeof params.themeId === "string" ? params.themeId : "";
+  useDocumentTitle(["New web template"]);
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [label, setLabel] = useState("");
   const [developerName, setDeveloperName] = useState("");
@@ -417,24 +399,12 @@ function CreateWebTemplateDialog({
   const layouts = useQuery({
     queryKey: ["web-templates", themeId, "base-layouts"],
     queryFn: () => adminApi.webTemplates(themeId).list({ baseLayoutsOnly: true, pageSize: 100 }),
-    enabled: open,
+    enabled: themeId.length > 0,
   });
   const contentTypes = useQuery({
     queryKey: ["content-types", "picker"],
     queryFn: () => adminApi.contentTypes.list({ pageSize: 100 }),
-    enabled: open,
   });
-
-  const reset = () => {
-    setLabel("");
-    setDeveloperName("");
-    setDeveloperTouched(false);
-    setContent("{% renderbody %}");
-    setIsBaseLayout(false);
-    setParentTemplateId("");
-    setAllowAccessForNewContentTypes(true);
-    setAccessIds([]);
-  };
 
   const create = useMutation({
     mutationFn: () => {
@@ -452,123 +422,123 @@ function CreateWebTemplateDialog({
     onSuccess: (result) => {
       toast.success("Web template created");
       void queryClient.invalidateQueries({ queryKey: ["web-templates", themeId] });
-      onOpenChange(false);
-      reset();
-      onCreated(result.id);
+      void navigate({ to: "/themes/$themeId/web-templates/$id", params: { themeId, id: result.id } });
     },
     onError: (error) => toast.error(formatError(error)),
   });
 
-  const handleSubmit = (event: FormEvent) => {
-    event.preventDefault();
-    create.mutate();
-  };
+  if (!themeId) {
+    return (
+      <div className="space-y-6">
+        <PageHeader title="New web template" />
+        <p className="text-sm text-muted-foreground">Pick a theme first.</p>
+      </div>
+    );
+  }
 
   return (
-    <Dialog
-      open={open}
-      widthClassName="max-w-2xl"
-      onOpenChange={(next) => {
-        onOpenChange(next);
-        if (!next) {
-          reset();
-        }
-      }}
-    >
-      <form onSubmit={handleSubmit}>
-        <DialogHeader>
-          <DialogTitle>New web template</DialogTitle>
-        </DialogHeader>
-        <DialogContent className="space-y-4">
-          <FormField label="Label" required htmlFor="new-web-label">
-            {(control) => (
-              <Input
-                {...control}
-                value={label}
-                onChange={(event) => {
-                  const next = event.target.value;
-                  setLabel(next);
-                  if (!developerTouched) {
-                    setDeveloperName(toDeveloperName(next));
-                  }
-                }}
+    <div className="space-y-6">
+      <PageHeader title="New web template" />
+      <ListBackLink
+        to="/themes/$themeId/web-templates"
+        params={{ themeId }}
+        listKey={`web-templates:${themeId}`}
+        label="web templates"
+      />
+      <Card>
+        <CardContent className="space-y-4 pt-6">
+          <form
+            className="space-y-4"
+            onSubmit={(event: FormEvent) => {
+              event.preventDefault();
+              create.mutate();
+            }}
+          >
+            <FormField label="Label" required htmlFor="new-web-label">
+              {(control) => (
+                <Input
+                  {...control}
+                  value={label}
+                  onChange={(event) => {
+                    const next = event.target.value;
+                    setLabel(next);
+                    if (!developerTouched) {
+                      setDeveloperName(toDeveloperName(next));
+                    }
+                  }}
+                />
+              )}
+            </FormField>
+            <FormField label="Developer name" required htmlFor="new-web-developer">
+              {(control) => (
+                <Input
+                  {...control}
+                  value={developerName}
+                  onChange={(event) => {
+                    setDeveloperTouched(true);
+                    setDeveloperName(event.target.value);
+                  }}
+                />
+              )}
+            </FormField>
+            <div className="flex items-center gap-2">
+              <Checkbox id="new-web-base" checked={isBaseLayout} onCheckedChange={setIsBaseLayout} />
+              <label htmlFor="new-web-base" className="text-sm">
+                Base layout
+              </label>
+            </div>
+            <FormField label="Parent template" htmlFor="new-web-parent">
+              {(control) => (
+                <Select {...control} value={parentTemplateId} onChange={(event) => setParentTemplateId(event.target.value)}>
+                  <option value="">None</option>
+                  {(layouts.data?.items ?? []).map((item) => (
+                    <option key={item.id} value={item.id}>
+                      {item.label || item.developerName || item.id}
+                    </option>
+                  ))}
+                </Select>
+              )}
+            </FormField>
+            <div className="flex items-center gap-2">
+              <Checkbox
+                id="new-web-allow"
+                checked={allowAccessForNewContentTypes}
+                onCheckedChange={setAllowAccessForNewContentTypes}
               />
-            )}
-          </FormField>
-          <FormField label="Developer name" required htmlFor="new-web-developer">
-            {(control) => (
-              <Input
-                {...control}
-                value={developerName}
-                onChange={(event) => {
-                  setDeveloperTouched(true);
-                  setDeveloperName(event.target.value);
-                }}
-              />
-            )}
-          </FormField>
-          <div className="flex items-center gap-2">
-            <Checkbox id="new-web-base" checked={isBaseLayout} onCheckedChange={setIsBaseLayout} />
-            <label htmlFor="new-web-base" className="text-sm">
-              Base layout
-            </label>
-          </div>
-          <FormField label="Parent template" htmlFor="new-web-parent">
-            {(control) => (
-              <Select {...control} value={parentTemplateId} onChange={(event) => setParentTemplateId(event.target.value)}>
-                <option value="">None</option>
-                {(layouts.data?.items ?? []).map((item) => (
-                  <option key={item.id} value={item.id}>
-                    {item.label || item.developerName || item.id}
-                  </option>
-                ))}
-              </Select>
-            )}
-          </FormField>
-          <div className="flex items-center gap-2">
-            <Checkbox
-              id="new-web-allow"
-              checked={allowAccessForNewContentTypes}
-              onCheckedChange={setAllowAccessForNewContentTypes}
-            />
-            <label htmlFor="new-web-allow" className="text-sm">
-              Allow access for new content types
-            </label>
-          </div>
-          <fieldset className="space-y-2">
-            <legend className="text-sm font-medium">Content types</legend>
-            {(contentTypes.data?.items ?? []).map((type) => {
-              const fields = entityFields(type);
-              const typeLabel = readString(fields, "labelPlural", "labelSingular", "developerName") || type.id;
-              return (
-                <div key={type.id} className="flex items-center gap-2">
-                  <Checkbox
-                    id={`new-web-access-${type.id}`}
-                    checked={accessIds.includes(type.id)}
-                    onCheckedChange={(next) => {
-                      setAccessIds((current) =>
-                        next ? [...current, type.id] : current.filter((item) => item !== type.id),
-                      );
-                    }}
-                  />
-                  <label htmlFor={`new-web-access-${type.id}`} className="text-sm">
-                    {typeLabel}
-                  </label>
-                </div>
-              );
-            })}
-          </fieldset>
-          <CodeEditor value={content} onChange={setContent} language="liquid" ariaLabel="New web template content" />
-        </DialogContent>
-        <DialogFooter>
-          <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
-          </Button>
-          <Button type="submit" loading={create.isPending}>
-            Create
-          </Button>
-        </DialogFooter>
-      </form>
-    </Dialog>
+              <label htmlFor="new-web-allow" className="text-sm">
+                Allow access for new content types
+              </label>
+            </div>
+            <fieldset className="space-y-2">
+              <legend className="text-sm font-medium">Content types</legend>
+              {(contentTypes.data?.items ?? []).map((type) => {
+                const fields = entityFields(type);
+                const typeLabel = readString(fields, "labelPlural", "labelSingular", "developerName") || type.id;
+                return (
+                  <div key={type.id} className="flex items-center gap-2">
+                    <Checkbox
+                      id={`new-web-access-${type.id}`}
+                      checked={accessIds.includes(type.id)}
+                      onCheckedChange={(next) => {
+                        setAccessIds((current) =>
+                          next ? [...current, type.id] : current.filter((item) => item !== type.id),
+                        );
+                      }}
+                    />
+                    <label htmlFor={`new-web-access-${type.id}`} className="text-sm">
+                      {typeLabel}
+                    </label>
+                  </div>
+                );
+              })}
+            </fieldset>
+            <CodeEditor value={content} onChange={setContent} language="liquid" ariaLabel="New web template content" />
+            <Button type="submit" loading={create.isPending}>
+              Create
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
+    </div>
   );
 }

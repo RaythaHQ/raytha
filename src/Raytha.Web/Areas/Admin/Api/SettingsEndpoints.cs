@@ -11,9 +11,8 @@ using Raytha.Application.Common.Models;
 using Raytha.Application.Common.Utils;
 using Raytha.Application.EmailLogs.Commands;
 using Raytha.Application.EmailLogs.Queries;
-using Raytha.Application.FeatureFlags.Commands;
-using Raytha.Application.FeatureFlags.Queries;
 using Raytha.Application.Login.Commands;
+using Raytha.Application.Maintenance.Commands;
 using Raytha.Application.Maintenance.Queries;
 using Raytha.Application.OrganizationSettings.Commands;
 using Raytha.Application.OrganizationSettings.Queries;
@@ -25,7 +24,7 @@ namespace Raytha.Web.Areas.Admin.Api;
 
 /// <summary>
 /// System settings: configuration, SMTP, authentication schemes, audit logs, email log,
-/// webhooks, feature flags, maintenance, background tasks, profile and version.
+/// webhooks, maintenance, background tasks, profile and version.
 /// </summary>
 public static class SettingsEndpoints
 {
@@ -34,6 +33,7 @@ public static class SettingsEndpoints
         // ---- Anything signed-in admin can hit ----
         admin.MapGet("/version", Version).WithTags("Admin platform");
         admin.MapPut("/profile", ChangeProfileHandler).WithTags("Admin profile");
+        admin.MapGet("/background-tasks", ListBackgroundTasks).WithTags("Admin background tasks");
         admin.MapGet("/background-tasks/{id}", BackgroundTask).WithTags("Admin background tasks");
 
         // ---- system_settings ----
@@ -73,11 +73,8 @@ public static class SettingsEndpoints
         webhooks.MapDelete("/{id}", DeleteWebhookHandler);
         webhooks.MapPost("/{id}/test", TestWebhookHandler);
 
-        var flags = system.MapGroup("/feature-flags").WithTags("Admin feature flags");
-        flags.MapGet("", ListFlags);
-        flags.MapPut("/{key}", SetFlag);
-
         system.MapGet("/maintenance", Maintenance).WithTags("Admin maintenance");
+        system.MapPost("/maintenance/tasks", BeginDemoTask).WithTags("Admin maintenance");
 
         // ---- audit_logs ----
         var audit = admin.MapGroup("/audit-logs").WithTags("Admin audit logs");
@@ -112,6 +109,26 @@ public static class SettingsEndpoints
                 }
             )
         );
+
+    private static async Task<IResult> ListBackgroundTasks(
+        [AsParameters] PagedQuery paging,
+        [FromQuery] string? status,
+        ISender mediator
+    )
+    {
+        var query = new GetBackgroundTasks.Query
+        {
+            Status = status,
+            PageNumber = paging.PageNumber,
+            PageSize = paging.PageSize,
+            Search = paging.Search,
+        };
+        if (paging.HasOrderBy)
+        {
+            query = query with { OrderBy = paging.OrderBy! };
+        }
+        return AdminResults.Paged(await mediator.Send(query), paging);
+    }
 
     private static async Task<IResult> BackgroundTask(string id, ISender mediator) =>
         AdminResults.From(await mediator.Send(new GetBackgroundTaskById.Query { Id = id }));
@@ -476,18 +493,24 @@ public static class SettingsEndpoints
     private static async Task<IResult> TestWebhookHandler(string id, ISender mediator) =>
         AdminResults.FromId(await mediator.Send(new TestWebhook.Command { Id = id }));
 
-    // ---- feature flags ----
-
-    private static async Task<IResult> ListFlags(ISender mediator) =>
-        AdminResults.From(await mediator.Send(new GetFeatureFlags.Query()));
-
-    public sealed record SetFlagRequest(bool IsEnabled);
-
-    private static async Task<IResult> SetFlag(string key, [FromBody] SetFlagRequest body, ISender mediator) =>
-        AdminResults.From(await mediator.Send(new SetFeatureFlag.Command { Key = key, IsEnabled = body.IsEnabled }));
-
     // ---- maintenance ----
 
     private static async Task<IResult> Maintenance(ISender mediator) =>
         AdminResults.From(await mediator.Send(new GetMaintenanceSnapshot.Query()));
+
+    public sealed record BeginDemoProgressTaskRequest(int? Steps, int? DelayMs);
+
+    private static async Task<IResult> BeginDemoTask(
+        [FromBody] BeginDemoProgressTaskRequest? body,
+        ISender mediator
+    ) =>
+        AdminResults.FromId(
+            await mediator.Send(
+                new BeginDemoProgressTask.Command
+                {
+                    Steps = body?.Steps ?? 10,
+                    DelayMs = body?.DelayMs ?? 500,
+                }
+            )
+        );
 }

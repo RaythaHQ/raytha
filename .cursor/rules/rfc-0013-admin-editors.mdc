@@ -1,0 +1,43 @@
+---
+description: Admin create/edit is a dedicated page; editor dialogs are forbidden
+globs: "src/admin/**/*.ts,src/admin/**/*.tsx"
+alwaysApply: false
+---
+
+# RFC-0013: Admin Editors
+
+Status: Active
+
+## Abstract
+
+Create and edit of admin entities happen on their own routes. A list may confirm
+a delete. A media insert picker may be a dialog. An entity editor MUST NOT.
+
+## 1. Routes
+
+- Create MUST be `/new` under the list (or `/new/$type` when the create form is
+  typed, as with authentication schemes).
+- Edit MUST be `/$id` under the list (or a nested `/$id` the list already owns,
+  such as `/menus/$id/items/$itemId`).
+- Entity URLs MUST NOT carry list query params (RFC-0010).
+
+## 2. Dialogs
+
+- Editor dialogs are FORBIDDEN. Create and edit open a page.
+- Confirm dialogs are ALLOWED (delete, discard draft, unpublish).
+- Insert pickers (media / FileUpload) MAY be dialogs. They insert a URL into an
+  already-open editor; they do not edit an entity.
+
+## 3. Lists
+
+- Row actions are one overflow menu (`RowActions`). Destructive items last,
+  after a separator.
+- The name/title column is the edit link when an edit route exists.
+- Back links from create, edit, and detail MUST use `ListBackLink` and restore
+  the remembered list search for that `listKey`.
+
+## 4. Remembered list query
+
+- When a list renders, it MUST store the applied query in `sessionStorage` under
+  `raytha.list:${listKey}` so `ListBackLink` can restore it.
+- Sidebar and command-palette links to the bare list path remain a reset.

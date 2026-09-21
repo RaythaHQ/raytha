@@ -18,6 +18,7 @@ import {
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate, useParams } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { ListBackLink } from "../../components/list-back-link";
 import { useDocumentTitle } from "../../lib/document-title";
 import { entityFields, formatWhen, readBoolean, readString } from "../entity";
 import { ContentFieldControl } from "./field-controls";
@@ -135,9 +136,14 @@ function ItemEditor({ developerName, itemId }: { developerName: string; itemId: 
     const source = Object.keys(draft).length > 0 ? draft : published;
     setValues(valuesFromContent(fields, source));
     setRoutePath(readString(itemRecord, "routePath"));
-    const first = templates[0];
-    if (first && !templateId) {
-      setTemplateId(first.id);
+    const savedTemplateId = readString(itemRecord, "webTemplateId");
+    if (savedTemplateId) {
+      setTemplateId(savedTemplateId);
+    } else {
+      const first = templates[0];
+      if (first && !templateId) {
+        setTemplateId(first.id);
+      }
     }
     setHydrated(true);
   }, [fields, hydrated, isNew, item, itemRecord, templateId, templates]);
@@ -375,6 +381,12 @@ function ItemEditor({ developerName, itemId }: { developerName: string; itemId: 
       <PageHeader
         title={isNew ? `New ${heading}` : readString(itemRecord, "primaryField") || heading}
         description={isNew ? "Fill in the fields and save a draft or publish." : readString(itemRecord, "routePath")}
+      />
+      <ListBackLink
+        to="/content/$developerName"
+        params={{ developerName }}
+        listKey={`content-items:${developerName}`}
+        label={contentType?.labelPlural || developerName || "items"}
       />
       <ContentTypeNav developerName={developerName} />
       {isNew ? (

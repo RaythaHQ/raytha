@@ -1,4 +1,4 @@
-import { formatError, getEnabledAdminSchemes, isAuthenticated, login, requestForgotPassword, requestMagicLink } from "@raytha/api";
+import { formatError, getAdminSetupStatus, getEnabledAdminSchemes, isAuthenticated, login, requestForgotPassword, requestMagicLink } from "@raytha/api";
 import { Button, Input, Label } from "@raytha/ui";
 import { useQuery } from "@tanstack/react-query";
 import { useState, type FormEvent } from "react";
@@ -17,6 +17,10 @@ export function LoginPage() {
   const schemesQuery = useQuery({
     queryKey: ["admin-login-schemes"],
     queryFn: getEnabledAdminSchemes,
+  });
+  const setupQuery = useQuery({
+    queryKey: ["admin-setup-status"],
+    queryFn: getAdminSetupStatus,
   });
 
   if (isAuthenticated()) {
@@ -92,15 +96,20 @@ export function LoginPage() {
           <button type="button" className="text-muted-foreground hover:underline" onClick={() => setMode(mode === "forgot" ? "password" : "forgot")}>
             {mode === "forgot" ? "Back to sign in" : "Forgot password?"}
           </button>
-          <Link to="/setup" className="text-muted-foreground hover:underline">
-            First-time setup
-          </Link>
+          {setupQuery.data?.required ? (
+            <Link to="/setup" className="text-muted-foreground hover:underline">
+              First-time setup
+            </Link>
+          ) : null}
         </div>
-        {schemesQuery.data && schemesQuery.data.length > 0 && (
-          <ul className="space-y-2 border-t border-border pt-4">
-            {schemesQuery.data
-              .filter((scheme) => scheme.signInUrl)
-              .map((scheme) => (
+        {(() => {
+          const ssoSchemes = (schemesQuery.data ?? []).filter((scheme) => scheme.signInUrl);
+          if (ssoSchemes.length === 0) {
+            return null;
+          }
+          return (
+            <ul className="space-y-2 border-t border-border pt-4">
+              {ssoSchemes.map((scheme) => (
                 <li key={scheme.developerName}>
                   <a
                     href={scheme.signInUrl ?? "#"}
@@ -110,8 +119,9 @@ export function LoginPage() {
                   </a>
                 </li>
               ))}
-          </ul>
-        )}
+            </ul>
+          );
+        })()}
       </div>
     </div>
   );

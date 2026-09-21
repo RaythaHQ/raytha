@@ -1,67 +1,11 @@
 ---
-description: Feature flags are code-defined constants evaluated through IFeatureFlagService, which fails closed
-globs: "src/Raytha.Application/FeatureFlags/**,src/Raytha.Infrastructure/FeatureFlags/**"
+description: Feature flags were removed. This RFC is superseded.
+globs: ""
 alwaysApply: false
 ---
 
 # RFC-0009: Feature Flags
 
-Status: Active
+Status: Superseded
 
-## Abstract
-
-A feature flag exists only if it is declared in `RaythaFeatureFlags`. Runtime
-state is a database override on top of that declaration, evaluated through
-`IFeatureFlagService`, which returns `false` for anything it cannot resolve.
-
-## 1. Declaring a Flag
-
-- Every flag MUST be a `const string` on `RaythaFeatureFlags` plus an entry in
-  `RaythaFeatureFlags.All` with a label, a description an operator can act on,
-  and `DefaultEnabled`.
-- Keys are `snake_case` and stable (`webhooks`, `email_log`, `admin_spa`,
-  `maintenance_tools`). A key is persisted in the `FeatureFlags` table and shown
-  in the admin — renaming one is a breaking change.
-- A flag not in the catalog cannot be evaluated or overridden: `IsEnabledAsync`
-  returns `false` and `SetAsync` throws. Do not read flags from configuration,
-  environment variables, or an ad-hoc table.
-- `DefaultEnabled: false` for anything unfinished or risky; `true` only for
-  behavior that is already the intended default.
-
-## 2. Evaluating
-
-- Call `IFeatureFlagService.IsEnabledAsync(RaythaFeatureFlags.X, ct)`. Passing a
-  string literal instead of the constant is FORBIDDEN.
-- Evaluation fails closed: an unknown key, or a store that throws, yields
-  `false` and logs. Code MUST NOT treat a failure as "enabled" or cache around
-  that behavior.
-- Check the flag at the outermost point that owns the behavior — the pipeline
-  behavior, the endpoint, the background task — not scattered through a handler.
-  `WebhookPublishBehavior` checking `RaythaFeatureFlags.Webhooks` once is the
-  pattern.
-- A disabled flag MUST make the feature a no-op, not an error. Turning off
-  `webhooks` skips publishing; it does not fail the command that would have
-  published.
-- The store is `EfFeatureFlagStore` over the `FeatureFlags` table, scoped by
-  `FeatureFlag.GlobalScope`. Per-tenant or per-user scopes do not exist yet;
-  adding one means changing the store and this RFC, not inventing a parallel
-  lookup.
-
-## 3. Admin Surface
-
-- `GetFeatureFlags` returns every catalog entry with its resolved value and
-  whether it came from `default` or an `override`, so the admin can show both.
-  A read that returns only overrides is wrong.
-- `SetFeatureFlag` requires the system-settings permission (RFC-0008).
-- Flags exposed to the SPA MUST come from the server per request. The SPA MUST
-  NOT hardcode a flag's default.
-
-## 4. Lifecycle
-
-- A flag is temporary by default. When a feature ships on by default and has no
-  plausible reason to be turned off, delete the flag, its branch, and its rows
-  in the same change.
-- A flag that has been enabled for a full release cycle SHOULD be removed
-  rather than left as permanent configuration.
-- Dead flags left in the catalog are a defect: they appear in the admin UI as
-  switches that do nothing.
+Feature flags were removed. WebhookPublishBehavior always publishes, and the FeatureFlags table is dropped.

@@ -11,21 +11,50 @@ export function ComingSoonPage({ title, description }: { title: string; descript
 }
 
 export { DashboardPage } from "./dashboard";
-export { UsersPage, UserGroupsPage } from "./users";
-export { AdminsPage, RolesPage } from "./admins";
-export { SitePagesPage, SitePageDetailPage, SitePageLayoutPage } from "./site-pages";
+export {
+  UsersPage,
+  UserGroupsPage,
+  NewUserPage,
+  EditUserPage,
+  NewUserGroupPage,
+  EditUserGroupPage,
+} from "./users";
+export {
+  AdminsPage,
+  RolesPage,
+  NewAdminPage,
+  EditAdminPage,
+  NewRolePage,
+  EditRolePage,
+} from "./admins";
+export {
+  SitePagesPage,
+  SitePageDetailPage,
+  SitePageLayoutPage,
+  NewSitePagePage,
+  NewSitePageWidgetPage,
+  EditSitePageWidgetPage,
+} from "./site-pages";
 export { ContentTypesPage, NewContentTypePage, ContentItemsPage } from "./content";
-export { ContentTypeFieldsPage } from "./content/fields";
+export { ContentTypeFieldsPage, NewContentTypeFieldPage, EditContentTypeFieldPage } from "./content/fields";
 export { ContentTypeConfigurationPage } from "./content/configuration";
 export { ContentTypeTrashPage } from "./content/trash";
 export { NewContentItemPage, EditContentItemPage } from "./content/editor";
-export { ContentViewsPage } from "./content/views";
+export { ContentViewsPage, NewContentViewPage } from "./content/views";
 export { ContentViewEditorPage } from "./content/view-editor";
-export { EmailTemplatesPage, MenusPage, FunctionsPage } from "./templates";
-export { ThemesPage } from "./themes";
+export { EmailTemplatesPage, MenusPage, FunctionsPage, NewMenuPage, NewFunctionPage } from "./templates";
+export { ThemesPage, NewThemePage } from "./themes";
 export { MediaPage } from "./media";
-export { AuditLogPage, WebhooksPage, EmailLogPage, FeatureFlagsPage, BackgroundTasksPage } from "./system";
-export { MaintenancePage, ConfigurationPage, SmtpPage, AuthenticationPage, ProfilePage } from "./settings";
+export {
+  AuditLogPage,
+  WebhooksPage,
+  EmailLogPage,
+  BackgroundTasksPage,
+  NewWebhookPage,
+  EditWebhookPage,
+} from "./system";
+export { MaintenancePage, ConfigurationPage, SmtpPage, ProfilePage } from "./settings";
+export { AuthenticationPage, NewAuthenticationPage, EditAuthenticationPage } from "./authentication";
 
 export function WebTemplatesPage() {
   return <ComingSoonPage title="Web templates" />;

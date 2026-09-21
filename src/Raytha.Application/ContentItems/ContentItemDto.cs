@@ -24,6 +24,7 @@ public record ContentItemDto : BaseEntityDto
     public ShortGuid RouteId { get; init; }
     public string RoutePath { get; init; }
     public string PrimaryField { get; init; }
+    public ShortGuid? WebTemplateId { get; init; }
     public dynamic PublishedContent { get; init; }
     public dynamic DraftContent { get; init; }
 

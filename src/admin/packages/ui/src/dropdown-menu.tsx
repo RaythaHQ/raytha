@@ -131,10 +131,12 @@ export function DropdownMenuItem({
   children,
   onSelect,
   className,
+  disabled,
 }: {
   children: ReactNode;
   onSelect?: () => void;
   className?: string;
+  disabled?: boolean;
 }) {
   const { setOpen } = useDropdown();
   return (
@@ -142,12 +144,17 @@ export function DropdownMenuItem({
       type="button"
       role="menuitem"
       tabIndex={-1}
+      disabled={disabled}
+      data-disabled={disabled ? "" : undefined}
       onClick={() => {
+        if (disabled) {
+          return;
+        }
         setOpen(false);
         onSelect?.();
       }}
       className={cn(
-        "flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-foreground outline-none transition-colors hover:bg-accent focus-visible:bg-accent [&_svg]:size-4 [&_svg]:text-muted-foreground",
+        "flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-foreground outline-none transition-colors hover:bg-accent focus-visible:bg-accent disabled:pointer-events-none disabled:opacity-50 [&_svg]:size-4 [&_svg]:text-muted-foreground",
         className,
       )}
     >

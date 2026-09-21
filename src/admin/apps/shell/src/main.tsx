@@ -4,12 +4,9 @@ import { RouterProvider } from "@tanstack/react-router";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { router } from "./router";
-import { applyStoredTheme } from "./lib/theme";
 import "./styles/_variables.scss";
 import "./styles/_keyframe-animations.scss";
 import "./styles.css";
-
-applyStoredTheme();
 
 /** Session expired mid-use: send the user back to the login screen. */
 function redirectToLoginOn401(error: unknown) {

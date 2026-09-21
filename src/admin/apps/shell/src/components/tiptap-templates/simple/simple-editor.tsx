@@ -73,6 +73,7 @@ import { useCursorVisibility } from "@/hooks/use-cursor-visibility"
 
 // --- Lib ---
 import { toast } from "@raytha/ui"
+import { EditorMediaDialog } from "@/components/editor-media-dialog"
 import { ingestEditorFiles } from "@/lib/media-upload"
 import { handleImageUpload, MAX_FILE_SIZE } from "@/lib/tiptap-utils"
 
@@ -102,6 +103,7 @@ const MainToolbarContent = ({
   onHighlighterClick,
   onLinkClick,
   onSearchAndReplaceClick,
+  onImageClick,
   isSearchAndReplaceOpen,
   searchAndReplaceButtonRef,
   isMobile,
@@ -110,6 +112,7 @@ const MainToolbarContent = ({
   onHighlighterClick: () => void
   onLinkClick: () => void
   onSearchAndReplaceClick: () => void
+  onImageClick: () => void
   isSearchAndReplaceOpen: boolean
   searchAndReplaceButtonRef: RefObject<HTMLButtonElement | null>
   isMobile: boolean
@@ -173,7 +176,13 @@ const MainToolbarContent = ({
           <ToolbarSeparator />
 
           <ToolbarGroup>
-            <ImageUploadButton text="Image" />
+            <ImageUploadButton
+              text="Image"
+              onClick={(event) => {
+                event.preventDefault()
+                onImageClick()
+              }}
+            />
             <FileLinkButton text="File" />
           </ToolbarGroup>
         </>
@@ -243,6 +252,7 @@ export function SimpleEditor({
     "main"
   )
   const [isSearchAndReplaceOpen, setIsSearchAndReplaceOpen] = useState(false)
+  const [imagePickerOpen, setImagePickerOpen] = useState(false)
   const toolbarRef = useRef<HTMLDivElement>(null)
   const searchAndReplaceButtonRef = useRef<HTMLButtonElement>(null)
   const onUpdateRef = useRef(onUpdate)
@@ -313,9 +323,6 @@ export function SimpleEditor({
         : []),
     ],
     content,
-    onCreate: ({ editor: current }) => {
-      onUpdateRef.current?.({ html: current.getHTML(), json: current.getJSON() })
-    },
     onUpdate: ({ editor: current }) => {
       onUpdateRef.current?.({ html: current.getHTML(), json: current.getJSON() })
     },
@@ -374,6 +381,7 @@ export function SimpleEditor({
               onHighlighterClick={() => setMobileView("highlighter")}
               onLinkClick={() => setMobileView("link")}
               onSearchAndReplaceClick={toggleSearchAndReplace}
+              onImageClick={() => setImagePickerOpen(true)}
               isSearchAndReplaceOpen={isSearchAndReplaceOpen}
               searchAndReplaceButtonRef={searchAndReplaceButtonRef}
               isMobile={isMobile}
@@ -400,6 +408,17 @@ export function SimpleEditor({
           role="presentation"
           className="simple-editor-content"
         />
+        {enableUploads ? (
+          <EditorMediaDialog
+            open={imagePickerOpen}
+            onOpenChange={setImagePickerOpen}
+            title="Insert image"
+            allowedFileTypes={["image/*"]}
+            onUploaded={(file) => {
+              editor?.chain().focus().setImage({ src: file.url, alt: file.name }).run()
+            }}
+          />
+        ) : null}
       </EditorContext.Provider>
     </div>
   )

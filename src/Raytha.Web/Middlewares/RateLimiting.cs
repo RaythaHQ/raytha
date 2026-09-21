@@ -20,20 +20,38 @@ public static class RateLimiting
     public const int DefaultPermitLimit = 30;
     public static readonly TimeSpan DefaultWindow = TimeSpan.FromMinutes(1);
 
-    /// <summary>Path prefixes (relative to path base) that are rate limited.</summary>
+    /// <summary>
+    /// Paths that accept credentials or mint sessions. Session probes such as
+    /// <c>/raytha/api/auth/me</c> and <c>/schemes</c> are excluded so normal SPA
+    /// navigation cannot exhaust the login budget.
+    /// </summary>
     public static readonly string[] AuthPathPrefixes =
     {
-        "/raytha/api/auth",
+        "/raytha/api/auth/login",
+        "/raytha/api/auth/magic-link",
+        "/raytha/api/auth/forgot-password",
+        "/raytha/api/auth/setup",
         "/raytha/login",
         "/account/login",
     };
 
-    public static bool IsAuthPath(PathString path, string pathBase)
+    public static bool IsAuthPath(PathString path, string pathBase, string method = "GET")
     {
         var value = path.Value ?? string.Empty;
         if (!string.IsNullOrEmpty(pathBase) && value.StartsWith(pathBase, StringComparison.OrdinalIgnoreCase))
         {
             value = value[pathBase.Length..];
+        }
+
+        // Read-only auth probes must not burn the login budget.
+        if (HttpMethods.IsGet(method)
+            && (
+                value.Equals("/raytha/api/auth/setup", StringComparison.OrdinalIgnoreCase)
+                || value.Equals("/raytha/api/auth/setup/status", StringComparison.OrdinalIgnoreCase)
+                || value.Equals("/raytha/api/auth/forgot-password/validate", StringComparison.OrdinalIgnoreCase)
+            ))
+        {
+            return false;
         }
 
         return AuthPathPrefixes.Any(prefix =>
@@ -57,7 +75,7 @@ public static class RateLimiting
 
             options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(context =>
             {
-                if (!IsAuthPath(context.Request.Path, pathBase))
+                if (!IsAuthPath(context.Request.Path, pathBase, context.Request.Method))
                 {
                     return RateLimitPartition.GetNoLimiter("unlimited");
                 }

@@ -20,7 +20,7 @@ tests are how the other RFCs stop being suggestions.
 |---|---|
 | `tests/Raytha.Domain.UnitTests` | Entity behavior, value objects, field types |
 | `tests/Raytha.Application.UnitTests` | Validators, handlers, utilities |
-| `tests/Raytha.Infrastructure.UnitTests` | JSON query engine, file storage, feature-flag store, services |
+| `tests/Raytha.Infrastructure.UnitTests` | JSON query engine, file storage, services |
 | `tests/Raytha.Architecture.Tests` | Layer boundaries and codebase conventions |
 
 - NUnit 4 (`[TestFixture]`, `[Test]`) with FluentAssertions. Do not introduce a

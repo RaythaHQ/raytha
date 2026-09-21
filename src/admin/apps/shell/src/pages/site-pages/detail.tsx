@@ -25,6 +25,7 @@ import {
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useParams } from "@tanstack/react-router";
 import { useState, type FormEvent } from "react";
+import { ListBackLink } from "../../components/list-back-link";
 import { useDocumentTitle } from "../../lib/document-title";
 import { entityFields, formatWhen, isRecord, jsonString, readString } from "../entity";
 import { parseSitePage } from "./models";
@@ -161,6 +162,7 @@ function SitePageDetail({ id }: { id: string }) {
                   </>
                 }
               />
+              <ListBackLink to="/site-pages" listKey="site-pages" label="site pages" />
               <div className="flex flex-wrap gap-2">
                 {page.isPublished ? <Badge variant="success">Published</Badge> : <Badge variant="secondary">Unpublished</Badge>}
                 {page.isDraft ? <Badge variant="warning">Draft</Badge> : null}
@@ -307,12 +309,11 @@ function SitePageSettingsForm({
   const [routePath, setRoutePath] = useState(initialRoutePath);
   const [templateId, setTemplateId] = useState(initialTemplateId);
 
-  const themesQuery = useQuery({
-    queryKey: ["themes", "picker"],
-    queryFn: () => adminApi.themes.list({ pageSize: 100 }),
-    placeholderData: keepPreviousData,
+  const configurationQuery = useQuery({
+    queryKey: ["configuration"],
+    queryFn: () => adminApi.configuration.get(),
   });
-  const themeId = themesQuery.data?.items[0]?.id ?? "";
+  const themeId = jsonString(configurationQuery.data ?? {}, "activeThemeId");
   const templatesQuery = useQuery({
     queryKey: ["web-templates", themeId],
     queryFn: () => adminApi.webTemplates(themeId).list({ pageSize: 100 }),

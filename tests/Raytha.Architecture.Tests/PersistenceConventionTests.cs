@@ -39,7 +39,6 @@ public class PersistenceConventionTests
 
         exposed.Should().Contain(typeof(Raytha.Domain.Entities.Webhook));
         exposed.Should().Contain(typeof(Raytha.Domain.Entities.WebhookDelivery));
-        exposed.Should().Contain(typeof(Raytha.Domain.Entities.FeatureFlag));
         exposed.Should().Contain(typeof(Raytha.Domain.Entities.EmailLog));
     }
 

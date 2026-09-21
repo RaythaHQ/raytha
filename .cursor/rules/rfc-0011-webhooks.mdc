@@ -33,8 +33,7 @@ deliveries are signed with HMAC-SHA256 and retried in the background.
 
 - `WebhookPublishBehavior` runs after the handler and publishes only when the
   response reports success. A failed command MUST NOT emit an event.
-- Publishing is gated by the `webhooks` feature flag (RFC-0009). Disabled means
-  skipped, not failed.
+- `WebhookPublishBehavior` always publishes after a successful annotated command.
 - A publish failure is logged and swallowed — it MUST NOT fail the command that
   triggered it. Do not "fix" that by rethrowing.
 - The payload is `{ result, request, requestType }`, with the request serialized

@@ -15,9 +15,11 @@ using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
+using Mediator;
 using Raytha.Application;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Utils;
+using Raytha.Application.Themes.Commands;
 using Raytha.Infrastructure.Health;
 using Raytha.Infrastructure.Persistence;
 using Raytha.Web.AdminSpa;
@@ -263,6 +265,12 @@ public class Startup
             )
             {
                 scope.ServiceProvider.GetRequiredService<RaythaDbContext>().Database.Migrate();
+                scope
+                    .ServiceProvider.GetRequiredService<ISender>()
+                    .Send(new EnsureDefaultThemeContent.Command())
+                    .AsTask()
+                    .GetAwaiter()
+                    .GetResult();
             }
         }
     }

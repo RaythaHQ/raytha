@@ -32,6 +32,7 @@ export { CommandPalette, type CommandItem } from "./command";
 export { Toaster, toast } from "./toast";
 export { Sheet, SheetHeader, SheetTitle, SheetContent, SheetFooter, type SheetProps } from "./sheet";
 export { ConfirmDialog } from "./confirm-dialog";
+export { RowActions, type RowAction } from "./row-actions";
 export { Breadcrumb, BreadcrumbItem, BreadcrumbSeparator } from "./breadcrumb";
 export { Separator } from "./separator";
 export { ScrollArea } from "./scroll-area";

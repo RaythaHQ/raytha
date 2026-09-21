@@ -1,5 +1,5 @@
 import { adminApi, formatError } from "@raytha/api";
-import type { SaveSitePageWidgetsInput, SitePageWidgetDefinition } from "@raytha/api";
+import type { SaveSitePageWidgetsInput } from "@raytha/api";
 import {
   Badge,
   Button,
@@ -7,11 +7,6 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
   FormField,
   Input,
   PageHeader,
@@ -20,18 +15,20 @@ import {
 } from "@raytha/ui";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useParams } from "@tanstack/react-router";
-import { useState } from "react";
+import { GridStack, type GridStackNode } from "gridstack";
+import { useEffect, useRef, useState } from "react";
+import { ListBackLink } from "../../components/list-back-link";
 import { useDocumentTitle } from "../../lib/document-title";
+import { listHref } from "../../lib/list-query";
 import {
-  newWidget,
   parseSitePage,
   settingsJson,
   widgetSummary,
   type SitePageSection,
   type SitePageWidget,
-  type WidgetSettings,
 } from "./models";
-import { WidgetSettingsForm } from "./widget-form";
+
+import "gridstack/dist/gridstack.min.css";
 
 export function SitePageLayoutPage() {
   const params = useParams({ strict: false });
@@ -53,22 +50,15 @@ export function SitePageLayoutPage() {
 function SitePageLayout({ id }: { id: string }) {
   const queryClient = useQueryClient();
   const [draft, setDraft] = useState<SitePageSection[] | null>(null);
-  const [selectedKey, setSelectedKey] = useState<string | null>(null);
   const [addSectionName, setAddSectionName] = useState("");
-  const [addToSection, setAddToSection] = useState<string | null>(null);
 
   const pageQuery = useQuery({
     queryKey: ["site-pages", id],
     queryFn: () => adminApi.sitePages.get(id),
   });
-  const definitionsQuery = useQuery({
-    queryKey: ["site-pages", "widget-definitions"],
-    queryFn: () => adminApi.sitePages.widgetDefinitions(),
-  });
 
   const page = pageQuery.data ? parseSitePage(pageQuery.data) : null;
   const sections = draft ?? page?.widgets ?? [];
-  const definitions = definitionsQuery.data ?? [];
 
   const save = useMutation({
     mutationFn: async () => {
@@ -133,6 +123,7 @@ function SitePageLayout({ id }: { id: string }) {
           </>
         }
       />
+      <ListBackLink to="/site-pages" listKey="site-pages" label="site pages" />
       <QueryGate query={pageQuery}>
         {() => (
           <div className="space-y-4">
@@ -145,12 +136,9 @@ function SitePageLayout({ id }: { id: string }) {
             {sections.map((section) => (
               <SectionEditor
                 key={section.name}
+                pageId={id}
                 section={section}
-                definitions={definitions}
-                selectedKey={selectedKey}
-                onSelect={setSelectedKey}
                 onChange={(widgets) => updateSection(section.name, widgets)}
-                onAddWidget={() => setAddToSection(section.name)}
                 onRemoveSection={() => updateSections(sections.filter((item) => item.name !== section.name))}
               />
             ))}
@@ -193,47 +181,19 @@ function SitePageLayout({ id }: { id: string }) {
           </div>
         )}
       </QueryGate>
-
-      <AddWidgetDialog
-        open={addToSection !== null}
-        definitions={definitions}
-        onOpenChange={(open) => {
-          if (!open) {
-            setAddToSection(null);
-          }
-        }}
-        onPick={(widgetType) => {
-          const sectionName = addToSection;
-          if (!sectionName) {
-            return;
-          }
-          const section = sections.find((item) => item.name === sectionName);
-          const maxRow = section?.widgets.reduce((max, widget) => Math.max(max, widget.row), -1) ?? -1;
-          const widget = newWidget(widgetType, maxRow + 1);
-          updateSection(sectionName, [...(section?.widgets ?? []), widget]);
-          setSelectedKey(widget.clientKey);
-          setAddToSection(null);
-        }}
-      />
     </div>
   );
 }
 
 function SectionEditor({
+  pageId,
   section,
-  definitions,
-  selectedKey,
-  onSelect,
   onChange,
-  onAddWidget,
   onRemoveSection,
 }: {
+  pageId: string;
   section: SitePageSection;
-  definitions: SitePageWidgetDefinition[];
-  selectedKey: string | null;
-  onSelect: (key: string | null) => void;
   onChange: (widgets: SitePageWidget[]) => void;
-  onAddWidget: () => void;
   onRemoveSection: () => void;
 }) {
   return (
@@ -246,9 +206,12 @@ function SectionEditor({
           </p>
         </div>
         <div className="flex gap-2">
-          <Button type="button" variant="outline" size="sm" onClick={onAddWidget}>
+          <a
+            href={listHref("/site-pages/$id/layout/widgets/new", { id: pageId }, { section: section.name })}
+            className="inline-flex h-8 items-center rounded-lg border border-input bg-card px-3 text-sm font-medium shadow-card hover:bg-brand-50"
+          >
             Add widget
-          </Button>
+          </a>
           {section.widgets.length === 0 ? (
             <Button type="button" variant="ghost" size="sm" onClick={onRemoveSection}>
               Remove section
@@ -256,213 +219,115 @@ function SectionEditor({
           ) : null}
         </div>
       </CardHeader>
-      <CardContent className="space-y-3">
+      <CardContent>
         {section.widgets.length === 0 ? (
           <p className="text-sm text-muted-foreground">No widgets in this section.</p>
         ) : (
-          section.widgets.map((widget, index) => (
-            <WidgetCard
-              key={widget.clientKey}
-              widget={widget}
-              definition={definitions.find((item) => item.developerName === widget.widgetType)}
-              expanded={selectedKey === widget.clientKey}
-              canMoveUp={index > 0}
-              canMoveDown={index < section.widgets.length - 1}
-              onToggle={() => onSelect(selectedKey === widget.clientKey ? null : widget.clientKey)}
-              onMove={(direction) => onChange(moveWidget(section.widgets, index, direction))}
-              onRemove={() => onChange(section.widgets.filter((item) => item.clientKey !== widget.clientKey))}
-              onChange={(next) =>
-                onChange(section.widgets.map((item) => (item.clientKey === widget.clientKey ? next : item)))
-              }
-            />
-          ))
+          <SectionGrid pageId={pageId} widgets={section.widgets} onChange={onChange} />
         )}
       </CardContent>
     </Card>
   );
 }
 
-function WidgetCard({
-  widget,
-  definition,
-  expanded,
-  canMoveUp,
-  canMoveDown,
-  onToggle,
-  onMove,
-  onRemove,
+function SectionGrid({
+  pageId,
+  widgets,
   onChange,
 }: {
-  widget: SitePageWidget;
-  definition: SitePageWidgetDefinition | undefined;
-  expanded: boolean;
-  canMoveUp: boolean;
-  canMoveDown: boolean;
-  onToggle: () => void;
-  onMove: (direction: -1 | 1) => void;
-  onRemove: () => void;
-  onChange: (widget: SitePageWidget) => void;
+  pageId: string;
+  widgets: SitePageWidget[];
+  onChange: (widgets: SitePageWidget[]) => void;
 }) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const widgetsRef = useRef(widgets);
+  widgetsRef.current = widgets;
+  const ids = widgets.map((widget) => widget.clientKey).join(",");
+
+  useEffect(() => {
+    const element = containerRef.current;
+    if (!element) {
+      return;
+    }
+    const grid = GridStack.init(
+      {
+        column: 12,
+        cellHeight: 100,
+        margin: 10,
+        float: false,
+        columnOpts: { columnMax: 12 },
+        resizable: { handles: "e,w" },
+      },
+      element,
+    );
+    if (!grid) {
+      return;
+    }
+    const handleChange = (_event: Event, items?: GridStackNode[]) => {
+      if (!items || items.length === 0) {
+        return;
+      }
+      const next = widgetsRef.current.map((widget) => {
+        const item = items.find((node) => node.id === widget.clientKey);
+        if (!item) {
+          return widget;
+        }
+        return {
+          ...widget,
+          column: item.x ?? widget.column,
+          row: item.y ?? widget.row,
+          columnSpan: item.w ?? widget.columnSpan,
+        };
+      });
+      onChange(next);
+    };
+    grid.on("change", handleChange);
+    return () => {
+      grid.off("change");
+      grid.destroy(false);
+    };
+  }, [ids, onChange]);
+
   return (
-    <div className="rounded-lg border border-border">
-      <div className="flex flex-wrap items-center justify-between gap-2 px-3 py-2">
-        <button type="button" className="min-w-0 text-left" onClick={onToggle}>
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="font-medium">{definition?.displayName ?? widget.widgetType}</span>
-            <Badge variant="secondary">{widget.widgetType}</Badge>
-          </div>
-          <p className="truncate text-sm text-muted-foreground">{widgetSummary(widget)}</p>
-        </button>
-        <div className="flex flex-wrap gap-1">
-          <Button type="button" variant="ghost" size="sm" disabled={!canMoveUp} onClick={() => onMove(-1)}>
-            Up
-          </Button>
-          <Button type="button" variant="ghost" size="sm" disabled={!canMoveDown} onClick={() => onMove(1)}>
-            Down
-          </Button>
-          <Button type="button" variant="ghost" size="sm" onClick={onToggle}>
-            {expanded ? "Close" : "Edit"}
-          </Button>
-          <Button type="button" variant="ghost" size="sm" onClick={onRemove}>
-            Remove
-          </Button>
-        </div>
-      </div>
-      {expanded ? (
-        <div className="space-y-4 border-t border-border p-3">
-          <WidgetSettingsForm
-            key={widget.clientKey}
-            settings={widget.settings}
-            onChange={(settings: WidgetSettings) => onChange({ ...widget, settings })}
-          />
-          <div className="grid gap-3 md:grid-cols-2">
-            <FormField label="Column span" htmlFor={`${widget.clientKey}-span`}>
-              {(control) => (
-                <Input
-                  {...control}
-                  type="number"
-                  min={1}
-                  max={12}
-                  value={String(widget.columnSpan)}
-                  onChange={(event) => {
-                    const parsed = Number(event.target.value);
-                    onChange({
-                      ...widget,
-                      columnSpan: Number.isFinite(parsed) ? Math.min(12, Math.max(1, parsed)) : 12,
-                    });
-                  }}
-                />
-              )}
-            </FormField>
-            <FormField label="Column" htmlFor={`${widget.clientKey}-col`}>
-              {(control) => (
-                <Input
-                  {...control}
-                  type="number"
-                  min={0}
-                  max={11}
-                  value={String(widget.column)}
-                  onChange={(event) => {
-                    const parsed = Number(event.target.value);
-                    onChange({
-                      ...widget,
-                      column: Number.isFinite(parsed) ? Math.min(11, Math.max(0, parsed)) : 0,
-                    });
-                  }}
-                />
-              )}
-            </FormField>
-            <FormField label="CSS class" htmlFor={`${widget.clientKey}-css`}>
-              {(control) => (
-                <Input
-                  {...control}
-                  value={widget.cssClass}
-                  onChange={(event) => onChange({ ...widget, cssClass: event.target.value })}
-                />
-              )}
-            </FormField>
-            <FormField label="HTML id" htmlFor={`${widget.clientKey}-html-id`}>
-              {(control) => (
-                <Input
-                  {...control}
-                  value={widget.htmlId}
-                  onChange={(event) => onChange({ ...widget, htmlId: event.target.value })}
-                />
-              )}
-            </FormField>
-            <FormField label="Custom attributes" htmlFor={`${widget.clientKey}-attrs`}>
-              {(control) => (
-                <Input
-                  {...control}
-                  value={widget.customAttributes}
-                  onChange={(event) => onChange({ ...widget, customAttributes: event.target.value })}
-                />
-              )}
-            </FormField>
+    <div ref={containerRef} className="grid-stack">
+      {widgets.map((widget) => (
+        <div
+          key={widget.clientKey}
+          className="grid-stack-item"
+          gs-id={widget.clientKey}
+          gs-x={widget.column}
+          gs-y={widget.row}
+          gs-w={widget.columnSpan}
+          gs-h={1}
+        >
+          <div className="grid-stack-item-content flex flex-col justify-between rounded-lg border border-border bg-card p-3">
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="font-medium">{widget.widgetType}</span>
+                <Badge variant="secondary">{widget.columnSpan} cols</Badge>
+              </div>
+              <p className="truncate text-sm text-muted-foreground">{widgetSummary(widget)}</p>
+            </div>
+            <div className="mt-2 flex flex-wrap gap-1">
+              <Link
+                to="/site-pages/$id/layout/widgets/$widgetId"
+                params={{ id: pageId, widgetId: widget.id || widget.clientKey }}
+                className="inline-flex h-8 items-center rounded-lg px-3 text-sm hover:bg-accent"
+              >
+                Edit
+              </Link>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => onChange(widgets.filter((item) => item.clientKey !== widget.clientKey))}
+              >
+                Remove
+              </Button>
+            </div>
           </div>
         </div>
-      ) : null}
+      ))}
     </div>
   );
-}
-
-function AddWidgetDialog({
-  open,
-  definitions,
-  onOpenChange,
-  onPick,
-}: {
-  open: boolean;
-  definitions: SitePageWidgetDefinition[];
-  onOpenChange: (open: boolean) => void;
-  onPick: (widgetType: string) => void;
-}) {
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogHeader>
-        <DialogTitle>Add widget</DialogTitle>
-      </DialogHeader>
-      <DialogContent className="space-y-2">
-        {definitions.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No widget types are available.</p>
-        ) : (
-          definitions.map((definition) => (
-            <button
-              key={definition.developerName}
-              type="button"
-              className="flex w-full flex-col rounded-lg border border-border px-3 py-2 text-left hover:bg-accent"
-              onClick={() => onPick(definition.developerName)}
-            >
-              <span className="font-medium">{definition.displayName}</span>
-              <span className="text-sm text-muted-foreground">{definition.description}</span>
-            </button>
-          ))
-        )}
-      </DialogContent>
-      <DialogFooter>
-        <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-          Cancel
-        </Button>
-      </DialogFooter>
-    </Dialog>
-  );
-}
-
-function moveWidget(widgets: SitePageWidget[], index: number, direction: -1 | 1): SitePageWidget[] {
-  const nextIndex = index + direction;
-  const current = widgets[index];
-  const neighbor = widgets[nextIndex];
-  if (!current || !neighbor) {
-    return widgets;
-  }
-  const swapped = widgets.map((widget, widgetIndex) => {
-    if (widgetIndex === index) {
-      return { ...current, row: neighbor.row, column: neighbor.column };
-    }
-    if (widgetIndex === nextIndex) {
-      return { ...neighbor, row: current.row, column: current.column };
-    }
-    return widget;
-  });
-  return swapped.sort((left, right) => left.row - right.row || left.column - right.column);
 }

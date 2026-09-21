@@ -2,9 +2,10 @@ import { adminApi, formatError } from "@raytha/api";
 import type { EmailTemplateDetail, TemplateRevision } from "@raytha/api";
 import { Button, Card, CardContent, FormField, Input, PageHeader, QueryGate, toast } from "@raytha/ui";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Link, useParams } from "@tanstack/react-router";
+import { useParams } from "@tanstack/react-router";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import type { ReactCodeMirrorRef } from "@uiw/react-codemirror";
+import { ListBackLink } from "../../components/list-back-link";
 import { useDocumentTitle } from "../../lib/document-title";
 import { CodeEditor, insertAtCursor } from "./code-editor";
 import { RevisionsPanel } from "./revisions-panel";
@@ -105,11 +106,7 @@ function EmailTemplateEditor({
           </Button>
         }
       />
-      <p className="text-sm">
-        <Link to="/email-templates" className="text-primary hover:underline">
-          Back to email templates
-        </Link>
-      </p>
+      <ListBackLink to="/email-templates" listKey="email-templates" label="email templates" />
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_18rem]">
         <Card>
           <CardContent className="space-y-4 pt-6">

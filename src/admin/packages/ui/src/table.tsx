@@ -1,4 +1,4 @@
-import type { HTMLAttributes, TdHTMLAttributes, ThHTMLAttributes } from "react";
+import type { ComponentProps, HTMLAttributes, TdHTMLAttributes, ThHTMLAttributes } from "react";
 import { cn } from "./cn";
 
 export function Table({
@@ -35,7 +35,7 @@ export function TableBody({ className, ...props }: HTMLAttributes<HTMLTableSecti
   return <tbody className={cn("[&_tr:last-child]:border-0", className)} {...props} />;
 }
 
-export function TableRow({ className, ...props }: HTMLAttributes<HTMLTableRowElement>) {
+export function TableRow({ className, ...props }: ComponentProps<"tr">) {
   return <tr className={cn("border-b border-border transition-colors hover:bg-brand-50/50", className)} {...props} />;
 }
 

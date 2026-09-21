@@ -19,7 +19,7 @@ Postgres is the only supported database.
 |---|---|---|
 | `src/Raytha.Domain` | Entities, value objects, domain events, domain exceptions | Any other layer; EF Core, Npgsql, ASP.NET Core |
 | `src/Raytha.Application` | Commands, queries, handlers, validators, DTOs, interfaces, pipeline behaviors | Infrastructure, Web, Npgsql, Dapper, ASP.NET Core |
-| `src/Raytha.Infrastructure` | EF Core `RaythaDbContext`, migrations, file storage, background tasks, feature-flag store, health checks, Raytha Functions runtime | Web |
+| `src/Raytha.Infrastructure` | EF Core `RaythaDbContext`, migrations, file storage, background tasks, health checks, Raytha Functions runtime | Web |
 | `src/Raytha.Web` | Public controllers and views, admin API, admin SPA hosting, REST API v1, middleware, observability | — |
 
 - `Raytha.Application` MAY reference EF Core abstractions, because

@@ -923,16 +923,6 @@ CREATE TABLE "EmailLogs" (
     CONSTRAINT "PK_EmailLogs" PRIMARY KEY ("Id")
 );
 
-CREATE TABLE "FeatureFlags" (
-    "Id" uuid NOT NULL,
-    "Key" text NOT NULL,
-    "IsEnabled" boolean NOT NULL,
-    "Scope" text NOT NULL,
-    "CreationTime" timestamp with time zone NOT NULL,
-    "LastModificationTime" timestamp with time zone,
-    CONSTRAINT "PK_FeatureFlags" PRIMARY KEY ("Id")
-);
-
 CREATE TABLE "Webhooks" (
     "Id" uuid NOT NULL,
     "Name" text NOT NULL,
@@ -976,8 +966,6 @@ CREATE INDEX "IX_EmailLogs_CreationTime" ON "EmailLogs" ("CreationTime");
 CREATE INDEX "IX_EmailLogs_IsSuccess" ON "EmailLogs" ("IsSuccess");
 
 CREATE INDEX "IX_EmailLogs_ToAddress" ON "EmailLogs" ("ToAddress");
-
-CREATE UNIQUE INDEX "IX_FeatureFlags_Scope_Key" ON "FeatureFlags" ("Scope", "Key");
 
 CREATE INDEX "IX_WebhookDeliveries_CreationTime" ON "WebhookDeliveries" ("CreationTime");
 

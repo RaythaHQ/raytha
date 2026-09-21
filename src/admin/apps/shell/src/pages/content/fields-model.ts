@@ -259,25 +259,33 @@ export function emptyFieldValue(field: ContentField): ContentFieldValue {
   }
 }
 
+function unwrapStoredField(raw: unknown): unknown {
+  if (isRecord(raw) && "value" in raw) {
+    return raw.value;
+  }
+  return raw;
+}
+
 export function parseFieldValue(field: ContentField, raw: unknown): ContentFieldValue {
+  const stored = unwrapStoredField(raw);
   switch (field.fieldType) {
     case "checkbox":
-      return { fieldType: "checkbox", value: raw === true || raw === "true" || raw === "True" };
+      return { fieldType: "checkbox", value: stored === true || stored === "true" || stored === "True" };
     case "multiple_select":
-      return { fieldType: "multiple_select", value: readStringArray(raw) };
+      return { fieldType: "multiple_select", value: readStringArray(stored) };
     case "dropdown":
     case "radio":
-      return { fieldType: field.fieldType, value: scalarString(raw) };
+      return { fieldType: field.fieldType, value: scalarString(stored) };
     case "date":
-      return { fieldType: "date", value: toDateInput(scalarString(raw)) };
+      return { fieldType: "date", value: toDateInput(scalarString(stored)) };
     case "number":
-      return { fieldType: "number", value: scalarString(raw) };
+      return { fieldType: "number", value: scalarString(stored) };
     case "single_line_text":
     case "long_text":
     case "wysiwyg":
     case "attachment":
     case "one_to_one_relationship":
-      return { fieldType: field.fieldType, value: scalarString(raw) };
+      return { fieldType: field.fieldType, value: scalarString(stored) };
     default: {
       const _exhaustive: never = field;
       return _exhaustive;

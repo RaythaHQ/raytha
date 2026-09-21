@@ -29,10 +29,10 @@ from a SHOULD requires a stated reason in the PR.
 - RFC-0006 Admin SPA — React at `/raytha`, admin API, cookie auth
 - RFC-0007 Testing — NUnit projects and architecture tests
 - RFC-0008 Security — authorization policies, rate limits, ProblemDetails, headers
-- RFC-0009 Feature Flags — code-defined catalog, fail-closed evaluation
 - RFC-0010 Admin List Query — list state lives in the URL
 - RFC-0011 Webhooks — `[WebhookEvent]` commands and HMAC signing
 - RFC-0012 Versioning and Migrations — `VERSION`, bump/check scripts, `v2_0_0`
+- RFC-0013 Admin Editors — create is `/new`, edit is `/$id`, no editor dialogs
 
 `pre-push-ci.mdc` is not an RFC; it points at the pre-push CI skill.
 

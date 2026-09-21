@@ -13,8 +13,9 @@ import {
   toast,
 } from "@raytha/ui";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Link, useParams } from "@tanstack/react-router";
+import { useParams } from "@tanstack/react-router";
 import { useEffect, useState, type FormEvent } from "react";
+import { ListBackLink } from "../../components/list-back-link";
 import { useDocumentTitle } from "../../lib/document-title";
 import { CodeEditor } from "./code-editor";
 import { RevisionsPanel } from "./revisions-panel";
@@ -110,11 +111,7 @@ function FunctionEditor({ fn, revisions }: { fn: FunctionDetail; revisions: Temp
           </Button>
         }
       />
-      <p className="text-sm">
-        <Link to="/functions" className="text-primary hover:underline">
-          Back to functions
-        </Link>
-      </p>
+      <ListBackLink to="/functions" listKey="functions" label="functions" />
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_18rem]">
         <Card>
           <CardContent className="space-y-4 pt-6">

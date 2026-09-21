@@ -3,6 +3,9 @@ import type { EntityRef } from "@raytha/api";
 import {
   Badge,
   Button,
+  Card,
+  CardContent,
+  Checkbox,
   Dialog,
   DialogContent,
   DialogFooter,
@@ -10,15 +13,18 @@ import {
   DialogTitle,
   FormField,
   Input,
+  PageHeader,
   Textarea,
   toast,
 } from "@raytha/ui";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState, type FormEvent } from "react";
 import { BackgroundTaskStatus } from "../components/background-task-status";
+import { ListBackLink } from "../components/list-back-link";
+import { useDocumentTitle } from "../lib/document-title";
 import { CrudListPage } from "./crud-list";
 import { entityFields, readBoolean, readString, toDeveloperName } from "./entity";
-import { Link } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 
 export function ThemesPage() {
   const queryClient = useQueryClient();
@@ -62,20 +68,22 @@ export function ThemesPage() {
       <CrudListPage
         title="Themes"
         queryKey={["themes"]}
+        listKey="themes"
         noun="theme"
         list={adminApi.themes.list}
-        create={adminApi.themes.create}
         remove={adminApi.themes.remove}
         createPermission={platformPermissions.templates}
         createLabel="New theme"
-        createFields={[
-          { key: "title", label: "Title", required: true, autoDeveloperNameFrom: "developerName" },
-          { key: "developerName", label: "Developer name", required: true },
-          { key: "description", label: "Description", type: "textarea", required: true },
-          { key: "insertDefaultThemeMediaItems", label: "Include default media", type: "checkbox" },
-        ]}
+        createTo="/themes/new"
         columns={[
-          { header: "Title", cell: (entity) => readString(entityFields(entity), "title") || entity.id },
+          {
+            header: "Title",
+            cell: (entity) => (
+              <Link to="/themes/$themeId/web-templates" params={{ themeId: entity.id }} className="text-primary hover:underline">
+                {readString(entityFields(entity), "title") || entity.id}
+              </Link>
+            ),
+          },
           { header: "Developer name", cell: (entity) => readString(entityFields(entity), "developerName") },
           { header: "Description", cell: (entity) => readString(entityFields(entity), "description") || "—" },
           {
@@ -102,45 +110,41 @@ export function ThemesPage() {
           const fields = entityFields(entity);
           const isActive = entity.id === activeThemeId || readBoolean(fields, "isActive");
           const isExportable = readBoolean(fields, "isExportable");
-          return (
-            <>
-              <Link
-                to="/themes/$themeId/web-templates"
-                params={{ themeId: entity.id }}
-                className="text-sm text-primary hover:underline"
-              >
-                Web templates
-              </Link>
-              <Link
-                to="/themes/$themeId/widget-templates"
-                params={{ themeId: entity.id }}
-                className="text-sm text-primary hover:underline"
-              >
-                Widgets
-              </Link>
-              <Button
-                type="button"
-                size="sm"
-                variant="ghost"
-                disabled={isActive || setActive.isPending}
-                onClick={() => setActive.mutate(entity.id)}
-              >
-                Set active
-              </Button>
-              <Button type="button" size="sm" variant="ghost" onClick={() => setDuplicate(entity)}>
-                Duplicate
-              </Button>
-              <Button
-                type="button"
-                size="sm"
-                variant="ghost"
-                disabled={setExportability.isPending}
-                onClick={() => setExportability.mutate({ id: entity.id, isExportable: !isExportable })}
-              >
-                {isExportable ? "Make private" : "Make exportable"}
-              </Button>
-            </>
-          );
+          return [
+            {
+              id: "web-templates",
+              label: "Web templates",
+              to: "/themes/$themeId/web-templates",
+              params: { themeId: entity.id },
+            },
+            {
+              id: "widgets",
+              label: "Widgets",
+              to: "/themes/$themeId/widget-templates",
+              params: { themeId: entity.id },
+            },
+            ...(isActive
+              ? []
+              : [
+                  {
+                    id: "set-active",
+                    label: "Set active",
+                    disabled: setActive.isPending,
+                    onSelect: () => setActive.mutate(entity.id),
+                  },
+                ]),
+            {
+              id: "duplicate",
+              label: "Duplicate",
+              onSelect: () => setDuplicate(entity),
+            },
+            {
+              id: "exportability",
+              label: isExportable ? "Make private" : "Make exportable",
+              disabled: setExportability.isPending,
+              onSelect: () => setExportability.mutate({ id: entity.id, isExportable: !isExportable }),
+            },
+          ];
         }}
       />
       {taskId ? <BackgroundTaskStatus taskId={taskId} /> : null}
@@ -378,5 +382,89 @@ function DuplicateThemeDialog({
         </DialogFooter>
       </form>
     </Dialog>
+  );
+}
+
+export function NewThemePage() {
+  useDocumentTitle(["New theme"]);
+  const navigate = useNavigate();
+  const [title, setTitle] = useState("");
+  const [developerName, setDeveloperName] = useState("");
+  const [developerTouched, setDeveloperTouched] = useState(false);
+  const [description, setDescription] = useState("");
+  const [insertDefaultThemeMediaItems, setInsertDefaultThemeMediaItems] = useState(false);
+
+  const mutation = useMutation({
+    mutationFn: () =>
+      adminApi.themes.create({ title, developerName, description, insertDefaultThemeMediaItems }),
+    onSuccess: () => {
+      toast.success("Theme created");
+      void navigate({ to: "/themes" });
+    },
+    onError: (error) => toast.error(formatError(error)),
+  });
+
+  return (
+    <div className="space-y-6">
+      <PageHeader title="New theme" />
+      <ListBackLink to="/themes" listKey="themes" label="themes" />
+      <Card>
+        <CardContent className="pt-6">
+          <form
+            className="space-y-4"
+            onSubmit={(event: FormEvent) => {
+              event.preventDefault();
+              mutation.mutate();
+            }}
+          >
+            <FormField label="Title" required htmlFor="theme-title">
+              {(control) => (
+                <Input
+                  {...control}
+                  value={title}
+                  onChange={(event) => {
+                    const next = event.target.value;
+                    setTitle(next);
+                    if (!developerTouched) {
+                      setDeveloperName(toDeveloperName(next));
+                    }
+                  }}
+                />
+              )}
+            </FormField>
+            <FormField label="Developer name" required htmlFor="theme-developer">
+              {(control) => (
+                <Input
+                  {...control}
+                  value={developerName}
+                  onChange={(event) => {
+                    setDeveloperTouched(true);
+                    setDeveloperName(event.target.value);
+                  }}
+                />
+              )}
+            </FormField>
+            <FormField label="Description" required htmlFor="theme-description">
+              {(control) => (
+                <Textarea {...control} value={description} onChange={(event) => setDescription(event.target.value)} />
+              )}
+            </FormField>
+            <div className="flex items-center gap-2">
+              <Checkbox
+                id="theme-default-media"
+                checked={insertDefaultThemeMediaItems}
+                onCheckedChange={setInsertDefaultThemeMediaItems}
+              />
+              <label htmlFor="theme-default-media" className="text-sm">
+                Include default media
+              </label>
+            </div>
+            <Button type="submit" loading={mutation.isPending}>
+              Create
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
+    </div>
   );
 }

@@ -1,18 +1,15 @@
 import { adminApi, formatError } from "@raytha/api";
-import type { JsonObject } from "@raytha/api";
 import {
   Button,
+  Card,
+  CardContent,
   ConfirmDialog,
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
   EmptyState,
   FormField,
   Input,
   PageHeader,
   QueryGate,
+  RowActions,
   Table,
   TableBody,
   TableCell,
@@ -23,9 +20,11 @@ import {
   toast,
 } from "@raytha/ui";
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Link, useParams } from "@tanstack/react-router";
+import { Link, useNavigate, useParams } from "@tanstack/react-router";
 import { Inbox, Star } from "lucide-react";
-import { useMemo, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { ListBackLink } from "../../components/list-back-link";
+import { rememberListQuery } from "../../lib/list-query";
 import { useDocumentTitle } from "../../lib/document-title";
 import { entityFields, readString, toDeveloperName } from "../entity";
 import { parseContentTypeSummary } from "./fields-model";
@@ -36,12 +35,7 @@ export function ContentViewsPage() {
   const developerName = typeof params.developerName === "string" ? params.developerName : "";
   useDocumentTitle(["Views", developerName]);
   const queryClient = useQueryClient();
-  const [createOpen, setCreateOpen] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
-  const [label, setLabel] = useState("");
-  const [viewDeveloperName, setViewDeveloperName] = useState("");
-  const [developerTouched, setDeveloperTouched] = useState(false);
-  const [description, setDescription] = useState("");
 
   const views = adminApi.views(developerName);
 
@@ -62,6 +56,10 @@ export function ContentViewsPage() {
     enabled: developerName.length > 0,
   });
 
+  useEffect(() => {
+    rememberListQuery(`content-views:${developerName}`, {});
+  }, [developerName]);
+
   const contentType = parseContentTypeSummary(typeQuery.data);
   const favoriteIds = useMemo(() => {
     const ids = new Set<string>();
@@ -75,20 +73,6 @@ export function ContentViewsPage() {
     void queryClient.invalidateQueries({ queryKey: ["content-views", developerName] });
     void queryClient.invalidateQueries({ queryKey: ["content-view-favorites", developerName] });
   };
-
-  const createMutation = useMutation({
-    mutationFn: (input: JsonObject) => views.create(input),
-    onSuccess: () => {
-      toast.success("View created");
-      setCreateOpen(false);
-      setLabel("");
-      setViewDeveloperName("");
-      setDescription("");
-      setDeveloperTouched(false);
-      invalidate();
-    },
-    onError: (error) => toast.error(formatError(error)),
-  });
 
   const deleteMutation = useMutation({
     mutationFn: (id: string) => views.remove(id),
@@ -107,15 +91,6 @@ export function ContentViewsPage() {
     onError: (error) => toast.error(formatError(error)),
   });
 
-  const handleCreate = (event: FormEvent) => {
-    event.preventDefault();
-    createMutation.mutate({
-      label,
-      developerName: viewDeveloperName || toDeveloperName(label),
-      description,
-    });
-  };
-
   if (!developerName) {
     return (
       <div className="space-y-6">
@@ -131,9 +106,13 @@ export function ContentViewsPage() {
         title={`${contentType?.labelPlural || developerName} views`}
         description="Saved lists with columns, sort, and filters."
         actions={
-          <Button type="button" onClick={() => setCreateOpen(true)}>
+          <Link
+            to="/content/$developerName/views/new"
+            params={{ developerName }}
+            className="inline-flex h-10 items-center rounded-lg bg-primary px-4 text-sm font-medium text-primary-foreground shadow-card hover:bg-brand-600"
+          >
             New view
-          </Button>
+          </Link>
         }
       />
       <ContentTypeNav developerName={developerName} />
@@ -170,7 +149,7 @@ export function ContentViewsPage() {
                       <TableCell className="font-mono text-xs">{readString(fields, "developerName")}</TableCell>
                       <TableCell>{readString(fields, "routePath") || "—"}</TableCell>
                       <TableCell>
-                        <div className="flex flex-wrap gap-2">
+                        <div className="flex items-center gap-1">
                           <Button
                             type="button"
                             size="sm"
@@ -180,9 +159,16 @@ export function ContentViewsPage() {
                           >
                             <Star className={isFavorite ? "fill-current" : ""} />
                           </Button>
-                          <Button type="button" size="sm" variant="ghost" onClick={() => setDeleteId(view.id)}>
-                            Delete
-                          </Button>
+                          <RowActions
+                            actions={[
+                              {
+                                id: "delete",
+                                label: "Delete",
+                                destructive: true,
+                                onSelect: () => setDeleteId(view.id),
+                              },
+                            ]}
+                          />
                         </div>
                       </TableCell>
                     </TableRow>
@@ -194,23 +180,74 @@ export function ContentViewsPage() {
         }
       </QueryGate>
 
-      <Dialog
-        open={createOpen}
+      <ConfirmDialog
+        open={deleteId !== null}
         onOpenChange={(open) => {
-          setCreateOpen(open);
           if (!open) {
-            setLabel("");
-            setViewDeveloperName("");
-            setDescription("");
-            setDeveloperTouched(false);
+            setDeleteId(null);
           }
         }}
-      >
-        <form onSubmit={handleCreate}>
-          <DialogHeader>
-            <DialogTitle>New view</DialogTitle>
-          </DialogHeader>
-          <DialogContent className="space-y-4">
+        title="Delete view?"
+        body="This cannot be undone."
+        onConfirm={() => {
+          if (deleteId) {
+            deleteMutation.mutate(deleteId);
+          }
+        }}
+        pending={deleteMutation.isPending}
+      />
+    </div>
+  );
+}
+
+export function NewContentViewPage() {
+  const params = useParams({ strict: false });
+  const developerName = typeof params.developerName === "string" ? params.developerName : "";
+  useDocumentTitle(["New view", developerName]);
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const [label, setLabel] = useState("");
+  const [viewDeveloperName, setViewDeveloperName] = useState("");
+  const [developerTouched, setDeveloperTouched] = useState(false);
+  const [description, setDescription] = useState("");
+
+  const mutation = useMutation({
+    mutationFn: () =>
+      adminApi.views(developerName).create({
+        label,
+        developerName: viewDeveloperName || toDeveloperName(label),
+        description,
+      }),
+    onSuccess: (created) => {
+      toast.success("View created");
+      void queryClient.invalidateQueries({ queryKey: ["content-views", developerName] });
+      void navigate({
+        to: "/content/$developerName/views/$viewId",
+        params: { developerName, viewId: created.id },
+      });
+    },
+    onError: (error) => toast.error(formatError(error)),
+  });
+
+  return (
+    <div className="space-y-6">
+      <PageHeader title="New view" />
+      <ListBackLink
+        to="/content/$developerName/views"
+        params={{ developerName }}
+        listKey={`content-views:${developerName}`}
+        label="views"
+      />
+      <ContentTypeNav developerName={developerName} />
+      <Card>
+        <CardContent className="pt-6">
+          <form
+            className="space-y-4"
+            onSubmit={(event: FormEvent) => {
+              event.preventDefault();
+              mutation.mutate();
+            }}
+          >
             <FormField label="Label" required htmlFor="view-label">
               {(control) => (
                 <Input
@@ -240,41 +277,15 @@ export function ContentViewsPage() {
             </FormField>
             <FormField label="Description" htmlFor="view-description">
               {(control) => (
-                <Textarea
-                  {...control}
-                  value={description}
-                  onChange={(event) => setDescription(event.target.value)}
-                />
+                <Textarea {...control} value={description} onChange={(event) => setDescription(event.target.value)} />
               )}
             </FormField>
-          </DialogContent>
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => setCreateOpen(false)}>
-              Cancel
-            </Button>
-            <Button type="submit" loading={createMutation.isPending}>
+            <Button type="submit" loading={mutation.isPending}>
               Create
             </Button>
-          </DialogFooter>
-        </form>
-      </Dialog>
-
-      <ConfirmDialog
-        open={deleteId !== null}
-        onOpenChange={(open) => {
-          if (!open) {
-            setDeleteId(null);
-          }
-        }}
-        title="Delete view?"
-        body="This cannot be undone."
-        onConfirm={() => {
-          if (deleteId) {
-            deleteMutation.mutate(deleteId);
-          }
-        }}
-        pending={deleteMutation.isPending}
-      />
+          </form>
+        </CardContent>
+      </Card>
     </div>
   );
 }

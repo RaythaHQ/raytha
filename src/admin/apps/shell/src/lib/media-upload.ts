@@ -57,7 +57,12 @@ export async function uploadEditorFile(
     throw new Error("Upload cancelled");
   }
 
-  const config = await adminApi.configuration.get().catch(() => ({ useDirectUploadToCloud: false }));
+  const config = await adminApi.media.config().catch(() => ({
+    useDirectUploadToCloud: false,
+    maxUploadBytes: EDITOR_MAX_FILE_SIZE,
+    allowedMimeTypes: "",
+    fileStorageProvider: "local",
+  }));
 
   if (config.useDirectUploadToCloud) {
     const data = await apiFetch<PresignResponse>("/raytha/media-items/presign", {
@@ -97,11 +102,13 @@ export async function uploadEditorFile(
 
   const form = new FormData();
   form.append("file", file);
-  const uploaded = await postForm<LocalUploadResponse>("/raytha/media-items/upload", form, (loaded, total) => {
-    if (total > 0) {
-      onProgress?.({ progress: Math.round((loaded / total) * 100) });
-    }
-  }, abortSignal);
+  const uploaded = parseLocalUpload(
+    await postForm("/raytha/media-items/upload", form, (loaded, total) => {
+      if (total > 0) {
+        onProgress?.({ progress: Math.round((loaded / total) * 100) });
+      }
+    }, abortSignal),
+  );
 
   const objectKey = uploaded.fields?.objectKey ?? "";
   return {
@@ -110,6 +117,34 @@ export async function uploadEditorFile(
     name: file.name,
     url: uploaded.url ?? uploaded.location ?? fileDownloadUrl(objectKey),
   };
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function parseLocalUpload(value: unknown): LocalUploadResponse {
+  if (!isRecord(value)) {
+    return {};
+  }
+  const record = value;
+  const result: LocalUploadResponse = {};
+  if ("url" in record && typeof record.url === "string") {
+    result.url = record.url;
+  }
+  if ("location" in record && typeof record.location === "string") {
+    result.location = record.location;
+  }
+  if (isRecord(record.fields)) {
+    const fields = record.fields;
+    result.fields = {
+      id: "id" in fields && typeof fields.id === "string" ? fields.id : "",
+      fileName: "fileName" in fields && typeof fields.fileName === "string" ? fields.fileName : "",
+      contentType: "contentType" in fields && typeof fields.contentType === "string" ? fields.contentType : "",
+      objectKey: "objectKey" in fields && typeof fields.objectKey === "string" ? fields.objectKey : "",
+    };
+  }
+  return result;
 }
 
 export function insertFileLink(editor: Editor, name: string, url: string, pos?: number): void {
@@ -181,12 +216,12 @@ function putBlob(
   });
 }
 
-function postForm<T>(
+function postForm(
   url: string,
   body: FormData,
   onProgress: (loaded: number, total: number) => void,
   abortSignal?: AbortSignal,
-): Promise<T> {
+): Promise<unknown> {
   return new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest();
     xhr.open("POST", url);
@@ -198,7 +233,7 @@ function postForm<T>(
     xhr.addEventListener("load", () => {
       if (xhr.status >= 200 && xhr.status < 300) {
         try {
-          resolve(JSON.parse(xhr.responseText) as T);
+          resolve(JSON.parse(xhr.responseText));
         } catch {
           reject(new Error("Upload succeeded but the response was not JSON."));
         }
