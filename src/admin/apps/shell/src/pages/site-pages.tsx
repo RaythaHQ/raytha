@@ -8,12 +8,21 @@ import { ListBackLink } from "../components/list-back-link";
 import { useDocumentTitle } from "../lib/document-title";
 import { CrudListPage } from "./crud-list";
 import { entityFields, formatWhen, jsonString, readBoolean, readString } from "./entity";
+import { sitePageStatus } from "./site-pages/models";
+import { SitePageStatusBadge } from "./site-pages/page-meta";
 
 export { SitePageDetailPage } from "./site-pages/detail";
 export { SitePageLayoutPage } from "./site-pages/layout";
 export { NewSitePageWidgetPage, EditSitePageWidgetPage } from "./site-pages/widget-page";
 
 export function SitePagesPage() {
+  const configQuery = useQuery({
+    queryKey: ["configuration"],
+    queryFn: () => adminApi.configuration.get(),
+  });
+  const homePageId = jsonString(configQuery.data ?? {}, "homePageId");
+  const homePageType = jsonString(configQuery.data ?? {}, "homePageType");
+
   return (
     <CrudListPage
       title="Site Pages"
@@ -22,7 +31,6 @@ export function SitePagesPage() {
       listKey="site-pages"
       noun="site page"
       list={adminApi.sitePages.list}
-      remove={adminApi.sitePages.remove}
       createPermission={platformPermissions.sitePages}
       createLabel="New page"
       createTo="/site-pages/new"
@@ -31,10 +39,14 @@ export function SitePagesPage() {
           header: "Title",
           cell: (entity) => {
             const title = readString(entityFields(entity), "title") || entity.id;
+            const isHome = homePageType === "SitePage" && entity.id === homePageId;
             return (
-              <Link to="/site-pages/$id" params={{ id: entity.id }} className="text-primary hover:underline">
-                {title}
-              </Link>
+              <span className="inline-flex flex-wrap items-center gap-2">
+                <Link to="/site-pages/$id" params={{ id: entity.id }} className="text-primary hover:underline">
+                  {title}
+                </Link>
+                {isHome ? <Badge variant="info">Home</Badge> : null}
+              </span>
             );
           },
         },
@@ -43,13 +55,9 @@ export function SitePagesPage() {
           header: "Status",
           cell: (entity) => {
             const fields = entityFields(entity);
-            if (readBoolean(fields, "isPublished")) {
-              return <Badge variant="success">Published</Badge>;
-            }
-            if (readBoolean(fields, "isDraft")) {
-              return <Badge variant="warning">Draft</Badge>;
-            }
-            return <Badge variant="secondary">Unpublished</Badge>;
+            return (
+              <SitePageStatusBadge status={sitePageStatus(readBoolean(fields, "isPublished"), readBoolean(fields, "isDraft"))} />
+            );
           },
         },
         { header: "Updated", cell: (entity) => formatWhen(entityFields(entity).lastModificationTime) || "—" },
@@ -88,8 +96,7 @@ export function NewSitePagePage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="New site page" />
-      <ListBackLink to="/site-pages" listKey="site-pages" label="site pages" />
+      <PageHeader back={<ListBackLink to="/site-pages" listKey="site-pages" label="site pages" />} title="New site page" />
       <Card>
         <CardContent className="pt-6">
           <form

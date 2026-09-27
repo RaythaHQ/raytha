@@ -1,6 +1,17 @@
-import { bootstrapSession, currentSession, logout } from "@raytha/api";
+import {
+  adminApi,
+  bootstrapSession,
+  currentSession,
+  hasContentTypePermission,
+  hasPermission,
+  logout,
+  platformPermissions,
+} from "@raytha/api";
 import {
   Avatar,
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbSeparator,
   cn,
   CommandPalette,
   DropdownMenu,
@@ -12,15 +23,17 @@ import {
   Toaster,
   type CommandItem,
 } from "@raytha/ui";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, Outlet, useLocation, useNavigate } from "@tanstack/react-router";
 import {
-  ChevronRight,
+  Activity,
+  ArrowUpRight,
+  Blocks,
   ChevronsUpDown,
-  ClipboardList,
-  ExternalLink,
   FileText,
+  Globe,
   HardDrive,
+  Image,
   KeyRound,
   LayoutDashboard,
   LayoutTemplate,
@@ -35,81 +48,281 @@ import {
   ScrollText,
   Search,
   Settings,
+  ShieldCheck,
+  SquareFunction,
   UserRound,
   Users,
   UsersRound,
   Webhook,
-  Image,
-  Wrench,
   X,
+  type LucideIcon,
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useDocumentTitle } from "../lib/document-title";
+import { entityFields, readString } from "../pages/entity";
+import { AppLink } from "./list-back-link";
 
 const SIDEBAR_KEY = "raytha.sidebar.collapsed";
-const SETTINGS_KEY = "raytha.sidebar.settings";
 
 interface NavItem {
   to: string;
   label: string;
-  icon: typeof Settings;
-  external?: boolean;
+  icon: LucideIcon;
+  /** Built-in system permission the matching API endpoints require; omitted means any admin. */
+  permission?: string;
   alsoMatch?: string[];
+  /** Readable content types render nested under this item. */
+  nestsContentTypes?: boolean;
+}
+
+interface NavGroup {
+  label?: string;
+  items: NavItem[];
+}
+
+/** An allowed item with its resolved children, ready to render. */
+interface VisibleNavItem extends NavItem {
+  children: NavItem[];
+}
+
+interface VisibleNavGroup {
+  label?: string;
+  items: VisibleNavItem[];
+}
+
+const NAV: NavGroup[] = [
+  { items: [{ to: "/", label: "Dashboard", icon: LayoutDashboard }] },
+  {
+    label: "Content",
+    items: [
+      {
+        to: "/content-types",
+        label: "Content types",
+        icon: Blocks,
+        permission: platformPermissions.contentTypes,
+        nestsContentTypes: true,
+      },
+      { to: "/site-pages", label: "Site pages", icon: FileText, permission: platformPermissions.sitePages },
+      { to: "/media", label: "Media", icon: Image, permission: platformPermissions.media },
+      { to: "/menus", label: "Menus", icon: List, permission: platformPermissions.contentTypes },
+    ],
+  },
+  {
+    label: "Design",
+    items: [
+      { to: "/themes", label: "Themes", icon: LayoutTemplate, permission: platformPermissions.templates },
+      { to: "/email-templates", label: "Email templates", icon: Mails, permission: platformPermissions.systemSettings },
+    ],
+  },
+  {
+    label: "Automation",
+    items: [
+      { to: "/functions", label: "Functions", icon: SquareFunction, permission: platformPermissions.systemSettings },
+      { to: "/webhooks", label: "Webhooks", icon: Webhook, permission: platformPermissions.systemSettings },
+    ],
+  },
+  {
+    label: "People",
+    items: [
+      { to: "/users", label: "Users", icon: Users, permission: platformPermissions.users },
+      { to: "/settings/admins", label: "Admins", icon: UsersRound, permission: platformPermissions.admins },
+      { to: "/settings/roles", label: "Roles", icon: ShieldCheck, permission: platformPermissions.admins },
+    ],
+  },
+  {
+    label: "Observability",
+    items: [
+      { to: "/audit-log", label: "Audit log", icon: ScrollText, permission: platformPermissions.auditLogs },
+      { to: "/email-log", label: "Email log", icon: Mail, permission: platformPermissions.systemSettings },
+    ],
+  },
+  {
+    label: "Settings",
+    items: [
+      { to: "/settings/configuration", label: "Configuration", icon: Settings, permission: platformPermissions.systemSettings },
+      { to: "/settings/authentication", label: "Authentication", icon: KeyRound, permission: platformPermissions.systemSettings },
+      { to: "/maintenance", label: "Maintenance", icon: HardDrive, permission: platformPermissions.systemSettings },
+      { to: "/background-tasks", label: "Background tasks", icon: Activity, permission: platformPermissions.systemSettings },
+    ],
+  },
+];
+
+const NEW_CONTENT_TYPE: NavItem = {
+  to: "/content-types/new",
+  label: "New content type",
+  icon: Plus,
+  permission: platformPermissions.contentTypes,
+};
+
+const PROFILE: NavItem = { to: "/profile", label: "My profile", icon: UserRound };
+
+const ALL_NAV: NavItem[] = [...NAV.flatMap((group) => group.items), NEW_CONTENT_TYPE, PROFILE];
+
+function allowed(item: NavItem): boolean {
+  return item.permission === undefined || hasPermission(item.permission);
+}
+
+/**
+ * Drops items the session cannot open and groups left empty. Content types stay
+ * reachable without the manage permission: they move up into the group instead.
+ */
+function visibleNav(contentTypes: NavItem[]): VisibleNavGroup[] {
+  return NAV.map((group) => ({
+    label: group.label,
+    items: group.items.flatMap((item): VisibleNavItem[] => {
+      const children = item.nestsContentTypes ? contentTypes : [];
+      if (allowed(item)) {
+        return [{ ...item, children }];
+      }
+      return children.map((child) => ({ ...child, children: [] }));
+    }),
+  })).filter((group) => group.items.length > 0);
 }
 
 function itemIsActive(item: NavItem, pathname: string): boolean {
-  if (item.external) {
-    return false;
-  }
   const prefixes = [item.to, ...(item.alsoMatch ?? [])];
   return prefixes.some((prefix) => {
     const normalized = prefix.replace(/\/+$/, "") || "/";
+    if (normalized === "/") {
+      return pathname === "/";
+    }
     return pathname === normalized || pathname.startsWith(`${normalized}/`);
   });
 }
 
-const PRIMARY_NAV: NavItem[] = [
-  { to: "/", label: "Dashboard", icon: LayoutDashboard },
-  { to: "/users", label: "Users", icon: Users },
-  { to: "/site-pages", label: "Site Pages", icon: FileText },
-  { to: "/content-types", label: "Content types", icon: ClipboardList, alsoMatch: ["/content"] },
-];
+/** Readable content types, as sidebar entries pointing at each type's items workspace. */
+function useContentTypeNav(): NavItem[] {
+  const query = useQuery({
+    queryKey: ["content-types", "nav"],
+    queryFn: () => adminApi.contentTypes.list({ pageSize: 1000 }),
+  });
+  return useMemo(() => {
+    const items: NavItem[] = [];
+    for (const entity of query.data?.items ?? []) {
+      const fields = entityFields(entity);
+      const developerName = readString(fields, "developerName");
+      if (!developerName || !hasContentTypePermission(developerName, "read")) {
+        continue;
+      }
+      items.push({
+        to: `/content/${developerName}`,
+        label: readString(fields, "labelPlural", "labelSingular") || developerName,
+        icon: FileText,
+        alsoMatch: [`/content-types/${developerName}`],
+      });
+    }
+    return items;
+  }, [query.data]);
+}
 
-const AFTER_CONTENT_NAV: NavItem[] = [
-  { to: "/", label: "Live Website", icon: ExternalLink, external: true },
-  // public site root, not the SPA dashboard
-  { to: "/themes", label: "Themes", icon: LayoutTemplate },
-  { to: "/email-templates", label: "Email Templates", icon: Mails },
-  { to: "/menus", label: "Menus", icon: List },
-  { to: "/functions", label: "Functions", icon: Wrench },
-  { to: "/audit-log", label: "Audit Log", icon: ScrollText },
-  { to: "/webhooks", label: "Webhooks", icon: Webhook },
-  { to: "/email-log", label: "Email Log", icon: Mail },
-  { to: "/media", label: "Media", icon: Image },
-];
+const SEGMENT_LABELS: Record<string, string> = {
+  new: "New",
+  "web-templates": "Web templates",
+  "widget-templates": "Widget templates",
+  assets: "Assets",
+  import: "Import",
+  layout: "Layout",
+  widgets: "Widgets",
+  fields: "Fields",
+  configuration: "Configuration",
+  trash: "Trash",
+  views: "Views",
+  items: "Items",
+  groups: "User groups",
+  authentication: "Authentication",
+  admins: "Admins",
+  roles: "Roles",
+  smtp: "SMTP",
+};
 
-const SETTINGS_NAV: NavItem[] = [
-  { to: "/settings/admins", label: "Admins", icon: UsersRound },
-  { to: "/settings/roles", label: "Roles", icon: KeyRound },
-  { to: "/settings/configuration", label: "Configuration", icon: Settings },
-  { to: "/settings/authentication", label: "Authentication", icon: KeyRound },
-  { to: "/maintenance", label: "Maintenance", icon: HardDrive },
-];
+function buildBreadcrumbs(pathname: string, contentTypes: NavItem[]): { label: string; to?: string }[] {
+  if (pathname === "/") {
+    return [{ label: "Dashboard" }];
+  }
+  // A content type owns both /content/{dev} and /content-types/{dev} paths.
+  for (const type of contentTypes) {
+    for (const prefix of [type.to, ...(type.alsoMatch ?? [])]) {
+      if (pathname !== prefix && !pathname.startsWith(`${prefix}/`)) {
+        continue;
+      }
+      const rest = pathname.slice(prefix.length).split("/").filter(Boolean);
+      // /content/{dev}/{viewId} is the items workspace; the view label is the
+      // page title, so the crumb is just the type.
+      if (rest.length === 1 && !SEGMENT_LABELS[rest[0]]) {
+        return [{ label: type.label }];
+      }
+      return walkSegments({ label: type.label, to: type.to }, prefix, pathname);
+    }
+  }
+  const match = ALL_NAV.filter((item) => item.to !== "/" && itemIsActive(item, pathname)).sort(
+    (a, b) => b.to.length - a.to.length,
+  )[0];
+  if (!match) {
+    return [{ label: "Admin" }];
+  }
+  return walkSegments({ label: match.label, to: match.to }, match.to, pathname);
+}
 
-const ALL_NAV: NavItem[] = [
-  ...PRIMARY_NAV,
-  { to: "/content-types/new", label: "New Content Type", icon: Plus },
-  ...AFTER_CONTENT_NAV,
-  ...SETTINGS_NAV,
-  { to: "/profile", label: "My Profile", icon: UserRound },
-];
+function walkSegments(
+  base: { label: string; to: string },
+  basePath: string,
+  pathname: string,
+): { label: string; to?: string }[] {
+  const rest = pathname.slice(basePath.length).split("/").filter(Boolean);
+  const crumbs: { label: string; to?: string }[] = [{ label: base.label, to: base.to }];
+  let path = basePath;
+  let skippedId = false;
+  for (const segment of rest) {
+    path += `/${segment}`;
+    const label = SEGMENT_LABELS[segment];
+    if (!label) {
+      skippedId = true;
+      continue;
+    }
+    crumbs.push({ label, to: path });
+    skippedId = false;
+  }
+  if (skippedId) {
+    crumbs.push({ label: "Details" });
+  }
+  if (crumbs.length === 1 && rest.length === 0) {
+    return [{ label: base.label }];
+  }
+  return crumbs.map((crumb, index) => (index === crumbs.length - 1 ? { label: crumb.label } : crumb));
+}
 
-function navItemClassName(active: boolean, collapsed: boolean, indented = false) {
+// The router stamps aria-current="page" on every prefix match; the sidebar decides
+// "current" itself, so the router may only agree on exact matches.
+const EXACT_ONLY = { exact: true, includeSearch: false } as const;
+
+function navItemClassName(active: boolean, collapsed: boolean) {
   return cn(
-    "flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-sidebar-foreground/85 transition-colors hover:bg-sidebar-accent hover:text-white",
-    collapsed && "justify-center px-0",
-    indented && !collapsed && "pl-9",
-    active && "bg-sidebar-active text-white shadow-card hover:bg-sidebar-active",
+    "group flex h-7 items-center gap-2.5 rounded-md px-2 text-[13px] font-medium outline-none transition-colors focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring",
+    collapsed && "mx-auto size-8 justify-center px-0",
+    active
+      ? "bg-sidebar-active text-foreground shadow-xs ring-1 ring-black/[0.06]"
+      : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-foreground",
+  );
+}
+
+function iconClassName(active: boolean) {
+  return cn(
+    "size-4 shrink-0 transition-colors",
+    active ? "text-brand-600" : "text-sidebar-muted group-hover:text-foreground",
+  );
+}
+
+function ContentTypeTile({ label, active }: { label: string; active: boolean }) {
+  return (
+    <span
+      aria-hidden
+      className={cn(
+        "flex size-5 shrink-0 items-center justify-center rounded-md text-[10px] font-semibold uppercase",
+        active ? "bg-brand-500 text-white" : "bg-[#e4e4ea] text-sidebar-foreground group-hover:bg-[#dcdce3]",
+      )}
+    >
+      {label.charAt(0)}
+    </span>
   );
 }
 
@@ -118,46 +331,60 @@ function NavLinkItem({
   collapsed,
   pathname,
   onNavigate,
-  indented = false,
 }: {
-  item: NavItem;
+  item: VisibleNavItem;
   collapsed: boolean;
   pathname: string;
   onNavigate?: () => void;
-  indented?: boolean;
 }) {
-  const active = itemIsActive(item, pathname);
-  const className = navItemClassName(active, collapsed, indented);
-  const content = (
-    <>
-      <item.icon className="size-4 shrink-0" aria-hidden />
-      {!collapsed && <span className="truncate">{item.label}</span>}
-    </>
-  );
+  const childActive = item.children.some((child) => itemIsActive(child, pathname));
+  const active = !childActive && itemIsActive(item, pathname);
+  const isContentType = item.to.startsWith("/content/");
 
   return (
     <li>
-      {item.external ? (
-        <a
-          href={item.to}
-          target="_blank"
-          rel="noreferrer"
-          onClick={onNavigate}
-          title={collapsed ? item.label : undefined}
-          className={className}
-        >
-          {content}
-        </a>
-      ) : (
-        <Link
-          to={item.to}
-          onClick={onNavigate}
-          aria-current={active ? "page" : undefined}
-          title={collapsed ? item.label : undefined}
-          className={className}
-        >
-          {content}
-        </Link>
+      <Link
+        to={item.to}
+        activeOptions={EXACT_ONLY}
+        onClick={onNavigate}
+        aria-current={active ? "page" : undefined}
+        title={collapsed ? item.label : undefined}
+        className={navItemClassName(active, collapsed)}
+      >
+        {isContentType ? (
+          <ContentTypeTile label={item.label} active={active} />
+        ) : (
+          <item.icon className={iconClassName(active)} aria-hidden />
+        )}
+        {collapsed ? <span className="sr-only">{item.label}</span> : <span className="truncate">{item.label}</span>}
+      </Link>
+      {item.children.length > 0 && (
+        <ul className={cn("mt-px space-y-px", collapsed ? "" : "ml-[15px] border-l border-sidebar-border pl-2")}>
+          {item.children.map((child) => {
+            const active = itemIsActive(child, pathname);
+            return (
+              <li key={child.to}>
+                <Link
+                  to={child.to}
+                  activeOptions={EXACT_ONLY}
+                  onClick={onNavigate}
+                  aria-current={active ? "page" : undefined}
+                  title={collapsed ? child.label : undefined}
+                  className={cn(navItemClassName(active, collapsed), !collapsed && "font-normal", active && "font-medium")}
+                >
+                  {collapsed ? (
+                    <>
+                      <ContentTypeTile label={child.label} active={active} />
+                      <span className="sr-only">{child.label}</span>
+                    </>
+                  ) : (
+                    <span className="truncate">{child.label}</span>
+                  )}
+                </Link>
+              </li>
+            );
+          })}
+        </ul>
       )}
     </li>
   );
@@ -165,109 +392,86 @@ function NavLinkItem({
 
 function BrandMark({ collapsed }: { collapsed: boolean }) {
   return (
-    <Link to="/" className="flex items-center gap-2.5 px-1" aria-label="Raytha Admin home">
-      <img src="/raytha/white.svg" alt="" className={cn("shrink-0", collapsed ? "h-8" : "h-10")} />
-      {!collapsed && <span className="sr-only">Raytha Admin</span>}
-    </Link>
+    <AppLink
+      href="/raytha"
+      className="flex items-center rounded-md outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+    >
+      <span className="sr-only">Raytha Admin home</span>
+      {collapsed ? (
+        <span className="block size-7 overflow-hidden rounded-md">
+          <img src="/raytha/color-no-background.svg" alt="" className="-mt-[2.5px] -ml-[2.5px] h-[33px] max-w-none" />
+        </span>
+      ) : (
+        <img src="/raytha/color-no-background.svg" alt="" className="h-8 shrink-0" />
+      )}
+    </AppLink>
   );
 }
 
 function SidebarContent({
   collapsed,
   pathname,
+  contentTypes,
   onNavigate,
 }: {
   collapsed: boolean;
   pathname: string;
+  contentTypes: NavItem[];
   onNavigate?: () => void;
 }) {
-  const [settingsOpen, setSettingsOpen] = useState(() => localStorage.getItem(SETTINGS_KEY) !== "0");
-  const settingsActive = SETTINGS_NAV.some((item) => itemIsActive(item, pathname));
+  const groups = visibleNav(contentTypes);
+  const canCreateType = allowed(NEW_CONTENT_TYPE);
+  const navRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    navRef.current?.querySelector('[aria-current="page"]')?.scrollIntoView({ block: "nearest" });
+  }, [pathname]);
 
   return (
     <div className="flex h-full flex-col">
-      <div className={cn("flex h-16 items-center border-b border-white/10 px-3", collapsed && "justify-center")}>
+      <div className={cn("flex h-14 shrink-0 items-center px-4", collapsed && "justify-center px-0")}>
         <BrandMark collapsed={collapsed} />
       </div>
 
-      <nav aria-label="Main" className="flex-1 overflow-y-auto px-2 pb-4">
-        <ul className="space-y-0.5 pt-3">
-          {PRIMARY_NAV.map((item) => (
-            <NavLinkItem key={item.to} item={item} collapsed={collapsed} pathname={pathname} onNavigate={onNavigate} />
-          ))}
-        </ul>
-
-        <div className={cn("pt-4", collapsed && "flex justify-center")}>
-          {collapsed ? (
-            <Link
-              to="/content-types/new"
-              onClick={onNavigate}
-              title="New Content Type"
-              className={navItemClassName(pathname === "/content-types/new", true)}
-            >
-              <Plus className="size-4" aria-hidden />
-            </Link>
-          ) : (
-            <Link
-              to="/content-types/new"
-              onClick={onNavigate}
-              className="flex items-center justify-center gap-2 rounded-lg bg-white/15 px-3 py-2 text-sm font-medium text-white hover:bg-white/25"
-            >
-              <Plus className="size-4" aria-hidden />
-              New Content Type
-            </Link>
-          )}
-        </div>
-
-        <div className="mx-3 my-4 border-t border-white/15" role="separator" />
-
-        <ul className="space-y-0.5">
-          {AFTER_CONTENT_NAV.map((item) => (
-            <NavLinkItem key={item.label} item={item} collapsed={collapsed} pathname={pathname} onNavigate={onNavigate} />
-          ))}
-        </ul>
-
-        <div className="mx-3 my-4 border-t border-white/15" role="separator" />
-
-        {collapsed ? (
-          <ul className="space-y-0.5">
-            {SETTINGS_NAV.map((item) => (
-              <NavLinkItem key={item.to} item={item} collapsed pathname={pathname} onNavigate={onNavigate} />
-            ))}
-          </ul>
-        ) : (
-          <div>
-            <button
-              type="button"
-              aria-expanded={settingsOpen}
-              aria-controls="nav-settings"
-              onClick={() => {
-                const next = !settingsOpen;
-                setSettingsOpen(next);
-                localStorage.setItem(SETTINGS_KEY, next ? "1" : "0");
-              }}
-              className={cn(
-                "flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors hover:bg-sidebar-accent hover:text-white",
-                settingsActive ? "text-white" : "text-sidebar-foreground/85",
-              )}
-            >
-              <Settings className="size-4 shrink-0" aria-hidden />
-              <span className="truncate text-left">Settings</span>
-              <ChevronRight className={cn("ml-auto size-4 shrink-0 transition-transform", settingsOpen && "rotate-90")} aria-hidden />
-            </button>
-            {settingsOpen && (
-              <ul id="nav-settings" className="space-y-0.5">
-                {SETTINGS_NAV.map((item) => (
-                  <NavLinkItem key={item.to} item={item} collapsed={false} pathname={pathname} onNavigate={onNavigate} indented />
-                ))}
-              </ul>
-            )}
+      <nav
+        ref={navRef}
+        aria-label="Main"
+        className={cn("sidebar-scroll flex-1 overflow-y-auto pb-6", collapsed ? "px-2" : "px-3")}
+      >
+        {groups.map((group) => (
+          <div key={group.label ?? "top"}>
+            {group.label &&
+              (collapsed ? (
+                <div className="mx-2 my-2.5 border-t border-sidebar-border" role="separator" />
+              ) : (
+                <div className="flex h-7 items-end justify-between pr-1 pb-1 pl-2">
+                  <h2 className="text-[11px] font-medium uppercase tracking-[0.06em] text-sidebar-muted">{group.label}</h2>
+                  {group.label === "Content" && canCreateType && (
+                    <Link
+                      to={NEW_CONTENT_TYPE.to}
+                      onClick={onNavigate}
+                      aria-label="New content type"
+                      title="New content type"
+                      className="flex size-5 items-center justify-center rounded-md text-sidebar-muted transition-colors hover:bg-sidebar-accent hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring"
+                    >
+                      <Plus className="size-3.5" aria-hidden />
+                    </Link>
+                  )}
+                </div>
+              ))}
+            <ul className="space-y-px">
+              {group.items.map((item) => (
+                <NavLinkItem key={item.to} item={item} collapsed={collapsed} pathname={pathname} onNavigate={onNavigate} />
+              ))}
+            </ul>
           </div>
-        )}
+        ))}
       </nav>
     </div>
   );
 }
+
+const isMac = typeof navigator !== "undefined" && /Mac|iPhone|iPad/.test(navigator.userAgent);
 
 export function AppShell() {
   const navigate = useNavigate();
@@ -280,6 +484,7 @@ export function AppShell() {
   const [paletteOpen, setPaletteOpen] = useState(false);
   const mobileDrawerRef = useRef<HTMLDivElement>(null);
   const session = currentSession();
+  const contentTypes = useContentTypeNav();
 
   useEffect(() => {
     localStorage.setItem(SIDEBAR_KEY, collapsed ? "1" : "0");
@@ -354,136 +559,150 @@ export function AppShell() {
     window.location.assign("/raytha/login");
   };
 
-  const commands = useMemo<CommandItem[]>(() => {
-    const go = (to: string) => () => void navigate({ to });
-    return [
-      ...ALL_NAV.filter((item) => !item.external).map((item) => ({
-        id: item.to,
-        label: item.label,
-        group: "Navigate",
-        icon: <item.icon />,
-        onSelect: go(item.to),
-      })),
-      {
-        id: "live-website",
-        label: "Live Website",
-        group: "Navigate",
-        icon: <ExternalLink />,
-        onSelect: () => window.open("/", "_blank", "noopener,noreferrer"),
-      },
-      {
-        id: "sign-out",
-        label: "Sign out",
-        group: "Session",
-        icon: <LogOut />,
-        onSelect: () => void handleLogout(),
-      },
-    ];
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [navigate]);
+  const go = (to: string) => () => void navigate({ to });
+  const navCommands: CommandItem[] = visibleNav(contentTypes).flatMap((group) =>
+    group.items.flatMap((item) => [item, ...item.children]).map((item) => ({
+      id: item.to,
+      label: item.label,
+      group: "Navigate",
+      hint: group.label,
+      icon: <item.icon />,
+      onSelect: go(item.to),
+    })),
+  );
+  const commands: CommandItem[] = [
+    ...navCommands,
+    ...[NEW_CONTENT_TYPE, PROFILE].filter(allowed).map((item) => ({
+      id: item.to,
+      label: item.label,
+      group: "Actions",
+      icon: <item.icon />,
+      onSelect: go(item.to),
+    })),
+    {
+      id: "live-website",
+      label: "View live site",
+      group: "Actions",
+      icon: <ArrowUpRight />,
+      onSelect: () => window.open("/", "_blank", "noopener,noreferrer"),
+    },
+    {
+      id: "sign-out",
+      label: "Sign out",
+      group: "Session",
+      icon: <LogOut />,
+      onSelect: () => void handleLogout(),
+    },
+  ];
 
-  const breadcrumbs = useMemo(() => {
-    const match = ALL_NAV.find((item) => !item.external && itemIsActive(item, pathname));
-    if (pathname === "/") {
-      return [{ label: "Dashboard" }];
-    }
-    return [{ label: "Dashboard", to: "/" }, { label: match?.label ?? pathname.replace(/^\//, "") }];
-  }, [pathname]);
+  const breadcrumbs = useMemo(() => buildBreadcrumbs(pathname, contentTypes), [pathname, contentTypes]);
 
   useDocumentTitle([breadcrumbs.at(-1)?.label ?? "Dashboard"]);
 
+  const displayName = session?.fullName || session?.email || "?";
+
   return (
-    <div className="flex min-h-screen min-w-0 overflow-x-hidden bg-background">
+    <div className="flex min-h-screen min-w-0 bg-background">
       <a
         href="#main"
-        className="sr-only focus:not-sr-only focus:absolute focus:left-0 focus:top-0 focus:z-50 focus:bg-primary focus:px-4 focus:py-2 focus:text-primary-foreground"
+        className="sr-only focus:not-sr-only focus:absolute focus:left-2 focus:top-2 focus:z-50 focus:rounded-lg focus:bg-primary focus:px-4 focus:py-2 focus:text-primary-foreground"
       >
         Skip to content
       </a>
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-30 hidden bg-sidebar text-sidebar-foreground transition-[width] duration-200 lg:block",
-          collapsed ? "w-16" : "w-64",
+          "hidden shrink-0 border-r border-sidebar-border bg-sidebar transition-[width] duration-200 lg:block",
+          collapsed ? "w-15" : "w-60",
         )}
       >
-        <SidebarContent collapsed={collapsed} pathname={pathname} />
+        <div className="sticky top-0 h-screen">
+          <SidebarContent collapsed={collapsed} pathname={pathname} contentTypes={contentTypes} />
+        </div>
       </aside>
 
       {mobileOpen && (
         <div className="fixed inset-0 z-40 lg:hidden">
-          <div className="absolute inset-0 bg-black/50" onClick={() => setMobileOpen(false)} aria-hidden />
+          <div className="absolute inset-0 animate-fade bg-zinc-950/40 backdrop-blur-[2px]" onClick={() => setMobileOpen(false)} aria-hidden />
           <div
             ref={mobileDrawerRef}
             id="mobile-navigation"
             role="dialog"
             aria-modal="true"
             aria-label="Navigation"
-            className="absolute inset-y-0 left-0 w-72 bg-sidebar text-sidebar-foreground shadow-pop"
+            className="absolute inset-y-0 left-0 w-72 border-r border-sidebar-border bg-sidebar shadow-pop"
           >
             <button
               type="button"
               aria-label="Close navigation"
               onClick={() => setMobileOpen(false)}
-              className="absolute right-3 top-4 rounded-lg p-1.5 text-sidebar-muted hover:bg-sidebar-accent hover:text-white"
+              className="absolute right-3 top-3 rounded-lg p-1.5 text-sidebar-muted hover:bg-sidebar-accent hover:text-foreground"
             >
               <X className="size-5" />
             </button>
-            <SidebarContent collapsed={false} pathname={pathname} onNavigate={() => setMobileOpen(false)} />
+            <SidebarContent
+              collapsed={false}
+              pathname={pathname}
+              contentTypes={contentTypes}
+              onNavigate={() => setMobileOpen(false)}
+            />
           </div>
         </div>
       )}
 
-      <div className={cn("flex min-h-screen min-w-0 flex-1 flex-col transition-[margin] duration-200", collapsed ? "lg:ml-16" : "lg:ml-64")}>
-        <header className="sticky top-0 z-20 flex h-16 min-w-0 items-center gap-3 border-b border-border bg-card/85 px-4 backdrop-blur-md lg:px-6">
+      <div className="flex min-h-screen min-w-0 flex-1 flex-col">
+        <header className="sticky top-0 z-20 flex h-14 min-w-0 items-center gap-2 border-b border-border bg-background/80 px-3 backdrop-blur-xl lg:px-5">
           <button
             type="button"
             aria-label="Open navigation"
             aria-expanded={mobileOpen}
             aria-controls="mobile-navigation"
             onClick={() => setMobileOpen(true)}
-            className="rounded-lg p-2 text-muted-foreground hover:bg-accent lg:hidden"
+            className="rounded-lg p-2 text-muted-foreground hover:bg-accent hover:text-foreground lg:hidden"
           >
-            <Menu className="size-5" />
+            <Menu className="size-4.5" />
           </button>
           <button
             type="button"
             aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+            title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
             onClick={() => setCollapsed((c) => !c)}
-            className="hidden rounded-lg p-2 text-muted-foreground hover:bg-accent lg:block"
+            className="hidden rounded-lg p-2 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground lg:block"
           >
-            {collapsed ? <PanelLeftOpen className="size-5" /> : <PanelLeftClose className="size-5" />}
+            {collapsed ? <PanelLeftOpen className="size-4.5" /> : <PanelLeftClose className="size-4.5" />}
           </button>
+          <span className="mx-1 hidden h-5 w-px bg-border md:block" aria-hidden />
 
-          <nav aria-label="Breadcrumb" className="hidden min-w-0 md:block">
-            <ol className="flex items-center gap-1.5 text-sm">
-              {breadcrumbs.map((crumb, i) => (
-                <li key={i} className="flex items-center gap-1.5">
-                  {i > 0 && <span className="text-muted-foreground/60">/</span>}
-                  {crumb.to && i < breadcrumbs.length - 1 ? (
-                    <Link to={crumb.to} className="text-muted-foreground hover:text-foreground">
+          <Breadcrumb className="hidden min-w-0 md:block">
+            {breadcrumbs.map((crumb, i) => {
+              const last = i === breadcrumbs.length - 1;
+              return [
+                i > 0 ? <BreadcrumbSeparator key={`sep-${i}`} /> : null,
+                <BreadcrumbItem key={i} current={last}>
+                  {crumb.to && !last ? (
+                    <AppLink href={crumb.to === "/" ? "/raytha" : `/raytha${crumb.to}`} className="transition-colors">
                       {crumb.label}
-                    </Link>
+                    </AppLink>
                   ) : (
-                    <span className={cn("truncate", i === breadcrumbs.length - 1 ? "font-semibold text-foreground" : "text-muted-foreground")}>
-                      {crumb.label}
-                    </span>
+                    crumb.label
                   )}
-                </li>
-              ))}
-            </ol>
-          </nav>
+                </BreadcrumbItem>,
+              ];
+            })}
+          </Breadcrumb>
 
-          <div className="ml-auto flex items-center gap-2">
+          <div className="ml-auto flex items-center gap-1.5">
             <button
               type="button"
               aria-expanded={paletteOpen}
               aria-haspopup="dialog"
               onClick={() => setPaletteOpen(true)}
-              className="hidden h-9 w-56 items-center gap-2 rounded-lg border border-input bg-background px-3 text-sm text-muted-foreground shadow-card transition-colors hover:border-brand-300 sm:flex"
+              className="hidden h-8 w-64 items-center gap-2 rounded-lg border border-border bg-card px-2.5 text-[13px] text-muted-foreground shadow-xs transition-colors hover:border-border-strong hover:text-foreground sm:flex"
             >
-              <Search className="size-4" aria-hidden />
-              <span className="flex-1 text-left">Search…</span>
-              <kbd className="rounded border border-border bg-muted px-1.5 py-0.5 text-[10px] font-medium">⌘K</kbd>
+              <Search className="size-3.5" aria-hidden />
+              <span className="flex-1 text-left">Search or jump to…</span>
+              <kbd className="rounded-md border border-border bg-muted px-1.5 py-px font-sans text-[10px] font-medium text-muted-foreground">
+                {isMac ? "⌘K" : "Ctrl K"}
+              </kbd>
             </button>
             <button
               type="button"
@@ -491,31 +710,50 @@ export function AppShell() {
               aria-expanded={paletteOpen}
               aria-haspopup="dialog"
               onClick={() => setPaletteOpen(true)}
-              className="rounded-lg p-2 text-muted-foreground hover:bg-accent sm:hidden"
+              className="rounded-lg p-2 text-muted-foreground hover:bg-accent hover:text-foreground sm:hidden"
             >
-              <Search className="size-5" />
+              <Search className="size-4.5" />
             </button>
+            <a
+              href="/"
+              target="_blank"
+              rel="noreferrer"
+              aria-label="View live site"
+              title="View live site"
+              className="rounded-lg p-2 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring"
+            >
+              <Globe className="size-4.5" aria-hidden />
+            </a>
 
             <DropdownMenu>
               <DropdownMenuTrigger>
                 <button
                   type="button"
-                  aria-label={`Account menu for ${session?.fullName ?? session?.email ?? "current user"}`}
-                  className="flex items-center gap-2 rounded-lg px-2 py-1.5 transition-colors hover:bg-accent"
+                  aria-label={`Account menu for ${displayName}`}
+                  className="ml-1 flex items-center gap-2 rounded-lg py-1 pr-1.5 pl-1 transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-ring"
                 >
-                  <Avatar name={session?.fullName ?? session?.email ?? "?"} />
-                  <span className="hidden max-w-40 truncate text-sm font-medium md:block">
-                    {session?.fullName ?? session?.email}
-                  </span>
+                  <Avatar name={displayName} className="size-7" />
+                  <span className="hidden max-w-36 truncate text-[13px] font-medium md:block">{displayName}</span>
                   <ChevronsUpDown className="hidden size-3.5 text-muted-foreground md:block" aria-hidden />
                 </button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent>
-                <DropdownMenuLabel>{session?.email}</DropdownMenuLabel>
+              <DropdownMenuContent className="min-w-60">
+                <div className="flex items-center gap-2.5 px-2.5 py-2">
+                  <Avatar name={displayName} />
+                  <div className="min-w-0">
+                    <p className="truncate text-[13px] font-medium text-foreground">{session?.fullName || "Signed in"}</p>
+                    <p className="truncate text-xs text-muted-foreground">{session?.email}</p>
+                  </div>
+                </div>
                 <DropdownMenuSeparator />
+                <DropdownMenuLabel>Account</DropdownMenuLabel>
                 <DropdownMenuItem onSelect={() => void navigate({ to: "/profile" })}>
                   <UserRound />
-                  My Profile
+                  My profile
+                </DropdownMenuItem>
+                <DropdownMenuItem onSelect={() => window.open("/", "_blank", "noopener,noreferrer")}>
+                  <ArrowUpRight />
+                  View live site
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onSelect={() => void handleLogout()}>
@@ -527,7 +765,7 @@ export function AppShell() {
           </div>
         </header>
 
-        <main id="main" tabIndex={-1} className="mx-auto w-full min-w-0 max-w-6xl flex-1 px-4 py-6 outline-none lg:px-8">
+        <main id="main" tabIndex={-1} className="mx-auto w-full min-w-0 max-w-6xl flex-1 px-4 pt-7 pb-16 outline-none sm:px-6 lg:px-10">
           <Outlet />
         </main>
       </div>

@@ -24,17 +24,17 @@ public static class MediaItemsEndpoints
         group
             .MapPost("/presign", CloudUploadPresignRequest)
             .WithName("mediaitemspresignuploadurl")
-            .RequireAuthorization(BuiltInSystemPermission.MANAGE_MEDIA_ITEMS);
+            .RequireAuthorization(BuiltInSystemPermission.UPLOAD_MEDIA_ITEMS_POLICY);
 
         group
             .MapPost("/create-after-upload", CloudUploadCreateAfterUpload)
             .WithName("mediaitemscreateafterupload")
-            .RequireAuthorization(BuiltInSystemPermission.MANAGE_MEDIA_ITEMS);
+            .RequireAuthorization(BuiltInSystemPermission.UPLOAD_MEDIA_ITEMS_POLICY);
 
         group
             .MapPost("/upload", DirectUpload)
             .WithName("mediaitemslocalstorageupload")
-            .RequireAuthorization(BuiltInSystemPermission.MANAGE_MEDIA_ITEMS)
+            .RequireAuthorization(BuiltInSystemPermission.UPLOAD_MEDIA_ITEMS_POLICY)
             .DisableAntiforgery();
 
         group

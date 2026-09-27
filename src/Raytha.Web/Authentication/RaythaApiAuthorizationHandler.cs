@@ -27,6 +27,8 @@ public class ApiManageContentTypesRequirement : IHasApiKeyRequirement { }
 
 public class ApiManageMediaItemsRequirement : IHasApiKeyRequirement { }
 
+public class ApiUploadMediaItemsRequirement : IHasApiKeyRequirement { }
+
 public class ApiManageSitePagesRequirement : IHasApiKeyRequirement { }
 
 public class ApiContentTypePermissionRequirement : IHasApiKeyRequirement
@@ -144,22 +146,18 @@ public class RaythaApiAuthorizationHandler : IAuthorizationHandler
             {
                 if (
                     systemPermissions.Contains(
-                        BuiltInSystemPermission.MANAGE_CONTENT_TYPES_PERMISSION
+                        BuiltInSystemPermission.MANAGE_MEDIA_ITEMS_PERMISSION
                     )
                 )
                 {
                     context.Succeed(requirement);
                 }
-                else
+            }
+            else if (requirement is ApiUploadMediaItemsRequirement)
+            {
+                if (MediaUploadAccess.IsAllowed(systemPermissions, contentTypePermissions))
                 {
-                    if (
-                        contentTypePermissions.Any(p =>
-                            p.EndsWith(BuiltInContentTypePermission.CONTENT_TYPE_EDIT_PERMISSION)
-                        )
-                    )
-                    {
-                        context.Succeed(requirement);
-                    }
+                    context.Succeed(requirement);
                 }
             }
             else if (requirement is ApiManageSitePagesRequirement)

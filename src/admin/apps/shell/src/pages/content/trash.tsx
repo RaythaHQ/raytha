@@ -20,10 +20,10 @@ import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tansta
 import { useParams } from "@tanstack/react-router";
 import { Trash2 } from "lucide-react";
 import { useState } from "react";
+import { ListBackLink } from "../../components/list-back-link";
 import { useDocumentTitle } from "../../lib/document-title";
 import { entityFields, formatWhen, readString } from "../entity";
 import { parseContentTypeSummary } from "./fields-model";
-import { ContentTypeNav } from "./nav";
 
 export function ContentTypeTrashPage() {
   const params = useParams({ strict: false });
@@ -81,10 +81,17 @@ export function ContentTypeTrashPage() {
   return (
     <div className="space-y-6">
       <PageHeader
+        back={
+          <ListBackLink
+            to="/content/$developerName"
+            params={{ developerName }}
+            listKey={`content-items:${developerName}`}
+            label={contentType?.labelPlural || developerName}
+          />
+        }
         title={`${contentType?.labelPlural || developerName} trash`}
         description="Restore a deleted item or remove it permanently."
       />
-      <ContentTypeNav developerName={developerName} />
       <QueryGate query={query}>
         {(data) => (
           <ListPanel

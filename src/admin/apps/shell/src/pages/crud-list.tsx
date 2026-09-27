@@ -1,9 +1,8 @@
 import type { EntityRef, JsonObject, PagedResult } from "@raytha/api";
-import { formatError, hasPermission } from "@raytha/api";
+import { hasPermission } from "@raytha/api";
 import {
   buttonVariants,
   Checkbox,
-  ConfirmDialog,
   EmptyState,
   FormField,
   Input,
@@ -13,7 +12,6 @@ import {
   PageHeader,
   QueryGate,
   RowActions,
-  SortableTableHead,
   Table,
   TableBody,
   TableCell,
@@ -21,23 +19,20 @@ import {
   TableHeader,
   TableRow,
   Textarea,
-  toast,
   type RowAction,
-  type SortDirection,
 } from "@raytha/ui";
-import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { useLocation, useNavigate } from "@tanstack/react-router";
 import { Inbox } from "lucide-react";
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useEffectEvent, useState, type ReactNode } from "react";
 import { useDocumentTitle } from "../lib/document-title";
+import { AppLink } from "../components/list-back-link";
 import {
   compactListQuery,
   listApiParams,
   listHref,
   listQueryFromSearchString,
   listQueryKey,
-  nextOrderBy,
-  parseOrderBy,
   rememberListQuery,
   type ListQuery,
 } from "../lib/list-query";
@@ -57,8 +52,6 @@ export type CreateField = {
 export type ListColumn = {
   header: string;
   cell: (entity: EntityRef) => ReactNode;
-  sortKey?: string;
-  naturalDir?: SortDirection;
 };
 
 type ListFn = (params?: Record<string, string | number | boolean | undefined>) => Promise<PagedResult<EntityRef>>;
@@ -81,55 +74,60 @@ export function formToJson(form: Record<string, FormValue>): JsonObject {
 
 export function CrudListPage({
   title,
+  titleAccessory,
   description,
   queryKey,
   listKey,
   noun,
   list,
-  remove,
   createPermission,
   createLabel,
   createTo,
   createParams,
   columns,
   rowActions,
-  canDelete,
   emptyHint,
   actions,
+  meta,
+  tabs,
+  belowHeader,
 }: {
   title: string;
+  titleAccessory?: ReactNode;
   description?: string;
   queryKey: string[];
   listKey: string;
   noun: string;
   list: ListFn;
-  remove?: (id: string) => Promise<void>;
   createPermission?: string;
   createLabel?: string;
   createTo?: string;
   createParams?: Record<string, string>;
   columns: ListColumn[];
-  rowActions?: (entity: EntityRef, helpers: { requestDelete: (id: string) => void }) => RowAction[];
-  canDelete?: (entity: EntityRef) => boolean;
+  rowActions?: (entity: EntityRef) => RowAction[];
   emptyHint?: string;
   actions?: ReactNode;
+  meta?: ReactNode;
+  tabs?: ReactNode;
+  belowHeader?: ReactNode;
 }) {
   useDocumentTitle([title]);
-  const queryClient = useQueryClient();
   const navigate = useNavigate();
   const location = useLocation();
   const applied = listQueryFromSearchString(location.searchStr);
   const [draftSearch, setDraftSearch] = useState(applied.search ?? "");
-  const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [syncedSearch, setSyncedSearch] = useState(applied.search);
   const nounPlural = pluralize(noun);
   const appliedKey = listQueryKey(applied);
 
-  useEffect(() => {
+  if (syncedSearch !== applied.search) {
+    setSyncedSearch(applied.search);
     setDraftSearch(applied.search ?? "");
-  }, [applied.search]);
+  }
 
+  const remember = useEffectEvent(() => rememberListQuery(listKey, applied));
   useEffect(() => {
-    rememberListQuery(listKey, applied);
+    remember();
   }, [listKey, appliedKey]);
 
   useDebouncedSearchWrite(draftSearch, applied, (next) => {
@@ -142,43 +140,40 @@ export function CrudListPage({
     placeholderData: keepPreviousData,
   });
 
-  const deleteMutation = useMutation({
-    mutationFn: (id: string) => {
-      if (!remove) {
-        throw new Error("Delete is not available.");
-      }
-      return remove(id);
-    },
-    onSuccess: () => {
-      toast.success(`${capitalize(noun)} deleted`);
-      void queryClient.invalidateQueries({ queryKey });
-      setDeleteId(null);
-    },
-    onError: (error) => toast.error(formatError(error)),
-  });
 
   const canCreate = Boolean(createTo) && (createPermission ? hasPermission(createPermission) : true);
-  const sort = parseOrderBy(applied.orderBy);
-  const showActions = Boolean(remove || rowActions);
+  const showActions = Boolean(rowActions);
 
   return (
     <div className="space-y-6">
       <PageHeader
-        title={title}
+        title={
+          titleAccessory ? (
+            <span className="inline-flex flex-wrap items-center gap-2">
+              {title}
+              {titleAccessory}
+            </span>
+          ) : (
+            title
+          )
+        }
         description={description}
+        meta={meta}
+        tabs={tabs}
         actions={
           canCreate || actions ? (
             <>
               {actions}
               {canCreate && createTo ? (
-                <a href={listHref(createTo, createParams)} className={buttonVariants()}>
+                <AppLink href={listHref(createTo, createParams)} className={buttonVariants()}>
                   {createLabel ?? `New ${noun}`}
-                </a>
+                </AppLink>
               ) : null}
             </>
           ) : undefined
         }
       />
+      {belowHeader}
       <QueryGate query={query}>
         {(data) => (
           <ListPanel
@@ -208,47 +203,15 @@ export function CrudListPage({
               <Table flush aria-label={title}>
                 <TableHeader>
                   <TableRow>
-                    {columns.map((column) =>
-                      column.sortKey ? (
-                        <SortableTableHead
-                          key={column.header}
-                          column={column.sortKey}
-                          label={column.header}
-                          sort={sort.column}
-                          dir={sort.dir}
-                          naturalDir={column.naturalDir}
-                          onSort={(columnKey, naturalDir) => {
-                            writeListSearch(navigate, {
-                              ...applied,
-                              pageNumber: 1,
-                              orderBy: nextOrderBy(applied.orderBy, columnKey, naturalDir),
-                            });
-                          }}
-                        />
-                      ) : (
-                        <TableHead key={column.header}>{column.header}</TableHead>
-                      ),
-                    )}
+                    {columns.map((column) => (
+                      <TableHead key={column.header}>{column.header}</TableHead>
+                    ))}
                     {showActions ? <TableHead className="w-12"><span className="sr-only">Actions</span></TableHead> : null}
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {data.items.map((item) => {
-                    const extra = rowActions?.(item, { requestDelete: setDeleteId }) ?? [];
-                    const allowDelete = Boolean(remove) && (canDelete ? canDelete(item) : true);
-                    const actions: RowAction[] = [
-                      ...extra,
-                      ...(allowDelete
-                        ? [
-                            {
-                              id: "delete",
-                              label: "Delete",
-                              destructive: true,
-                              onSelect: () => setDeleteId(item.id),
-                            } satisfies RowAction,
-                          ]
-                        : []),
-                    ];
+                    const actions = rowActions?.(item) ?? [];
                     return (
                       <TableRow key={item.id}>
                         {columns.map((column) => (
@@ -268,23 +231,6 @@ export function CrudListPage({
           </ListPanel>
         )}
       </QueryGate>
-
-      <ConfirmDialog
-        open={deleteId !== null}
-        onOpenChange={(open) => {
-          if (!open) {
-            setDeleteId(null);
-          }
-        }}
-        title={`Delete ${noun}?`}
-        body="This cannot be undone."
-        onConfirm={() => {
-          if (deleteId) {
-            deleteMutation.mutate(deleteId);
-          }
-        }}
-        pending={deleteMutation.isPending}
-      />
     </div>
   );
 }
@@ -340,8 +286,7 @@ function useDebouncedSearchWrite(
   applied: ListQuery,
   write: (next: ListQuery) => void,
 ) {
-  const writeRef = useRef(write);
-  writeRef.current = write;
+  const writeLatest = useEffectEvent(write);
   const appliedSearch = applied.search ?? "";
 
   useEffect(() => {
@@ -349,7 +294,7 @@ function useDebouncedSearchWrite(
       return;
     }
     const handle = window.setTimeout(() => {
-      writeRef.current({
+      writeLatest({
         ...applied,
         search: draftSearch.trim() ? draftSearch : undefined,
         pageNumber: 1,
@@ -366,8 +311,4 @@ function writeListSearch(navigate: ReturnType<typeof useNavigate>, query: ListQu
     search,
     replace: true,
   });
-}
-
-function capitalize(value: string): string {
-  return value.charAt(0).toUpperCase() + value.slice(1);
 }

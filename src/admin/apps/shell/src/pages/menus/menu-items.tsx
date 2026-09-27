@@ -6,13 +6,12 @@ import {
   Card,
   CardContent,
   Checkbox,
-  ConfirmDialog,
+  DangerZone,
   EmptyState,
   FormField,
   Input,
   PageHeader,
   QueryGate,
-  RowActions,
   Select,
   toast,
 } from "@raytha/ui";
@@ -36,7 +35,7 @@ import { CSS } from "@dnd-kit/utilities";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useLocation, useNavigate, useParams } from "@tanstack/react-router";
 import { GripVertical, Inbox } from "lucide-react";
-import { useEffect, useState, type FormEvent } from "react";
+import { useState, type FormEvent } from "react";
 import { ListBackLink } from "../../components/list-back-link";
 import { useDocumentTitle } from "../../lib/document-title";
 
@@ -62,7 +61,8 @@ export function MenuItemsPage() {
   const params = useParams({ strict: false });
   const id = "id" in params && typeof params.id === "string" ? params.id : "";
   const queryClient = useQueryClient();
-  const [deleteId, setDeleteId] = useState<string | null>(null);
+  const navigate = useNavigate();
+  const canEdit = hasPermission(platformPermissions.contentTypes);
 
   const menuQuery = useQuery({
     queryKey: ["menu", id],
@@ -77,12 +77,22 @@ export function MenuItemsPage() {
 
   useDocumentTitle([menuQuery.data?.label ?? "Menu items"]);
 
-  const remove = useMutation({
-    mutationFn: (itemId: string) => adminApi.menus.items(id).remove(itemId),
+  const removeMenu = useMutation({
+    mutationFn: () => adminApi.menus.remove(id),
     onSuccess: () => {
-      toast.success("Menu item deleted");
-      void queryClient.invalidateQueries({ queryKey: ["menu-items", id] });
-      setDeleteId(null);
+      toast.success("Menu deleted");
+      void queryClient.invalidateQueries({ queryKey: ["menus"] });
+      void navigate({ to: "/menus" });
+    },
+    onError: (error) => toast.error(formatError(error)),
+  });
+
+  const setMain = useMutation({
+    mutationFn: () => adminApi.menus.setMain(id),
+    onSuccess: () => {
+      toast.success("Main menu updated");
+      void queryClient.invalidateQueries({ queryKey: ["menu"] });
+      void queryClient.invalidateQueries({ queryKey: ["menus"] });
     },
     onError: (error) => toast.error(formatError(error)),
   });
@@ -112,6 +122,7 @@ export function MenuItemsPage() {
 
   const items = itemsQuery.data ?? [];
   const tree = buildTree(items);
+  const menu = menuQuery.data;
 
   const onDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
@@ -146,53 +157,65 @@ export function MenuItemsPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title={menuQuery.data?.label || "Menu items"}
-        description={menuQuery.data?.developerName}
+        back={<ListBackLink to="/menus" listKey="menus" label="menus" />}
+        title={menu?.label || "Menu items"}
+        description={menu ? <code className="text-[13px]">{menu.developerName}</code> : undefined}
+        meta={
+          menu ? (
+            <>
+              {menu.isMainMenu ? <Badge variant="info">Main menu</Badge> : null}
+              <span className="text-sm text-muted-foreground">
+                {items.length === 1 ? "1 item" : `${items.length} items`}
+              </span>
+            </>
+          ) : undefined
+        }
         actions={
-          hasPermission(platformPermissions.contentTypes) ? (
-            <Link
-              to="/menus/$id/items/new"
-              params={{ id }}
-              className="inline-flex h-10 items-center rounded-lg bg-primary px-4 text-sm font-medium text-primary-foreground shadow-card hover:bg-brand-600"
-            >
-              New item
-            </Link>
+          canEdit ? (
+            <>
+              {menu && !menu.isMainMenu ? (
+                <Button type="button" variant="outline" loading={setMain.isPending} onClick={() => setMain.mutate()}>
+                  Set as main menu
+                </Button>
+              ) : null}
+              <Link
+                to="/menus/$id/items/new"
+                params={{ id }}
+                className="inline-flex h-10 items-center rounded-lg bg-primary px-4 text-sm font-medium text-primary-foreground shadow-card hover:bg-brand-600"
+              >
+                New item
+              </Link>
+            </>
           ) : undefined
         }
       />
-      <ListBackLink to="/menus" listKey="menus" label="menus" />
       <QueryGate query={itemsQuery}>
         {() =>
           tree.length === 0 ? (
             <EmptyState icon={Inbox} title="No menu items" hint="Add the first link in this menu." />
           ) : (
             <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
-              <SortableItemTree
-                nodes={tree}
-                menuId={id}
-                canEdit={hasPermission(platformPermissions.contentTypes)}
-                onDelete={setDeleteId}
-              />
+              <SortableItemTree nodes={tree} menuId={id} canEdit={canEdit} />
             </DndContext>
           )
         }
       </QueryGate>
-      <ConfirmDialog
-        open={deleteId !== null}
-        onOpenChange={(open) => {
-          if (!open) {
-            setDeleteId(null);
-          }
-        }}
-        title="Delete menu item?"
-        body="This cannot be undone."
-        onConfirm={() => {
-          if (deleteId) {
-            remove.mutate(deleteId);
-          }
-        }}
-        pending={remove.isPending}
-      />
+      {canEdit && menu ? (
+        menu.isMainMenu ? (
+          <p className="rounded-xl border border-border bg-card px-6 py-4 text-sm text-muted-foreground shadow-card">
+            This is the main menu, so it cannot be deleted. Set another menu as the main menu first.
+          </p>
+        ) : (
+          <DangerZone
+            description="Delete this menu and all of its items. Templates that render it will show nothing in its place."
+            actionLabel="Delete menu"
+            confirmTitle={`Delete “${menu.label}”?`}
+            confirmBody={`This deletes the menu and its ${items.length === 1 ? "1 item" : `${items.length} items`}. This cannot be undone.`}
+            onConfirm={() => removeMenu.mutate()}
+            pending={removeMenu.isPending}
+          />
+        )
+      ) : null}
     </div>
   );
 }
@@ -245,10 +268,7 @@ function MenuItemEditor({
   const items = itemsQuery.data ?? [];
   const editing = items.find((item) => item.id === itemId) ?? null;
 
-  useEffect(() => {
-    if (isNew || hydrated || !editing) {
-      return;
-    }
+  if (!isNew && !hydrated && editing) {
     setForm({
       label: editing.label,
       url: editing.url,
@@ -258,7 +278,7 @@ function MenuItemEditor({
       parentNavigationMenuItemId: editing.parentNavigationMenuItemId ?? "",
     });
     setHydrated(true);
-  }, [editing, hydrated, isNew]);
+  }
 
   const mutation = useMutation({
     mutationFn: () => {
@@ -284,7 +304,18 @@ function MenuItemEditor({
     onError: (error) => toast.error(formatError(error)),
   });
 
+  const remove = useMutation({
+    mutationFn: (id: string) => adminApi.menus.items(menuId).remove(id),
+    onSuccess: () => {
+      toast.success("Menu item deleted");
+      void queryClient.invalidateQueries({ queryKey: ["menu-items", menuId] });
+      void navigate({ to: "/menus/$id", params: { id: menuId } });
+    },
+    onError: (error) => toast.error(formatError(error)),
+  });
+
   const parentChoices = parentOptions(items, itemId);
+  const childCount = itemId ? descendantIds(items, itemId).size : 0;
 
   if (!menuId) {
     return (
@@ -297,8 +328,10 @@ function MenuItemEditor({
 
   return (
     <div className="space-y-6">
-      <PageHeader title={isNew ? "New menu item" : editing?.label || "Edit menu item"} />
-      <ListBackLink to="/menus/$id" params={{ id: menuId }} listKey={`menu-items:${menuId}`} label="menu items" />
+      <PageHeader
+        back={<ListBackLink to="/menus/$id" params={{ id: menuId }} listKey={`menu-items:${menuId}`} label="menu items" />}
+        title={isNew ? "New menu item" : editing?.label || "Edit menu item"}
+      />
       <Card>
         <CardContent className="pt-6">
           <QueryGate query={itemsQuery}>
@@ -381,6 +414,24 @@ function MenuItemEditor({
           </QueryGate>
         </CardContent>
       </Card>
+      {editing ? (
+        <DangerZone
+          description={
+            childCount > 0
+              ? `Delete this menu item and the ${childCount === 1 ? "item" : `${childCount} items`} nested under it.`
+              : "Delete this menu item."
+          }
+          actionLabel="Delete menu item"
+          confirmTitle={`Delete “${editing.label || "menu item"}”?`}
+          confirmBody={
+            childCount > 0
+              ? `Its ${childCount === 1 ? "child item is" : `${childCount} nested items are`} deleted too. This cannot be undone.`
+              : "This cannot be undone."
+          }
+          onConfirm={() => remove.mutate(editing.id)}
+          pending={remove.isPending}
+        />
+      ) : null}
     </div>
   );
 }
@@ -437,12 +488,10 @@ function SortableItemTree({
   nodes,
   menuId,
   canEdit,
-  onDelete,
 }: {
   nodes: TreeNode[];
   menuId: string;
   canEdit: boolean;
-  onDelete: (id: string) => void;
 }) {
   return (
     <SortableContext items={nodes.map((node) => node.item.id)} strategy={verticalListSortingStrategy}>
@@ -454,7 +503,6 @@ function SortableItemTree({
             depth={0}
             menuId={menuId}
             canEdit={canEdit}
-            onDelete={onDelete}
           />
         ))}
       </ul>
@@ -467,13 +515,11 @@ function SortableMenuItem({
   depth,
   menuId,
   canEdit,
-  onDelete,
 }: {
   node: TreeNode;
   depth: number;
   menuId: string;
   canEdit: boolean;
-  onDelete: (id: string) => void;
 }) {
   const item = node.item;
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: item.id });
@@ -514,24 +560,14 @@ function SortableMenuItem({
         {item.isDisabled ? <Badge variant="secondary">Disabled</Badge> : null}
         {item.openInNewTab ? <Badge variant="info">New tab</Badge> : null}
         {canEdit ? (
-          <div className="flex flex-wrap items-center gap-1">
-            <a
-              href={`/raytha/menus/${encodeURIComponent(menuId)}/items/new?parent=${encodeURIComponent(item.id)}`}
-              className="inline-flex h-8 items-center rounded-lg px-3 text-sm hover:bg-accent"
-            >
-              Add child
-            </a>
-            <RowActions
-              actions={[
-                {
-                  id: "delete",
-                  label: "Delete",
-                  destructive: true,
-                  onSelect: () => onDelete(item.id),
-                },
-              ]}
-            />
-          </div>
+          <Link
+            to="/menus/$id/items/new"
+            params={{ id: menuId }}
+            search={{ parent: item.id }}
+            className="inline-flex h-8 items-center rounded-lg px-3 text-sm hover:bg-accent"
+          >
+            Add child
+          </Link>
         ) : null}
       </div>
       {node.children.length > 0 ? (
@@ -545,7 +581,6 @@ function SortableMenuItem({
                   depth={depth + 1}
                   menuId={menuId}
                   canEdit={canEdit}
-                  onDelete={onDelete}
                 />
               ))}
             </ul>

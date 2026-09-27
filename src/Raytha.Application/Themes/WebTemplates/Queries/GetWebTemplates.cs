@@ -34,40 +34,28 @@ public class GetWebTemplates
             CancellationToken cancellationToken
         )
         {
-            var query = _db
-                .WebTemplates.Include(wt => wt.TemplateAccessToModelDefinitions)
-                .ThenInclude(wt => wt.ContentType)
-                .Include(wt => wt.LastModifierUser)
-                .Include(wt => wt.ParentTemplate)
-                .AsQueryable();
+            var query = _db.WebTemplates.AsQueryable();
 
             if (request.ThemeId.HasValue)
             {
-                query = query.Where(wt => wt.ThemeId == request.ThemeId.Value.Guid);
+                var themeId = request.ThemeId.Value.Guid;
+                query = query.Where(wt => wt.ThemeId == themeId);
             }
 
             if (!string.IsNullOrEmpty(request.Search))
             {
                 var searchQuery = request.Search.ToLower();
                 query = query.Where(wt =>
-                    wt.Label!.ToLower().Contains(searchQuery)
-                    || wt.DeveloperName!.ToLower().Contains(searchQuery)
-                    || (
-                        wt.LastModifierUser != null
-                        && (
-                            wt.LastModifierUser.FirstName.ToLower().Contains(searchQuery)
-                            || wt.LastModifierUser.LastName.ToLower().Contains(searchQuery)
-                        )
-                    )
+                    (wt.Label != null && wt.Label.ToLower().Contains(searchQuery))
+                    || (wt.DeveloperName != null && wt.DeveloperName.ToLower().Contains(searchQuery))
                 );
             }
 
-            if (request.ContentTypeId.HasValue)
+            if (request.ContentTypeId is { } contentType && contentType.Guid != Guid.Empty)
             {
+                var contentTypeId = contentType.Guid;
                 query = query.Where(wt =>
-                    wt.TemplateAccessToModelDefinitions.Any(c =>
-                        c.ContentTypeId == request.ContentTypeId.Value.Guid
-                    )
+                    wt.TemplateAccessToModelDefinitions.Any(c => c.ContentTypeId == contentTypeId)
                 );
             }
 

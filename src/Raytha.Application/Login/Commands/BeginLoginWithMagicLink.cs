@@ -16,7 +16,6 @@ public class BeginLoginWithMagicLink
     public record Command : LoggableRequest<CommandResponseDto<ShortGuid>>
     {
         public string EmailAddress { get; init; } = null!;
-        public string ReturnUrl { get; init; } = null;
         public bool SendEmail { get; init; } = true;
     }
 
@@ -109,10 +108,10 @@ public class BeginLoginWithMagicLink
                     p.EmailAddress.ToLower() == request.EmailAddress.ToLower().Trim()
                 );
 
-            var guid = ShortGuid.NewGuid();
+            var code = MagicLinkCode.Generate();
             var otp = new OneTimePassword
             {
-                Id = PasswordUtility.Hash(guid),
+                Id = MagicLinkCode.OtpId(entity.Id, code),
                 IsUsed = false,
                 UserId = entity.Id,
                 ExpiresAt = DateTime.UtcNow.AddSeconds(authScheme.MagicLinkExpiresInSeconds),
@@ -124,8 +123,7 @@ public class BeginLoginWithMagicLink
                 new BeginLoginWithMagicLinkEvent(
                     entity,
                     request.SendEmail,
-                    guid,
-                    request.ReturnUrl,
+                    code,
                     authScheme.MagicLinkExpiresInSeconds
                 )
             );

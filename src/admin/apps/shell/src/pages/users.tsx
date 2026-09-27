@@ -1,11 +1,14 @@
-import { adminApi, formatError, platformPermissions } from "@raytha/api";
+import { adminApi, currentSession, formatError, platformPermissions } from "@raytha/api";
 import type { EntityRef } from "@raytha/api";
 import {
   Badge,
   Button,
   Card,
   CardContent,
+  CardHeader,
+  CardTitle,
   Checkbox,
+  DangerZone,
   FormField,
   Input,
   Label,
@@ -20,6 +23,7 @@ import { ListBackLink } from "../components/list-back-link";
 import { useDocumentTitle } from "../lib/document-title";
 import { CrudListPage } from "./crud-list";
 import { displayName, entityFields, formatWhen, isRecord, readBoolean, readString } from "./entity";
+import { UsersSectionTabs } from "./users-section-tabs";
 
 export function UsersPage() {
   return (
@@ -30,10 +34,10 @@ export function UsersPage() {
       listKey="users"
       noun="user"
       list={adminApi.users.list}
-      remove={adminApi.users.remove}
       createPermission={platformPermissions.users}
       createLabel="New user"
       createTo="/users/new"
+      tabs={<UsersSectionTabs active="users" />}
       columns={[
         {
           header: "Name",
@@ -63,14 +67,15 @@ export function UserGroupsPage() {
   return (
     <CrudListPage
       title="User groups"
+      description="Groups for assigning membership on users."
       queryKey={["user-groups"]}
       listKey="user-groups"
       noun="user group"
       list={adminApi.userGroups.list}
-      remove={adminApi.userGroups.remove}
       createPermission={platformPermissions.users}
       createLabel="New group"
       createTo="/users/groups/new"
+      tabs={<UsersSectionTabs active="groups" />}
       columns={[
         {
           header: "Label",
@@ -112,8 +117,7 @@ export function NewUserPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="New user" />
-      <ListBackLink to="/users" listKey="users" label="users" />
+      <PageHeader back={<ListBackLink to="/users" listKey="users" label="users" />} title="New user" />
       <Card>
         <CardContent className="pt-6">
           <form
@@ -171,8 +175,7 @@ export function EditUserPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Edit user" />
-      <ListBackLink to="/users" listKey="users" label="users" />
+      <PageHeader back={<ListBackLink to="/users" listKey="users" label="users" />} title="Edit user" />
       <QueryGate query={query}>{(user) => <UserEditForm user={user} />}</QueryGate>
     </div>
   );
@@ -180,55 +183,184 @@ export function EditUserPage() {
 
 function UserEditForm({ user }: { user: EntityRef }) {
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const fields = entityFields(user);
+  const isActive = readBoolean(fields, "isActive");
+  const isSelf = currentSession()?.id === user.id;
   const [firstName, setFirstName] = useState(readString(fields, "firstName"));
   const [lastName, setLastName] = useState(readString(fields, "lastName"));
   const [emailAddress, setEmailAddress] = useState(readString(fields, "emailAddress"));
   const [groupIds, setGroupIds] = useState<string[]>(readIds(fields.userGroups));
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmNewPassword, setConfirmNewPassword] = useState("");
+  const [sendEmail, setSendEmail] = useState(true);
 
   const groupsQuery = useQuery({
     queryKey: ["user-groups", "picker"],
     queryFn: () => adminApi.userGroups.list({ pageSize: 100 }),
   });
 
+  const invalidate = () => {
+    void queryClient.invalidateQueries({ queryKey: ["users"] });
+    void queryClient.invalidateQueries({ queryKey: ["users", user.id] });
+  };
+
   const mutation = useMutation({
     mutationFn: () => adminApi.users.update(user.id, { firstName, lastName, emailAddress, userGroups: groupIds }),
     onSuccess: () => {
       toast.success("User updated");
+      invalidate();
+    },
+    onError: (error) => toast.error(formatError(error)),
+  });
+
+  const setActive = useMutation({
+    mutationFn: () => (isActive ? adminApi.users.suspend(user.id) : adminApi.users.restore(user.id)),
+    onSuccess: () => {
+      toast.success(isActive ? "User suspended" : "User restored");
+      invalidate();
+    },
+    onError: (error) => toast.error(formatError(error)),
+  });
+
+  const resetPassword = useMutation({
+    mutationFn: () =>
+      adminApi.users.resetPassword(user.id, { newPassword, confirmNewPassword, sendEmail }),
+    onSuccess: () => {
+      toast.success(sendEmail ? "Password reset and email sent" : "Password reset");
+      setNewPassword("");
+      setConfirmNewPassword("");
+    },
+    onError: (error) => toast.error(formatError(error)),
+  });
+
+  const remove = useMutation({
+    mutationFn: () => adminApi.users.remove(user.id),
+    onSuccess: () => {
+      toast.success("User deleted");
       void queryClient.invalidateQueries({ queryKey: ["users"] });
+      void navigate({ to: "/users" });
     },
     onError: (error) => toast.error(formatError(error)),
   });
 
   return (
-    <Card>
-      <CardContent className="pt-6">
-        <form
-          className="space-y-4"
-          onSubmit={(event) => {
-            event.preventDefault();
-            mutation.mutate();
-          }}
-        >
-          <UserFields
-            firstName={firstName}
-            lastName={lastName}
-            emailAddress={emailAddress}
-            onFirstName={setFirstName}
-            onLastName={setLastName}
-            onEmail={setEmailAddress}
-          />
-          <GroupPicker
-            groups={groupsQuery.data?.items ?? []}
-            selected={groupIds}
-            onChange={setGroupIds}
-          />
-          <Button type="submit" loading={mutation.isPending}>
-            Save
-          </Button>
-        </form>
-      </CardContent>
-    </Card>
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle>Details</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <form
+            className="space-y-4"
+            onSubmit={(event) => {
+              event.preventDefault();
+              mutation.mutate();
+            }}
+          >
+            <UserFields
+              firstName={firstName}
+              lastName={lastName}
+              emailAddress={emailAddress}
+              onFirstName={setFirstName}
+              onLastName={setLastName}
+              onEmail={setEmailAddress}
+            />
+            <GroupPicker
+              groups={groupsQuery.data?.items ?? []}
+              selected={groupIds}
+              onChange={setGroupIds}
+            />
+            <Button type="submit" loading={mutation.isPending}>
+              Save
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
+      <Card>
+        <CardHeader>
+          <CardTitle>Account</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {isActive ? <Badge variant="success">Active</Badge> : <Badge variant="secondary">Inactive</Badge>}
+          {isSelf ? (
+            <p className="text-sm text-muted-foreground">You cannot change the status of your own account.</p>
+          ) : (
+            <Button type="button" variant="outline" loading={setActive.isPending} onClick={() => setActive.mutate()}>
+              {isActive ? "Suspend" : "Restore"}
+            </Button>
+          )}
+        </CardContent>
+      </Card>
+      {isActive ? (
+        <Card>
+          <CardHeader>
+            <CardTitle>Reset password</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <form
+              className="space-y-4"
+              onSubmit={(event) => {
+                event.preventDefault();
+                if (newPassword.length < 8) {
+                  toast.error("Password must be at least 8 characters.");
+                  return;
+                }
+                if (newPassword !== confirmNewPassword) {
+                  toast.error("Confirm password did not match.");
+                  return;
+                }
+                resetPassword.mutate();
+              }}
+            >
+              <FormField label="New password" required htmlFor="user-new-password" hint="At least 8 characters.">
+                {(control) => (
+                  <Input
+                    {...control}
+                    type="password"
+                    autoComplete="new-password"
+                    value={newPassword}
+                    onChange={(event) => setNewPassword(event.target.value)}
+                  />
+                )}
+              </FormField>
+              <FormField label="Confirm password" required htmlFor="user-confirm-password">
+                {(control) => (
+                  <Input
+                    {...control}
+                    type="password"
+                    autoComplete="new-password"
+                    value={confirmNewPassword}
+                    onChange={(event) => setConfirmNewPassword(event.target.value)}
+                  />
+                )}
+              </FormField>
+              <div className="flex items-center gap-2">
+                <Checkbox id="user-reset-send-email" checked={sendEmail} onCheckedChange={setSendEmail} />
+                <Label htmlFor="user-reset-send-email">Email the new password</Label>
+              </div>
+              <Button type="submit" loading={resetPassword.isPending}>
+                Reset password
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
+      ) : (
+        <p className="text-sm text-muted-foreground">Restore this account before resetting the password.</p>
+      )}
+      {isSelf ? (
+        <p className="text-sm text-muted-foreground">You cannot delete your own account.</p>
+      ) : (
+        <DangerZone
+          description="Delete this user. This cannot be undone."
+          actionLabel="Delete user"
+          confirmTitle="Delete user?"
+          confirmBody="This cannot be undone."
+          onConfirm={() => remove.mutate()}
+          pending={remove.isPending}
+        />
+      )}
+    </div>
   );
 }
 
@@ -250,8 +382,7 @@ export function NewUserGroupPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="New user group" />
-      <ListBackLink to="/users/groups" listKey="user-groups" label="user groups" />
+      <PageHeader back={<ListBackLink to="/users/groups" listKey="user-groups" label="user groups" />} title="New user group" />
       <Card>
         <CardContent className="pt-6">
           <form
@@ -319,8 +450,7 @@ export function EditUserGroupPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Edit user group" />
-      <ListBackLink to="/users/groups" listKey="user-groups" label="user groups" />
+      <PageHeader back={<ListBackLink to="/users/groups" listKey="user-groups" label="user groups" />} title="Edit user group" />
       <QueryGate query={query}>{(group) => <UserGroupEditForm group={group} />}</QueryGate>
     </div>
   );
@@ -328,6 +458,7 @@ export function EditUserGroupPage() {
 
 function UserGroupEditForm({ group }: { group: EntityRef }) {
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const fields = entityFields(group);
   const [label, setLabel] = useState(readString(fields, "label"));
 
@@ -340,27 +471,47 @@ function UserGroupEditForm({ group }: { group: EntityRef }) {
     onError: (error) => toast.error(formatError(error)),
   });
 
+  const remove = useMutation({
+    mutationFn: () => adminApi.userGroups.remove(group.id),
+    onSuccess: () => {
+      toast.success("User group deleted");
+      void queryClient.invalidateQueries({ queryKey: ["user-groups"] });
+      void navigate({ to: "/users/groups" });
+    },
+    onError: (error) => toast.error(formatError(error)),
+  });
+
   const handleSubmit = (event: FormEvent) => {
     event.preventDefault();
     mutation.mutate();
   };
 
   return (
-    <Card>
-      <CardContent className="pt-6">
-        <form className="space-y-4" onSubmit={handleSubmit}>
-          <FormField label="Label" required htmlFor="edit-group-label">
-            {(control) => <Input {...control} value={label} onChange={(event) => setLabel(event.target.value)} />}
-          </FormField>
-          <p className="text-sm text-muted-foreground">
-            Developer name {readString(fields, "developerName") || "—"}
-          </p>
-          <Button type="submit" loading={mutation.isPending}>
-            Save
-          </Button>
-        </form>
-      </CardContent>
-    </Card>
+    <div className="space-y-6">
+      <Card>
+        <CardContent className="pt-6">
+          <form className="space-y-4" onSubmit={handleSubmit}>
+            <FormField label="Label" required htmlFor="edit-group-label">
+              {(control) => <Input {...control} value={label} onChange={(event) => setLabel(event.target.value)} />}
+            </FormField>
+            <p className="text-sm text-muted-foreground">
+              Developer name {readString(fields, "developerName") || "—"}
+            </p>
+            <Button type="submit" loading={mutation.isPending}>
+              Save
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
+      <DangerZone
+        description="Delete this group. Unassign every member first."
+        actionLabel="Delete group"
+        confirmTitle="Delete user group?"
+        confirmBody="This cannot be undone."
+        onConfirm={() => remove.mutate()}
+        pending={remove.isPending}
+      />
+    </div>
   );
 }
 

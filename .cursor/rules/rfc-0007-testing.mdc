@@ -58,6 +58,9 @@ These run in the normal test pass and MUST stay green:
   auditable, webhook event names unique and dot-namespaced, `[WebhookEvent]`
   types declaring a nested Mediator command, catalog discovery, and the webhook
   publish behavior being registered.
+- `CqrsStructureTests` — the RFC-0002 use-case shape and handler/validator MUSTs.
+- `AdminEndpointAuthorizationTests` — RFC-0008 §1 policies on every `/raytha`
+  endpoint, from the real endpoint table.
 
 Rules:
 

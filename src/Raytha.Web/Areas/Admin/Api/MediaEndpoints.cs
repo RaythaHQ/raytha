@@ -21,10 +21,11 @@ public static class MediaEndpoints
 
         var media = admin.MapGroup("/media")
             .WithTags("Admin media")
-            .RequireAuthorization(BuiltInSystemPermission.MANAGE_MEDIA_ITEMS);
+            .RequireAuthorization(BuiltInSystemPermission.MANAGE_MEDIA_ITEMS_PERMISSION);
 
         media.MapGet("", List);
         media.MapGet("/{id}", Get);
+        media.MapGet("/{id}/usage", Usage);
         media.MapDelete("/{id}", Delete);
 
         return admin;
@@ -64,6 +65,9 @@ public static class MediaEndpoints
 
     private static async Task<IResult> Get(string id, ISender mediator, IRelativeUrlBuilder urls) =>
         AdminResults.From(await mediator.Send(new GetMediaItemById.Query { Id = id }), item => WithUrl(item, urls));
+
+    private static async Task<IResult> Usage(string id, ISender mediator) =>
+        AdminResults.From(await mediator.Send(new GetMediaItemUsage.Query { Id = id }));
 
     private static async Task<IResult> Delete(string id, ISender mediator) =>
         AdminResults.NoContent(await mediator.Send(new DeleteMediaItem.Command { Id = id }));

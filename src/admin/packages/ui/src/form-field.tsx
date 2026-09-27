@@ -39,7 +39,7 @@ export function FormField({
   };
 
   return (
-    <div className="flex flex-col gap-1.5">
+    <div className="flex flex-col gap-2">
       <Label htmlFor={id}>
         {label}
         {required ? (
@@ -50,12 +50,12 @@ export function FormField({
       </Label>
       {children(field)}
       {hint ? (
-        <p id={hintId} className="text-xs text-muted-foreground">
+        <p id={hintId} className="text-xs leading-5 text-muted-foreground">
           {hint}
         </p>
       ) : null}
       {error ? (
-        <p id={errId} role="alert" className="text-xs text-destructive">
+        <p id={errId} role="alert" className="text-xs font-medium text-destructive-soft-foreground">
           {error}
         </p>
       ) : null}

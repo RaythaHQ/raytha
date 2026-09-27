@@ -1,8 +1,10 @@
 import {
   parseBackgroundTask,
+  parseClearedLog,
   parseEmailTemplate,
   parseFunction,
   parseIdResponse,
+  parseMaintenanceSnapshot,
   parseMenu,
   parseMenuItem,
   parseMenuItems,
@@ -17,6 +19,7 @@ import type {
   AdminSetupStatus,
   BackgroundTaskDetail,
   AuthenticationSchemeRequest,
+  ClearedLog,
   ConfigurationOptions,
   DuplicateThemeInput,
   EmailTemplateDetail,
@@ -29,12 +32,17 @@ import type {
   JsonObject,
   LoginResponse,
   LoginScheme,
+  LogRetention,
+  MaintenanceSnapshot,
   Me,
   MediaConfig,
+  MediaItem,
+  MediaItemUsage,
   MenuDetail,
   MenuItemDetail,
   PagedResult,
   PlatformVersion,
+  RetainedLogKey,
   RolePermissionCatalog,
   ThemeMediaItem,
 } from "./types";
@@ -120,6 +128,19 @@ export function hasPermission(permission: string): boolean {
   return currentUser.permissions.includes(permission);
 }
 
+export type ContentTypeAccess = "read" | "edit" | "config";
+
+/** Mirrors RaythaAdminAuthorizationHandler: manage-content-types grants every content type. */
+export function hasContentTypePermission(developerName: string, access: ContentTypeAccess): boolean {
+  if (currentUser === null) {
+    return false;
+  }
+  if (currentUser.permissions.includes(platformPermissions.contentTypes)) {
+    return true;
+  }
+  return currentUser.contentTypePermissions.includes(`${developerName}_${access}`);
+}
+
 /** Resolves the cookie session before the router renders anything. */
 export async function bootstrapSession(): Promise<Me | null> {
   try {
@@ -194,8 +215,22 @@ export async function requestMagicLink(email: string): Promise<void> {
   });
 
   if (!response.ok) {
-    throw new ApiError(response.status, await readProblem(response, "Could not send a magic link."));
+    throw new ApiError(response.status, await readProblem(response, "Could not send a sign-in code."));
   }
+}
+
+export async function completeMagicLink(email: string, code: string): Promise<void> {
+  const response = await fetch("/raytha/api/auth/magic-link/complete", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email, code }),
+  });
+
+  if (!response.ok) {
+    throw new ApiError(response.status, await readProblem(response, "Invalid or expired code."));
+  }
+
+  await requireBootstrappedSession();
 }
 
 export async function requestForgotPassword(email: string): Promise<void> {
@@ -264,6 +299,13 @@ async function fetchUnknown(path: string, init?: RequestInit): Promise<unknown> 
   return JSON.parse(text);
 }
 
+const CLEAR_LOG_PATH: Record<RetainedLogKey, string> = {
+  audit_logs: "/raytha/api/admin/audit-logs",
+  email_logs: "/raytha/api/admin/email-log",
+  webhook_deliveries: "/raytha/api/admin/webhooks/deliveries",
+  background_tasks: "/raytha/api/admin/background-tasks",
+};
+
 export async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
   const method = (init?.method ?? "GET").toUpperCase();
   const isMutating = method !== "GET" && method !== "HEAD";
@@ -316,6 +358,28 @@ export function formatError(e: unknown): string {
   return e instanceof Error ? e.message : "Request failed.";
 }
 
+/**
+ * Per-field messages from a 400 validation problem, keyed by the server property name
+ * (`DeveloperName`); form-level failures are under `""`. Empty for any other error.
+ */
+export function problemFieldErrors(e: unknown): Record<string, string> {
+  if (!(e instanceof ApiError) || e.status !== 400) {
+    return {};
+  }
+  try {
+    const problem = JSON.parse(e.message) as { errors?: Record<string, unknown> };
+    const fields: Record<string, string> = {};
+    for (const [key, messages] of Object.entries(problem.errors ?? {})) {
+      if (Array.isArray(messages)) {
+        fields[key] = messages.filter((message) => typeof message === "string").join(" ");
+      }
+    }
+    return fields;
+  } catch {
+    return {};
+  }
+}
+
 function listQuery(path: string, params?: Record<string, string | number | boolean | undefined>): string {
   const search = new URLSearchParams();
   for (const [key, value] of Object.entries(params ?? {})) {
@@ -343,9 +407,48 @@ function crud<T extends EntityRef>(base: string) {
 export const adminApi = {
   dashboard: () => apiFetch<JsonObject>("/raytha/api/admin/dashboard"),
 
-  users: crud<EntityRef>("/raytha/api/admin/users"),
+  users: {
+    ...crud<EntityRef>("/raytha/api/admin/users"),
+    suspend: (id: string) =>
+      apiFetch<EntityRef>(`/raytha/api/admin/users/${id}/suspend`, { method: "POST", body: "{}" }),
+    restore: (id: string) =>
+      apiFetch<EntityRef>(`/raytha/api/admin/users/${id}/restore`, { method: "POST", body: "{}" }),
+    resetPassword: (
+      id: string,
+      input: { newPassword?: string; confirmNewPassword?: string; sendEmail?: boolean },
+    ) =>
+      apiFetch<void>(`/raytha/api/admin/users/${id}/reset-password`, {
+        method: "POST",
+        body: JSON.stringify(input),
+      }),
+  },
   userGroups: crud<EntityRef>("/raytha/api/admin/user-groups"),
-  admins: crud<EntityRef>("/raytha/api/admin/admins"),
+  admins: {
+    ...crud<EntityRef>("/raytha/api/admin/admins"),
+    suspend: (id: string) =>
+      apiFetch<EntityRef>(`/raytha/api/admin/admins/${id}/suspend`, { method: "POST", body: "{}" }),
+    restore: (id: string) =>
+      apiFetch<EntityRef>(`/raytha/api/admin/admins/${id}/restore`, { method: "POST", body: "{}" }),
+    removeAccess: (id: string) =>
+      apiFetch<EntityRef>(`/raytha/api/admin/admins/${id}/remove-access`, { method: "POST", body: "{}" }),
+    resetPassword: (
+      id: string,
+      input: { newPassword?: string; confirmNewPassword?: string; sendEmail?: boolean },
+    ) =>
+      apiFetch<void>(`/raytha/api/admin/admins/${id}/reset-password`, {
+        method: "POST",
+        body: JSON.stringify(input),
+      }),
+    apiKeys: (adminId: string) => {
+      const base = `/raytha/api/admin/admins/${adminId}/api-keys`;
+      return {
+        list: (params?: Record<string, string | number | boolean | undefined>) =>
+          apiFetch<PagedResult<EntityRef>>(listQuery(base, params)),
+        create: (input: JsonObject) => apiFetch<EntityRef>(base, { method: "POST", body: JSON.stringify(input) }),
+        remove: (keyId: string) => apiFetch<void>(`${base}/${keyId}`, { method: "DELETE" }),
+      };
+    },
+  },
   roles: {
     ...crud<EntityRef>("/raytha/api/admin/roles"),
     permissions: () => apiFetch<RolePermissionCatalog>("/raytha/api/admin/roles/permissions"),
@@ -413,6 +516,7 @@ export const adminApi = {
           body: JSON.stringify(input),
         }),
       setAsHomePage: (id: string) => apiFetch<EntityRef>(`${base}/${id}/set-as-home-page`, { method: "POST" }),
+      template: (id: string) => apiFetch<unknown>(`${base}/${id}/template`),
       exportCsv: (id: string, input: ExportContentItemsToCsvInput): Promise<IdResponse> =>
         fetchUnknown(`${base}/${id}/export`, {
           method: "POST",
@@ -437,6 +541,7 @@ export const adminApi = {
       discardDraft: (id: string) => apiFetch<EntityRef>(`${base}/${id}/discard-draft`, { method: "POST" }),
       updateSettings: (id: string, input: JsonObject) =>
         apiFetch<EntityRef>(`${base}/${id}/settings`, { method: "PUT", body: JSON.stringify(input) }),
+      setAsHomePage: (id: string) => apiFetch<EntityRef>(`${base}/${id}/set-as-home-page`, { method: "POST" }),
       importCsv: (input: ImportContentItemsFromCsvInput): Promise<IdResponse> =>
         fetchUnknown(`${base}/import`, {
           method: "POST",
@@ -447,8 +552,9 @@ export const adminApi = {
 
   media: {
     list: (params?: Record<string, string | number | boolean | undefined>) =>
-      apiFetch<PagedResult<EntityRef>>(listQuery("/raytha/api/admin/media", params)),
-    get: (id: string) => apiFetch<EntityRef>(`/raytha/api/admin/media/${id}`),
+      apiFetch<PagedResult<MediaItem>>(listQuery("/raytha/api/admin/media", params)),
+    get: (id: string) => apiFetch<MediaItem>(`/raytha/api/admin/media/${id}`),
+    usage: (id: string) => apiFetch<MediaItemUsage>(`/raytha/api/admin/media/${id}/usage`),
     remove: (id: string) => apiFetch<void>(`/raytha/api/admin/media/${id}`, { method: "DELETE" }),
     config: () => apiFetch<MediaConfig>("/raytha/api/admin/media/config"),
   },
@@ -575,6 +681,11 @@ export const adminApi = {
       fetchUnknown(`/raytha/api/admin/navigation-menus/${id}`).then((value) =>
         requireValue(parseMenu(value), "menu"),
       ),
+    setMain: (id: string) =>
+      fetchUnknown(`/raytha/api/admin/navigation-menus/${id}/set-main`, {
+        method: "POST",
+        body: "{}",
+      }).then(parseIdResponse),
     items: (menuId: string) => {
       const base = `/raytha/api/admin/navigation-menus/${menuId}/items`;
       return {
@@ -648,6 +759,7 @@ export const adminApi = {
     list: (params?: Record<string, string | number | boolean | undefined>) =>
       apiFetch<PagedResult<EntityRef>>(listQuery("/raytha/api/admin/audit-logs", params)),
     get: (id: string) => apiFetch<EntityRef>(`/raytha/api/admin/audit-logs/${id}`),
+    categories: () => apiFetch<string[]>("/raytha/api/admin/audit-logs/categories"),
   },
 
   profile: {
@@ -659,8 +771,10 @@ export const adminApi = {
   },
 
   backgroundTasks: {
-    list: (params?: Record<string, string | number | boolean | undefined>) =>
-      apiFetch<PagedResult<EntityRef>>(listQuery("/raytha/api/admin/background-tasks", params)),
+    list: (params?: Record<string, string | number | boolean | undefined>): Promise<PagedResult<BackgroundTaskDetail>> =>
+      fetchUnknown(listQuery("/raytha/api/admin/background-tasks", params)).then((value) =>
+        parsePaged(value, parseBackgroundTask),
+      ),
     get: (id: string): Promise<BackgroundTaskDetail> =>
       fetchUnknown(`/raytha/api/admin/background-tasks/${id}`).then((value) =>
         requireValue(parseBackgroundTask(value), "background task"),
@@ -677,12 +791,14 @@ export const adminApi = {
     get: (id: string) => apiFetch<EntityRef>(`/raytha/api/admin/email-log/${id}`),
   },
   maintenance: {
-    snapshot: () => apiFetch<JsonObject>("/raytha/api/admin/maintenance"),
-    enqueueTask: (input: { steps: number; delayMs: number }) =>
-      apiFetch<IdResponse>("/raytha/api/admin/maintenance/tasks", {
-        method: "POST",
-        body: JSON.stringify(input),
-      }),
+    snapshot: (): Promise<MaintenanceSnapshot> =>
+      fetchUnknown("/raytha/api/admin/maintenance").then(parseMaintenanceSnapshot),
+    retention: () => apiFetch<LogRetention>("/raytha/api/admin/maintenance/retention"),
+    updateRetention: (input: LogRetention) =>
+      apiFetch<LogRetention>("/raytha/api/admin/maintenance/retention", { method: "PUT", body: JSON.stringify(input) }),
+    /** Deletes every row of a log now (finished tasks only for background tasks). */
+    clearLog: (key: RetainedLogKey): Promise<ClearedLog> =>
+      fetchUnknown(CLEAR_LOG_PATH[key], { method: "DELETE" }).then(parseClearedLog),
   },
   version: () => apiFetch<PlatformVersion>("/raytha/api/admin/version"),
 };

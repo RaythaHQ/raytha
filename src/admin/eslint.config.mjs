@@ -3,6 +3,10 @@ import reactHooks from "eslint-plugin-react-hooks";
 import globals from "globals";
 import tseslint from "typescript-eslint";
 
+const rawHttpMessage =
+  "RFC-0006: admin HTTP goes through @raytha/api, which owns base paths, JSON headers, error mapping, and the session cache.";
+const rawHttpGlobals = ["fetch", "XMLHttpRequest", "EventSource"];
+
 export default tseslint.config(
   {
     ignores: [
@@ -43,6 +47,37 @@ export default tseslint.config(
       "jsx-a11y/label-has-associated-control": [
         "error",
         { controlComponents: ["Checkbox", "Input", "Select", "Switch", "Textarea", "FileUpload"] },
+      ],
+    },
+  },
+  {
+    files: ["apps/**/*.{ts,tsx}", "packages/ui/**/*.{ts,tsx}"],
+    rules: {
+      "no-restricted-globals": ["error", ...rawHttpGlobals.map((name) => ({ name, message: rawHttpMessage }))],
+      "no-restricted-properties": [
+        "error",
+        ...["window", "globalThis", "self"].flatMap((object) =>
+          rawHttpGlobals.map((property) => ({ object, property, message: rawHttpMessage })),
+        ),
+      ],
+      "no-restricted-imports": [
+        "error",
+        {
+          paths: ["axios", "ky"].map((name) => ({ name, message: rawHttpMessage })),
+          patterns: [{ group: ["axios/*", "ky/*"], message: rawHttpMessage }],
+        },
+      ],
+    },
+  },
+  {
+    // Grandfathered: duplicate XHR upload-with-progress helpers, to be replaced by one in @raytha/api.
+    files: ["apps/shell/src/lib/media-upload.ts", "packages/ui/src/file-upload.tsx"],
+    rules: {
+      "no-restricted-globals": [
+        "error",
+        ...rawHttpGlobals
+          .filter((name) => name !== "XMLHttpRequest")
+          .map((name) => ({ name, message: rawHttpMessage })),
       ],
     },
   },

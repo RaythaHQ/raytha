@@ -907,7 +907,6 @@ VALUES ('20251129000211_v1_5_0', '10.0.0');
 
 COMMIT;
 
-
 START TRANSACTION;
 CREATE TABLE "EmailLogs" (
     "Id" uuid NOT NULL,
@@ -921,6 +920,16 @@ CREATE TABLE "EmailLogs" (
     "DurationMs" bigint NOT NULL,
     "CreationTime" timestamp with time zone NOT NULL,
     CONSTRAINT "PK_EmailLogs" PRIMARY KEY ("Id")
+);
+
+CREATE TABLE "FeatureFlags" (
+    "Id" uuid NOT NULL,
+    "Key" text NOT NULL,
+    "IsEnabled" boolean NOT NULL,
+    "Scope" text NOT NULL,
+    "CreationTime" timestamp with time zone NOT NULL,
+    "LastModificationTime" timestamp with time zone,
+    CONSTRAINT "PK_FeatureFlags" PRIMARY KEY ("Id")
 );
 
 CREATE TABLE "Webhooks" (
@@ -967,6 +976,8 @@ CREATE INDEX "IX_EmailLogs_IsSuccess" ON "EmailLogs" ("IsSuccess");
 
 CREATE INDEX "IX_EmailLogs_ToAddress" ON "EmailLogs" ("ToAddress");
 
+CREATE UNIQUE INDEX "IX_FeatureFlags_Scope_Key" ON "FeatureFlags" ("Scope", "Key");
+
 CREATE INDEX "IX_WebhookDeliveries_CreationTime" ON "WebhookDeliveries" ("CreationTime");
 
 CREATE INDEX "IX_WebhookDeliveries_EventName" ON "WebhookDeliveries" ("EventName");
@@ -981,6 +992,30 @@ CREATE INDEX "IX_Webhooks_LastModifierUserId" ON "Webhooks" ("LastModifierUserId
 
 INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
 VALUES ('20260921002825_v2_0_0', '10.0.0');
+
+COMMIT;
+
+START TRANSACTION;
+DROP TABLE "FeatureFlags";
+
+INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
+VALUES ('20260921025511_v2_1_0', '10.0.0');
+
+COMMIT;
+
+START TRANSACTION;
+ALTER TABLE "OrganizationSettings" ADD "AuditLogRetentionDays" integer NOT NULL DEFAULT 180;
+
+ALTER TABLE "OrganizationSettings" ADD "BackgroundTaskRetentionDays" integer NOT NULL DEFAULT 180;
+
+ALTER TABLE "OrganizationSettings" ADD "EmailLogRetentionDays" integer NOT NULL DEFAULT 180;
+
+ALTER TABLE "OrganizationSettings" ADD "WebhookDeliveryRetentionDays" integer NOT NULL DEFAULT 180;
+
+UPDATE "Roles" SET "SystemPermissions" = "SystemPermissions" | 128 WHERE ("SystemPermissions" & 5) <> 0 OR EXISTS (SELECT 1 FROM "ContentTypeRolePermission" p WHERE p."RoleId" = "Roles"."Id" AND (p."ContentTypePermissions" & 2) <> 0);
+
+INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
+VALUES ('20260926222411_v2_2_0', '10.0.0');
 
 COMMIT;
 

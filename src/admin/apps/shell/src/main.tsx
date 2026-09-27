@@ -1,4 +1,5 @@
 import { ApiError, bootstrapSession } from "@raytha/api";
+import { registerSpaNavigation } from "@raytha/ui";
 import { keepPreviousData, MutationCache, QueryCache, QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { RouterProvider } from "@tanstack/react-router";
 import { StrictMode } from "react";
@@ -26,6 +27,10 @@ export const queryClient = new QueryClient({
       placeholderData: keepPreviousData,
     },
   },
+});
+
+registerSpaNavigation((href) => {
+  void router.navigate({ href });
 });
 
 void bootstrapSession().then(() => {

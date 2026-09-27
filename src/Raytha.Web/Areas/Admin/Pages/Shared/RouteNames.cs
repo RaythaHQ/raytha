@@ -15,7 +15,6 @@ public static class RouteNames
         public const string LoginRedirect = "/Login/LoginRedirect";
         public const string LoginWithEmailAndPassword = "/Login/LoginWithEmailAndPassword";
         public const string LoginWithMagicLink = "/Login/LoginWithMagicLink";
-        public const string LoginWithMagicLinkSent = "/Login/LoginWithMagicLinkSent";
         public const string LoginWithMagicLinkComplete = "/Login/LoginWithMagicLinkComplete";
         public const string LoginWithSaml = "/Login/LoginWithSaml";
         public const string LoginWithSso = "/Login/LoginWithSso";

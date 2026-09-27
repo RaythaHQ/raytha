@@ -1,10 +1,8 @@
-import { adminApi, CSV_IMPORT_METHODS, formatError } from "@raytha/api";
-import type { CsvImportMethod } from "@raytha/api";
+import { adminApi, formatError } from "@raytha/api";
 import {
   Button,
   Card,
   CardContent,
-  Checkbox,
   FormField,
   Input,
   PageHeader,
@@ -15,12 +13,11 @@ import {
 } from "@raytha/ui";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useParams } from "@tanstack/react-router";
-import { useEffect, useState, type FormEvent } from "react";
-import { BackgroundTaskStatus } from "../../components/background-task-status";
+import { useState, type FormEvent } from "react";
 import { useDocumentTitle } from "../../lib/document-title";
-import { fileToBase64, importMethodLabel, parseCsvImportMethod } from "./csv";
+import { ListBackLink } from "../../components/list-back-link";
 import { parseContentTypeSummary } from "./fields-model";
-import { ContentTypeNav } from "./nav";
+import { RouteTemplateField } from "./route-template";
 
 type SettingsForm = {
   labelSingular: string;
@@ -36,6 +33,7 @@ export function ContentTypeConfigurationPage() {
   useDocumentTitle(["Settings", developerName]);
   const queryClient = useQueryClient();
   const [form, setForm] = useState<SettingsForm | null>(null);
+  const [formFor, setFormFor] = useState<string | null>(null);
 
   const query = useQuery({
     queryKey: ["content-type", developerName],
@@ -45,10 +43,8 @@ export function ContentTypeConfigurationPage() {
 
   const contentType = parseContentTypeSummary(query.data);
 
-  useEffect(() => {
-    if (!contentType) {
-      return;
-    }
+  if (contentType && contentType.id !== formFor) {
+    setFormFor(contentType.id);
     setForm({
       labelSingular: contentType.labelSingular,
       labelPlural: contentType.labelPlural,
@@ -56,7 +52,7 @@ export function ContentTypeConfigurationPage() {
       defaultRouteTemplate: contentType.defaultRouteTemplate,
       primaryFieldId: contentType.primaryFieldId,
     });
-  }, [contentType]);
+  }
 
   const mutation = useMutation({
     mutationFn: (input: SettingsForm) => adminApi.contentTypes.updateByDeveloperName(developerName, input),
@@ -89,10 +85,17 @@ export function ContentTypeConfigurationPage() {
   return (
     <div className="space-y-6">
       <PageHeader
+        back={
+          <ListBackLink
+            to="/content/$developerName"
+            params={{ developerName }}
+            listKey={`content-items:${developerName}`}
+            label={contentType?.labelPlural || developerName}
+          />
+        }
         title={`${contentType?.labelPlural || developerName} settings`}
         description="Labels, primary field, and the default public route template."
       />
-      <ContentTypeNav developerName={developerName} />
       <QueryGate query={query}>
         {() =>
           form ? (
@@ -126,20 +129,12 @@ export function ContentTypeConfigurationPage() {
                       />
                     )}
                   </FormField>
-                  <FormField
-                    label="Default route template"
-                    required
-                    htmlFor="ct-route"
-                    hint="Tokens: {ContentTypeDeveloperName}, {PrimaryField}, {Id}, {CurrentYear}, {CurrentMonth}"
-                  >
-                    {(control) => (
-                      <Input
-                        {...control}
-                        value={form.defaultRouteTemplate}
-                        onChange={(event) => setForm({ ...form, defaultRouteTemplate: event.target.value })}
-                      />
-                    )}
-                  </FormField>
+                  <RouteTemplateField
+                    id="ct-route"
+                    value={form.defaultRouteTemplate}
+                    onChange={(defaultRouteTemplate) => setForm({ ...form, defaultRouteTemplate })}
+                    developerName={developerName}
+                  />
                   <FormField
                     label="Primary field"
                     required
@@ -172,95 +167,6 @@ export function ContentTypeConfigurationPage() {
           )
         }
       </QueryGate>
-      {contentType ? <CsvImportCard contentTypeId={contentType.id} developerName={developerName} /> : null}
     </div>
-  );
-}
-
-function CsvImportCard({ contentTypeId, developerName }: { contentTypeId: string; developerName: string }) {
-  const [importMethod, setImportMethod] = useState<CsvImportMethod>("add_new_records_only");
-  const [importAsDraft, setImportAsDraft] = useState(false);
-  const [file, setFile] = useState<File | null>(null);
-  const [taskId, setTaskId] = useState<string | null>(null);
-
-  const mutation = useMutation({
-    mutationFn: async () => {
-      if (!file) {
-        throw new Error("Choose a CSV file.");
-      }
-      const csvAsBytes = await fileToBase64(file);
-      return adminApi.contentItems(developerName).importCsv({
-        contentTypeId,
-        importMethod,
-        importAsDraft,
-        csvAsBytes,
-      });
-    },
-    onSuccess: (result) => {
-      toast.success(`Import started. Task ${result.id}`);
-      setTaskId(result.id);
-    },
-    onError: (error) => toast.error(formatError(error)),
-  });
-
-  return (
-    <Card>
-      <CardContent className="space-y-4 pt-6">
-        <div>
-          <h2 className="text-lg font-semibold">Import CSV</h2>
-          <p className="text-sm text-muted-foreground">
-            Posts the file bytes to the import command. Include a <code>Template</code> column; an{" "}
-            <code>Id</code> column is required when updating existing records.
-          </p>
-        </div>
-        <FormField label="Import method" required htmlFor="csv-import-method">
-          {(control) => (
-            <Select
-              {...control}
-              value={importMethod}
-              onChange={(event) => {
-                const next = parseCsvImportMethod(event.target.value);
-                if (next) {
-                  setImportMethod(next);
-                }
-              }}
-            >
-              {CSV_IMPORT_METHODS.map((method) => (
-                <option key={method} value={method}>
-                  {importMethodLabel(method)}
-                </option>
-              ))}
-            </Select>
-          )}
-        </FormField>
-        <div className="flex items-center gap-2">
-          <Checkbox
-            id="csv-import-draft"
-            checked={importAsDraft}
-            onCheckedChange={(checked) => setImportAsDraft(checked)}
-          />
-          <label htmlFor="csv-import-draft" className="text-sm">
-            Import as draft
-          </label>
-        </div>
-        <FormField label="CSV file" required htmlFor="csv-import-file">
-          {(control) => (
-            <Input
-              {...control}
-              type="file"
-              accept=".csv,text/csv"
-              onChange={(event) => {
-                const next = event.target.files?.[0] ?? null;
-                setFile(next);
-              }}
-            />
-          )}
-        </FormField>
-        <Button type="button" loading={mutation.isPending} onClick={() => mutation.mutate()}>
-          Import CSV
-        </Button>
-        {taskId ? <BackgroundTaskStatus taskId={taskId} /> : null}
-      </CardContent>
-    </Card>
   );
 }

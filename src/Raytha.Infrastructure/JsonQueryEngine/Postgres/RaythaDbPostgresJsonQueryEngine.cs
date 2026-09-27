@@ -304,7 +304,7 @@ internal class RaythaDbPostgresJsonQueryEngine
             int index = OneToOneRelationshipFields.IndexOf(item);
             sqlBuilder.Join(
                 $"\"{RawSqlColumn.CONTENT_ITEM_TABLE_NAME}\" AS {RawSqlColumn.RELATED_ITEM_COLUMN_NAME}_{index}",
-                $"({RawSqlColumn.RELATED_ITEM_COLUMN_NAME}_{index}.\"{RawSqlColumn.Id.Name}\" = ({RawSqlColumn.SOURCE_ITEM_COLUMN_NAME}.\"{RawSqlColumn.PublishedContent.Name}\"->>'{item.DeveloperName?.ToDeveloperName()}')::uuid)",
+                $"({RawSqlColumn.RELATED_ITEM_COLUMN_NAME}_{index}.\"{RawSqlColumn.Id.Name}\" = NULLIF({RawSqlColumn.SOURCE_ITEM_COLUMN_NAME}.\"{RawSqlColumn.PublishedContent.Name}\"->>'{item.DeveloperName?.ToDeveloperName()}', '')::uuid)",
                 joinType: "LEFT"
             );
             sqlBuilder.Join(

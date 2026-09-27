@@ -4,6 +4,7 @@ using Mediator;
 using Microsoft.EntityFrameworkCore;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Models;
+using Raytha.Application.Common.Security;
 using Raytha.Application.Common.Utils;
 using Raytha.Application.Webhooks;
 using Raytha.Domain.Entities;
@@ -26,7 +27,7 @@ public class CreateAdmin
 
     public class Validator : AbstractValidator<Command>
     {
-        public Validator(IRaythaDbContext db)
+        public Validator(IRaythaDbContext db, ICurrentUser currentUser)
         {
             RuleFor(x => x.FirstName).NotEmpty();
             RuleFor(x => x.LastName).NotEmpty();
@@ -48,6 +49,23 @@ public class CreateAdmin
                             );
                             return;
                         }
+
+                        var requestedIds = (request.Roles ?? []).Select(p => p.Guid).ToList();
+                        var requested = db.FindRoleGrants(requestedIds);
+                        if (requested.Count != requestedIds.Distinct().Count())
+                        {
+                            context.AddDenial(AdminAuthorityGuard.UnknownRole);
+                            return;
+                        }
+
+                        context.AddDenial(
+                            AdminAuthorityGuard.CheckRoleAssignment(
+                                db.FindCaller(currentUser),
+                                null,
+                                requested,
+                                0
+                            )
+                        );
                     }
                 );
         }

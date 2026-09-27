@@ -67,6 +67,13 @@ public record SitePageDto : BaseAuditableEntityDto
     public Dictionary<string, List<SitePageWidgetDto>> PublishedWidgets { get; init; } =
         new Dictionary<string, List<SitePageWidgetDto>>();
 
+    /// <summary>
+    /// Section names the page's web template (and its parent templates) render, in
+    /// first-seen order. Widgets stored under any other key never reach the public page.
+    /// Populated by <c>GetSitePageById</c> only; list projections leave it empty.
+    /// </summary>
+    public IReadOnlyList<string> TemplateSections { get; init; } = Array.Empty<string>();
+
     public static Expression<Func<SitePage, SitePageDto>> GetProjection()
     {
         return entity => GetProjection(entity);

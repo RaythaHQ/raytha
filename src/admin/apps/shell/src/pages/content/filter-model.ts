@@ -404,3 +404,72 @@ export function parseViewModel(value: unknown): ViewModel | undefined {
 export function operatorNeedsValue(operator: string, fieldType: FieldTypeName | "id"): boolean {
   return operatorsForFieldType(fieldType).find((item) => item.developerName === operator)?.needsValue ?? true;
 }
+
+const DIRECTION_WORDS: Partial<Record<FieldTypeName | "id", Record<SortDirection, string>>> = {
+  date: { asc: "oldest first", desc: "newest first" },
+  number: { asc: "lowest first", desc: "highest first" },
+  single_line_text: { asc: "A to Z", desc: "Z to A" },
+  long_text: { asc: "A to Z", desc: "Z to A" },
+  checkbox: { asc: "no first", desc: "yes first" },
+};
+
+/** "Created at, newest first, then Title, A to Z". Empty sort describes the server default. */
+export function describeSort(sort: ViewSortRow[], options: ViewColumnOption[]): string {
+  const rows: ViewSortRow[] = sort.length > 0 ? sort : [{ developerName: "CreationTime", direction: "desc" }];
+  return rows
+    .map((row) => {
+      const option = options.find((item) => item.developerName === row.developerName);
+      const words = (option && DIRECTION_WORDS[option.fieldType]) ?? { asc: "ascending", desc: "descending" };
+      return `${option?.label ?? row.developerName}, ${words[row.direction]}`;
+    })
+    .join(", then ");
+}
+
+export type FilterDescription = {
+  conditionCount: number;
+  text: string;
+};
+
+/** The filter tree in words: `Title contains "news" and Is published is true`. */
+export function describeFilter(
+  root: FilterGroupNode,
+  options: ViewColumnOption[],
+  fields: ContentField[],
+): FilterDescription {
+  let conditionCount = 0;
+
+  const describeCondition = (node: FilterConditionNode): string => {
+    const option = options.find((item) => item.developerName === node.field);
+    if (!option) {
+      return "";
+    }
+    conditionCount += 1;
+    const operator = operatorsForFieldType(option.fieldType).find(
+      (item) => item.developerName === node.conditionOperator,
+    );
+    const phrase = `${option.label} ${operator?.label ?? node.conditionOperator}`;
+    if (operator && !operator.needsValue) {
+      return phrase;
+    }
+    const field = fields.find((item) => item.developerName === node.field);
+    const choice = field && "choices" in field ? field.choices.find((item) => item.developerName === node.value) : undefined;
+    return `${phrase} “${choice?.label ?? node.value}”`;
+  };
+
+  const describeGroup = (group: FilterGroupNode, nested: boolean): string => {
+    const parts = group.children
+      .map((child) => (child.kind === "group" ? describeGroup(child, true) : describeCondition(child)))
+      .filter((part) => part.length > 0);
+    if (parts.length === 0) {
+      return "";
+    }
+    const joined = parts.join(group.groupOperator === "OR" ? " or " : " and ");
+    if (group.groupOperator === "NOT") {
+      return `not (${joined})`;
+    }
+    return nested && parts.length > 1 ? `(${joined})` : joined;
+  };
+
+  const text = describeGroup(root, false);
+  return { conditionCount, text };
+}

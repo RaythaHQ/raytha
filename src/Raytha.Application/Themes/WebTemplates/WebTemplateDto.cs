@@ -1,6 +1,7 @@
 using System.Linq.Expressions;
 using CSharpVitamins;
 using Raytha.Application.Common.Models;
+using Raytha.Application.Common.Utils;
 using Raytha.Domain.Entities;
 
 namespace Raytha.Application.Themes.WebTemplates;
@@ -19,6 +20,7 @@ public record WebTemplateDto : BaseAuditableEntityDto
     public WebTemplateDto? ParentTemplate { get; init; }
     public bool AllowAccessForNewContentTypes { get; init; }
     public Dictionary<ShortGuid, string> TemplateAccessToModelDefinitions { get; init; } = null!;
+    public IReadOnlyList<TemplateVariableGroupDto>? AvailableVariables { get; init; }
 
     public static Expression<Func<WebTemplate?, WebTemplateDto?>> GetProjection()
     {

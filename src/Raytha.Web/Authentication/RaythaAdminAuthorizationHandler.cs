@@ -29,6 +29,8 @@ public class ManageAuditLogsRequirement : IAuthorizationRequirement { }
 
 public class ManageMediaItemsRequirement : IAuthorizationRequirement { }
 
+public class UploadMediaItemsRequirement : IAuthorizationRequirement { }
+
 public class ManageSitePagesRequirement : IAuthorizationRequirement { }
 
 public class ContentTypePermissionRequirement : IAuthorizationRequirement
@@ -149,22 +151,23 @@ public class RaythaAdminAuthorizationHandler : IAuthorizationHandler
             {
                 if (
                     systemPermissionsClaims.Contains(
-                        BuiltInSystemPermission.MANAGE_CONTENT_TYPES_PERMISSION
+                        BuiltInSystemPermission.MANAGE_MEDIA_ITEMS_PERMISSION
                     )
                 )
                 {
                     context.Succeed(requirement);
                 }
-                else
-                {
-                    if (
-                        contentTypePermissionsClaims.Any(p =>
-                            p.EndsWith(BuiltInContentTypePermission.CONTENT_TYPE_EDIT_PERMISSION)
-                        )
+            }
+            else if (requirement is UploadMediaItemsRequirement)
+            {
+                if (
+                    MediaUploadAccess.IsAllowed(
+                        systemPermissionsClaims,
+                        contentTypePermissionsClaims
                     )
-                    {
-                        context.Succeed(requirement);
-                    }
+                )
+                {
+                    context.Succeed(requirement);
                 }
             }
             else if (requirement is ManageSitePagesRequirement)

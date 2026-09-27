@@ -1,4 +1,4 @@
-import { formatError, getAdminSetupStatus, getEnabledAdminSchemes, isAuthenticated, login, requestForgotPassword, requestMagicLink } from "@raytha/api";
+import { completeMagicLink, formatError, getAdminSetupStatus, getEnabledAdminSchemes, isAuthenticated, login, requestForgotPassword, requestMagicLink } from "@raytha/api";
 import { Button, Input, Label } from "@raytha/ui";
 import { useQuery } from "@tanstack/react-query";
 import { useState, type FormEvent } from "react";
@@ -9,10 +9,12 @@ export function LoginPage() {
   useDocumentTitle(["Sign in"]);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [code, setCode] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
-  const [mode, setMode] = useState<"password" | "magic" | "forgot">("password");
+  const [mode, setMode] = useState<"password" | "magic" | "magic-code" | "forgot">("password");
+  const isMagicMode = mode === "magic" || mode === "magic-code";
 
   const schemesQuery = useQuery({
     queryKey: ["admin-login-schemes"],
@@ -39,7 +41,13 @@ export function LoginPage() {
     try {
       if (mode === "magic") {
         await requestMagicLink(email);
-        setMessage("Check your email for a sign-in link.");
+        setMode("magic-code");
+        setMessage("Check your email for a sign-in code.");
+        return;
+      }
+      if (mode === "magic-code") {
+        await completeMagicLink(email, code);
+        finishSignIn();
         return;
       }
       if (mode === "forgot") {
@@ -49,6 +57,20 @@ export function LoginPage() {
       }
       await login(email, password);
       finishSignIn();
+    } catch (err) {
+      setError(formatError(err));
+    } finally {
+      setPending(false);
+    }
+  };
+
+  const resendCode = async () => {
+    setError(null);
+    setMessage(null);
+    setPending(true);
+    try {
+      await requestMagicLink(email);
+      setMessage("We sent a new code.");
     } catch (err) {
       setError(formatError(err));
     } finally {
@@ -75,25 +97,64 @@ export function LoginPage() {
               {message}
             </p>
           )}
-          <div className="space-y-1.5">
-            <Label htmlFor="email">Email</Label>
-            <Input id="email" type="email" autoComplete="username" value={email} onChange={(e) => setEmail(e.target.value)} required />
-          </div>
+          {mode === "magic-code" ? (
+            <p className="text-sm text-muted-foreground">
+              Code sent to <span className="font-medium text-foreground">{email}</span>
+            </p>
+          ) : (
+            <div className="space-y-1.5">
+              <Label htmlFor="email">Email</Label>
+              <Input id="email" type="email" autoComplete="username" value={email} onChange={(e) => setEmail(e.target.value)} required />
+            </div>
+          )}
           {mode === "password" && (
             <div className="space-y-1.5">
               <Label htmlFor="password">Password</Label>
               <Input id="password" type="password" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} required />
             </div>
           )}
+          {mode === "magic-code" && (
+            <div className="space-y-1.5">
+              <Label htmlFor="code">One-time code</Label>
+              <Input
+                id="code"
+                type="text"
+                inputMode="numeric"
+                autoComplete="one-time-code"
+                value={code}
+                onChange={(e) => setCode(e.target.value)}
+                required
+              />
+            </div>
+          )}
           <Button type="submit" className="w-full" loading={pending}>
-            {mode === "password" ? "Sign in" : mode === "magic" ? "Send magic link" : "Send reset email"}
+            {mode === "password" ? "Sign in" : mode === "magic" ? "Email me a code" : mode === "magic-code" ? "Verify code" : "Send reset email"}
           </Button>
         </form>
         <div className="flex flex-col gap-2 text-center text-sm">
-          <button type="button" className="text-primary hover:underline" onClick={() => setMode(mode === "magic" ? "password" : "magic")}>
-            {mode === "magic" ? "Use password instead" : "Sign in with a magic link"}
+          {mode === "magic-code" && (
+            <button type="button" className="text-primary hover:underline" onClick={() => void resendCode()}>
+              Resend code
+            </button>
+          )}
+          <button
+            type="button"
+            className="text-primary hover:underline"
+            onClick={() => {
+              setCode("");
+              setMode(isMagicMode ? "password" : "magic");
+            }}
+          >
+            {isMagicMode ? "Use password instead" : "Sign in with a one-time code"}
           </button>
-          <button type="button" className="text-muted-foreground hover:underline" onClick={() => setMode(mode === "forgot" ? "password" : "forgot")}>
+          <button
+            type="button"
+            className="text-muted-foreground hover:underline"
+            onClick={() => {
+              setCode("");
+              setMode(mode === "forgot" ? "password" : "forgot");
+            }}
+          >
             {mode === "forgot" ? "Back to sign in" : "Forgot password?"}
           </button>
           {setupQuery.data?.required ? (

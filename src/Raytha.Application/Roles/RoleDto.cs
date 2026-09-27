@@ -31,7 +31,11 @@ public record RoleDto : BaseAuditableEntityDto
             foreach (var contentTypePerm in entity.ContentTypeRolePermissions)
             {
                 var listOfPermissions = BuiltInContentTypePermission
-                    .From(contentTypePerm.ContentTypePermissions)
+                    .From(
+                        BuiltInContentTypePermission.WithImplied(
+                            contentTypePerm.ContentTypePermissions
+                        )
+                    )
                     .Select(p => p.DeveloperName);
                 contentTypePermissions.Add(contentTypePerm.ContentTypeId, listOfPermissions);
                 contentTypePermissionsFriendlyNames.Add(

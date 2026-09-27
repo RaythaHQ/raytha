@@ -9,5 +9,19 @@ export const toast = {
 };
 
 export function Toaster() {
-  return <SonnerToaster richColors position="bottom-right" closeButton />;
+  return (
+    <SonnerToaster
+      position="bottom-right"
+      closeButton
+      toastOptions={{
+        classNames: {
+          toast: "!rounded-xl !border-border !shadow-pop !font-sans !text-[13px]",
+          title: "!font-medium",
+          success: "[&_[data-icon]]:!text-success",
+          error: "[&_[data-icon]]:!text-destructive",
+          info: "[&_[data-icon]]:!text-brand-600",
+        },
+      }}
+    />
+  );
 }

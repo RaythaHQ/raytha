@@ -90,7 +90,7 @@ export function Sheet({ open, onOpenChange, children, widthClassName = "max-w-md
   return createPortal(
     <SheetTitleIdContext.Provider value={titleId}>
       <div className="fixed inset-0 z-50" data-raytha-overlay="sheet">
-        <div className="fixed inset-0 bg-black/40" onClick={() => onOpenChange(false)} aria-hidden />
+        <div className="fixed inset-0 animate-fade bg-zinc-950/30 backdrop-blur-[2px]" onClick={() => onOpenChange(false)} aria-hidden />
         <div
           ref={panelRef}
           role="dialog"
@@ -98,7 +98,7 @@ export function Sheet({ open, onOpenChange, children, widthClassName = "max-w-md
           aria-labelledby={titleId}
           tabIndex={-1}
           className={cn(
-            "fixed inset-y-0 right-0 z-50 flex w-full flex-col border-l bg-background shadow-lg outline-none",
+            "fixed inset-y-0 right-0 z-50 flex w-full animate-slide-in-right flex-col border-l border-border bg-card shadow-pop outline-none",
             widthClassName,
           )}
         >
@@ -106,7 +106,7 @@ export function Sheet({ open, onOpenChange, children, widthClassName = "max-w-md
             type="button"
             aria-label="Close"
             onClick={() => onOpenChange(false)}
-            className="absolute right-3 top-3 rounded-sm p-1 text-muted-foreground transition-colors hover:text-foreground"
+            className="absolute right-3 top-3 z-10 rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring"
           >
             <X className="size-4" />
           </button>
@@ -119,7 +119,7 @@ export function Sheet({ open, onOpenChange, children, widthClassName = "max-w-md
 }
 
 export function SheetHeader({ className, ...props }: HTMLAttributes<HTMLDivElement>) {
-  return <div className={cn("border-b px-6 py-4 pr-12", className)} {...props} />;
+  return <div className={cn("border-b border-border px-6 py-4 pr-12", className)} {...props} />;
 }
 
 export function SheetTitle({ className, ...props }: HTMLAttributes<HTMLHeadingElement>) {
@@ -127,7 +127,7 @@ export function SheetTitle({ className, ...props }: HTMLAttributes<HTMLHeadingEl
   return (
     // Content arrives via the children in ...props; the rule cannot see through the spread.
     // eslint-disable-next-line jsx-a11y/heading-has-content
-    <h2 id={titleId} className={cn("text-lg font-semibold leading-none tracking-tight", className)} {...props} />
+    <h2 id={titleId} className={cn("font-display text-base font-semibold leading-6 tracking-tight", className)} {...props} />
   );
 }
 
@@ -136,5 +136,5 @@ export function SheetContent({ className, ...props }: HTMLAttributes<HTMLDivElem
 }
 
 export function SheetFooter({ className, ...props }: HTMLAttributes<HTMLDivElement>) {
-  return <div className={cn("flex justify-end gap-2 border-t px-6 py-4", className)} {...props} />;
+  return <div className={cn("flex justify-end gap-2 border-t border-border bg-[#fafafb] px-6 py-3.5", className)} {...props} />;
 }

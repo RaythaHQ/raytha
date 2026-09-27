@@ -15,12 +15,13 @@ import {
   AuthenticationPage,
   BackgroundTasksPage,
   ConfigurationPage,
-  ContentItemsPage,
   ContentTypeConfigurationPage,
   ContentTypeFieldsPage,
   ContentTypeTrashPage,
+  ContentTypeHomePage,
   ContentTypesPage,
   ContentViewEditorPage,
+  ContentViewItemsPage,
   ContentViewsPage,
   DashboardPage,
   EditAdminPage,
@@ -60,6 +61,7 @@ import {
   SitePagesPage,
   SmtpPage,
   ThemesPage,
+  ThemeSettingsPage,
   UserGroupsPage,
   UsersPage,
   WebhooksPage,
@@ -67,9 +69,12 @@ import {
 import { EmailTemplateEditorPage } from "./pages/editors/email-template-editor";
 import { FunctionEditorPage } from "./pages/editors/function-editor";
 import { NewWebTemplatePage, WebTemplateEditorPage, WebTemplatesListPage } from "./pages/editors/web-templates";
+import { ThemeAssetsPage } from "./pages/editors/theme-assets";
 import { WidgetTemplateEditorPage, WidgetTemplatesListPage } from "./pages/editors/widget-templates";
 import { EditMenuItemPage, MenuItemsPage, NewMenuItemPage } from "./pages/menus/menu-items";
 import { SetupPage } from "./pages/setup";
+import { ContentTypeImportPage } from "./pages/content/import";
+import { MediaDetailPage } from "./pages/media";
 
 const rootRoute = createRootRoute({ component: Outlet });
 
@@ -142,10 +147,15 @@ const editSitePageWidgetRoute = createRoute({
 });
 const contentTypesRoute = createRoute({ getParentRoute: () => appRoute, path: "/content-types", component: ContentTypesPage });
 const newContentTypeRoute = createRoute({ getParentRoute: () => appRoute, path: "/content-types/new", component: NewContentTypePage });
-const contentItemsRoute = createRoute({
+const contentTypeHomeRoute = createRoute({
   getParentRoute: () => appRoute,
   path: "/content/$developerName",
-  component: ContentItemsPage,
+  component: ContentTypeHomePage,
+});
+const contentViewItemsRoute = createRoute({
+  getParentRoute: () => appRoute,
+  path: "/content/$developerName/$viewId",
+  component: ContentViewItemsPage,
 });
 const newContentItemRoute = createRoute({
   getParentRoute: () => appRoute,
@@ -197,8 +207,18 @@ const contentTypeTrashRoute = createRoute({
   path: "/content-types/$developerName/trash",
   component: ContentTypeTrashPage,
 });
+const contentTypeImportRoute = createRoute({
+  getParentRoute: () => appRoute,
+  path: "/content/$developerName/import",
+  component: ContentTypeImportPage,
+});
 const themesRoute = createRoute({ getParentRoute: () => appRoute, path: "/themes", component: ThemesPage });
 const newThemeRoute = createRoute({ getParentRoute: () => appRoute, path: "/themes/new", component: NewThemePage });
+const themeSettingsRoute = createRoute({
+  getParentRoute: () => appRoute,
+  path: "/themes/$themeId",
+  component: ThemeSettingsPage,
+});
 const webTemplatesRoute = createRoute({
   getParentRoute: () => appRoute,
   path: "/themes/$themeId/web-templates",
@@ -223,6 +243,11 @@ const widgetTemplateEditorRoute = createRoute({
   getParentRoute: () => appRoute,
   path: "/themes/$themeId/widget-templates/$id",
   component: WidgetTemplateEditorPage,
+});
+const themeAssetsRoute = createRoute({
+  getParentRoute: () => appRoute,
+  path: "/themes/$themeId/assets",
+  component: ThemeAssetsPage,
 });
 const emailTemplatesRoute = createRoute({ getParentRoute: () => appRoute, path: "/email-templates", component: EmailTemplatesPage });
 const emailTemplateEditorRoute = createRoute({
@@ -249,6 +274,7 @@ const editWebhookRoute = createRoute({ getParentRoute: () => appRoute, path: "/w
 const emailLogRoute = createRoute({ getParentRoute: () => appRoute, path: "/email-log", component: EmailLogPage });
 const backgroundTasksRoute = createRoute({ getParentRoute: () => appRoute, path: "/background-tasks", component: BackgroundTasksPage });
 const mediaRoute = createRoute({ getParentRoute: () => appRoute, path: "/media", component: MediaPage });
+const mediaDetailRoute = createRoute({ getParentRoute: () => appRoute, path: "/media/$id", component: MediaDetailPage });
 const maintenanceRoute = createRoute({ getParentRoute: () => appRoute, path: "/maintenance", component: MaintenancePage });
 const profileRoute = createRoute({ getParentRoute: () => appRoute, path: "/profile", component: ProfilePage });
 
@@ -296,7 +322,9 @@ const routeTree = rootRoute.addChildren([
     editContentTypeFieldRoute,
     contentTypeConfigurationRoute,
     contentTypeTrashRoute,
-    contentItemsRoute,
+    contentTypeImportRoute,
+    contentTypeHomeRoute,
+    contentViewItemsRoute,
     newContentItemRoute,
     editContentItemRoute,
     contentViewsRoute,
@@ -304,11 +332,13 @@ const routeTree = rootRoute.addChildren([
     contentViewEditorRoute,
     themesRoute,
     newThemeRoute,
+    themeSettingsRoute,
     webTemplatesRoute,
     newWebTemplateRoute,
     webTemplateEditorRoute,
     widgetTemplatesRoute,
     widgetTemplateEditorRoute,
+    themeAssetsRoute,
     emailTemplatesRoute,
     emailTemplateEditorRoute,
     menusRoute,
@@ -326,6 +356,7 @@ const routeTree = rootRoute.addChildren([
     emailLogRoute,
     backgroundTasksRoute,
     mediaRoute,
+    mediaDetailRoute,
     maintenanceRoute,
     profileRoute,
     settingsAdminsRoute,

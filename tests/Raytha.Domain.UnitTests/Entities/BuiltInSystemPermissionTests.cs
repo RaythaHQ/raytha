@@ -14,6 +14,7 @@ public class BuiltInSystemPermissionTests
     [TestCase(BuiltInSystemPermission.MANAGE_ADMINISTRATORS_PERMISSION)]
     [TestCase(BuiltInSystemPermission.MANAGE_USERS_PERMISSION)]
     [TestCase(BuiltInSystemPermission.MANAGE_SITE_PAGES_PERMISSION)]
+    [TestCase(BuiltInSystemPermission.MANAGE_MEDIA_ITEMS_PERMISSION)]
     [Parallelizable(ParallelScope.All)]
     public void ShouldReturnCorrectDeveloperName(string developerName)
     {
@@ -29,6 +30,7 @@ public class BuiltInSystemPermissionTests
     [TestCase(BuiltInSystemPermission.MANAGE_ADMINISTRATORS_PERMISSION, "Manage Administrators")]
     [TestCase(BuiltInSystemPermission.MANAGE_USERS_PERMISSION, "Manage Users")]
     [TestCase(BuiltInSystemPermission.MANAGE_SITE_PAGES_PERMISSION, "Manage Site Pages")]
+    [TestCase(BuiltInSystemPermission.MANAGE_MEDIA_ITEMS_PERMISSION, "Manage Media")]
     [Parallelizable(ParallelScope.All)]
     public void ToStringShouldMatchLabel(string developerName, string label)
     {
@@ -58,6 +60,6 @@ public class BuiltInSystemPermissionTests
     [Test]
     public void ShouldMatchNumberOfSupportedTypes()
     {
-        BuiltInSystemPermission.Permissions.Count().Should().Be(7);
+        BuiltInSystemPermission.Permissions.Count().Should().Be(8);
     }
 }

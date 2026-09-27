@@ -23,7 +23,7 @@ public class LoginWithSaml
     {
         [JsonIgnore]
         public string SAMLResponse { get; init; } = null!;
-        public string DeveloperName { get; set; } = null!;
+        public string DeveloperName { get; init; } = null!;
     }
 
     public class Validator : AbstractValidator<Command>

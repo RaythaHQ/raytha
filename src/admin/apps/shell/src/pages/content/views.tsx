@@ -1,15 +1,14 @@
-import { adminApi, formatError } from "@raytha/api";
+import { adminApi, currentSession, formatError } from "@raytha/api";
 import {
   Button,
+  buttonVariants,
   Card,
   CardContent,
-  ConfirmDialog,
   EmptyState,
   FormField,
   Input,
   PageHeader,
   QueryGate,
-  RowActions,
   Table,
   TableBody,
   TableCell,
@@ -21,21 +20,19 @@ import {
 } from "@raytha/ui";
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useNavigate, useParams } from "@tanstack/react-router";
-import { Inbox, Star } from "lucide-react";
+import { House, Inbox, SlidersHorizontal, Star } from "lucide-react";
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { ListBackLink } from "../../components/list-back-link";
 import { rememberListQuery } from "../../lib/list-query";
 import { useDocumentTitle } from "../../lib/document-title";
 import { entityFields, readString, toDeveloperName } from "../entity";
 import { parseContentTypeSummary } from "./fields-model";
-import { ContentTypeNav } from "./nav";
 
 export function ContentViewsPage() {
   const params = useParams({ strict: false });
   const developerName = typeof params.developerName === "string" ? params.developerName : "";
   useDocumentTitle(["Views", developerName]);
   const queryClient = useQueryClient();
-  const [deleteId, setDeleteId] = useState<string | null>(null);
 
   const views = adminApi.views(developerName);
 
@@ -61,6 +58,7 @@ export function ContentViewsPage() {
   }, [developerName]);
 
   const contentType = parseContentTypeSummary(typeQuery.data);
+  const homePageId = currentSession()?.homePageId ?? null;
   const favoriteIds = useMemo(() => {
     const ids = new Set<string>();
     for (const item of favoritesQuery.data?.items ?? []) {
@@ -73,16 +71,6 @@ export function ContentViewsPage() {
     void queryClient.invalidateQueries({ queryKey: ["content-views", developerName] });
     void queryClient.invalidateQueries({ queryKey: ["content-view-favorites", developerName] });
   };
-
-  const deleteMutation = useMutation({
-    mutationFn: (id: string) => views.remove(id),
-    onSuccess: () => {
-      toast.success("View deleted");
-      setDeleteId(null);
-      invalidate();
-    },
-    onError: (error) => toast.error(formatError(error)),
-  });
 
   const favoriteMutation = useMutation({
     mutationFn: ({ id, setAsFavorite }: { id: string; setAsFavorite: boolean }) =>
@@ -103,6 +91,14 @@ export function ContentViewsPage() {
   return (
     <div className="space-y-6">
       <PageHeader
+        back={
+          <ListBackLink
+            to="/content/$developerName"
+            params={{ developerName }}
+            listKey={`content-items:${developerName}`}
+            label={contentType?.labelPlural || developerName}
+          />
+        }
         title={`${contentType?.labelPlural || developerName} views`}
         description="Saved lists with columns, sort, and filters."
         actions={
@@ -115,7 +111,6 @@ export function ContentViewsPage() {
           </Link>
         }
       />
-      <ContentTypeNav developerName={developerName} />
       <QueryGate query={listQuery}>
         {(data) =>
           data.items.length === 0 ? (
@@ -138,13 +133,18 @@ export function ContentViewsPage() {
                   return (
                     <TableRow key={view.id}>
                       <TableCell>
-                        <Link
-                          to="/content/$developerName/views/$viewId"
-                          params={{ developerName, viewId: view.id }}
-                          className="text-primary hover:underline"
-                        >
-                          {viewLabel}
-                        </Link>
+                        <span className="inline-flex items-center gap-1.5">
+                          <Link
+                            to="/content/$developerName/$viewId"
+                            params={{ developerName, viewId: view.id }}
+                            className="text-primary hover:underline"
+                          >
+                            {viewLabel}
+                          </Link>
+                          {homePageId === view.id && (
+                            <House className="size-3.5 text-muted-foreground" aria-label="Home page" />
+                          )}
+                        </span>
                       </TableCell>
                       <TableCell className="font-mono text-xs">{readString(fields, "developerName")}</TableCell>
                       <TableCell>{readString(fields, "routePath") || "—"}</TableCell>
@@ -159,16 +159,14 @@ export function ContentViewsPage() {
                           >
                             <Star className={isFavorite ? "fill-current" : ""} />
                           </Button>
-                          <RowActions
-                            actions={[
-                              {
-                                id: "delete",
-                                label: "Delete",
-                                destructive: true,
-                                onSelect: () => setDeleteId(view.id),
-                              },
-                            ]}
-                          />
+                          <Link
+                            to="/content/$developerName/views/$viewId"
+                            params={{ developerName, viewId: view.id }}
+                            className={buttonVariants({ variant: "ghost", size: "sm" })}
+                          >
+                            <SlidersHorizontal aria-hidden />
+                            Edit view
+                          </Link>
                         </div>
                       </TableCell>
                     </TableRow>
@@ -179,23 +177,6 @@ export function ContentViewsPage() {
           )
         }
       </QueryGate>
-
-      <ConfirmDialog
-        open={deleteId !== null}
-        onOpenChange={(open) => {
-          if (!open) {
-            setDeleteId(null);
-          }
-        }}
-        title="Delete view?"
-        body="This cannot be undone."
-        onConfirm={() => {
-          if (deleteId) {
-            deleteMutation.mutate(deleteId);
-          }
-        }}
-        pending={deleteMutation.isPending}
-      />
     </div>
   );
 }
@@ -231,14 +212,17 @@ export function NewContentViewPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="New view" />
-      <ListBackLink
-        to="/content/$developerName/views"
-        params={{ developerName }}
-        listKey={`content-views:${developerName}`}
-        label="views"
+      <PageHeader
+        back={
+          <ListBackLink
+            to="/content/$developerName/views"
+            params={{ developerName }}
+            listKey={`content-views:${developerName}`}
+            label="views"
+          />
+        }
+        title="New view"
       />
-      <ContentTypeNav developerName={developerName} />
       <Card>
         <CardContent className="pt-6">
           <form

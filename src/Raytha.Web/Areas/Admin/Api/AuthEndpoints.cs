@@ -70,6 +70,7 @@ public static class AuthEndpoints
                 contentTypePermissions = Values(RaythaClaimTypes.ContentTypePermissions),
                 userGroups = Values(RaythaClaimTypes.UserGroups),
                 initialSetupComplete = organization.InitialSetupComplete,
+                homePageId = organization.HomePageId?.ToString(),
                 useDirectUploadToCloud = fileStorage.UseDirectUploadToCloud,
                 emailAndPasswordEnabled = organization.EmailAndPasswordIsEnabledForAdmins,
                 organization = new
@@ -170,27 +171,29 @@ public static class AuthEndpoints
     )
     {
         var response = await mediator.Send(
-            new BeginLoginWithMagicLink.Command
-            {
-                EmailAddress = body.Email ?? string.Empty,
-                ReturnUrl = SafeReturnUrl(body.ReturnUrl),
-            }
+            new BeginLoginWithMagicLink.Command { EmailAddress = body.Email ?? string.Empty }
         );
         return AdminResults.NoContent(response);
     }
 
     private static async Task<IResult> CompleteMagicLink(
         HttpContext http,
-        [FromBody] TokenRequest body,
+        [FromBody] MagicLinkCompleteRequest body,
         [FromServices] ISender mediator
     )
     {
-        if (string.IsNullOrWhiteSpace(body.Token))
+        if (string.IsNullOrWhiteSpace(body.Email) || string.IsNullOrWhiteSpace(body.Code))
         {
-            return AdminResults.Problem("Login token is missing.");
+            return AdminResults.Problem("Email address and code are required.");
         }
 
-        var response = await mediator.Send(new CompleteLoginWithMagicLink.Command { Id = body.Token });
+        var response = await mediator.Send(
+            new CompleteLoginWithMagicLink.Command
+            {
+                EmailAddress = body.Email,
+                Code = body.Code,
+            }
+        );
         if (!response.Success)
         {
             return AdminResults.Problem(response.GetErrors(), StatusCodes.Status401Unauthorized);
@@ -205,9 +208,7 @@ public static class AuthEndpoints
         }
 
         await SignInAsync(http, response.Result, rememberMe: true);
-        return Results.Ok(
-            new { id = response.Result.Id.ToString(), returnUrl = SafeReturnUrl(body.ReturnUrl) }
-        );
+        return Results.Ok(new { id = response.Result.Id.ToString() });
     }
 
     private static async Task<IResult> BeginForgotPassword(
@@ -367,23 +368,11 @@ public static class AuthEndpoints
         );
     }
 
-    /// <summary>Only local, absolute-path return URLs survive; anything else is dropped.</summary>
-    private static string? SafeReturnUrl(string? returnUrl)
-    {
-        if (string.IsNullOrEmpty(returnUrl))
-        {
-            return null;
-        }
-        return returnUrl.StartsWith('/') && !returnUrl.StartsWith("//") && !returnUrl.StartsWith("/\\")
-            ? returnUrl
-            : null;
-    }
-
     public sealed record LoginRequest(string? Email, string? Password, bool? RememberMe);
 
-    public sealed record EmailRequest(string? Email, string? ReturnUrl);
+    public sealed record EmailRequest(string? Email);
 
-    public sealed record TokenRequest(string? Token, string? ReturnUrl);
+    public sealed record MagicLinkCompleteRequest(string? Email, string? Code);
 
     public sealed record CompleteForgotPasswordRequest(
         string? Token,

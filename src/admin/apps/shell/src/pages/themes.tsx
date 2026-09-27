@@ -5,7 +5,10 @@ import {
   Button,
   Card,
   CardContent,
+  CardHeader,
+  CardTitle,
   Checkbox,
+  DangerZone,
   Dialog,
   DialogContent,
   DialogFooter,
@@ -14,54 +17,29 @@ import {
   FormField,
   Input,
   PageHeader,
+  QueryGate,
   Textarea,
   toast,
 } from "@raytha/ui";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useState, type FormEvent } from "react";
+import { useState, type FormEvent } from "react";
 import { BackgroundTaskStatus } from "../components/background-task-status";
 import { ListBackLink } from "../components/list-back-link";
 import { useDocumentTitle } from "../lib/document-title";
 import { CrudListPage } from "./crud-list";
+import { ThemeSectionHeader } from "./editors/theme-section-header";
 import { entityFields, readBoolean, readString, toDeveloperName } from "./entity";
-import { Link, useNavigate } from "@tanstack/react-router";
+import { Link, useNavigate, useParams } from "@tanstack/react-router";
 
 export function ThemesPage() {
   const queryClient = useQueryClient();
   const [importOpen, setImportOpen] = useState(false);
-  const [duplicate, setDuplicate] = useState<EntityRef | null>(null);
   const [taskId, setTaskId] = useState<string | null>(null);
-
-  const configQuery = useQuery({
-    queryKey: ["configuration"],
-    queryFn: () => adminApi.configuration.get(),
-  });
-  const activeThemeId =
-    typeof configQuery.data?.activeThemeId === "string" ? configQuery.data.activeThemeId : "";
 
   const invalidate = () => {
     void queryClient.invalidateQueries({ queryKey: ["themes"] });
     void queryClient.invalidateQueries({ queryKey: ["configuration"] });
   };
-
-  const setActive = useMutation({
-    mutationFn: (id: string) => adminApi.themes.setActive(id),
-    onSuccess: () => {
-      toast.success("Active theme updated");
-      invalidate();
-    },
-    onError: (error) => toast.error(formatError(error)),
-  });
-
-  const setExportability = useMutation({
-    mutationFn: ({ id, isExportable }: { id: string; isExportable: boolean }) =>
-      adminApi.themes.setExportability(id, { isExportable }),
-    onSuccess: () => {
-      toast.success("Exportability updated");
-      invalidate();
-    },
-    onError: (error) => toast.error(formatError(error)),
-  });
 
   return (
     <div className="space-y-4">
@@ -71,7 +49,6 @@ export function ThemesPage() {
         listKey="themes"
         noun="theme"
         list={adminApi.themes.list}
-        remove={adminApi.themes.remove}
         createPermission={platformPermissions.templates}
         createLabel="New theme"
         createTo="/themes/new"
@@ -79,7 +56,7 @@ export function ThemesPage() {
           {
             header: "Title",
             cell: (entity) => (
-              <Link to="/themes/$themeId/web-templates" params={{ themeId: entity.id }} className="text-primary hover:underline">
+              <Link to="/themes/$themeId" params={{ themeId: entity.id }} className="text-primary hover:underline">
                 {readString(entityFields(entity), "title") || entity.id}
               </Link>
             ),
@@ -90,7 +67,7 @@ export function ThemesPage() {
             header: "Status",
             cell: (entity) => {
               const fields = entityFields(entity);
-              const isActive = entity.id === activeThemeId || readBoolean(fields, "isActive");
+              const isActive = readBoolean(fields, "isActive");
               const isExportable = readBoolean(fields, "isExportable");
               return (
                 <span className="flex flex-wrap gap-1">
@@ -106,63 +83,11 @@ export function ThemesPage() {
             Import from URL
           </Button>
         }
-        rowActions={(entity) => {
-          const fields = entityFields(entity);
-          const isActive = entity.id === activeThemeId || readBoolean(fields, "isActive");
-          const isExportable = readBoolean(fields, "isExportable");
-          return [
-            {
-              id: "web-templates",
-              label: "Web templates",
-              to: "/themes/$themeId/web-templates",
-              params: { themeId: entity.id },
-            },
-            {
-              id: "widgets",
-              label: "Widgets",
-              to: "/themes/$themeId/widget-templates",
-              params: { themeId: entity.id },
-            },
-            ...(isActive
-              ? []
-              : [
-                  {
-                    id: "set-active",
-                    label: "Set active",
-                    disabled: setActive.isPending,
-                    onSelect: () => setActive.mutate(entity.id),
-                  },
-                ]),
-            {
-              id: "duplicate",
-              label: "Duplicate",
-              onSelect: () => setDuplicate(entity),
-            },
-            {
-              id: "exportability",
-              label: isExportable ? "Make private" : "Make exportable",
-              disabled: setExportability.isPending,
-              onSelect: () => setExportability.mutate({ id: entity.id, isExportable: !isExportable }),
-            },
-          ];
-        }}
       />
       {taskId ? <BackgroundTaskStatus taskId={taskId} /> : null}
       <ImportThemeDialog
         open={importOpen}
         onOpenChange={setImportOpen}
-        onStarted={(id) => {
-          setTaskId(id);
-          invalidate();
-        }}
-      />
-      <DuplicateThemeDialog
-        theme={duplicate}
-        onOpenChange={(open) => {
-          if (!open) {
-            setDuplicate(null);
-          }
-        }}
         onStarted={(id) => {
           setTaskId(id);
           invalidate();
@@ -309,17 +234,13 @@ function DuplicateThemeDialog({
   const [developerName, setDeveloperName] = useState("");
   const [description, setDescription] = useState("");
 
-  useEffect(() => {
-    if (!theme) {
-      setTitle("");
-      setDeveloperName("");
-      setDescription("");
-      return;
-    }
+  const [synced, setSynced] = useState<EntityRef | null>(null);
+  if (synced !== theme) {
+    setSynced(theme);
     setTitle(sourceTitle ? `${sourceTitle} copy` : "");
     setDeveloperName(sourceDeveloper ? `${sourceDeveloper}_copy` : "");
     setDescription(sourceDescription);
-  }, [theme, sourceTitle, sourceDeveloper, sourceDescription]);
+  }
 
   const mutation = useMutation({
     mutationFn: () => {
@@ -385,6 +306,212 @@ function DuplicateThemeDialog({
   );
 }
 
+export function ThemeSettingsPage() {
+  const params = useParams({ strict: false });
+  const themeId = "themeId" in params && typeof params.themeId === "string" ? params.themeId : "";
+  useDocumentTitle(["Theme settings"]);
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const [duplicateOpen, setDuplicateOpen] = useState(false);
+  const [taskId, setTaskId] = useState<string | null>(null);
+
+  const themeQuery = useQuery({
+    queryKey: ["themes", themeId],
+    queryFn: () => adminApi.themes.get(themeId),
+    enabled: themeId.length > 0,
+  });
+  const configQuery = useQuery({
+    queryKey: ["configuration"],
+    queryFn: () => adminApi.configuration.get(),
+  });
+
+  if (!themeId) {
+    return (
+      <div className="space-y-6">
+        <PageHeader title="Theme settings" />
+        <p className="text-sm text-muted-foreground">Pick a theme from the list.</p>
+      </div>
+    );
+  }
+
+  const activeThemeId =
+    typeof configQuery.data?.activeThemeId === "string" ? configQuery.data.activeThemeId : "";
+
+  return (
+    <QueryGate query={themeQuery}>
+      {(theme) => (
+        <ThemeSettingsForm
+          theme={theme}
+          activeThemeId={activeThemeId}
+          taskId={taskId}
+          duplicateOpen={duplicateOpen}
+          onDuplicateOpen={setDuplicateOpen}
+          onTask={(id) => {
+            setTaskId(id);
+            void queryClient.invalidateQueries({ queryKey: ["themes"] });
+          }}
+          onDeleted={() => {
+            void queryClient.invalidateQueries({ queryKey: ["themes"] });
+            void navigate({ to: "/themes" });
+          }}
+        />
+      )}
+    </QueryGate>
+  );
+}
+
+function ThemeSettingsForm({
+  theme,
+  activeThemeId,
+  taskId,
+  duplicateOpen,
+  onDuplicateOpen,
+  onTask,
+  onDeleted,
+}: {
+  theme: EntityRef;
+  activeThemeId: string;
+  taskId: string | null;
+  duplicateOpen: boolean;
+  onDuplicateOpen: (open: boolean) => void;
+  onTask: (id: string) => void;
+  onDeleted: () => void;
+}) {
+  const queryClient = useQueryClient();
+  const fields = entityFields(theme);
+  const isActive = theme.id === activeThemeId || readBoolean(fields, "isActive");
+  const isExportable = readBoolean(fields, "isExportable");
+  const [title, setTitle] = useState(readString(fields, "title"));
+  const [description, setDescription] = useState(readString(fields, "description"));
+
+  const [synced, setSynced] = useState(theme);
+  if (synced !== theme) {
+    setSynced(theme);
+    setTitle(readString(fields, "title"));
+    setDescription(readString(fields, "description"));
+  }
+
+  const invalidate = () => {
+    void queryClient.invalidateQueries({ queryKey: ["themes"] });
+    void queryClient.invalidateQueries({ queryKey: ["themes", theme.id] });
+    void queryClient.invalidateQueries({ queryKey: ["configuration"] });
+  };
+
+  const save = useMutation({
+    mutationFn: () => adminApi.themes.update(theme.id, { title, description }),
+    onSuccess: () => {
+      toast.success("Theme saved");
+      invalidate();
+    },
+    onError: (error) => toast.error(formatError(error)),
+  });
+
+  const setActive = useMutation({
+    mutationFn: () => adminApi.themes.setActive(theme.id),
+    onSuccess: () => {
+      toast.success("Active theme updated");
+      invalidate();
+    },
+    onError: (error) => toast.error(formatError(error)),
+  });
+
+  const setExportability = useMutation({
+    mutationFn: (next: boolean) => adminApi.themes.setExportability(theme.id, { isExportable: next }),
+    onSuccess: () => {
+      toast.success("Exportability updated");
+      invalidate();
+    },
+    onError: (error) => toast.error(formatError(error)),
+  });
+
+  const remove = useMutation({
+    mutationFn: () => adminApi.themes.remove(theme.id),
+    onSuccess: () => {
+      toast.success("Theme deleted");
+      onDeleted();
+    },
+    onError: (error) => toast.error(formatError(error)),
+  });
+
+  return (
+    <div className="space-y-6">
+      <ThemeSectionHeader themeId={theme.id} active="settings" />
+      {taskId ? <BackgroundTaskStatus taskId={taskId} /> : null}
+      <Card>
+        <CardHeader>
+          <CardTitle>Details</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <form
+            className="space-y-4"
+            onSubmit={(event: FormEvent) => {
+              event.preventDefault();
+              save.mutate();
+            }}
+          >
+            <FormField label="Title" required htmlFor="theme-settings-title">
+              {(control) => <Input {...control} value={title} onChange={(event) => setTitle(event.target.value)} />}
+            </FormField>
+            <FormField label="Description" required htmlFor="theme-settings-description">
+              {(control) => (
+                <Textarea {...control} value={description} onChange={(event) => setDescription(event.target.value)} />
+              )}
+            </FormField>
+            <Button type="submit" loading={save.isPending}>
+              Save
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
+      <Card>
+        <CardHeader>
+          <CardTitle>Publishing</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {isActive ? (
+            <p className="text-sm text-muted-foreground">This theme is the one visitors see.</p>
+          ) : (
+            <Button type="button" variant="outline" loading={setActive.isPending} onClick={() => setActive.mutate()}>
+              Set as active theme
+            </Button>
+          )}
+          <div className="flex items-center gap-2">
+            <Checkbox
+              id="theme-exportable"
+              checked={isExportable}
+              disabled={setExportability.isPending}
+              onCheckedChange={(checked) => setExportability.mutate(checked)}
+            />
+            <label htmlFor="theme-exportable" className="text-sm">
+              Allow this theme to be exported
+            </label>
+          </div>
+          <Button type="button" variant="outline" onClick={() => onDuplicateOpen(true)}>
+            Duplicate theme
+          </Button>
+        </CardContent>
+      </Card>
+      {isActive ? (
+        <p className="text-sm text-muted-foreground">Set another theme active before deleting this one.</p>
+      ) : (
+        <DangerZone
+          description="Delete this theme and its templates."
+          actionLabel="Delete theme"
+          confirmTitle="Delete theme?"
+          confirmBody="This cannot be undone."
+          onConfirm={() => remove.mutate()}
+          pending={remove.isPending}
+        />
+      )}
+      <DuplicateThemeDialog
+        theme={duplicateOpen ? theme : null}
+        onOpenChange={onDuplicateOpen}
+        onStarted={onTask}
+      />
+    </div>
+  );
+}
+
 export function NewThemePage() {
   useDocumentTitle(["New theme"]);
   const navigate = useNavigate();
@@ -406,8 +533,7 @@ export function NewThemePage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="New theme" />
-      <ListBackLink to="/themes" listKey="themes" label="themes" />
+      <PageHeader back={<ListBackLink to="/themes" listKey="themes" label="themes" />} title="New theme" />
       <Card>
         <CardContent className="pt-6">
           <form

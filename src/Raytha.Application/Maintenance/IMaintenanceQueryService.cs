@@ -30,7 +30,13 @@ public sealed record StorageSizeInfo(
     string MaxDisplay
 );
 
-public sealed record LogTableInfo(string Key, string Label, long RowCount);
+public sealed record LogTableInfo(
+    string Key,
+    string Label,
+    long RowCount,
+    DateTime? OldestEntry,
+    int RetentionDays
+);
 
 public sealed record BackgroundTaskCounts(int Enqueued, int Processing, int Complete, int Error);
 

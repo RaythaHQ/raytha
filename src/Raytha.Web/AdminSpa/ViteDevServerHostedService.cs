@@ -100,9 +100,6 @@ public sealed class ViteDevServerHostedService : IHostedService, IDisposable
             return;
         }
 
-        _ = ForwardStreamAsync(_process.StandardOutput, LogLevel.Debug, cancellationToken);
-        _ = ForwardStreamAsync(_process.StandardError, LogLevel.Information, cancellationToken);
-
         var ready = await WaitUntilAdminSpaAsync(url, TimeSpan.FromSeconds(60), cancellationToken);
         if (!ready)
         {
@@ -128,34 +125,6 @@ public sealed class ViteDevServerHostedService : IHostedService, IDisposable
     {
         _process?.Dispose();
         _process = null;
-    }
-
-    private async Task ForwardStreamAsync(StreamReader reader, LogLevel level, CancellationToken cancellationToken)
-    {
-        try
-        {
-            while (!cancellationToken.IsCancellationRequested)
-            {
-                var line = await reader.ReadLineAsync(cancellationToken);
-                if (line is null)
-                {
-                    break;
-                }
-
-                if (!string.IsNullOrWhiteSpace(line))
-                {
-                    _logger.Log(level, "[vite] {Line}", line);
-                }
-            }
-        }
-        catch (OperationCanceledException)
-        {
-            // host shutting down
-        }
-        catch (Exception ex)
-        {
-            _logger.LogDebug(ex, "Vite log stream ended");
-        }
     }
 
     /// <summary>Raytha.Web's ContentRoot is <c>src/Raytha.Web</c>; the admin workspace is <c>src/admin</c>.</summary>
@@ -184,8 +153,8 @@ public sealed class ViteDevServerHostedService : IHostedService, IDisposable
             FileName = fileName,
             Arguments = arguments,
             WorkingDirectory = workingDirectory,
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
+            // Output is inherited, not piped: a piped Vite dies on its next write once this host
+            // exits, which breaks reuse across restarts and leaves the proxy pointing at a dead port.
             RedirectStandardInput = true,
             UseShellExecute = false,
             CreateNoWindow = true,

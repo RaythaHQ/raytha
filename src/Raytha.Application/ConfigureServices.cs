@@ -7,7 +7,6 @@ using Raytha.Application.Common.Shared;
 using Raytha.Application.ContentItems;
 using Raytha.Application.ContentItems.Commands;
 using Raytha.Application.ContentItems.EventHandlers;
-using Raytha.Application.Maintenance.Commands;
 using Raytha.Application.Themes.Commands;
 using Raytha.Application.Webhooks;
 using static Raytha.Application.ContentItems.EventHandlers.ContentItemCreatedEventHandler;
@@ -35,9 +34,6 @@ public static class ConfigureServices
         services.AddScoped<IWebhookEventPublisher, WebhookEventPublisher>();
         services.AddScoped<DeliverWebhookTask>();
         services.AddHttpClient(DeliverWebhookTask.HttpClientName);
-
-        // Maintenance
-        services.AddScoped<DemoProgressTask>();
 
         services.AddScoped<BeginExportContentItemsToCsv.BackgroundTask>();
         services.AddScoped<BeginImportContentItemsFromCsv.BackgroundTask>();

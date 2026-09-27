@@ -52,13 +52,13 @@ public class LoginWithMagicLink : BaseAdminLoginPageModel
             new Raytha.Application.Login.Commands.BeginLoginWithMagicLink.Command
             {
                 EmailAddress = Form.EmailAddress,
-                ReturnUrl = returnUrl,
             }
         );
 
         if (response.Success)
         {
-            return RedirectToPage(RouteNames.Login.LoginWithMagicLinkSent);
+            TempData["MagicLinkEmailAddress"] = Form.EmailAddress;
+            return RedirectToPage(RouteNames.Login.LoginWithMagicLinkComplete, new { returnUrl });
         }
         else
         {

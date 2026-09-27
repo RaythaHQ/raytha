@@ -1,8 +1,8 @@
 using System.Diagnostics;
-using System.Text.RegularExpressions;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Raytha.Application.Common.Interfaces;
+using Raytha.Application.EmailLogs;
 using Raytha.Domain.Common;
 using Raytha.Domain.Entities;
 using Raytha.Infrastructure.Persistence;
@@ -11,11 +11,11 @@ namespace Raytha.Infrastructure.Services;
 
 /// <summary>
 /// Decorator around the configured <see cref="IEmailer"/> that records every send attempt
-/// to the EmailLogs table. Bodies are persisted only after credential-bearing query
-/// parameters (reset/magic-link tokens) are redacted. Logging failures never mask the
-/// send outcome.
+/// to the EmailLogs table. Bodies are persisted only after <see cref="EmailBodySanitizer"/>
+/// redacts reset links, magic-link tokens, and labeled passwords. Logging failures never
+/// mask the send outcome.
 /// </summary>
-public sealed partial class EmailLoggingEmailer : IEmailer
+public sealed class EmailLoggingEmailer : IEmailer
 {
     public const int MaxBodyLength = 200_000;
 
@@ -65,8 +65,11 @@ public sealed partial class EmailLoggingEmailer : IEmailer
                     Id = Guid.NewGuid(),
                     ToAddress = string.Join(", ", message.To ?? Array.Empty<string>()),
                     FromAddress = message.FromEmailAddress ?? string.Empty,
-                    Subject = message.Subject ?? string.Empty,
-                    Body = Sanitize(message.Content),
+                    Subject = RedactSensitiveContent(
+                        message.Subject ?? string.Empty,
+                        message.SensitiveContent
+                    ),
+                    Body = Sanitize(RedactSensitiveContent(message.Content, message.SensitiveContent)),
                     IsHtml = message.IsHtml,
                     IsSuccess = isSuccess,
                     ErrorMessage = error,
@@ -85,21 +88,28 @@ public sealed partial class EmailLoggingEmailer : IEmailer
         }
     }
 
-    /// <summary>Redacts token-like query string values and truncates oversized bodies.</summary>
+    /// <summary>Redacts credential-bearing values, then truncates oversized bodies.</summary>
     public static string Sanitize(string? body)
     {
-        if (string.IsNullOrEmpty(body))
-        {
-            return string.Empty;
-        }
-
-        var redacted = SensitiveQueryParameter().Replace(body, "$1[redacted]");
+        var redacted = EmailBodySanitizer.Sanitize(body);
         return redacted.Length > MaxBodyLength ? redacted[..MaxBodyLength] : redacted;
     }
 
-    [GeneratedRegex(
-        @"([?&](?:token|code|key|otp|password|secret|signature)=)[^&""'\s<]+",
-        RegexOptions.IgnoreCase
-    )]
-    private static partial Regex SensitiveQueryParameter();
+    /// <summary>
+    /// Strips values the sender declared secret (<see cref="EmailMessage.SensitiveContent"/>).
+    /// Pattern-based sanitization cannot find a bare one-time code in a
+    /// site-builder-authored template, but the sender knows the exact string.
+    /// </summary>
+    public static string RedactSensitiveContent(string? text, IEnumerable<string>? sensitiveValues)
+    {
+        var result = text ?? string.Empty;
+        foreach (var value in sensitiveValues ?? Array.Empty<string>())
+        {
+            if (!string.IsNullOrEmpty(value))
+            {
+                result = result.Replace(value, EmailBodySanitizer.RedactedValue);
+            }
+        }
+        return result;
+    }
 }

@@ -54,6 +54,8 @@ public static class ContentTypesEndpoints
             .RequireAuthorization(BuiltInContentTypePermission.CONTENT_TYPE_READ_PERMISSION);
         views.MapGet("/{id}", GetView)
             .RequireAuthorization(BuiltInContentTypePermission.CONTENT_TYPE_READ_PERMISSION);
+        views.MapGet("/{id}/template", GetViewTemplate)
+            .RequireAuthorization(BuiltInContentTypePermission.CONTENT_TYPE_READ_PERMISSION);
         views.MapPost("/{id}/favorite", ToggleFavorite)
             .RequireAuthorization(BuiltInContentTypePermission.CONTENT_TYPE_READ_PERMISSION);
         views.MapPost("/{id}/export", ExportViewCsv)
@@ -254,6 +256,20 @@ public static class ContentTypesEndpoints
 
     private static async Task<IResult> GetView(string contentTypeDeveloperName, string id, ISender mediator) =>
         AdminResults.From(await mediator.Send(new GetViewById.Query { Id = id }));
+
+    /// <summary>The active theme's web template that renders this view's public list page.</summary>
+    private static async Task<IResult> GetViewTemplate(
+        string contentTypeDeveloperName,
+        string id,
+        ISender mediator,
+        ICurrentOrganization organization
+    ) =>
+        AdminResults.From(
+            await mediator.Send(
+                new GetWebTemplateByViewId.Query { ThemeId = organization.ActiveThemeId, ViewId = id }
+            ),
+            t => new { id = t.Id.ToString(), label = t.Label, developerName = t.DeveloperName }
+        );
 
     private static async Task<IResult> ToggleFavorite(
         string contentTypeDeveloperName,

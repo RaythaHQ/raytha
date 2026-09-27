@@ -1,14 +1,21 @@
 import type {
   BackgroundTaskDetail,
   BackgroundTaskStatusName,
+  ClearedLog,
   EmailTemplateDetail,
   FunctionDetail,
   IdResponse,
+  MaintenanceSnapshot,
   MenuDetail,
   MenuItemDetail,
   PagedResult,
+  RetainedLogKey,
+  RetainedLogStats,
+  SizeUsage,
   TaskMediaItem,
   TemplateRevision,
+  TemplateVariable,
+  TemplateVariableGroup,
   ThemeMediaItem,
   WebTemplateDetail,
   WidgetTemplateDetail,
@@ -58,30 +65,40 @@ function creatorName(value: unknown): string {
   return stringField(value, "fullName", "emailAddress") || `${stringField(value, "firstName")} ${stringField(value, "lastName")}`.trim();
 }
 
-function availableVariables(record: Record<string, unknown>): string[] | null {
-  const raw = record.availableVariables ?? record.templateVariables ?? record.variables;
-  if (raw == null) {
-    return null;
+function optionalText(record: Record<string, unknown>, key: string): string | null {
+  const value = record[key];
+  return typeof value === "string" && value.length > 0 ? value : null;
+}
+
+function availableVariables(value: unknown): TemplateVariableGroup[] {
+  if (!Array.isArray(value)) {
+    return [];
   }
-  if (Array.isArray(raw)) {
-    const names: string[] = [];
-    for (const item of raw) {
-      if (typeof item === "string" && item.length > 0) {
-        names.push(item);
-      } else if (isRecord(item)) {
-        const name = stringField(item, "developerName", "name", "key", "value");
-        if (name.length > 0) {
-          names.push(name);
-        }
+  const groups: TemplateVariableGroup[] = [];
+  for (const group of value) {
+    if (!isRecord(group) || !Array.isArray(group.variables)) {
+      continue;
+    }
+    const variables: TemplateVariable[] = [];
+    for (const variable of group.variables) {
+      if (!isRecord(variable)) {
+        continue;
+      }
+      const path = stringField(variable, "path");
+      if (path.length > 0) {
+        variables.push({
+          path,
+          description: optionalText(variable, "description"),
+          example: optionalText(variable, "example"),
+        });
       }
     }
-    return names.length > 0 ? names : null;
+    const category = stringField(group, "category");
+    if (category.length > 0 && variables.length > 0) {
+      groups.push({ category, variables });
+    }
   }
-  if (isRecord(raw)) {
-    const names = Object.keys(raw).filter((key) => key.length > 0);
-    return names.length > 0 ? names : null;
-  }
-  return null;
+  return groups;
 }
 
 function accessIds(value: unknown): string[] {
@@ -161,7 +178,7 @@ export function parseEmailTemplate(value: unknown): EmailTemplateDetail | null {
     content: stringField(value, "content"),
     cc: stringField(value, "cc"),
     bcc: stringField(value, "bcc"),
-    availableVariables: availableVariables(value),
+    availableVariables: availableVariables(value.availableVariables),
   };
 }
 
@@ -184,6 +201,7 @@ export function parseWebTemplate(value: unknown): WebTemplateDetail | null {
     parentTemplateId: optionalId(value.parentTemplateId ?? value.parentTemplate),
     allowAccessForNewContentTypes: booleanField(value, "allowAccessForNewContentTypes"),
     templateAccessToModelDefinitions: accessIds(value.templateAccessToModelDefinitions),
+    availableVariables: availableVariables(value.availableVariables),
   };
 }
 
@@ -348,6 +366,66 @@ export function parseBackgroundTask(value: unknown): BackgroundTaskDetail | null
     lastModificationTime: stringField(value, "lastModificationTime"),
     completionTime: stringField(value, "completionTime"),
   };
+}
+
+const RETAINED_LOG_KEYS: readonly RetainedLogKey[] = ["audit_logs", "email_logs", "webhook_deliveries", "background_tasks"];
+
+function retainedLogKey(value: unknown): RetainedLogKey | null {
+  return RETAINED_LOG_KEYS.find((key) => key === value) ?? null;
+}
+
+function sizeUsage(value: unknown): SizeUsage {
+  const record = isRecord(value) ? value : {};
+  return {
+    sizeBytes: numberField(record, "sizeBytes", 0),
+    sizeDisplay: stringField(record, "sizeDisplay"),
+    maxBytes: numberField(record, "maxBytes", 0),
+    maxDisplay: stringField(record, "maxDisplay"),
+  };
+}
+
+/** Tolerates servers that predate retention settings: their log rows parse with `retentionDays: null`. */
+export function parseMaintenanceSnapshot(value: unknown): MaintenanceSnapshot {
+  const record = isRecord(value) ? value : {};
+  const storage = isRecord(record.storage) ? record.storage : {};
+  const tasks = isRecord(record.backgroundTasks) ? record.backgroundTasks : {};
+  const logs: RetainedLogStats[] = [];
+  for (const item of Array.isArray(record.logs) ? record.logs : []) {
+    const key = isRecord(item) ? retainedLogKey(item.key) : null;
+    if (!isRecord(item) || key === null) {
+      continue;
+    }
+    const retentionDays = item.retentionDays;
+    logs.push({
+      key,
+      label: stringField(item, "label"),
+      rowCount: numberField(item, "rowCount", 0),
+      oldestEntry: optionalText(item, "oldestEntry"),
+      retentionDays: typeof retentionDays === "number" ? retentionDays : null,
+    });
+  }
+  return {
+    version: stringField(record, "version"),
+    environment: stringField(record, "environment"),
+    database: sizeUsage(record.database),
+    storage: {
+      ...sizeUsage(storage),
+      provider: stringField(storage, "provider"),
+      fileCount: numberField(storage, "fileCount", 0),
+    },
+    logs,
+    backgroundTasks: {
+      enqueued: numberField(tasks, "enqueued", 0),
+      processing: numberField(tasks, "processing", 0),
+      complete: numberField(tasks, "complete", 0),
+      error: numberField(tasks, "error", 0),
+    },
+  };
+}
+
+export function parseClearedLog(value: unknown): ClearedLog {
+  const deleted = isRecord(value) ? value.deleted : undefined;
+  return { deleted: typeof deleted === "number" ? deleted : null };
 }
 
 export function parseThemeMediaItem(value: unknown): ThemeMediaItem | null {

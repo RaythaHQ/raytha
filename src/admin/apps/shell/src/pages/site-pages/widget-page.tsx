@@ -13,7 +13,7 @@ import {
 } from "@raytha/ui";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocation, useNavigate, useParams } from "@tanstack/react-router";
-import { useEffect, useState, type FormEvent } from "react";
+import { useState, type FormEvent } from "react";
 import { ListBackLink } from "../../components/list-back-link";
 import { useDocumentTitle } from "../../lib/document-title";
 import {
@@ -98,27 +98,19 @@ function WidgetEditor({
   const sections = page?.widgets ?? [];
   const definitions = definitionsQuery.data ?? [];
 
-  useEffect(() => {
-    if (!page || hydrated) {
-      return;
-    }
-    if (isNew) {
-      setSectionName(initialSection || page.widgets[0]?.name || "");
-      setHydrated(true);
-      return;
-    }
-    if (!widgetId) {
-      setHydrated(true);
-      return;
-    }
-    const found = findWidget(page.widgets, widgetId);
-    if (found) {
-      setSectionName(found.section);
-      setWidgetType(found.widget.widgetType);
-      setDraft(found.widget);
-    }
+  if (page && !hydrated) {
     setHydrated(true);
-  }, [hydrated, initialSection, isNew, page, widgetId]);
+    if (isNew) {
+      setSectionName(initialSection || page.widgets.find((section) => section.kind === "template")?.name || "");
+    } else if (widgetId) {
+      const found = findWidget(page.widgets, widgetId);
+      if (found) {
+        setSectionName(found.section);
+        setWidgetType(found.widget.widgetType);
+        setDraft(found.widget);
+      }
+    }
+  }
 
   const applyType = (nextType: string) => {
     setWidgetType(nextType);
@@ -168,12 +160,16 @@ function WidgetEditor({
 
   return (
     <div className="space-y-6">
-      <PageHeader title={isNew ? "New widget" : "Edit widget"} />
-      <ListBackLink
-        to="/site-pages/$id/layout"
-        params={{ id: pageId }}
-        listKey={`site-page-layout:${pageId}`}
-        label="layout"
+      <PageHeader
+        back={
+          <ListBackLink
+            to="/site-pages/$id/layout"
+            params={{ id: pageId }}
+            listKey={`site-page-layout:${pageId}`}
+            label="layout"
+          />
+        }
+        title={isNew ? "New widget" : "Edit widget"}
       />
       <QueryGate query={pageQuery}>
         {() =>
@@ -198,11 +194,13 @@ function WidgetEditor({
                         onChange={(event) => setSectionName(event.target.value)}
                       >
                         <option value="">Select a section</option>
-                        {sections.map((section) => (
-                          <option key={section.name} value={section.name}>
-                            {section.name}
-                          </option>
-                        ))}
+                        {sections
+                          .filter((section) => !isNew || section.kind === "template")
+                          .map((section) => (
+                            <option key={section.name} value={section.name}>
+                              {section.kind === "orphaned" ? `${section.name} (orphaned)` : section.name}
+                            </option>
+                          ))}
                       </Select>
                     )}
                   </FormField>

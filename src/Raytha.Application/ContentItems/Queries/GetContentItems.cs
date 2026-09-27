@@ -109,8 +109,40 @@ public class GetContentItems
                 count = _db.CountContentItems(contentType.Id, null, request.Search, filters);
                 items = queryResult.Select(p => ContentItemDto.GetProjection(p));
             }
+            items = await WithWebTemplateIds(items, cancellationToken);
             return new QueryResponseDto<ListResultDto<ContentItemDto>>(
                 new ListResultDto<ContentItemDto>(items, count)
+            );
+        }
+
+        /// <summary>
+        /// The json query engine materializes items without template relations, so a
+        /// view's Template column would always be empty. Batch-fill them for the page,
+        /// matching GetContentItemById's per-item lookup.
+        /// </summary>
+        private async Task<IEnumerable<ContentItemDto>> WithWebTemplateIds(
+            IEnumerable<ContentItemDto> items,
+            CancellationToken cancellationToken
+        )
+        {
+            var itemsList = items.ToList();
+            var itemIds = itemsList.Select(p => p.Id.Guid).ToArray();
+            var relationPairs = await _entityFrameworkDb
+                .WebTemplateContentItemRelations.Where(relation =>
+                    itemIds.Contains(relation.ContentItemId)
+                )
+                .Select(relation => new { relation.ContentItemId, relation.WebTemplateId })
+                .ToListAsync(cancellationToken);
+            var templateIdsByItemId = relationPairs
+                .GroupBy(pair => pair.ContentItemId)
+                .ToDictionary(group => group.Key, group => group.First().WebTemplateId);
+            return itemsList.Select(p =>
+                templateIdsByItemId.TryGetValue(p.Id.Guid, out var templateId)
+                    ? p with
+                    {
+                        WebTemplateId = templateId,
+                    }
+                    : p
             );
         }
 

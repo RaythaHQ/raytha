@@ -5,8 +5,10 @@ import {
   Button,
   Card,
   CardContent,
+  CardHeader,
+  CardTitle,
   Checkbox,
-  ConfirmDialog,
+  DangerZone,
   EmptyState,
   FormField,
   Input,
@@ -26,20 +28,20 @@ import {
 } from "@raytha/ui";
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useNavigate, useParams } from "@tanstack/react-router";
-import { Inbox } from "lucide-react";
-import { useEffect, useState, type FormEvent } from "react";
+import { Inbox, Plus } from "lucide-react";
+import { useState, type FormEvent, type ReactNode } from "react";
 import { ListBackLink } from "../../components/list-back-link";
 import { useDocumentTitle } from "../../lib/document-title";
 import { entityFields, readString, toDeveloperName } from "../entity";
-import { CodeEditor } from "./code-editor";
 import { RevisionsPanel } from "./revisions-panel";
+import { TemplateWorkbench } from "./template-workbench";
+import { ThemeSectionHeader, useThemeSummary } from "./theme-section-header";
 
 export function WebTemplatesListPage() {
   const params = useParams({ strict: false });
   const themeId = "themeId" in params && typeof params.themeId === "string" ? params.themeId : "";
-  const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
-  const [deleteId, setDeleteId] = useState<string | null>(null);
+  const theme = useThemeSummary(themeId);
 
   const query = useQuery({
     queryKey: ["web-templates", themeId, search],
@@ -48,50 +50,26 @@ export function WebTemplatesListPage() {
     placeholderData: keepPreviousData,
   });
 
-  const deleteMutation = useMutation({
-    mutationFn: (id: string) => adminApi.webTemplates(themeId).remove(id),
-    onSuccess: () => {
-      toast.success("Web template deleted");
-      void queryClient.invalidateQueries({ queryKey: ["web-templates", themeId] });
-      setDeleteId(null);
-    },
-    onError: (error) => toast.error(formatError(error)),
-  });
-
-  useDocumentTitle(["Web templates"]);
-
-  if (!themeId) {
-    return (
-      <div className="space-y-6">
-        <PageHeader title="Web templates" />
-        <p className="text-sm text-muted-foreground">Pick a theme first.</p>
-      </div>
-    );
-  }
+  useDocumentTitle(["Web templates", theme?.title ?? "Theme"]);
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        title="Web templates"
-        description="HTML + Liquid templates for this theme."
+      <ThemeSectionHeader
+        themeId={themeId}
+        active="web"
         actions={
           hasPermission(platformPermissions.templates) ? (
             <Link
               to="/themes/$themeId/web-templates/new"
               params={{ themeId }}
-              className="inline-flex h-10 items-center rounded-lg bg-primary px-4 text-sm font-medium text-primary-foreground shadow-card hover:bg-brand-600"
+              className="inline-flex h-9 items-center gap-2 rounded-lg bg-primary px-3.5 text-sm font-medium text-primary-foreground shadow-card hover:bg-brand-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
             >
+              <Plus className="size-4" aria-hidden />
               New template
             </Link>
           ) : undefined
         }
       />
-      <ListBackLink to="/themes" listKey="themes" label="themes" />
-      <p className="text-sm">
-        <Link to="/themes/$themeId/widget-templates" params={{ themeId }} className="text-primary hover:underline">
-          Widget templates
-        </Link>
-      </p>
       <QueryGate query={query}>
         {(data) => (
           <ListPanel
@@ -120,7 +98,6 @@ export function WebTemplatesListPage() {
                     <TableHead>Label</TableHead>
                     <TableHead>Developer name</TableHead>
                     <TableHead>Type</TableHead>
-                    <TableHead className="w-40">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -130,19 +107,22 @@ export function WebTemplatesListPage() {
                         <Link
                           to="/themes/$themeId/web-templates/$id"
                           params={{ themeId, id: item.id }}
-                          className="text-primary hover:underline"
+                          className="font-medium text-primary hover:underline"
                         >
                           {item.label || item.id}
                         </Link>
                       </TableCell>
-                      <TableCell>{item.developerName || "—"}</TableCell>
                       <TableCell>
-                        {item.isBaseLayout ? <Badge variant="info">Base layout</Badge> : "Template"}
+                        <code className="text-xs text-muted-foreground">{item.developerName || "—"}</code>
                       </TableCell>
                       <TableCell>
-                        <Button type="button" variant="ghost" size="sm" onClick={() => setDeleteId(item.id)}>
-                          Delete
-                        </Button>
+                        <span className="flex flex-wrap gap-1.5">
+                          {item.isBaseLayout ? <Badge variant="info">Base layout</Badge> : null}
+                          {item.isBuiltInTemplate ? <Badge variant="secondary">Built-in</Badge> : null}
+                          {!item.isBaseLayout && !item.isBuiltInTemplate ? (
+                            <span className="text-sm text-muted-foreground">Custom</span>
+                          ) : null}
+                        </span>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -152,22 +132,6 @@ export function WebTemplatesListPage() {
           </ListPanel>
         )}
       </QueryGate>
-      <ConfirmDialog
-        open={deleteId !== null}
-        onOpenChange={(open) => {
-          if (!open) {
-            setDeleteId(null);
-          }
-        }}
-        title="Delete web template?"
-        body="This cannot be undone."
-        onConfirm={() => {
-          if (deleteId) {
-            deleteMutation.mutate(deleteId);
-          }
-        }}
-        pending={deleteMutation.isPending}
-      />
     </div>
   );
 }
@@ -189,15 +153,6 @@ export function WebTemplateEditorPage() {
 
   useDocumentTitle([query.data?.label ?? "Web template"]);
 
-  if (!themeId || !id) {
-    return (
-      <div className="space-y-6">
-        <PageHeader title="Web template" />
-        <p className="text-sm text-muted-foreground">Pick a template from the list.</p>
-      </div>
-    );
-  }
-
   return (
     <QueryGate query={query}>
       {(template) => (
@@ -217,6 +172,7 @@ function WebTemplateEditor({
   revisions: TemplateRevision[];
 }) {
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const [label, setLabel] = useState(template.label);
   const [content, setContent] = useState(template.content);
   const [isBaseLayout, setIsBaseLayout] = useState(template.isBaseLayout);
@@ -226,22 +182,20 @@ function WebTemplateEditor({
   );
   const [accessIds, setAccessIds] = useState<string[]>(template.templateAccessToModelDefinitions);
 
-  useEffect(() => {
+  const [synced, setSynced] = useState(template);
+  if (synced !== template) {
+    setSynced(template);
     setLabel(template.label);
     setContent(template.content);
     setIsBaseLayout(template.isBaseLayout);
     setParentTemplateId(template.parentTemplateId ?? "");
     setAllowAccessForNewContentTypes(template.allowAccessForNewContentTypes);
     setAccessIds(template.templateAccessToModelDefinitions);
-  }, [template]);
+  }
 
   const layouts = useQuery({
     queryKey: ["web-templates", themeId, "base-layouts"],
     queryFn: () => adminApi.webTemplates(themeId).list({ baseLayoutsOnly: true, pageSize: 100 }),
-  });
-  const contentTypes = useQuery({
-    queryKey: ["content-types", "picker"],
-    queryFn: () => adminApi.contentTypes.list({ pageSize: 100 }),
   });
 
   const save = useMutation({
@@ -261,6 +215,16 @@ function WebTemplateEditor({
       void queryClient.invalidateQueries({ queryKey: ["web-template", themeId, template.id] });
       void queryClient.invalidateQueries({ queryKey: ["web-template-revisions", themeId, template.id] });
       void queryClient.invalidateQueries({ queryKey: ["web-templates", themeId] });
+    },
+    onError: (error) => toast.error(formatError(error)),
+  });
+
+  const remove = useMutation({
+    mutationFn: () => adminApi.webTemplates(themeId).remove(template.id),
+    onSuccess: () => {
+      toast.success("Web template deleted");
+      void queryClient.invalidateQueries({ queryKey: ["web-templates", themeId] });
+      void navigate({ to: "/themes/$themeId/web-templates", params: { themeId } });
     },
     onError: (error) => toast.error(formatError(error)),
   });
@@ -285,89 +249,52 @@ function WebTemplateEditor({
   return (
     <div className="space-y-6">
       <PageHeader
+        back={<WebTemplatesBackLink themeId={themeId} />}
         title={template.label || template.developerName || "Web template"}
-        description={template.developerName}
+        meta={
+          <>
+            {template.developerName ? <code>{template.developerName}</code> : null}
+            {template.isBaseLayout ? <Badge variant="info">Base layout</Badge> : null}
+            {template.isBuiltInTemplate ? <Badge variant="secondary">Built-in</Badge> : null}
+          </>
+        }
         actions={
           <Button type="submit" form="web-template-form" loading={save.isPending}>
             Save
           </Button>
         }
       />
-      <ListBackLink
-        to="/themes/$themeId/web-templates"
-        params={{ themeId }}
-        listKey={`web-templates:${themeId}`}
-        label="web templates"
+      <TemplateWorkbench
+        title={template.developerName || "Template"}
+        value={content}
+        onChange={setContent}
+        ariaLabel="Web template content"
+        variables={template.availableVariables}
+        themeId={themeId}
+        onSave={() => save.mutate()}
       />
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_18rem]">
+      <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
         <Card>
-          <CardContent className="space-y-4 pt-6">
-            <form id="web-template-form" className="space-y-4" onSubmit={handleSubmit}>
-              <FormField label="Label" required htmlFor="web-label">
-                {(control) => <Input {...control} value={label} onChange={(event) => setLabel(event.target.value)} />}
-              </FormField>
-              <div className="flex items-center gap-2">
-                <Checkbox
-                  id="web-base-layout"
-                  checked={isBaseLayout}
-                  onCheckedChange={setIsBaseLayout}
-                  disabled={template.isBuiltInTemplate}
-                />
-                <label htmlFor="web-base-layout" className="text-sm">
-                  Base layout
-                </label>
-              </div>
-              <FormField label="Parent template" htmlFor="web-parent">
-                {(control) => (
-                  <Select
-                    {...control}
-                    value={parentTemplateId}
-                    onChange={(event) => setParentTemplateId(event.target.value)}
-                  >
-                    <option value="">None</option>
-                    {parentOptions.map((item) => (
-                      <option key={item.id} value={item.id}>
-                        {item.label || item.developerName || item.id}
-                      </option>
-                    ))}
-                  </Select>
-                )}
-              </FormField>
-              <div className="flex items-center gap-2">
-                <Checkbox
-                  id="web-allow-new"
-                  checked={allowAccessForNewContentTypes}
-                  onCheckedChange={setAllowAccessForNewContentTypes}
-                />
-                <label htmlFor="web-allow-new" className="text-sm">
-                  Allow access for new content types
-                </label>
-              </div>
-              <fieldset className="space-y-2">
-                <legend className="text-sm font-medium">Content types</legend>
-                {(contentTypes.data?.items ?? []).map((type) => {
-                  const fields = entityFields(type);
-                  const typeLabel = readString(fields, "labelPlural", "labelSingular", "developerName") || type.id;
-                  const checked = accessIds.includes(type.id);
-                  return (
-                    <div key={type.id} className="flex items-center gap-2">
-                      <Checkbox
-                        id={`web-access-${type.id}`}
-                        checked={checked}
-                        onCheckedChange={(next) => {
-                          setAccessIds((current) =>
-                            next ? [...current, type.id] : current.filter((item) => item !== type.id),
-                          );
-                        }}
-                      />
-                      <label htmlFor={`web-access-${type.id}`} className="text-sm">
-                        {typeLabel}
-                      </label>
-                    </div>
-                  );
-                })}
-              </fieldset>
-              <CodeEditor value={content} onChange={setContent} language="liquid" ariaLabel="Web template content" />
+          <CardHeader>
+            <CardTitle>Settings</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <form id="web-template-form" className="space-y-5" onSubmit={handleSubmit}>
+              <WebTemplateSettings
+                idPrefix="web"
+                label={label}
+                onLabel={setLabel}
+                isBaseLayout={isBaseLayout}
+                onBaseLayout={setIsBaseLayout}
+                baseLayoutLocked={template.isBuiltInTemplate}
+                parentTemplateId={parentTemplateId}
+                onParentTemplate={setParentTemplateId}
+                parentOptions={parentOptions}
+                allowAccessForNewContentTypes={allowAccessForNewContentTypes}
+                onAllowAccessForNewContentTypes={setAllowAccessForNewContentTypes}
+                accessIds={accessIds}
+                onAccessIds={setAccessIds}
+              />
             </form>
           </CardContent>
         </Card>
@@ -377,6 +304,16 @@ function WebTemplateEditor({
           onRevert={(revisionId) => revert.mutate(revisionId)}
         />
       </div>
+      {template.isBuiltInTemplate ? null : (
+        <DangerZone
+          description="Delete this template. This cannot be undone."
+          actionLabel="Delete template"
+          confirmTitle="Delete web template?"
+          confirmBody="This cannot be undone."
+          onConfirm={() => remove.mutate()}
+          pending={remove.isPending}
+        />
+      )}
     </div>
   );
 }
@@ -401,10 +338,6 @@ export function NewWebTemplatePage() {
     queryFn: () => adminApi.webTemplates(themeId).list({ baseLayoutsOnly: true, pageSize: 100 }),
     enabled: themeId.length > 0,
   });
-  const contentTypes = useQuery({
-    queryKey: ["content-types", "picker"],
-    queryFn: () => adminApi.contentTypes.list({ pageSize: 100 }),
-  });
 
   const create = useMutation({
     mutationFn: () => {
@@ -427,118 +360,187 @@ export function NewWebTemplatePage() {
     onError: (error) => toast.error(formatError(error)),
   });
 
-  if (!themeId) {
-    return (
-      <div className="space-y-6">
-        <PageHeader title="New web template" />
-        <p className="text-sm text-muted-foreground">Pick a theme first.</p>
-      </div>
-    );
-  }
-
   return (
     <div className="space-y-6">
-      <PageHeader title="New web template" />
-      <ListBackLink
-        to="/themes/$themeId/web-templates"
-        params={{ themeId }}
-        listKey={`web-templates:${themeId}`}
-        label="web templates"
+      <PageHeader
+        back={<WebTemplatesBackLink themeId={themeId} />}
+        title="New web template"
+        description="Variables for the template appear once it is created."
+        actions={
+          <Button type="submit" form="new-web-template-form" loading={create.isPending}>
+            Create
+          </Button>
+        }
       />
       <Card>
-        <CardContent className="space-y-4 pt-6">
+        <CardHeader>
+          <CardTitle>Settings</CardTitle>
+        </CardHeader>
+        <CardContent>
           <form
-            className="space-y-4"
+            id="new-web-template-form"
+            className="space-y-5"
             onSubmit={(event: FormEvent) => {
               event.preventDefault();
               create.mutate();
             }}
           >
-            <FormField label="Label" required htmlFor="new-web-label">
-              {(control) => (
-                <Input
-                  {...control}
-                  value={label}
-                  onChange={(event) => {
-                    const next = event.target.value;
-                    setLabel(next);
-                    if (!developerTouched) {
-                      setDeveloperName(toDeveloperName(next));
-                    }
-                  }}
-                />
-              )}
-            </FormField>
-            <FormField label="Developer name" required htmlFor="new-web-developer">
-              {(control) => (
-                <Input
-                  {...control}
-                  value={developerName}
-                  onChange={(event) => {
-                    setDeveloperTouched(true);
-                    setDeveloperName(event.target.value);
-                  }}
-                />
-              )}
-            </FormField>
-            <div className="flex items-center gap-2">
-              <Checkbox id="new-web-base" checked={isBaseLayout} onCheckedChange={setIsBaseLayout} />
-              <label htmlFor="new-web-base" className="text-sm">
-                Base layout
-              </label>
-            </div>
-            <FormField label="Parent template" htmlFor="new-web-parent">
-              {(control) => (
-                <Select {...control} value={parentTemplateId} onChange={(event) => setParentTemplateId(event.target.value)}>
-                  <option value="">None</option>
-                  {(layouts.data?.items ?? []).map((item) => (
-                    <option key={item.id} value={item.id}>
-                      {item.label || item.developerName || item.id}
-                    </option>
-                  ))}
-                </Select>
-              )}
-            </FormField>
-            <div className="flex items-center gap-2">
-              <Checkbox
-                id="new-web-allow"
-                checked={allowAccessForNewContentTypes}
-                onCheckedChange={setAllowAccessForNewContentTypes}
-              />
-              <label htmlFor="new-web-allow" className="text-sm">
-                Allow access for new content types
-              </label>
-            </div>
-            <fieldset className="space-y-2">
-              <legend className="text-sm font-medium">Content types</legend>
-              {(contentTypes.data?.items ?? []).map((type) => {
-                const fields = entityFields(type);
-                const typeLabel = readString(fields, "labelPlural", "labelSingular", "developerName") || type.id;
-                return (
-                  <div key={type.id} className="flex items-center gap-2">
-                    <Checkbox
-                      id={`new-web-access-${type.id}`}
-                      checked={accessIds.includes(type.id)}
-                      onCheckedChange={(next) => {
-                        setAccessIds((current) =>
-                          next ? [...current, type.id] : current.filter((item) => item !== type.id),
-                        );
+            <WebTemplateSettings
+              idPrefix="new-web"
+              label={label}
+              onLabel={(next) => {
+                setLabel(next);
+                if (!developerTouched) {
+                  setDeveloperName(toDeveloperName(next));
+                }
+              }}
+              developerNameField={
+                <FormField label="Developer name" required htmlFor="new-web-developer">
+                  {(control) => (
+                    <Input
+                      {...control}
+                      value={developerName}
+                      onChange={(event) => {
+                        setDeveloperTouched(true);
+                        setDeveloperName(event.target.value);
                       }}
                     />
-                    <label htmlFor={`new-web-access-${type.id}`} className="text-sm">
-                      {typeLabel}
-                    </label>
-                  </div>
-                );
-              })}
-            </fieldset>
-            <CodeEditor value={content} onChange={setContent} language="liquid" ariaLabel="New web template content" />
-            <Button type="submit" loading={create.isPending}>
-              Create
-            </Button>
+                  )}
+                </FormField>
+              }
+              isBaseLayout={isBaseLayout}
+              onBaseLayout={setIsBaseLayout}
+              parentTemplateId={parentTemplateId}
+              onParentTemplate={setParentTemplateId}
+              parentOptions={layouts.data?.items ?? []}
+              allowAccessForNewContentTypes={allowAccessForNewContentTypes}
+              onAllowAccessForNewContentTypes={setAllowAccessForNewContentTypes}
+              accessIds={accessIds}
+              onAccessIds={setAccessIds}
+            />
           </form>
         </CardContent>
       </Card>
+      <TemplateWorkbench
+        title={developerName || "New template"}
+        value={content}
+        onChange={setContent}
+        ariaLabel="New web template content"
+        themeId={themeId}
+        onSave={() => create.mutate()}
+      />
     </div>
+  );
+}
+
+function WebTemplatesBackLink({ themeId }: { themeId: string }) {
+  return (
+    <ListBackLink
+      to="/themes/$themeId/web-templates"
+      params={{ themeId }}
+      listKey={`web-templates:${themeId}`}
+      label="web templates"
+    />
+  );
+}
+
+function WebTemplateSettings({
+  idPrefix,
+  label,
+  onLabel,
+  developerNameField,
+  isBaseLayout,
+  onBaseLayout,
+  baseLayoutLocked = false,
+  parentTemplateId,
+  onParentTemplate,
+  parentOptions,
+  allowAccessForNewContentTypes,
+  onAllowAccessForNewContentTypes,
+  accessIds,
+  onAccessIds,
+}: {
+  idPrefix: string;
+  label: string;
+  onLabel: (value: string) => void;
+  developerNameField?: ReactNode;
+  isBaseLayout: boolean;
+  onBaseLayout: (value: boolean) => void;
+  baseLayoutLocked?: boolean;
+  parentTemplateId: string;
+  onParentTemplate: (value: string) => void;
+  parentOptions: WebTemplateDetail[];
+  allowAccessForNewContentTypes: boolean;
+  onAllowAccessForNewContentTypes: (value: boolean) => void;
+  accessIds: string[];
+  onAccessIds: (update: (current: string[]) => string[]) => void;
+}) {
+  const contentTypes = useQuery({
+    queryKey: ["content-types", "picker"],
+    queryFn: () => adminApi.contentTypes.list({ pageSize: 100 }),
+  });
+
+  return (
+    <>
+      <div className="grid gap-5 md:grid-cols-2">
+        <FormField label="Label" required htmlFor={`${idPrefix}-label`}>
+          {(control) => <Input {...control} value={label} onChange={(event) => onLabel(event.target.value)} />}
+        </FormField>
+        {developerNameField}
+        <FormField label="Parent template" htmlFor={`${idPrefix}-parent`}>
+          {(control) => (
+            <Select {...control} value={parentTemplateId} onChange={(event) => onParentTemplate(event.target.value)}>
+              <option value="">None</option>
+              {parentOptions.map((item) => (
+                <option key={item.id} value={item.id}>
+                  {item.label || item.developerName || item.id}
+                </option>
+              ))}
+            </Select>
+          )}
+        </FormField>
+      </div>
+      <div className="flex items-center gap-2">
+        <Checkbox
+          id={`${idPrefix}-base-layout`}
+          checked={isBaseLayout}
+          onCheckedChange={onBaseLayout}
+          disabled={baseLayoutLocked}
+        />
+        <label htmlFor={`${idPrefix}-base-layout`} className="text-sm">
+          Base layout that other templates can inherit from
+        </label>
+      </div>
+      <fieldset className="space-y-2.5">
+        <legend className="mb-2 text-sm font-medium">Content types that can use this template</legend>
+        <div className="flex items-center gap-2">
+          <Checkbox
+            id={`${idPrefix}-allow-new`}
+            checked={allowAccessForNewContentTypes}
+            onCheckedChange={onAllowAccessForNewContentTypes}
+          />
+          <label htmlFor={`${idPrefix}-allow-new`} className="text-sm">
+            Content types created later
+          </label>
+        </div>
+        {(contentTypes.data?.items ?? []).map((type) => {
+          const typeLabel = readString(entityFields(type), "labelPlural", "labelSingular", "developerName") || type.id;
+          return (
+            <div key={type.id} className="flex items-center gap-2">
+              <Checkbox
+                id={`${idPrefix}-access-${type.id}`}
+                checked={accessIds.includes(type.id)}
+                onCheckedChange={(next) =>
+                  onAccessIds((current) => (next ? [...current, type.id] : current.filter((item) => item !== type.id)))
+                }
+              />
+              <label htmlFor={`${idPrefix}-access-${type.id}`} className="text-sm">
+                {typeLabel}
+              </label>
+            </div>
+          );
+        })}
+      </fieldset>
+    </>
   );
 }

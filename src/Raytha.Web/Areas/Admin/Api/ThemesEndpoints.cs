@@ -1,3 +1,4 @@
+using CSharpVitamins;
 using Mediator;
 using Microsoft.AspNetCore.Mvc;
 using Raytha.Application.Common.Interfaces;
@@ -101,9 +102,15 @@ public static class ThemesEndpoints
         string id,
         [FromBody] DuplicateThemeRequest body,
         ISender mediator,
-        ICurrentOrganization org
-    ) =>
-        AdminResults.FromId(
+        ICurrentOrganization org,
+        HttpContext http
+    )
+    {
+        // Local media downloads need an absolute URL. An empty site path base is valid
+        // when the app is hosted at the domain root.
+        var pathBase = org.PathBase ?? string.Empty;
+        var origin = $"{http.Request.Scheme}://{http.Request.Host}{pathBase}";
+        return AdminResults.FromId(
             await mediator.Send(
                 new BeginDuplicateTheme.Command
                 {
@@ -111,10 +118,11 @@ public static class ThemesEndpoints
                     Title = body.Title,
                     DeveloperName = body.DeveloperName,
                     Description = body.Description,
-                    PathBase = org.PathBase,
+                    PathBase = origin,
                 }
             )
         );
+    }
 
     /// <summary>Returns the background task id; poll <c>/background-tasks/{id}</c> for progress.</summary>
     private static async Task<IResult> Import([FromBody] BeginImportThemeFromUrl.Command body, ISender mediator) =>
@@ -158,11 +166,17 @@ public static class ThemesEndpoints
         ISender mediator
     )
     {
+        ShortGuid? contentType = null;
+        if (!string.IsNullOrWhiteSpace(contentTypeId))
+        {
+            contentType = new ShortGuid(contentTypeId);
+        }
+
         var query = new GetWebTemplates.Query
         {
             ThemeId = themeId,
             BaseLayoutsOnly = baseLayoutsOnly ?? false,
-            ContentTypeId = string.IsNullOrWhiteSpace(contentTypeId) ? null : contentTypeId,
+            ContentTypeId = contentType,
             PageNumber = paging.PageNumber,
             PageSize = paging.PageSize,
             Search = paging.Search,

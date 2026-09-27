@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Mvc;
 using Raytha.Web.Areas.Admin.Pages.Shared;
 
@@ -5,16 +6,24 @@ namespace Raytha.Web.Areas.Admin.Pages.Login;
 
 public class LoginWithMagicLinkComplete : BaseAdminLoginPageModel
 {
-    public async Task<IActionResult> OnGet(string token = null, string returnUrl = null)
-    {
-        if (string.IsNullOrEmpty(token))
-        {
-            SetErrorMessage("Login token is missing.");
-            return new ForbidResult();
-        }
+    [BindProperty]
+    public FormModel Form { get; set; }
 
+    public IActionResult OnGet(string returnUrl = null)
+    {
+        ViewData["returnUrl"] = returnUrl;
+        Form = new FormModel { EmailAddress = TempData["MagicLinkEmailAddress"] as string };
+        return Page();
+    }
+
+    public async Task<IActionResult> OnPost(string returnUrl = null)
+    {
         var response = await Mediator.Send(
-            new Raytha.Application.Login.Commands.CompleteLoginWithMagicLink.Command { Id = token }
+            new Raytha.Application.Login.Commands.CompleteLoginWithMagicLink.Command
+            {
+                EmailAddress = Form.EmailAddress ?? string.Empty,
+                Code = Form.Code ?? string.Empty,
+            }
         );
 
         if (response.Success)
@@ -31,8 +40,18 @@ public class LoginWithMagicLinkComplete : BaseAdminLoginPageModel
         }
         else
         {
-            SetErrorMessage(response.Error);
-            return RedirectToPage(RouteNames.Login.LoginWithMagicLink, new { returnUrl });
+            ViewData["returnUrl"] = returnUrl;
+            SetErrorMessage(response.GetErrors());
+            return Page();
         }
+    }
+
+    public record FormModel
+    {
+        [Display(Name = "Your email address")]
+        public string EmailAddress { get; set; }
+
+        [Display(Name = "One-time code")]
+        public string Code { get; set; }
     }
 }

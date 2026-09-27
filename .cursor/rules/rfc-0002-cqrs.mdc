@@ -22,6 +22,11 @@ dispatched through Mediator (source-generated, `ISender`).
   Namespace matches the folder (`Raytha.Application.Users.Commands`).
 - The outer type MUST be a plain class used only as a namespace for the nested
   types. It MUST NOT hold state or logic.
+- `CqrsStructureTests` enforces the shape and the MUSTs in §2–§5: one sibling
+  `Handler` per `Command`/`Query`, a `Validator` for its sibling only, no members
+  on the outer class, init-only command records, no `SaveChanges` in query
+  handlers or validators, and no `ISender` or container in a handler. Its
+  exemption lists are closed.
 
 ```csharp
 public class CreateUser

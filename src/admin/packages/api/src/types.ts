@@ -5,7 +5,13 @@ export interface Me {
   lastName: string;
   fullName: string;
   permissions: string[];
+  /** `${contentTypeDeveloperName}_${read|edit|config}` claims from roles. */
+  contentTypePermissions: string[];
+  /** Role developer names, e.g. `super_admin`. */
+  roles: string[];
   isAdmin: boolean;
+  /** Id of the view, content item, or site page serving `/`; null when unset. */
+  homePageId: string | null;
 }
 
 export interface LoginResponse {
@@ -52,6 +58,22 @@ export interface MediaConfig {
   maxUploadBytes: number;
   allowedMimeTypes: string;
   fileStorageProvider: string;
+}
+
+export interface MediaItem {
+  id: string;
+  fileName: string;
+  contentType: string;
+  length: number;
+  objectKey: string;
+  fileStorageProvider: string;
+  creationTime: string;
+  url: string;
+}
+
+export interface MediaItemUsage {
+  themes: { id: string; title: string }[];
+  webTemplates: { id: string; label: string; themeId: string; themeTitle: string }[];
 }
 
 export type ConfigOption = {
@@ -106,6 +128,17 @@ export interface IdResponse {
   id: string;
 }
 
+export interface TemplateVariable {
+  path: string;
+  description: string | null;
+  example: string | null;
+}
+
+export interface TemplateVariableGroup {
+  category: string;
+  variables: TemplateVariable[];
+}
+
 export interface EmailTemplateDetail {
   id: string;
   subject: string;
@@ -113,7 +146,7 @@ export interface EmailTemplateDetail {
   content: string;
   cc: string;
   bcc: string;
-  availableVariables: string[] | null;
+  availableVariables: TemplateVariableGroup[];
 }
 
 export interface WebTemplateDetail {
@@ -127,6 +160,7 @@ export interface WebTemplateDetail {
   parentTemplateId: string | null;
   allowAccessForNewContentTypes: boolean;
   templateAccessToModelDefinitions: string[];
+  availableVariables: TemplateVariableGroup[];
 }
 
 export interface WidgetTemplateDetail {
@@ -213,6 +247,52 @@ export interface BackgroundTaskDetail {
   creationTime: string;
   lastModificationTime: string;
   completionTime: string;
+}
+
+export type RetainedLogKey = "audit_logs" | "email_logs" | "webhook_deliveries" | "background_tasks";
+
+/** Retention windows in days; 0 keeps entries forever. */
+export interface LogRetention {
+  auditLogRetentionDays: number;
+  emailLogRetentionDays: number;
+  webhookDeliveryRetentionDays: number;
+  backgroundTaskRetentionDays: number;
+}
+
+export const RETENTION_FIELD: Record<RetainedLogKey, keyof LogRetention> = {
+  audit_logs: "auditLogRetentionDays",
+  email_logs: "emailLogRetentionDays",
+  webhook_deliveries: "webhookDeliveryRetentionDays",
+  background_tasks: "backgroundTaskRetentionDays",
+};
+
+export interface RetainedLogStats {
+  key: RetainedLogKey;
+  label: string;
+  rowCount: number;
+  oldestEntry: string | null;
+  /** Null when the server predates configurable retention. */
+  retentionDays: number | null;
+}
+
+export interface SizeUsage {
+  sizeBytes: number;
+  sizeDisplay: string;
+  maxBytes: number;
+  maxDisplay: string;
+}
+
+export interface MaintenanceSnapshot {
+  version: string;
+  environment: string;
+  database: SizeUsage;
+  storage: SizeUsage & { provider: string; fileCount: number };
+  logs: RetainedLogStats[];
+  backgroundTasks: Record<BackgroundTaskStatusName, number>;
+}
+
+export interface ClearedLog {
+  deleted: number | null;
 }
 
 export interface TaskMediaItem {

@@ -79,8 +79,8 @@ public static class ConfigureServices
         ));
         services.AddTransient<IBackgroundTaskDb, BackgroundTaskDb>();
         services.AddTransient<IRaythaRawDbInfo, RaythaRawDbInfo>();
-        services.AddTransient<IRaythaRawDbCommands, RaythaRawDbCommands>();
         services.AddScoped<IMaintenanceQueryService, MaintenanceQueryService>();
+        services.AddHostedService<LogRetentionHostedService>();
 
         //file storage provider
         var fileStorageProvider = configuration[FileStorageUtility.CONFIG_NAME]

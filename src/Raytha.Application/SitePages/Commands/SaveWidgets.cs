@@ -22,7 +22,7 @@ public class SaveWidgets
         public string SectionName { get; init; } = string.Empty;
 
         /// <summary>
-        /// The widgets to save for this section.
+        /// The widgets to save for this section. An empty list removes the section.
         /// </summary>
         public IEnumerable<WidgetInput> Widgets { get; init; } = Array.Empty<WidgetInput>();
     }
@@ -208,8 +208,14 @@ public class SaveWidgets
                 })
                 .ToList();
 
-            // Update the section
-            currentWidgets[request.SectionName] = sectionWidgets;
+            if (sectionWidgets.Count == 0)
+            {
+                currentWidgets.Remove(request.SectionName);
+            }
+            else
+            {
+                currentWidgets[request.SectionName] = sectionWidgets;
+            }
 
             // Save to draft and mark as having draft changes
             entity.DraftWidgets = currentWidgets;

@@ -16,11 +16,15 @@ export function ListPanel({
 }: HTMLAttributes<HTMLDivElement> & { toolbar?: ReactNode }) {
   return (
     <div
-      className={cn("overflow-hidden rounded-xl border border-border bg-card shadow-card", className)}
+      className={cn(
+        "overflow-hidden rounded-xl border border-border bg-card shadow-card",
+        "[&>[data-slot=empty-state]]:rounded-none [&>[data-slot=empty-state]]:border-0",
+        className,
+      )}
       {...props}
     >
       {toolbar && (
-        <div className="flex flex-wrap items-center gap-3 border-b border-border px-4 py-3">{toolbar}</div>
+        <div className="flex flex-wrap items-center gap-2 border-b border-border px-3 py-2.5">{toolbar}</div>
       )}
       {children}
     </div>
@@ -47,12 +51,12 @@ export function ListStatus({
 /** Icon search field sized for a ListPanel toolbar. */
 export function ListSearch({ className, ...props }: InputHTMLAttributes<HTMLInputElement>) {
   return (
-    <div className="relative min-w-0 max-w-sm flex-1">
+    <div className="relative min-w-0 max-w-xs flex-1">
       <Search
-        className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
+        className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
         aria-hidden
       />
-      <Input className={cn("pl-9", className)} {...props} />
+      <Input className={cn("h-8 pl-8 shadow-none", className)} {...props} />
     </div>
   );
 }

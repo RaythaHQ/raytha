@@ -564,7 +564,7 @@ public class InitialSetup
                     IsEnabledForAdmins = false,
                     IsEnabledForUsers = false,
                     AuthenticationSchemeType = AuthenticationSchemeType.MagicLink,
-                    LoginButtonText = "Email me a login link",
+                    LoginButtonText = "Email me a login code",
                     MagicLinkExpiresInSeconds = 900,
                 },
             };

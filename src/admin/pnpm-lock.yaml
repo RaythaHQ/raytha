@@ -29,6 +29,9 @@ importers:
 
   apps/shell:
     dependencies:
+      '@codemirror/autocomplete':
+        specifier: 6.20.3
+        version: 6.20.3
       '@codemirror/lang-javascript':
         specifier: ^6.2.5
         version: 6.2.5

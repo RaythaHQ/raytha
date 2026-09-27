@@ -40,7 +40,12 @@ public class BuiltInRole : ValueObject
         new("Super Admin", "super_admin", BuiltInSystemPermission.AllPermissionsAsEnum);
     public static BuiltInRole Admin =>
         new("Admin", "admin", BuiltInSystemPermission.AllPermissionsAsEnum);
-    public static BuiltInRole Editor => new("Editor", "editor", SystemPermissions.ManageSitePages);
+    public static BuiltInRole Editor =>
+        new(
+            "Editor",
+            "editor",
+            SystemPermissions.ManageSitePages | SystemPermissions.ManageMediaItems
+        );
 
     public string DefaultLabel { get; private set; } = string.Empty;
     public string DeveloperName { get; private set; } = string.Empty;
@@ -88,6 +93,7 @@ public enum SystemPermissions
     ManageTemplates = 16,
     ManageUsers = 32,
     ManageSitePages = 64,
+    ManageMediaItems = 128,
 }
 
 public class BuiltInSystemPermission : ValueObject
@@ -99,9 +105,13 @@ public class BuiltInSystemPermission : ValueObject
     public const string MANAGE_CONTENT_TYPES_PERMISSION = "content_types";
     public const string MANAGE_SYSTEM_SETTINGS_PERMISSION = "system_settings";
     public const string MANAGE_SITE_PAGES_PERMISSION = "site_pages";
+    public const string MANAGE_MEDIA_ITEMS_PERMISSION = "media_items";
 
-    //not an explicit permission
-    public const string MANAGE_MEDIA_ITEMS = "media_items";
+    /// <summary>
+    /// Policy name, not a permission: attaching a file from an editor is allowed for anyone who
+    /// can author content or templates, without access to the media library itself.
+    /// </summary>
+    public const string UPLOAD_MEDIA_ITEMS_POLICY = "upload_media_items";
 
     static BuiltInSystemPermission() { }
 
@@ -148,6 +158,8 @@ public class BuiltInSystemPermission : ValueObject
             permissions.Add(ManageUsers);
         if (permission.HasFlag(SystemPermissions.ManageSitePages))
             permissions.Add(ManageSitePages);
+        if (permission.HasFlag(SystemPermissions.ManageMediaItems))
+            permissions.Add(ManageMediaItems);
         return permissions;
     }
 
@@ -194,6 +206,8 @@ public class BuiltInSystemPermission : ValueObject
         new("Manage Users", MANAGE_USERS_PERMISSION, SystemPermissions.ManageUsers);
     public static BuiltInSystemPermission ManageSitePages =>
         new("Manage Site Pages", MANAGE_SITE_PAGES_PERMISSION, SystemPermissions.ManageSitePages);
+    public static BuiltInSystemPermission ManageMediaItems =>
+        new("Manage Media", MANAGE_MEDIA_ITEMS_PERMISSION, SystemPermissions.ManageMediaItems);
 
     public string Label { get; private set; } = string.Empty;
     public string DeveloperName { get; private set; } = string.Empty;
@@ -225,6 +239,7 @@ public class BuiltInSystemPermission : ValueObject
             yield return ManageTemplates;
             yield return ManageUsers;
             yield return ManageSitePages;
+            yield return ManageMediaItems;
         }
     }
 
@@ -238,7 +253,8 @@ public class BuiltInSystemPermission : ValueObject
                 | ManageTemplates.Permission
                 | ManageAdministrators.Permission
                 | ManageUsers.Permission
-                | ManageSitePages.Permission;
+                | ManageSitePages.Permission
+                | ManageMediaItems.Permission;
         }
     }
 

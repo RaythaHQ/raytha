@@ -611,7 +611,8 @@ public class RaythaFunctionApi_V1 : IRaythaFunctionApi_V1
 
     private TResponse Send<TResponse>(IRequest<TResponse> request)
     {
-        return ExecuteSync(async () => await Mediator.Send(request).ConfigureAwait(false));
+        var aborted = RaythaFunctionScriptEngine.ExecutionAborted;
+        return ExecuteSync(async () => await Mediator.Send(request, aborted).ConfigureAwait(false));
     }
 
     private static T ExecuteSync<T>(Func<Task<T>> operation)

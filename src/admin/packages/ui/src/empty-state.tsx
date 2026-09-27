@@ -17,15 +17,22 @@ export function EmptyState({
   className?: string;
 }) {
   return (
-    <div className={cn("flex flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-border px-6 py-12 text-center", className)}>
+    <div
+      data-slot="empty-state"
+      className={cn(
+        "flex flex-col items-center justify-center rounded-xl border border-dashed border-border-strong bg-[radial-gradient(ellipse_at_top,var(--brand-50),transparent_70%)] px-6 py-14 text-center",
+        className,
+      )}
+    >
       {Icon && (
-        <span className="mb-1 flex size-11 items-center justify-center rounded-xl bg-brand-50 text-brand-500">
-          <Icon className="size-5" aria-hidden />
+        <span className="relative mb-4 flex size-12 items-center justify-center rounded-xl border border-border bg-card text-brand-600 shadow-card">
+          <span className="absolute inset-1 rounded-lg bg-gradient-to-b from-brand-50 to-transparent" aria-hidden />
+          <Icon className="relative size-5" aria-hidden />
         </span>
       )}
-      <p className="font-display font-semibold text-foreground">{title}</p>
-      {hint && <p className="max-w-sm text-sm text-muted-foreground">{hint}</p>}
-      {action && <div className="mt-3">{action}</div>}
+      <p className="font-display text-[15px] font-semibold text-foreground">{title}</p>
+      {hint && <p className="mt-1 max-w-sm text-[13px] leading-5 text-muted-foreground">{hint}</p>}
+      {action && <div className="mt-5">{action}</div>}
     </div>
   );
 }

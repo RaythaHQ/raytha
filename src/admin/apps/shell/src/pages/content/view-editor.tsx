@@ -1,11 +1,13 @@
 import { adminApi, formatError } from "@raytha/api";
 import {
   Button,
+  buttonVariants,
   Card,
   CardContent,
   CardHeader,
   CardTitle,
   Checkbox,
+  DangerZone,
   FormField,
   Input,
   PageHeader,
@@ -19,12 +21,28 @@ import {
   toast,
 } from "@raytha/ui";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useParams } from "@tanstack/react-router";
-import { Star } from "lucide-react";
-import { useEffect, useState } from "react";
-import { BackgroundTaskStatus } from "../../components/background-task-status";
+import { Link, useLocation, useNavigate, useParams } from "@tanstack/react-router";
+import {
+  closestCenter,
+  DndContext,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import { GripVertical, Star } from "lucide-react";
+import { useMemo, useState, type ReactNode } from "react";
 import { useDocumentTitle } from "../../lib/document-title";
 import { parseContentTypeSummary, parseNamedRefs, type ContentField, type FieldTypeName } from "./fields-model";
+import { ListBackLink } from "../../components/list-back-link";
 import {
   emptyChildGroup,
   emptyCondition,
@@ -40,7 +58,13 @@ import {
   type ViewModel,
   type ViewSortRow,
 } from "./filter-model";
-import { ContentTypeNav } from "./nav";
+
+const EDITOR_TABS = ["columns", "sort", "filter", "public", "details"] as const;
+type EditorTab = (typeof EDITOR_TABS)[number];
+
+function parseEditorTab(hash: string): EditorTab {
+  return EDITOR_TABS.find((tab) => tab === hash) ?? "columns";
+}
 
 export function ContentViewEditorPage() {
   const params = useParams({ strict: false });
@@ -48,12 +72,11 @@ export function ContentViewEditorPage() {
   const viewId = typeof params.viewId === "string" ? params.viewId : "";
   useDocumentTitle(["View", developerName]);
   const queryClient = useQueryClient();
-  const [tab, setTab] = useState("columns");
+  const navigate = useNavigate();
+  const tab = parseEditorTab(useLocation().hash);
   const [label, setLabel] = useState("");
   const [description, setDescription] = useState("");
-  const [hydrated, setHydrated] = useState(false);
-  const [exportOnlyColumnsFromView, setExportOnlyColumnsFromView] = useState(true);
-  const [exportTaskId, setExportTaskId] = useState<string | null>(null);
+  const [detailsFor, setDetailsFor] = useState<string | null>(null);
 
   const views = adminApi.views(developerName);
 
@@ -77,27 +100,48 @@ export function ContentViewEditorPage() {
     queryFn: () => adminApi.contentTypes.templates(developerName),
     enabled: developerName.length > 0,
   });
+  const viewTemplateQuery = useQuery({
+    queryKey: ["content-view-template", developerName, viewId],
+    queryFn: () => views.template(viewId),
+    enabled: developerName.length > 0 && viewId.length > 0,
+    retry: false,
+  });
 
   const contentType = parseContentTypeSummary(typeQuery.data);
-  const view = parseViewModel(viewQuery.data);
+  const view = useMemo(() => parseViewModel(viewQuery.data), [viewQuery.data]);
   const templates = parseNamedRefs(templatesQuery.data);
+  const currentTemplate = parseNamedRefs([viewTemplateQuery.data])[0];
+  const currentTemplateId = currentTemplate?.id ?? "";
+  const publicTemplates =
+    currentTemplate && !templates.some((template) => template.id === currentTemplate.id)
+      ? [currentTemplate, ...templates]
+      : templates;
   const isFavorite = (favoritesQuery.data?.items ?? []).some((item) => item.id === viewId);
   const columns = viewColumnOptions(contentType?.fields ?? []);
 
-  useEffect(() => {
-    if (!view || hydrated) {
-      return;
-    }
+  if (view && view.id !== detailsFor) {
+    setDetailsFor(view.id);
     setLabel(view.label);
     setDescription(view.description);
-    setHydrated(true);
-  }, [view, hydrated]);
+  }
 
   const invalidate = () => {
     void queryClient.invalidateQueries({ queryKey: ["content-view", developerName, viewId] });
+    void queryClient.invalidateQueries({ queryKey: ["content-view-template", developerName, viewId] });
     void queryClient.invalidateQueries({ queryKey: ["content-views", developerName] });
     void queryClient.invalidateQueries({ queryKey: ["content-view-favorites", developerName] });
   };
+
+  const deleteMutation = useMutation({
+    mutationFn: () => views.remove(viewId),
+    onSuccess: () => {
+      toast.success("View deleted");
+      void queryClient.invalidateQueries({ queryKey: ["content-views", developerName] });
+      void queryClient.invalidateQueries({ queryKey: ["content-view-favorites", developerName] });
+      void navigate({ to: "/content/$developerName/views", params: { developerName } });
+    },
+    onError: (error) => toast.error(formatError(error)),
+  });
 
   const detailsMutation = useMutation({
     mutationFn: () => views.update(viewId, { label, description }),
@@ -114,15 +158,6 @@ export function ContentViewEditorPage() {
     onError: (error) => toast.error(formatError(error)),
   });
 
-  const exportMutation = useMutation({
-    mutationFn: () => views.exportCsv(viewId, { exportOnlyColumnsFromView }),
-    onSuccess: (result) => {
-      toast.success(`Export started. Task ${result.id}`);
-      setExportTaskId(result.id);
-    },
-    onError: (error) => toast.error(formatError(error)),
-  });
-
   if (!developerName || !viewId) {
     return (
       <div className="space-y-6">
@@ -135,25 +170,25 @@ export function ContentViewEditorPage() {
   return (
     <div className="space-y-6">
       <PageHeader
+        back={
+          <ListBackLink
+            to="/content/$developerName/views"
+            params={{ developerName }}
+            listKey={`content-views:${developerName}`}
+            label="views"
+          />
+        }
         title={view?.label || "View"}
         description={view?.developerName}
         actions={
           <>
-            <label className="flex items-center gap-2 text-sm">
-              <Checkbox
-                checked={exportOnlyColumnsFromView}
-                onCheckedChange={(checked) => setExportOnlyColumnsFromView(checked)}
-              />
-              View columns only
-            </label>
-            <Button
-              type="button"
-              variant="outline"
-              loading={exportMutation.isPending}
-              onClick={() => exportMutation.mutate()}
+            <Link
+              to="/content/$developerName/$viewId"
+              params={{ developerName, viewId }}
+              className={buttonVariants({ variant: "outline" })}
             >
-              Export CSV
-            </Button>
+              Open items
+            </Link>
             <Button
               type="button"
               variant="outline"
@@ -166,12 +201,13 @@ export function ContentViewEditorPage() {
           </>
         }
       />
-      <ContentTypeNav developerName={developerName} />
-      {exportTaskId ? <BackgroundTaskStatus taskId={exportTaskId} /> : null}
       <QueryGate query={viewQuery}>
         {() =>
           view ? (
-            <Tabs value={tab} onValueChange={setTab}>
+            <Tabs
+              value={tab}
+              onValueChange={(next) => void navigate({ to: ".", hash: parseEditorTab(next), replace: true })}
+            >
               <TabsList>
                 <TabsTrigger value="columns">Columns</TabsTrigger>
                 <TabsTrigger value="sort">Sort</TabsTrigger>
@@ -238,8 +274,17 @@ export function ContentViewEditorPage() {
               </TabsContent>
               <TabsContent value="public" className="mt-4">
                 <PublicSettingsEditor
+                  key={[
+                    view.isPublished,
+                    view.routePath,
+                    view.defaultNumberOfItemsPerPage,
+                    view.maxNumberOfItemsPerPage,
+                    view.ignoreClientFilterAndSortQueryParams,
+                    currentTemplateId || templates[0]?.id,
+                  ].join("|")}
                   view={view}
-                  templates={templates}
+                  templates={publicTemplates}
+                  currentTemplateId={currentTemplateId}
                   onSave={(input) =>
                     views.updatePublicSettings(viewId, input).then(
                       () => {
@@ -251,7 +296,7 @@ export function ContentViewEditorPage() {
                   }
                 />
               </TabsContent>
-              <TabsContent value="details" className="mt-4">
+              <TabsContent value="details" className="mt-4 space-y-6">
                 <Card>
                   <CardContent className="space-y-4 pt-6">
                     <FormField label="Label" required htmlFor="view-edit-label">
@@ -273,6 +318,14 @@ export function ContentViewEditorPage() {
                     </Button>
                   </CardContent>
                 </Card>
+                <DangerZone
+                  description="Delete this view. Items are not affected, and its public route stops working."
+                  actionLabel="Delete view"
+                  confirmTitle={`Delete ${view.label || "this view"}?`}
+                  confirmBody="Anyone who saved this view as a favorite loses it. This cannot be undone."
+                  onConfirm={() => deleteMutation.mutate()}
+                  pending={deleteMutation.isPending}
+                />
               </TabsContent>
             </Tabs>
           ) : (
@@ -280,6 +333,62 @@ export function ContentViewEditorPage() {
           )
         }
       </QueryGate>
+    </div>
+  );
+}
+
+function ReorderList({
+  ids,
+  onReorder,
+  children,
+}: {
+  ids: string[];
+  onReorder: (id: string, newFieldOrder: number) => void;
+  children: ReactNode;
+}) {
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  );
+  const onDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) {
+      return;
+    }
+    const newIndex = ids.indexOf(String(over.id));
+    if (newIndex < 0) {
+      return;
+    }
+    onReorder(String(active.id), newIndex + 1);
+  };
+  return (
+    <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
+      <SortableContext items={ids} strategy={verticalListSortingStrategy}>
+        <div className="space-y-2">{children}</div>
+      </SortableContext>
+    </DndContext>
+  );
+}
+
+function SortableRow({ id, children }: { id: string; children: ReactNode }) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.6 : 1,
+  };
+  return (
+    <div ref={setNodeRef} style={style} className="flex items-center gap-2 rounded-lg border border-border px-3 py-2">
+      <button
+        type="button"
+        className="rounded-md p-1 text-muted-foreground hover:bg-accent hover:text-foreground"
+        aria-label={`Reorder ${id}`}
+        {...attributes}
+        {...listeners}
+      >
+        <GripVertical className="size-4" />
+      </button>
+      <div className="flex min-w-0 flex-1 items-center justify-between gap-2">{children}</div>
     </div>
   );
 }
@@ -308,34 +417,19 @@ function ColumnsEditor({
           {visible.length === 0 ? (
             <p className="text-sm text-muted-foreground">No columns selected.</p>
           ) : (
-            visible.map((developer, index) => (
-              <div key={developer} className="flex items-center justify-between gap-2 rounded-lg border border-border px-3 py-2">
-                <span className="text-sm">{labelFor(options, developer)}</span>
-                <div className="flex gap-1">
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="outline"
-                    disabled={index === 0}
-                    onClick={() => onReorder(developer, index)}
-                  >
-                    Up
-                  </Button>
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="outline"
-                    disabled={index === visible.length - 1}
-                    onClick={() => onReorder(developer, index + 2)}
-                  >
-                    Down
-                  </Button>
+            <ReorderList
+              ids={visible}
+              onReorder={onReorder}
+            >
+              {visible.map((developer) => (
+                <SortableRow key={developer} id={developer}>
+                  <span className="text-sm">{labelFor(options, developer)}</span>
                   <Button type="button" size="sm" variant="ghost" onClick={() => onToggle(developer, false)}>
                     Hide
                   </Button>
-                </div>
-              </div>
-            ))
+                </SortableRow>
+              ))}
+            </ReorderList>
           )}
         </CardContent>
       </Card>
@@ -382,36 +476,18 @@ function SortEditor({
         <CardTitle>Sort</CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
-        {view.sort.map((row, index) => (
-          <div key={row.developerName} className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-border px-3 py-2">
-            <span className="text-sm">
-              {labelFor(options, row.developerName)} · {row.direction === "desc" ? "Descending" : "Ascending"}
-            </span>
-            <div className="flex gap-1">
-              <Button
-                type="button"
-                size="sm"
-                variant="outline"
-                disabled={index === 0}
-                onClick={() => onReorder(row.developerName, index)}
-              >
-                Up
-              </Button>
-              <Button
-                type="button"
-                size="sm"
-                variant="outline"
-                disabled={index === view.sort.length - 1}
-                onClick={() => onReorder(row.developerName, index + 2)}
-              >
-                Down
-              </Button>
+        <ReorderList ids={view.sort.map((row) => row.developerName)} onReorder={onReorder}>
+          {view.sort.map((row) => (
+            <SortableRow key={row.developerName} id={row.developerName}>
+              <span className="text-sm">
+                {labelFor(options, row.developerName)} · {row.direction === "desc" ? "Descending" : "Ascending"}
+              </span>
               <Button type="button" size="sm" variant="ghost" onClick={() => onRemove(row.developerName)}>
                 Remove
               </Button>
-            </div>
-          </div>
-        ))}
+            </SortableRow>
+          ))}
+        </ReorderList>
         {available.length > 0 && (
           <div className="flex flex-wrap items-end gap-2">
             <FormField label="Field" htmlFor="sort-field">
@@ -466,10 +542,12 @@ function FilterEditor({
   onSave: (filter: FilterGroupNode) => void;
 }) {
   const [root, setRoot] = useState<FilterGroupNode>(view.filter);
+  const [syncedFilter, setSyncedFilter] = useState(view.filter);
 
-  useEffect(() => {
+  if (syncedFilter !== view.filter) {
+    setSyncedFilter(view.filter);
     setRoot(view.filter);
-  }, [view.filter]);
+  }
 
   return (
     <Card>
@@ -639,10 +717,12 @@ function FilterConditionEditor({
 function PublicSettingsEditor({
   view,
   templates,
+  currentTemplateId,
   onSave,
 }: {
   view: ViewModel;
   templates: ReturnType<typeof parseNamedRefs>;
+  currentTemplateId: string;
   onSave: (input: {
     isPublished: boolean;
     routePath: string;
@@ -654,21 +734,10 @@ function PublicSettingsEditor({
 }) {
   const [isPublished, setIsPublished] = useState(view.isPublished);
   const [routePath, setRoutePath] = useState(view.routePath);
-  const [templateId, setTemplateId] = useState(templates[0]?.id ?? "");
+  const [templateId, setTemplateId] = useState(currentTemplateId || templates[0]?.id || "");
   const [defaultPage, setDefaultPage] = useState(String(view.defaultNumberOfItemsPerPage));
   const [maxPage, setMaxPage] = useState(String(view.maxNumberOfItemsPerPage));
   const [ignoreClient, setIgnoreClient] = useState(view.ignoreClientFilterAndSortQueryParams);
-
-  useEffect(() => {
-    setIsPublished(view.isPublished);
-    setRoutePath(view.routePath);
-    setDefaultPage(String(view.defaultNumberOfItemsPerPage));
-    setMaxPage(String(view.maxNumberOfItemsPerPage));
-    setIgnoreClient(view.ignoreClientFilterAndSortQueryParams);
-    if (!templateId && templates[0]) {
-      setTemplateId(templates[0].id);
-    }
-  }, [view, templates, templateId]);
 
   return (
     <Card>

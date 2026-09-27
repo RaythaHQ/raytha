@@ -4,6 +4,7 @@ using Raytha.Application.Common.Exceptions;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Models;
 using Raytha.Application.Common.Utils;
+using Raytha.Application.ContentTypes;
 
 namespace Raytha.Application.Themes.WebTemplates.Queries;
 
@@ -34,7 +35,28 @@ public class GetWebTemplateById
             if (entity == null)
                 throw new NotFoundException("Template", request.Id);
 
-            return new QueryResponseDto<WebTemplateDto>(WebTemplateDto.GetProjection(entity)!);
+            var contentTypes = TemplateInsertVariables.ShowsContentVariables(
+                entity.DeveloperName,
+                entity.IsBuiltInTemplate
+            )
+                ? await _db
+                    .ContentTypes.AsNoTracking()
+                    .Include(p => p.ContentTypeFields)
+                    .OrderBy(p => p.LabelSingular)
+                    .ToListAsync(cancellationToken)
+                : [];
+
+            var dto = WebTemplateDto.GetProjection(entity)!;
+            return new QueryResponseDto<WebTemplateDto>(
+                dto with
+                {
+                    AvailableVariables = TemplateInsertVariables.ForWeb(
+                        entity.DeveloperName,
+                        entity.IsBuiltInTemplate,
+                        contentTypes.Select(ContentTypeDto.GetProjection)
+                    ),
+                }
+            );
         }
     }
 }

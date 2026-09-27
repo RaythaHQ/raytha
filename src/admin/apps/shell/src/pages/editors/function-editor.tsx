@@ -5,28 +5,28 @@ import {
   Card,
   CardContent,
   Checkbox,
+  DangerZone,
   FormField,
   Input,
   PageHeader,
   QueryGate,
   Select,
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
   toast,
 } from "@raytha/ui";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useParams } from "@tanstack/react-router";
-import { useEffect, useState, type FormEvent } from "react";
+import { useNavigate, useParams } from "@tanstack/react-router";
+import type { ReactCodeMirrorRef } from "@uiw/react-codemirror";
+import { useRef, useState, type FormEvent } from "react";
 import { ListBackLink } from "../../components/list-back-link";
 import { useDocumentTitle } from "../../lib/document-title";
-import { CodeEditor } from "./code-editor";
+import { CodeEditor, insertAtCursor } from "./code-editor";
+import { FUNCTION_TRIGGERS, missingEntryPoint, triggerFor } from "./function-reference";
+import { FunctionReferencePanel } from "./function-reference-panel";
 import { RevisionsPanel } from "./revisions-panel";
-
-const FUNCTION_TRIGGERS = [
-  { value: "http_request", label: "HTTP request" },
-  { value: "liquid_template", label: "Liquid template" },
-  { value: "content_item_created", label: "Content item created" },
-  { value: "content_item_updated", label: "Content item updated" },
-  { value: "content_item_deleted", label: "Content item deleted" },
-] as const;
 
 export function FunctionEditorPage() {
   const params = useParams({ strict: false });
@@ -62,17 +62,23 @@ export function FunctionEditorPage() {
 
 function FunctionEditor({ fn, revisions }: { fn: FunctionDetail; revisions: TemplateRevision[] }) {
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const [name, setName] = useState(fn.name);
-  const [triggerType, setTriggerType] = useState(fn.triggerType || FUNCTION_TRIGGERS[0].value);
+  const editorRef = useRef<ReactCodeMirrorRef>(null);
+  const [rail, setRail] = useState("reference");
+  const [triggerType, setTriggerType] = useState(triggerFor(fn.triggerType).value);
   const [isActive, setIsActive] = useState(fn.isActive);
   const [code, setCode] = useState(fn.code);
+  const [loaded, setLoaded] = useState(fn);
+  const entryWarning = missingEntryPoint(triggerType, code);
 
-  useEffect(() => {
+  if (loaded !== fn) {
+    setLoaded(fn);
     setName(fn.name);
-    setTriggerType(fn.triggerType || FUNCTION_TRIGGERS[0].value);
+    setTriggerType(triggerFor(fn.triggerType).value);
     setIsActive(fn.isActive);
     setCode(fn.code);
-  }, [fn]);
+  }
 
   const save = useMutation({
     mutationFn: () => adminApi.functions.update(fn.id, { name, triggerType, isActive, code }),
@@ -95,6 +101,16 @@ function FunctionEditor({ fn, revisions }: { fn: FunctionDetail; revisions: Temp
     onError: (error) => toast.error(formatError(error)),
   });
 
+  const remove = useMutation({
+    mutationFn: () => adminApi.functions.remove(fn.id),
+    onSuccess: () => {
+      toast.success("Function deleted");
+      void queryClient.invalidateQueries({ queryKey: ["functions"] });
+      void navigate({ to: "/functions" });
+    },
+    onError: (error) => toast.error(formatError(error)),
+  });
+
   const handleSubmit = (event: FormEvent) => {
     event.preventDefault();
     save.mutate();
@@ -103,6 +119,7 @@ function FunctionEditor({ fn, revisions }: { fn: FunctionDetail; revisions: Temp
   return (
     <div className="space-y-6">
       <PageHeader
+        back={<ListBackLink to="/functions" listKey="functions" label="functions" />}
         title={fn.name || fn.developerName || "Function"}
         description={fn.developerName}
         actions={
@@ -111,8 +128,7 @@ function FunctionEditor({ fn, revisions }: { fn: FunctionDetail; revisions: Temp
           </Button>
         }
       />
-      <ListBackLink to="/functions" listKey="functions" label="functions" />
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_18rem]">
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_24rem] lg:items-start">
         <Card>
           <CardContent className="space-y-4 pt-6">
             <form id="function-form" className="space-y-4" onSubmit={handleSubmit}>
@@ -121,7 +137,11 @@ function FunctionEditor({ fn, revisions }: { fn: FunctionDetail; revisions: Temp
               </FormField>
               <FormField label="Trigger" required htmlFor="function-trigger">
                 {(control) => (
-                  <Select {...control} value={triggerType} onChange={(event) => setTriggerType(event.target.value)}>
+                  <Select
+                    {...control}
+                    value={triggerType}
+                    onChange={(event) => setTriggerType(triggerFor(event.target.value).value)}
+                  >
                     {FUNCTION_TRIGGERS.map((trigger) => (
                       <option key={trigger.value} value={trigger.value}>
                         {trigger.label}
@@ -136,16 +156,48 @@ function FunctionEditor({ fn, revisions }: { fn: FunctionDetail; revisions: Temp
                   Active
                 </label>
               </div>
-              <CodeEditor value={code} onChange={setCode} language="javascript" ariaLabel="Function code" />
+              <div className="space-y-2">
+                <CodeEditor
+                  value={code}
+                  onChange={setCode}
+                  language="javascript"
+                  editorRef={editorRef}
+                  ariaLabel="Function code"
+                />
+                {entryWarning ? <p className="text-sm text-warning">{entryWarning}</p> : null}
+              </div>
             </form>
           </CardContent>
         </Card>
-        <RevisionsPanel
-          revisions={revisions}
-          pendingId={revert.isPending ? (revert.variables ?? null) : null}
-          onRevert={(revisionId) => revert.mutate(revisionId)}
-        />
+        <Tabs value={rail} onValueChange={setRail} className="space-y-3">
+          <TabsList aria-label="Side panel">
+            <TabsTrigger value="reference">Reference</TabsTrigger>
+            <TabsTrigger value="revisions">Revisions ({revisions.length})</TabsTrigger>
+          </TabsList>
+          <TabsContent value="reference">
+            <FunctionReferencePanel
+              trigger={triggerType}
+              developerName={fn.developerName}
+              onInsert={(text) => insertAtCursor(editorRef.current, text)}
+            />
+          </TabsContent>
+          <TabsContent value="revisions">
+            <RevisionsPanel
+              revisions={revisions}
+              pendingId={revert.isPending ? (revert.variables ?? null) : null}
+              onRevert={(revisionId) => revert.mutate(revisionId)}
+            />
+          </TabsContent>
+        </Tabs>
       </div>
+      <DangerZone
+        description="Delete this function. This cannot be undone."
+        actionLabel="Delete function"
+        confirmTitle="Delete function?"
+        confirmBody="This cannot be undone."
+        onConfirm={() => remove.mutate()}
+        pending={remove.isPending}
+      />
     </div>
   );
 }

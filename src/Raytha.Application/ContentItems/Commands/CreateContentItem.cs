@@ -205,11 +205,14 @@ public class CreateContentItem
 
             var routePathTemplate = contentType.DefaultRouteTemplate;
 
-            string primaryFieldDeveloperName = contentType
-                .ContentTypeFields.First(p => p.Id == contentType.PrimaryFieldId)
-                .DeveloperName;
-            var primaryField =
-                ((IDictionary<string, dynamic>)content)[primaryFieldDeveloperName] as string;
+            var primaryFieldDefinition = contentType.ContentTypeFields.First(p =>
+                p.Id == contentType.PrimaryFieldId
+            );
+            ((IDictionary<string, dynamic>)content).TryGetValue(
+                primaryFieldDefinition.DeveloperName,
+                out var primaryFieldRaw
+            );
+            string primaryField = primaryFieldDefinition.FieldType.FieldValueFrom(primaryFieldRaw).Text;
 
             string path = routePathTemplate
                 .IfNullOrEmpty($"{BuiltInContentTypeField.PrimaryField.DeveloperName}")

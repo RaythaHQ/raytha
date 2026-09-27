@@ -1,12 +1,11 @@
-import { adminApi, formatError, hasPermission, platformPermissions } from "@raytha/api";
-import type { EntityRef } from "@raytha/api";
-import { Badge, Button, Card, CardContent, FormField, Input, PageHeader, Textarea, toast } from "@raytha/ui";
-import { useMutation, useQuery } from "@tanstack/react-query";
-import { Link, useNavigate, useParams } from "@tanstack/react-router";
+import { adminApi, formatError, hasPermission, platformPermissions, problemFieldErrors } from "@raytha/api";
+import { Button, Card, CardContent, FormField, Input, PageHeader, Textarea, toast } from "@raytha/ui";
+import { useMutation } from "@tanstack/react-query";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { useState, type FormEvent } from "react";
 import { CrudListPage } from "./crud-list";
-import { entityFields, formatWhen, readBoolean, readString, toDeveloperName } from "./entity";
-import { ContentTypeNav } from "./content/nav";
+import { entityFields, pluralize, readString, toDeveloperName } from "./entity";
+import { DEFAULT_ROUTE_TEMPLATE, RouteTemplateField } from "./content/route-template";
 import { ListBackLink } from "../components/list-back-link";
 import { useDocumentTitle } from "../lib/document-title";
 
@@ -79,82 +78,155 @@ export function ContentTypesPage() {
   );
 }
 
+type NewContentTypeForm = {
+  labelSingular: string;
+  labelPlural: string;
+  developerName: string;
+  description: string;
+  defaultRouteTemplate: string;
+};
+
+const DEVELOPER_NAME_PATTERN = /^[a-z0-9]+(_[a-z0-9]+)*$/;
+
 export function NewContentTypePage() {
   useDocumentTitle(["New content type"]);
   const navigate = useNavigate();
-  const [label, setLabel] = useState("");
-  const [developerName, setDeveloperName] = useState("");
+  const [form, setForm] = useState<NewContentTypeForm>({
+    labelSingular: "",
+    labelPlural: "",
+    developerName: "",
+    description: "",
+    defaultRouteTemplate: DEFAULT_ROUTE_TEMPLATE,
+  });
+  const [pluralTouched, setPluralTouched] = useState(false);
   const [developerTouched, setDeveloperTouched] = useState(false);
-  const [description, setDescription] = useState("");
 
   const mutation = useMutation({
-    mutationFn: () =>
-      adminApi.contentTypes.create({
-        labelSingular: label,
-        labelPlural: label.endsWith("s") ? label : `${label}s`,
-        developerName: developerName || toDeveloperName(label),
-        description,
-        defaultRouteTemplate: "{ContentTypeDeveloperName}/{PrimaryField}",
-      }),
-    onSuccess: () => {
-      toast.success("Content type created");
-      const name = developerName || toDeveloperName(label);
-      void navigate({ to: "/content/$developerName", params: { developerName: name } });
+    mutationFn: (input: NewContentTypeForm) => adminApi.contentTypes.create(input),
+    onSuccess: (_created, input) => {
+      toast.success(`${input.labelPlural} created`);
+      void navigate({ to: "/content/$developerName", params: { developerName: input.developerName } });
     },
-    onError: (error) => toast.error(formatError(error)),
+    onError: (error) => {
+      if (Object.keys(problemFieldErrors(error)).length === 0) {
+        toast.error(formatError(error));
+      }
+    },
   });
+  const serverErrors = problemFieldErrors(mutation.error);
+  const developerFormatError =
+    form.developerName && !DEVELOPER_NAME_PATTERN.test(form.developerName)
+      ? "Use lowercase letters, numbers, and single underscores."
+      : undefined;
+
+  const setLabelPlural = (labelPlural: string) =>
+    setForm((current) => ({
+      ...current,
+      labelPlural,
+      developerName: developerTouched ? current.developerName : toDeveloperName(labelPlural),
+    }));
 
   const handleSubmit = (event: FormEvent) => {
     event.preventDefault();
-    mutation.mutate();
+    if (!developerFormatError) {
+      mutation.mutate(form);
+    }
   };
 
   return (
     <div className="space-y-6">
-      <PageHeader title="New content type" description="Label and developer name are required. A default route template is applied." />
-      <ListBackLink to="/content-types" listKey="content-types" label="content types" />
-      <Card>
-        <CardContent className="space-y-4 pt-6">
-          <form className="space-y-4" onSubmit={handleSubmit}>
-            <FormField label="Label" required htmlFor="content-type-label">
+      <PageHeader
+        back={<ListBackLink to="/content-types" listKey="content-types" label="content types" />}
+        title="New content type"
+        description="A content type is a kind of content, like blog posts or team members. It starts with a Title and a Content field and an “All” view."
+      />
+      <Card className="max-w-3xl">
+        <CardContent className="pt-6">
+          <form className="space-y-5" onSubmit={handleSubmit} noValidate>
+            <div className="grid gap-5 sm:grid-cols-2">
+              <FormField
+                label="Singular label"
+                required
+                htmlFor="ct-label-singular"
+                hint="One item, e.g. Blog post."
+                error={serverErrors.LabelSingular}
+              >
+                {(control) => (
+                  <Input
+                    {...control}
+                    value={form.labelSingular}
+                    onChange={(event) => {
+                      const labelSingular = event.target.value;
+                      setForm((current) => ({ ...current, labelSingular }));
+                      if (!pluralTouched) {
+                        setLabelPlural(pluralize(labelSingular));
+                      }
+                    }}
+                  />
+                )}
+              </FormField>
+              <FormField
+                label="Plural label"
+                required
+                htmlFor="ct-label-plural"
+                hint="The list and sidebar name, e.g. Blog posts."
+                error={serverErrors.LabelPlural}
+              >
+                {(control) => (
+                  <Input
+                    {...control}
+                    value={form.labelPlural}
+                    onChange={(event) => {
+                      setPluralTouched(true);
+                      setLabelPlural(event.target.value);
+                    }}
+                  />
+                )}
+              </FormField>
+            </div>
+            <FormField
+              label="Developer name"
+              required
+              htmlFor="ct-developer-name"
+              hint="Used in templates, the API, and URLs. It cannot be changed later."
+              error={developerFormatError ?? serverErrors.DeveloperName}
+            >
               {(control) => (
                 <Input
                   {...control}
-                  value={label}
-                  onChange={(event) => {
-                    const next = event.target.value;
-                    setLabel(next);
-                    if (!developerTouched) {
-                      setDeveloperName(toDeveloperName(next));
-                    }
-                  }}
-                />
-              )}
-            </FormField>
-            <FormField label="Developer name" required htmlFor="content-type-developer-name">
-              {(control) => (
-                <Input
-                  {...control}
-                  value={developerName}
+                  className="font-mono"
+                  value={form.developerName}
                   onChange={(event) => {
                     setDeveloperTouched(true);
-                    setDeveloperName(event.target.value);
+                    setForm((current) => ({ ...current, developerName: event.target.value }));
                   }}
                 />
               )}
             </FormField>
-            <FormField label="Description" htmlFor="content-type-description">
+            <FormField label="Description" htmlFor="ct-description" error={serverErrors.Description}>
               {(control) => (
                 <Textarea
                   {...control}
-                  value={description}
-                  onChange={(event) => setDescription(event.target.value)}
+                  value={form.description}
+                  onChange={(event) => setForm((current) => ({ ...current, description: event.target.value }))}
                 />
               )}
             </FormField>
+            <RouteTemplateField
+              id="ct-route"
+              value={form.defaultRouteTemplate}
+              onChange={(defaultRouteTemplate) => setForm((current) => ({ ...current, defaultRouteTemplate }))}
+              developerName={form.developerName}
+              error={serverErrors.DefaultRouteTemplate}
+            />
+            {serverErrors[""] && (
+              <p role="alert" className="rounded-lg border border-destructive/40 bg-destructive/5 px-3 py-2 text-sm text-destructive">
+                {serverErrors[""]}
+              </p>
+            )}
             <div className="flex gap-2">
               <Button type="submit" loading={mutation.isPending}>
-                Create
+                Create content type
               </Button>
               <Button type="button" variant="outline" onClick={() => void navigate({ to: "/content-types" })}>
                 Cancel
@@ -167,83 +239,4 @@ export function NewContentTypePage() {
   );
 }
 
-export function ContentItemsPage() {
-  const params = useParams({ strict: false });
-  const developerName = typeof params.developerName === "string" ? params.developerName : "";
-  const contentTypeQuery = useQuery({
-    queryKey: ["content-types", developerName],
-    queryFn: () => adminApi.contentTypes.byDeveloperName(developerName),
-    enabled: developerName.length > 0,
-  });
-  const contentTypeFields = contentTypeQuery.data ? entityFields(contentTypeQuery.data) : {};
-  const title =
-    readString(contentTypeFields, "labelPlural", "labelSingular") || developerName || "Content items";
-  useDocumentTitle([title]);
-
-  if (!developerName) {
-    return (
-      <div className="space-y-6">
-        <PageHeader title="Content items" />
-        <p className="text-sm text-muted-foreground">Pick a content type from the list.</p>
-      </div>
-    );
-  }
-
-  const items = adminApi.contentItems(developerName);
-
-  return (
-    <div className="space-y-6">
-      <ContentTypeNav developerName={developerName} />
-      <CrudListPage
-        title={title}
-        description="Items for this content type."
-        queryKey={["content-items", developerName]}
-        listKey={`content-items:${developerName}`}
-        noun="item"
-        list={items.list}
-        remove={items.remove}
-        createTo="/content/$developerName/new"
-        createParams={{ developerName }}
-        createLabel="New item"
-        columns={[
-          {
-            header: "Title",
-            cell: (entity) => (
-              <Link
-                to="/content/$developerName/items/$id"
-                params={{ developerName, id: entity.id }}
-                className="text-primary hover:underline"
-              >
-                {readString(entityFields(entity), "primaryField", "title") || entity.id}
-              </Link>
-            ),
-          },
-          { header: "Path", cell: (entity) => readString(entityFields(entity), "routePath") || "—" },
-          {
-            header: "Status",
-            cell: (entity) => <ItemStatus entity={entity} />,
-          },
-          {
-            header: "Updated",
-            cell: (entity) => {
-              const fields = entityFields(entity);
-              return formatWhen(fields.lastModificationTime) || formatWhen(fields.creationTime) || "—";
-            },
-          },
-        ]}
-        rowActions={() => []}
-      />
-    </div>
-  );
-}
-
-function ItemStatus({ entity }: { entity: EntityRef }) {
-  const fields = entityFields(entity);
-  if (readBoolean(fields, "isPublished")) {
-    return <Badge variant="success">Published</Badge>;
-  }
-  if (readBoolean(fields, "isDraft")) {
-    return <Badge variant="warning">Draft</Badge>;
-  }
-  return <Badge variant="secondary">Unpublished</Badge>;
-}
+export { ContentTypeHomePage, ContentViewItemsPage } from "./content/items";

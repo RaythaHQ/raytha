@@ -1,14 +1,24 @@
 import { adminApi, formatError } from "@raytha/api";
 import type { EmailTemplateDetail, TemplateRevision } from "@raytha/api";
-import { Button, Card, CardContent, FormField, Input, PageHeader, QueryGate, toast } from "@raytha/ui";
+import {
+  Button,
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  FormField,
+  Input,
+  PageHeader,
+  QueryGate,
+  toast,
+} from "@raytha/ui";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useParams } from "@tanstack/react-router";
-import { useEffect, useRef, useState, type FormEvent } from "react";
-import type { ReactCodeMirrorRef } from "@uiw/react-codemirror";
+import { useState, type FormEvent } from "react";
 import { ListBackLink } from "../../components/list-back-link";
 import { useDocumentTitle } from "../../lib/document-title";
-import { CodeEditor, insertAtCursor } from "./code-editor";
 import { RevisionsPanel } from "./revisions-panel";
+import { TemplateWorkbench } from "./template-workbench";
 
 export function EmailTemplateEditorPage() {
   const params = useParams({ strict: false });
@@ -55,18 +65,19 @@ function EmailTemplateEditor({
   revisions: TemplateRevision[];
 }) {
   const queryClient = useQueryClient();
-  const editorRef = useRef<ReactCodeMirrorRef>(null);
   const [subject, setSubject] = useState(template.subject);
   const [content, setContent] = useState(template.content);
   const [cc, setCc] = useState(template.cc);
   const [bcc, setBcc] = useState(template.bcc);
 
-  useEffect(() => {
+  const [synced, setSynced] = useState(template);
+  if (synced !== template) {
+    setSynced(template);
     setSubject(template.subject);
     setContent(template.content);
     setCc(template.cc);
     setBcc(template.bcc);
-  }, [template]);
+  }
 
   const save = useMutation({
     mutationFn: () =>
@@ -98,53 +109,35 @@ function EmailTemplateEditor({
   return (
     <div className="space-y-6">
       <PageHeader
+        back={<ListBackLink to="/email-templates" listKey="email-templates" label="email templates" />}
         title={template.subject || template.developerName || "Email template"}
-        description={template.developerName}
+        meta={template.developerName ? <code>{template.developerName}</code> : undefined}
         actions={
           <Button type="submit" form="email-template-form" loading={save.isPending}>
             Save
           </Button>
         }
       />
-      <ListBackLink to="/email-templates" listKey="email-templates" label="email templates" />
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_18rem]">
+      <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
         <Card>
-          <CardContent className="space-y-4 pt-6">
-            <form id="email-template-form" className="space-y-4" onSubmit={handleSubmit}>
-              <FormField label="Subject" required htmlFor="email-subject">
-                {(control) => <Input {...control} value={subject} onChange={(event) => setSubject(event.target.value)} />}
-              </FormField>
+          <CardHeader>
+            <CardTitle>Envelope</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <form id="email-template-form" className="grid gap-5 md:grid-cols-2" onSubmit={handleSubmit}>
+              <div className="md:col-span-2">
+                <FormField label="Subject" required htmlFor="email-subject">
+                  {(control) => (
+                    <Input {...control} value={subject} onChange={(event) => setSubject(event.target.value)} />
+                  )}
+                </FormField>
+              </div>
               <FormField label="CC" htmlFor="email-cc">
                 {(control) => <Input {...control} value={cc} onChange={(event) => setCc(event.target.value)} />}
               </FormField>
               <FormField label="BCC" htmlFor="email-bcc">
                 {(control) => <Input {...control} value={bcc} onChange={(event) => setBcc(event.target.value)} />}
               </FormField>
-              {template.availableVariables ? (
-                <div className="space-y-2">
-                  <p className="text-sm font-medium">Insert variable</p>
-                  <div className="flex flex-wrap gap-2">
-                    {template.availableVariables.map((variable) => (
-                      <Button
-                        key={variable}
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={() => insertAtCursor(editorRef.current, liquidVariable(variable))}
-                      >
-                        {variable}
-                      </Button>
-                    ))}
-                  </div>
-                </div>
-              ) : null}
-              <CodeEditor
-                editorRef={editorRef}
-                value={content}
-                onChange={setContent}
-                language="liquid"
-                ariaLabel="Email template content"
-              />
             </form>
           </CardContent>
         </Card>
@@ -154,13 +147,14 @@ function EmailTemplateEditor({
           onRevert={(revisionId) => revert.mutate(revisionId)}
         />
       </div>
+      <TemplateWorkbench
+        title="Message body"
+        value={content}
+        onChange={setContent}
+        ariaLabel="Email template content"
+        variables={template.availableVariables}
+        onSave={() => save.mutate()}
+      />
     </div>
   );
-}
-
-function liquidVariable(variable: string): string {
-  if (variable.includes("{{") || variable.includes("{%")) {
-    return variable;
-  }
-  return `{{ ${variable} }}`;
 }

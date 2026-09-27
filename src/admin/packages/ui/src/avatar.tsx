@@ -19,7 +19,7 @@ export function Avatar({
   return (
     <span
       className={cn(
-        "inline-flex size-8 shrink-0 select-none items-center justify-center rounded-full bg-gradient-to-br from-tertiary to-primary text-xs font-semibold text-white",
+        "inline-flex size-8 shrink-0 select-none items-center justify-center rounded-full bg-gradient-to-br from-brand-400 to-brand-700 text-[11px] font-semibold tracking-wide text-white ring-1 ring-black/5",
         className,
       )}
       aria-hidden

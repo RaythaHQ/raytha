@@ -5,7 +5,9 @@ import {
   Button,
   Card,
   CardContent,
-  ConfirmDialog,
+  CardHeader,
+  CardTitle,
+  DangerZone,
   EmptyState,
   FormField,
   Input,
@@ -25,17 +27,19 @@ import {
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useParams } from "@tanstack/react-router";
 import { Inbox } from "lucide-react";
-import { useEffect, useState, type FormEvent } from "react";
+import { useState, type FormEvent } from "react";
 import { useDocumentTitle } from "../../lib/document-title";
-import { CodeEditor } from "./code-editor";
+import { ListBackLink } from "../../components/list-back-link";
 import { RevisionsPanel } from "./revisions-panel";
+import { TemplateWorkbench } from "./template-workbench";
+import { ThemeSectionHeader, useThemeSummary } from "./theme-section-header";
 
 export function WidgetTemplatesListPage() {
   const params = useParams({ strict: false });
   const themeId = "themeId" in params && typeof params.themeId === "string" ? params.themeId : "";
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
-  const [resetOpen, setResetOpen] = useState(false);
+  const theme = useThemeSummary(themeId);
 
   const query = useQuery({
     queryKey: ["widget-templates", themeId, search],
@@ -49,44 +53,15 @@ export function WidgetTemplatesListPage() {
     onSuccess: () => {
       toast.success("Widget templates reset to defaults");
       void queryClient.invalidateQueries({ queryKey: ["widget-templates", themeId] });
-      setResetOpen(false);
     },
     onError: (error) => toast.error(formatError(error)),
   });
 
-  useDocumentTitle(["Widget templates"]);
-
-  if (!themeId) {
-    return (
-      <div className="space-y-6">
-        <PageHeader title="Widget templates" />
-        <p className="text-sm text-muted-foreground">Pick a theme first.</p>
-      </div>
-    );
-  }
+  useDocumentTitle(["Widget templates", theme?.title ?? "Theme"]);
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        title="Widget templates"
-        description="Built-in widget markup for this theme."
-        actions={
-          hasPermission(platformPermissions.templates) ? (
-            <Button type="button" variant="outline" onClick={() => setResetOpen(true)}>
-              Reset to defaults
-            </Button>
-          ) : undefined
-        }
-      />
-      <p className="text-sm">
-        <Link to="/themes" className="text-primary hover:underline">
-          Back to themes
-        </Link>
-        {" · "}
-        <Link to="/themes/$themeId/web-templates" params={{ themeId }} className="text-primary hover:underline">
-          Web templates
-        </Link>
-      </p>
+      <ThemeSectionHeader themeId={themeId} active="widget" />
       <QueryGate query={query}>
         {(data) => (
           <ListPanel
@@ -114,7 +89,7 @@ export function WidgetTemplatesListPage() {
                   <TableRow>
                     <TableHead>Label</TableHead>
                     <TableHead>Developer name</TableHead>
-                    <TableHead>Built-in</TableHead>
+                    <TableHead>Type</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -124,14 +99,20 @@ export function WidgetTemplatesListPage() {
                         <Link
                           to="/themes/$themeId/widget-templates/$id"
                           params={{ themeId, id: item.id }}
-                          className="text-primary hover:underline"
+                          className="font-medium text-primary hover:underline"
                         >
                           {item.label || item.id}
                         </Link>
                       </TableCell>
-                      <TableCell>{item.developerName || "—"}</TableCell>
                       <TableCell>
-                        {item.isBuiltInTemplate ? <Badge variant="secondary">Built-in</Badge> : "—"}
+                        <code className="text-xs text-muted-foreground">{item.developerName || "—"}</code>
+                      </TableCell>
+                      <TableCell>
+                        {item.isBuiltInTemplate ? (
+                          <Badge variant="secondary">Built-in</Badge>
+                        ) : (
+                          <span className="text-sm text-muted-foreground">Custom</span>
+                        )}
                       </TableCell>
                     </TableRow>
                   ))}
@@ -141,15 +122,17 @@ export function WidgetTemplatesListPage() {
           </ListPanel>
         )}
       </QueryGate>
-      <ConfirmDialog
-        open={resetOpen}
-        onOpenChange={setResetOpen}
-        title="Reset widget templates?"
-        body="This replaces each built-in widget template with the default markup and keeps a revision."
-        confirmLabel="Reset"
-        onConfirm={() => reset.mutate()}
-        pending={reset.isPending}
-      />
+      {hasPermission(platformPermissions.templates) ? (
+        <DangerZone
+          description="Replace every built-in widget template in this theme with the default markup. Each template keeps a revision you can revert to."
+          actionLabel="Reset to defaults"
+          confirmTitle="Reset widget templates?"
+          confirmBody="This replaces each built-in widget template with the default markup and keeps a revision."
+          confirmLabel="Reset"
+          onConfirm={() => reset.mutate()}
+          pending={reset.isPending}
+        />
+      ) : null}
     </div>
   );
 }
@@ -202,10 +185,12 @@ function WidgetTemplateEditor({
   const [label, setLabel] = useState(template.label);
   const [content, setContent] = useState(template.content);
 
-  useEffect(() => {
+  const [synced, setSynced] = useState(template);
+  if (synced !== template) {
+    setSynced(template);
     setLabel(template.label);
     setContent(template.content);
-  }, [template]);
+  }
 
   const save = useMutation({
     mutationFn: () => adminApi.widgetTemplates(themeId).update(template.id, { label, content }),
@@ -236,27 +221,45 @@ function WidgetTemplateEditor({
   return (
     <div className="space-y-6">
       <PageHeader
+        back={
+          <ListBackLink
+            to="/themes/$themeId/widget-templates"
+            params={{ themeId }}
+            listKey={`widget-templates:${themeId}`}
+            label="widget templates"
+          />
+        }
         title={template.label || template.developerName || "Widget template"}
-        description={template.developerName}
+        meta={
+          <>
+            {template.developerName ? <code>{template.developerName}</code> : null}
+            {template.isBuiltInTemplate ? <Badge variant="secondary">Built-in</Badge> : null}
+          </>
+        }
         actions={
           <Button type="submit" form="widget-template-form" loading={save.isPending}>
             Save
           </Button>
         }
       />
-      <p className="text-sm">
-        <Link to="/themes/$themeId/widget-templates" params={{ themeId }} className="text-primary hover:underline">
-          Back to widget templates
-        </Link>
-      </p>
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_18rem]">
+      <TemplateWorkbench
+        title={template.developerName || "Widget"}
+        value={content}
+        onChange={setContent}
+        ariaLabel="Widget template content"
+        themeId={themeId}
+        onSave={() => save.mutate()}
+      />
+      <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
         <Card>
-          <CardContent className="space-y-4 pt-6">
-            <form id="widget-template-form" className="space-y-4" onSubmit={handleSubmit}>
+          <CardHeader>
+            <CardTitle>Settings</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <form id="widget-template-form" className="space-y-5" onSubmit={handleSubmit}>
               <FormField label="Label" required htmlFor="widget-label">
                 {(control) => <Input {...control} value={label} onChange={(event) => setLabel(event.target.value)} />}
               </FormField>
-              <CodeEditor value={content} onChange={setContent} language="liquid" ariaLabel="Widget template content" />
             </form>
           </CardContent>
         </Card>

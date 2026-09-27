@@ -3,11 +3,12 @@ import type { JsonObject } from "@raytha/api";
 import {
   Badge,
   Button,
+  buttonVariants,
   Card,
   CardContent,
   CardHeader,
   CardTitle,
-  ConfirmDialog,
+  DangerZone,
   FormField,
   Input,
   PageHeader,
@@ -17,10 +18,12 @@ import {
 } from "@raytha/ui";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate, useParams } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { ExternalLink, Eye } from "lucide-react";
+import { useState } from "react";
 import { ListBackLink } from "../../components/list-back-link";
 import { useDocumentTitle } from "../../lib/document-title";
 import { entityFields, formatWhen, readBoolean, readString } from "../entity";
+
 import { ContentFieldControl } from "./field-controls";
 import {
   emptyFieldValue,
@@ -32,7 +35,7 @@ import {
   type ContentField,
   type ContentFieldValue,
 } from "./fields-model";
-import { ContentTypeNav } from "./nav";
+import { publicPath } from "./public-url";
 
 type EditorValues = Record<string, ContentFieldValue>;
 
@@ -83,8 +86,8 @@ function ItemEditor({ developerName, itemId }: { developerName: string; itemId: 
   const [values, setValues] = useState<EditorValues>({});
   const [templateId, setTemplateId] = useState("");
   const [routePath, setRoutePath] = useState("");
-  const [hydrated, setHydrated] = useState(false);
-  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [hydratedKey, setHydratedKey] = useState<string | null>(null);
+  const [reloadCount, setReloadCount] = useState(0);
 
   const items = adminApi.contentItems(developerName);
 
@@ -115,47 +118,40 @@ function ItemEditor({ developerName, itemId }: { developerName: string; itemId: 
   const item = itemQuery.data;
   const itemRecord = item ? entityFields(item) : {};
 
-  useEffect(() => {
-    if (fields.length === 0 || hydrated) {
-      return;
-    }
+  const typeReady = contentType !== undefined && !typeQuery.isPlaceholderData;
+  const sourceReady = isNew
+    ? !templatesQuery.isPending && !templatesQuery.isPlaceholderData
+    : item !== undefined && !itemQuery.isPlaceholderData;
+  const sourceKey = typeReady && sourceReady ? `${developerName}:${itemId ?? "new"}:${reloadCount}` : null;
+  if (sourceKey !== null && sourceKey !== hydratedKey) {
+    setHydratedKey(sourceKey);
     if (isNew) {
       setValues(emptyValues(fields));
-      const first = templates[0];
-      if (first && !templateId) {
-        setTemplateId(first.id);
-      }
-      setHydrated(true);
-      return;
-    }
-    if (!item) {
-      return;
-    }
-    const draft = parseContentMap(itemRecord.draftContent);
-    const published = parseContentMap(itemRecord.publishedContent);
-    const source = Object.keys(draft).length > 0 ? draft : published;
-    setValues(valuesFromContent(fields, source));
-    setRoutePath(readString(itemRecord, "routePath"));
-    const savedTemplateId = readString(itemRecord, "webTemplateId");
-    if (savedTemplateId) {
-      setTemplateId(savedTemplateId);
+      setTemplateId(templates[0]?.id ?? "");
     } else {
-      const first = templates[0];
-      if (first && !templateId) {
-        setTemplateId(first.id);
-      }
+      const draft = parseContentMap(itemRecord.draftContent);
+      const published = parseContentMap(itemRecord.publishedContent);
+      const source = Object.keys(draft).length > 0 ? draft : published;
+      setValues(valuesFromContent(fields, source));
+      setRoutePath(readString(itemRecord, "routePath"));
+      setTemplateId(readString(itemRecord, "webTemplateId") || templates[0]?.id || "");
     }
-    setHydrated(true);
-  }, [fields, hydrated, isNew, item, itemRecord, templateId, templates]);
+  }
 
   const setField = (developer: string, next: ContentFieldValue) => {
     setValues((current) => ({ ...current, [developer]: next }));
   };
 
-  const invalidate = () => {
-    void queryClient.invalidateQueries({ queryKey: ["content-item", developerName, itemId] });
-    void queryClient.invalidateQueries({ queryKey: ["content-items", developerName] });
-    void queryClient.invalidateQueries({ queryKey: ["content-revisions", developerName, itemId] });
+  const invalidate = () =>
+    Promise.all([
+      queryClient.invalidateQueries({ queryKey: ["content-item", developerName, itemId] }),
+      queryClient.invalidateQueries({ queryKey: ["content-items", developerName] }),
+      queryClient.invalidateQueries({ queryKey: ["content-revisions", developerName, itemId] }),
+    ]);
+
+  const reload = async () => {
+    await invalidate();
+    setReloadCount((count) => count + 1);
   };
 
   const saveMutation = useMutation({
@@ -168,7 +164,7 @@ function ItemEditor({ developerName, itemId }: { developerName: string; itemId: 
     },
     onSuccess: (created) => {
       toast.success("Saved");
-      invalidate();
+      void invalidate();
       if (isNew && created.id) {
         void navigate({
           to: "/content/$developerName/items/$id",
@@ -183,7 +179,7 @@ function ItemEditor({ developerName, itemId }: { developerName: string; itemId: 
     mutationFn: () => items.unpublish(itemId ?? ""),
     onSuccess: () => {
       toast.success("Unpublished");
-      invalidate();
+      void invalidate();
     },
     onError: (error) => toast.error(formatError(error)),
   });
@@ -192,8 +188,7 @@ function ItemEditor({ developerName, itemId }: { developerName: string; itemId: 
     mutationFn: () => items.discardDraft(itemId ?? ""),
     onSuccess: () => {
       toast.success("Draft discarded");
-      setHydrated(false);
-      invalidate();
+      return reload();
     },
     onError: (error) => toast.error(formatError(error)),
   });
@@ -211,7 +206,7 @@ function ItemEditor({ developerName, itemId }: { developerName: string; itemId: 
     mutationFn: () => items.updateSettings(itemId ?? "", { templateId, routePath }),
     onSuccess: () => {
       toast.success("Settings saved");
-      invalidate();
+      void invalidate();
     },
     onError: (error) => toast.error(formatError(error)),
   });
@@ -220,14 +215,14 @@ function ItemEditor({ developerName, itemId }: { developerName: string; itemId: 
     mutationFn: (revisionId: string) => items.revert(revisionId),
     onSuccess: () => {
       toast.success("Reverted to revision");
-      setHydrated(false);
-      invalidate();
+      return reload();
     },
     onError: (error) => toast.error(formatError(error)),
   });
 
   const isPublished = readBoolean(itemRecord, "isPublished");
   const isDraft = readBoolean(itemRecord, "isDraft");
+  const savedRoutePath = readString(itemRecord, "routePath");
   const heading = contentType?.labelSingular || developerName || "Item";
 
   if (!developerName) {
@@ -243,7 +238,7 @@ function ItemEditor({ developerName, itemId }: { developerName: string; itemId: 
     <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
       <Card>
         <CardContent className="space-y-4 pt-6">
-          {!hydrated ? (
+          {sourceKey === null ? (
             <p className="text-sm text-muted-foreground">Loading fields…</p>
           ) : fields.length === 0 ? (
             <p className="text-sm text-muted-foreground">This content type has no fields yet.</p>
@@ -304,11 +299,6 @@ function ItemEditor({ developerName, itemId }: { developerName: string; itemId: 
                 onClick={() => discardMutation.mutate()}
               >
                 Discard draft
-              </Button>
-            )}
-            {!isNew && (
-              <Button type="button" variant="ghost" onClick={() => setDeleteOpen(true)}>
-                Delete
               </Button>
             )}
           </div>
@@ -372,6 +362,17 @@ function ItemEditor({ developerName, itemId }: { developerName: string; itemId: 
             onRevert={(id) => revertMutation.mutate(id)}
           />
         )}
+
+        {!isNew && (
+          <DangerZone
+            description="Move this item to trash. You can restore it later."
+            actionLabel="Delete item"
+            confirmTitle="Delete this item?"
+            confirmBody="It will move to trash and can be restored from there."
+            onConfirm={() => deleteMutation.mutate()}
+            pending={deleteMutation.isPending}
+          />
+        )}
       </div>
     </div>
   );
@@ -379,29 +380,49 @@ function ItemEditor({ developerName, itemId }: { developerName: string; itemId: 
   return (
     <div className="space-y-6">
       <PageHeader
+        back={
+          <ListBackLink
+            to="/content/$developerName"
+            params={{ developerName }}
+            listKey={`content-items:${developerName}`}
+            label={contentType?.labelPlural || developerName || "items"}
+          />
+        }
         title={isNew ? `New ${heading}` : readString(itemRecord, "primaryField") || heading}
-        description={isNew ? "Fill in the fields and save a draft or publish." : readString(itemRecord, "routePath")}
+        description={isNew ? "Fill in the fields and save a draft or publish." : savedRoutePath && publicPath(savedRoutePath)}
+        actions={
+          !isNew && savedRoutePath ? (
+            <>
+              <a
+                href={publicPath(savedRoutePath, { previewDraft: true })}
+                target="_blank"
+                rel="noreferrer"
+                title={isDraft ? "Open the unpublished draft in a new tab" : "Open this item in a new tab"}
+                className={buttonVariants({ variant: "outline" })}
+              >
+                <Eye aria-hidden />
+                Preview
+              </a>
+              {isPublished && (
+                <a
+                  href={publicPath(savedRoutePath)}
+                  target="_blank"
+                  rel="noreferrer"
+                  className={buttonVariants({ variant: "outline" })}
+                >
+                  <ExternalLink aria-hidden />
+                  View live
+                </a>
+              )}
+            </>
+          ) : undefined
+        }
       />
-      <ListBackLink
-        to="/content/$developerName"
-        params={{ developerName }}
-        listKey={`content-items:${developerName}`}
-        label={contentType?.labelPlural || developerName || "items"}
-      />
-      <ContentTypeNav developerName={developerName} />
       {isNew ? (
         <QueryGate query={typeQuery}>{() => body}</QueryGate>
       ) : (
         <QueryGate query={itemQuery}>{() => body}</QueryGate>
       )}
-      <ConfirmDialog
-        open={deleteOpen}
-        onOpenChange={setDeleteOpen}
-        title="Delete this item?"
-        body="It will move to trash and can be restored from there."
-        onConfirm={() => deleteMutation.mutate()}
-        pending={deleteMutation.isPending}
-      />
     </div>
   );
 }

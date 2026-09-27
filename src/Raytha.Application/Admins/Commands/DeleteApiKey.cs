@@ -1,14 +1,43 @@
 ﻿using CSharpVitamins;
+using FluentValidation;
 using Mediator;
 using Raytha.Application.Common.Exceptions;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Models;
+using Raytha.Application.Common.Security;
 
 namespace Raytha.Application.Admins.Commands;
 
 public class DeleteApiKey
 {
     public record Command : LoggableEntityRequest<CommandResponseDto<ShortGuid>> { }
+
+    public class Validator : AbstractValidator<Command>
+    {
+        public Validator(IRaythaDbContext db, ICurrentUser currentUser)
+        {
+            RuleFor(x => x)
+                .Custom(
+                    (request, context) =>
+                    {
+                        var ownerId = db
+                            .ApiKeys.Where(p => p.Id == request.Id.Guid)
+                            .Select(p => (Guid?)p.UserId)
+                            .FirstOrDefault();
+                        if (ownerId is null)
+                            return;
+
+                        context.AddDenial(
+                            db.AccountActionDenial(
+                                currentUser,
+                                ownerId.Value,
+                                AdminAccountAction.ManageApiKeys
+                            )
+                        );
+                    }
+                );
+        }
+    }
 
     public class Handler : IRequestHandler<Command, CommandResponseDto<ShortGuid>>
     {

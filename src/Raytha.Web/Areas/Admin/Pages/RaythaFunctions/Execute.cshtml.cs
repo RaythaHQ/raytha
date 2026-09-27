@@ -44,7 +44,7 @@ public class Execute : BaseAdminPageModel
             PayloadJson = payloadJson,
         };
 
-        var response = await Mediator.Send(input);
+        var response = await Mediator.Send(input, HttpContext.RequestAborted);
         if (response.Success)
         {
             dynamic result = response.Result;

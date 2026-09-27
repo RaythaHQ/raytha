@@ -9,6 +9,12 @@ namespace Raytha.Infrastructure.RaythaFunctions;
 
 public class RaythaFunctionScriptEngine : IRaythaFunctionScriptEngine
 {
+    private static readonly AsyncLocal<CancellationToken> CurrentExecutionAborted = new();
+
+    // Host objects pass this on so work a function started (outbound requests, nested functions)
+    // stops with it; otherwise a timed-out function that called itself keeps its chain alive.
+    internal static CancellationToken ExecutionAborted => CurrentExecutionAborted.Value;
+
     private readonly IV8EnginePool _enginePool;
     private readonly IRaythaFunctionApi_V1 _raythaFunctionApiV1;
     private readonly IEmailer _emailer;
@@ -41,41 +47,26 @@ public class RaythaFunctionScriptEngine : IRaythaFunctionScriptEngine
     )
     {
         V8ScriptEngine engine = _enginePool.Rent();
+        engine.AddHostObject("API_V1", _raythaFunctionApiV1);
+        engine.AddHostObject("CurrentOrganization", _currentOrganization);
+        engine.AddHostObject("CurrentUser", _currentUser);
+        engine.AddHostObject("Emailer", _emailer);
+        engine.AddHostObject("HttpClient", _httpClient);
+
+        var abort = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        abort.CancelAfter(executeTimeout);
+        var interruptOnAbort = abort.Token.Register(engine.Interrupt);
+        var execution = Task.Run(() => Run(engine, code, method, abort.Token));
         try
         {
-            // Add per-request host objects
-            engine.AddHostObject("API_V1", _raythaFunctionApiV1);
-            engine.AddHostObject("CurrentOrganization", _currentOrganization);
-            engine.AddHostObject("CurrentUser", _currentUser);
-            engine.AddHostObject("Emailer", _emailer);
-            engine.AddHostObject("HttpClient", _httpClient);
-
-            engine.Execute(code);
-            var scriptResult = await Task.Run(
-                    async () =>
-                    {
-                        var result = engine.Evaluate(method);
-
-                        // The script can be synchronous or asynchronous, so this simple solution is used to convert the result
-                        // Source: https://github.com/microsoft/ClearScript/issues/366
-                        try
-                        {
-                            return await result.ToTask();
-                        }
-                        catch (ArgumentException)
-                        {
-                            return result;
-                        }
-                    },
-                    cancellationToken
-                )
-                .WaitAsync(executeTimeout, cancellationToken);
-
-            // Marshal the result to a .NET object before disposing the engine
-            return MarshalResult(engine, scriptResult);
+            return await execution.WaitAsync(abort.Token);
         }
-        catch (TimeoutException)
+        catch (Exception exception)
+            when (abort.IsCancellationRequested
+                && exception is OperationCanceledException or ScriptInterruptedException
+            )
         {
+            cancellationToken.ThrowIfCancellationRequested();
             throw new RaythaFunctionExecuteTimeoutException(
                 "The function execution time has exceeded the timeout"
             );
@@ -86,8 +77,48 @@ public class RaythaFunctionScriptEngine : IRaythaFunctionScriptEngine
         }
         finally
         {
-            _enginePool.Return(engine);
+            _ = ReturnWhenFinished(engine, execution, abort, interruptOnAbort);
         }
+    }
+
+    private static async Task<object> Run(
+        V8ScriptEngine engine,
+        string code,
+        string method,
+        CancellationToken abort
+    )
+    {
+        CurrentExecutionAborted.Value = abort;
+        // Interrupt only stops a script that is already running, so an abort that fired before
+        // this task was scheduled has to be honored here.
+        abort.ThrowIfCancellationRequested();
+        engine.Execute(code);
+        var result = engine.Evaluate(method);
+
+        // The script can be synchronous or asynchronous, so this simple solution is used to convert the result
+        // Source: https://github.com/microsoft/ClearScript/issues/366
+        try
+        {
+            result = await result.ToTask().WaitAsync(abort);
+        }
+        catch (ArgumentException) { }
+
+        return MarshalResult(engine, result);
+    }
+
+    // An aborted script can still be inside a blocking host call, where Interrupt has no effect until
+    // it re-enters JavaScript, so the engine is released only once the script has actually stopped.
+    private async Task ReturnWhenFinished(
+        V8ScriptEngine engine,
+        Task execution,
+        CancellationTokenSource abort,
+        CancellationTokenRegistration interruptOnAbort
+    )
+    {
+        await execution.ConfigureAwait(ConfigureAwaitOptions.SuppressThrowing);
+        interruptOnAbort.Dispose();
+        abort.Dispose();
+        _enginePool.Return(engine);
     }
 
     private static readonly JsonSerializerOptions JsonOptions = new()

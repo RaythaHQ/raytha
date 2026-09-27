@@ -13,3 +13,44 @@
   position: relative;
   z-index: auto;
 }
+
+.raytha-file-upload .uppy-Dashboard-inner {
+  width: 100% !important;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--card);
+  font-family: var(--font-sans);
+}
+
+.raytha-file-upload .uppy-Dashboard-innerWrap {
+  border-radius: 12px;
+}
+
+.raytha-file-upload .uppy-Dashboard-AddFiles {
+  margin: 6px;
+  height: calc(100% - 12px);
+  border: 1px dashed var(--border-strong);
+  border-radius: 9px;
+  background: radial-gradient(ellipse at top, var(--brand-50), transparent 70%);
+}
+
+.raytha-file-upload .uppy-Dashboard-AddFiles-title {
+  color: var(--foreground);
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.raytha-file-upload .uppy-Dashboard-browse {
+  color: var(--brand-600);
+  font-weight: 600;
+}
+
+.raytha-file-upload .uppy-Dashboard-browse:hover,
+.raytha-file-upload .uppy-Dashboard-browse:focus {
+  border-bottom-color: var(--brand-600);
+}
+
+.raytha-file-upload .uppy-Dashboard-note {
+  color: var(--muted-foreground);
+  font-size: 12px;
+}

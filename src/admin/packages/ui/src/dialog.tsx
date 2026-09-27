@@ -115,7 +115,7 @@ export function Dialog({ open, onOpenChange, children, widthClassName = "max-w-l
   return createPortal(
     <DialogTitleIdContext.Provider value={titleId}>
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4" data-raytha-overlay="dialog">
-        <div className="fixed inset-0 bg-black/50" onClick={() => onOpenChange(false)} aria-hidden />
+        <div className="fixed inset-0 animate-fade bg-zinc-950/40 backdrop-blur-[2px]" onClick={() => onOpenChange(false)} aria-hidden />
         <div
           ref={panelRef}
           role="dialog"
@@ -123,7 +123,7 @@ export function Dialog({ open, onOpenChange, children, widthClassName = "max-w-l
           aria-labelledby={titleId}
           tabIndex={-1}
           className={cn(
-            "relative z-50 flex max-h-[85vh] w-full flex-col overflow-hidden rounded-lg border bg-background shadow-lg",
+            "relative z-50 flex max-h-[85vh] w-full animate-pop flex-col overflow-hidden rounded-xl border border-border bg-card shadow-pop outline-none",
             widthClassName,
           )}
         >
@@ -131,7 +131,7 @@ export function Dialog({ open, onOpenChange, children, widthClassName = "max-w-l
             type="button"
             aria-label="Close"
             onClick={() => onOpenChange(false)}
-            className="absolute right-3 top-3 rounded-sm p-1 text-muted-foreground transition-colors hover:text-foreground"
+            className="absolute right-3 top-3 z-10 rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring"
           >
             <X className="size-4" />
           </button>
@@ -144,7 +144,7 @@ export function Dialog({ open, onOpenChange, children, widthClassName = "max-w-l
 }
 
 export function DialogHeader({ className, ...props }: HTMLAttributes<HTMLDivElement>) {
-  return <div className={cn("border-b px-6 py-4", className)} {...props} />;
+  return <div className={cn("border-b border-border px-6 py-4 pr-12", className)} {...props} />;
 }
 
 export function DialogTitle({ className, ...props }: HTMLAttributes<HTMLHeadingElement>) {
@@ -152,7 +152,7 @@ export function DialogTitle({ className, ...props }: HTMLAttributes<HTMLHeadingE
   return (
     // Content arrives via the children in ...props; the rule cannot see through the spread.
     // eslint-disable-next-line jsx-a11y/heading-has-content
-    <h2 id={titleId} className={cn("text-lg font-semibold leading-none tracking-tight", className)} {...props} />
+    <h2 id={titleId} className={cn("font-display text-base font-semibold leading-6 tracking-tight", className)} {...props} />
   );
 }
 
@@ -161,5 +161,5 @@ export function DialogContent({ className, ...props }: HTMLAttributes<HTMLDivEle
 }
 
 export function DialogFooter({ className, ...props }: HTMLAttributes<HTMLDivElement>) {
-  return <div className={cn("flex justify-end gap-2 border-t px-6 py-4", className)} {...props} />;
+  return <div className={cn("flex justify-end gap-2 border-t border-border bg-[#fafafb] px-6 py-3.5", className)} {...props} />;
 }

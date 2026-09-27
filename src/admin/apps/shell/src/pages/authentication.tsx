@@ -6,6 +6,7 @@ import {
   Card,
   CardContent,
   Checkbox,
+  DangerZone,
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -15,6 +16,7 @@ import {
   Label,
   PageHeader,
   QueryGate,
+  Textarea,
   toast,
 } from "@raytha/ui";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -36,11 +38,6 @@ export function AuthenticationPage() {
       listKey="auth-schemes"
       noun="scheme"
       list={adminApi.authSchemes.list}
-      remove={adminApi.authSchemes.remove}
-      canDelete={(entity) => {
-        const type = readSchemeType(entityFields(entity).authenticationSchemeType);
-        return type === undefined || !BUILT_IN.has(type);
-      }}
       createPermission={platformPermissions.systemSettings}
       columns={[
         {
@@ -108,17 +105,21 @@ export function NewAuthenticationPage() {
   if (!schemeType || schemeType === "email_and_password" || schemeType === "magic_link") {
     return (
       <div className="space-y-6">
-        <PageHeader title="New authentication scheme" />
+        <PageHeader
+          back={<ListBackLink to="/settings/authentication" listKey="auth-schemes" label="authentication" />}
+          title="New authentication scheme"
+        />
         <p className="text-sm text-muted-foreground">Create a jwt or saml scheme from the authentication list.</p>
-        <ListBackLink to="/settings/authentication" listKey="auth-schemes" label="authentication" />
       </div>
     );
   }
 
   return (
     <div className="space-y-6">
-      <PageHeader title={`New ${schemeTypeLabel(schemeType)} scheme`} />
-      <ListBackLink to="/settings/authentication" listKey="auth-schemes" label="authentication" />
+      <PageHeader
+        back={<ListBackLink to="/settings/authentication" listKey="auth-schemes" label="authentication" />}
+        title={`New ${schemeTypeLabel(schemeType)} scheme`}
+      />
       <Card>
         <CardContent className="pt-6">
           <SchemeFormFields
@@ -157,8 +158,10 @@ export function EditAuthenticationPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Edit authentication scheme" />
-      <ListBackLink to="/settings/authentication" listKey="auth-schemes" label="authentication" />
+      <PageHeader
+        back={<ListBackLink to="/settings/authentication" listKey="auth-schemes" label="authentication" />}
+        title="Edit authentication scheme"
+      />
       <QueryGate query={query}>{(scheme) => <SchemeEditForm scheme={scheme} />}</QueryGate>
     </div>
   );
@@ -166,9 +169,11 @@ export function EditAuthenticationPage() {
 
 function SchemeEditForm({ scheme }: { scheme: EntityRef }) {
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const fields = entityFields(scheme);
   const schemeType = readSchemeType(fields.authenticationSchemeType) ?? "email_and_password";
   const [form, setForm] = useState<SchemeForm>(() => formFromEntity(fields, schemeType));
+  const canDelete = !BUILT_IN.has(schemeType);
 
   const mutation = useMutation({
     mutationFn: () => adminApi.authSchemes.updateScheme(scheme.id, toRequest(form, schemeType, false)),
@@ -179,20 +184,42 @@ function SchemeEditForm({ scheme }: { scheme: EntityRef }) {
     onError: (error) => toast.error(formatError(error)),
   });
 
+  const remove = useMutation({
+    mutationFn: () => adminApi.authSchemes.remove(scheme.id),
+    onSuccess: () => {
+      toast.success("Authentication scheme deleted");
+      void queryClient.invalidateQueries({ queryKey: ["auth-schemes"] });
+      void navigate({ to: "/settings/authentication" });
+    },
+    onError: (error) => toast.error(formatError(error)),
+  });
+
   return (
-    <Card>
-      <CardContent className="pt-6">
-        <SchemeFormFields
-          form={form}
-          setForm={setForm}
-          schemeType={schemeType}
-          isCreate={false}
-          onSubmit={() => mutation.mutate()}
-          pending={mutation.isPending}
-          submitLabel="Save"
+    <div className="space-y-6">
+      <Card>
+        <CardContent className="pt-6">
+          <SchemeFormFields
+            form={form}
+            setForm={setForm}
+            schemeType={schemeType}
+            isCreate={false}
+            onSubmit={() => mutation.mutate()}
+            pending={mutation.isPending}
+            submitLabel="Save"
+          />
+        </CardContent>
+      </Card>
+      {canDelete ? (
+        <DangerZone
+          description="Delete this scheme. This cannot be undone."
+          actionLabel="Delete scheme"
+          confirmTitle="Delete authentication scheme?"
+          confirmBody="This cannot be undone."
+          onConfirm={() => remove.mutate()}
+          pending={remove.isPending}
         />
-      </CardContent>
-    </Card>
+      ) : null}
+    </div>
   );
 }
 
@@ -388,10 +415,19 @@ function SchemeFormFields({
       ) : null}
       {schemeType === "saml" ? (
         <>
-          <FormField label="SAML certificate" htmlFor="scheme-saml-cert">
+          <FormField
+            label="SAML certificate"
+            htmlFor="scheme-saml-cert"
+            hint="Paste the identity provider's X.509 signing certificate, including the BEGIN and END lines."
+          >
             {(control) => (
-              <Input
+              <Textarea
                 {...control}
+                rows={20}
+                spellCheck={false}
+                autoComplete="off"
+                className="font-mono text-xs leading-5"
+                placeholder={"-----BEGIN CERTIFICATE-----\n…\n-----END CERTIFICATE-----"}
                 value={form.samlCertificate}
                 onChange={(event) => setForm({ ...form, samlCertificate: event.target.value })}
               />

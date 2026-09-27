@@ -1,10 +1,11 @@
 import { MoreHorizontal } from "lucide-react";
+import type { MouseEvent } from "react";
 import { Button } from "./button";
+import { followSpaHref } from "./spa-href";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "./dropdown-menu";
 
@@ -14,13 +15,10 @@ export type RowAction = {
   to?: string;
   params?: Record<string, string>;
   onSelect?: () => void;
-  destructive?: boolean;
   disabled?: boolean;
 };
 
 export function RowActions({ actions, label = "Row actions" }: { actions: RowAction[]; label?: string }) {
-  const regular = actions.filter((action) => !action.destructive);
-  const destructive = actions.filter((action) => action.destructive);
   if (actions.length === 0) {
     return null;
   }
@@ -33,11 +31,7 @@ export function RowActions({ actions, label = "Row actions" }: { actions: RowAct
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        {regular.map((action) => (
-          <RowActionItem key={action.id} action={action} />
-        ))}
-        {regular.length > 0 && destructive.length > 0 ? <DropdownMenuSeparator /> : null}
-        {destructive.map((action) => (
+        {actions.map((action) => (
           <RowActionItem key={action.id} action={action} />
         ))}
       </DropdownMenuContent>
@@ -47,7 +41,6 @@ export function RowActions({ actions, label = "Row actions" }: { actions: RowAct
 
 function RowActionItem({ action }: { action: RowAction }) {
   const href = actionHref(action);
-  const className = action.destructive ? "text-destructive [&_svg]:text-destructive" : undefined;
 
   if (href && !action.onSelect) {
     return (
@@ -56,10 +49,10 @@ function RowActionItem({ action }: { action: RowAction }) {
         role="menuitem"
         tabIndex={-1}
         aria-disabled={action.disabled || undefined}
+        onClick={(event) => followInternalHref(event, href)}
         className={[
           "flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-foreground outline-none transition-colors hover:bg-accent focus-visible:bg-accent",
           action.disabled ? "pointer-events-none opacity-50" : "",
-          className ?? "",
         ].join(" ")}
       >
         {action.label}
@@ -70,17 +63,24 @@ function RowActionItem({ action }: { action: RowAction }) {
   return (
     <DropdownMenuItem
       disabled={action.disabled}
-      className={className}
       onSelect={() => {
         action.onSelect?.();
         if (href) {
-          window.location.assign(href);
+          followSpaHref(href);
         }
       }}
     >
       {action.label}
     </DropdownMenuItem>
   );
+}
+
+function followInternalHref(event: MouseEvent<HTMLAnchorElement>, href: string): void {
+  if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) {
+    return;
+  }
+  event.preventDefault();
+  followSpaHref(href);
 }
 
 function actionHref(action: RowAction): string | undefined {

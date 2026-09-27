@@ -1,12 +1,13 @@
 import type { JsonObject } from "@raytha/api";
 import { Button, Checkbox, FormField, Input, Select, Textarea } from "@raytha/ui";
 import { toDeveloperName } from "../entity";
+import type {
+  parseFieldTypeOptions,
+  parseNamedRefs} from "./fields-model";
 import {
   hasChoices,
   isFieldTypeName,
   isRelationship,
-  parseFieldTypeOptions,
-  parseNamedRefs,
   type ContentField,
   type FieldChoice,
   type FieldTypeName,

@@ -116,6 +116,13 @@ public static class AdminSpaExtensions
                         devServerUrl,
                         error
                     );
+                    if (error == ForwarderError.Request && !context.Response.HasStarted)
+                    {
+                        state.ViteReady = false;
+                        logger.LogWarning("Vite is unreachable; serving the published admin bundle until the host restarts.");
+                        context.Response.Clear();
+                        await next();
+                    }
                 }
             }
         );

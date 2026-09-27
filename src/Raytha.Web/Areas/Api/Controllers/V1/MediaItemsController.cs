@@ -16,14 +16,14 @@ namespace Raytha.Web.Areas.Api.Controllers.V1;
 
 [Authorize(
     Policy = RaythaApiAuthorizationHandler.POLICY_PREFIX
-        + BuiltInSystemPermission.MANAGE_MEDIA_ITEMS
+        + BuiltInSystemPermission.UPLOAD_MEDIA_ITEMS_POLICY
 )]
 public class MediaItemsController : BaseController
 {
     [HttpGet("", Name = "GetMediaItems")]
     [Authorize(
         Policy = RaythaApiAuthorizationHandler.POLICY_PREFIX
-            + BuiltInSystemPermission.MANAGE_SYSTEM_SETTINGS_PERMISSION
+            + BuiltInSystemPermission.MANAGE_MEDIA_ITEMS_PERMISSION
     )]
     public async Task<ActionResult<IQueryResponseDto<ListResultDto<MediaItemDto>>>> GetMediaItems(
         [FromQuery] GetMediaItems.Query request

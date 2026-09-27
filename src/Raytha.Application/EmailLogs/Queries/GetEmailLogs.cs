@@ -46,15 +46,18 @@ public class GetEmailLogs
             CancellationToken cancellationToken
         )
         {
-            var query = _db.EmailLogs.AsQueryable();
+            var query = _db.EmailLogs.AsNoTracking();
 
             if (request.StartDateAsUtc.HasValue)
-                query = query.Where(p => p.CreationTime >= request.StartDateAsUtc);
+            {
+                var start = AsUtcDate(request.StartDateAsUtc.Value);
+                query = query.Where(p => p.CreationTime >= start);
+            }
 
             if (request.EndDateAsUtc.HasValue)
             {
-                var endOfEndDateAsUtc = request.EndDateAsUtc.Value.AddDays(1).AddMilliseconds(-1);
-                query = query.Where(p => p.CreationTime <= endOfEndDateAsUtc);
+                var end = AsUtcDate(request.EndDateAsUtc.Value).AddDays(1).AddMilliseconds(-1);
+                query = query.Where(p => p.CreationTime <= end);
             }
 
             if (!string.IsNullOrEmpty(request.ToAddress))
@@ -84,5 +87,10 @@ public class GetEmailLogs
                 new ListResultDto<EmailLogListItemDto>(items, total)
             );
         }
+    }
+
+    private static DateTime AsUtcDate(DateTime value)
+    {
+        return DateTime.SpecifyKind(value.Date, DateTimeKind.Utc);
     }
 }

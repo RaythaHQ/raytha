@@ -5,7 +5,12 @@ import {
   Button,
   Card,
   CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
   Checkbox,
+  DangerZone,
   FormField,
   Input,
   Label,
@@ -15,29 +20,17 @@ import {
 } from "@raytha/ui";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useNavigate, useParams } from "@tanstack/react-router";
-import { useState, type FormEvent } from "react";
+import { ArrowRight, Copy, KeyRound, TriangleAlert } from "lucide-react";
+import { useEffect, useState, type FormEvent } from "react";
 import { ListBackLink } from "../components/list-back-link";
 import { CrudListPage } from "./crud-list";
-import { entityFields, formatWhen, humanizeAuditCategory, readBoolean, readString } from "./entity";
+import { copyText } from "./editors/clipboard";
+import { entityFields, readBoolean, readString } from "./entity";
 import { useDocumentTitle } from "../lib/document-title";
 
-export function AuditLogPage() {
-  return (
-    <CrudListPage
-      title="Audit log"
-      queryKey={["audit-logs"]}
-      listKey="audit-logs"
-      noun="entry"
-      list={adminApi.auditLogs.list}
-      columns={[
-        { header: "When", cell: (entity) => formatWhen(entityFields(entity).creationTime) || "—" },
-        { header: "Category", cell: (entity) => humanizeAuditCategory(readString(entityFields(entity), "category") || "—") },
-        { header: "User", cell: (entity) => readString(entityFields(entity), "userEmail") || "—" },
-        { header: "IP", cell: (entity) => readString(entityFields(entity), "ipAddress") || "—" },
-      ]}
-    />
-  );
-}
+export { AuditLogPage } from "./audit-log";
+export { EmailLogPage } from "./email-log";
+export { BackgroundTasksPage } from "./background-tasks";
 
 export function WebhooksPage() {
   return (
@@ -47,7 +40,6 @@ export function WebhooksPage() {
       listKey="webhooks"
       noun="webhook"
       list={adminApi.webhooks.list}
-      remove={adminApi.webhooks.remove}
       createPermission={platformPermissions.systemSettings}
       createLabel="New webhook"
       createTo="/webhooks/new"
@@ -80,20 +72,36 @@ export function NewWebhookPage() {
   const navigate = useNavigate();
   const [form, setForm] = useState(emptyWebhookForm);
 
+  const openWebhook = (id: string) => void navigate({ to: "/webhooks/$id", params: { id } });
+
   const mutation = useMutation({
     mutationFn: () => adminApi.webhooks.create(webhookPayload(form)),
     onSuccess: (created) => {
-      const secret = readString(entityFields(created), "secret");
-      toast.success(secret ? `Webhook created. Secret: ${secret}` : "Webhook created");
-      void navigate({ to: "/webhooks/$id", params: { id: created.id } });
+      if (!readString(entityFields(created), "secret")) {
+        toast.success("Webhook created");
+        openWebhook(created.id);
+      }
     },
     onError: (error) => toast.error(formatError(error)),
   });
 
+  const created = mutation.data;
+  const secret = created ? readString(entityFields(created), "secret") : "";
+  if (created && secret) {
+    return (
+      <div className="space-y-6">
+        <PageHeader
+          title="Webhook created"
+          description={`${form.name || "This webhook"} will send signed events to ${form.url}.`}
+        />
+        <WebhookSecretReveal secret={secret} onContinue={() => openWebhook(created.id)} />
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
-      <PageHeader title="New webhook" />
-      <ListBackLink to="/webhooks" listKey="webhooks" label="webhooks" />
+      <PageHeader back={<ListBackLink to="/webhooks" listKey="webhooks" label="webhooks" />} title="New webhook" />
       <Card>
         <CardContent className="pt-6">
           <WebhookForm
@@ -106,6 +114,64 @@ export function NewWebhookPage() {
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+function WebhookSecretReveal({ secret, onContinue }: { secret: string; onContinue: () => void }) {
+  useEffect(() => {
+    document.getElementById("webhook-secret")?.focus();
+  }, []);
+
+  return (
+    <Card className="max-w-3xl">
+      <CardHeader>
+        <div className="flex items-center gap-2">
+          <KeyRound className="size-4 text-muted-foreground" aria-hidden />
+          <CardTitle>Signing secret</CardTitle>
+        </div>
+        <CardDescription>
+          Each delivery carries an <code className="font-mono text-foreground">X-Raytha-Signature</code> header, an
+          HMAC-SHA256 of the request body made with this secret. Your endpoint uses it to verify the request came from
+          Raytha.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div
+          role="note"
+          className="flex gap-3 rounded-lg border border-warning-border bg-warning-soft px-4 py-3 text-sm text-warning"
+        >
+          <TriangleAlert className="mt-0.5 size-4 shrink-0" aria-hidden />
+          <p>
+            <span className="font-medium">Copy it now. It will not be shown again.</span> The webhook page never
+            displays it. If you lose it, delete this webhook and create a new one.
+          </p>
+        </div>
+        <div className="space-y-1.5">
+          <Label htmlFor="webhook-secret">Secret</Label>
+          <div className="flex gap-2">
+            <Input
+              id="webhook-secret"
+              readOnly
+              value={secret}
+              spellCheck={false}
+              autoComplete="off"
+              className="font-mono"
+              onFocus={(event) => event.currentTarget.select()}
+            />
+            <Button type="button" variant="outline" onClick={() => void copyText(secret, "Signing secret copied")}>
+              <Copy aria-hidden />
+              Copy
+            </Button>
+          </div>
+        </div>
+      </CardContent>
+      <CardFooter className="justify-end border-t border-border pt-4">
+        <Button type="button" onClick={onContinue}>
+          Continue to webhook
+          <ArrowRight aria-hidden />
+        </Button>
+      </CardFooter>
+    </Card>
   );
 }
 
@@ -130,8 +196,7 @@ export function EditWebhookPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Edit webhook" />
-      <ListBackLink to="/webhooks" listKey="webhooks" label="webhooks" />
+      <PageHeader back={<ListBackLink to="/webhooks" listKey="webhooks" label="webhooks" />} title="Edit webhook" />
       <QueryGate query={query}>{(webhook) => <WebhookEditForm webhook={webhook} />}</QueryGate>
     </div>
   );
@@ -139,7 +204,20 @@ export function EditWebhookPage() {
 
 function WebhookEditForm({ webhook }: { webhook: EntityRef }) {
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const [form, setForm] = useState(() => formFromWebhook(webhook));
+  const name = readString(entityFields(webhook), "name") || "this webhook";
+
+  const remove = useMutation({
+    mutationFn: () => adminApi.webhooks.remove(webhook.id),
+    onSuccess: () => {
+      toast.success("Webhook deleted");
+      queryClient.removeQueries({ queryKey: ["webhooks", webhook.id] });
+      void queryClient.invalidateQueries({ queryKey: ["webhooks"] });
+      void navigate({ to: "/webhooks" });
+    },
+    onError: (error) => toast.error(formatError(error)),
+  });
 
   const mutation = useMutation({
     mutationFn: () => adminApi.webhooks.update(webhook.id, webhookPayload(form)),
@@ -151,17 +229,27 @@ function WebhookEditForm({ webhook }: { webhook: EntityRef }) {
   });
 
   return (
-    <Card>
-      <CardContent className="pt-6">
-        <WebhookForm
-          form={form}
-          setForm={setForm}
-          pending={mutation.isPending}
-          submitLabel="Save"
-          onSubmit={() => mutation.mutate()}
-        />
-      </CardContent>
-    </Card>
+    <>
+      <Card>
+        <CardContent className="pt-6">
+          <WebhookForm
+            form={form}
+            setForm={setForm}
+            pending={mutation.isPending}
+            submitLabel="Save"
+            onSubmit={() => mutation.mutate()}
+          />
+        </CardContent>
+      </Card>
+      <DangerZone
+        description="Delete this webhook and its delivery history. Pending deliveries are not sent. To pause it instead, clear Active."
+        actionLabel="Delete webhook"
+        confirmTitle={`Delete ${name}?`}
+        confirmBody="Its delivery history is deleted too. This cannot be undone."
+        onConfirm={() => remove.mutate()}
+        pending={remove.isPending}
+      />
+    </>
   );
 }
 
@@ -304,78 +392,5 @@ function WebhookForm({
         {submitLabel}
       </Button>
     </form>
-  );
-}
-
-export function EmailLogPage() {
-  return (
-    <CrudListPage
-      title="Email log"
-      queryKey={["email-log"]}
-      listKey="email-log"
-      noun="message"
-      list={adminApi.emailLog.list}
-      columns={[
-        { header: "When", cell: (entity) => formatWhen(entityFields(entity).creationTime) || "—" },
-        { header: "To", cell: (entity) => readString(entityFields(entity), "toAddress") || "—" },
-        { header: "Subject", cell: (entity) => readString(entityFields(entity), "subject") || "—" },
-        {
-          header: "Status",
-          cell: (entity) =>
-            readBoolean(entityFields(entity), "isSuccess") ? (
-              <Badge variant="success">Sent</Badge>
-            ) : (
-              <Badge variant="destructive">Failed</Badge>
-            ),
-        },
-      ]}
-    />
-  );
-}
-
-export function BackgroundTasksPage() {
-  useDocumentTitle(["Background tasks"]);
-
-  return (
-    <CrudListPage
-      title="Background tasks"
-      queryKey={["background-tasks"]}
-      listKey="background-tasks"
-      noun="task"
-      list={adminApi.backgroundTasks.list}
-      emptyHint="No background tasks yet."
-      columns={[
-        { header: "Name", cell: (entity) => readString(entityFields(entity), "name") || entity.id },
-        {
-          header: "Status",
-          cell: (entity) => {
-            const fields = entityFields(entity);
-            const status = fields.status;
-            if (typeof status === "string") {
-              return status;
-            }
-            if (status && typeof status === "object" && "label" in status && typeof status.label === "string") {
-              return status.label;
-            }
-            return readString(fields, "status") || "—";
-          },
-        },
-        {
-          header: "Progress",
-          cell: (entity) => {
-            const fields = entityFields(entity);
-            const percent = fields.percentComplete;
-            return typeof percent === "number" ? `${percent}%` : "—";
-          },
-        },
-        {
-          header: "Updated",
-          cell: (entity) => {
-            const fields = entityFields(entity);
-            return formatWhen(fields.lastModificationTime) || formatWhen(fields.creationTime) || "—";
-          },
-        },
-      ]}
-    />
   );
 }

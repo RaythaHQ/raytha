@@ -83,8 +83,12 @@ public static class ConfigureServices
                 policy => policy.Requirements.Add(new ManageSystemSettingsRequirement())
             );
             options.AddPolicy(
-                BuiltInSystemPermission.MANAGE_MEDIA_ITEMS,
+                BuiltInSystemPermission.MANAGE_MEDIA_ITEMS_PERMISSION,
                 policy => policy.Requirements.Add(new ManageMediaItemsRequirement())
+            );
+            options.AddPolicy(
+                BuiltInSystemPermission.UPLOAD_MEDIA_ITEMS_POLICY,
+                policy => policy.Requirements.Add(new UploadMediaItemsRequirement())
             );
             options.AddPolicy(
                 BuiltInSystemPermission.MANAGE_SITE_PAGES_PERMISSION,
@@ -139,8 +143,13 @@ public static class ConfigureServices
             );
             options.AddPolicy(
                 RaythaApiAuthorizationHandler.POLICY_PREFIX
-                    + BuiltInSystemPermission.MANAGE_MEDIA_ITEMS,
+                    + BuiltInSystemPermission.MANAGE_MEDIA_ITEMS_PERMISSION,
                 policy => policy.Requirements.Add(new ApiManageMediaItemsRequirement())
+            );
+            options.AddPolicy(
+                RaythaApiAuthorizationHandler.POLICY_PREFIX
+                    + BuiltInSystemPermission.UPLOAD_MEDIA_ITEMS_POLICY,
+                policy => policy.Requirements.Add(new ApiUploadMediaItemsRequirement())
             );
             options.AddPolicy(
                 RaythaApiAuthorizationHandler.POLICY_PREFIX

@@ -20,7 +20,7 @@ public record SendBeginForgotPassword_RenderModel : BaseSendToUserEmail_RenderMo
 
 public record SendBeginLoginWithMagicLink_RenderModel : BaseSendToUserEmail_RenderModel
 {
-    public string LoginWithMagicLinkCompleteUrl { get; init; } = string.Empty;
+    public string Code { get; init; } = string.Empty;
     public int MagicLinkExpiresInSeconds { get; init; }
 
     public override IEnumerable<string> GetDeveloperNames()
@@ -29,8 +29,24 @@ public record SendBeginLoginWithMagicLink_RenderModel : BaseSendToUserEmail_Rend
         {
             yield return developerName;
         }
-        yield return nameof(LoginWithMagicLinkCompleteUrl);
+        yield return nameof(Code);
         yield return nameof(MagicLinkExpiresInSeconds);
+    }
+}
+
+public record MagicLinkCompleteSubmit_RenderModel : BaseFormSubmit_RenderModel
+{
+    public string EmailAddress { get; init; } = string.Empty;
+    public string ReturnUrl { get; init; } = string.Empty;
+
+    public override IEnumerable<string> GetDeveloperNames()
+    {
+        foreach (var developerName in base.GetDeveloperNames())
+        {
+            yield return developerName;
+        }
+        yield return nameof(EmailAddress);
+        yield return nameof(ReturnUrl);
     }
 }
 

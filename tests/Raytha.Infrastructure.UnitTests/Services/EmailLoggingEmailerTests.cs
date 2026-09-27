@@ -24,6 +24,28 @@ public class EmailLoggingEmailerTests
     }
 
     [Test]
+    public void Sanitize_RedactsMagicLinkPathTokens()
+    {
+        var body = "https://site/raytha/login/magic-link/complete/live-token-value";
+
+        EmailLoggingEmailer.Sanitize(body).Should().NotContain("live-token-value");
+    }
+
+    [Test]
+    public void Sanitize_RedactsForgotPasswordPathAndLabeledPassword()
+    {
+        var body =
+            "<a href=\"https://site/account/login/forgot-password/complete/CfDJ8AbC123\">reset</a>"
+            + "<p>Password: SuperSecret9</p>";
+
+        var sanitized = EmailLoggingEmailer.Sanitize(body);
+
+        sanitized.Should().NotContain("CfDJ8AbC123").And.NotContain("SuperSecret9");
+        sanitized.Should().Contain("/forgot-password/complete/[redacted]");
+        sanitized.Should().Contain("Password: [redacted]");
+    }
+
+    [Test]
     public void Sanitize_TruncatesOversizedBodies()
     {
         var body = new string('a', EmailLoggingEmailer.MaxBodyLength + 500);
@@ -36,6 +58,30 @@ public class EmailLoggingEmailerTests
     {
         EmailLoggingEmailer.Sanitize(null).Should().BeEmpty();
         EmailLoggingEmailer.Sanitize(string.Empty).Should().BeEmpty();
+    }
+
+    [Test]
+    public void RedactSensitiveContent_StripsDeclaredValuesFromAnyTemplateShape()
+    {
+        var body = "<p>Your sign-in code is <strong>123456</strong>. It expires soon.</p>";
+
+        var redacted = EmailLoggingEmailer.RedactSensitiveContent(body, new[] { "123456" });
+
+        redacted.Should().NotContain("123456");
+        redacted.Should().Contain("<strong>[redacted]</strong>");
+    }
+
+    [Test]
+    public void RedactSensitiveContent_IgnoresNullAndEmptyValues()
+    {
+        var body = "nothing secret here";
+
+        EmailLoggingEmailer
+            .RedactSensitiveContent(body, new[] { string.Empty, null! })
+            .Should()
+            .Be(body);
+        EmailLoggingEmailer.RedactSensitiveContent(body, null).Should().Be(body);
+        EmailLoggingEmailer.RedactSensitiveContent(null, new[] { "123456" }).Should().BeEmpty();
     }
 
     [Test]

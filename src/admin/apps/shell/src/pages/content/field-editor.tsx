@@ -1,5 +1,5 @@
 import { adminApi, formatError } from "@raytha/api";
-import { Button, Card, CardContent, PageHeader, QueryGate, toast } from "@raytha/ui";
+import { Button, Card, CardContent, DangerZone, PageHeader, QueryGate, toast } from "@raytha/ui";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate, useParams } from "@tanstack/react-router";
 import { useState, type FormEvent } from "react";
@@ -14,7 +14,6 @@ import {
   type FieldForm,
 } from "./field-form";
 import { parseContentFields, parseFieldTypeOptions, parseNamedRefs } from "./fields-model";
-import { ContentTypeNav } from "./nav";
 
 export function NewContentTypeFieldPage() {
   const params = useParams({ strict: false });
@@ -45,14 +44,17 @@ export function NewContentTypeFieldPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="New field" />
-      <ListBackLink
-        to="/content-types/$developerName/fields"
-        params={{ developerName }}
-        listKey={`content-fields:${developerName}`}
-        label="fields"
+      <PageHeader
+        back={
+          <ListBackLink
+            to="/content-types/$developerName/fields"
+            params={{ developerName }}
+            listKey={`content-fields:${developerName}`}
+            label="fields"
+          />
+        }
+        title="New field"
       />
-      <ContentTypeNav developerName={developerName} />
       <Card>
         <CardContent className="pt-6">
           <form
@@ -104,14 +106,17 @@ export function EditContentTypeFieldPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Edit field" />
-      <ListBackLink
-        to="/content-types/$developerName/fields"
-        params={{ developerName }}
-        listKey={`content-fields:${developerName}`}
-        label="fields"
+      <PageHeader
+        back={
+          <ListBackLink
+            to="/content-types/$developerName/fields"
+            params={{ developerName }}
+            listKey={`content-fields:${developerName}`}
+            label="fields"
+          />
+        }
+        title="Edit field"
       />
-      <ContentTypeNav developerName={developerName} />
       <QueryGate query={fieldsQuery}>
         {() =>
           field ? (
@@ -135,6 +140,7 @@ function EditFieldForm({
   initial: FieldForm;
 }) {
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const [form, setForm] = useState(initial);
   const fieldTypesQuery = useQuery({
     queryKey: ["content-field-types"],
@@ -154,30 +160,51 @@ function EditFieldForm({
     onError: (error) => toast.error(formatError(error)),
   });
 
+  const deleteMutation = useMutation({
+    mutationFn: () => adminApi.fields(developerName).remove(fieldId),
+    onSuccess: () => {
+      toast.success("Field deleted");
+      void queryClient.invalidateQueries({ queryKey: ["content-fields", developerName] });
+      void queryClient.invalidateQueries({ queryKey: ["content-type", developerName] });
+      void navigate({ to: "/content-types/$developerName/fields", params: { developerName } });
+    },
+    onError: (error) => toast.error(formatError(error)),
+  });
+
   return (
-    <Card>
-      <CardContent className="pt-6">
-        <form
-          className="space-y-4"
-          onSubmit={(event: FormEvent) => {
-            event.preventDefault();
-            mutation.mutate();
-          }}
-        >
-          <FieldFormFields
-            form={form}
-            setForm={setForm}
-            fieldTypes={parseFieldTypeOptions(fieldTypesQuery.data)}
-            relatedTypes={parseNamedRefs(typesQuery.data?.items)}
-            developerLocked
-            developerTouched
-            setDeveloperTouched={() => undefined}
-          />
-          <Button type="submit" loading={mutation.isPending}>
-            Save
-          </Button>
-        </form>
-      </CardContent>
-    </Card>
+    <div className="space-y-6">
+      <Card>
+        <CardContent className="pt-6">
+          <form
+            className="space-y-4"
+            onSubmit={(event: FormEvent) => {
+              event.preventDefault();
+              mutation.mutate();
+            }}
+          >
+            <FieldFormFields
+              form={form}
+              setForm={setForm}
+              fieldTypes={parseFieldTypeOptions(fieldTypesQuery.data)}
+              relatedTypes={parseNamedRefs(typesQuery.data?.items)}
+              developerLocked
+              developerTouched
+              setDeveloperTouched={() => undefined}
+            />
+            <Button type="submit" loading={mutation.isPending}>
+              Save
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
+      <DangerZone
+        description="Remove this field and drop it from every view's columns. The primary field, or a field a view sorts or filters by, cannot be deleted until that changes."
+        actionLabel="Delete field"
+        confirmTitle={`Delete ${initial.label || "this field"}?`}
+        confirmBody="Values already saved for this field stay in stored content, but the field no longer appears on forms."
+        onConfirm={() => deleteMutation.mutate()}
+        pending={deleteMutation.isPending}
+      />
+    </div>
   );
 }

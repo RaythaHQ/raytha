@@ -142,19 +142,31 @@ export type SitePageWidget = {
   customAttributes: string;
 };
 
+/** `orphaned`: saved widgets under a name the template no longer renders, so they never reach the public page. */
 export type SitePageSection = {
   name: string;
+  kind: "template" | "orphaned";
   widgets: SitePageWidget[];
+};
+
+export type SitePageStatus = "draft" | "published" | "published-with-changes";
+
+export type AuditStamp = {
+  at: string;
+  by: string;
 };
 
 export type SitePageDetail = {
   id: string;
   title: string;
   routePath: string;
+  status: SitePageStatus;
   isPublished: boolean;
   isDraft: boolean;
   webTemplateId: string;
-  templateContent: string;
+  templateLabel: string;
+  created: AuditStamp;
+  modified: AuditStamp;
   widgets: SitePageSection[];
 };
 
@@ -310,73 +322,75 @@ export function newWidget(widgetType: string, row: number): SitePageWidget {
 
 export function parseSitePage(entity: EntityRef): SitePageDetail {
   const fields = entityFields(entity);
-  const template = fields.webTemplate;
-  const templateContent = isRecord(template) ? readString(template, "content") : "";
-  const stored = parseSections(fields.widgets);
+  const template = isRecord(fields.webTemplate) ? fields.webTemplate : {};
+  const isPublished = readBoolean(fields, "isPublished");
+  const isDraft = readBoolean(fields, "isDraft");
   return {
     id: entity.id,
     title: readString(fields, "title"),
     routePath: readString(fields, "routePath"),
-    isPublished: readBoolean(fields, "isPublished"),
-    isDraft: readBoolean(fields, "isDraft"),
+    status: sitePageStatus(isPublished, isDraft),
+    isPublished,
+    isDraft,
     webTemplateId: readString(fields, "webTemplateId"),
-    templateContent,
-    widgets: mergeTemplateSections(stored, sectionNamesFromTemplate(templateContent)),
+    templateLabel: readString(template, "label", "developerName"),
+    created: auditStamp(fields.creationTime, fields.creatorUser),
+    modified: auditStamp(fields.lastModificationTime ?? fields.creationTime, fields.lastModifierUser ?? fields.creatorUser),
+    widgets: layoutSections(parseStoredWidgets(fields.widgets), readStringList(fields.templateSections)),
   };
 }
 
-export function parseSections(value: unknown): SitePageSection[] {
-  if (!isRecord(value)) {
-    return [];
+export function sitePageStatus(isPublished: boolean, isDraft: boolean): SitePageStatus {
+  if (!isPublished) {
+    return "draft";
   }
-  const sections: SitePageSection[] = [];
-  for (const [name, widgets] of Object.entries(value)) {
-    if (!Array.isArray(widgets)) {
-      continue;
+  return isDraft ? "published-with-changes" : "published";
+}
+
+/**
+ * Template sections come first in template order, always present so an empty one can take widgets.
+ * A stored key the template does not render is kept only while it still holds widgets; the match is
+ * exact because the public renderer looks sections up by exact key.
+ */
+export function layoutSections(stored: Map<string, SitePageWidget[]>, templateNames: string[]): SitePageSection[] {
+  const sections: SitePageSection[] = templateNames.map((name) => ({
+    name,
+    kind: "template",
+    widgets: stored.get(name) ?? [],
+  }));
+  for (const [name, widgets] of stored) {
+    if (!templateNames.includes(name) && widgets.length > 0) {
+      sections.push({ name, kind: "orphaned", widgets });
     }
-    sections.push({
-      name,
-      widgets: widgets
-        .map(parseWidget)
-        .sort((left, right) => left.row - right.row || left.column - right.column),
-    });
   }
   return sections;
 }
 
-export function sectionNamesFromTemplate(content: string): string[] {
-  const names: string[] = [];
-  const pattern = /(?:render_section|get_section)\(\s*["']([^"']+)["']/g;
-  let match = pattern.exec(content);
-  while (match) {
-    const name = match[1];
-    if (name && !names.includes(name)) {
-      names.push(name);
-    }
-    match = pattern.exec(content);
+function parseStoredWidgets(value: unknown): Map<string, SitePageWidget[]> {
+  const stored = new Map<string, SitePageWidget[]>();
+  if (!isRecord(value)) {
+    return stored;
   }
-  return names;
+  for (const [name, widgets] of Object.entries(value)) {
+    if (Array.isArray(widgets)) {
+      stored.set(
+        name,
+        widgets.map(parseWidget).sort((left, right) => left.row - right.row || left.column - right.column),
+      );
+    }
+  }
+  return stored;
 }
 
-export function mergeTemplateSections(
-  stored: SitePageSection[],
-  templateNames: string[],
-): SitePageSection[] {
-  const byName = new Map(stored.map((section) => [section.name, section]));
-  const merged: SitePageSection[] = [];
-  for (const name of templateNames) {
-    const existing = byName.get(name);
-    if (existing) {
-      merged.push(existing);
-      byName.delete(name);
-    } else {
-      merged.push({ name, widgets: [] });
-    }
-  }
-  for (const leftover of byName.values()) {
-    merged.push(leftover);
-  }
-  return merged;
+function auditStamp(at: unknown, user: unknown): AuditStamp {
+  return {
+    at: typeof at === "string" ? at : "",
+    by: isRecord(user) ? readString(user, "fullName", "emailAddress") : "",
+  };
+}
+
+function readStringList(value: unknown): string[] {
+  return Array.isArray(value) ? value.filter((item): item is string => typeof item === "string") : [];
 }
 
 export function parseWidget(value: unknown): SitePageWidget {

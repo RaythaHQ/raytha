@@ -1,7 +1,6 @@
 import { adminApi, formatError } from "@raytha/api";
 import type { JsonObject } from "@raytha/api";
 import {
-  Badge,
   Button,
   Card,
   CardContent,
@@ -9,6 +8,7 @@ import {
   CardTitle,
   AlertDialog,
   ConfirmDialog,
+  DangerZone,
   FormField,
   Input,
   PageHeader,
@@ -23,12 +23,13 @@ import {
   toast,
 } from "@raytha/ui";
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Link, useParams } from "@tanstack/react-router";
+import { useNavigate, useParams } from "@tanstack/react-router";
 import { useState, type FormEvent } from "react";
 import { ListBackLink } from "../../components/list-back-link";
 import { useDocumentTitle } from "../../lib/document-title";
 import { entityFields, formatWhen, isRecord, jsonString, readString } from "../entity";
 import { parseSitePage } from "./models";
+import { PreviewActions, SitePageMeta, SitePageTabs, statusHint, useIsHomePage } from "./page-meta";
 
 export function SitePageDetailPage() {
   const params = useParams({ strict: false });
@@ -49,16 +50,14 @@ export function SitePageDetailPage() {
 
 function SitePageDetail({ id }: { id: string }) {
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const [revertId, setRevertId] = useState<string | null>(null);
   const [confirm, setConfirm] = useState<"publish" | "unpublish" | "discard" | "home" | null>(null);
+  const isHome = useIsHomePage(id);
 
   const pageQuery = useQuery({
     queryKey: ["site-pages", id],
     queryFn: () => adminApi.sitePages.get(id),
-  });
-  const configurationQuery = useQuery({
-    queryKey: ["configuration"],
-    queryFn: () => adminApi.configuration.get(),
   });
   const revisionsQuery = useQuery({
     queryKey: ["site-pages", id, "revisions"],
@@ -116,29 +115,31 @@ function SitePageDetail({ id }: { id: string }) {
     },
     onError: (error) => toast.error(formatError(error)),
   });
+  const remove = useMutation({
+    mutationFn: () => adminApi.sitePages.remove(id),
+    onSuccess: () => {
+      toast.success("Site page deleted");
+      void navigate({ to: "/site-pages" });
+    },
+    onError: (error) => toast.error(formatError(error)),
+  });
 
   return (
     <div className="space-y-6">
       <QueryGate query={pageQuery}>
         {(entity) => {
           const page = parseSitePage(entity);
-          const homePageId = jsonString(configurationQuery.data ?? {}, "homePageId");
-          const homePageType = jsonString(configurationQuery.data ?? {}, "homePageType");
-          const isHome = homePageType === "SitePage" && homePageId === page.id;
           return (
             <>
               <PageHeader
+                back={<ListBackLink to="/site-pages" listKey="site-pages" label="site pages" />}
                 title={page.title || "Site page"}
-                description={page.routePath ? `/${page.routePath}` : undefined}
+                description={statusHint(page.status)}
+                meta={<SitePageMeta page={page} isHome={isHome} />}
+                tabs={<SitePageTabs id={id} active="settings" />}
                 actions={
                   <>
-                    <Link
-                      to="/site-pages/$id/layout"
-                      params={{ id }}
-                      className="inline-flex h-10 items-center rounded-lg border border-input bg-card px-4 text-sm font-medium shadow-card hover:bg-brand-50"
-                    >
-                      Edit layout
-                    </Link>
+                    <PreviewActions page={page} />
                     {page.isDraft ? (
                       <Button type="button" variant="outline" onClick={() => setConfirm("discard")}>
                         Discard draft
@@ -149,24 +150,22 @@ function SitePageDetail({ id }: { id: string }) {
                         Unpublish
                       </Button>
                     ) : null}
-                    <Button type="button" onClick={() => setConfirm("publish")}>
-                      Publish
-                    </Button>
-                    {isHome ? (
-                      <Badge variant="info">Home page</Badge>
-                    ) : (
+                    {isHome ? null : (
                       <Button type="button" variant="outline" onClick={() => setConfirm("home")}>
                         Set as home page
                       </Button>
                     )}
+                    <Button
+                      type="button"
+                      disabled={page.status === "published"}
+                      title={page.status === "published" ? "Nothing to publish. The live page matches." : undefined}
+                      onClick={() => setConfirm("publish")}
+                    >
+                      Publish
+                    </Button>
                   </>
                 }
               />
-              <ListBackLink to="/site-pages" listKey="site-pages" label="site pages" />
-              <div className="flex flex-wrap gap-2">
-                {page.isPublished ? <Badge variant="success">Published</Badge> : <Badge variant="secondary">Unpublished</Badge>}
-                {page.isDraft ? <Badge variant="warning">Draft</Badge> : null}
-              </div>
               <SitePageSettingsForm
                 key={`${page.id}-${page.title}-${page.routePath}-${page.webTemplateId}`}
                 id={id}
@@ -225,6 +224,15 @@ function SitePageDetail({ id }: { id: string }) {
           </QueryGate>
         </CardContent>
       </Card>
+
+      <DangerZone
+        description="Delete this site page and its draft widgets. This cannot be undone."
+        actionLabel="Delete page"
+        confirmTitle="Delete site page?"
+        confirmBody="This cannot be undone."
+        onConfirm={() => remove.mutate()}
+        pending={remove.isPending}
+      />
 
       <AlertDialog
         open={confirm === "publish"}
@@ -377,17 +385,9 @@ function SitePageSettingsForm({
               </Select>
             )}
           </FormField>
-          <div className="flex gap-2">
-            <Button type="submit" loading={save.isPending}>
-              Save settings
-            </Button>
-            <Link
-              to="/site-pages"
-              className="inline-flex h-10 items-center rounded-lg border border-input bg-card px-4 text-sm font-medium shadow-card hover:bg-brand-50"
-            >
-              Back to list
-            </Link>
-          </div>
+          <Button type="submit" loading={save.isPending}>
+            Save settings
+          </Button>
         </form>
       </CardContent>
     </Card>

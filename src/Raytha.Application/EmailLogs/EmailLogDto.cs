@@ -43,7 +43,7 @@ public record EmailLogDto : EmailLogListItemDto
             ToAddress = entity.ToAddress,
             FromAddress = entity.FromAddress,
             Subject = entity.Subject,
-            Body = entity.Body,
+            Body = EmailBodySanitizer.Sanitize(entity.Body),
             IsHtml = entity.IsHtml,
             IsSuccess = entity.IsSuccess,
             ErrorMessage = entity.ErrorMessage,

@@ -27,7 +27,9 @@ New admin work goes into the SPA, not into the Razor admin pages.
 
 - HTTP calls MUST go through `@raytha/api`. Raw `fetch` in a page or component
   is FORBIDDEN — that client owns base paths, JSON headers, error mapping, and
-  the session cache the route guards read.
+  the session cache the route guards read. `eslint.config.mjs` enforces it:
+  `fetch`, `XMLHttpRequest`, `EventSource`, and axios/ky imports fail `pnpm lint`
+  everywhere except `packages/api`.
 - Shared visual components belong in `@raytha/ui`. A component copied into
   `apps/shell` because it was faster is a defect.
 - TypeScript is strict; `any` and non-null assertions need a stated reason.

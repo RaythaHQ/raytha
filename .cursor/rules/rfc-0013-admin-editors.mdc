@@ -10,8 +10,9 @@ Status: Active
 
 ## Abstract
 
-Create and edit of admin entities happen on their own routes. A list may confirm
-a delete. A media insert picker may be a dialog. An entity editor MUST NOT.
+Create and edit of admin entities happen on their own routes. Deleting an entity
+happens in its editor's DangerZone, never from a list. A media insert picker may
+be a dialog. An entity editor MUST NOT.
 
 ## 1. Routes
 
@@ -30,8 +31,9 @@ a delete. A media insert picker may be a dialog. An entity editor MUST NOT.
 
 ## 3. Lists
 
-- Row actions are one overflow menu (`RowActions`). Destructive items last,
-  after a separator.
+- Row actions are one overflow menu (`RowActions`) and hold only
+  non-destructive actions. A list MUST NOT delete, clear, or revoke, except
+  trash (§5).
 - The name/title column is the edit link when an edit route exists.
 - Back links from create, edit, and detail MUST use `ListBackLink` and restore
   the remembered list search for that `listKey`.
@@ -41,3 +43,17 @@ a delete. A media insert picker may be a dialog. An entity editor MUST NOT.
 - When a list renders, it MUST store the applied query in `sessionStorage` under
   `raytha.list:${listKey}` so `ListBackLink` can restore it.
 - Sidebar and command-palette links to the bare list path remain a reset.
+
+## 5. Danger Zone
+
+- Every destructive action on an entity (delete, permanent delete, revoke,
+  reset) lives in a `DangerZone` at the bottom of that entity's edit page, with
+  a confirm dialog that names what breaks.
+- An entity with no edit page gets a detail page (`/$id`) to hold its
+  DangerZone, as media items do at `/media/$id`.
+- Bulk maintenance (clearing logs, finished background tasks) is not an entity
+  delete. It lives on the Maintenance page behind a confirm dialog.
+- Trash is the one list exception. A trashed item has no editor, so each trash
+  row offers Restore and Delete permanently, and permanent delete is confirmed.
+- `CrudListPage` has no delete prop, and `RowActions` has no destructive
+  variant, so a row-menu delete cannot be written.

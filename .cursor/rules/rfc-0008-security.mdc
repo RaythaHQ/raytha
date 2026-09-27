@@ -26,6 +26,10 @@ code.
 - Every admin endpoint, controller, and page MUST carry a policy. The
   `/raytha/api/admin` group requires `IsAdmin`; each resource group narrows to its
   permission. `AllowAnonymous` on an admin resource is FORBIDDEN.
+  `AdminEndpointAuthorizationTests` enforces this on the endpoint table `Startup`
+  actually maps: every `/raytha` endpoint needs a policy and no `AllowAnonymous`,
+  REST API v1 policies must be `Api`-prefixed, and a deliberately public route
+  goes in its `AnonymousAllowlist` with a reason.
 - Authorization decisions MUST use these policies. Checking
   `User.IsInRole("admin")`, comparing email addresses, or re-deriving permissions
   in a handler is FORBIDDEN.

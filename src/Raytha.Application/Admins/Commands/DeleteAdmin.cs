@@ -4,7 +4,7 @@ using Mediator;
 using Raytha.Application.Common.Exceptions;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Models;
-using Raytha.Application.Common.Utils;
+using Raytha.Application.Common.Security;
 using Raytha.Application.Webhooks;
 
 namespace Raytha.Application.Admins.Commands;
@@ -16,21 +16,18 @@ public class DeleteAdmin
 
     public class Validator : AbstractValidator<Command>
     {
-        public Validator(ICurrentUser currentUser)
+        public Validator(IRaythaDbContext db, ICurrentUser currentUser)
         {
             RuleFor(x => x)
                 .Custom(
                     (request, context) =>
-                    {
-                        if (request.Id == currentUser.UserId)
-                        {
-                            context.AddFailure(
-                                Constants.VALIDATION_SUMMARY,
-                                "You cannot remove your own account."
-                            );
-                            return;
-                        }
-                    }
+                        context.AddDenial(
+                            db.AccountActionDenial(
+                                currentUser,
+                                request.Id.Guid,
+                                AdminAccountAction.Delete
+                            )
+                        )
                 );
         }
     }

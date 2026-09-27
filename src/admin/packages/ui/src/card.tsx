@@ -6,17 +6,17 @@ export function Card({ className, ...props }: HTMLAttributes<HTMLDivElement>) {
 }
 
 export function CardHeader({ className, ...props }: HTMLAttributes<HTMLDivElement>) {
-  return <div className={cn("flex flex-col space-y-1.5 p-6", className)} {...props} />;
+  return <div className={cn("flex flex-col space-y-1 px-6 pt-5 pb-4", className)} {...props} />;
 }
 
 export function CardTitle({ className, ...props }: HTMLAttributes<HTMLHeadingElement>) {
   // Content always arrives via children from the caller.
   // eslint-disable-next-line jsx-a11y/heading-has-content
-  return <h3 className={cn("font-display font-semibold leading-none tracking-tight", className)} {...props} />;
+  return <h3 className={cn("font-display text-[15px] font-semibold leading-6 tracking-tight", className)} {...props} />;
 }
 
 export function CardDescription({ className, ...props }: HTMLAttributes<HTMLDivElement>) {
-  return <div className={cn("text-sm text-muted-foreground", className)} {...props} />;
+  return <div className={cn("text-[13px] leading-5 text-muted-foreground", className)} {...props} />;
 }
 
 export function CardContent({ className, ...props }: HTMLAttributes<HTMLDivElement>) {
@@ -24,5 +24,5 @@ export function CardContent({ className, ...props }: HTMLAttributes<HTMLDivEleme
 }
 
 export function CardFooter({ className, ...props }: HTMLAttributes<HTMLDivElement>) {
-  return <div className={cn("flex items-center p-6 pt-0", className)} {...props} />;
+  return <div className={cn("flex items-center gap-2 p-6 pt-0", className)} {...props} />;
 }

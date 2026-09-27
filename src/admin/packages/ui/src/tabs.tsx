@@ -38,7 +38,7 @@ export function TabsList({ className, ...props }: HTMLAttributes<HTMLDivElement>
   return (
     <div
       role="tablist"
-      className={cn("inline-flex items-center gap-1 rounded-lg bg-muted p-1", className)}
+      className={cn("inline-flex h-9 items-center gap-0.5 rounded-lg border border-border bg-muted/70 p-0.5", className)}
       {...props}
     />
   );
@@ -62,8 +62,10 @@ export function TabsTrigger({
       aria-selected={selected}
       onClick={() => tabs.onValueChange(value)}
       className={cn(
-        "rounded-md px-3 py-1.5 text-sm font-medium transition-colors",
-        selected ? "bg-card text-foreground shadow-card" : "text-muted-foreground hover:text-foreground",
+        "inline-flex h-7 items-center rounded-md px-3 text-[13px] font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring",
+        selected
+          ? "bg-card text-foreground shadow-xs ring-1 ring-black/[0.06]"
+          : "text-muted-foreground hover:text-foreground",
         className,
       )}
     >

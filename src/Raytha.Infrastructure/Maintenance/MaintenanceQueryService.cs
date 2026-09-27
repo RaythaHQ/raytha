@@ -42,21 +42,20 @@ public sealed class MaintenanceQueryService : IMaintenanceQueryService
         var storageBytes = await _db.MediaItems.SumAsync(p => (long?)p.Length, cancellationToken) ?? 0;
         var storageCount = await _db.MediaItems.LongCountAsync(cancellationToken);
 
-        var logs = new List<LogTableInfo>
+        var settings = await _db.OrganizationSettings.AsNoTracking().FirstAsync(cancellationToken);
+        var logs = new List<LogTableInfo>();
+        foreach (var log in RetainedLogs.All)
         {
-            new("audit_logs", "Audit logs", await _db.AuditLogs.LongCountAsync(cancellationToken)),
-            new("email_logs", "Email log", await _db.EmailLogs.LongCountAsync(cancellationToken)),
-            new(
-                "webhook_deliveries",
-                "Webhook deliveries",
-                await _db.WebhookDeliveries.LongCountAsync(cancellationToken)
-            ),
-            new(
-                "background_tasks",
-                "Background tasks",
-                await _db.BackgroundTasks.LongCountAsync(cancellationToken)
-            ),
-        };
+            logs.Add(
+                new LogTableInfo(
+                    log.Key,
+                    log.Label,
+                    await log.CountAsync(_db, olderThan: null, cancellationToken),
+                    await log.OldestAsync(_db, cancellationToken),
+                    log.RetentionDays(settings)
+                )
+            );
+        }
 
         var taskCounts = await _db
             .BackgroundTasks.GroupBy(t => t.Status)

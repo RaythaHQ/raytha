@@ -13,11 +13,22 @@ import {
 } from "@raytha/ui";
 import { useMutation } from "@tanstack/react-query";
 import { Link, useNavigate } from "@tanstack/react-router";
-import { useState, type FormEvent } from "react";
+import type { ReactCodeMirrorRef } from "@uiw/react-codemirror";
+import { useRef, useState, type FormEvent } from "react";
 import { ListBackLink } from "../components/list-back-link";
 import { useDocumentTitle } from "../lib/document-title";
+import { CodeEditor, insertAtCursor } from "./editors/code-editor";
+import {
+  DEFAULT_TRIGGER,
+  FUNCTION_TRIGGERS,
+  missingEntryPoint,
+  starterCode,
+  triggerFor,
+  type FunctionTriggerType,
+} from "./editors/function-reference";
+import { FunctionReferencePanel } from "./editors/function-reference-panel";
 import { CrudListPage } from "./crud-list";
-import { entityFields, formatCell, formatWhen, readBoolean, readString, toDeveloperName } from "./entity";
+import { entityFields, formatWhen, isRecord, readBoolean, readString, toDeveloperName } from "./entity";
 
 export function EmailTemplatesPage() {
   return (
@@ -51,7 +62,6 @@ export function MenusPage() {
       listKey="menus"
       noun="menu"
       list={adminApi.menus.list}
-      remove={adminApi.menus.remove}
       createPermission={platformPermissions.contentTypes}
       createLabel="New menu"
       createTo="/menus/new"
@@ -75,14 +85,6 @@ export function MenusPage() {
   );
 }
 
-const FUNCTION_TRIGGERS = [
-  { value: "http_request", label: "HTTP request" },
-  { value: "liquid_template", label: "Liquid template" },
-  { value: "content_item_created", label: "Content item created" },
-  { value: "content_item_updated", label: "Content item updated" },
-  { value: "content_item_deleted", label: "Content item deleted" },
-] as const;
-
 export function FunctionsPage() {
   return (
     <CrudListPage
@@ -91,7 +93,6 @@ export function FunctionsPage() {
       listKey="functions"
       noun="function"
       list={adminApi.functions.list}
-      remove={adminApi.functions.remove}
       createPermission={platformPermissions.systemSettings}
       createLabel="New function"
       createTo="/functions/new"
@@ -105,7 +106,14 @@ export function FunctionsPage() {
           ),
         },
         { header: "Developer name", cell: (entity) => readString(entityFields(entity), "developerName") },
-        { header: "Trigger", cell: (entity) => formatCell(entityFields(entity).triggerType) || "—" },
+        {
+          header: "Trigger",
+          cell: (entity) => {
+            const trigger = entityFields(entity).triggerType;
+            const value = isRecord(trigger) ? readString(trigger, "developerName") : readString({ trigger }, "trigger");
+            return value ? triggerFor(value).label : "—";
+          },
+        },
         {
           header: "Status",
           cell: (entity) =>
@@ -138,8 +146,7 @@ export function NewMenuPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="New menu" />
-      <ListBackLink to="/menus" listKey="menus" label="menus" />
+      <PageHeader back={<ListBackLink to="/menus" listKey="menus" label="menus" />} title="New menu" />
       <Card>
         <CardContent className="pt-6">
           <form
@@ -189,12 +196,18 @@ export function NewMenuPage() {
 export function NewFunctionPage() {
   useDocumentTitle(["New function"]);
   const navigate = useNavigate();
+  const editorRef = useRef<ReactCodeMirrorRef>(null);
   const [name, setName] = useState("");
   const [developerName, setDeveloperName] = useState("");
   const [developerTouched, setDeveloperTouched] = useState(false);
-  const [triggerType, setTriggerType] = useState<string>(FUNCTION_TRIGGERS[0].value);
-  const [code, setCode] = useState("");
+  const [triggerType, setTriggerType] = useState<FunctionTriggerType>(DEFAULT_TRIGGER);
+  /** null while the editor still shows the untouched starter, which follows the trigger and developer name. */
+  const [editedCode, setEditedCode] = useState<string | null>(null);
+  const [offerStarter, setOfferStarter] = useState(false);
   const [isActive, setIsActive] = useState(true);
+  const starter = starterCode(triggerType, developerName);
+  const code = editedCode ?? starter;
+  const entryWarning = missingEntryPoint(triggerType, code);
 
   const mutation = useMutation({
     mutationFn: () =>
@@ -206,79 +219,130 @@ export function NewFunctionPage() {
     onError: (error) => toast.error(formatError(error)),
   });
 
+  const changeTrigger = (next: FunctionTriggerType) => {
+    setTriggerType(next);
+    setOfferStarter(editedCode !== null && editedCode !== starterCode(next, developerName));
+  };
+
+  /** Goes through the view so the swap is immediate and Ctrl+Z brings the edited code back. */
+  const replaceWithStarter = () => {
+    const view = editorRef.current?.view;
+    view?.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: starter }, userEvent: "input.replace" });
+    setEditedCode(null);
+    setOfferStarter(false);
+  };
+
   return (
     <div className="space-y-6">
-      <PageHeader title="New function" />
-      <ListBackLink to="/functions" listKey="functions" label="functions" />
-      <Card>
-        <CardContent className="pt-6">
-          <form
-            className="space-y-4"
-            onSubmit={(event: FormEvent) => {
-              event.preventDefault();
-              mutation.mutate();
-            }}
-          >
-            <FormField label="Name" required htmlFor="fn-name">
-              {(control) => (
-                <Input
-                  {...control}
-                  value={name}
-                  onChange={(event) => {
-                    const next = event.target.value;
-                    setName(next);
-                    if (!developerTouched) {
-                      setDeveloperName(toDeveloperName(next));
-                    }
-                  }}
-                />
-              )}
-            </FormField>
-            <FormField label="Developer name" required htmlFor="fn-developer">
-              {(control) => (
-                <Input
-                  {...control}
-                  value={developerName}
-                  onChange={(event) => {
-                    setDeveloperTouched(true);
-                    setDeveloperName(event.target.value);
-                  }}
-                />
-              )}
-            </FormField>
-            <FormField label="Trigger" required htmlFor="fn-trigger">
-              {(control) => (
-                <Select {...control} value={triggerType} onChange={(event) => setTriggerType(event.target.value)}>
-                  {FUNCTION_TRIGGERS.map((trigger) => (
-                    <option key={trigger.value} value={trigger.value}>
-                      {trigger.label}
-                    </option>
-                  ))}
-                </Select>
-              )}
-            </FormField>
-            <FormField label="Code" required htmlFor="fn-code">
-              {(control) => (
-                <textarea
-                  {...control}
-                  className="min-h-40 w-full rounded-lg border border-input bg-background px-3 py-2 font-mono text-sm"
+      <PageHeader
+        back={<ListBackLink to="/functions" listKey="functions" label="functions" />}
+        title="New function"
+        description="Server-side JavaScript that runs on a request, in a template, or when content changes."
+      />
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_24rem] lg:items-start">
+        <Card>
+          <CardContent className="pt-6">
+            <form
+              className="space-y-4"
+              onSubmit={(event: FormEvent) => {
+                event.preventDefault();
+                mutation.mutate();
+              }}
+            >
+              <FormField label="Name" required htmlFor="fn-name">
+                {(control) => (
+                  <Input
+                    {...control}
+                    value={name}
+                    onChange={(event) => {
+                      const next = event.target.value;
+                      setName(next);
+                      if (!developerTouched) {
+                        setDeveloperName(toDeveloperName(next));
+                      }
+                    }}
+                  />
+                )}
+              </FormField>
+              <FormField label="Developer name" required htmlFor="fn-developer">
+                {(control) => (
+                  <Input
+                    {...control}
+                    value={developerName}
+                    onChange={(event) => {
+                      setDeveloperTouched(true);
+                      setDeveloperName(event.target.value);
+                    }}
+                  />
+                )}
+              </FormField>
+              <FormField label="Trigger" required htmlFor="fn-trigger">
+                {(control) => (
+                  <Select
+                    {...control}
+                    value={triggerType}
+                    onChange={(event) => changeTrigger(triggerFor(event.target.value).value)}
+                  >
+                    {FUNCTION_TRIGGERS.map((trigger) => (
+                      <option key={trigger.value} value={trigger.value}>
+                        {trigger.label}
+                      </option>
+                    ))}
+                  </Select>
+                )}
+              </FormField>
+              {offerStarter ? (
+                <div
+                  role="status"
+                  className="flex flex-wrap items-center gap-2 rounded-lg border border-info-border bg-info-soft px-3 py-2 text-sm"
+                >
+                  <span className="min-w-0 flex-1">
+                    Replace your code with the {triggerFor(triggerType).label} starter? You can undo with Ctrl+Z.
+                  </span>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={replaceWithStarter}
+                  >
+                    Replace
+                  </Button>
+                  <Button type="button" size="sm" variant="ghost" onClick={() => setOfferStarter(false)}>
+                    Keep my code
+                  </Button>
+                </div>
+              ) : null}
+              <div className="space-y-2">
+                <label htmlFor="fn-code" className="text-sm font-medium">
+                  Code
+                </label>
+                <CodeEditor
                   value={code}
-                  onChange={(event) => setCode(event.target.value)}
+                  onChange={(next) => setEditedCode(next === starter ? null : next)}
+                  language="javascript"
+                  editorRef={editorRef}
+                  ariaLabel="Function code"
                 />
-              )}
-            </FormField>
-            <div className="flex items-center gap-2">
-              <Checkbox id="fn-active" checked={isActive} onCheckedChange={setIsActive} />
-              <label htmlFor="fn-active" className="text-sm">
-                Active
-              </label>
-            </div>
-            <Button type="submit" loading={mutation.isPending}>
-              Create
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
+                {entryWarning ? <p className="text-sm text-warning">{entryWarning}</p> : null}
+              </div>
+              <div className="flex items-center gap-2">
+                <Checkbox id="fn-active" checked={isActive} onCheckedChange={setIsActive} />
+                <label htmlFor="fn-active" className="text-sm">
+                  Active
+                </label>
+              </div>
+              <Button type="submit" loading={mutation.isPending}>
+                Create
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
+        <FunctionReferencePanel
+          trigger={triggerType}
+          developerName={developerName}
+          onInsert={(text) => insertAtCursor(editorRef.current, text)}
+        />
+      </div>
     </div>
   );
 }

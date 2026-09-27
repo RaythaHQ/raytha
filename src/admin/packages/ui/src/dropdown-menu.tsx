@@ -1,4 +1,5 @@
-import { cloneElement, createContext, useContext, useEffect, useId, useRef, useState, type KeyboardEvent, type ReactElement, type ReactNode } from "react";
+import { cloneElement, createContext, useContext, useEffect, useId, useLayoutEffect, useRef, useState, type CSSProperties, type KeyboardEvent, type ReactElement, type ReactNode, type RefObject } from "react";
+import { createPortal } from "react-dom";
 import { cn } from "./cn";
 
 interface DropdownContextValue {
@@ -6,6 +7,7 @@ interface DropdownContextValue {
   setOpen: (open: boolean) => void;
   triggerId: string;
   menuId: string;
+  rootRef: RefObject<HTMLDivElement | null>;
 }
 
 const DropdownContext = createContext<DropdownContextValue | null>(null);
@@ -27,9 +29,10 @@ export function DropdownMenu({ children }: { children: ReactNode }) {
   const [open, setOpen] = useState(false);
   const triggerId = useId();
   const menuId = useId();
+  const rootRef = useRef<HTMLDivElement>(null);
   return (
-    <DropdownContext.Provider value={{ open, setOpen, triggerId, menuId }}>
-      <div className="relative inline-block">{children}</div>
+    <DropdownContext.Provider value={{ open, setOpen, triggerId, menuId, rootRef }}>
+      <div ref={rootRef} className="relative inline-block">{children}</div>
     </DropdownContext.Provider>
   );
 }
@@ -60,9 +63,40 @@ export function DropdownMenuContent({
   className?: string;
   align?: "start" | "end";
 }) {
-  const { open, setOpen, triggerId, menuId } = useDropdown();
+  const { open, setOpen, triggerId, menuId, rootRef } = useDropdown();
   const ref = useRef<HTMLDivElement>(null);
   const wasOpen = useRef(false);
+  const [menuStyle, setMenuStyle] = useState<CSSProperties>({ position: "fixed", top: 0, left: 0 });
+
+  useLayoutEffect(() => {
+    if (!open) {
+      return;
+    }
+    const place = () => {
+      const trigger = document.getElementById(triggerId);
+      const menu = ref.current;
+      if (!trigger || !menu) {
+        return;
+      }
+      const triggerRect = trigger.getBoundingClientRect();
+      const menuRect = menu.getBoundingClientRect();
+      const gap = 8;
+      let top = triggerRect.bottom + gap;
+      if (top + menuRect.height > window.innerHeight - gap) {
+        top = Math.max(gap, triggerRect.top - gap - menuRect.height);
+      }
+      let left = align === "end" ? triggerRect.right - menuRect.width : triggerRect.left;
+      left = Math.min(Math.max(gap, left), Math.max(gap, window.innerWidth - menuRect.width - gap));
+      setMenuStyle({ position: "fixed", top, left });
+    };
+    place();
+    window.addEventListener("resize", place);
+    window.addEventListener("scroll", place, true);
+    return () => {
+      window.removeEventListener("resize", place);
+      window.removeEventListener("scroll", place, true);
+    };
+  }, [open, align, triggerId]);
 
   useEffect(() => {
     if (!open) {
@@ -70,13 +104,15 @@ export function DropdownMenuContent({
     }
 
     const onPointerDown = (event: MouseEvent) => {
-      if (ref.current && !ref.current.parentElement?.contains(event.target as Node)) {
-        setOpen(false);
+      const target = event.target as Node;
+      if (rootRef.current?.contains(target) || ref.current?.contains(target)) {
+        return;
       }
+      setOpen(false);
     };
     document.addEventListener("mousedown", onPointerDown);
     return () => document.removeEventListener("mousedown", onPointerDown);
-  }, [open, setOpen]);
+  }, [open, setOpen, rootRef]);
 
   useEffect(() => {
     if (open) {
@@ -109,21 +145,22 @@ export function DropdownMenuContent({
     }
   };
 
-  return (
+  return createPortal(
     <div
       ref={ref}
       id={menuId}
       role="menu"
       tabIndex={-1}
       onKeyDown={onKeyDown}
+      style={menuStyle}
       className={cn(
-        "absolute z-50 mt-2 min-w-52 overflow-hidden rounded-xl border border-border bg-card p-1.5 shadow-pop",
-        align === "end" ? "right-0" : "left-0",
+        "z-50 min-w-52 animate-pop overflow-hidden rounded-xl border border-border bg-card p-1 shadow-pop outline-none",
         className,
       )}
     >
       {children}
-    </div>
+    </div>,
+    document.body,
   );
 }
 
@@ -154,7 +191,7 @@ export function DropdownMenuItem({
         onSelect?.();
       }}
       className={cn(
-        "flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-foreground outline-none transition-colors hover:bg-accent focus-visible:bg-accent disabled:pointer-events-none disabled:opacity-50 [&_svg]:size-4 [&_svg]:text-muted-foreground",
+        "flex h-8 w-full items-center gap-2 rounded-lg px-2.5 text-left text-[13px] text-foreground outline-none transition-colors hover:bg-accent focus-visible:bg-accent disabled:pointer-events-none disabled:opacity-50 [&_svg]:size-4 [&_svg]:shrink-0 [&_svg]:text-muted-foreground",
         className,
       )}
     >
@@ -164,9 +201,9 @@ export function DropdownMenuItem({
 }
 
 export function DropdownMenuLabel({ children }: { children: ReactNode }) {
-  return <p className="px-3 py-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">{children}</p>;
+  return <p className="truncate px-2.5 pt-1.5 pb-1 text-xs font-medium text-muted-foreground">{children}</p>;
 }
 
 export function DropdownMenuSeparator() {
-  return <div role="separator" className="mx-1 my-1 border-t border-border" />;
+  return <div role="separator" className="-mx-1 my-1 border-t border-border" />;
 }

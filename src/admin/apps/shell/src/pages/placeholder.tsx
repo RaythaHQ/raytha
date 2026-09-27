@@ -35,7 +35,7 @@ export {
   NewSitePageWidgetPage,
   EditSitePageWidgetPage,
 } from "./site-pages";
-export { ContentTypesPage, NewContentTypePage, ContentItemsPage } from "./content";
+export { ContentTypesPage, NewContentTypePage, ContentTypeHomePage, ContentViewItemsPage } from "./content";
 export { ContentTypeFieldsPage, NewContentTypeFieldPage, EditContentTypeFieldPage } from "./content/fields";
 export { ContentTypeConfigurationPage } from "./content/configuration";
 export { ContentTypeTrashPage } from "./content/trash";
@@ -43,7 +43,7 @@ export { NewContentItemPage, EditContentItemPage } from "./content/editor";
 export { ContentViewsPage, NewContentViewPage } from "./content/views";
 export { ContentViewEditorPage } from "./content/view-editor";
 export { EmailTemplatesPage, MenusPage, FunctionsPage, NewMenuPage, NewFunctionPage } from "./templates";
-export { ThemesPage, NewThemePage } from "./themes";
+export { ThemesPage, NewThemePage, ThemeSettingsPage } from "./themes";
 export { MediaPage } from "./media";
 export {
   AuditLogPage,

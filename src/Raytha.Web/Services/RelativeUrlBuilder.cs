@@ -27,9 +27,6 @@ public class RelativeUrlBuilder : IRelativeUrlBuilder
     public string AdminLoginUrl(string returnUrl = "") =>
         AdminPath("/raytha/login", returnUrl);
 
-    public string AdminLoginWithMagicLinkCompleteUrl(string token, string returnUrl = "") =>
-        AdminPath($"/raytha/login/magic-link/complete/{Uri.EscapeDataString(token)}", returnUrl);
-
     public string AdminForgotPasswordCompleteUrl(string token) =>
         AdminPath($"/raytha/login/forgot-password/complete/{Uri.EscapeDataString(token)}");
 
@@ -65,17 +62,6 @@ public class RelativeUrlBuilder : IRelativeUrlBuilder
         ResolveUrlIfHttpContextAccessExists(
             "/Login/LoginWithEmailAndPassword",
             new { area = "Public", returnUrl }
-        );
-
-    public string UserLoginWithMagicLinkCompleteUrl(string token, string returnUrl = "") =>
-        ResolveUrlIfHttpContextAccessExists(
-            "/Login/LoginWithMagicLinkComplete",
-            new
-            {
-                area = "Public",
-                token,
-                returnUrl,
-            }
         );
 
     public string UserForgotPasswordCompleteUrl(string token) =>

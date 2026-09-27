@@ -32,12 +32,12 @@ export function Switch({
         aria-hidden
         className={cn(
           "pointer-events-none inline-flex h-5 w-9 items-center rounded-full border-2 transition-colors peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-ring peer-disabled:opacity-50",
-          checked ? "border-primary bg-primary" : "border-foreground/45 bg-input",
+          checked ? "border-primary bg-primary" : "border-transparent bg-[#a1a1ab]",
         )}
       >
         <span
           className={cn(
-            "block size-4 rounded-full bg-background shadow-lg ring-0 transition-transform",
+            "block size-4 rounded-full bg-white shadow-[0_1px_2px_rgb(24_24_32/0.2)] ring-0 transition-transform",
             checked ? "translate-x-4" : "translate-x-0",
           )}
         />

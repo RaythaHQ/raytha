@@ -4,11 +4,7 @@ import {
   Button,
   Card,
   CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
   Checkbox,
-  FileUpload,
   FormField,
   Input,
   Label,
@@ -22,130 +18,12 @@ import {
   toast,
 } from "@raytha/ui";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Link, Navigate } from "@tanstack/react-router";
+import { Navigate } from "@tanstack/react-router";
 import { useState, type FormEvent } from "react";
-import { BackgroundTaskStatus } from "../components/background-task-status";
-import { RichTextEditor } from "../components/rich-text-editor";
-import { formatCell, humanizeKey, isRecord, jsonBoolean, jsonNumber, jsonString } from "./entity";
+import { jsonBoolean, jsonNumber, jsonString } from "./entity";
 import { useDocumentTitle } from "../lib/document-title";
 
-export function MaintenancePage() {
-  useDocumentTitle(["Maintenance"]);
-  const query = useQuery({
-    queryKey: ["maintenance"],
-    queryFn: () => adminApi.maintenance.snapshot(),
-  });
-  const [html, setHtml] = useState("<p>Try the editor.</p>");
-  const [taskId, setTaskId] = useState<string | null>(null);
-
-  const enqueue = useMutation({
-    mutationFn: () => adminApi.maintenance.enqueueTask({ steps: 5, delayMs: 400 }),
-    onSuccess: (result) => {
-      toast.success(`Task ${result.id} started`);
-      setTaskId(result.id);
-    },
-    onError: (error) => toast.error(formatError(error)),
-  });
-
-  return (
-    <div className="space-y-6">
-      <PageHeader
-        title="Maintenance"
-        description="Platform snapshot and editor playground."
-        actions={
-          <Link to="/background-tasks" className="text-sm text-primary hover:underline">
-            Background tasks
-          </Link>
-        }
-      />
-      <QueryGate query={query}>{(data) => <SnapshotCards data={data} />}</QueryGate>
-      <Card>
-        <CardHeader>
-          <CardTitle>Background task test</CardTitle>
-          <CardDescription>Enqueue a short sample task and watch its status.</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          <Button type="button" loading={enqueue.isPending} onClick={() => enqueue.mutate()}>
-            Run sample task
-          </Button>
-          {taskId ? <BackgroundTaskStatus taskId={taskId} /> : null}
-        </CardContent>
-      </Card>
-      <Card>
-        <CardHeader>
-          <CardTitle>File upload</CardTitle>
-          <CardDescription>Uppy talks to media config and local or cloud storage.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <FileUpload
-            height={220}
-            onUploaded={(files) => {
-              const first = files[0];
-              if (first) {
-                toast.success(`Uploaded ${first.name}`);
-              }
-            }}
-          />
-        </CardContent>
-      </Card>
-      <Card>
-        <CardHeader>
-          <CardTitle>Rich text editor</CardTitle>
-          <CardDescription>Playground for the TipTap editor used on content forms.</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          <RichTextEditor content={html} onHtmlChange={setHtml} ariaLabel="Rich text playground" />
-        </CardContent>
-      </Card>
-    </div>
-  );
-}
-
-function SnapshotCards({ data }: { data: JsonObject }) {
-  return (
-    <div className="grid gap-4 lg:grid-cols-2">
-      {Object.entries(data).map(([key, value]) => (
-        <Card key={key}>
-          <CardHeader>
-            <CardTitle>{humanizeKey(key)}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {isRecord(value) ? (
-              <dl className="space-y-2 text-sm">
-                {Object.entries(value).map(([childKey, childValue]) => (
-                  <div key={childKey} className="flex justify-between gap-4">
-                    <dt className="text-muted-foreground">{humanizeKey(childKey)}</dt>
-                    <dd className="text-right font-medium">
-                      {Array.isArray(childValue)
-                        ? childValue.length
-                        : isRecord(childValue)
-                          ? formatCell(childValue)
-                          : formatCell(childValue) || "—"}
-                    </dd>
-                  </div>
-                ))}
-              </dl>
-            ) : Array.isArray(value) ? (
-              <ul className="space-y-2 text-sm">
-                {value.map((item, index) => (
-                  <li key={index} className="rounded-lg border border-border px-3 py-2">
-                    {isRecord(item)
-                      ? Object.entries(item)
-                          .map(([childKey, childValue]) => `${humanizeKey(childKey)}: ${formatCell(childValue)}`)
-                          .join(" · ")
-                      : formatCell(item)}
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className="font-display text-2xl font-semibold">{formatCell(value) || "—"}</p>
-            )}
-          </CardContent>
-        </Card>
-      ))}
-    </div>
-  );
-}
+export { MaintenancePage } from "./maintenance";
 
 export function ConfigurationPage() {
   useDocumentTitle(["Configuration"]);
@@ -195,6 +73,8 @@ function ConfigurationForm({ data }: { data: JsonObject }) {
     setSmtpHydrated(true);
   }
   const hasPassword = jsonBoolean(smtp, "hasSmtpPassword");
+  const smtpEnvMissing = jsonBoolean(smtp, "missingSmtpEnvironmentVariables");
+  const smtpOverrideOn = smtpEnvMissing || smtpOverrideSystem;
 
   const mutation = useMutation({
     mutationFn: async () => {
@@ -207,7 +87,7 @@ function ConfigurationForm({ data }: { data: JsonObject }) {
         smtpDefaultFromName,
       });
       await adminApi.smtp.update({
-        smtpOverrideSystem,
+        smtpOverrideSystem: smtpOverrideOn,
         smtpHost,
         smtpPort: smtpPort ? Number(smtpPort) : undefined,
         smtpUsername,
@@ -294,41 +174,50 @@ function ConfigurationForm({ data }: { data: JsonObject }) {
               />
             )}
           </FormField>
-          {jsonBoolean(smtp, "missingSmtpEnvironmentVariables") && (
+          {smtpEnvMissing && (
             <p className="rounded-lg border border-warning/40 bg-warning/10 px-3 py-2 text-sm">
               Server SMTP environment variables are missing. Override is required.
             </p>
           )}
           <div className="flex items-center gap-2">
-            <Checkbox id="smtp-override" checked={smtpOverrideSystem} onCheckedChange={setSmtpOverrideSystem} />
+            <Checkbox
+              id="smtp-override"
+              checked={smtpOverrideOn}
+              disabled={smtpEnvMissing}
+              onCheckedChange={setSmtpOverrideSystem}
+            />
             <Label htmlFor="smtp-override">Override system SMTP</Label>
           </div>
-          <FormField label="Host" htmlFor="smtp-host">
-            {(control) => <Input {...control} value={smtpHost} onChange={(event) => setSmtpHost(event.target.value)} />}
-          </FormField>
-          <FormField label="Port" htmlFor="smtp-port">
-            {(control) => <Input {...control} type="number" value={smtpPort} onChange={(event) => setSmtpPort(event.target.value)} />}
-          </FormField>
-          <FormField label="Username" htmlFor="smtp-username">
-            {(control) => (
-              <Input {...control} value={smtpUsername} onChange={(event) => setSmtpUsername(event.target.value)} />
-            )}
-          </FormField>
-          <FormField
-            label="Password"
-            htmlFor="smtp-password"
-            hint={hasPassword ? "A password is already stored. Leave blank unless you are changing it." : undefined}
-          >
-            {(control) => (
-              <Input
-                {...control}
-                type="password"
-                autoComplete="new-password"
-                value={smtpPassword}
-                onChange={(event) => setSmtpPassword(event.target.value)}
-              />
-            )}
-          </FormField>
+          {smtpOverrideOn ? (
+            <>
+              <FormField label="Host" htmlFor="smtp-host">
+                {(control) => <Input {...control} value={smtpHost} onChange={(event) => setSmtpHost(event.target.value)} />}
+              </FormField>
+              <FormField label="Port" htmlFor="smtp-port">
+                {(control) => <Input {...control} type="number" value={smtpPort} onChange={(event) => setSmtpPort(event.target.value)} />}
+              </FormField>
+              <FormField label="Username" htmlFor="smtp-username">
+                {(control) => (
+                  <Input {...control} value={smtpUsername} onChange={(event) => setSmtpUsername(event.target.value)} />
+                )}
+              </FormField>
+              <FormField
+                label="Password"
+                htmlFor="smtp-password"
+                hint={hasPassword ? "A password is already stored. Leave blank unless you are changing it." : undefined}
+              >
+                {(control) => (
+                  <Input
+                    {...control}
+                    type="password"
+                    autoComplete="new-password"
+                    value={smtpPassword}
+                    onChange={(event) => setSmtpPassword(event.target.value)}
+                  />
+                )}
+              </FormField>
+            </>
+          ) : null}
           <div className="flex gap-2">
             <Button type="submit" loading={mutation.isPending}>
               Save

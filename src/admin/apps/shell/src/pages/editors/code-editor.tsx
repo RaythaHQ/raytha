@@ -1,7 +1,12 @@
 import { javascript } from "@codemirror/lang-javascript";
 import { liquid } from "@codemirror/lang-liquid";
+import type { TemplateVariableGroup } from "@raytha/api";
+import { cn } from "@raytha/ui";
 import CodeMirror, { type ReactCodeMirrorRef } from "@uiw/react-codemirror";
 import { useEffect, useMemo, useState, type Ref } from "react";
+import { liquidAutocomplete } from "./liquid-completion";
+
+const NO_VARIABLES: TemplateVariableGroup[] = [];
 
 export function insertAtCursor(editor: ReactCodeMirrorRef | null, text: string): void {
   const view = editor?.view;
@@ -12,6 +17,7 @@ export function insertAtCursor(editor: ReactCodeMirrorRef | null, text: string):
   view.dispatch({
     changes: { from, to, insert: text },
     selection: { anchor: from + text.length },
+    scrollIntoView: true,
   });
   view.focus();
 }
@@ -22,26 +28,35 @@ export function CodeEditor({
   language,
   editorRef,
   ariaLabel,
+  variables = NO_VARIABLES,
+  height = "28rem",
+  className,
 }: {
   value: string;
   onChange: (value: string) => void;
   language: "liquid" | "javascript";
   editorRef?: Ref<ReactCodeMirrorRef>;
   ariaLabel: string;
+  variables?: TemplateVariableGroup[];
+  height?: string;
+  className?: string;
 }) {
   const dark = useDarkClass();
-  const extensions = useMemo(() => (language === "javascript" ? [javascript()] : [liquid()]), [language]);
+  const extensions = useMemo(
+    () => (language === "javascript" ? [javascript()] : [liquid(), liquidAutocomplete(variables)]),
+    [language, variables],
+  );
 
   return (
-    <div className="overflow-hidden rounded-lg border border-border" role="group" aria-label={ariaLabel}>
+    <div className={cn("overflow-hidden rounded-lg border border-border", className)} role="group" aria-label={ariaLabel}>
       <CodeMirror
         ref={editorRef}
         value={value}
-        height="28rem"
+        height={height}
         theme={dark ? "dark" : "light"}
         extensions={extensions}
         onChange={onChange}
-        basicSetup={{ foldGutter: true, lineNumbers: true }}
+        basicSetup={{ foldGutter: true, lineNumbers: true, autocompletion: language === "javascript" }}
       />
     </div>
   );

@@ -1,7 +1,6 @@
 using CSharpVitamins;
 using Mediator;
 using Microsoft.AspNetCore.Mvc;
-using Raytha.Application.AuditLogs.Commands;
 using Raytha.Application.AuditLogs.Queries;
 using Raytha.Application.AuthenticationSchemes.Commands;
 using Raytha.Application.AuthenticationSchemes.Queries;
@@ -9,9 +8,9 @@ using Raytha.Application.BackgroundTasks.Queries;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Models;
 using Raytha.Application.Common.Utils;
-using Raytha.Application.EmailLogs.Commands;
 using Raytha.Application.EmailLogs.Queries;
 using Raytha.Application.Login.Commands;
+using Raytha.Application.Maintenance;
 using Raytha.Application.Maintenance.Commands;
 using Raytha.Application.Maintenance.Queries;
 using Raytha.Application.OrganizationSettings.Commands;
@@ -33,12 +32,16 @@ public static class SettingsEndpoints
         // ---- Anything signed-in admin can hit ----
         admin.MapGet("/version", Version).WithTags("Admin platform");
         admin.MapPut("/profile", ChangeProfileHandler).WithTags("Admin profile");
-        admin.MapGet("/background-tasks", ListBackgroundTasks).WithTags("Admin background tasks");
+        // Theme import/duplicate and CSV export poll their own task, so status stays open to any admin.
         admin.MapGet("/background-tasks/{id}", BackgroundTask).WithTags("Admin background tasks");
 
         // ---- system_settings ----
         var system = admin.MapGroup("")
             .RequireAuthorization(BuiltInSystemPermission.MANAGE_SYSTEM_SETTINGS_PERMISSION);
+
+        var tasks = system.MapGroup("/background-tasks").WithTags("Admin background tasks");
+        tasks.MapGet("", ListBackgroundTasks);
+        tasks.MapDelete("", ClearLogHandler(RetainedLogs.BackgroundTasks));
 
         var config = system.MapGroup("/configuration").WithTags("Admin configuration");
         config.MapGet("", GetConfiguration);
@@ -59,13 +62,13 @@ public static class SettingsEndpoints
         var emailLog = system.MapGroup("/email-log").WithTags("Admin email log");
         emailLog.MapGet("", ListEmailLogs);
         emailLog.MapGet("/{id}", GetEmailLog);
-        emailLog.MapDelete("", ClearEmailLogs);
+        emailLog.MapDelete("", ClearLogHandler(RetainedLogs.EmailLogs));
 
         var webhooks = system.MapGroup("/webhooks").WithTags("Admin webhooks");
         webhooks.MapGet("", ListWebhooks);
         webhooks.MapGet("/events", WebhookEvents);
         webhooks.MapGet("/deliveries", ListDeliveries);
-        webhooks.MapDelete("/deliveries", ClearDeliveries);
+        webhooks.MapDelete("/deliveries", ClearLogHandler(RetainedLogs.WebhookDeliveries));
         webhooks.MapPost("/deliveries/{id}/redeliver", Redeliver);
         webhooks.MapGet("/{id}", GetWebhook);
         webhooks.MapPost("", CreateWebhookHandler);
@@ -73,15 +76,17 @@ public static class SettingsEndpoints
         webhooks.MapDelete("/{id}", DeleteWebhookHandler);
         webhooks.MapPost("/{id}/test", TestWebhookHandler);
 
-        system.MapGet("/maintenance", Maintenance).WithTags("Admin maintenance");
-        system.MapPost("/maintenance/tasks", BeginDemoTask).WithTags("Admin maintenance");
+        var maintenance = system.MapGroup("/maintenance").WithTags("Admin maintenance");
+        maintenance.MapGet("", Maintenance);
+        maintenance.MapGet("/retention", GetRetention);
+        maintenance.MapPut("/retention", EditRetention);
 
         // ---- audit_logs ----
         var audit = admin.MapGroup("/audit-logs").WithTags("Admin audit logs");
         audit.MapGet("", ListAuditLogs).RequireAuthorization(BuiltInSystemPermission.MANAGE_AUDIT_LOGS_PERMISSION);
         audit.MapGet("/categories", AuditLogCategories)
             .RequireAuthorization(BuiltInSystemPermission.MANAGE_AUDIT_LOGS_PERMISSION);
-        audit.MapDelete("", ClearAuditLogs)
+        audit.MapDelete("", ClearLogHandler(RetainedLogs.AuditLogs))
             .RequireAuthorization(BuiltInSystemPermission.MANAGE_SYSTEM_SETTINGS_PERMISSION);
 
         return admin;
@@ -377,9 +382,6 @@ public static class SettingsEndpoints
 
     private static IResult AuditLogCategories() => Results.Ok(LogCategories.Value);
 
-    private static async Task<IResult> ClearAuditLogs(ISender mediator) =>
-        AdminResults.From(await mediator.Send(new ClearAllAuditLogs.Command()));
-
     // ---- email log ----
 
     private static async Task<IResult> ListEmailLogs(
@@ -410,10 +412,6 @@ public static class SettingsEndpoints
 
     private static async Task<IResult> GetEmailLog(string id, ISender mediator) =>
         AdminResults.From(await mediator.Send(new GetEmailLogById.Query { Id = id }));
-
-    private static async Task<IResult> ClearEmailLogs(ISender mediator) =>
-        AdminResults.From(await mediator.Send(new ClearEmailLog.Command()));
-
     // ---- webhooks ----
 
     private static async Task<IResult> ListWebhooks(
@@ -463,9 +461,6 @@ public static class SettingsEndpoints
         return AdminResults.Paged(await mediator.Send(query), paging);
     }
 
-    private static async Task<IResult> ClearDeliveries(ISender mediator) =>
-        AdminResults.From(await mediator.Send(new ClearWebhookDeliveries.Command()));
-
     private static async Task<IResult> Redeliver(string id, ISender mediator) =>
         AdminResults.FromId(await mediator.Send(new RedeliverWebhookDelivery.Command { Id = id }));
 
@@ -498,19 +493,13 @@ public static class SettingsEndpoints
     private static async Task<IResult> Maintenance(ISender mediator) =>
         AdminResults.From(await mediator.Send(new GetMaintenanceSnapshot.Query()));
 
-    public sealed record BeginDemoProgressTaskRequest(int? Steps, int? DelayMs);
+    private static async Task<IResult> GetRetention(ISender mediator) =>
+        AdminResults.From(await mediator.Send(new GetLogRetention.Query()));
 
-    private static async Task<IResult> BeginDemoTask(
-        [FromBody] BeginDemoProgressTaskRequest? body,
-        ISender mediator
-    ) =>
-        AdminResults.FromId(
-            await mediator.Send(
-                new BeginDemoProgressTask.Command
-                {
-                    Steps = body?.Steps ?? 10,
-                    DelayMs = body?.DelayMs ?? 500,
-                }
-            )
-        );
+    private static async Task<IResult> EditRetention([FromBody] EditLogRetention.Command body, ISender mediator) =>
+        AdminResults.From(await mediator.Send(body));
+
+    /// <summary>Returns <c>{ key, deleted }</c>.</summary>
+    private static Func<ISender, Task<IResult>> ClearLogHandler(RetainedLog log) =>
+        async mediator => AdminResults.From(await mediator.Send(new ClearLog.Command { Key = log.Key }));
 }

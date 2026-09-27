@@ -22,8 +22,8 @@ export function Checkbox({ checked, onCheckedChange, disabled, id, className, ..
       <span
         aria-hidden
         className={cn(
-          "pointer-events-none flex size-4 items-center justify-center rounded-sm border border-primary shadow-xs transition-colors peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-ring peer-disabled:opacity-50",
-          checked ? "bg-primary text-primary-foreground" : "bg-background",
+          "pointer-events-none flex size-4 items-center justify-center rounded-[5px] border shadow-xs transition-colors peer-hover:border-brand-500 peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-ring peer-disabled:opacity-50",
+          checked ? "border-primary bg-primary text-primary-foreground" : "border-[#a1a1ab] bg-card",
         )}
       >
         {checked && <Check className="size-3" strokeWidth={3} />}

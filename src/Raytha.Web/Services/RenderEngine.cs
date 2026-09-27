@@ -292,7 +292,8 @@ public class RenderEngine : IRenderEngine
 
     /// <summary>
     /// Calls a Raytha Function from a Liquid template.
-    /// Usage: raytha_function("developer-name", "methodName", arg1: value1, arg2: value2)
+    /// Usage: raytha_function("developer-name", "methodName", name = value, other = value2)
+    /// Positional arguments arrive as arg1, arg2; mixing them with named arguments mislabels them.
     /// Only functions with trigger type "liquid_template" can be called.
     /// </summary>
     public FunctionValue RaythaFunction()

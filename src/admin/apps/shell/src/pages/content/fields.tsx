@@ -1,10 +1,8 @@
 import { adminApi, formatError } from "@raytha/api";
 import {
-  ConfirmDialog,
   EmptyState,
   PageHeader,
   QueryGate,
-  RowActions,
   Table,
   TableBody,
   TableCell,
@@ -33,7 +31,7 @@ import { CSS } from "@dnd-kit/utilities";
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useParams } from "@tanstack/react-router";
 import { GripVertical, Inbox } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { ListBackLink } from "../../components/list-back-link";
 import { useDocumentTitle } from "../../lib/document-title";
 import {
@@ -43,7 +41,6 @@ import {
   parseFieldTypeOptions,
   type ContentField,
 } from "./fields-model";
-import { ContentTypeNav } from "./nav";
 
 export { NewContentTypeFieldPage, EditContentTypeFieldPage } from "./field-editor";
 
@@ -52,7 +49,6 @@ export function ContentTypeFieldsPage() {
   const developerName = typeof params.developerName === "string" ? params.developerName : "";
   useDocumentTitle(["Fields", developerName]);
   const queryClient = useQueryClient();
-  const [deleteField, setDeleteField] = useState<ContentField | null>(null);
   const fieldsApi = adminApi.fields(developerName);
 
   const typeQuery = useQuery({
@@ -85,16 +81,6 @@ export function ContentTypeFieldsPage() {
     void queryClient.invalidateQueries({ queryKey: ["content-fields", developerName] });
     void queryClient.invalidateQueries({ queryKey: ["content-type", developerName] });
   };
-
-  const deleteMutation = useMutation({
-    mutationFn: (id: string) => fieldsApi.remove(id),
-    onSuccess: () => {
-      toast.success("Field deleted");
-      setDeleteField(null);
-      invalidate();
-    },
-    onError: (error) => toast.error(formatError(error)),
-  });
 
   const reorderMutation = useMutation({
     mutationFn: ({ id, newFieldOrder }: { id: string; newFieldOrder: number }) =>
@@ -138,6 +124,14 @@ export function ContentTypeFieldsPage() {
   return (
     <div className="space-y-6">
       <PageHeader
+        back={
+          <ListBackLink
+            to="/content/$developerName"
+            params={{ developerName }}
+            listKey={`content-items:${developerName}`}
+            label={contentType?.labelPlural || developerName}
+          />
+        }
         title={`${contentType?.labelPlural || developerName} fields`}
         description="Define the fields editors fill in for each item."
         actions={
@@ -150,8 +144,6 @@ export function ContentTypeFieldsPage() {
           </Link>
         }
       />
-      <ListBackLink to="/content-types" listKey="content-types" label="content types" />
-      <ContentTypeNav developerName={developerName} />
       <QueryGate query={fieldsQuery}>
         {() =>
           fields.length === 0 ? (
@@ -167,7 +159,6 @@ export function ContentTypeFieldsPage() {
                       <TableHead>Developer name</TableHead>
                       <TableHead>Type</TableHead>
                       <TableHead>Required</TableHead>
-                      <TableHead className="w-12"><span className="sr-only">Actions</span></TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -177,7 +168,6 @@ export function ContentTypeFieldsPage() {
                         field={field}
                         typeLabel={fieldTypeLabel(field.fieldType, fieldTypes)}
                         developerName={developerName}
-                        onDelete={() => setDeleteField(field)}
                       />
                     ))}
                   </TableBody>
@@ -187,22 +177,6 @@ export function ContentTypeFieldsPage() {
           )
         }
       </QueryGate>
-      <ConfirmDialog
-        open={deleteField !== null}
-        onOpenChange={(open) => {
-          if (!open) {
-            setDeleteField(null);
-          }
-        }}
-        title="Delete field?"
-        body="Existing values for this field stay in stored content but the field will no longer appear on forms."
-        onConfirm={() => {
-          if (deleteField) {
-            deleteMutation.mutate(deleteField.id);
-          }
-        }}
-        pending={deleteMutation.isPending}
-      />
     </div>
   );
 }
@@ -211,12 +185,10 @@ function SortableFieldRow({
   field,
   typeLabel,
   developerName,
-  onDelete,
 }: {
   field: ContentField;
   typeLabel: string;
   developerName: string;
-  onDelete: () => void;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: field.id });
   const style = {
@@ -249,18 +221,6 @@ function SortableFieldRow({
       <TableCell className="font-mono text-xs">{field.developerName}</TableCell>
       <TableCell>{typeLabel}</TableCell>
       <TableCell>{field.isRequired ? "Yes" : "No"}</TableCell>
-      <TableCell>
-        <RowActions
-          actions={[
-            {
-              id: "delete",
-              label: "Delete",
-              destructive: true,
-              onSelect: onDelete,
-            },
-          ]}
-        />
-      </TableCell>
     </TableRow>
   );
 }

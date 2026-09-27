@@ -152,16 +152,13 @@ public class LoginController : BaseController
     )
     {
         var response = await Mediator.Send(
-            new BeginLoginWithMagicLink.Command
-            {
-                EmailAddress = model.EmailAddress,
-                ReturnUrl = returnUrl,
-            }
+            new BeginLoginWithMagicLink.Command { EmailAddress = model.EmailAddress }
         );
 
         if (response.Success)
         {
-            return RedirectToAction("LoginWithMagicLinkSent", "Login");
+            TempData["MagicLinkEmailAddress"] = model.EmailAddress;
+            return RedirectToAction("LoginWithMagicLinkSent", "Login", new { returnUrl });
         }
         else
         {
@@ -186,9 +183,14 @@ public class LoginController : BaseController
     }
 
     [Route("account/login/magic-link/sent", Name = "userloginmagiclinksent")]
-    public IActionResult LoginWithMagicLinkSent()
+    public IActionResult LoginWithMagicLinkSent(string returnUrl = null)
     {
-        var viewModel = new EmptyTarget_RenderModel();
+        var viewModel = new MagicLinkCompleteSubmit_RenderModel
+        {
+            EmailAddress = TempData["MagicLinkEmailAddress"] as string ?? string.Empty,
+            ReturnUrl = returnUrl,
+            RequestVerificationToken = Antiforgery.GetAndStoreTokens(HttpContext).RequestToken,
+        };
         return new AccountActionViewResult(
             BuiltInWebTemplate.LoginWithMagicLinkSentPage,
             viewModel,
@@ -196,23 +198,21 @@ public class LoginController : BaseController
         );
     }
 
-    [Route("account/login/magic-link/complete/{token?}", Name = "userloginmagiclinkcomplete")]
+    [Route("account/login/magic-link/complete", Name = "userloginmagiclinkcomplete")]
+    [HttpPost]
+    [ValidateAntiForgeryToken]
     public async Task<IActionResult> LoginWithMagicLinkComplete(
-        string token = null,
+        LoginWithMagicLinkCompleteViewModel model,
         string returnUrl = null
     )
     {
-        if (string.IsNullOrEmpty(token))
-        {
-            return new ErrorActionViewResult(
-                BuiltInWebTemplate.Error403,
-                403,
-                new GenericError_RenderModel(),
-                ViewData
-            );
-        }
-
-        var response = await Mediator.Send(new CompleteLoginWithMagicLink.Command { Id = token });
+        var response = await Mediator.Send(
+            new CompleteLoginWithMagicLink.Command
+            {
+                EmailAddress = model.EmailAddress ?? string.Empty,
+                Code = model.Code ?? string.Empty,
+            }
+        );
 
         if (response.Success)
         {
@@ -228,7 +228,22 @@ public class LoginController : BaseController
         }
         else
         {
-            return RedirectToAction("LoginWithMagicLink", "Login", new { returnUrl });
+            var viewModel = new MagicLinkCompleteSubmit_RenderModel
+            {
+                EmailAddress = model.EmailAddress ?? string.Empty,
+                ReturnUrl = returnUrl,
+                ValidationFailures = response
+                    .GetErrors()
+                    ?.ToDictionary(k => k.PropertyName, v => v.ErrorMessage),
+                RequestVerificationToken = Antiforgery
+                    .GetAndStoreTokens(HttpContext)
+                    .RequestToken,
+            };
+            return new AccountActionViewResult(
+                BuiltInWebTemplate.LoginWithMagicLinkSentPage,
+                viewModel,
+                ViewData
+            );
         }
     }
 

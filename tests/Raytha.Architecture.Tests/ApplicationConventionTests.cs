@@ -107,6 +107,8 @@ public class ApplicationConventionTests
         "SetAsActiveThemeInternal",
         "ExecuteRaythaFunction", // functions are audited by their own trigger records
         "LoginWithApiKey", // every API request would otherwise write an audit row
+        "PurgeExpiredLogs", // unattended daily retention job with no acting user; logs a summary instead
+        "EnsureDefaultThemeContent", // startup and setup repair of the active theme, no acting user
     };
 
     [Test]

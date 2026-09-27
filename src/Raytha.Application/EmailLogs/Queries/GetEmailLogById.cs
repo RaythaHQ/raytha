@@ -24,10 +24,8 @@ public class GetEmailLogById
             CancellationToken cancellationToken
         )
         {
-            var entity = await _db.EmailLogs.FirstOrDefaultAsync(
-                p => p.Id == request.Id.Guid,
-                cancellationToken
-            );
+            var entity = await _db.EmailLogs.AsNoTracking()
+                .FirstOrDefaultAsync(p => p.Id == request.Id.Guid, cancellationToken);
 
             if (entity == null)
                 throw new NotFoundException("Email log", request.Id);

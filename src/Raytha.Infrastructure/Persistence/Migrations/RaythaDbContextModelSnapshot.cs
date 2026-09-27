@@ -934,8 +934,17 @@ namespace Raytha.Infrastructure.Persistence.Migrations
                     b.Property<Guid>("ActiveThemeId")
                         .HasColumnType("uuid");
 
+                    b.Property<int>("AuditLogRetentionDays")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("BackgroundTaskRetentionDays")
+                        .HasColumnType("integer");
+
                     b.Property<string>("DateFormat")
                         .HasColumnType("text");
+
+                    b.Property<int>("EmailLogRetentionDays")
+                        .HasColumnType("integer");
 
                     b.Property<Guid?>("HomePageId")
                         .HasColumnType("uuid");
@@ -970,6 +979,9 @@ namespace Raytha.Infrastructure.Persistence.Migrations
 
                     b.Property<string>("TimeZone")
                         .HasColumnType("text");
+
+                    b.Property<int>("WebhookDeliveryRetentionDays")
+                        .HasColumnType("integer");
 
                     b.Property<string>("WebsiteUrl")
                         .HasColumnType("text");

@@ -12,12 +12,12 @@ namespace Raytha.Application.Webhooks.Commands;
 /// </summary>
 public class TestWebhook
 {
-    public const string EventName = "webhook.test";
-
     public record Command : LoggableEntityRequest<CommandResponseDto<ShortGuid>> { }
 
     public class Handler : IRequestHandler<Command, CommandResponseDto<ShortGuid>>
     {
+        private const string EventName = "webhook.test";
+
         private readonly IRaythaDbContext _db;
         private readonly IWebhookEventPublisher _publisher;
         private readonly ICurrentUser _currentUser;

@@ -26,9 +26,15 @@ export function QueryGate<T>({
 }) {
   if (query.isPending) {
     return (
-      <div className="space-y-3" aria-busy="true">
-        <Skeleton className="h-8 w-1/3" />
-        <Skeleton className="h-40 w-full" />
+      <div className="overflow-hidden rounded-xl border border-border bg-card shadow-card" aria-busy="true">
+        <div className="border-b border-border px-4 py-3">
+          <Skeleton className="h-8 w-64 max-w-full" />
+        </div>
+        <div className="space-y-3 p-4">
+          <Skeleton className="h-4 w-2/3" />
+          <Skeleton className="h-4 w-1/2" />
+          <Skeleton className="h-4 w-3/5" />
+        </div>
       </div>
     );
   }
@@ -46,7 +52,7 @@ export function QueryGate<T>({
     }
 
     return (
-      <p className="rounded-lg border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive" role="alert">
+      <p className="rounded-xl border border-destructive-border bg-destructive-soft px-4 py-3 text-sm text-destructive-soft-foreground" role="alert">
         {formatError(query.error)}
       </p>
     );
