@@ -20,6 +20,15 @@ internal static class PostgresFieldSql
     public static string ReservedColumn(string alias, string columnName) =>
         $"{alias}.\"{columnName}\"";
 
+    /// <summary>
+    /// A relationship value as <c>uuid</c>, or NULL when the stored text is not a hyphenated Guid.
+    /// A bare <c>::uuid</c> cast would fail the whole list query on one malformed row.
+    /// </summary>
+    public static string RelationshipId(string alias, string jsonColumn, string key) =>
+        $"CASE WHEN ({alias}.\"{jsonColumn}\"->>'{key}') ~* "
+        + "'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' "
+        + $"THEN ({alias}.\"{jsonColumn}\"->>'{key}')::uuid ELSE NULL END";
+
     public static string MultiSelectEmpty(string alias, string jsonColumn, string key) =>
         $"(({alias}.\"{jsonColumn}\"->'{key}') IS NULL OR NOT EXISTS "
         + $"(SELECT 1 FROM jsonb_array_elements_text({alias}.\"{jsonColumn}\"->'{key}')))";

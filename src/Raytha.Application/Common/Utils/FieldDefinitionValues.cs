@@ -12,12 +12,15 @@ public static class FieldDefinitionValues
 {
     /// <summary>
     /// Content fields whose stored form is the canonical one from <see cref="Parse"/>. Older types
-    /// keep what the client sent, because existing filters and sorts read that raw text.
+    /// keep what the client sent, because existing filters and sorts read that raw text. A
+    /// relationship is stored as a full Guid because list queries cast it to <c>uuid</c> to join
+    /// the related item.
     /// </summary>
     private static readonly HashSet<string> CanonicalContentFieldTypes =
     [
         BaseFieldType.Color.DeveloperName,
         BaseFieldType.Repeater.DeveloperName,
+        BaseFieldType.OneToOneRelationship.DeveloperName,
     ];
 
     public static FieldDefinition ToDefinition(this ContentTypeField field) =>
@@ -52,8 +55,8 @@ public static class FieldDefinitionValues
     }
 
     /// <summary>
-    /// The content to persist: color and repeater fields replaced by their canonical form,
-    /// everything else as sent.
+    /// The content to persist: color, repeater, and relationship fields replaced by their
+    /// canonical form, everything else as sent.
     /// </summary>
     public static IDictionary<string, dynamic> ToStoredContent(
         IEnumerable<ContentTypeField> fields,

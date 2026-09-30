@@ -1,4 +1,5 @@
 using System.Text.Json;
+using CSharpVitamins;
 using FluentAssertions;
 using Raytha.Application.Common.Utils;
 using Raytha.Domain.Entities;
@@ -123,6 +124,25 @@ public class FieldDefinitionValuesTests
             .RowErrors(Accent, Accent.FieldType.FieldValueFrom("#fff"), enforceRequired: true)
             .Should()
             .BeEmpty();
+    }
+
+    [Test]
+    public void Relationship_short_ids_are_stored_as_full_guids()
+    {
+        var relatedId = Guid.NewGuid();
+        var author = new ContentTypeField
+        {
+            DeveloperName = "author",
+            Label = "Author",
+            FieldType = BaseFieldType.OneToOneRelationship,
+        };
+
+        var stored = FieldDefinitionValues.ToStoredContent(
+            [author],
+            new Dictionary<string, dynamic> { ["author"] = Json($"\"{new ShortGuid(relatedId)}\"") }
+        );
+
+        ((string)stored["author"]).Should().Be(relatedId.ToString());
     }
 
     private static ContentTypeField Title() =>
