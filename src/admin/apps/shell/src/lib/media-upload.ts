@@ -35,6 +35,11 @@ export function fileDownloadUrl(objectKey: string): string {
   return `/raytha/media-items/objectkey/${encodeURIComponent(objectKey)}`;
 }
 
+/** Attachment fields store an object key, which templates resolve with `attachment_public_url`. */
+export function attachmentUrl(value: string): string {
+  return value.startsWith("/") || /^[a-z][a-z0-9+.-]*:/i.test(value) ? value : fileDownloadUrl(value);
+}
+
 function fileExtension(name: string): string {
   const index = name.lastIndexOf(".");
   return index >= 0 ? name.slice(index) : "";

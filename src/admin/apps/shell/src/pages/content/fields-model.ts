@@ -427,11 +427,12 @@ export function parseFieldValue(field: ContentField, raw: unknown): ContentField
       return { fieldType: "date", value: toDateInput(scalarString(stored)) };
     case "number":
       return { fieldType: "number", value: scalarString(stored) };
+    case "one_to_one_relationship":
+      return { fieldType: "one_to_one_relationship", value: relatedItemId(stored) };
     case "single_line_text":
     case "long_text":
     case "wysiwyg":
     case "attachment":
-    case "one_to_one_relationship":
     case "color":
       return { fieldType: field.fieldType, value: scalarString(stored) };
     default: {
@@ -439,6 +440,14 @@ export function parseFieldValue(field: ContentField, raw: unknown): ContentField
       return _exhaustive;
     }
   }
+}
+
+/** The admin API returns a relationship as the related item itself, not its id. */
+function relatedItemId(stored: unknown): string {
+  if (isRecord(stored)) {
+    return readString(stored, "id");
+  }
+  return scalarString(stored);
 }
 
 export function fieldValueForSave(value: ContentFieldValue): string | number | boolean | string[] | RepeaterRow[] {

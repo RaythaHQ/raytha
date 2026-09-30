@@ -4,6 +4,7 @@ import { ArrowDown, ArrowUp, ChevronDown, Plus, Rows3, Trash2 } from "lucide-rea
 import { useRef, useState, type ReactNode } from "react";
 import { Button, Checkbox, ColorInput, EmptyState, FileUpload, FormField, Input, Select, Textarea, cn } from "@raytha/ui";
 import { RichTextEditor } from "../../components/rich-text-editor";
+import { attachmentUrl } from "../../lib/media-upload";
 import { entityFields, readString } from "../entity";
 import {
   readRows,
@@ -288,7 +289,8 @@ function ColorControl({ definition, id, label, hint, value, onChange }: ControlP
 }
 
 function AttachmentControl({ definition, id, label, hint, value, onChange }: ControlProps) {
-  const url = textOf(value);
+  const stored = textOf(value);
+  const url = stored ? attachmentUrl(stored) : "";
   return (
     <div className="space-y-2" role="group" aria-labelledby={`${id}-label`}>
       <p id={`${id}-label`} className="text-sm font-medium">
@@ -311,7 +313,7 @@ function AttachmentControl({ definition, id, label, hint, value, onChange }: Con
         onUploaded={(files) => {
           const first = files[0];
           if (first) {
-            onChange(first.url || first.objectKey);
+            onChange(first.objectKey || first.url);
           }
         }}
       />

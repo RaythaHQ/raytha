@@ -1,5 +1,6 @@
 import { Checkbox, FileUpload, FormField, Input, Select, Textarea } from "@raytha/ui";
 import { RichTextEditor } from "../../components/rich-text-editor";
+import { attachmentUrl } from "../../lib/media-upload";
 import { DefinitionFieldControl } from "./definition-field-control";
 import {
   fieldAsDefinition,
@@ -177,7 +178,7 @@ export function ContentFieldControl({
           {hint ? <p className="text-xs text-muted-foreground">{hint}</p> : null}
           {value.value ? (
             <div className="flex items-center gap-2 text-sm">
-              <a href={value.value} className="text-primary hover:underline" target="_blank" rel="noreferrer">
+              <a href={attachmentUrl(value.value)} className="text-primary hover:underline" target="_blank" rel="noreferrer">
                 Current file
               </a>
               <button
@@ -194,7 +195,7 @@ export function ContentFieldControl({
             onUploaded={(files) => {
               const first = files[0];
               if (first) {
-                onChange({ fieldType: "attachment", value: first.url || first.objectKey });
+                onChange({ fieldType: "attachment", value: first.objectKey || first.url });
               }
             }}
           />
