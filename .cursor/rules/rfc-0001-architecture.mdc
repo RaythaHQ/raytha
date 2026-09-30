@@ -38,8 +38,8 @@ review.
   (`AddApplicationServices`, `AddInfrastructureServices`, `AddWebUIServices`).
   Registration for a layer's types MUST live there, not in `Startup`.
 - `Startup.Configure` owns middleware order. The order that matters:
-  exception handler → status-code pages → HTTPS/HSTS (non-Development) → admin
-  SPA dev proxy → static files → security headers → admin API JSON guard →
+ exception handler → status-code pages → HTTPS/HSTS (non-Development) → 1.5
+ admin URL redirects → admin SPA dev proxy → static files → security headers → admin API JSON guard →
   routing → rate limiter → authentication → authorization → endpoints.
 - Cross-layer contracts live in `Raytha.Application/Common/Interfaces`. The
   Application layer defines the interface; Infrastructure implements it.

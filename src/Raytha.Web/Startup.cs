@@ -87,6 +87,8 @@ public class Startup
             app.UseHsts();
         }
 
+        app.UseLegacyAdminRedirects();
+
         // Development: hand SPA navigations and assets under /raytha to Vite before the stale
         // bundle in wwwroot/raytha or a Razor page can answer. No-op outside Development.
         app.UseAdminSpaDevProxy(env);
