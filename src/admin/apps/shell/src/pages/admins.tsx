@@ -694,6 +694,12 @@ function RolePermissionMatrix({
   const labels = useMemo(() => new Map(catalog.map((option) => [option.developerName, option.label])), [catalog]);
   const selected = useMemo(() => new Set(systemPermissions), [systemPermissions]);
   const allContentTypes = fullAccess || selected.has(CONTENT_TYPES_PERMISSION);
+  const canBulkEdit = !readOnly && !fullAccess;
+  const grantableSystem = useMemo(
+    () => catalog.filter((option) => canToggleSystem(ceiling, option.developerName)).map((option) => option.developerName),
+    [catalog, ceiling],
+  );
+  const grantableSystemSelected = grantableSystem.filter((permission) => selected.has(permission)).length;
 
   const toggleSystem = (permission: string, checked: boolean) => {
     const next = new Set(selected);
@@ -725,12 +731,86 @@ function RolePermissionMatrix({
     onContent(updated);
   };
 
+  const writeSystem = (next: Set<string>) => {
+    onSystem(catalog.map((option) => option.developerName).filter((value) => next.has(value)));
+  };
+
+  const selectAllSystem = () => {
+    const next = new Set(selected);
+    for (const permission of grantableSystem) {
+      next.add(permission);
+    }
+    writeSystem(next);
+  };
+
+  const clearAllSystem = () => {
+    const next = new Set(selected);
+    for (const permission of grantableSystem) {
+      next.delete(permission);
+    }
+    writeSystem(next);
+  };
+
+  const writeAllContent = (checked: boolean) => {
+    const updated = { ...contentTypePermissions };
+    for (const type of typesQuery.data?.items ?? []) {
+      const developerName = readString(entityFields(type), "developerName");
+      const current = new Set(updated[type.id] ?? []);
+      for (const option of CONTENT_ACCESS) {
+        if (!canGrantContent(ceiling, developerName, option.value)) {
+          continue;
+        }
+        if (checked) {
+          current.add(option.value);
+        } else {
+          current.delete(option.value);
+        }
+      }
+      const nextAccess = withImpliedRead([...current]);
+      if (nextAccess.length === 0) {
+        delete updated[type.id];
+      } else {
+        updated[type.id] = nextAccess;
+      }
+    }
+    onContent(updated);
+  };
+
+  const contentTypes = typesQuery.data?.items ?? [];
+  let grantableContent = 0;
+  let grantedContent = 0;
+  if (canBulkEdit && !allContentTypes) {
+    for (const type of contentTypes) {
+      const developerName = readString(entityFields(type), "developerName");
+      const access = contentTypePermissions[type.id] ?? [];
+      for (const option of CONTENT_ACCESS) {
+        if (!canGrantContent(ceiling, developerName, option.value)) {
+          continue;
+        }
+        grantableContent += 1;
+        if (access.includes(option.value)) {
+          grantedContent += 1;
+        }
+      }
+    }
+  }
+
   return (
     <>
       <Card>
-        <CardHeader>
-          <CardTitle>System permissions</CardTitle>
-          <CardDescription>Areas of the admin this role can manage.</CardDescription>
+        <CardHeader className="gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div className="space-y-1">
+            <CardTitle>System permissions</CardTitle>
+            <CardDescription>Areas of the admin this role can manage.</CardDescription>
+          </div>
+          {canBulkEdit && grantableSystem.length > 0 && (
+            <BulkPermissionActions
+              onSelect={selectAllSystem}
+              onClear={clearAllSystem}
+              selectDisabled={grantableSystemSelected === grantableSystem.length}
+              clearDisabled={grantableSystemSelected === 0}
+            />
+          )}
         </CardHeader>
         <CardContent>
           {catalogQuery.isPending ? (
@@ -754,13 +834,23 @@ function RolePermissionMatrix({
         </CardContent>
       </Card>
       <Card>
-        <CardHeader>
-          <CardTitle>Content types</CardTitle>
-          <CardDescription>
-            {allContentTypes
-              ? `${fullAccess ? "Super Admin" : "Manage Content Types"} grants read, edit, and configure on every content type, including ones created later.`
-              : "Access per content type. Edit and Configure include Read."}
-          </CardDescription>
+        <CardHeader className="gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div className="space-y-1">
+            <CardTitle>Content types</CardTitle>
+            <CardDescription>
+              {allContentTypes
+                ? `${fullAccess ? "Super Admin" : "Manage Content Types"} grants read, edit, and configure on every content type, including ones created later.`
+                : "Access per content type. Edit and Configure include Read."}
+            </CardDescription>
+          </div>
+          {canBulkEdit && !allContentTypes && grantableContent > 0 && (
+            <BulkPermissionActions
+              onSelect={() => writeAllContent(true)}
+              onClear={() => writeAllContent(false)}
+              selectDisabled={grantedContent === grantableContent}
+              clearDisabled={grantedContent === 0}
+            />
+          )}
         </CardHeader>
         <CardContent className="px-0 pb-2">
           {typesQuery.isPending ? (
@@ -840,6 +930,43 @@ function RolePermissionMatrix({
         </CardContent>
       </Card>
     </>
+  );
+}
+
+function BulkPermissionActions({
+  onSelect,
+  onClear,
+  selectDisabled,
+  clearDisabled,
+}: {
+  onSelect: () => void;
+  onClear: () => void;
+  selectDisabled: boolean;
+  clearDisabled: boolean;
+}) {
+  return (
+    <div className="flex shrink-0 gap-1">
+      <Button
+        type="button"
+        variant="ghost"
+        size="sm"
+        disabled={selectDisabled}
+        onClick={onSelect}
+        title="Select every permission you can grant"
+      >
+        Select all
+      </Button>
+      <Button
+        type="button"
+        variant="ghost"
+        size="sm"
+        disabled={clearDisabled}
+        onClick={onClear}
+        title="Clear every permission you can change"
+      >
+        Clear all
+      </Button>
+    </div>
   );
 }
 

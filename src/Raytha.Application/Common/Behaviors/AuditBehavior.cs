@@ -1,6 +1,7 @@
-﻿using System.Text.Json;
+﻿using System.Reflection;
 using CSharpVitamins;
 using Mediator;
+using Raytha.Application.Common.Attributes;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Models;
 using Raytha.Application.Common.Utils;
@@ -40,20 +41,51 @@ public class AuditBehavior<TMessage, TResponse> : IPipelineBehavior<TMessage, TR
             dynamic messageAsDynamic = message as dynamic;
             if (responseAsDynamic.Success)
             {
+                var redactIdentifier = message
+                    .GetType()
+                    .GetCustomAttribute<AuditCredentialIdentifierAttribute>()
+                    is not null;
                 var auditLog = new AuditLog
                 {
                     Id = Guid.NewGuid(),
-                    Request = JsonSerializer.Serialize(messageAsDynamic),
+                    Request = AuditRequestSanitizer.Sanitize(message, redactIdentifier),
                     Category = messageAsDynamic.GetLogName(),
                     UserEmail = _currentUser.EmailAddress,
                     ImpersonatorEmail = _currentUser.ImpersonatorEmailAddress,
                     IpAddress = _currentUser.RemoteIpAddress,
-                    EntityId = isLoggableEntityRequest ? (ShortGuid)messageAsDynamic.Id : null,
+                    EntityId = EntityIdFor(message, response, isLoggableEntityRequest, redactIdentifier),
                 };
                 _db.AuditLogs.Add(auditLog);
                 await _db.SaveChangesAsync(cancellationToken);
             }
         }
         return response;
+    }
+
+    /// <summary>
+    /// A credential identifier (a reset token) must not be stored as the audited
+    /// entity. Point the row at the user id the command returned instead.
+    /// </summary>
+    private static Guid? EntityIdFor(
+        object message,
+        object response,
+        bool isLoggableEntityRequest,
+        bool redactIdentifier
+    )
+    {
+        if (!isLoggableEntityRequest)
+        {
+            return null;
+        }
+
+        if (redactIdentifier)
+        {
+            var result = response.GetType().GetProperty("Result")?.GetValue(response);
+            return result is ShortGuid userId && userId.Guid != Guid.Empty ? userId.Guid : null;
+        }
+
+        dynamic messageAsDynamic = message;
+        ShortGuid id = messageAsDynamic.Id;
+        return id.Guid == Guid.Empty ? null : id.Guid;
     }
 }

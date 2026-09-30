@@ -32,7 +32,8 @@ export function AuditLogPage() {
   const location = useLocation();
   const listQuery = listQueryFromSearchString(location.searchStr);
   const orderBy = listQuery.orderBy;
-  const sort = parseOrderBy(orderBy);
+  const effectiveOrderBy = orderBy ?? "CreationTime desc";
+  const sort = parseOrderBy(effectiveOrderBy);
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("");
   const [userEmail, setUserEmail] = useState("");
@@ -63,6 +64,15 @@ export function AuditLogPage() {
   });
 
   const pageCount = query.data ? Math.max(1, Math.ceil(query.data.totalCount / query.data.pageSize)) : 1;
+
+  const sortBy = (columnKey: string, naturalDir: "asc" | "desc") => {
+    setPageNumber(1);
+    void navigate({
+      to: ".",
+      search: compactListQuery({ orderBy: nextOrderBy(effectiveOrderBy, columnKey, naturalDir) }),
+      replace: true,
+    });
+  };
 
   return (
     <div className="space-y-6">
@@ -149,20 +159,20 @@ export function AuditLogPage() {
                 <TableHeader>
                   <TableRow>
                     <TableHead className="w-10"><span className="sr-only">Changes</span></TableHead>
-                    <TableHead>When</TableHead>
+                    <SortableTableHead
+                      column="CreationTime"
+                      label="When"
+                      sort={sort.column}
+                      dir={sort.dir}
+                      naturalDir="desc"
+                      onSort={sortBy}
+                    />
                     <SortableTableHead
                       column="Category"
                       label="Category"
                       sort={sort.column}
                       dir={sort.dir}
-                      onSort={(columnKey, naturalDir) => {
-                        setPageNumber(1);
-                        void navigate({
-                          to: ".",
-                          search: compactListQuery({ orderBy: nextOrderBy(orderBy, columnKey, naturalDir) }),
-                          replace: true,
-                        });
-                      }}
+                      onSort={sortBy}
                     />
                     <TableHead>User</TableHead>
                     <TableHead>IP</TableHead>
