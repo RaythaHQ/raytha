@@ -21,41 +21,35 @@ public interface IWebhookEventCatalog
 public sealed class WebhookEventCatalog : IWebhookEventCatalog
 {
     public WebhookEventCatalog()
-        : this(new[] { typeof(WebhookEventCatalog).Assembly }) { }
-
-    public WebhookEventCatalog(IEnumerable<Assembly> assemblies)
     {
         var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         var events = new List<WebhookEventDescriptor>();
 
-        foreach (var assembly in assemblies.Distinct())
+        Type[] types;
+        try
         {
-            Type[] types;
-            try
+            types = typeof(WebhookEventCatalog).Assembly.GetTypes();
+        }
+        catch (ReflectionTypeLoadException ex)
+        {
+            types = ex.Types.Where(t => t is not null).Cast<Type>().ToArray();
+        }
+
+        foreach (var type in types)
+        {
+            var attr = type.GetCustomAttribute<WebhookEventAttribute>();
+            if (attr is null || !seen.Add(attr.EventName))
             {
-                types = assembly.GetTypes();
-            }
-            catch (ReflectionTypeLoadException ex)
-            {
-                types = ex.Types.Where(t => t is not null).Cast<Type>().ToArray();
+                continue;
             }
 
-            foreach (var type in types)
-            {
-                var attr = type.GetCustomAttribute<WebhookEventAttribute>();
-                if (attr is null || !seen.Add(attr.EventName))
-                {
-                    continue;
-                }
-
-                events.Add(
-                    new WebhookEventDescriptor(
-                        attr.EventName,
-                        attr.DisplayName ?? attr.EventName,
-                        attr.Group
-                    )
-                );
-            }
+            events.Add(
+                new WebhookEventDescriptor(
+                    attr.EventName,
+                    attr.DisplayName ?? attr.EventName,
+                    attr.Group
+                )
+            );
         }
 
         Events = events

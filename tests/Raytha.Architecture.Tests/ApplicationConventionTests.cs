@@ -90,6 +90,19 @@ public class ApplicationConventionTests
         catalog.IsKnownEvent("does.not_exist").Should().BeFalse();
     }
 
+    [Test]
+    public void Webhook_event_catalog_resolved_from_the_container_discovers_the_application_events()
+    {
+        var services = new ServiceCollection();
+        services.AddApplicationServices();
+        using var provider = services.BuildServiceProvider();
+
+        var catalog = provider.GetRequiredService<IWebhookEventCatalog>();
+
+        catalog.Events.Should().HaveCount(new WebhookEventCatalog().Events.Count);
+        catalog.IsKnownEvent("content_item.created").Should().BeTrue();
+    }
+
     /// <summary>
     /// Pre-2.0 commands that deliberately bypass the audit log (UI-state tweaks with no
     /// business meaning). Add here only with a reason; new commands must be auditable.
