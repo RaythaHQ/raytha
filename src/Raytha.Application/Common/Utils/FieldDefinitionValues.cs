@@ -1,3 +1,5 @@
+using System.Globalization;
+using System.Text.RegularExpressions;
 using Raytha.Domain.Entities;
 using Raytha.Domain.ValueObjects.FieldTypes;
 using Raytha.Domain.ValueObjects.FieldValues;
@@ -14,14 +16,18 @@ public static class FieldDefinitionValues
     /// Content fields whose stored form is the canonical one from <see cref="Parse"/>. Older types
     /// keep what the client sent, because existing filters and sorts read that raw text. A
     /// relationship is stored as a full Guid because list queries cast it to <c>uuid</c> to join
-    /// the related item.
+    /// the related item. A date is stored as ISO so it sorts and filters the same under every
+    /// organization date format.
     /// </summary>
     private static readonly HashSet<string> CanonicalContentFieldTypes =
     [
         BaseFieldType.Color.DeveloperName,
         BaseFieldType.Repeater.DeveloperName,
         BaseFieldType.OneToOneRelationship.DeveloperName,
+        BaseFieldType.Date.DeveloperName,
     ];
+
+    private static readonly Regex IsoDatePrefix = new(@"^\d{4}-\d{2}-\d{2}", RegexOptions.Compiled);
 
     public static FieldDefinition ToDefinition(this ContentTypeField field) =>
         new()
@@ -55,7 +61,7 @@ public static class FieldDefinitionValues
     }
 
     /// <summary>
-    /// The content to persist: color, repeater, and relationship fields replaced by their
+    /// The content to persist: color, repeater, relationship, and date fields replaced by their
     /// canonical form, everything else as sent.
     /// </summary>
     public static IDictionary<string, dynamic> ToStoredContent(
@@ -113,8 +119,8 @@ public static class FieldDefinitionValues
                 return number.Value;
             case BooleanFieldValue flag:
                 return flag.HasValue && flag.Value;
-            case DateTimeFieldValue:
-                return value.HasValue ? raw!.ToString()!.Trim() : null;
+            case DateTimeFieldValue date:
+                return date.HasValue ? IsoDate(raw!.ToString()!.Trim(), ((DateTime?)date)!.Value) : null;
         }
 
         if (!value.HasValue)
@@ -160,6 +166,11 @@ public static class FieldDefinitionValues
         }
         return rows;
     }
+
+    private static string IsoDate(string raw, DateTime parsed) =>
+        IsoDatePrefix.IsMatch(raw) ? raw
+        : parsed.TimeOfDay == TimeSpan.Zero ? parsed.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)
+        : parsed.ToString("yyyy-MM-ddTHH:mm:ss", CultureInfo.InvariantCulture);
 
     private static string LabelOf(FieldDefinition definition) =>
         string.IsNullOrEmpty(definition.Label) ? definition.DeveloperName : definition.Label;

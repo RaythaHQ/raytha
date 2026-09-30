@@ -154,4 +154,39 @@ public class FieldDefinitionValuesTests
         };
 
     private static JsonElement Json(string json) => JsonDocument.Parse(json).RootElement.Clone();
+
+    [TestCase("\"01/15/2025\"", "2025-01-15")]
+    [TestCase("\"1/15/2025 12:00:00 AM\"", "2025-01-15")]
+    [TestCase("\"1/15/2025 3:30:00 PM\"", "2025-01-15T15:30:00")]
+    [TestCase("\"2025-01-15\"", "2025-01-15")]
+    [TestCase("\"2025-01-15T10:00:00Z\"", "2025-01-15T10:00:00Z")]
+    public void Stored_content_writes_dates_as_iso(string json, string expected)
+    {
+        var eventDate = new ContentTypeField
+        {
+            DeveloperName = "event_date",
+            Label = "Event date",
+            FieldType = BaseFieldType.Date,
+        };
+
+        var stored = FieldDefinitionValues.ToStoredContent(
+            [eventDate],
+            new Dictionary<string, dynamic> { ["event_date"] = Json(json) }
+        );
+
+        ((object)stored["event_date"]).Should().Be(expected);
+    }
+
+    [Test]
+    public void Stored_content_clears_an_empty_date()
+    {
+        var eventDate = new ContentTypeField { DeveloperName = "event_date", FieldType = BaseFieldType.Date };
+
+        var stored = FieldDefinitionValues.ToStoredContent(
+            [eventDate],
+            new Dictionary<string, dynamic> { ["event_date"] = Json("\"\"") }
+        );
+
+        ((object?)stored["event_date"]).Should().BeNull();
+    }
 }
