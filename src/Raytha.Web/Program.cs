@@ -23,11 +23,15 @@ public class Program
             {
                 webBuilder.UseRaythaSentry();
                 webBuilder.UseStartup<Startup>();
-                // 0.0.0.0 so a Tailscale (or LAN) address can reach the dev server.
-                // localhost still works. Override with ASPNETCORE_URLS.
-                webBuilder.UseUrls(
-                    Environment.GetEnvironmentVariable("ASPNETCORE_URLS")
-                        ?? "http://0.0.0.0:5200"
-                );
+                // 0.0.0.0 so a Tailscale (or LAN) address can reach the dev server. Only a
+                // fallback: the .NET container images listen on 8080 via ASPNETCORE_HTTP_PORTS.
+                if (
+                    string.IsNullOrEmpty(webBuilder.GetSetting(WebHostDefaults.ServerUrlsKey))
+                    && string.IsNullOrEmpty(webBuilder.GetSetting(WebHostDefaults.HttpPortsKey))
+                    && string.IsNullOrEmpty(webBuilder.GetSetting(WebHostDefaults.HttpsPortsKey))
+                )
+                {
+                    webBuilder.UseUrls("http://0.0.0.0:5200");
+                }
             });
 }

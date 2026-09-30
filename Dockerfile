@@ -1,6 +1,9 @@
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS base
 WORKDIR /app
 EXPOSE 8080
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends curl \
+  && rm -rf /var/lib/apt/lists/*
 HEALTHCHECK --interval=30s --timeout=5s --start-period=40s --retries=3 \
   CMD curl -fsS http://127.0.0.1:8080/healthz || exit 1
 
@@ -11,20 +14,15 @@ COPY ["src/Raytha.Domain/Raytha.Domain.csproj", "src/Raytha.Domain/"]
 COPY ["src/Raytha.Application/Raytha.Application.csproj", "src/Raytha.Application/"]
 COPY ["src/Raytha.Infrastructure/Raytha.Infrastructure.csproj", "src/Raytha.Infrastructure/"]
 COPY ["src/Raytha.Web/Raytha.Web.csproj", "src/Raytha.Web/"]
-COPY ["tests/Raytha.Domain.UnitTests/Raytha.Domain.UnitTests.csproj", "tests/Raytha.Domain.UnitTests/"]
-COPY ["tests/Raytha.Application.UnitTests/Raytha.Application.UnitTests.csproj", "tests/Raytha.Application.UnitTests/"]
-COPY ["tests/Raytha.Infrastructure.UnitTests/Raytha.Infrastructure.UnitTests.csproj", "tests/Raytha.Infrastructure.UnitTests/"]
 COPY ["Directory.Build.props", ""]
 COPY ["Directory.Packages.props", ""]
 COPY ["VERSION", ""]
-COPY ["Raytha.sln", ""]
 
 ARG DOTNET_RESTORE_CLI_ARGS=
-RUN dotnet restore "Raytha.sln" $DOTNET_RESTORE_CLI_ARGS
+RUN dotnet restore "src/Raytha.Web/Raytha.Web.csproj" $DOTNET_RESTORE_CLI_ARGS
 
 COPY . .
-RUN dotnet build "Raytha.sln" -c Release --no-restore
-RUN dotnet publish -c Release --no-build -o /app "src/Raytha.Web/Raytha.Web.csproj"
+RUN dotnet publish "src/Raytha.Web/Raytha.Web.csproj" -c Release --no-restore -o /app
 
 FROM base AS final
 WORKDIR /app
