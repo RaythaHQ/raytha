@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using CSharpVitamins;
 using Microsoft.AspNetCore.Authorization;
@@ -114,6 +115,97 @@ public class SitePagesController : BaseController
     )
     {
         var input = new UnpublishSitePage.Command { Id = sitePageId };
+        var response = await Mediator.Send(input);
+        if (!response.Success)
+        {
+            return BadRequest(response);
+        }
+        return response;
+    }
+
+    [HttpGet("widget-definitions", Name = "GetWidgetDefinitions")]
+    public async Task<
+        ActionResult<IQueryResponseDto<IReadOnlyList<WidgetDefinitionDto>>>
+    > GetWidgetDefinitions()
+    {
+        var input = new GetWidgetDefinitions.Query();
+        var response =
+            await Mediator.Send(input) as QueryResponseDto<IReadOnlyList<WidgetDefinitionDto>>;
+        return response;
+    }
+
+    [HttpPut("{sitePageId}/widgets", Name = "SaveSitePageWidgets")]
+    public async Task<ActionResult<ICommandResponseDto<ShortGuid>>> SaveSitePageWidgets(
+        string sitePageId,
+        [FromBody] SaveWidgets.Command request
+    )
+    {
+        var input = request with { Id = sitePageId };
+        var response = await Mediator.Send(input);
+        if (!response.Success)
+        {
+            return BadRequest(response);
+        }
+        return response;
+    }
+
+    [HttpPut("{sitePageId}/widgets/{widgetId}", Name = "EditSitePageWidget")]
+    public async Task<ActionResult<ICommandResponseDto<ShortGuid>>> EditSitePageWidget(
+        string sitePageId,
+        string widgetId,
+        [FromBody] EditWidget.Command request
+    )
+    {
+        var input = request with { SitePageId = sitePageId, WidgetId = widgetId };
+        var response = await Mediator.Send(input);
+        if (!response.Success)
+        {
+            return BadRequest(response);
+        }
+        return response;
+    }
+
+    [HttpDelete("{sitePageId}/widgets/{widgetId}", Name = "DeleteSitePageWidget")]
+    public async Task<ActionResult<ICommandResponseDto<ShortGuid>>> DeleteSitePageWidget(
+        string sitePageId,
+        string widgetId,
+        string sectionName
+    )
+    {
+        var input = new DeleteWidget.Command
+        {
+            SitePageId = sitePageId,
+            WidgetId = widgetId,
+            SectionName = sectionName,
+        };
+        var response = await Mediator.Send(input);
+        if (!response.Success)
+        {
+            return BadRequest(response);
+        }
+        return response;
+    }
+
+    [HttpPut("{sitePageId}/discard-draft", Name = "DiscardDraftSitePage")]
+    public async Task<ActionResult<ICommandResponseDto<ShortGuid>>> DiscardDraftSitePage(
+        string sitePageId
+    )
+    {
+        var input = new DiscardDraftSitePage.Command { Id = sitePageId };
+        var response = await Mediator.Send(input);
+        if (!response.Success)
+        {
+            return BadRequest(response);
+        }
+        return response;
+    }
+
+    [HttpPut("{sitePageId}/set-as-home-page", Name = "SetSitePageAsHomePage")]
+    public async Task<ActionResult<ICommandResponseDto<ShortGuid>>> SetSitePageAsHomePage(
+        string sitePageId
+    )
+    {
+        var input = new SetSitePageAsHomePage.Command { Id = sitePageId };
         var response = await Mediator.Send(input);
         if (!response.Success)
         {

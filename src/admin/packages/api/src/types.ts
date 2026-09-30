@@ -65,6 +65,13 @@ export interface PagedResult<T> {
   pageSize: number;
 }
 
+/** A stored admin API key. The secret is not included; it is returned once at creation. */
+export interface AdminApiKey {
+  id: string;
+  creationTime: string;
+  creatorName: string;
+}
+
 export interface ProblemDetails {
   type?: string;
   title?: string;

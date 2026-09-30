@@ -23,6 +23,7 @@ import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tansta
 import { Link, useNavigate, useParams } from "@tanstack/react-router";
 import { Lock, ShieldCheck } from "lucide-react";
 import { useId, useMemo, useState, type FormEvent, type ReactNode } from "react";
+import { copyText } from "./editors/clipboard";
 import { ImpersonateCard } from "../components/impersonate-card";
 import { ListBackLink } from "../components/list-back-link";
 import { useDocumentTitle } from "../lib/document-title";
@@ -433,6 +434,7 @@ function AdminEditForm({ admin }: { admin: EntityRef }) {
               </CardContent>
             )}
           </Card>
+          <ApiKeysCard adminId={admin.id} isActive={isActive} />
           {!isSelf && (
             <div className="space-y-2">
               <DangerZone
@@ -1171,6 +1173,113 @@ function RoleBadges({ roles }: { roles: RoleSummary[] }) {
         </Badge>
       ))}
     </span>
+  );
+}
+
+const API_KEY_LIMIT = 10;
+
+function ApiKeysCard({ adminId, isActive }: { adminId: string; isActive: boolean }) {
+  const queryClient = useQueryClient();
+  const [revealed, setRevealed] = useState<string | null>(null);
+  const [revokeId, setRevokeId] = useState<string | null>(null);
+  const keys = useQuery({
+    queryKey: ["admins", adminId, "api-keys"],
+    queryFn: () => adminApi.admins.apiKeys(adminId).list(),
+  });
+  const create = useMutation({
+    mutationFn: () => adminApi.admins.apiKeys(adminId).create(),
+    onSuccess: (created) => {
+      setRevealed(created.apiKey);
+      void queryClient.invalidateQueries({ queryKey: ["admins", adminId, "api-keys"] });
+    },
+  });
+  const revoke = useMutation({
+    mutationFn: (keyId: string) => adminApi.admins.apiKeys(adminId).remove(keyId),
+    onSuccess: () => {
+      toast.success("API key revoked");
+      setRevokeId(null);
+      void queryClient.invalidateQueries({ queryKey: ["admins", adminId, "api-keys"] });
+    },
+    onError: () => setRevokeId(null),
+  });
+
+  const items = keys.data?.items ?? [];
+  const atLimit = (keys.data?.totalCount ?? 0) >= API_KEY_LIMIT;
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>API keys</CardTitle>
+        <CardDescription>
+          A key signs in as this admin and can do whatever their roles allow. The secret is shown once, when you create
+          it. Each admin can have {API_KEY_LIMIT}.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {revealed && (
+          <div className="space-y-2 rounded-lg border border-warning-border bg-warning-soft p-3">
+            <p className="text-sm font-medium text-foreground">Copy this key now. It will not be shown again.</p>
+            <div className="flex flex-wrap gap-2">
+              <Input readOnly value={revealed} aria-label="New API key" className="min-w-0 flex-1 font-mono" />
+              <Button type="button" variant="outline" onClick={() => void copyText(revealed)}>
+                Copy
+              </Button>
+            </div>
+          </div>
+        )}
+        {keys.isPending ? (
+          <p className="text-sm text-muted-foreground">Loading API keys…</p>
+        ) : items.length === 0 ? (
+          <p className="text-sm text-muted-foreground">No API keys yet.</p>
+        ) : (
+          <ul className="divide-y divide-border rounded-lg border border-border">
+            {items.map((key) => (
+              <li key={key.id} className="flex items-center justify-between gap-3 px-3 py-2">
+                <span className="min-w-0 text-sm text-foreground">
+                  Created {formatWhen(key.creationTime) || "unknown"}
+                  {key.creatorName ? ` by ${key.creatorName}` : ""}
+                </span>
+                <Button type="button" variant="outline" size="sm" onClick={() => setRevokeId(key.id)}>
+                  Revoke
+                </Button>
+              </li>
+            ))}
+          </ul>
+        )}
+        <InlineError error={keys.error ?? create.error ?? revoke.error} />
+        {isActive ? (
+          <div className="space-y-2">
+            <Button type="button" variant="outline" loading={create.isPending} disabled={atLimit} onClick={() => create.mutate()}>
+              Create API key
+            </Button>
+            {atLimit && (
+              <p className="text-sm text-muted-foreground">
+                This admin already has {API_KEY_LIMIT} API keys. Revoke one to create another.
+              </p>
+            )}
+          </div>
+        ) : (
+          <p className="text-sm text-muted-foreground">Restore this account before creating an API key.</p>
+        )}
+        <ConfirmDialog
+          open={revokeId !== null}
+          onOpenChange={(open) => {
+            if (!open) {
+              setRevokeId(null);
+            }
+          }}
+          title="Revoke this API key?"
+          body="Anything using it will stop being able to sign in. This cannot be undone."
+          confirmLabel="Revoke key"
+          onConfirm={() => {
+            if (revokeId) {
+              revoke.mutate(revokeId);
+            }
+          }}
+          pending={revoke.isPending}
+        />
+      </CardContent>
+    </Card>
   );
 }
 

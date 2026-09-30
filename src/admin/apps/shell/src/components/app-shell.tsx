@@ -33,6 +33,7 @@ import {
   Activity,
   ArrowUpRight,
   Blocks,
+  BookOpen,
   ChevronsUpDown,
   FileText,
   Globe,
@@ -413,6 +414,15 @@ function BrandMark({ collapsed }: { collapsed: boolean }) {
   );
 }
 
+/** Scalar reference for this instance, including a configured path base. */
+function apiReferenceHref(): string {
+  const pathBase = (currentSession()?.organization.pathBase ?? window.location.pathname.split("/raytha")[0] ?? "").replace(
+    /\/+$/,
+    "",
+  );
+  return `${pathBase}/raytha/api`;
+}
+
 function SidebarContent({
   collapsed,
   pathname,
@@ -472,6 +482,26 @@ function SidebarContent({
           </div>
         ))}
       </nav>
+
+      <div className={cn("shrink-0 border-t border-sidebar-border", collapsed ? "px-2 py-2" : "px-3 py-2")}>
+        <a
+          href={apiReferenceHref()}
+          target="_blank"
+          rel="noreferrer"
+          title={collapsed ? "API reference" : undefined}
+          className={navItemClassName(false, collapsed)}
+        >
+          <BookOpen className={iconClassName(false)} aria-hidden />
+          {collapsed ? (
+            <span className="sr-only">API reference</span>
+          ) : (
+            <>
+              <span className="truncate">API reference</span>
+              <ArrowUpRight className="ml-auto size-3.5 shrink-0 text-sidebar-muted" aria-hidden />
+            </>
+          )}
+        </a>
+      </div>
     </div>
   );
 }
@@ -632,6 +662,13 @@ export function AppShell() {
       group: "Actions",
       icon: <ArrowUpRight />,
       onSelect: () => window.open("/", "_blank", "noopener,noreferrer"),
+    },
+    {
+      id: "api-reference",
+      label: "API reference",
+      group: "Actions",
+      icon: <BookOpen />,
+      onSelect: () => window.open(apiReferenceHref(), "_blank", "noopener,noreferrer"),
     },
     {
       id: "sign-out",

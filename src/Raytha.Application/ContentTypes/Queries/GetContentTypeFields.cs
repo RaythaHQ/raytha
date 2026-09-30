@@ -14,7 +14,7 @@ public class GetContentTypeFields
         : GetPagedEntitiesInputDto,
             IRequest<IQueryResponseDto<ListResultDto<ContentTypeFieldDto>>>
     {
-        public override string OrderBy { get; init; } = $"Label {SortOrder.Ascending}";
+        public override string OrderBy { get; init; } = $"Label {SortOrder.ASCENDING}";
         public ShortGuid ContentTypeId { get; init; } = ShortGuid.Empty;
         public string DeveloperName { get; init; } = null!;
         public bool ShowDeletedOnly { get; init; } = false;

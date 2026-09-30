@@ -3,6 +3,7 @@ using CSharpVitamins;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Raytha.Application.Common.Models;
+using Raytha.Application.Themes.Queries;
 using Raytha.Application.Themes.WidgetTemplates;
 using Raytha.Application.Themes.WidgetTemplates.Commands;
 using Raytha.Application.Themes.WidgetTemplates.Queries;
@@ -84,6 +85,53 @@ public class WidgetTemplatesController : BaseController
             ThemeDeveloperName = themeDeveloperName,
             TemplateDeveloperName = templateDeveloperName,
         };
+        var response = await Mediator.Send(input);
+        if (!response.Success)
+        {
+            return BadRequest(response);
+        }
+        return response;
+    }
+
+    [HttpPost("theme/{themeDeveloperName}", Name = "CreateWidgetTemplate")]
+    public async Task<ActionResult<ICommandResponseDto<ShortGuid>>> CreateWidgetTemplate(
+        string themeDeveloperName,
+        [FromBody] CreateWidgetTemplate.Command request
+    )
+    {
+        var theme = await Mediator.Send(
+            new GetThemeByDeveloperName.Query { DeveloperName = themeDeveloperName }
+        );
+        var input = request with { ThemeId = theme.Result.Id };
+        var response = await Mediator.Send(input);
+        if (!response.Success)
+        {
+            return BadRequest(response);
+        }
+        return CreatedAtAction(
+            nameof(GetWidgetTemplateById),
+            new { widgetTemplateId = response.Result },
+            response
+        );
+    }
+
+    [HttpDelete(
+        "theme/{themeDeveloperName}/template/{templateDeveloperName}",
+        Name = "DeleteWidgetTemplate"
+    )]
+    public async Task<ActionResult<ICommandResponseDto<ShortGuid>>> DeleteWidgetTemplate(
+        string themeDeveloperName,
+        string templateDeveloperName
+    )
+    {
+        var template = await Mediator.Send(
+            new GetWidgetTemplateByDeveloperNames.Query
+            {
+                ThemeDeveloperName = themeDeveloperName,
+                TemplateDeveloperName = templateDeveloperName,
+            }
+        );
+        var input = new DeleteWidgetTemplate.Command { Id = template.Result.Id };
         var response = await Mediator.Send(input);
         if (!response.Success)
         {

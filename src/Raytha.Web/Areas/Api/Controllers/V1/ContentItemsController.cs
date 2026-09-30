@@ -198,6 +198,94 @@ public class ContentItemsController : BaseController
         return response;
     }
 
+    [HttpPut(
+        $"{{{RouteConstants.CONTENT_TYPE_DEVELOPER_NAME}}}/{{contentItemId}}/set-as-home-page",
+        Name = "SetContentItemAsHomePage"
+    )]
+    [Authorize(
+        Policy = RaythaApiAuthorizationHandler.POLICY_PREFIX
+            + BuiltInContentTypePermission.CONTENT_TYPE_EDIT_PERMISSION
+    )]
+    public async Task<ActionResult<ICommandResponseDto<ShortGuid>>> SetContentItemAsHomePage(
+        string contentTypeDeveloperName,
+        string contentItemId
+    )
+    {
+        var input = new SetAsHomePage.Command { Id = contentItemId };
+        var response = await Mediator.Send(input);
+        if (!response.Success)
+        {
+            return BadRequest(response);
+        }
+        return response;
+    }
+
+    [HttpPut(
+        $"{{{RouteConstants.CONTENT_TYPE_DEVELOPER_NAME}}}/{{contentItemId}}/discard-draft",
+        Name = "DiscardDraftContentItem"
+    )]
+    [Authorize(
+        Policy = RaythaApiAuthorizationHandler.POLICY_PREFIX
+            + BuiltInContentTypePermission.CONTENT_TYPE_EDIT_PERMISSION
+    )]
+    public async Task<ActionResult<ICommandResponseDto<ShortGuid>>> DiscardDraftContentItem(
+        string contentTypeDeveloperName,
+        string contentItemId
+    )
+    {
+        var input = new DiscardDraftContentItem.Command { Id = contentItemId };
+        var response = await Mediator.Send(input);
+        if (!response.Success)
+        {
+            return BadRequest(response);
+        }
+        return response;
+    }
+
+    [HttpPut(
+        $"{{{RouteConstants.CONTENT_TYPE_DEVELOPER_NAME}}}/{{contentItemId}}/restore",
+        Name = "RestoreContentItem"
+    )]
+    [Authorize(
+        Policy = RaythaApiAuthorizationHandler.POLICY_PREFIX
+            + BuiltInContentTypePermission.CONTENT_TYPE_CONFIG_PERMISSION
+    )]
+    public async Task<ActionResult<ICommandResponseDto<ShortGuid>>> RestoreContentItem(
+        string contentTypeDeveloperName,
+        string contentItemId
+    )
+    {
+        var input = new RestoreContentItem.Command { Id = contentItemId };
+        var response = await Mediator.Send(input);
+        if (!response.Success)
+        {
+            return BadRequest(response);
+        }
+        return response;
+    }
+
+    [HttpDelete(
+        $"{{{RouteConstants.CONTENT_TYPE_DEVELOPER_NAME}}}/trash/{{contentItemId}}",
+        Name = "DeleteAlreadyDeletedContentItem"
+    )]
+    [Authorize(
+        Policy = RaythaApiAuthorizationHandler.POLICY_PREFIX
+            + BuiltInContentTypePermission.CONTENT_TYPE_CONFIG_PERMISSION
+    )]
+    public async Task<ActionResult<ICommandResponseDto<ShortGuid>>> DeleteAlreadyDeletedContentItem(
+        string contentTypeDeveloperName,
+        string contentItemId
+    )
+    {
+        var input = new DeleteAlreadyDeletedContentItem.Command { Id = contentItemId };
+        var response = await Mediator.Send(input);
+        if (!response.Success)
+        {
+            return BadRequest(response);
+        }
+        return response;
+    }
+
     [HttpGet(
         $"{{{RouteConstants.CONTENT_TYPE_DEVELOPER_NAME}}}/route/{{routePath}}",
         Name = "GetRouteByPath"

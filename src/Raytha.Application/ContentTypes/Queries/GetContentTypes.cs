@@ -13,7 +13,7 @@ public class GetContentTypes
         : GetPagedEntitiesInputDto,
             IRequest<IQueryResponseDto<ListResultDto<ContentTypeDto>>>
     {
-        public override string OrderBy { get; init; } = $"LabelPlural {SortOrder.Ascending}";
+        public override string OrderBy { get; init; } = $"LabelPlural {SortOrder.ASCENDING}";
     }
 
     public class Handler : IRequestHandler<Query, IQueryResponseDto<ListResultDto<ContentTypeDto>>>

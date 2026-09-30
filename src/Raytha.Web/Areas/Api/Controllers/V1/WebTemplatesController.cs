@@ -109,4 +109,29 @@ public class WebTemplatesController : BaseController
         }
         return response;
     }
+
+    [HttpDelete(
+        "theme/{themeDeveloperName}/template/{templateDeveloperName}",
+        Name = "DeleteWebTemplate"
+    )]
+    public async Task<ActionResult<ICommandResponseDto<ShortGuid>>> DeleteWebTemplate(
+        string themeDeveloperName,
+        string templateDeveloperName
+    )
+    {
+        var template = await Mediator.Send(
+            new GetWebTemplateByDeveloperNames.Query
+            {
+                ThemeDeveloperName = themeDeveloperName,
+                TemplateDeveloperName = templateDeveloperName,
+            }
+        );
+        var input = new DeleteWebTemplate.Command { Id = template.Result.Id };
+        var response = await Mediator.Send(input);
+        if (!response.Success)
+        {
+            return BadRequest(response);
+        }
+        return response;
+    }
 }

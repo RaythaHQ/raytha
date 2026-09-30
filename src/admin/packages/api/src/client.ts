@@ -1,5 +1,7 @@
 import {
+  parseAdminApiKey,
   parseBackgroundTask,
+  parseCreatedApiKey,
   parseClearedLog,
   parseEmailTemplate,
   parseFunction,
@@ -441,9 +443,11 @@ export const adminApi = {
     apiKeys: (adminId: string) => {
       const base = `/raytha/api/admin/admins/${adminId}/api-keys`;
       return {
-        list: (params?: Record<string, string | number | boolean | undefined>) =>
-          apiFetch<PagedResult<EntityRef>>(listQuery(base, params)),
-        create: (input: JsonObject) => apiFetch<EntityRef>(base, { method: "POST", body: JSON.stringify(input) }),
+        list: () =>
+          apiFetch<unknown>(listQuery(base, { pageSize: 10 })).then((value) =>
+            parsePaged(value, parseAdminApiKey),
+          ),
+        create: () => apiFetch<unknown>(base, { method: "POST", body: "{}" }).then(parseCreatedApiKey),
         remove: (keyId: string) => apiFetch<void>(`${base}/${keyId}`, { method: "DELETE" }),
       };
     },

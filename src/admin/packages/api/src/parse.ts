@@ -1,4 +1,5 @@
 import type {
+  AdminApiKey,
   BackgroundTaskDetail,
   BackgroundTaskStatusName,
   ClearedLog,
@@ -135,6 +136,32 @@ function triggerType(value: unknown): { developerName: string; label: string } {
     return { developerName, label };
   }
   return { developerName: "", label: "" };
+}
+
+export function parseAdminApiKey(value: unknown): AdminApiKey | null {
+  if (!isRecord(value)) {
+    return null;
+  }
+  const id = stringField(value, "id");
+  if (id.length === 0) {
+    return null;
+  }
+  return {
+    id,
+    creationTime: stringField(value, "creationTime"),
+    creatorName: creatorName(value.creatorUser),
+  };
+}
+
+export function parseCreatedApiKey(value: unknown): { apiKey: string } {
+  if (!isRecord(value)) {
+    throw new Error("The server did not return an API key.");
+  }
+  const apiKey = stringField(value, "apiKey");
+  if (apiKey.length === 0) {
+    throw new Error("The server did not return an API key.");
+  }
+  return { apiKey };
 }
 
 export function parseIdResponse(value: unknown): IdResponse {
