@@ -20,19 +20,24 @@ internal enum FilterValueType
     Text,
     Number,
     Guid,
+    Boolean,
+    Timestamp,
+    Date,
 }
 
 /// <summary>
 /// A filter field after it has been checked against the content type. <see cref="ScalarSql"/> is the
-/// expression used for comparisons and null checks (and the left side of a text match). Array fields
-/// also carry <see cref="Alias"/>, <see cref="JsonColumn"/>, and <see cref="ArrayKey"/> so the
-/// compiler can build their EXISTS predicates.
+/// typed expression used for comparisons and null checks; <see cref="TextSql"/> is the stored text
+/// that contains/startswith/endswith match against. Array fields also carry <see cref="Alias"/>,
+/// <see cref="JsonColumn"/>, and <see cref="ArrayKey"/> so the compiler can build their EXISTS
+/// predicates.
 /// </summary>
 internal sealed record ResolvedField(
     string Name,
     FilterFieldKind Kind,
     FilterValueType ValueType,
     string ScalarSql,
+    string TextSql,
     string Alias,
     string JsonColumn,
     string ArrayKey
@@ -67,6 +72,9 @@ internal sealed class ContentTypeFieldResolver
         _dateFormat = dateFormat;
     }
 
+    /// <summary>The organization's .NET date format, which stored and filtered dates may use.</summary>
+    public string DateFormat => _dateFormat;
+
     public ResolvedField Resolve(string name)
     {
         var realName =
@@ -86,46 +94,46 @@ internal sealed class ContentTypeFieldResolver
 
     private ResolvedField ResolveReserved(string realName)
     {
-        var valueType =
-            realName == BuiltInContentTypeField.Id.DeveloperName
-                ? FilterValueType.Guid
-                : FilterValueType.Text;
-
-        var isFilterableColumn =
-            realName == BuiltInContentTypeField.Id.DeveloperName
-            || realName == BuiltInContentTypeField.CreationTime.DeveloperName
+        FilterValueType valueType;
+        if (realName == BuiltInContentTypeField.Id.DeveloperName)
+            valueType = FilterValueType.Guid;
+        else if (
+            realName == BuiltInContentTypeField.CreationTime.DeveloperName
             || realName == BuiltInContentTypeField.LastModificationTime.DeveloperName
-            || realName == BuiltInContentTypeField.IsDraft.DeveloperName
-            || realName == BuiltInContentTypeField.IsPublished.DeveloperName;
-
-        if (!isFilterableColumn)
+        )
+            valueType = FilterValueType.Timestamp;
+        else if (
+            realName == BuiltInContentTypeField.IsDraft.DeveloperName
+            || realName == BuiltInContentTypeField.IsPublished.DeveloperName
+        )
+            valueType = FilterValueType.Boolean;
+        else
             throw new InvalidFilterException($"Field '{realName}' cannot be used in a filter.");
 
-        return Scalar(
-            realName,
-            FilterFieldKind.ReservedColumn,
-            valueType,
-            PostgresFieldSql.ReservedColumn(Source, realName)
-        );
+        var column = PostgresFieldSql.ReservedColumn(Source, realName);
+        return Scalar(realName, FilterFieldKind.ReservedColumn, valueType, column, column);
     }
 
     private ResolvedField ResolveCustom(ContentTypeField field, string realName)
     {
         var typeName = field.FieldType.DeveloperName;
+        var storedText = PostgresFieldSql.TextScalar(Source, JsonColumnName, realName);
 
         if (typeName == BaseFieldType.Number)
             return Scalar(
                 realName,
                 FilterFieldKind.Number,
                 FilterValueType.Number,
-                PostgresFieldSql.NumberScalar(Source, JsonColumnName, realName)
+                PostgresFieldSql.NumberScalar(Source, JsonColumnName, realName),
+                storedText
             );
         if (typeName == BaseFieldType.Date)
             return Scalar(
                 realName,
                 FilterFieldKind.Date,
-                FilterValueType.Text,
-                PostgresFieldSql.DateScalar(Source, JsonColumnName, realName, _dateFormat)
+                FilterValueType.Date,
+                PostgresFieldSql.DateScalar(Source, JsonColumnName, realName, _dateFormat),
+                storedText
             );
         if (typeName == BaseFieldType.MultipleSelect)
             return Array(realName, FilterFieldKind.MultiSelect);
@@ -134,12 +142,7 @@ internal sealed class ContentTypeFieldResolver
         if (typeName == BaseFieldType.OneToOneRelationship)
             return ResolveRelationship(field, realName);
 
-        return Scalar(
-            realName,
-            FilterFieldKind.Text,
-            FilterValueType.Text,
-            PostgresFieldSql.TextScalar(Source, JsonColumnName, realName)
-        );
+        return Scalar(realName, FilterFieldKind.Text, FilterValueType.Text, storedText, storedText);
     }
 
     private ResolvedField ResolveRelationship(ContentTypeField field, string realName)
@@ -158,11 +161,13 @@ internal sealed class ContentTypeFieldResolver
             .DeveloperName;
 
         var alias = $"{RawSqlColumn.RELATED_ITEM_COLUMN_NAME}_{index}";
+        var relatedPrimary = PostgresFieldSql.TextScalar(alias, JsonColumnName, relatedPrimaryFieldName);
         return Scalar(
             realName,
             FilterFieldKind.Relationship,
             FilterValueType.Text,
-            PostgresFieldSql.TextScalar(alias, JsonColumnName, relatedPrimaryFieldName)
+            relatedPrimary,
+            relatedPrimary
         );
     }
 
@@ -170,17 +175,22 @@ internal sealed class ContentTypeFieldResolver
         string name,
         FilterFieldKind kind,
         FilterValueType valueType,
-        string scalarSql
-    ) => new(name, kind, valueType, scalarSql, string.Empty, string.Empty, string.Empty);
+        string scalarSql,
+        string textSql
+    ) => new(name, kind, valueType, scalarSql, textSql, string.Empty, string.Empty, string.Empty);
 
-    private ResolvedField Array(string realName, FilterFieldKind kind) =>
-        new(
+    private ResolvedField Array(string realName, FilterFieldKind kind)
+    {
+        var storedText = PostgresFieldSql.TextScalar(Source, JsonColumnName, realName);
+        return new(
             realName,
             kind,
             FilterValueType.Text,
-            PostgresFieldSql.TextScalar(Source, JsonColumnName, realName),
+            storedText,
+            storedText,
             Source,
             JsonColumnName,
             realName
         );
+    }
 }

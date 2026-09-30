@@ -20,7 +20,7 @@ public class PostgresFilterCompilerTests
             BuildContentType(),
             "title",
             new List<ContentTypeField>(),
-            "MM/DD/YYYY"
+            "MM/dd/yyyy"
         );
         var compiler = new PostgresFilterCompiler(resolver);
         var node = ODataFilterParser.Parse(filter);
@@ -105,13 +105,53 @@ public class PostgresFilterCompilerTests
     }
 
     [Test]
-    public void A_date_comparison_parses_the_column_and_binds_the_value()
+    [TestCase("2024-01-15")]
+    [TestCase("01/15/2024")]
+    public void A_date_comparison_binds_a_date_in_iso_or_organization_format(string value)
     {
-        var (sql, parameters) = Compile("published_on gt '2024-01-01'");
+        var (sql, parameters) = Compile($"published_on gt '{value}'");
 
         sql.Should().Contain("TO_DATE");
         sql.Should().Contain("@p0");
-        parameters.Single().Should().Be("2024-01-01");
+        parameters.Single().Should().Be(new DateTime(2024, 1, 15));
+    }
+
+    [Test]
+    public void Stored_dates_are_read_in_iso_or_organization_format()
+    {
+        var (sql, _) = Compile("published_on gt '2024-01-15'");
+
+        sql.Should().Contain("'YYYY-MM-DD'");
+        sql.Should().Contain("'MM/DD/YYYY'");
+    }
+
+    [Test]
+    public void A_creation_time_comparison_binds_a_utc_timestamp()
+    {
+        var (_, parameters) = Compile("CreationTime ge '2020-01-02'");
+
+        var value = parameters.Single().Should().BeOfType<DateTime>().Subject;
+        value.Should().Be(new DateTime(2020, 1, 2));
+        value.Kind.Should().Be(DateTimeKind.Utc);
+    }
+
+    [Test]
+    [TestCase("IsPublished eq 'true'", true)]
+    [TestCase("IsDraft eq 'false'", false)]
+    public void A_publish_state_comparison_binds_a_boolean(string filter, bool expected)
+    {
+        var (_, parameters) = Compile(filter);
+
+        parameters.Single().Should().Be(expected);
+    }
+
+    [Test]
+    [TestCase("published_on gt 'soon'")]
+    [TestCase("CreationTime ge 'yesterday'")]
+    [TestCase("IsPublished eq 'maybe'")]
+    public void A_value_that_does_not_fit_the_column_is_rejected(string filter)
+    {
+        FluentActions.Invoking(() => Compile(filter)).Should().Throw<InvalidFilterException>();
     }
 
     [Test]
@@ -140,12 +180,16 @@ public class PostgresFilterCompilerTests
     }
 
     [Test]
-    public void Matching_a_number_field_is_rejected()
+    [TestCase("contains(rank,'5')")]
+    [TestCase("contains(published_on,'5')")]
+    public void Matching_a_number_or_date_field_matches_its_stored_text(string filter)
     {
-        FluentActions
-            .Invoking(() => Compile("contains(rank,'5')"))
-            .Should()
-            .Throw<InvalidFilterException>();
+        var (sql, parameters) = Compile(filter);
+
+        sql.Should().Contain("ILIKE @p0 ESCAPE '\\'");
+        sql.Should().NotContain("TO_DATE");
+        sql.Should().NotContain("::decimal");
+        parameters.Single().Should().Be("%5%");
     }
 
     [Test]

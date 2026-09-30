@@ -14,8 +14,14 @@ internal static class PostgresFieldSql
         $"CASE WHEN ({alias}.\"{jsonColumn}\"->>'{key}') ~ '^[0-9]+(\\.[0-9]+)?$' "
         + $"THEN ({alias}.\"{jsonColumn}\"->> '{key}')::decimal(18, 2) ELSE NULL END";
 
+    /// <summary>
+    /// A stored date as <c>date</c>. The admin SPA and API clients store ISO dates; the Razor admin
+    /// stored the organization's format, so both are read.
+    /// </summary>
     public static string DateScalar(string alias, string jsonColumn, string key, string dateFormat) =>
-        $"TO_DATE(NULLIF({alias}.\"{jsonColumn}\"->>'{key}', ''), '{Format(dateFormat)}')";
+        $"CASE WHEN ({alias}.\"{jsonColumn}\"->>'{key}') ~ '^[0-9]{{4}}-[0-9]{{2}}-[0-9]{{2}}' "
+        + $"THEN TO_DATE(LEFT({alias}.\"{jsonColumn}\"->>'{key}', 10), 'YYYY-MM-DD') "
+        + $"ELSE TO_DATE(NULLIF({alias}.\"{jsonColumn}\"->>'{key}', ''), '{Format(dateFormat)}') END";
 
     public static string ReservedColumn(string alias, string columnName) =>
         $"{alias}.\"{columnName}\"";
@@ -62,7 +68,7 @@ internal static class PostgresFieldSql
         string dateFormat,
         string direction
     ) =>
-        $"TO_DATE(NULLIF({alias}.\"{jsonColumn}\"->>'{key}', ''), '{Format(dateFormat)}') "
+        $"{DateScalar(alias, jsonColumn, key, dateFormat)} "
         + $"{(direction.ToUpperInvariant() == "DESC" ? "DESC" : "ASC")}";
 
     public static string MultiSelectOrderBy(

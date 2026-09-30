@@ -53,7 +53,7 @@ internal sealed class PostgresFilterCompiler
                 $"Field '{node.Field}' cannot be used with this operator."
             );
 
-        var parameter = addParameter(ConvertValue(field, node.Value));
+        var parameter = addParameter(ConvertValue(field, node.Value, _resolver.DateFormat));
         return $"({field.ScalarSql} {Operator(node.Operator)} {parameter})";
     }
 
@@ -64,13 +64,15 @@ internal sealed class PostgresFilterCompiler
         {
             case FilterFieldKind.Text:
             case FilterFieldKind.Relationship:
+            case FilterFieldKind.Number:
+            case FilterFieldKind.Date:
             {
                 var pattern = PostgresFieldSql.WrapLike(
                     node.Kind,
                     PostgresFieldSql.EscapeLike(node.Value)
                 );
                 var parameter = addParameter(pattern);
-                return $"({field.ScalarSql} ILIKE {parameter} ESCAPE '\\')";
+                return $"({field.TextSql} ILIKE {parameter} ESCAPE '\\')";
             }
             case FilterFieldKind.MultiSelect:
                 if (node.Kind != MatchKind.Contains)
@@ -103,7 +105,7 @@ internal sealed class PostgresFilterCompiler
         }
     }
 
-    private static object ConvertValue(ResolvedField field, string value)
+    private static object ConvertValue(ResolvedField field, string value, string dateFormat)
     {
         switch (field.ValueType)
         {
@@ -122,9 +124,56 @@ internal sealed class PostgresFilterCompiler
                 return number;
             case FilterValueType.Guid:
                 return ParseGuid(value);
+            case FilterValueType.Boolean:
+                if (!bool.TryParse(value, out var flag))
+                    throw new InvalidFilterException($"Field '{field.Name}' expects true or false.");
+                return flag;
+            case FilterValueType.Date:
+                return DateTime.SpecifyKind(
+                    ParseDate(field, value, dateFormat, DateTimeStyles.None).Date,
+                    DateTimeKind.Unspecified
+                );
+            case FilterValueType.Timestamp:
+                return DateTime.SpecifyKind(
+                    ParseDate(
+                        field,
+                        value,
+                        dateFormat,
+                        DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal
+                    ),
+                    DateTimeKind.Utc
+                );
             default:
                 return value;
         }
+    }
+
+    /// <summary>
+    /// Accepts the organization's date format (what the Razor admin wrote) or an ISO date (what the
+    /// admin SPA and API clients send).
+    /// </summary>
+    private static DateTime ParseDate(
+        ResolvedField field,
+        string value,
+        string dateFormat,
+        DateTimeStyles styles
+    )
+    {
+        var trimmed = value.Trim();
+        if (
+            !string.IsNullOrEmpty(dateFormat)
+            && DateTime.TryParseExact(
+                trimmed,
+                dateFormat,
+                CultureInfo.InvariantCulture,
+                styles,
+                out var inOrganizationFormat
+            )
+        )
+            return inOrganizationFormat;
+        if (DateTime.TryParse(trimmed, CultureInfo.InvariantCulture, styles, out var parsed))
+            return parsed;
+        throw new InvalidFilterException($"Field '{field.Name}' expects a date.");
     }
 
     private static Guid ParseGuid(string value)
