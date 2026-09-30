@@ -58,30 +58,14 @@ public class CurrentUser : ICurrentUser
                 c.Type == RaythaClaimTypes.AuthenticationScheme
             )
             ?.Value;
-    public string RemoteIpAddress
-    {
-        get
-        {
-            var context = _httpContextAccessor?.HttpContext;
-            if (context == null) return null;
-
-            // Check Cloudflare header first
-            var cfConnectingIp = context.Request.Headers["CF-Connecting-IP"].FirstOrDefault();
-            if (!string.IsNullOrEmpty(cfConnectingIp))
-                return cfConnectingIp;
-
-            // Check X-Forwarded-For (set by most reverse proxies)
-            var forwardedFor = context.Request.Headers["X-Forwarded-For"].FirstOrDefault();
-            if (!string.IsNullOrEmpty(forwardedFor))
-            {
-                // X-Forwarded-For can contain multiple IPs, the first is the original client
-                return forwardedFor.Split(',')[0].Trim();
-            }
-
-            // Fall back to connection IP
-            return context.Connection.RemoteIpAddress?.MapToIPv4().ToString();
-        }
-    }
+    /// <summary>
+    /// The connection's address after the forwarded-headers pass, which alone decides how much of
+    /// <c>X-Forwarded-For</c> to believe (<c>TRUSTED_PROXIES</c>). Raw headers are never read here.
+    /// </summary>
+    public string RemoteIpAddress =>
+        _httpContextAccessor?.HttpContext?.Connection.RemoteIpAddress is { } address
+            ? (address.IsIPv4MappedToIPv6 ? address.MapToIPv4() : address).ToString()
+            : null;
     public bool IsAdmin =>
         _httpContextAccessor
             ?.HttpContext.User.Claims.FirstOrDefault(c => c.Type == RaythaClaimTypes.IsAdmin)

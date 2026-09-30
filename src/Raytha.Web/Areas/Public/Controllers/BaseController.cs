@@ -23,6 +23,7 @@ public class BaseController : Controller
     private IAntiforgery _antiforgery;
     private IWebHostEnvironment _environment;
     private ILogger _logger;
+    private IRelativeUrlBuilder _relativeUrlBuilder;
 
     protected ISender Mediator =>
         _mediator ??= HttpContext.RequestServices.GetRequiredService<ISender>();
@@ -37,6 +38,9 @@ public class BaseController : Controller
         _environment ??= HttpContext.RequestServices.GetRequiredService<IWebHostEnvironment>();
     protected ILogger Logger =>
         _logger ??= HttpContext.RequestServices.GetRequiredService<ILogger<BaseController>>();
+    protected IRelativeUrlBuilder RelativeUrlBuilder =>
+        _relativeUrlBuilder ??=
+            HttpContext.RequestServices.GetRequiredService<IRelativeUrlBuilder>();
 
     public const string ErrorMessageKey = "ErrorMessage";
     public const string SuccessMessageKey = "SuccessMessage";

@@ -107,14 +107,9 @@ public static class ThemesEndpoints
         string id,
         [FromBody] DuplicateThemeRequest body,
         ISender mediator,
-        ICurrentOrganization org,
-        HttpContext http
+        IRelativeUrlBuilder urls
     )
     {
-        // Local media downloads need an absolute URL. An empty site path base is valid
-        // when the app is hosted at the domain root.
-        var pathBase = org.PathBase ?? string.Empty;
-        var origin = $"{http.Request.Scheme}://{http.Request.Host}{pathBase}";
         return AdminResults.FromId(
             await mediator.Send(
                 new BeginDuplicateTheme.Command
@@ -123,7 +118,7 @@ public static class ThemesEndpoints
                     Title = body.Title,
                     DeveloperName = body.DeveloperName,
                     Description = body.Description,
-                    PathBase = origin,
+                    PathBase = urls.GetSiteRoot(),
                 }
             )
         );

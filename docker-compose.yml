@@ -75,6 +75,11 @@ services:
       # Security settings
       - ENFORCE_HTTPS=${ENFORCE_HTTPS:-true}
       - ALLOW_INTERNAL_URL_IMPORTS=${ALLOW_INTERNAL_URL_IMPORTS:-false}
+
+      # Proxy trust. Port 5001 is published straight to Kestrel; if it is reachable from the
+      # internet without a proxy in front, set TRUSTED_PROXIES=none. See .env.example.
+      - TRUSTED_PROXIES=${TRUSTED_PROXIES:-all}
+      - TRUSTED_PROXY_HOPS=${TRUSTED_PROXY_HOPS:-}
       
       # Maintenance mode (optional - redirects all traffic)
       - REDIRECT_WEBSITE=${REDIRECT_WEBSITE:-}

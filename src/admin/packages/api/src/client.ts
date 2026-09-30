@@ -173,6 +173,7 @@ export async function createFirstAdmin(input: {
   password: string;
   firstName?: string;
   lastName?: string;
+  websiteUrl: string;
 }): Promise<void> {
   const response = await fetch("/raytha/api/auth/setup", {
     method: "POST",

@@ -80,6 +80,21 @@ Applied in `Startup.Configure`; do not remove or weaken:
 - Outside Development with `ENFORCE_HTTPS` (default true), HTTPS redirection and
   HSTS are on. Do not disable them to work around a proxy — fix the forwarded
   headers.
+- Proxy trust comes only from `TRUSTED_PROXIES` (`all` default, `none`,
+  `private`, IPs, CIDRs) and `TRUSTED_PROXY_HOPS` (with `all` only), parsed by
+  `ProxyTrust`. An unreadable value MUST fail startup. Only `X-Forwarded-For`
+  and `X-Forwarded-Proto` are honored; honoring `X-Forwarded-Host` is FORBIDDEN.
+- Forwarded headers MUST be applied once, through the parameterless
+  `UseForwardedHeaders()`, which the framework's
+  `ASPNETCORE_FORWARDEDHEADERS_ENABLED` pass shares.
+- The client IP (rate limits, audit logs, `ICurrentUser.RemoteIpAddress`) MUST
+  be `Connection.RemoteIpAddress`. Reading `X-Forwarded-For`,
+  `CF-Connecting-IP`, or any other header for it is FORBIDDEN.
+- Absolute URLs that leave the request (emails, SSO callbacks, API media URLs)
+  MUST come from `IRelativeUrlBuilder`, which builds them from `WebsiteUrl`.
+  The request host is a fallback in Development only; building a link from
+  `Request.Host`, `Url.ActionLink`, or `LinkGenerator.GetUri*` is FORBIDDEN.
+- Initial setup MUST receive an explicit website URL outside Development.
 - There is deliberately no global CSP, because site builders author their own
   HTML. Adding one is a breaking change and needs a decision, not a commit.
 

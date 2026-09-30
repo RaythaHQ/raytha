@@ -7,13 +7,11 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.WebUtilities;
 using Raytha.Application.AuthenticationSchemes;
 using Raytha.Application.AuthenticationSchemes.Queries;
 using Raytha.Application.Common.Models;
 using Raytha.Application.Common.Models.RenderModels;
 using Raytha.Application.Common.Security;
-using Raytha.Application.Common.Utils;
 using Raytha.Application.Login;
 using Raytha.Application.Login.Commands;
 using Raytha.Application.Login.Queries;
@@ -663,41 +661,22 @@ public class LoginController : BaseController
 
         if (authScheme.AuthenticationSchemeType == AuthenticationSchemeType.Jwt.DeveloperName)
         {
-            string callbackUrl = Url.ActionLink(
-                "Jwt",
-                "Login",
-                values: new { developerName = authScheme.DeveloperName }
+            return RelativeUrlBuilder.GetSingleSignOnCallbackJwtUrl(
+                "Public",
+                authScheme.DeveloperName,
+                authScheme.SignInUrl,
+                returnUrl
             );
-            if (!string.IsNullOrEmpty(returnUrl))
-            {
-                var parametersToAdd = new Dictionary<string, string> { { "returnUrl", returnUrl } };
-                callbackUrl = QueryHelpers.AddQueryString(callbackUrl, parametersToAdd);
-            }
-            var setCallbackParams = new Dictionary<string, string>
-            {
-                { "raytha_callback_url", callbackUrl },
-            };
-            var loginUrl = QueryHelpers.AddQueryString(authScheme.SignInUrl, setCallbackParams);
-            return loginUrl;
         }
         else if (authScheme.AuthenticationSchemeType == AuthenticationSchemeType.Saml.DeveloperName)
         {
-            var acsUrl = Url.ActionLink(
-                "Saml",
-                "Login",
-                values: new { developerName = authScheme.DeveloperName }
+            return RelativeUrlBuilder.GetSingleSignOnCallbackSamlUrl(
+                "Public",
+                authScheme.DeveloperName,
+                authScheme.SamlIdpEntityId,
+                authScheme.SignInUrl,
+                returnUrl
             );
-            var samlRequest = SamlUtility.GetSamlRequestAsBase64(
-                acsUrl,
-                authScheme.SamlIdpEntityId
-            );
-            var parametersToAdd = new Dictionary<string, string> { { "SAMLRequest", samlRequest } };
-
-            if (!string.IsNullOrEmpty(returnUrl))
-                parametersToAdd.Add("RelayState", returnUrl);
-
-            var loginUrl = QueryHelpers.AddQueryString(authScheme.SignInUrl, parametersToAdd);
-            return loginUrl;
         }
         else
             throw new Exception("Unknown Sso type");

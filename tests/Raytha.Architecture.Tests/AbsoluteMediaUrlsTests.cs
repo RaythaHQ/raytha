@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc.Abstractions;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
+using Raytha.Application.Common.Interfaces;
 using Raytha.Web.Areas.Api.Controllers.V1;
 
 namespace Raytha.Architecture.Tests;
@@ -93,12 +94,38 @@ public class AbsoluteMediaUrlsTests
     }
 
     [Test]
-    public async Task The_filter_rewrites_the_response_for_the_requests_origin()
+    public async Task The_filter_resolves_against_website_url_not_the_request_host()
+    {
+        var result = await Filtered(
+            "https://cms.example.com/site",
+            "/site",
+            "<img src=\"/site/raytha/media-items/objectkey/k.png\">"
+        );
+
+        result.DeclaredType.Should().Be(typeof(JsonNode));
+        ((JsonNode)result.Value!)["result"]!["content"]!.GetValue<string>()
+            .Should()
+            .Be("<img src=\"https://cms.example.com/site/raytha/media-items/objectkey/k.png\">");
+    }
+
+    [Test]
+    public async Task Without_a_site_root_the_filter_leaves_the_response_alone()
+    {
+        var result = await Filtered("", "", "<img src=\"/raytha/media-items/objectkey/k.png\">");
+
+        result.DeclaredType.Should().BeNull();
+        result.Value.Should().NotBeOfType<JsonObject>();
+    }
+
+    private static async Task<ObjectResult> Filtered(string websiteUrl, string pathBase, string content)
     {
         var services = new ServiceCollection();
         services.AddOptions();
         services.Configure<JsonOptions>(o =>
             o.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+        );
+        services.AddSingleton<IRelativeUrlBuilder>(
+            SiteUrlTests.Builder("Production", websiteUrl, pathBase)
         );
         var httpContext = new DefaultHttpContext
         {
@@ -106,9 +133,7 @@ public class AbsoluteMediaUrlsTests
         };
         httpContext.Request.Scheme = "https";
         httpContext.Request.Host = new HostString("api.example.com:8443");
-        var result = new ObjectResult(
-            new { Result = new { Content = "<img src=\"/raytha/media-items/objectkey/k.png\">" } }
-        );
+        var result = new ObjectResult(new { Result = new { Content = content } });
         var context = new ResultExecutingContext(
             new ActionContext(httpContext, new RouteData(), new ActionDescriptor()),
             [],
@@ -123,10 +148,6 @@ public class AbsoluteMediaUrlsTests
                     new ResultExecutedContext(context, [], context.Result, context.Controller)
                 )
         );
-
-        result.DeclaredType.Should().Be(typeof(JsonNode));
-        ((JsonNode)result.Value!)["result"]!["content"]!.GetValue<string>()
-            .Should()
-            .Be("<img src=\"https://api.example.com:8443/raytha/media-items/objectkey/k.png\">");
+        return result;
     }
 }

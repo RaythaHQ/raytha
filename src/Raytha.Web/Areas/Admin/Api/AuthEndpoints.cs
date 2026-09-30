@@ -399,7 +399,8 @@ public static class AuthEndpoints
         HttpContext http,
         [FromBody] SetupRequest body,
         [FromServices] ISender mediator,
-        [FromServices] ICurrentOrganization organization
+        [FromServices] ICurrentOrganization organization,
+        [FromServices] IHostEnvironment environment
     )
     {
         if (organization.InitialSetupComplete)
@@ -410,7 +411,11 @@ public static class AuthEndpoints
         var email = body.Email ?? string.Empty;
         var firstName = body.FirstName ?? string.Empty;
         var lastName = body.LastName ?? string.Empty;
-        var fallbackWebsiteUrl = $"{http.Request.Scheme}://{http.Request.Host}{organization.PathBase}";
+        // Emailed links are built from this, so outside Development the person running setup
+        // confirms it (the SPA prefills the browser's origin) rather than the Host header deciding.
+        var fallbackWebsiteUrl = environment.IsDevelopment()
+            ? $"{http.Request.Scheme}://{http.Request.Host}{organization.PathBase}"
+            : string.Empty;
 
         var response = await mediator.Send(
             new InitialSetup.Command

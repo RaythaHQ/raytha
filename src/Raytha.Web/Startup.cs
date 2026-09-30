@@ -6,7 +6,6 @@ using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.OpenApi;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -43,16 +42,7 @@ public class Startup
 
     public void ConfigureServices(IServiceCollection services)
     {
-        services.Configure<ForwardedHeadersOptions>(options =>
-        {
-            options.ForwardedHeaders =
-                ForwardedHeaders.XForwardedFor
-                | ForwardedHeaders.XForwardedProto
-                | ForwardedHeaders.XForwardedHost;
-
-            options.KnownNetworks.Clear();
-            options.KnownProxies.Clear();
-        });
+        services.AddRaythaForwardedHeaders(Configuration);
         services.AddApplicationServices();
         services.AddInfrastructureServices(Configuration);
         services.AddWebUIServices(Environment);
@@ -67,7 +57,7 @@ public class Startup
 
         string pathBase = Configuration["PATHBASE"] ?? string.Empty;
         app.UsePathBase(new PathString(pathBase));
-        app.UseForwardedHeaders();
+        app.UseRaythaForwardedHeaders();
         app.UseExceptionHandler(
             new ExceptionHandlerOptions
             {

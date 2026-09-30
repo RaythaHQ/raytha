@@ -11,6 +11,9 @@ export function SetupPage() {
   const [password, setPassword] = useState("");
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
+  const [websiteUrl, setWebsiteUrl] = useState(
+    () => `${window.location.origin}${window.location.pathname.split("/raytha")[0] ?? ""}`,
+  );
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
 
@@ -28,7 +31,7 @@ export function SetupPage() {
     setError(null);
     setPending(true);
     try {
-      await createFirstAdmin({ email, password, firstName, lastName });
+      await createFirstAdmin({ email, password, firstName, lastName, websiteUrl });
       window.location.assign("/raytha");
     } catch (err) {
       setError(formatError(err));
@@ -72,6 +75,20 @@ export function SetupPage() {
           <div className="space-y-1.5">
             <Label htmlFor="password">Password</Label>
             <Input id="password" type="password" autoComplete="new-password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="websiteUrl">Website URL</Label>
+            <Input
+              id="websiteUrl"
+              type="url"
+              value={websiteUrl}
+              onChange={(e) => setWebsiteUrl(e.target.value)}
+              aria-describedby="websiteUrlHint"
+              required
+            />
+            <p id="websiteUrlHint" className="text-xs text-muted-foreground">
+              The public address of this site. Links in emails are built from it.
+            </p>
           </div>
           <Button type="submit" className="w-full" loading={pending}>
             Create administrator

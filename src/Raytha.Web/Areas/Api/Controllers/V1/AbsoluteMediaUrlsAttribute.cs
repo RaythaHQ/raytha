@@ -8,12 +8,13 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
+using Raytha.Application.Common.Interfaces;
 
 namespace Raytha.Web.Areas.Api.Controllers.V1;
 
 /// <summary>
 /// Stored media URLs are root-relative, and a headless client has no page to resolve them
-/// against, so v1 responses carry them resolved against the request's scheme and host. Any path
+/// against, so v1 responses carry them resolved against the site root from WebsiteUrl. The path
 /// base is already part of the stored path. Nothing stored changes.
 /// </summary>
 [AttributeUsage(AttributeTargets.Class)]
@@ -24,14 +25,13 @@ public sealed partial class AbsoluteMediaUrlsAttribute : Attribute, IAsyncResult
         ResultExecutionDelegate next
     )
     {
-        if (context.Result is ObjectResult { Value: { } value } result)
+        var services = context.HttpContext.RequestServices;
+        var siteRoot = services.GetRequiredService<IRelativeUrlBuilder>().GetSiteRoot();
+        if (context.Result is ObjectResult { Value: { } value } result && siteRoot.Length > 0)
         {
-            var options = context
-                .HttpContext.RequestServices.GetRequiredService<IOptions<JsonOptions>>()
-                .Value.JsonSerializerOptions;
-            var request = context.HttpContext.Request;
+            var options = services.GetRequiredService<IOptions<JsonOptions>>().Value.JsonSerializerOptions;
             var node = JsonSerializer.SerializeToNode(value, value.GetType(), options);
-            Absolutize(node, $"{request.Scheme}://{request.Host}");
+            Absolutize(node, siteRoot);
             result.Value = node;
             result.DeclaredType = typeof(JsonNode);
         }

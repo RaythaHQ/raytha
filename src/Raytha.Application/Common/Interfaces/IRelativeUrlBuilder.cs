@@ -14,12 +14,18 @@ public interface IRelativeUrlBuilder
     /// </summary>
     string MediaRedirectToFilePath(string objectKey);
     string MediaFileLocalStorageUrl(string objectKey);
-    string MediaCloudUploadPresignUrl();
-    string MediaCloudUploadCreateAfterUploadUrl();
-    string MediaDirectUploadUrl();
     string UserLoginUrl(string returnUrl = "");
     string UserForgotPasswordCompleteUrl(string token);
+
+    /// <summary>The site's absolute root with the path base: prefix a route with it.</summary>
     string GetBaseUrl();
+
+    /// <summary>
+    /// The site's absolute root without the path base: prefix a root-relative path, which already
+    /// carries the path base, with it. Comes from WebsiteUrl, never from a request outside
+    /// Development, and is empty when there is neither.
+    /// </summary>
+    string GetSiteRoot();
     string GetSingleSignOnCallbackJwtUrl(
         string area,
         string developerName,

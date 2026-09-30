@@ -62,6 +62,9 @@ public class InitialSetup
                 .Must(DateTimeExtensions.IsValidTimeZone)
                 .WithMessage(p => $"{p.TimeZone} timezone is unrecognized.");
             RuleFor(x => x.WebsiteUrl)
+                .Cascade(CascadeMode.Stop)
+                .NotEmpty()
+                .WithMessage("Enter the website URL, for example https://www.example.com.")
                 .Must(StringExtensions.IsValidUriFormat)
                 .WithMessage(p => $"{p.WebsiteUrl} must be a valid URI format.");
             RuleFor(x => x.SmtpDefaultFromAddress).EmailAddress();

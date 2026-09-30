@@ -62,6 +62,21 @@ HTTPS is enforced by default. `.env.example` ships with
 `Production` once you have TLS in front of it. Every other setting — SMTP, cloud
 storage, function limits, upload limits — is documented in `.env.example`.
 
+Behind a proxy, `TRUSTED_PROXIES` decides who may set the client IP and scheme:
+
+- Railway, Azure App Service, one nginx or Caddy: leave it unset (`all`).
+- Cloudflare in front of Railway or App Service: `all` with `TRUSTED_PROXY_HOPS=2`.
+- A sidecar, a tunnel, or a Docker network where Kestrel is also reachable directly: `private`.
+- Known proxy addresses: a comma-separated list of IPs and CIDR ranges.
+- Kestrel exposed straight to the internet: `none`.
+
+> **Warning:** unset means any peer is trusted. If clients can reach Raytha
+> without going through your proxy, set `none` or list your proxies, or they can
+> forge their IP address and get around per-IP rate limits.
+
+Emailed links and API media URLs are built from the Website URL in organization
+settings, never from the request's host.
+
 ## Develop
 
 Requirements: .NET 10 SDK, Node 24, pnpm 11.9, Docker.
