@@ -19,41 +19,27 @@ public class FilterConditionToODataUtility
         if (filter == null || !filter.Any())
             return string.Empty;
 
-        FilterCondition baseFilterGroup = filter.First(p => p.ParentId == null);
+        var conditions = filter.ToList();
+        FilterCondition baseFilterGroup = conditions.First(p => p.ParentId == null);
 
-        return BuildODataFilter(filter.Where(p => p.ParentId != null), baseFilterGroup);
+        return BuildODataFilter(conditions, baseFilterGroup);
     }
 
-    private string BuildODataFilter(IEnumerable<FilterCondition> children, FilterCondition current)
+    private string BuildODataFilter(List<FilterCondition> conditions, FilterCondition current)
     {
-        if (children != null && children.Any())
+        if (current.Type.DeveloperName == FilterConditionType.FilterCondition)
         {
-            List<string> oDataSubtrees = new List<string>();
-            foreach (var child in children)
-            {
-                oDataSubtrees.Add(
-                    BuildODataFilter(children.ToList().Where(p => p.ParentId == child.Id), child)
-                );
-            }
-            string joinedSubtrees = string.Join(
-                $" {current.GroupOperator} ",
-                oDataSubtrees.Where(p => !string.IsNullOrEmpty(p))
-            );
-            if (!string.IsNullOrEmpty(joinedSubtrees))
-                return $"({joinedSubtrees})";
-            else
-                return string.Empty;
+            return TranslateToODataExpression(current);
         }
 
-        if (current != null && current.Type.DeveloperName == FilterConditionType.FilterCondition)
-        {
-            string translatedExpression = TranslateToODataExpression(current);
-            if (!string.IsNullOrEmpty(translatedExpression))
-                return $"{translatedExpression}";
-            else
-                return string.Empty;
-        }
-        return string.Empty;
+        string joinedSubtrees = string.Join(
+            $" {current.GroupOperator} ",
+            conditions
+                .Where(p => p.ParentId == current.Id)
+                .Select(child => BuildODataFilter(conditions, child))
+                .Where(p => !string.IsNullOrEmpty(p))
+        );
+        return string.IsNullOrEmpty(joinedSubtrees) ? string.Empty : $"({joinedSubtrees})";
     }
 
     private string TranslateToODataExpression(FilterCondition condition)
