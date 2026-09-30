@@ -145,10 +145,11 @@ public class RaythaFunctionScriptEngine : IRaythaFunctionScriptEngine
         {
             // Check if this is a structured result (JsonResult, HtmlResult, etc.)
             var contentType = engine.Evaluate("__marshalTemp.contentType") as string;
+            var kind = engine.Evaluate("__marshalTemp.kind") as string;
 
-            if (!string.IsNullOrEmpty(contentType))
+            if (!string.IsNullOrEmpty(contentType) || kind == "content")
             {
-                var result = new RaythaFunctionResult { contentType = contentType };
+                var result = new RaythaFunctionResult { contentType = contentType, kind = kind };
 
                 // Get the body value
                 var bodyValue = engine.Evaluate("__marshalTemp.body");

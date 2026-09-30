@@ -24,6 +24,7 @@ import { useRef, useState, type FormEvent } from "react";
 import { ListBackLink } from "../../components/list-back-link";
 import { useDocumentTitle } from "../../lib/document-title";
 import { CodeEditor, insertAtCursor } from "./code-editor";
+import { FunctionPublicPath, publicPathFor } from "./function-public-path";
 import { FUNCTION_TRIGGERS, missingEntryPoint, triggerFor } from "./function-reference";
 import { FunctionReferencePanel } from "./function-reference-panel";
 import { RevisionsPanel } from "./revisions-panel";
@@ -69,6 +70,7 @@ function FunctionEditor({ fn, revisions }: { fn: FunctionDetail; revisions: Temp
   const [triggerType, setTriggerType] = useState(triggerFor(fn.triggerType).value);
   const [isActive, setIsActive] = useState(fn.isActive);
   const [code, setCode] = useState(fn.code);
+  const [routePath, setRoutePath] = useState(fn.routePath);
   const [loaded, setLoaded] = useState(fn);
   const entryWarning = missingEntryPoint(triggerType, code);
 
@@ -78,10 +80,18 @@ function FunctionEditor({ fn, revisions }: { fn: FunctionDetail; revisions: Temp
     setTriggerType(triggerFor(fn.triggerType).value);
     setIsActive(fn.isActive);
     setCode(fn.code);
+    setRoutePath(fn.routePath);
   }
 
   const save = useMutation({
-    mutationFn: () => adminApi.functions.update(fn.id, { name, triggerType, isActive, code }),
+    mutationFn: () =>
+      adminApi.functions.update(fn.id, {
+        name,
+        triggerType,
+        isActive,
+        code,
+        routePath: publicPathFor(triggerType, routePath),
+      }),
     onSuccess: () => {
       toast.success("Function saved");
       void queryClient.invalidateQueries({ queryKey: ["function", fn.id] });
@@ -150,6 +160,13 @@ function FunctionEditor({ fn, revisions }: { fn: FunctionDetail; revisions: Temp
                   </Select>
                 )}
               </FormField>
+              <FunctionPublicPath
+                id="function-public-path"
+                trigger={triggerType}
+                value={routePath}
+                savedPath={fn.routePath}
+                onChange={setRoutePath}
+              />
               <div className="flex items-center gap-2">
                 <Checkbox id="function-active" checked={isActive} onCheckedChange={setIsActive} />
                 <label htmlFor="function-active" className="text-sm">

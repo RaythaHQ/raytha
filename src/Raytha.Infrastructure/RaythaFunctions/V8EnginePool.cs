@@ -137,6 +137,21 @@ public class V8EnginePool : IV8EnginePool
             this.body = error;
             this.contentType = 'statusCode';
           }
+        }
+
+        class ContentResult {
+          constructor(body, contentType = 'text/plain; charset=utf-8', statusCode = 200) {
+            this.body = body;
+            this.contentType = contentType;
+            this.statusCode = statusCode;
+            this.kind = 'content';
+          }
+        }
+
+        class TextResult extends ContentResult {
+          constructor(text) {
+            super(text);
+          }
         }"
         );
     }

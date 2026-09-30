@@ -2,7 +2,6 @@ using Mediator;
 using Microsoft.AspNetCore.Mvc;
 using Raytha.Application.SitePages.Commands;
 using Raytha.Application.SitePages.Queries;
-using Raytha.Application.SitePages.Widgets;
 using Raytha.Domain.Entities;
 
 namespace Raytha.Web.Areas.Admin.Api;
@@ -50,20 +49,9 @@ public static class SitePagesEndpoints
         return AdminResults.Paged(await mediator.Send(query), paging);
     }
 
-    private static IResult WidgetDefinitions()
-    {
-        return Results.Ok(
-            WidgetDefinitionService
-                .GetAll()
-                .Select(d => new
-                {
-                    developerName = d.DeveloperName,
-                    displayName = d.DisplayName,
-                    description = d.Description,
-                    iconClass = d.IconClass,
-                })
-        );
-    }
+    /// <summary>The active theme's widget templates with their fields, for the "Add widget" picker and form.</summary>
+    private static async Task<IResult> WidgetDefinitions(ISender mediator) =>
+        AdminResults.From(await mediator.Send(new GetWidgetDefinitions.Query()));
 
     private static async Task<IResult> Get(string id, ISender mediator) =>
         AdminResults.From(await mediator.Send(new GetSitePageById.Query { Id = id }));

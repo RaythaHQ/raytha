@@ -130,6 +130,16 @@ public class CreateContentItem
                                             $"'{fieldDefinition.Label}' field is required."
                                         );
                                     }
+                                    foreach (
+                                        var error in FieldDefinitionValues.RowErrors(
+                                            fieldDefinition,
+                                            fieldValue,
+                                            !request.SaveAsDraft
+                                        )
+                                    )
+                                    {
+                                        context.AddFailure(fieldDefinition.DeveloperName, error);
+                                    }
                                 }
                                 catch (Exception ex)
                                 {
@@ -165,13 +175,17 @@ public class CreateContentItem
 
             var newEntityId = Guid.NewGuid();
             var path = GetRoutePath(request.Content, newEntityId, contentTypeDefinition.Id);
+            var content = FieldDefinitionValues.ToStoredContent(
+                contentTypeDefinition.ContentTypeFields,
+                request.Content
+            );
             var entity = new ContentItem
             {
                 Id = newEntityId,
                 IsDraft = request.SaveAsDraft,
                 IsPublished = request.SaveAsDraft == false,
-                DraftContent = request.Content,
-                PublishedContent = request.Content,
+                DraftContent = content,
+                PublishedContent = content,
                 ContentTypeId = contentTypeDefinition.Id,
                 Route = new Route { Path = path, ContentItemId = newEntityId },
             };

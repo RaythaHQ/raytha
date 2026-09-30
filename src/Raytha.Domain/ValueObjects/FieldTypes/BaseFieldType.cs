@@ -42,6 +42,8 @@ public abstract class BaseFieldType : ValueObject
     public static BaseFieldType Number => new NumberFieldType();
     public static BaseFieldType Attachment => new AttachmentFieldType();
     public static BaseFieldType OneToOneRelationship => new OneToOneRelationshipFieldType();
+    public static BaseFieldType Color => new ColorFieldType();
+    public static BaseFieldType Repeater => new RepeaterFieldType();
     public static BaseFieldType Id => new IdentifierFieldType();
 
     public string DeveloperName { get; private set; } = string.Empty;
@@ -82,11 +84,25 @@ public abstract class BaseFieldType : ValueObject
             yield return Number;
             yield return Attachment;
             yield return OneToOneRelationship;
+            yield return Color;
+            yield return Repeater;
         }
     }
 
     [NotMapped]
     public abstract IEnumerable<ConditionOperator> SupportedConditionOperators { get; }
+
+    [NotMapped]
+    public virtual bool IsSortable => true;
+
+    [NotMapped]
+    public virtual bool IsSearchable => true;
+
+    /// <summary>
+    /// The stored value is a JSON array, so emptiness means an empty array rather than an empty string.
+    /// </summary>
+    [NotMapped]
+    public virtual bool StoresJsonArray => false;
 
     public abstract BaseFieldValue FieldValueFrom(dynamic value);
 

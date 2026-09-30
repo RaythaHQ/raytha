@@ -7,7 +7,6 @@ using Raytha.Application.Common.Exceptions;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Models;
 using Raytha.Application.Common.Utils;
-using Raytha.Application.SitePages.Widgets;
 using Raytha.Domain.Entities;
 
 namespace Raytha.Application.SitePages.Commands;
@@ -95,10 +94,22 @@ public class SaveWidgets
                         if (entity == null)
                             throw new NotFoundException("Site Page", request.Id);
 
-                        // Validate each widget
+                        var themeFields = WidgetSettings.ActiveThemeFields(db);
+                        var savedWidgets = entity
+                            .DraftWidgets.Values.Concat(entity.PublishedWidgets.Values)
+                            .SelectMany(section => section)
+                            .ToLookup(w => w.Id);
+
                         var index = 0;
                         foreach (var widget in request.Widgets)
                         {
+                            var saved = widget.Id is { } id
+                                ? savedWidgets[id.Guid]
+                                    .Where(w => w.WidgetType == widget.WidgetType)
+                                    .Select(w => w.SettingsJson)
+                                    .ToList()
+                                : [];
+
                             if (string.IsNullOrEmpty(widget.WidgetType))
                             {
                                 context.AddFailure(
@@ -106,11 +117,31 @@ public class SaveWidgets
                                     "Widget type is required."
                                 );
                             }
-                            else if (!WidgetDefinitionService.IsValidWidgetType(widget.WidgetType))
+                            else if (themeFields.TryGetValue(widget.WidgetType, out var fields))
+                            {
+                                foreach (
+                                    var error in WidgetSettings.Validate(
+                                        widget.SettingsJson,
+                                        fields,
+                                        saved
+                                    )
+                                )
+                                {
+                                    context.AddFailure($"Widgets[{index}].SettingsJson", error);
+                                }
+                            }
+                            else if (saved.Count == 0)
                             {
                                 context.AddFailure(
                                     $"Widgets[{index}].WidgetType",
-                                    $"Widget type '{widget.WidgetType}' is not supported."
+                                    $"Widget type '{widget.WidgetType}' is not in the active theme."
+                                );
+                            }
+                            else if (!IsJson(widget.SettingsJson))
+                            {
+                                context.AddFailure(
+                                    $"Widgets[{index}].SettingsJson",
+                                    "Invalid JSON format."
                                 );
                             }
 
@@ -138,26 +169,25 @@ public class SaveWidgets
                                 );
                             }
 
-                            // Validate settings JSON is valid JSON
-                            if (!string.IsNullOrEmpty(widget.SettingsJson))
-                            {
-                                try
-                                {
-                                    JsonDocument.Parse(widget.SettingsJson);
-                                }
-                                catch
-                                {
-                                    context.AddFailure(
-                                        $"Widgets[{index}].SettingsJson",
-                                        "Invalid JSON format."
-                                    );
-                                }
-                            }
-
                             index++;
                         }
                     }
                 );
+        }
+
+        private static bool IsJson(string? json)
+        {
+            if (string.IsNullOrEmpty(json))
+                return true;
+            try
+            {
+                using var _ = JsonDocument.Parse(json);
+                return true;
+            }
+            catch (JsonException)
+            {
+                return false;
+            }
         }
     }
 

@@ -19,6 +19,9 @@ public class CreateRaythaFunction
         public bool IsActive { get; init; }
         public required string Code { get; init; }
 
+        /// <summary>Optional public path such as llms.txt. HTTP request functions only.</summary>
+        public string? RoutePath { get; init; }
+
         public static Command Empty() =>
             new()
             {
@@ -47,6 +50,18 @@ public class CreateRaythaFunction
                                 "DeveloperName",
                                 $"A function with the developer name {developerName} already exists."
                             );
+
+                        var routePath = RaythaFunctionRoutePath.Normalize(request.RoutePath);
+                        if (routePath.Length == 0)
+                            return;
+                        var routeProblem = RaythaFunctionRoutePath.Problem(
+                            db,
+                            routePath,
+                            request.TriggerType,
+                            ownRouteId: null
+                        );
+                        if (routeProblem != null)
+                            context.AddFailure("RoutePath", routeProblem);
                     }
                 );
         }
@@ -75,6 +90,11 @@ public class CreateRaythaFunction
                 IsActive = request.IsActive,
                 Code = request.Code,
             };
+            RaythaFunctionRoutePath.Apply(
+                _db,
+                function,
+                RaythaFunctionRoutePath.Normalize(request.RoutePath)
+            );
 
             await _db.RaythaFunctions.AddAsync(function, cancellationToken);
 

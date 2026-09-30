@@ -16,6 +16,7 @@ public class WebTemplate : BaseAuditableEntity
         new List<WebTemplateRevision>();
     public virtual ICollection<WebTemplateAccessToModelDefinition> TemplateAccessToModelDefinitions { get; set; } =
         new List<WebTemplateAccessToModelDefinition>();
+    public virtual ICollection<User> UserFavorites { get; set; } = new List<User>();
 }
 
 public class BuiltInWebTemplate : ValueObject

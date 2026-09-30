@@ -152,7 +152,7 @@ public class LoginWithJwt
                                 p.SsoId == sub && p.AuthenticationSchemeId == authScheme.Id
                             );
                         }
-                        else
+                        if (entity == null)
                         {
                             entity = db.Users.FirstOrDefault(p =>
                                 p.EmailAddress.ToLower() == email

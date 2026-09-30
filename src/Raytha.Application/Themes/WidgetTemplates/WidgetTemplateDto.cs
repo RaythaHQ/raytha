@@ -12,6 +12,7 @@ public record WidgetTemplateDto : BaseAuditableEntityDto
     public string DeveloperName { get; init; } = string.Empty;
     public string Content { get; init; } = string.Empty;
     public bool IsBuiltInTemplate { get; init; }
+    public IReadOnlyList<FieldDefinition> Fields { get; init; } = [];
     public AuditableUserDto? CreatorUser { get; init; }
     public AuditableUserDto? LastModifierUser { get; init; }
 
@@ -33,6 +34,7 @@ public record WidgetTemplateDto : BaseAuditableEntityDto
             DeveloperName = entity.DeveloperName ?? string.Empty,
             Content = entity.Content ?? string.Empty,
             IsBuiltInTemplate = entity.IsBuiltInTemplate,
+            Fields = entity.Fields,
             CreatorUserId = entity.CreatorUserId,
             CreationTime = entity.CreationTime,
             LastModificationTime = entity.LastModificationTime,

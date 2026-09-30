@@ -7,7 +7,7 @@
     "build": "pnpm --filter @raytha/shell build",
     "typecheck": "pnpm -r typecheck",
     "lint": "eslint .",
-    "test": "pnpm --filter @raytha/ui test"
+    "test": "pnpm -r test"
   },
   "devDependencies": {
     "eslint": "^10.8.0",

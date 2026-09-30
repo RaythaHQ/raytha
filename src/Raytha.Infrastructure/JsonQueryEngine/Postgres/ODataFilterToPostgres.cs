@@ -123,10 +123,7 @@ internal class ODataFilterToPostgres : AbstractODataFilterToSql
                         )
                     );
                 }
-                else if (
-                    chosenColumnAsCustomField.FieldType.DeveloperName
-                    == BaseFieldType.MultipleSelect
-                )
+                else if (chosenColumnAsCustomField.FieldType.StoresJsonArray)
                 {
                     if (functionName != "contains")
                         throw new NotImplementedException(

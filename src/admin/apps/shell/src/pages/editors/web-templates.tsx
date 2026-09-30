@@ -1,5 +1,5 @@
 import { adminApi, formatError, hasPermission, platformPermissions } from "@raytha/api";
-import type { JsonObject, TemplateRevision, WebTemplateDetail } from "@raytha/api";
+import type { JsonObject, PagedResult, TemplateRevision, WebTemplateDetail } from "@raytha/api";
 import {
   Badge,
   Button,
@@ -28,7 +28,7 @@ import {
 } from "@raytha/ui";
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useNavigate, useParams } from "@tanstack/react-router";
-import { Inbox, Plus } from "lucide-react";
+import { Inbox, Plus, Star } from "lucide-react";
 import { useState, type FormEvent, type ReactNode } from "react";
 import { ListBackLink } from "../../components/list-back-link";
 import { useDocumentTitle } from "../../lib/document-title";
@@ -42,12 +42,29 @@ export function WebTemplatesListPage() {
   const themeId = "themeId" in params && typeof params.themeId === "string" ? params.themeId : "";
   const [search, setSearch] = useState("");
   const theme = useThemeSummary(themeId);
+  const queryClient = useQueryClient();
 
+  const listKey = ["web-templates", themeId, search];
   const query = useQuery({
-    queryKey: ["web-templates", themeId, search],
+    queryKey: listKey,
     queryFn: () => adminApi.webTemplates(themeId).list({ search: search || undefined, pageSize: 50 }),
     enabled: themeId.length > 0,
     placeholderData: keepPreviousData,
+  });
+  const favorite = useFavoriteWebTemplate(themeId, {
+    onMutate: async ({ id, setAsFavorite }) => {
+      await queryClient.cancelQueries({ queryKey: listKey });
+      const previous = queryClient.getQueryData<PagedResult<WebTemplateDetail>>(listKey);
+      queryClient.setQueryData<PagedResult<WebTemplateDetail>>(listKey, (current) =>
+        current
+          ? {
+              ...current,
+              items: current.items.map((item) => (item.id === id ? { ...item, isFavorite: setAsFavorite } : item)),
+            }
+          : current,
+      );
+      return () => queryClient.setQueryData(listKey, previous);
+    },
   });
 
   useDocumentTitle(["Web templates", theme?.title ?? "Theme"]);
@@ -95,38 +112,61 @@ export function WebTemplatesListPage() {
               <Table flush aria-label="Web templates">
                 <TableHeader>
                   <TableRow>
+                    <TableHead className="w-12 pr-0">
+                      <span className="sr-only">Favorite</span>
+                    </TableHead>
                     <TableHead>Label</TableHead>
                     <TableHead>Developer name</TableHead>
                     <TableHead>Type</TableHead>
                   </TableRow>
                 </TableHeader>
-                <TableBody>
-                  {data.items.map((item) => (
-                    <TableRow key={item.id}>
-                      <TableCell>
-                        <Link
-                          to="/themes/$themeId/web-templates/$id"
-                          params={{ themeId, id: item.id }}
-                          className="font-medium text-primary hover:underline"
+                {favoriteGroups(data.items).map((group) => (
+                  <TableBody key={group.title ?? "all"}>
+                    {group.title ? (
+                      <TableRow className="bg-muted/40 hover:bg-muted/40">
+                        <th
+                          scope="rowgroup"
+                          colSpan={4}
+                          className="px-4 py-1.5 text-left text-[11px] font-semibold uppercase tracking-wide text-muted-foreground"
                         >
-                          {item.label || item.id}
-                        </Link>
-                      </TableCell>
-                      <TableCell>
-                        <code className="text-xs text-muted-foreground">{item.developerName || "—"}</code>
-                      </TableCell>
-                      <TableCell>
-                        <span className="flex flex-wrap gap-1.5">
-                          {item.isBaseLayout ? <Badge variant="info">Base layout</Badge> : null}
-                          {item.isBuiltInTemplate ? <Badge variant="secondary">Built-in</Badge> : null}
-                          {!item.isBaseLayout && !item.isBuiltInTemplate ? (
-                            <span className="text-sm text-muted-foreground">Custom</span>
-                          ) : null}
-                        </span>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
+                          {group.title}
+                        </th>
+                      </TableRow>
+                    ) : null}
+                    {group.items.map((item) => (
+                      <TableRow key={item.id}>
+                        <TableCell className="w-12 py-1 pr-0">
+                          <FavoriteStarButton
+                            label={item.label || item.developerName || item.id}
+                            isFavorite={item.isFavorite}
+                            onToggle={() => favorite.mutate({ id: item.id, setAsFavorite: !item.isFavorite })}
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Link
+                            to="/themes/$themeId/web-templates/$id"
+                            params={{ themeId, id: item.id }}
+                            className="font-medium text-primary hover:underline"
+                          >
+                            {item.label || item.id}
+                          </Link>
+                        </TableCell>
+                        <TableCell>
+                          <code className="text-xs text-muted-foreground">{item.developerName || "—"}</code>
+                        </TableCell>
+                        <TableCell>
+                          <span className="flex flex-wrap gap-1.5">
+                            {item.isBaseLayout ? <Badge variant="info">Base layout</Badge> : null}
+                            {item.isBuiltInTemplate ? <Badge variant="secondary">Built-in</Badge> : null}
+                            {!item.isBaseLayout && !item.isBuiltInTemplate ? (
+                              <span className="text-sm text-muted-foreground">Custom</span>
+                            ) : null}
+                          </span>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                ))}
               </Table>
             )}
           </ListPanel>
@@ -181,6 +221,7 @@ function WebTemplateEditor({
     template.allowAccessForNewContentTypes,
   );
   const [accessIds, setAccessIds] = useState<string[]>(template.templateAccessToModelDefinitions);
+  const [isFavorite, setIsFavorite] = useState(template.isFavorite);
 
   const [synced, setSynced] = useState(template);
   if (synced !== template) {
@@ -191,7 +232,16 @@ function WebTemplateEditor({
     setParentTemplateId(template.parentTemplateId ?? "");
     setAllowAccessForNewContentTypes(template.allowAccessForNewContentTypes);
     setAccessIds(template.templateAccessToModelDefinitions);
+    setIsFavorite(template.isFavorite);
   }
+
+  const favorite = useFavoriteWebTemplate(themeId, {
+    onMutate: ({ setAsFavorite }) => {
+      const previous = isFavorite;
+      setIsFavorite(setAsFavorite);
+      return () => setIsFavorite(previous);
+    },
+  });
 
   const layouts = useQuery({
     queryKey: ["web-templates", themeId, "base-layouts"],
@@ -259,9 +309,20 @@ function WebTemplateEditor({
           </>
         }
         actions={
-          <Button type="submit" form="web-template-form" loading={save.isPending}>
-            Save
-          </Button>
+          <>
+            <Button
+              type="button"
+              variant="outline"
+              aria-pressed={isFavorite}
+              onClick={() => favorite.mutate({ id: template.id, setAsFavorite: !isFavorite })}
+            >
+              <Star className={isFavorite ? "fill-current text-warning" : ""} aria-hidden />
+              {isFavorite ? "Favorited" : "Favorite"}
+            </Button>
+            <Button type="submit" form="web-template-form" loading={save.isPending}>
+              Save
+            </Button>
+          </>
         }
       />
       <TemplateWorkbench
@@ -430,6 +491,73 @@ export function NewWebTemplatePage() {
         onSave={() => create.mutate()}
       />
     </div>
+  );
+}
+
+interface FavoriteInput {
+  id: string;
+  setAsFavorite: boolean;
+}
+
+/** `onMutate` applies the optimistic change and returns its rollback. */
+function useFavoriteWebTemplate(
+  themeId: string,
+  { onMutate }: { onMutate: (input: FavoriteInput) => Promise<() => void> | (() => void) },
+) {
+  const queryClient = useQueryClient();
+  const mutationKey = ["web-template-favorite", themeId];
+  return useMutation({
+    mutationKey,
+    mutationFn: ({ id, setAsFavorite }: FavoriteInput) => adminApi.webTemplates(themeId).favorite(id, setAsFavorite),
+    onMutate,
+    onError: (error, _input, rollback) => {
+      rollback?.();
+      toast.error(formatError(error));
+    },
+    onSettled: (_result, _error, { id }) => {
+      // A refetch while another star is in flight would overwrite that star's optimistic state.
+      if (queryClient.isMutating({ mutationKey }) > 1) {
+        return;
+      }
+      void queryClient.invalidateQueries({ queryKey: ["web-templates", themeId] });
+      // The open editor resets its form whenever the template refetches, so only mark it stale.
+      void queryClient.invalidateQueries({ queryKey: ["web-template", themeId, id], refetchType: "none" });
+    },
+  });
+}
+
+function favoriteGroups(items: WebTemplateDetail[]): { title: string | null; items: WebTemplateDetail[] }[] {
+  if (!items.some((item) => item.isFavorite)) {
+    return [{ title: null, items }];
+  }
+  return [
+    { title: "Favorites", items: items.filter((item) => item.isFavorite) },
+    { title: "Other templates", items: items.filter((item) => !item.isFavorite) },
+  ].filter((group) => group.items.length > 0);
+}
+
+function FavoriteStarButton({
+  label,
+  isFavorite,
+  onToggle,
+}: {
+  label: string;
+  isFavorite: boolean;
+  onToggle: () => void;
+}) {
+  return (
+    <Button
+      type="button"
+      variant="ghost"
+      size="icon"
+      className="size-8"
+      aria-label={`Favorite ${label}`}
+      aria-pressed={isFavorite}
+      title={isFavorite ? "Remove from favorites" : "Add to favorites"}
+      onClick={onToggle}
+    >
+      <Star className={isFavorite ? "fill-current text-warning" : "text-muted-foreground"} aria-hidden />
+    </Button>
   );
 }
 

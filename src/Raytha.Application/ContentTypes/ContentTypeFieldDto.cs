@@ -18,6 +18,7 @@ public record ContentTypeFieldDto : BaseEntityDto
     public IEnumerable<ContentTypeFieldChoice> Choices { get; init; } =
         new List<ContentTypeFieldChoice>();
     public ShortGuid? RelatedContentTypeId { get; init; }
+    public IReadOnlyList<FieldDefinition> SubFields { get; init; } = [];
 
     public static Expression<Func<ContentTypeField, ContentTypeFieldDto>> GetProjection()
     {
@@ -38,6 +39,7 @@ public record ContentTypeFieldDto : BaseEntityDto
             IsRequired = entity.IsRequired,
             FieldOrder = entity.FieldOrder,
             RelatedContentTypeId = entity.RelatedContentTypeId,
+            SubFields = entity.SubFields,
         };
     }
 }

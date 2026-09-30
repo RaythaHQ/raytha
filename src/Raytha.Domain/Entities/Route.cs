@@ -5,6 +5,7 @@ public class Route : BaseEntity
     public const string CONTENT_ITEM_TYPE = "ContentItem";
     public const string VIEW_TYPE = "View";
     public const string SITE_PAGE_TYPE = "SitePage";
+    public const string RAYTHA_FUNCTION_TYPE = "RaythaFunction";
     public const string UNKNOWN_TYPE = "Unknown";
 
     public string Path { get; set; }
@@ -17,4 +18,7 @@ public class Route : BaseEntity
 
     public Guid SitePageId { get; set; }
     public virtual SitePage SitePage { get; set; }
+
+    public Guid? RaythaFunctionId { get; set; }
+    public virtual RaythaFunction? RaythaFunction { get; set; }
 }

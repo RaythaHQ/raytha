@@ -100,7 +100,7 @@ public class LoginWithSaml
                                 && p.AuthenticationSchemeId == authScheme.Id
                             );
                         }
-                        else
+                        if (entity == null)
                         {
                             entity = db.Users.FirstOrDefault(p =>
                                 p.EmailAddress.ToLower() == email
@@ -209,6 +209,7 @@ public class LoginWithSaml
                     IsActive = true,
                     Salt = salt,
                     PasswordHash = PasswordUtility.Hash(PasswordUtility.RandomPassword(12), salt),
+                    SsoId = nameID,
                     UserGroups = foundUserGroups,
                 };
             }

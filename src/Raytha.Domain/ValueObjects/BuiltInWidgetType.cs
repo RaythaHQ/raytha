@@ -1,11 +1,12 @@
 using Raytha.Domain.Common;
+using Raytha.Domain.Entities;
 using Raytha.Domain.Exceptions;
 
 namespace Raytha.Domain.ValueObjects;
 
 /// <summary>
-/// Defines the built-in widget types available for Site Pages.
-/// Each widget type has a system name, display name, and default Liquid template.
+/// The widget templates every theme starts with: their default Liquid and default fields.
+/// Themes may add custom widget templates; those have no entry here.
 /// </summary>
 public class BuiltInWidgetType : ValueObject
 {
@@ -13,10 +14,19 @@ public class BuiltInWidgetType : ValueObject
 
     private BuiltInWidgetType() { }
 
-    private BuiltInWidgetType(string displayName, string developerName)
+    private BuiltInWidgetType(
+        string displayName,
+        string developerName,
+        string description,
+        string iconClass,
+        IReadOnlyList<FieldDefinition> fields
+    )
     {
         DisplayName = displayName;
         DeveloperName = developerName;
+        Description = description;
+        IconClass = iconClass;
+        Fields = fields;
     }
 
     public static BuiltInWidgetType From(string developerName)
@@ -31,45 +41,82 @@ public class BuiltInWidgetType : ValueObject
         return type;
     }
 
-    /// <summary>
-    /// Hero widget - large banner with headline, subtext, and optional CTA button.
-    /// </summary>
-    public static BuiltInWidgetType Hero => new("Hero", "hero");
+    public static BuiltInWidgetType? Find(string? developerName) =>
+        WidgetTypes.FirstOrDefault(p => p.DeveloperName == developerName);
 
-    /// <summary>
-    /// WYSIWYG widget - Rich text content block.
-    /// </summary>
-    public static BuiltInWidgetType Wysiwyg => new("WYSIWYG", "wysiwyg");
+    public static bool IsBuiltIn(string? developerName) => Find(developerName) != null;
 
-    /// <summary>
-    /// Image + Text widget - image alongside text content, configurable layout.
-    /// </summary>
-    public static BuiltInWidgetType ImageText => new("Image + Text", "imagetext");
+    public static BuiltInWidgetType Hero =>
+        new(
+            "Hero",
+            "hero",
+            "Large banner with headline, subtext, and optional call-to-action button.",
+            "bi-card-heading",
+            BuiltInWidgetFields.Hero
+        );
 
-    /// <summary>
-    /// Card widget - single card with image, title, description, and CTA.
-    /// </summary>
-    public static BuiltInWidgetType Card => new("Card", "card");
+    public static BuiltInWidgetType Wysiwyg =>
+        new(
+            "WYSIWYG",
+            "wysiwyg",
+            "Rich text content block with WYSIWYG editor.",
+            "bi-file-earmark-richtext",
+            BuiltInWidgetFields.Wysiwyg
+        );
 
-    /// <summary>
-    /// FAQ widget - expandable accordion of questions and answers.
-    /// </summary>
-    public static BuiltInWidgetType FAQ => new("FAQ", "faq");
+    public static BuiltInWidgetType ImageText =>
+        new(
+            "Image + Text",
+            "imagetext",
+            "Image alongside text content with configurable layout.",
+            "bi-image",
+            BuiltInWidgetFields.ImageText
+        );
 
-    /// <summary>
-    /// Call to Action widget - prominent CTA block with heading, text, and button.
-    /// </summary>
-    public static BuiltInWidgetType CTA => new("Call to Action", "cta");
+    public static BuiltInWidgetType Card =>
+        new(
+            "Card",
+            "card",
+            "A single card with image, title, description, and call-to-action.",
+            "bi-card-text",
+            BuiltInWidgetFields.Card
+        );
 
-    /// <summary>
-    /// Embed widget - embed external content via iframe or script.
-    /// </summary>
-    public static BuiltInWidgetType Embed => new("Embed", "embed");
+    public static BuiltInWidgetType FAQ =>
+        new(
+            "FAQ",
+            "faq",
+            "Expandable accordion of frequently asked questions.",
+            "bi-question-circle",
+            BuiltInWidgetFields.Faq
+        );
 
-    /// <summary>
-    /// Content List widget - displays a list of content items from a content type.
-    /// </summary>
-    public static BuiltInWidgetType ContentList => new("Content List", "contentlist");
+    public static BuiltInWidgetType CTA =>
+        new(
+            "Call to Action",
+            "cta",
+            "Prominent call-to-action block with heading and button.",
+            "bi-megaphone",
+            BuiltInWidgetFields.Cta
+        );
+
+    public static BuiltInWidgetType Embed =>
+        new(
+            "Embed",
+            "embed",
+            "Embed external content via iframe or raw HTML.",
+            "bi-code-slash",
+            BuiltInWidgetFields.Embed
+        );
+
+    public static BuiltInWidgetType ContentList =>
+        new(
+            "Content List",
+            "contentlist",
+            "Displays a list of content items from a content type.",
+            "bi-list-ul",
+            BuiltInWidgetFields.ContentList
+        );
 
     /// <summary>
     /// Display name shown in admin UI.
@@ -80,6 +127,15 @@ public class BuiltInWidgetType : ValueObject
     /// Developer name used as identifier and in template paths.
     /// </summary>
     public string DeveloperName { get; private set; } = string.Empty;
+
+    public string Description { get; private set; } = string.Empty;
+
+    /// <summary>
+    /// Bootstrap Icons class shown in the admin widget picker.
+    /// </summary>
+    public string IconClass { get; private set; } = string.Empty;
+
+    public IReadOnlyList<FieldDefinition> Fields { get; private set; } = [];
 
     /// <summary>
     /// Gets the default Liquid template content for this widget type.
@@ -99,10 +155,21 @@ public class BuiltInWidgetType : ValueObject
         }
     }
 
-    /// <summary>
-    /// Gets the template developer name for database storage.
-    /// </summary>
-    public string TemplateDeveloperName => $"raytha_widget_{DeveloperName}";
+    public WidgetTemplate CreateTemplate(Guid themeId)
+    {
+        var template = new WidgetTemplate { Id = Guid.NewGuid(), ThemeId = themeId };
+        ResetTemplate(template);
+        return template;
+    }
+
+    public void ResetTemplate(WidgetTemplate template)
+    {
+        template.Label = DisplayName;
+        template.DeveloperName = DeveloperName;
+        template.Content = DefaultTemplateContent;
+        template.IsBuiltInTemplate = true;
+        template.Fields = Fields;
+    }
 
     public static implicit operator string(BuiltInWidgetType type)
     {

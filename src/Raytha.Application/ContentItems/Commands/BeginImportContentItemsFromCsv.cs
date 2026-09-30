@@ -497,6 +497,16 @@ public class BeginImportContentItemsFromCsv
                                 errorMessage =
                                     $"Value is empty for required field: {fieldDefinition.DeveloperName}";
                             }
+
+                            var rowErrors = FieldDefinitionValues.RowErrors(
+                                fieldDefinition,
+                                fieldValue,
+                                !importAsDraft
+                            );
+                            if (string.IsNullOrEmpty(errorMessage) && rowErrors.Count > 0)
+                            {
+                                errorMessage = string.Join(" ", rowErrors);
+                            }
                         }
                         catch (Exception ex)
                         {
@@ -518,10 +528,14 @@ public class BeginImportContentItemsFromCsv
                     }
                 }
 
+                var storedContent = FieldDefinitionValues.ToStoredContent(
+                    contentType.ContentTypeFields,
+                    content
+                );
                 var contentItem = new ContentItem
                 {
-                    PublishedContent = content,
-                    DraftContent = content,
+                    PublishedContent = storedContent,
+                    DraftContent = storedContent,
                     IsPublished = importAsDraft == false,
                     IsDraft = importAsDraft,
                     ContentTypeId = contentType.Id,

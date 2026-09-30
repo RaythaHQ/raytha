@@ -8,6 +8,7 @@ using Raytha.Application.Common.Models.RenderModels;
 using Raytha.Application.ContentItems;
 using Raytha.Application.ContentItems.Queries;
 using Raytha.Application.ContentTypes;
+using Raytha.Application.RaythaFunctions.Queries;
 using Raytha.Application.Routes.Queries;
 using Raytha.Application.SitePages.Queries;
 using Raytha.Application.Themes.Queries;
@@ -17,6 +18,7 @@ using Raytha.Application.Views.Queries;
 using Raytha.Domain.Entities;
 using Raytha.Web.Areas.Public.DbViewEngine;
 using Raytha.Web.Authentication;
+using Raytha.Web.Services;
 
 namespace Raytha.Web.Areas.Public.Controllers;
 
@@ -81,8 +83,23 @@ public class MainController : BaseController
                 ),
             Domain.Entities.Route.SITE_PAGE_TYPE =>
                 await RenderSitePageAsync(response.Result.SitePageId.Value),
+            Domain.Entities.Route.RAYTHA_FUNCTION_TYPE =>
+                await RunFunctionAsync(response.Result.RaythaFunctionId),
             _ => throw new Exception("Unknown content type"),
         };
+    }
+
+    private async Task<IActionResult> RunFunctionAsync(ShortGuid raythaFunctionId)
+    {
+        var function = await Mediator.Send(new GetRaythaFunctionById.Query { Id = raythaFunctionId });
+        var input = await RaythaFunctionHttp.ReadCommand(Request, function.Result.DeveloperName);
+        if (input is null)
+        {
+            return RaythaFunctionHttp.MethodNotAllowed(Response);
+        }
+
+        var response = await Mediator.Send(input, HttpContext.RequestAborted);
+        return RaythaFunctionHttp.ToActionResult(Request, response, notFound: BuildNotFoundResult());
     }
 
     private async Task<IActionResult> RenderContentItemAsync(ShortGuid contentItemId)

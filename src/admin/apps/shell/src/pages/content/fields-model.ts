@@ -12,9 +12,53 @@ export const FIELD_TYPE_NAMES = [
   "number",
   "attachment",
   "one_to_one_relationship",
+  "color",
+  "repeater",
 ] as const;
 
 export type FieldTypeName = (typeof FIELD_TYPE_NAMES)[number];
+
+/** Types a repeater row can hold. Mirrors `RepeaterFieldType.SubFieldTypes`. */
+export const REPEATER_SUB_FIELD_TYPES = [
+  "single_line_text",
+  "long_text",
+  "wysiwyg",
+  "number",
+  "checkbox",
+  "date",
+  "dropdown",
+  "radio",
+  "color",
+  "attachment",
+] as const satisfies readonly FieldTypeName[];
+
+export type RepeaterSubFieldType = (typeof REPEATER_SUB_FIELD_TYPES)[number];
+
+/** Types a `FieldDefinition` can take: repeater sub-fields, and the repeater itself. */
+export const DEFINITION_FIELD_TYPES = [...REPEATER_SUB_FIELD_TYPES, "repeater"] as const;
+
+export type DefinitionFieldType = (typeof DEFINITION_FIELD_TYPES)[number];
+
+const DEFINITION_FIELD_TYPE_SET = new Set<string>(DEFINITION_FIELD_TYPES);
+
+export function isDefinitionFieldType(value: string): value is DefinitionFieldType {
+  return DEFINITION_FIELD_TYPE_SET.has(value);
+}
+
+/** A field stored as JSON rather than as a row. Mirrors `Raytha.Domain.Entities.FieldDefinition`. */
+export type FieldDefinition = {
+  developerName: string;
+  label: string;
+  fieldType: DefinitionFieldType;
+  description: string;
+  isRequired: boolean;
+  choices: FieldChoice[];
+  subFields: FieldDefinition[];
+};
+
+export type Cell = string | number | boolean | null;
+export type DefinitionValue = Cell | RepeaterRow[];
+export type RepeaterRow = { [developerName: string]: DefinitionValue };
 
 const FIELD_TYPE_SET = new Set<string>(FIELD_TYPE_NAMES);
 
@@ -47,11 +91,16 @@ export type RelationshipField = FieldBase & {
   relatedContentTypeId: string;
 };
 
-export type SimpleField = FieldBase & {
-  fieldType: "single_line_text" | "long_text" | "wysiwyg" | "checkbox" | "date" | "number" | "attachment";
+export type RepeaterField = FieldBase & {
+  fieldType: "repeater";
+  subFields: FieldDefinition[];
 };
 
-export type ContentField = ChoiceField | RelationshipField | SimpleField;
+export type SimpleField = FieldBase & {
+  fieldType: "single_line_text" | "long_text" | "wysiwyg" | "checkbox" | "date" | "number" | "attachment" | "color";
+};
+
+export type ContentField = ChoiceField | RelationshipField | RepeaterField | SimpleField;
 
 export type FieldTypeOption = {
   label: string;
@@ -74,11 +123,29 @@ export type CheckboxFieldValue = {
 };
 
 export type TextFieldValue = {
-  fieldType: "single_line_text" | "long_text" | "wysiwyg" | "date" | "number" | "attachment" | "one_to_one_relationship";
+  fieldType:
+    | "single_line_text"
+    | "long_text"
+    | "wysiwyg"
+    | "date"
+    | "number"
+    | "attachment"
+    | "one_to_one_relationship"
+    | "color";
   value: string;
 };
 
-export type ContentFieldValue = ChoiceFieldValue | MultipleSelectFieldValue | CheckboxFieldValue | TextFieldValue;
+export type RepeaterFieldValue = {
+  fieldType: "repeater";
+  value: RepeaterRow[];
+};
+
+export type ContentFieldValue =
+  | ChoiceFieldValue
+  | MultipleSelectFieldValue
+  | CheckboxFieldValue
+  | TextFieldValue
+  | RepeaterFieldValue;
 
 export type NamedRef = {
   id: string;
@@ -175,7 +242,82 @@ export function parseContentField(value: unknown): ContentField | undefined {
       relatedContentTypeId: readString(value, "relatedContentTypeId"),
     };
   }
+  if (fieldType === "repeater") {
+    return { ...base, fieldType, subFields: parseFieldDefinitions(value.subFields) };
+  }
   return { ...base, fieldType };
+}
+
+export function parseFieldDefinitions(value: unknown): FieldDefinition[] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+  const definitions: FieldDefinition[] = [];
+  for (const item of value) {
+    if (!isRecord(item)) {
+      continue;
+    }
+    const fieldType = readDeveloperName(item.fieldType).toLowerCase();
+    if (!isDefinitionFieldType(fieldType)) {
+      continue;
+    }
+    const choices: FieldChoice[] = [];
+    for (const choice of Array.isArray(item.choices) ? item.choices : []) {
+      const parsed = parseChoice(choice);
+      if (parsed) {
+        choices.push(parsed);
+      }
+    }
+    definitions.push({
+      developerName: readString(item, "developerName"),
+      label: readString(item, "label"),
+      fieldType,
+      description: readString(item, "description"),
+      isRequired: readBoolean(item, "isRequired"),
+      choices,
+      subFields: parseFieldDefinitions(item.subFields),
+    });
+  }
+  return definitions;
+}
+
+/** A content field in the `FieldDefinition` shape, for fields rendered by `DefinitionFieldControl`. */
+export function fieldAsDefinition(field: ContentField): FieldDefinition | undefined {
+  if (!isDefinitionFieldType(field.fieldType)) {
+    return undefined;
+  }
+  return {
+    developerName: field.developerName,
+    label: field.label,
+    fieldType: field.fieldType,
+    description: field.description,
+    isRequired: field.isRequired,
+    choices: "choices" in field ? field.choices : [],
+    subFields: field.fieldType === "repeater" ? field.subFields : [],
+  };
+}
+
+/** Repeater rows from a stored value: an array of flat objects. Anything else reads as no rows. */
+export function readRows(value: unknown): RepeaterRow[] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+  const rows: RepeaterRow[] = [];
+  for (const item of value) {
+    if (!isRecord(item)) {
+      continue;
+    }
+    const row: RepeaterRow = {};
+    for (const [key, cell] of Object.entries(item)) {
+      if (cell === null || typeof cell === "string" || typeof cell === "number" || typeof cell === "boolean") {
+        row[key] = cell;
+      } else if (Array.isArray(cell)) {
+        row[key] = readRows(cell);
+      }
+    }
+    rows.push(row);
+  }
+  return rows;
 }
 
 export function parseContentFields(value: unknown): ContentField[] {
@@ -241,6 +383,8 @@ export function emptyFieldValue(field: ContentField): ContentFieldValue {
       return { fieldType: "checkbox", value: false };
     case "multiple_select":
       return { fieldType: "multiple_select", value: [] };
+    case "repeater":
+      return { fieldType: "repeater", value: [] };
     case "dropdown":
     case "radio":
       return { fieldType: field.fieldType, value: "" };
@@ -251,6 +395,7 @@ export function emptyFieldValue(field: ContentField): ContentFieldValue {
     case "number":
     case "attachment":
     case "one_to_one_relationship":
+    case "color":
       return { fieldType: field.fieldType, value: "" };
     default: {
       const _exhaustive: never = field;
@@ -273,6 +418,8 @@ export function parseFieldValue(field: ContentField, raw: unknown): ContentField
       return { fieldType: "checkbox", value: stored === true || stored === "true" || stored === "True" };
     case "multiple_select":
       return { fieldType: "multiple_select", value: readStringArray(stored) };
+    case "repeater":
+      return { fieldType: "repeater", value: readRows(stored) };
     case "dropdown":
     case "radio":
       return { fieldType: field.fieldType, value: scalarString(stored) };
@@ -285,6 +432,7 @@ export function parseFieldValue(field: ContentField, raw: unknown): ContentField
     case "wysiwyg":
     case "attachment":
     case "one_to_one_relationship":
+    case "color":
       return { fieldType: field.fieldType, value: scalarString(stored) };
     default: {
       const _exhaustive: never = field;
@@ -293,11 +441,13 @@ export function parseFieldValue(field: ContentField, raw: unknown): ContentField
   }
 }
 
-export function fieldValueForSave(value: ContentFieldValue): string | number | boolean | string[] {
+export function fieldValueForSave(value: ContentFieldValue): string | number | boolean | string[] | RepeaterRow[] {
   switch (value.fieldType) {
     case "checkbox":
       return value.value;
     case "multiple_select":
+      return value.value;
+    case "repeater":
       return value.value;
     case "number": {
       if (value.value.trim() === "") {
@@ -314,6 +464,7 @@ export function fieldValueForSave(value: ContentFieldValue): string | number | b
     case "date":
     case "attachment":
     case "one_to_one_relationship":
+    case "color":
       return value.value;
     default: {
       const _exhaustive: never = value;
@@ -366,4 +517,8 @@ export function hasChoices(fieldType: FieldTypeName): boolean {
 
 export function isRelationship(fieldType: FieldTypeName): boolean {
   return fieldType === "one_to_one_relationship";
+}
+
+export function isRepeater(fieldType: FieldTypeName): boolean {
+  return fieldType === "repeater";
 }

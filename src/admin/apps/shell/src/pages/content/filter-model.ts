@@ -115,7 +115,7 @@ const ID_OPERATORS: ConditionOperator[] = [
   { developerName: "ne", label: "does not equal", needsValue: true },
 ];
 
-const ATTACHMENT_OPERATORS: ConditionOperator[] = [
+const PRESENCE_OPERATORS: ConditionOperator[] = [
   { developerName: "empty", label: "is empty", needsValue: false },
   { developerName: "notempty", label: "is not empty", needsValue: false },
 ];
@@ -142,6 +142,7 @@ export function operatorsForFieldType(fieldType: FieldTypeName | "id"): Conditio
       return TEXT_OPERATORS;
     case "radio":
     case "dropdown":
+    case "color":
       return SELECT_OPERATORS;
     case "checkbox":
       return CHECKBOX_OPERATORS;
@@ -151,7 +152,8 @@ export function operatorsForFieldType(fieldType: FieldTypeName | "id"): Conditio
     case "number":
       return NUMERIC_OPERATORS;
     case "attachment":
-      return ATTACHMENT_OPERATORS;
+    case "repeater":
+      return PRESENCE_OPERATORS;
     case "id":
       return ID_OPERATORS;
     default: {
@@ -168,6 +170,11 @@ export function viewColumnOptions(fields: ContentField[]): ViewColumnOption[] {
     fieldType: field.fieldType,
   }));
   return [...BUILT_IN_COLUMNS, ...custom];
+}
+
+/** Mirrors `BaseFieldType.IsSortable`: the server rejects a sort on anything else. */
+export function isSortableColumn(option: ViewColumnOption): boolean {
+  return option.fieldType !== "repeater";
 }
 
 export function emptyRootGroup(): FilterGroupNode {

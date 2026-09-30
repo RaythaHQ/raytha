@@ -6,7 +6,6 @@ import { Link } from "@tanstack/react-router";
 import {
   Activity,
   ArrowRight,
-  ArrowUpRight,
   Blocks,
   ChevronRight,
   Database,
@@ -42,12 +41,6 @@ export function DashboardPage() {
       <PageHeader
         title={firstName ? `${greeting()}, ${firstName}` : greeting()}
         description="Here is what is happening across your site."
-        actions={
-          <a href="/" target="_blank" rel="noreferrer" className={buttonVariants({ variant: "outline" })}>
-            View live site
-            <ArrowUpRight />
-          </a>
-        }
       />
       <QueryGate query={query}>{(data) => <Dashboard data={data} />}</QueryGate>
     </div>

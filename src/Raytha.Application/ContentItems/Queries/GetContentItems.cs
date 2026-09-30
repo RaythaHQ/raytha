@@ -50,6 +50,7 @@ public class GetContentItems
             {
                 View view = _entityFrameworkDb
                     .Views.Include(p => p.ContentType)
+                    .ThenInclude(p => p.ContentTypeFields)
                     .FirstOrDefault(p => p.Id == request.ViewId.Value.Guid);
 
                 if (view == null)

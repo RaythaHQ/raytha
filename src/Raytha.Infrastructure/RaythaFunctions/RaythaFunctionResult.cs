@@ -10,4 +10,10 @@ public class RaythaFunctionResult
     public string contentType { get; set; }
     public object body { get; set; }
     public int statusCode { get; set; }
+
+    /// <summary>
+    /// "content" for ContentResult and TextResult, whose contentType is any media type; null for the
+    /// older helpers, which are told apart by their contentType token.
+    /// </summary>
+    public string? kind { get; set; }
 }

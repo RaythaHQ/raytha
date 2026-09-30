@@ -12,6 +12,8 @@ import {
   parseRevision,
   parseThemeMediaItems,
   parseWebTemplate,
+  parseWidgetDefinitions,
+  parseWidgetFieldTypeOptions,
   parseWidgetTemplate,
   requireValue,
 } from "./parse";
@@ -21,6 +23,7 @@ import type {
   AuthenticationSchemeRequest,
   ClearedLog,
   ConfigurationOptions,
+  CreateWidgetTemplateInput,
   DuplicateThemeInput,
   EmailTemplateDetail,
   EntityRef,
@@ -44,7 +47,10 @@ import type {
   PlatformVersion,
   RetainedLogKey,
   RolePermissionCatalog,
+  SitePageWidgetDefinition,
   ThemeMediaItem,
+  UpdateWidgetTemplateInput,
+  WidgetFieldTypeOption,
 } from "./types";
 
 export class ApiError extends Error {
@@ -54,14 +60,6 @@ export class ApiError extends Error {
   ) {
     super(message);
   }
-}
-
-/** One built-in widget type from GET /site-pages/widget-definitions. */
-export interface SitePageWidgetDefinition {
-  developerName: string;
-  displayName: string;
-  description: string;
-  iconClass: string;
 }
 
 /** One widget in PUT /site-pages/{id}/widgets. Matches SaveWidgets.WidgetInput. */
@@ -561,8 +559,8 @@ export const adminApi = {
 
   sitePages: {
     ...crud<EntityRef>("/raytha/api/admin/site-pages"),
-    widgetDefinitions: () =>
-      apiFetch<SitePageWidgetDefinition[]>("/raytha/api/admin/site-pages/widget-definitions"),
+    widgetDefinitions: (): Promise<SitePageWidgetDefinition[]> =>
+      fetchUnknown("/raytha/api/admin/site-pages/widget-definitions").then(parseWidgetDefinitions),
     updateSettings: (id: string, input: { routePath: string }) =>
       apiFetch<EntityRef>(`/raytha/api/admin/site-pages/${id}/settings`, {
         method: "PUT",
@@ -609,6 +607,8 @@ export const adminApi = {
       }).then(parseIdResponse),
     media: (id: string): Promise<ThemeMediaItem[]> =>
       fetchUnknown(`/raytha/api/admin/themes/${id}/media`).then(parseThemeMediaItems),
+    widgetFieldTypes: (): Promise<WidgetFieldTypeOption[]> =>
+      fetchUnknown("/raytha/api/admin/themes/widget-field-types").then(parseWidgetFieldTypeOptions),
   },
   webTemplates: (themeId: string) => {
     const base = `/raytha/api/admin/themes/${themeId}/web-templates`;
@@ -624,6 +624,10 @@ export const adminApi = {
       remove: async (id: string) => {
         await fetchUnknown(`${base}/${id}`, { method: "DELETE" });
       },
+      favorite: (id: string, setAsFavorite: boolean) =>
+        fetchUnknown(`${base}/${id}/favorite`, { method: "POST", body: JSON.stringify({ setAsFavorite }) }).then(
+          parseIdResponse,
+        ),
       revisions: (id: string, params?: Record<string, string | number | boolean | undefined>) =>
         fetchUnknown(listQuery(`${base}/${id}/revisions`, params)).then((value) =>
           parsePaged(value, parseRevision),
@@ -641,8 +645,13 @@ export const adminApi = {
         fetchUnknown(listQuery(base, params)).then((value) => parsePaged(value, parseWidgetTemplate)),
       get: (id: string) =>
         fetchUnknown(`${base}/${id}`).then((value) => requireValue(parseWidgetTemplate(value), "widget template")),
-      update: (id: string, input: JsonObject) =>
+      create: (input: CreateWidgetTemplateInput) =>
+        fetchUnknown(base, { method: "POST", body: JSON.stringify(input) }).then(parseIdResponse),
+      update: (id: string, input: UpdateWidgetTemplateInput) =>
         fetchUnknown(`${base}/${id}`, { method: "PUT", body: JSON.stringify(input) }).then(parseIdResponse),
+      remove: async (id: string) => {
+        await fetchUnknown(`${base}/${id}`, { method: "DELETE" });
+      },
       revisions: (id: string, params?: Record<string, string | number | boolean | undefined>) =>
         fetchUnknown(listQuery(`${base}/${id}/revisions`, params)).then((value) =>
           parsePaged(value, parseRevision),

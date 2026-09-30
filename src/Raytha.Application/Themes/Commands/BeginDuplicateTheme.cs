@@ -9,6 +9,7 @@ using Raytha.Application.Common.Exceptions;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Models;
 using Raytha.Application.Common.Utils;
+using Raytha.Application.Themes.WidgetTemplates;
 using Raytha.Domain.Entities;
 
 namespace Raytha.Application.Themes.Commands;
@@ -359,16 +360,7 @@ public class BeginDuplicateTheme
             var widgetTemplates = new List<WidgetTemplate>();
             foreach (var originalWidgetTemplate in originalThemeWidgetTemplates)
             {
-                var widgetTemplate = new WidgetTemplate
-                {
-                    Id = Guid.NewGuid(),
-                    ThemeId = entity.Id,
-                    Label = originalWidgetTemplate.Label,
-                    DeveloperName = originalWidgetTemplate.DeveloperName,
-                    Content = originalWidgetTemplate.Content,
-                    IsBuiltInTemplate = originalWidgetTemplate.IsBuiltInTemplate,
-                };
-                widgetTemplates.Add(widgetTemplate);
+                widgetTemplates.Add(originalWidgetTemplate.CopyToTheme(entity.Id));
             }
 
             await _db.WidgetTemplates.AddRangeAsync(widgetTemplates, cancellationToken);

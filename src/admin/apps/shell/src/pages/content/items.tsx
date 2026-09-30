@@ -669,7 +669,16 @@ function renderCell(name: string, entity: EntityRef, ctx: CellContext): ReactNod
   const content = entityFields(entity).publishedContent;
   const raw = isRecord(content) ? content[name] : undefined;
   const field = ctx.fields.find((item) => item.developerName === name);
-  return formatFieldCell(field, raw) || "—";
+  const text = formatFieldCell(field, raw);
+  if (field?.fieldType === "color" && text) {
+    return (
+      <span className="inline-flex items-center gap-2 font-mono text-xs">
+        <span aria-hidden className="size-4 shrink-0 rounded border border-border shadow-xs" style={{ backgroundColor: text }} />
+        {text}
+      </span>
+    );
+  }
+  return text || "—";
 }
 
 function auditUserName(value: unknown): string {
@@ -693,6 +702,10 @@ function formatFieldCell(field: ContentField | undefined, raw: unknown): string 
       return typeof value === "string" ? choiceLabel(field, value) : displayText(value);
     case "one_to_one_relationship":
       return isRecord(value) ? readString(value, "primaryField") || displayText(value) : displayText(value);
+    case "repeater": {
+      const count = Array.isArray(value) ? value.length : 0;
+      return count > 0 ? `${count} ${count === 1 ? "row" : "rows"}` : "";
+    }
     default:
       return displayText(value);
   }

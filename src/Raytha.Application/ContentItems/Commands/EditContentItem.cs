@@ -77,6 +77,16 @@ public class EditContentItem
                                             $"'{fieldDefinition.Label}' field is required."
                                         );
                                     }
+                                    foreach (
+                                        var error in FieldDefinitionValues.RowErrors(
+                                            fieldDefinition,
+                                            fieldValue,
+                                            !request.SaveAsDraft
+                                        )
+                                    )
+                                    {
+                                        context.AddFailure(fieldDefinition.DeveloperName, error);
+                                    }
                                 }
                                 catch (Exception ex)
                                 {
@@ -110,8 +120,13 @@ public class EditContentItem
                 .ContentItems.Include(p => p.CreatorUser)
                 .Include(p => p.LastModifierUser)
                 .Include(p => p.ContentType)
+                .ThenInclude(p => p.ContentTypeFields)
                 .Include(p => p.Route)
                 .First(p => p.Id == request.Id.Guid);
+            var content = FieldDefinitionValues.ToStoredContent(
+                entity.ContentType!.ContentTypeFields,
+                request.Content
+            );
 
             if (request.SaveAsDraft)
             {
@@ -123,7 +138,7 @@ public class EditContentItem
                 entity.IsPublished = true;
             }
 
-            entity.DraftContent = request.Content;
+            entity.DraftContent = content;
 
             if (!entity.IsDraft)
             {
@@ -134,7 +149,7 @@ public class EditContentItem
                         PublishedContent = entity.PublishedContent,
                     }
                 );
-                entity.PublishedContent = request.Content;
+                entity.PublishedContent = content;
             }
             entity.AddDomainEvent(new ContentItemUpdatedEvent(entity));
 

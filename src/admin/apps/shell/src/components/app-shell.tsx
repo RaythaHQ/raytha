@@ -751,10 +751,6 @@ export function AppShell() {
                   <UserRound />
                   My profile
                 </DropdownMenuItem>
-                <DropdownMenuItem onSelect={() => window.open("/", "_blank", "noopener,noreferrer")}>
-                  <ArrowUpRight />
-                  View live site
-                </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onSelect={() => void handleLogout()}>
                   <LogOut />

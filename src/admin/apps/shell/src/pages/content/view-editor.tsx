@@ -38,15 +38,17 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { GripVertical, Star } from "lucide-react";
+import { GripVertical, Star, Trash2 } from "lucide-react";
 import { useMemo, useState, type ReactNode } from "react";
 import { useDocumentTitle } from "../../lib/document-title";
 import { parseContentTypeSummary, parseNamedRefs, type ContentField, type FieldTypeName } from "./fields-model";
 import { ListBackLink } from "../../components/list-back-link";
+import { FilterValueInput } from "./filter-value-input";
 import {
   emptyChildGroup,
   emptyCondition,
   flattenFilter,
+  isSortableColumn,
   operatorNeedsValue,
   operatorsForFieldType,
   parseViewModel,
@@ -234,7 +236,7 @@ export function ContentViewEditorPage() {
               <TabsContent value="sort" className="mt-4">
                 <SortEditor
                   view={view}
-                  options={columns}
+                  options={columns.filter(isSortableColumn)}
                   onAdd={(row) =>
                     views
                       .updateSort(viewId, {
@@ -616,26 +618,30 @@ function FilterGroupEditor({
         </Button>
       </div>
       {node.children.map((child, index) => (
-        <div key={child.id} className="space-y-2">
-          {child.kind === "group" ? (
-            <FilterGroupEditor
-              node={child}
-              options={options}
-              fields={fields}
-              onChange={(next) => replaceChild(index, next)}
-            />
-          ) : (
-            <FilterConditionEditor
-              node={child}
-              options={options}
-              fields={fields}
-              onChange={(next) => replaceChild(index, next)}
-            />
-          )}
+        <div key={child.id} className="flex items-start gap-2">
+          <div className="min-w-0 flex-1">
+            {child.kind === "group" ? (
+              <FilterGroupEditor
+                node={child}
+                options={options}
+                fields={fields}
+                onChange={(next) => replaceChild(index, next)}
+              />
+            ) : (
+              <FilterConditionEditor
+                node={child}
+                options={options}
+                fields={fields}
+                onChange={(next) => replaceChild(index, next)}
+              />
+            )}
+          </div>
           <Button
             type="button"
-            size="sm"
             variant="ghost"
+            size="icon"
+            className="size-9 shrink-0 text-muted-foreground hover:text-destructive"
+            aria-label={child.kind === "group" ? "Remove group" : "Remove condition"}
             onClick={() =>
               onChange({
                 ...node,
@@ -643,7 +649,7 @@ function FilterGroupEditor({
               })
             }
           >
-            Remove
+            <Trash2 className="size-4" aria-hidden />
           </Button>
         </div>
       ))}
@@ -702,10 +708,12 @@ function FilterConditionEditor({
         ))}
       </Select>
       {needsValue ? (
-        <Input
-          aria-label="Value"
+        <FilterValueInput
+          key={`${node.field}:${node.conditionOperator}`}
+          fieldType={fieldType}
+          field={fields.find((item) => item.developerName === node.field)}
           value={node.value}
-          onChange={(event) => onChange({ ...node, value: event.target.value })}
+          onChange={(value) => onChange({ ...node, value })}
         />
       ) : (
         <span className="text-sm text-muted-foreground self-center">No value</span>

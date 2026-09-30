@@ -28,6 +28,7 @@ public class User : BaseAuditableEntity, IPassivable
     public string? _RecentlyAccessedViews { get; set; }
     public virtual ICollection<Role> Roles { get; set; }
     public virtual ICollection<View> FavoriteViews { get; set; }
+    public virtual ICollection<WebTemplate> FavoriteWebTemplates { get; set; } = new List<WebTemplate>();
     public virtual ICollection<UserGroup> UserGroups { get; set; }
     public virtual ICollection<ApiKey> ApiKeys { get; set; }
 

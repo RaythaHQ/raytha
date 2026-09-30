@@ -26,6 +26,13 @@ public class EnsureDefaultThemeContent
             CancellationToken cancellationToken
         )
         {
+            // First-run setup uploads the theme assets and seeds the templates against them. Seeding
+            // here first would leave the layout pointing at asset file names that were never uploaded.
+            if (!await _db.OrganizationSettings.AnyAsync(cancellationToken))
+            {
+                return new CommandResponseDto<ShortGuid>(ShortGuid.Empty);
+            }
+
             var theme = await ResolveActiveTheme(cancellationToken);
             if (theme is null)
             {
@@ -253,23 +260,9 @@ public class EnsureDefaultThemeContent
 
         private void InsertDefaultWidgetTemplates(Guid defaultThemeId)
         {
-            var list = new List<WidgetTemplate>();
-
-            foreach (var widgetType in BuiltInWidgetType.WidgetTypes)
-            {
-                var template = new WidgetTemplate
-                {
-                    Id = Guid.NewGuid(),
-                    ThemeId = defaultThemeId,
-                    Label = widgetType.DisplayName,
-                    DeveloperName = widgetType.DeveloperName,
-                    Content = widgetType.DefaultTemplateContent,
-                    IsBuiltInTemplate = true,
-                };
-                list.Add(template);
-            }
-
-            _db.WidgetTemplates.AddRange(list);
+            _db.WidgetTemplates.AddRange(
+                BuiltInWidgetType.WidgetTypes.Select(t => t.CreateTemplate(defaultThemeId))
+            );
         }
     }
 }

@@ -1,6 +1,7 @@
 {
   "extends": "../../tsconfig.base.json",
   "include": ["src", "vite.config.ts"],
+  "exclude": ["src/**/*.test.ts", "src/**/*.test.tsx", "src/setup-tests.ts"],
   "compilerOptions": {
     "types": ["vite/client"],
     "paths": {

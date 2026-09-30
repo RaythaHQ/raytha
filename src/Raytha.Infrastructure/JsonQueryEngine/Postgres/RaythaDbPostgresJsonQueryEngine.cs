@@ -382,6 +382,9 @@ internal class RaythaDbPostgresJsonQueryEngine
             );
             if (columnAsContentTypeField != null)
             {
+                if (!columnAsContentTypeField.FieldType.IsSearchable)
+                    continue;
+
                 string columnAsContentTypeFieldDeveloperName =
                     columnAsContentTypeField.DeveloperName.ToDeveloperName();
 
@@ -513,6 +516,9 @@ internal class RaythaDbPostgresJsonQueryEngine
                 );
                 if (columnAsContentTypeField != null)
                 {
+                    if (!columnAsContentTypeField.FieldType.IsSortable)
+                        continue;
+
                     string columnAsContentTypeFieldDeveloperName =
                         columnAsContentTypeField.DeveloperName;
                     if (
@@ -608,6 +614,10 @@ internal class RaythaDbPostgresJsonQueryEngine
             }
             catch { }
         }
+
+        // Items saved together can share a CreationTime to the microsecond, so without a unique last key
+        // their order, and which one a paged list shows, depends on physical row order.
+        sqlBuilder.OrderBy($"{RawSqlColumn.SOURCE_ITEM_COLUMN_NAME}.\"Id\" asc");
 
         return sqlBuilder;
     }

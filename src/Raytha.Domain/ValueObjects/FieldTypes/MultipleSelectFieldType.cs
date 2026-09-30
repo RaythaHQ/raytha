@@ -17,6 +17,8 @@ public class MultipleSelectFieldType : BaseFieldType
         }
     }
 
+    public override bool StoresJsonArray => true;
+
     public override BaseFieldValue FieldValueFrom(dynamic value)
     {
         return new ArrayFieldValue(value);

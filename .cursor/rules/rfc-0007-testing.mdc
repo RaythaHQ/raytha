@@ -11,7 +11,7 @@ Status: Active
 ## Abstract
 
 .NET tests are NUnit with FluentAssertions, one project per layer plus an
-architecture project. Admin tests are Vitest in `@raytha/ui`. The architecture
+architecture project. Admin tests are Vitest in `@raytha/ui` and `apps/shell`. The architecture
 tests are how the other RFCs stop being suggestions.
 
 ## 1. Projects
@@ -76,10 +76,12 @@ Rules:
 ```bash
 cd src/admin
 pnpm lint         # eslint, including react-hooks and jsx-a11y
-pnpm test         # Vitest in @raytha/ui
+pnpm test         # Vitest in every workspace package that has tests
 pnpm typecheck    # every workspace package
 pnpm build        # must be run and the bundle committed (RFC-0006)
 ```
 
-`apps/shell` has no test runner today. A page with logic worth testing SHOULD
-have that logic extracted into `@raytha/ui` or `@raytha/api`, where it can be.
+`apps/shell` runs Vitest with the same setup as `@raytha/ui` (jsdom,
+testing-library, `jest-axe`). Put reusable UI logic in `@raytha/ui` or
+`@raytha/api`; test page behavior (a form's save payload, a list's ordering)
+next to the page. Test files are excluded from `tsc` and eslint in both.

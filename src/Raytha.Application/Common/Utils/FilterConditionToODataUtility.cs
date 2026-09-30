@@ -65,10 +65,7 @@ public class FilterConditionToODataUtility
 
         if (condition.ConditionOperator.DeveloperName == ConditionOperator.IS_EMPTY)
         {
-            if (
-                chosenColumnAsCustomField != null
-                && chosenColumnAsCustomField.FieldType.DeveloperName == BaseFieldType.MultipleSelect
-            )
+            if (chosenColumnAsCustomField != null && chosenColumnAsCustomField.FieldType.StoresJsonArray)
             {
                 expression.Append($"{ConditionOperator.CONTAINS}({condition.Field}, '[]')");
             }
@@ -102,10 +99,7 @@ public class FilterConditionToODataUtility
         }
         else if (condition.ConditionOperator.DeveloperName == ConditionOperator.IS_NOT_EMPTY)
         {
-            if (
-                chosenColumnAsCustomField != null
-                && chosenColumnAsCustomField.FieldType.DeveloperName == BaseFieldType.MultipleSelect
-            )
+            if (chosenColumnAsCustomField != null && chosenColumnAsCustomField.FieldType.StoresJsonArray)
             {
                 expression.Append($"not {ConditionOperator.CONTAINS}({condition.Field}, '[]')");
             }

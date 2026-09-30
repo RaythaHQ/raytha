@@ -1,17 +1,18 @@
 import type { JsonObject } from "@raytha/api";
-import { Button, Checkbox, FormField, Input, Select, Textarea } from "@raytha/ui";
+import { Checkbox, FormField, Input, Select, Textarea } from "@raytha/ui";
 import { toDeveloperName } from "../entity";
-import type {
-  parseFieldTypeOptions,
-  parseNamedRefs} from "./fields-model";
+import { ChoicesEditor } from "./choices-editor";
+import type { parseFieldTypeOptions, parseNamedRefs } from "./fields-model";
 import {
   hasChoices,
   isFieldTypeName,
   isRelationship,
+  isRepeater,
   type ContentField,
   type FieldChoice,
   type FieldTypeName,
 } from "./fields-model";
+import { SubFieldsEditor, subFieldDrafts, subFieldsPayload, type SubFieldDraft } from "./sub-fields-editor";
 
 export type FieldForm = {
   label: string;
@@ -21,6 +22,7 @@ export type FieldForm = {
   fieldType: FieldTypeName;
   relatedContentTypeId: string;
   choices: FieldChoice[];
+  subFields: SubFieldDraft[];
 };
 
 export function emptyFieldForm(): FieldForm {
@@ -32,6 +34,7 @@ export function emptyFieldForm(): FieldForm {
     fieldType: "single_line_text",
     relatedContentTypeId: "",
     choices: [{ label: "", developerName: "", disabled: false }],
+    subFields: [],
   };
 }
 
@@ -49,6 +52,7 @@ export function formFromField(field: ContentField): FieldForm {
           ? field.choices
           : [{ label: "", developerName: "", disabled: false }]
         : [{ label: "", developerName: "", disabled: false }],
+    subFields: field.fieldType === "repeater" ? subFieldDrafts(field.subFields) : [],
   };
 }
 
@@ -70,11 +74,14 @@ export function createFieldPayload(form: FieldForm): JsonObject {
   if (isRelationship(form.fieldType) && form.relatedContentTypeId) {
     payload.relatedContentTypeId = form.relatedContentTypeId;
   }
+  if (isRepeater(form.fieldType)) {
+    payload.subFields = subFieldsPayload(form.subFields);
+  }
   return payload;
 }
 
 export function editFieldPayload(form: FieldForm): JsonObject {
-  return {
+  const payload: JsonObject = {
     label: form.label,
     isRequired: form.isRequired,
     description: form.description,
@@ -86,6 +93,10 @@ export function editFieldPayload(form: FieldForm): JsonObject {
         }))
       : [],
   };
+  if (isRepeater(form.fieldType)) {
+    payload.subFields = subFieldsPayload(form.subFields);
+  }
+  return payload;
 }
 
 export function FieldFormFields({
@@ -105,6 +116,7 @@ export function FieldFormFields({
   developerTouched: boolean;
   setDeveloperTouched: (next: boolean) => void;
 }) {
+  const typeOptions = fieldTypes.length > 0 ? fieldTypes : fallbackFieldTypes();
   return (
     <>
       <FormField label="Label" required htmlFor="field-label">
@@ -149,7 +161,7 @@ export function FieldFormFields({
               }
             }}
           >
-            {(fieldTypes.length > 0 ? fieldTypes : fallbackFieldTypes()).map((option) => (
+            {typeOptions.map((option) => (
               <option key={option.developerName} value={option.developerName}>
                 {option.label}
               </option>
@@ -179,6 +191,14 @@ export function FieldFormFields({
       {hasChoices(form.fieldType) ? (
         <ChoicesEditor choices={form.choices} onChange={(choices) => setForm({ ...form, choices })} />
       ) : null}
+      {isRepeater(form.fieldType) ? (
+        <SubFieldsEditor
+          subFields={form.subFields}
+          onChange={(subFields) => setForm({ ...form, subFields })}
+          fieldTypes={typeOptions}
+          fieldDeveloperName={form.developerName}
+        />
+      ) : null}
       {isRelationship(form.fieldType) ? (
         <FormField label="Related content type" required htmlFor="field-related-type">
           {(control) => (
@@ -201,92 +221,6 @@ export function FieldFormFields({
   );
 }
 
-function ChoicesEditor({
-  choices,
-  onChange,
-}: {
-  choices: FieldChoice[];
-  onChange: (choices: FieldChoice[]) => void;
-}) {
-  return (
-    <div className="space-y-3">
-      <p className="text-sm font-medium">Choices</p>
-      {choices.map((choice, index) => (
-        <div key={index} className="grid gap-2 rounded-lg border border-border p-3 sm:grid-cols-[1fr_1fr_auto_auto]">
-          <Input
-            aria-label={`Choice ${index + 1} label`}
-            placeholder="Label"
-            value={choice.label}
-            onChange={(event) => {
-              const label = event.target.value;
-              const next = choices.slice();
-              const current = next[index];
-              if (!current) {
-                return;
-              }
-              next[index] = {
-                ...current,
-                label,
-                developerName:
-                  current.developerName === "" || current.developerName === toDeveloperName(current.label)
-                    ? toDeveloperName(label)
-                    : current.developerName,
-              };
-              onChange(next);
-            }}
-          />
-          <Input
-            aria-label={`Choice ${index + 1} developer name`}
-            placeholder="Developer name"
-            value={choice.developerName}
-            onChange={(event) => {
-              const next = choices.slice();
-              const current = next[index];
-              if (!current) {
-                return;
-              }
-              next[index] = { ...current, developerName: event.target.value };
-              onChange(next);
-            }}
-          />
-          <label className="flex items-center gap-2 text-sm">
-            <Checkbox
-              checked={choice.disabled}
-              onCheckedChange={(checked) => {
-                const next = choices.slice();
-                const current = next[index];
-                if (!current) {
-                  return;
-                }
-                next[index] = { ...current, disabled: checked };
-                onChange(next);
-              }}
-            />
-            Disabled
-          </label>
-          <Button
-            type="button"
-            size="sm"
-            variant="ghost"
-            disabled={choices.length === 1}
-            onClick={() => onChange(choices.filter((_, choiceIndex) => choiceIndex !== index))}
-          >
-            Remove
-          </Button>
-        </div>
-      ))}
-      <Button
-        type="button"
-        size="sm"
-        variant="outline"
-        onClick={() => onChange([...choices, { label: "", developerName: "", disabled: false }])}
-      >
-        Add choice
-      </Button>
-    </div>
-  );
-}
-
 function fallbackFieldTypes(): ReturnType<typeof parseFieldTypeOptions> {
   return [
     { label: "Single line text", developerName: "single_line_text" },
@@ -300,5 +234,7 @@ function fallbackFieldTypes(): ReturnType<typeof parseFieldTypeOptions> {
     { label: "Number", developerName: "number" },
     { label: "Attachment", developerName: "attachment" },
     { label: "One to one relationship", developerName: "one_to_one_relationship" },
+    { label: "Color", developerName: "color" },
+    { label: "Repeater", developerName: "repeater" },
   ];
 }

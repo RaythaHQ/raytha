@@ -1,4 +1,5 @@
-﻿using Mediator;
+﻿using CSharpVitamins;
+using Mediator;
 using Microsoft.EntityFrameworkCore;
 using Raytha.Application.Common.Exceptions;
 using Raytha.Application.Common.Interfaces;
@@ -10,7 +11,11 @@ namespace Raytha.Application.Themes.WebTemplates.Queries;
 
 public class GetWebTemplateById
 {
-    public record Query : GetEntityByIdInputDto, IRequest<IQueryResponseDto<WebTemplateDto>> { }
+    public record Query : GetEntityByIdInputDto, IRequest<IQueryResponseDto<WebTemplateDto>>
+    {
+        /// <summary>Sets <c>IsFavorite</c> for this admin.</summary>
+        public ShortGuid? CurrentUserId { get; init; }
+    }
 
     public class Handler : IRequestHandler<Query, IQueryResponseDto<WebTemplateDto>>
     {
@@ -46,6 +51,13 @@ public class GetWebTemplateById
                     .ToListAsync(cancellationToken)
                 : [];
 
+            var isFavorite =
+                request.CurrentUserId is { } userId
+                && await _db.Users.AnyAsync(
+                    u => u.Id == userId.Guid && u.FavoriteWebTemplates.Any(wt => wt.Id == entity.Id),
+                    cancellationToken
+                );
+
             var dto = WebTemplateDto.GetProjection(entity)!;
             return new QueryResponseDto<WebTemplateDto>(
                 dto with
@@ -55,6 +67,7 @@ public class GetWebTemplateById
                         entity.IsBuiltInTemplate,
                         contentTypes.Select(ContentTypeDto.GetProjection)
                     ),
+                    IsFavorite = isFavorite,
                 }
             );
         }

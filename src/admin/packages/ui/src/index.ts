@@ -1,6 +1,7 @@
 export { cn } from "./cn";
 export { Button, buttonVariants, type ButtonProps } from "./button";
 export { Input } from "./input";
+export { ColorInput, normalizeHexColor, type ColorInputProps } from "./color-input";
 export { Textarea } from "./textarea";
 export { Label } from "./label";
 export { FormField, RequiredLegend, type FormFieldControlProps } from "./form-field";
@@ -12,6 +13,7 @@ export { Badge, type BadgeProps } from "./badge";
 export { Switch, type SwitchProps } from "./switch";
 export { Checkbox, type CheckboxProps } from "./checkbox";
 export { Select } from "./select";
+export { Combobox, type ComboboxOption, type ComboboxProps } from "./combobox";
 export { Dialog, DialogHeader, DialogTitle, DialogContent, DialogFooter, type DialogProps } from "./dialog";
 export { AlertDialog, type AlertDialogProps } from "./alert-dialog";
 export { FileUpload, type FileUploadProps, type UploadedFile } from "./file-upload";

@@ -17,7 +17,7 @@ namespace Raytha.Infrastructure.Persistence.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "10.0.0")
+                .HasAnnotation("ProductVersion", "10.0.11")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -432,6 +432,11 @@ namespace Raytha.Infrastructure.Persistence.Migrations
                     b.Property<string>("_Choices")
                         .IsRequired()
                         .HasColumnType("text");
+
+                    b.Property<string>("_SubFieldsJson")
+                        .IsRequired()
+                        .HasColumnType("jsonb")
+                        .HasColumnName("_SubFieldsJson");
 
                     b.HasKey("Id");
 
@@ -1024,6 +1029,9 @@ namespace Raytha.Infrastructure.Persistence.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<Guid?>("RouteId")
+                        .HasColumnType("uuid");
+
                     b.Property<string>("TriggerType")
                         .IsRequired()
                         .HasColumnType("text");
@@ -1036,6 +1044,9 @@ namespace Raytha.Infrastructure.Persistence.Migrations
                         .IsUnique();
 
                     b.HasIndex("LastModifierUserId");
+
+                    b.HasIndex("RouteId")
+                        .IsUnique();
 
                     b.ToTable("RaythaFunctions");
                 });
@@ -1129,6 +1140,9 @@ namespace Raytha.Infrastructure.Persistence.Migrations
                     b.Property<string>("Path")
                         .IsRequired()
                         .HasColumnType("text");
+
+                    b.Property<Guid?>("RaythaFunctionId")
+                        .HasColumnType("uuid");
 
                     b.Property<Guid>("SitePageId")
                         .HasColumnType("uuid");
@@ -1845,6 +1859,11 @@ namespace Raytha.Infrastructure.Persistence.Migrations
                     b.Property<Guid>("ThemeId")
                         .HasColumnType("uuid");
 
+                    b.Property<string>("_FieldsJson")
+                        .IsRequired()
+                        .HasColumnType("jsonb")
+                        .HasColumnName("_FieldsJson");
+
                     b.HasKey("Id");
 
                     b.HasIndex("CreatorUserId");
@@ -1885,6 +1904,11 @@ namespace Raytha.Infrastructure.Persistence.Migrations
 
                     b.Property<Guid>("WidgetTemplateId")
                         .HasColumnType("uuid");
+
+                    b.Property<string>("_FieldsJson")
+                        .IsRequired()
+                        .HasColumnType("jsonb")
+                        .HasColumnName("_FieldsJson");
 
                     b.HasKey("Id");
 
@@ -1940,6 +1964,21 @@ namespace Raytha.Infrastructure.Persistence.Migrations
                     b.HasIndex("UserFavoritesId");
 
                     b.ToTable("UserView");
+                });
+
+            modelBuilder.Entity("UserWebTemplate", b =>
+                {
+                    b.Property<Guid>("FavoriteWebTemplatesId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("UserFavoritesId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("FavoriteWebTemplatesId", "UserFavoritesId");
+
+                    b.HasIndex("UserFavoritesId");
+
+                    b.ToTable("UserWebTemplate");
                 });
 
             modelBuilder.Entity("Raytha.Domain.Entities.ApiKey", b =>
@@ -2268,9 +2307,16 @@ namespace Raytha.Infrastructure.Persistence.Migrations
                         .WithMany()
                         .HasForeignKey("LastModifierUserId");
 
+                    b.HasOne("Raytha.Domain.Entities.Route", "Route")
+                        .WithOne("RaythaFunction")
+                        .HasForeignKey("Raytha.Domain.Entities.RaythaFunction", "RouteId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.Navigation("CreatorUser");
 
                     b.Navigation("LastModifierUser");
+
+                    b.Navigation("Route");
                 });
 
             modelBuilder.Entity("Raytha.Domain.Entities.RaythaFunctionRevision", b =>
@@ -2713,6 +2759,21 @@ namespace Raytha.Infrastructure.Persistence.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("UserWebTemplate", b =>
+                {
+                    b.HasOne("Raytha.Domain.Entities.WebTemplate", null)
+                        .WithMany()
+                        .HasForeignKey("FavoriteWebTemplatesId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Raytha.Domain.Entities.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserFavoritesId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("Raytha.Domain.Entities.ContentItem", b =>
                 {
                     b.Navigation("ContentItemRevisions");
@@ -2751,6 +2812,8 @@ namespace Raytha.Infrastructure.Persistence.Migrations
                 {
                     b.Navigation("ContentItem")
                         .IsRequired();
+
+                    b.Navigation("RaythaFunction");
 
                     b.Navigation("SitePage")
                         .IsRequired();

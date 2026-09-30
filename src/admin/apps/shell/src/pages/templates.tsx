@@ -18,6 +18,7 @@ import { useRef, useState, type FormEvent } from "react";
 import { ListBackLink } from "../components/list-back-link";
 import { useDocumentTitle } from "../lib/document-title";
 import { CodeEditor, insertAtCursor } from "./editors/code-editor";
+import { FunctionPublicPath, publicPathFor } from "./editors/function-public-path";
 import {
   DEFAULT_TRIGGER,
   FUNCTION_TRIGGERS,
@@ -205,13 +206,21 @@ export function NewFunctionPage() {
   const [editedCode, setEditedCode] = useState<string | null>(null);
   const [offerStarter, setOfferStarter] = useState(false);
   const [isActive, setIsActive] = useState(true);
+  const [routePath, setRoutePath] = useState("");
   const starter = starterCode(triggerType, developerName);
   const code = editedCode ?? starter;
   const entryWarning = missingEntryPoint(triggerType, code);
 
   const mutation = useMutation({
     mutationFn: () =>
-      adminApi.functions.create({ name, developerName, triggerType, code, isActive }),
+      adminApi.functions.create({
+        name,
+        developerName,
+        triggerType,
+        code,
+        isActive,
+        routePath: publicPathFor(triggerType, routePath),
+      }),
     onSuccess: (created) => {
       toast.success("Function created");
       void navigate({ to: "/functions/$id", params: { id: created.id } });
@@ -291,6 +300,7 @@ export function NewFunctionPage() {
                   </Select>
                 )}
               </FormField>
+              <FunctionPublicPath id="fn-public-path" trigger={triggerType} value={routePath} onChange={setRoutePath} />
               {offerStarter ? (
                 <div
                   role="status"

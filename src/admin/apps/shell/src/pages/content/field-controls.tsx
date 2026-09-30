@@ -1,15 +1,14 @@
-import { adminApi } from "@raytha/api";
 import { Checkbox, FileUpload, FormField, Input, Select, Textarea } from "@raytha/ui";
-import { keepPreviousData, useQuery } from "@tanstack/react-query";
-import { useState } from "react";
 import { RichTextEditor } from "../../components/rich-text-editor";
-import { entityFields, readString } from "../entity";
+import { DefinitionFieldControl } from "./definition-field-control";
 import {
+  fieldAsDefinition,
+  parseFieldValue,
   type ChoiceField,
   type ContentField,
   type ContentFieldValue,
-  type RelationshipField,
 } from "./fields-model";
+import { RelationshipPicker } from "./relationship-picker";
 
 export function ContentFieldControl({
   field,
@@ -212,6 +211,17 @@ export function ContentFieldControl({
           onChange={(next) => onChange({ fieldType: "one_to_one_relationship", value: next })}
         />
       );
+    case "color":
+    case "repeater": {
+      const definition = fieldAsDefinition(field);
+      return definition ? (
+        <DefinitionFieldControl
+          definition={definition}
+          value={value.value}
+          onChange={(next) => onChange(parseFieldValue(field, next))}
+        />
+      ) : null;
+    }
     default: {
       const _exhaustive: never = field;
       return _exhaustive;
@@ -303,71 +313,4 @@ function MultipleChoices({
       </div>
     </fieldset>
   );
-}
-
-function RelationshipPicker({
-  field,
-  value,
-  onChange,
-}: {
-  field: RelationshipField;
-  value: string;
-  onChange: (next: string) => void;
-}) {
-  const [search, setSearch] = useState("");
-  const typesQuery = useQuery({
-    queryKey: ["content-types", "picker"],
-    queryFn: () => adminApi.contentTypes.list({ pageSize: 200 }),
-    placeholderData: keepPreviousData,
-  });
-  const relatedDeveloperName = relatedTypeDeveloperName(typesQuery.data?.items, field.relatedContentTypeId);
-  const itemsQuery = useQuery({
-    queryKey: ["content-items", relatedDeveloperName, "rel", search],
-    queryFn: () => adminApi.contentItems(relatedDeveloperName).list({ search: search || undefined, pageSize: 20 }),
-    enabled: relatedDeveloperName.length > 0,
-    placeholderData: keepPreviousData,
-  });
-
-  const items = itemsQuery.data?.items ?? [];
-
-  return (
-    <FormField
-      label={field.label || field.developerName}
-      required={field.isRequired}
-      hint={field.description || "Search items of the related content type."}
-      htmlFor={field.developerName}
-    >
-      {(control) => (
-        <div className="space-y-2">
-          <Input
-            {...control}
-            value={search}
-            placeholder="Search related items"
-            onChange={(event) => setSearch(event.target.value)}
-          />
-          <Select value={value} onChange={(event) => onChange(event.target.value)}>
-            <option value="">None</option>
-            {value && !items.some((item) => item.id === value) ? <option value={value}>{value}</option> : null}
-            {items.map((item) => (
-              <option key={item.id} value={item.id}>
-                {readString(entityFields(item), "primaryField", "title") || item.id}
-              </option>
-            ))}
-          </Select>
-        </div>
-      )}
-    </FormField>
-  );
-}
-
-function relatedTypeDeveloperName(items: { id: string }[] | undefined, relatedId: string): string {
-  if (!items || !relatedId) {
-    return "";
-  }
-  for (const item of items) {
-    if (item.id === relatedId) {
-      return readString(entityFields(item), "developerName");
-    }
-  }
-  return "";
 }

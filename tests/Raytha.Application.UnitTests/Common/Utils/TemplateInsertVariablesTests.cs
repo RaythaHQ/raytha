@@ -90,6 +90,38 @@ public class TemplateInsertVariablesTests
     }
 
     [Test]
+    public void Repeater_fields_offer_a_loop_over_their_rows()
+    {
+        var faqs = Posts() with
+        {
+            ContentTypeFields =
+            [
+                new ContentTypeFieldDto
+                {
+                    DeveloperName = "faq",
+                    Label = "FAQ",
+                    FieldType = BaseFieldType.Repeater,
+                    SubFields =
+                    [
+                        new FieldDefinition { DeveloperName = "question", FieldType = "single_line_text" },
+                        new FieldDefinition { DeveloperName = "answer", FieldType = "long_text" },
+                    ],
+                },
+            ],
+        };
+
+        var groups = TemplateInsertVariables.ForWeb("my_page", isBuiltInTemplate: false, [faqs]);
+
+        var loop = groups.Single(g => g.Category == "Post fields").Variables.Single();
+        loop.Path.Should().Be("Target.PublishedContent.faq.Value");
+        loop.Description.Should().Contain("rows");
+        loop.Example.Should()
+            .Be(
+                "{% for row in Target.PublishedContent.faq.Value %}\n  {{ row.question }}\n  {{ row.answer }}\n{% endfor %}"
+            );
+    }
+
+    [Test]
     public void Duplicate_content_type_labels_get_distinct_categories()
     {
         var groups = TemplateInsertVariables.ForWeb(

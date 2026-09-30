@@ -10,6 +10,7 @@ using Raytha.Application.Themes.WebTemplates.Queries;
 using Raytha.Application.Themes.WidgetTemplates.Commands;
 using Raytha.Application.Themes.WidgetTemplates.Queries;
 using Raytha.Domain.Entities;
+using Raytha.Domain.ValueObjects;
 
 namespace Raytha.Web.Areas.Admin.Api;
 
@@ -34,6 +35,7 @@ public static class ThemesEndpoints
         themes.MapPut("/{id}/exportability", ToggleExportability);
         themes.MapPost("/{id}/duplicate", Duplicate);
         themes.MapPost("/import", Import);
+        themes.MapGet("/widget-field-types", WidgetFieldTypes);
         themes.MapGet("/{id}/media", ThemeMedia);
         themes.MapGet("/{id}/web-templates/developer-names", WebTemplateDeveloperNames);
         themes.MapGet("/{id}/web-templates/unmatched", UnmatchedWebTemplates);
@@ -46,13 +48,16 @@ public static class ThemesEndpoints
         templates.MapPost("", CreateWebTemplateHandler);
         templates.MapPut("/{id}", EditWebTemplateHandler);
         templates.MapDelete("/{id}", DeleteWebTemplateHandler);
+        templates.MapPost("/{id}/favorite", FavoriteWebTemplateHandler);
         templates.MapPost("/revisions/{revisionId}/revert", RevertWebTemplateHandler);
 
         var widgets = themes.MapGroup("/{themeId}/widget-templates");
         widgets.MapGet("", ListWidgetTemplates);
         widgets.MapGet("/{id}", GetWidgetTemplate);
         widgets.MapGet("/{id}/revisions", WidgetTemplateRevisions);
+        widgets.MapPost("", CreateWidgetTemplateHandler);
         widgets.MapPut("/{id}", EditWidgetTemplateHandler);
+        widgets.MapDelete("/{id}", DeleteWidgetTemplateHandler);
         widgets.MapPost("/revisions/{revisionId}/revert", RevertWidgetTemplateHandler);
         widgets.MapPost("/reset", ResetWidgetTemplatesHandler);
 
@@ -163,7 +168,8 @@ public static class ThemesEndpoints
         [AsParameters] PagedQuery paging,
         [FromQuery] bool? baseLayoutsOnly,
         [FromQuery] string? contentTypeId,
-        ISender mediator
+        ISender mediator,
+        ICurrentUser currentUser
     )
     {
         ShortGuid? contentType = null;
@@ -177,6 +183,7 @@ public static class ThemesEndpoints
             ThemeId = themeId,
             BaseLayoutsOnly = baseLayoutsOnly ?? false,
             ContentTypeId = contentType,
+            CurrentUserId = currentUser.UserId,
             PageNumber = paging.PageNumber,
             PageSize = paging.PageSize,
             Search = paging.Search,
@@ -188,8 +195,15 @@ public static class ThemesEndpoints
         return AdminResults.Paged(await mediator.Send(query), paging);
     }
 
-    private static async Task<IResult> GetWebTemplate(string themeId, string id, ISender mediator) =>
-        AdminResults.From(await mediator.Send(new GetWebTemplateById.Query { Id = id }));
+    private static async Task<IResult> GetWebTemplate(
+        string themeId,
+        string id,
+        ISender mediator,
+        ICurrentUser currentUser
+    ) =>
+        AdminResults.From(
+            await mediator.Send(new GetWebTemplateById.Query { Id = id, CurrentUserId = currentUser.UserId })
+        );
 
     private static async Task<IResult> WebTemplateRevisions(
         string themeId,
@@ -226,6 +240,26 @@ public static class ThemesEndpoints
 
     private static async Task<IResult> DeleteWebTemplateHandler(string themeId, string id, ISender mediator) =>
         AdminResults.NoContent(await mediator.Send(new DeleteWebTemplate.Command { Id = id }));
+
+    public sealed record FavoriteWebTemplateRequest(bool SetAsFavorite);
+
+    private static async Task<IResult> FavoriteWebTemplateHandler(
+        string themeId,
+        string id,
+        [FromBody] FavoriteWebTemplateRequest body,
+        ISender mediator,
+        ICurrentUser currentUser
+    ) =>
+        AdminResults.FromId(
+            await mediator.Send(
+                new ToggleWebTemplateAsFavoriteForAdmin.Command
+                {
+                    Id = id,
+                    UserId = currentUser.UserId ?? ShortGuid.Empty,
+                    SetAsFavorite = body.SetAsFavorite,
+                }
+            )
+        );
 
     private static async Task<IResult> RevertWebTemplateHandler(string themeId, string revisionId, ISender mediator) =>
         AdminResults.FromId(await mediator.Send(new RevertWebTemplate.Command { Id = revisionId }));
@@ -272,6 +306,27 @@ public static class ThemesEndpoints
         }
         return AdminResults.Paged(await mediator.Send(query), paging);
     }
+
+    /// <summary>The field types a widget template field may use.</summary>
+    private static IResult WidgetFieldTypes() =>
+        Results.Ok(
+            WidgetFieldType.SupportedTypes.Select(t => new
+            {
+                developerName = t.DeveloperName,
+                label = t.Label,
+                hasChoices = t.HasChoices,
+                allowedInRepeater = t.AllowedInRepeater,
+            })
+        );
+
+    private static async Task<IResult> CreateWidgetTemplateHandler(
+        string themeId,
+        [FromBody] CreateWidgetTemplate.Command body,
+        ISender mediator
+    ) => AdminResults.FromId(await mediator.Send(body with { ThemeId = themeId }), created: true);
+
+    private static async Task<IResult> DeleteWidgetTemplateHandler(string themeId, string id, ISender mediator) =>
+        AdminResults.NoContent(await mediator.Send(new DeleteWidgetTemplate.Command { Id = id }));
 
     private static async Task<IResult> EditWidgetTemplateHandler(
         string themeId,

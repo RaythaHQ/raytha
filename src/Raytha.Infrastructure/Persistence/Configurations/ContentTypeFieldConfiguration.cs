@@ -17,6 +17,8 @@ public class ContentTypeFieldConfiguration : IEntityTypeConfiguration<ContentTyp
             .Property(b => b.FieldType)
             .HasConversion(v => v.DeveloperName, v => BaseFieldType.From(v));
 
+        builder.Property(b => b._SubFieldsJson).HasColumnName("_SubFieldsJson").HasColumnType("jsonb");
+
         builder.HasQueryFilter(b => !b.IsDeleted);
     }
 }

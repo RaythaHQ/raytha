@@ -19,6 +19,9 @@ public class EditRaythaFunction
         public bool IsActive { get; init; }
         public required string Code { get; init; }
 
+        /// <summary>Optional public path such as llms.txt. Empty removes it; HTTP request functions only.</summary>
+        public string? RoutePath { get; init; }
+
         public static Command Empty() =>
             new()
             {
@@ -37,10 +40,26 @@ public class EditRaythaFunction
             RuleFor(x => x.TriggerType).NotEmpty();
             RuleFor(x => x)
                 .Custom(
-                    (request, _) =>
+                    (request, context) =>
                     {
-                        if (!db.RaythaFunctions.Any(p => p.Id == request.Id.Guid))
+                        var function = db
+                            .RaythaFunctions.Where(p => p.Id == request.Id.Guid)
+                            .Select(p => new { p.RouteId })
+                            .FirstOrDefault();
+                        if (function == null)
                             throw new NotFoundException("Raytha Function", request.Id);
+
+                        var routePath = RaythaFunctionRoutePath.Normalize(request.RoutePath);
+                        if (routePath.Length == 0)
+                            return;
+                        var routeProblem = RaythaFunctionRoutePath.Problem(
+                            db,
+                            routePath,
+                            request.TriggerType,
+                            function.RouteId
+                        );
+                        if (routeProblem != null)
+                            context.AddFailure("RoutePath", routeProblem);
                     }
                 );
         }
@@ -60,10 +79,9 @@ public class EditRaythaFunction
             CancellationToken cancellationToken
         )
         {
-            var function = await _db.RaythaFunctions.FirstAsync(
-                rf => rf.Id == request.Id.Guid,
-                cancellationToken
-            );
+            var function = await _db
+                .RaythaFunctions.Include(rf => rf.Route)
+                .FirstAsync(rf => rf.Id == request.Id.Guid, cancellationToken);
 
             if (!function.Code.Equals(request.Code))
             {
@@ -80,6 +98,13 @@ public class EditRaythaFunction
             function.TriggerType = RaythaFunctionTriggerType.From(request.TriggerType);
             function.IsActive = request.IsActive;
             function.Code = request.Code;
+            RaythaFunctionRoutePath.Apply(
+                _db,
+                function,
+                function.TriggerType.Equals(RaythaFunctionTriggerType.HttpRequest)
+                    ? RaythaFunctionRoutePath.Normalize(request.RoutePath)
+                    : string.Empty
+            );
 
             await _db.SaveChangesAsync(cancellationToken);
 

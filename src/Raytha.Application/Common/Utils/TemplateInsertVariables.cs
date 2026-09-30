@@ -120,6 +120,12 @@ public static class TemplateInsertVariables
                 continue;
             }
 
+            if (field.FieldType?.DeveloperName == BaseFieldType.Repeater.DeveloperName)
+            {
+                variables.Add(RepeaterLoop(path, label, field.SubFields));
+                continue;
+            }
+
             variables.Add(
                 new TemplateVariableDto { Path = $"{path}.Text", Description = $"{label}, as display text." }
             );
@@ -142,6 +148,22 @@ public static class TemplateInsertVariables
             category = $"{name} ({contentType.DeveloperName}) fields";
         }
         groups.Add(new TemplateVariableGroupDto { Category = category, Variables = variables });
+    }
+
+    private static TemplateVariableDto RepeaterLoop(
+        string path,
+        string label,
+        IReadOnlyList<FieldDefinition> subFields
+    )
+    {
+        var cells = subFields.Count > 0 ? subFields.Select(s => s.DeveloperName) : ["sub_field"];
+        var body = string.Join("\n", cells.Select(name => $"  {{{{ row.{name} }}}}"));
+        return new TemplateVariableDto
+        {
+            Path = $"{path}.Value",
+            Description = $"{label}. A list of rows; loop it and read each sub-field by its developer name.",
+            Example = $"{{% for row in {path}.Value %}}\n{body}\n{{% endfor %}}",
+        };
     }
 
     private static readonly Dictionary<string, string> Descriptions = new()

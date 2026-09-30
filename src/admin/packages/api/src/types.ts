@@ -161,6 +161,59 @@ export interface WebTemplateDetail {
   allowAccessForNewContentTypes: boolean;
   templateAccessToModelDefinitions: string[];
   availableVariables: TemplateVariableGroup[];
+  /** Starred by the signed-in admin. */
+  isFavorite: boolean;
+}
+
+export type JsonValue = string | number | boolean | null | JsonValue[] | { [key: string]: JsonValue };
+
+/** Mirrors `WidgetFieldType.SupportedTypes` on the server. */
+export const WIDGET_FIELD_TYPES = [
+  "single_line_text",
+  "long_text",
+  "wysiwyg",
+  "number",
+  "checkbox",
+  "date",
+  "dropdown",
+  "radio",
+  "color",
+  "repeater",
+  "image",
+  "content_type",
+  "view",
+] as const;
+
+export type WidgetFieldTypeName = (typeof WIDGET_FIELD_TYPES)[number];
+
+export interface WidgetFieldChoice {
+  label: string;
+  developerName: string;
+  disabled: boolean;
+}
+
+/** One field of a widget template's settings form, or a repeater sub-field. Mirrors `FieldDefinition`. */
+export interface WidgetField {
+  /** The SettingsJson key, read in Liquid as `widget.settings.<developerName>`. */
+  developerName: string;
+  label: string;
+  fieldType: WidgetFieldTypeName;
+  description: string;
+  isRequired: boolean;
+  /** Applied only to a newly added widget; null for none. */
+  defaultValue: JsonValue;
+  choices: WidgetFieldChoice[];
+  subFields: WidgetField[];
+  /** For a view field, the sibling content_type field whose views it lists; empty otherwise. */
+  contentTypeField: string;
+}
+
+/** One entry of GET /themes/widget-field-types. */
+export interface WidgetFieldTypeOption {
+  developerName: WidgetFieldTypeName;
+  label: string;
+  hasChoices: boolean;
+  allowedInRepeater: boolean;
 }
 
 export interface WidgetTemplateDetail {
@@ -170,6 +223,32 @@ export interface WidgetTemplateDetail {
   developerName: string;
   content: string;
   isBuiltInTemplate: boolean;
+  fields: WidgetField[];
+}
+
+/** Body for POST /themes/{themeId}/widget-templates. */
+export interface CreateWidgetTemplateInput {
+  label: string;
+  developerName: string;
+  content: string;
+  fields: WidgetField[];
+}
+
+/** Body for PUT /themes/{themeId}/widget-templates/{id}. */
+export interface UpdateWidgetTemplateInput {
+  label: string;
+  content: string;
+  fields: WidgetField[];
+}
+
+/** One widget type a site page can use: a widget template of the active theme. */
+export interface SitePageWidgetDefinition {
+  developerName: string;
+  displayName: string;
+  description: string;
+  iconClass: string;
+  isBuiltInTemplate: boolean;
+  fields: WidgetField[];
 }
 
 export interface FunctionDetail {
@@ -180,6 +259,8 @@ export interface FunctionDetail {
   triggerLabel: string;
   isActive: boolean;
   code: string;
+  /** Public path without a leading slash; empty when the function has none. */
+  routePath: string;
 }
 
 export interface MenuDetail {

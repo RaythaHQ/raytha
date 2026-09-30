@@ -94,7 +94,7 @@ public class BaseFieldTypeTests
     [Test]
     public void ShouldMatchNumberOfSupportedTypes()
     {
-        BaseFieldType.SupportedTypes.Count().Should().Be(11);
+        BaseFieldType.SupportedTypes.Count().Should().Be(13);
     }
 
     [Test]

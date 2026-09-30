@@ -21,10 +21,14 @@ import {
 } from "@raytha/ui";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useNavigate, useParams } from "@tanstack/react-router";
-import { useState, type FormEvent } from "react";
+import { Copy, KeyRound } from "lucide-react";
+import { useState, type FormEvent, type ReactNode } from "react";
 import { ListBackLink } from "../components/list-back-link";
 import { useDocumentTitle } from "../lib/document-title";
+import { schemeDeveloperName, suggestedSpEntityId, type SsoSchemeType } from "./authentication-guide";
+import { SsoGuidePanel, useSsoContext } from "./authentication-guide-panel";
 import { CrudListPage } from "./crud-list";
+import { copyText } from "./editors/clipboard";
 import { entityFields, formatCell, isRecord, readBoolean, readString } from "./entity";
 
 const BUILT_IN: ReadonlySet<AuthSchemeType> = new Set(["email_and_password", "magic_link"]);
@@ -120,21 +124,53 @@ export function NewAuthenticationPage() {
         back={<ListBackLink to="/settings/authentication" listKey="auth-schemes" label="authentication" />}
         title={`New ${schemeTypeLabel(schemeType)} scheme`}
       />
-      <Card>
-        <CardContent className="pt-6">
-          <SchemeFormFields
-            form={form}
-            setForm={setForm}
-            schemeType={schemeType}
-            isCreate
-            onSubmit={() => mutation.mutate()}
-            pending={mutation.isPending}
-            submitLabel="Create"
-          />
-        </CardContent>
-      </Card>
+      <SchemeLayout form={form} schemeType={schemeType}>
+        <Card>
+          <CardContent className="pt-6">
+            <SchemeFormFields
+              form={form}
+              setForm={setForm}
+              schemeType={schemeType}
+              isCreate
+              onSubmit={() => mutation.mutate()}
+              pending={mutation.isPending}
+              submitLabel="Create"
+            />
+          </CardContent>
+        </Card>
+      </SchemeLayout>
     </div>
   );
+}
+
+function SchemeLayout({
+  form,
+  schemeType,
+  children,
+}: {
+  form: SchemeForm;
+  schemeType: AuthSchemeType;
+  children: ReactNode;
+}) {
+  const sso = ssoType(schemeType);
+  if (!sso) {
+    return <div className="space-y-6">{children}</div>;
+  }
+  return (
+    <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_27rem] xl:items-start">
+      <div className="min-w-0 space-y-6">{children}</div>
+      <SsoGuidePanel
+        type={sso}
+        developerName={form.developerName}
+        spEntityId={form.samlIdpEntityId}
+        enabled={{ users: form.isEnabledForUsers, admins: form.isEnabledForAdmins }}
+      />
+    </div>
+  );
+}
+
+function ssoType(type: AuthSchemeType): SsoSchemeType | undefined {
+  return type === "jwt" || type === "saml" ? type : undefined;
 }
 
 export function EditAuthenticationPage() {
@@ -195,7 +231,7 @@ function SchemeEditForm({ scheme }: { scheme: EntityRef }) {
   });
 
   return (
-    <div className="space-y-6">
+    <SchemeLayout form={form} schemeType={schemeType}>
       <Card>
         <CardContent className="pt-6">
           <SchemeFormFields
@@ -219,7 +255,7 @@ function SchemeEditForm({ scheme }: { scheme: EntityRef }) {
           pending={remove.isPending}
         />
       ) : null}
-    </div>
+    </SchemeLayout>
   );
 }
 
@@ -295,7 +331,7 @@ function toRequest(form: SchemeForm, schemeType: AuthSchemeType, isCreate: boole
     isEnabledForAdmins: form.isEnabledForAdmins,
     jwtSecretKey: form.jwtSecretKey,
     jwtUseHighSecurity: form.jwtUseHighSecurity,
-    samlCertificate: form.samlCertificate,
+    samlCertificate: form.samlCertificate.trim(),
     samlIdpEntityId: form.samlIdpEntityId,
     magicLinkExpiresInSeconds: Number(form.magicLinkExpiresInSeconds) || 0,
     bruteForceProtectionMaxFailedAttempts: Number(form.bruteForceProtectionMaxFailedAttempts) || 0,
@@ -324,10 +360,19 @@ function SchemeFormFields({
     event.preventDefault();
     onSubmit();
   };
+  const sso = ssoType(schemeType);
+  const { context } = useSsoContext(form.developerName);
+  const storedDeveloperName = schemeDeveloperName(form.developerName);
+  const suggestedEntityId = suggestedSpEntityId(context);
 
   return (
     <form className="space-y-4" onSubmit={handleSubmit}>
-      <FormField label="Label" required htmlFor="scheme-label">
+      <FormField
+        label="Label"
+        required
+        htmlFor="scheme-label"
+        hint={sso ? "Names the scheme in this list and on the admin sign-in page, as Continue with …" : undefined}
+      >
         {(control) => (
           <Input
             {...control}
@@ -337,7 +382,22 @@ function SchemeFormFields({
         )}
       </FormField>
       {isCreate ? (
-        <FormField label="Developer name" required htmlFor="scheme-developer">
+        <FormField
+          label="Developer name"
+          required
+          htmlFor="scheme-developer"
+          hint={
+            <>
+              Part of every sign-in URL, and it can't be changed later. Lowercase letters, numbers, and underscores.
+              {storedDeveloperName && storedDeveloperName !== form.developerName ? (
+                <>
+                  {" "}
+                  Saved as <code className="font-mono text-foreground">{storedDeveloperName}</code>.
+                </>
+              ) : null}
+            </>
+          }
+        >
           {(control) => (
             <Input
               {...control}
@@ -347,9 +407,17 @@ function SchemeFormFields({
           )}
         </FormField>
       ) : (
-        <p className="text-sm text-muted-foreground">Developer name {form.developerName}</p>
+        <div className="flex flex-col gap-1">
+          <p className="text-sm font-medium">Developer name</p>
+          <code className="font-mono text-sm text-muted-foreground">{form.developerName}</code>
+        </div>
       )}
-      <FormField label="Login button text" htmlFor="scheme-button">
+      <FormField
+        label="Login button text"
+        required
+        htmlFor="scheme-button"
+        hint={sso ? "The label of this scheme's button on the public login page." : undefined}
+      >
         {(control) => (
           <Input
             {...control}
@@ -358,67 +426,115 @@ function SchemeFormFields({
           />
         )}
       </FormField>
-      <FormField label="Sign in URL" htmlFor="scheme-signin">
-        {(control) => (
-          <Input
-            {...control}
-            value={form.signInUrl}
-            onChange={(event) => setForm({ ...form, signInUrl: event.target.value })}
-          />
-        )}
-      </FormField>
-      <FormField label="Sign out URL" htmlFor="scheme-signout">
-        {(control) => (
-          <Input
-            {...control}
-            value={form.signOutUrl}
-            onChange={(event) => setForm({ ...form, signOutUrl: event.target.value })}
-          />
-        )}
-      </FormField>
-      <div className="flex items-center gap-2">
-        <Checkbox
-          id="scheme-users"
-          checked={form.isEnabledForUsers}
-          onCheckedChange={(checked) => setForm({ ...form, isEnabledForUsers: checked })}
-        />
-        <Label htmlFor="scheme-users">Enabled for users</Label>
-      </div>
-      <div className="flex items-center gap-2">
-        <Checkbox
-          id="scheme-admins"
-          checked={form.isEnabledForAdmins}
-          onCheckedChange={(checked) => setForm({ ...form, isEnabledForAdmins: checked })}
-        />
-        <Label htmlFor="scheme-admins">Enabled for admins</Label>
-      </div>
-      {schemeType === "jwt" ? (
+      {sso ? (
         <>
-          <FormField label="JWT secret" htmlFor="scheme-jwt-secret">
+          <FormField label="Sign in URL" required htmlFor="scheme-signin" hint={SIGN_IN_HINT[sso]}>
             {(control) => (
               <Input
                 {...control}
-                value={form.jwtSecretKey}
-                onChange={(event) => setForm({ ...form, jwtSecretKey: event.target.value })}
+                type="url"
+                placeholder={sso === "jwt" ? "https://app.example.com/raytha-sign-in" : "https://idp.example.com/sso/saml"}
+                value={form.signInUrl}
+                onChange={(event) => setForm({ ...form, signInUrl: event.target.value })}
               />
             )}
           </FormField>
-          <div className="flex items-center gap-2">
-            <Checkbox
-              id="scheme-jwt-high"
-              checked={form.jwtUseHighSecurity}
-              onCheckedChange={(checked) => setForm({ ...form, jwtUseHighSecurity: checked })}
-            />
-            <Label htmlFor="scheme-jwt-high">JWT high security</Label>
-          </div>
+          <FormField
+            label="Sign out URL"
+            htmlFor="scheme-signout"
+            hint="Optional. Raytha never calls it: signing out of Raytha ends only the Raytha session. Site templates can read it from CurrentOrganization.AuthenticationSchemes to link to your provider's sign-out page."
+          >
+            {(control) => (
+              <Input
+                {...control}
+                type="url"
+                value={form.signOutUrl}
+                onChange={(event) => setForm({ ...form, signOutUrl: event.target.value })}
+              />
+            )}
+          </FormField>
+        </>
+      ) : null}
+      <CheckboxField
+        id="scheme-users"
+        label="Enabled for users"
+        hint={
+          sso
+            ? "Public users may sign in with this scheme, and its button shows on the public login page."
+            : undefined
+        }
+        checked={form.isEnabledForUsers}
+        onCheckedChange={(checked) => setForm({ ...form, isEnabledForUsers: checked })}
+      />
+      <CheckboxField
+        id="scheme-admins"
+        label="Enabled for admins"
+        hint={
+          sso
+            ? "Admin accounts may sign in with this scheme, and the admin sign-in page offers it. It never grants admin access: the admin must already exist in Raytha."
+            : undefined
+        }
+        checked={form.isEnabledForAdmins}
+        onCheckedChange={(checked) => setForm({ ...form, isEnabledForAdmins: checked })}
+      />
+      {schemeType === "jwt" ? (
+        <>
+          <FormField
+            label="JWT secret"
+            required
+            htmlFor="scheme-jwt-secret"
+            hint="The shared HMAC secret your app signs tokens with (HS256). Use at least 32 random ASCII characters: Raytha pads shorter secrets with NUL bytes to 32."
+          >
+            {(control) => (
+              <div className="flex gap-2">
+                <Input
+                  {...control}
+                  spellCheck={false}
+                  autoComplete="off"
+                  className="font-mono"
+                  value={form.jwtSecretKey}
+                  onChange={(event) => setForm({ ...form, jwtSecretKey: event.target.value })}
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="shrink-0"
+                  onClick={() => setForm({ ...form, jwtSecretKey: randomSecret() })}
+                >
+                  <KeyRound aria-hidden />
+                  Generate
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  className="shrink-0"
+                  aria-label="Copy JWT secret"
+                  title="Copy JWT secret"
+                  disabled={!form.jwtSecretKey}
+                  onClick={() => void copyText(form.jwtSecretKey, "Copied JWT secret")}
+                >
+                  <Copy aria-hidden />
+                </Button>
+              </div>
+            )}
+          </FormField>
+          <CheckboxField
+            id="scheme-jwt-high"
+            label="JWT high security"
+            hint="Require a jti claim in every token and accept each jti once, so a leaked sign-in link can't be replayed. Recommended."
+            checked={form.jwtUseHighSecurity}
+            onCheckedChange={(checked) => setForm({ ...form, jwtUseHighSecurity: checked })}
+          />
         </>
       ) : null}
       {schemeType === "saml" ? (
         <>
           <FormField
             label="SAML certificate"
+            required
             htmlFor="scheme-saml-cert"
-            hint="Paste the identity provider's X.509 signing certificate, including the BEGIN and END lines."
+            hint="The identity provider's X.509 signing certificate as PEM, including the BEGIN and END lines. Raytha verifies every response against it."
           >
             {(control) => (
               <Textarea
@@ -433,10 +549,34 @@ function SchemeFormFields({
               />
             )}
           </FormField>
-          <FormField label="SAML IdP entity id" htmlFor="scheme-saml-idp">
+          <FormField
+            label="Service provider entity ID (sent as Issuer)"
+            required={isCreate}
+            htmlFor="scheme-saml-idp"
+            hint={
+              <>
+                Raytha's own identifier, not your IdP's. Raytha sends it as the Issuer of every SAML request, so enter
+                the exact value you gave the IdP as the app's Entity ID, Audience URI, or Identifier. Any unique URI
+                works.
+                {form.samlIdpEntityId.trim() === "" && context.developerName ? (
+                  <>
+                    {" "}
+                    <button
+                      type="button"
+                      className="font-medium text-primary hover:underline focus-visible:outline-2 focus-visible:outline-ring"
+                      onClick={() => setForm({ ...form, samlIdpEntityId: suggestedEntityId })}
+                    >
+                      Use {suggestedEntityId}
+                    </button>
+                  </>
+                ) : null}
+              </>
+            }
+          >
             {(control) => (
               <Input
                 {...control}
+                spellCheck={false}
                 value={form.samlIdpEntityId}
                 onChange={(event) => setForm({ ...form, samlIdpEntityId: event.target.value })}
               />
@@ -488,6 +628,52 @@ function SchemeFormFields({
         {submitLabel}
       </Button>
     </form>
+  );
+}
+
+const SIGN_IN_HINT: Record<SsoSchemeType, string> = {
+  jwt: "Your app's sign-in page. Raytha sends people here with a raytha_callback_url query parameter and expects them back at that URL with token=<jwt> added.",
+  saml: "Your IdP's SAML single sign-on URL (HTTP-Redirect). Raytha adds SAMLRequest, and RelayState when there is a return path.",
+};
+
+const SECRET_ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
+
+function randomSecret(): string {
+  return Array.from(crypto.getRandomValues(new Uint8Array(48)), (byte) => SECRET_ALPHABET[byte % 64]).join("");
+}
+
+function CheckboxField({
+  id,
+  label,
+  hint,
+  checked,
+  onCheckedChange,
+}: {
+  id: string;
+  label: string;
+  hint?: string;
+  checked: boolean;
+  onCheckedChange: (checked: boolean) => void;
+}) {
+  const hintId = hint ? `${id}-hint` : undefined;
+  return (
+    <div className="flex items-start gap-2.5">
+      <Checkbox
+        id={id}
+        checked={checked}
+        onCheckedChange={onCheckedChange}
+        aria-describedby={hintId}
+        className="mt-0.5"
+      />
+      <div className="space-y-0.5">
+        <Label htmlFor={id}>{label}</Label>
+        {hint ? (
+          <p id={hintId} className="text-xs leading-5 text-muted-foreground">
+            {hint}
+          </p>
+        ) : null}
+      </div>
+    </div>
   );
 }
 

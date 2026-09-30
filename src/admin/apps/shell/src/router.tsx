@@ -70,7 +70,7 @@ import { EmailTemplateEditorPage } from "./pages/editors/email-template-editor";
 import { FunctionEditorPage } from "./pages/editors/function-editor";
 import { NewWebTemplatePage, WebTemplateEditorPage, WebTemplatesListPage } from "./pages/editors/web-templates";
 import { ThemeAssetsPage } from "./pages/editors/theme-assets";
-import { WidgetTemplateEditorPage, WidgetTemplatesListPage } from "./pages/editors/widget-templates";
+import { NewWidgetTemplatePage, WidgetTemplateEditorPage, WidgetTemplatesListPage } from "./pages/editors/widget-templates";
 import { EditMenuItemPage, MenuItemsPage, NewMenuItemPage } from "./pages/menus/menu-items";
 import { SetupPage } from "./pages/setup";
 import { ContentTypeImportPage } from "./pages/content/import";
@@ -239,6 +239,11 @@ const widgetTemplatesRoute = createRoute({
   path: "/themes/$themeId/widget-templates",
   component: WidgetTemplatesListPage,
 });
+const newWidgetTemplateRoute = createRoute({
+  getParentRoute: () => appRoute,
+  path: "/themes/$themeId/widget-templates/new",
+  component: NewWidgetTemplatePage,
+});
 const widgetTemplateEditorRoute = createRoute({
   getParentRoute: () => appRoute,
   path: "/themes/$themeId/widget-templates/$id",
@@ -337,6 +342,7 @@ const routeTree = rootRoute.addChildren([
     newWebTemplateRoute,
     webTemplateEditorRoute,
     widgetTemplatesRoute,
+    newWidgetTemplateRoute,
     widgetTemplateEditorRoute,
     themeAssetsRoute,
     emailTemplatesRoute,

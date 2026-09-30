@@ -62,17 +62,20 @@ mkdir -p "$RUNS"
 ./tools/compose-up.sh     # skips any service whose port is already taken
 dotnet build src/Raytha.Web/Raytha.Web.csproj
 
+cd src/Raytha.Web
 ASPNETCORE_ENVIRONMENT=Development \
 ASPNETCORE_URLS=http://127.0.0.1:15200 \
-nohup src/Raytha.Web/bin/Debug/net10.0/Raytha.Web \
+nohup bin/Debug/net10.0/Raytha.Web \
   --ConnectionStrings:DefaultConnection="Host=localhost;Port=5433;Username=postgres;Password=changeme;Database=raytha_verify" \
   --APPLY_PENDING_MIGRATIONS=true \
   --AdminSpa:AutoStart=false \
   --SMTP_HOST=localhost \
   --SMTP_PORT=1025 \
+  --FILE_STORAGE_PROVIDER=local \
   --FILE_STORAGE_LOCAL_DIRECTORY="$RUNS/uploads" \
   > "$RUNS/host.log" 2>&1 &
 echo $! > "$RUNS/host.pid"
+cd -
 ```
 
 Why it is shaped this way:
@@ -83,6 +86,15 @@ Why it is shaped this way:
 - `FILE_STORAGE_LOCAL_DIRECTORY` must be **absolute**: a relative path resolves
   against the content root (`src/Raytha.Web/`), which scatters upload
   directories into the source tree.
+  It must also be **all lowercase**: the storage settings lowercase the path, so
+  `.../W2/uploads` is written to `.../w2/uploads`. `FILE_STORAGE_PROVIDER=local`
+  is required too, or the storage readiness check fails.
+- Launch **from `src/Raytha.Web`**: first-run setup reads the default theme from
+  `wwwroot/...` relative to the working directory, so any other directory makes
+  setup fail or seed an incomplete theme.
+- If other agents build the same tree while you verify, copy
+  `bin/Debug/net10.0` to a private directory and run that copy, so a concurrent
+  build cannot swap the binaries under your running host.
 
 - Settings go in as **command-line arguments with colons**, because `Program`
   calls `DotNetEnv`, so a repo-root `.env` can overwrite environment variables —
@@ -202,7 +214,8 @@ Notes that will save you a wrong conclusion:
 ## Evidence
 
 Keep artifacts in `.cursor/skills/verify-raytha/evidence/<change>/`, named after
-what they show (`home.html`, `users-list.json`, `me.json`).
+what they show (`home.html`, `users-list.json`, `me.json`). The folder is
+gitignored: evidence backs your report, it does not ship with the change.
 
 Proof bar:
 
@@ -231,7 +244,7 @@ Confirm the port is free. If something is still listening, find it with
 - Leave `raytha_verify` in place; the next launch reuses it and setup is already
   done. Drop it only when you need a true first-run test:
   `docker compose -f tools/compose.yaml exec -T postgres dropdb -U postgres raytha_verify`.
-- Leave `evidence/`. `runs/` holds logs, cookies, and uploads — it is scratch,
-  and nothing in it should be committed.
+- Leave `evidence/` for the report. `runs/` holds logs, cookies, and uploads — it is
+  scratch. Both are gitignored; never force-add either.
 - Never `pkill dotnet` or `pkill node`. That kills the developer's dev instance,
   which is the one thing this skill exists to protect.

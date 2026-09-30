@@ -96,12 +96,13 @@ public class ApplicationConventionTests
     /// </summary>
     private static readonly HashSet<string> AuditExemptCommands = new(StringComparer.Ordinal)
     {
-        // Per-admin view presentation state (column/sort layout, favourites).
+        // Per-admin presentation state (view column/sort layout, view and web template favourites).
         "EditColumn",
         "ReorderColumn",
         "EditSort",
         "ReorderSort",
         "ToggleViewAsFavoriteForAdmin",
+        "ToggleWebTemplateAsFavoriteForAdmin",
         "UpdateRecentlyAccessedView",
         // Internal/self-describing operations.
         "SetAsActiveThemeInternal",

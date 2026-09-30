@@ -29,17 +29,8 @@ public class RevertWidgetTemplate
                 .WidgetTemplateRevisions.Include(p => p.WidgetTemplate)
                 .First(p => p.Id == request.Id.Guid);
 
-            var newRevision = new WidgetTemplateRevision
-            {
-                WidgetTemplateId = entity.WidgetTemplateId,
-                Content = entity.WidgetTemplate!.Content,
-                Label = entity.WidgetTemplate.Label,
-            };
-
-            _db.WidgetTemplateRevisions.Add(newRevision);
-
-            entity.WidgetTemplate.Label = entity.Label;
-            entity.WidgetTemplate.Content = entity.Content;
+            _db.WidgetTemplateRevisions.Add(entity.WidgetTemplate!.ToRevision());
+            entity.WidgetTemplate.RestoreFrom(entity);
 
             await _db.SaveChangesAsync(cancellationToken);
 

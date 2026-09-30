@@ -51,13 +51,16 @@ const HTTP_STARTER = `/**
  * HTTP request trigger.
  * GET  /raytha/functions/execute/{developerName} calls get(query)
  * POST /raytha/functions/execute/{developerName} calls post(payload, query)
+ * Set a public path (for example llms.txt) to answer at that URL as well.
  *
  * query:   array of { Key, Value } pairs, where Value is an array of strings
  * payload: the parsed JSON body, or { Key, Value } pairs for a form post
- * Return a JsonResult, HtmlResult, XmlResult, RedirectResult, or StatusCodeResult.
+ * Return a JsonResult, TextResult, ContentResult, HtmlResult, XmlResult,
+ * RedirectResult, or StatusCodeResult.
  */
 function get(query) {
     return new JsonResult({ success: true });
+    // return new TextResult("Hello World");
     // return new HtmlResult("<p>Hello World</p>");
     // return new RedirectResult("https://raytha.com");
     // return new StatusCodeResult(404, "Not Found");
@@ -107,12 +110,13 @@ export const FUNCTION_TRIGGERS: readonly FunctionTrigger[] = [
   {
     value: "http_request",
     label: "HTTP request",
-    summary: "A public endpoint at /raytha/functions/execute/{developerName}. Anyone can call it; check CurrentUser if it must be private.",
+    summary:
+      "A public endpoint at /raytha/functions/execute/{developerName}, and at its public path if you set one. Anyone can call it; check CurrentUser if it must be private.",
     entryPoints: [
       {
         signature: "get(query)",
         when: "GET request. query is [{ Key, Value: [strings] }].",
-        returns: "JsonResult, HtmlResult, XmlResult, RedirectResult, or StatusCodeResult.",
+        returns: "JsonResult, TextResult, ContentResult, HtmlResult, XmlResult, RedirectResult, or StatusCodeResult.",
       },
       {
         signature: "post(payload, query)",
@@ -198,7 +202,8 @@ export const REFERENCE_GROUPS: readonly ReferenceGroup[] = [
   {
     id: "results",
     title: "Result helpers",
-    description: "Return one of these from get or post. The content type and status follow the helper.",
+    description:
+      "Return one of these from get or post. The content type and status follow the helper. You cannot set other response headers.",
     members: [
       {
         signature: "new JsonResult(value)",
@@ -206,8 +211,19 @@ export const REFERENCE_GROUPS: readonly ReferenceGroup[] = [
         example: "return new JsonResult({ ok: true, items: [] });",
       },
       {
+        signature: "new TextResult(text)",
+        description: "Returns text/plain; charset=utf-8 with status 200. Good for llms.txt, robots.txt, or a CSV download.",
+        example: 'return new TextResult("User-agent: *\\nAllow: /");',
+      },
+      {
+        signature: "new ContentResult(body, contentType = 'text/plain; charset=utf-8', statusCode = 200)",
+        description:
+          "Any content type and a status from 200 to 599. An invalid content type or status answers 500 naming the bad value. Served from your site's origin, so treat text/html or image/svg+xml bodies like page content.",
+        example: 'return new ContentResult(csv, "text/csv; charset=utf-8");',
+      },
+      {
         signature: "new HtmlResult(html)",
-        description: "Returns text/html.",
+        description: "Returns text/html, served from your site's origin like any page, so escape anything a visitor supplied.",
         example: 'return new HtmlResult("<h1>Thanks!</h1>");',
       },
       {
@@ -647,6 +663,31 @@ export const FUNCTION_LIMITS: readonly FunctionLimit[] = [
 ];
 
 export const FUNCTION_RECIPES: readonly FunctionRecipe[] = [
+  {
+    id: "llms-txt",
+    title: "llms.txt for AI crawlers",
+    trigger: "http_request",
+    description:
+      "A plain-text index of your published pages. Set the public path to llms.txt so it answers at /llms.txt.",
+    code: `function get(query) {
+    const site = CurrentOrganization.WebsiteUrl;
+    const lines = [
+        "# " + CurrentOrganization.OrganizationName,
+        "",
+        "> A plain-text guide to this site for language models.",
+        "",
+        "## Pages",
+    ];
+    const pages = API_V1.GetSitePages("", "", 1, 200).Result.Items;
+    for (const page of Array.from(pages)) {
+        if (page.IsPublished) {
+            lines.push("- [" + page.Title + "](" + site + "/" + page.RoutePath + ")");
+        }
+    }
+    return new TextResult(lines.join("\\n"));
+}
+`,
+  },
   {
     id: "json-api",
     title: "JSON API of published posts",

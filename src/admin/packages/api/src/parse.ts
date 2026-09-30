@@ -17,9 +17,16 @@ import type {
   TemplateVariable,
   TemplateVariableGroup,
   ThemeMediaItem,
+  JsonValue,
+  SitePageWidgetDefinition,
   WebTemplateDetail,
+  WidgetField,
+  WidgetFieldChoice,
+  WidgetFieldTypeName,
+  WidgetFieldTypeOption,
   WidgetTemplateDetail,
 } from "./types";
+import { WIDGET_FIELD_TYPES } from "./types";
 
 export function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -202,6 +209,7 @@ export function parseWebTemplate(value: unknown): WebTemplateDetail | null {
     allowAccessForNewContentTypes: booleanField(value, "allowAccessForNewContentTypes"),
     templateAccessToModelDefinitions: accessIds(value.templateAccessToModelDefinitions),
     availableVariables: availableVariables(value.availableVariables),
+    isFavorite: booleanField(value, "isFavorite"),
   };
 }
 
@@ -220,7 +228,104 @@ export function parseWidgetTemplate(value: unknown): WidgetTemplateDetail | null
     developerName: stringField(value, "developerName"),
     content: stringField(value, "content"),
     isBuiltInTemplate: booleanField(value, "isBuiltInTemplate"),
+    fields: parseWidgetFields(value.fields),
   };
+}
+
+function widgetFieldTypeName(value: unknown): WidgetFieldTypeName | null {
+  return WIDGET_FIELD_TYPES.find((name) => name === value) ?? null;
+}
+
+function jsonValue(value: unknown): JsonValue {
+  if (value === null || typeof value === "string" || typeof value === "boolean") {
+    return value;
+  }
+  if (typeof value === "number") {
+    return Number.isFinite(value) ? value : null;
+  }
+  if (Array.isArray(value)) {
+    return value.map(jsonValue);
+  }
+  if (isRecord(value)) {
+    return Object.fromEntries(Object.entries(value).map(([key, item]) => [key, jsonValue(item)]));
+  }
+  return null;
+}
+
+function widgetFieldChoices(value: unknown): WidgetFieldChoice[] {
+  const choices: WidgetFieldChoice[] = [];
+  for (const item of Array.isArray(value) ? value : []) {
+    if (isRecord(item)) {
+      choices.push({
+        label: stringField(item, "label"),
+        developerName: stringField(item, "developerName"),
+        disabled: booleanField(item, "disabled"),
+      });
+    }
+  }
+  return choices;
+}
+
+/** Fields in display order. A field whose type this admin does not know is dropped. */
+export function parseWidgetFields(value: unknown): WidgetField[] {
+  const fields: WidgetField[] = [];
+  for (const item of Array.isArray(value) ? value : []) {
+    if (!isRecord(item)) {
+      continue;
+    }
+    const fieldType = widgetFieldTypeName(item.fieldType);
+    if (fieldType === null) {
+      continue;
+    }
+    fields.push({
+      developerName: stringField(item, "developerName"),
+      label: stringField(item, "label"),
+      fieldType,
+      description: stringField(item, "description"),
+      isRequired: booleanField(item, "isRequired"),
+      defaultValue: jsonValue(item.defaultValue ?? null),
+      choices: widgetFieldChoices(item.choices),
+      subFields: parseWidgetFields(item.subFields),
+      contentTypeField: stringField(item, "contentTypeField"),
+    });
+  }
+  return fields;
+}
+
+export function parseWidgetFieldTypeOptions(value: unknown): WidgetFieldTypeOption[] {
+  const options: WidgetFieldTypeOption[] = [];
+  for (const item of Array.isArray(value) ? value : []) {
+    const developerName = isRecord(item) ? widgetFieldTypeName(item.developerName) : null;
+    if (!isRecord(item) || developerName === null) {
+      continue;
+    }
+    options.push({
+      developerName,
+      label: stringField(item, "label") || developerName,
+      hasChoices: booleanField(item, "hasChoices"),
+      allowedInRepeater: booleanField(item, "allowedInRepeater"),
+    });
+  }
+  return options;
+}
+
+export function parseWidgetDefinitions(value: unknown): SitePageWidgetDefinition[] {
+  const definitions: SitePageWidgetDefinition[] = [];
+  for (const item of Array.isArray(value) ? value : []) {
+    const developerName = isRecord(item) ? stringField(item, "developerName") : "";
+    if (!isRecord(item) || developerName.length === 0) {
+      continue;
+    }
+    definitions.push({
+      developerName,
+      displayName: stringField(item, "displayName") || developerName,
+      description: stringField(item, "description"),
+      iconClass: stringField(item, "iconClass"),
+      isBuiltInTemplate: booleanField(item, "isBuiltInTemplate"),
+      fields: parseWidgetFields(item.fields),
+    });
+  }
+  return definitions;
 }
 
 export function parseFunction(value: unknown): FunctionDetail | null {
@@ -240,6 +345,7 @@ export function parseFunction(value: unknown): FunctionDetail | null {
     triggerLabel: trigger.label,
     isActive: booleanField(value, "isActive"),
     code: stringField(value, "code"),
+    routePath: stringField(value, "routePath"),
   };
 }
 
