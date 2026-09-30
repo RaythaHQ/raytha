@@ -1,4 +1,5 @@
-﻿<!DOCTYPE html>
+﻿@inject ICurrentOrganization Organization
+<!DOCTYPE html>
 <html lang="en">
 
 <head>
@@ -18,6 +19,7 @@
     <script src="~/raytha_admin/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
 
     @await RenderSectionAsync("Scripts", required: false)
+    @Html.Raw(Raytha.Web.Services.ImpersonationBanner.For(User, Organization.PathBase))
 </body>
 
 </html>

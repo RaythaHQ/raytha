@@ -146,7 +146,7 @@ public static class ThemesEndpoints
                     contentType = m.ContentType,
                     length = m.Length,
                     objectKey = m.ObjectKey,
-                    url = urls.MediaRedirectToFileUrl(m.ObjectKey),
+                    url = urls.MediaRedirectToFilePath(m.ObjectKey),
                 })
         );
     }

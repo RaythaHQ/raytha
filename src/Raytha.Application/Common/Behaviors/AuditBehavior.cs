@@ -46,6 +46,7 @@ public class AuditBehavior<TMessage, TResponse> : IPipelineBehavior<TMessage, TR
                     Request = JsonSerializer.Serialize(messageAsDynamic),
                     Category = messageAsDynamic.GetLogName(),
                     UserEmail = _currentUser.EmailAddress,
+                    ImpersonatorEmail = _currentUser.ImpersonatorEmailAddress,
                     IpAddress = _currentUser.RemoteIpAddress,
                     EntityId = isLoggableEntityRequest ? (ShortGuid)messageAsDynamic.Id : null,
                 };

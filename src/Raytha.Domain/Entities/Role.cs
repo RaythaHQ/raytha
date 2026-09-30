@@ -17,6 +17,12 @@ public class BuiltInRole : ValueObject
 
     private BuiltInRole() { }
 
+    /// <summary>
+    /// Policy name, not a permission: holding the Super Admin role itself. Every permission policy
+    /// passes for a super admin too, so a rule reserved for super admins needs this one.
+    /// </summary>
+    public const string SUPER_ADMIN_POLICY = "super_admin";
+
     private BuiltInRole(string label, string developerName, SystemPermissions permission)
     {
         DefaultLabel = label;

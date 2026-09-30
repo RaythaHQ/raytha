@@ -11,6 +11,7 @@ using Raytha.Application.Login;
 using Raytha.Application.Login.Commands;
 using Raytha.Application.Login.Queries;
 using Raytha.Application.OrganizationSettings.Commands;
+using Raytha.Domain.Entities;
 using Raytha.Domain.ValueObjects;
 
 namespace Raytha.Web.Areas.Admin.Api;
@@ -41,6 +42,27 @@ public static class AuthEndpoints
         group.MapGet("/setup", SetupStatus).AllowAnonymous();
         group.MapGet("/setup/status", SetupStatus).AllowAnonymous();
         group.MapPost("/setup", Setup).AllowAnonymous();
+
+        group
+            .MapPost(
+                "/impersonation/users/{id}",
+                (string id, HttpContext http, ISender m, ICurrentUser u, ICurrentOrganization o, IConfiguration c) =>
+                    StartImpersonation(http, id, BeginImpersonation.TargetKind.WebsiteUser, m, u, o, c)
+            )
+            .RequireAuthorization(RaythaClaimTypes.IsAdmin, BuiltInSystemPermission.MANAGE_USERS_PERMISSION);
+        group
+            .MapPost(
+                "/impersonation/admins/{id}",
+                (string id, HttpContext http, ISender m, ICurrentUser u, ICurrentOrganization o, IConfiguration c) =>
+                    StartImpersonation(http, id, BeginImpersonation.TargetKind.Admin, m, u, o, c)
+            )
+            .RequireAuthorization(
+                RaythaClaimTypes.IsAdmin,
+                BuiltInSystemPermission.MANAGE_ADMINISTRATORS_PERMISSION,
+                BuiltInRole.SUPER_ADMIN_POLICY
+            );
+        // Any signed-in principal: the session being ended may be a website user's.
+        group.MapPost("/impersonation/stop", StopImpersonation).RequireAuthorization();
 
         return endpoints;
     }
@@ -81,8 +103,84 @@ public static class AuthEndpoints
                     dateFormat = organization.DateFormat,
                     pathBase = organization.PathBase,
                 },
+                impersonation = currentUser.ImpersonatorId is { } impersonatorId
+                    ? new
+                    {
+                        impersonatorId = impersonatorId.ToString(),
+                        impersonatorName = http.User.FindFirstValue(RaythaClaimTypes.ImpersonatorName),
+                        impersonatorEmail = currentUser.ImpersonatorEmailAddress,
+                        startedAt = http.User.FindFirstValue(RaythaClaimTypes.ImpersonationStarted),
+                        expiresAt = http.User.FindFirstValue(RaythaClaimTypes.ImpersonationExpires),
+                    }
+                    : null,
             }
         );
+    }
+
+    private const string ImpersonationMaxMinutesKey = "IMPERSONATION_MAX_MINUTES";
+
+    private static async Task<IResult> StartImpersonation(
+        HttpContext http,
+        string id,
+        BeginImpersonation.TargetKind kind,
+        ISender mediator,
+        ICurrentUser currentUser,
+        ICurrentOrganization organization,
+        IConfiguration configuration
+    )
+    {
+        var response = await mediator.Send(new BeginImpersonation.Command { Id = id, Kind = kind });
+        if (!response.Success)
+        {
+            return AdminResults.Problem(response.GetErrors());
+        }
+
+        var maxMinutes = Math.Clamp(configuration.GetValue(ImpersonationMaxMinutesKey, 60), 1, 24 * 60);
+        var now = DateTimeOffset.UtcNow;
+        var expires = now.AddMinutes(maxMinutes);
+        await SignInAsync(
+            http,
+            response.Result,
+            new AuthenticationProperties
+            {
+                IsPersistent = false,
+                AllowRefresh = false,
+                IssuedUtc = now,
+                ExpiresUtc = expires,
+            },
+            new Claim(RaythaClaimTypes.ImpersonatorId, currentUser.UserId!.Value.ToString()),
+            new Claim(RaythaClaimTypes.ImpersonationStarted, now.ToString("O")),
+            new Claim(RaythaClaimTypes.ImpersonationExpires, expires.ToString("O"))
+        );
+
+        var landing = response.Result.IsAdmin ? "/raytha" : "/";
+        return Results.Ok(new { redirectUrl = $"{organization.PathBase}{landing}" });
+    }
+
+    private static async Task<IResult> StopImpersonation(
+        HttpContext http,
+        [FromServices] ISender mediator,
+        [FromServices] ICurrentUser currentUser,
+        [FromServices] ICurrentOrganization organization
+    )
+    {
+        if (currentUser.ImpersonatorId is not { } impersonatorId || currentUser.UserId is not { } targetId)
+        {
+            return AdminResults.Problem("You are not impersonating anyone.", StatusCodes.Status409Conflict);
+        }
+
+        var targetPage = currentUser.IsAdmin ? $"/raytha/settings/admins/{targetId}" : $"/raytha/users/{targetId}";
+        var response = await mediator.Send(
+            new EndImpersonation.Command { ImpersonatorId = impersonatorId, TargetUserId = targetId }
+        );
+        if (!response.Success)
+        {
+            await http.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+            return AdminResults.Problem(response.GetErrors(), StatusCodes.Status403Forbidden);
+        }
+
+        await SignInAsync(http, response.Result, rememberMe: false);
+        return Results.Ok(new { redirectUrl = $"{organization.PathBase}{targetPage}" });
     }
 
     private static async Task<IResult> Login(
@@ -353,19 +451,24 @@ public static class AuthEndpoints
     }
 
     /// <summary>Mirror of <c>BaseAdminLoginPageModel.LoginWithClaims</c>.</summary>
-    internal static async Task SignInAsync(HttpContext http, LoginDto user, bool rememberMe)
+    internal static Task SignInAsync(HttpContext http, LoginDto user, bool rememberMe) =>
+        SignInAsync(http, user, new AuthenticationProperties { IsPersistent = rememberMe });
+
+    private static async Task SignInAsync(
+        HttpContext http,
+        LoginDto user,
+        AuthenticationProperties properties,
+        params Claim[] extraClaims
+    )
     {
         var claims = new List<Claim>
         {
             new(ClaimTypes.NameIdentifier, user.Id.ToString()),
             new(RaythaClaimTypes.LastModificationTime, user.LastModificationTime.ToString() ?? string.Empty),
         };
+        claims.AddRange(extraClaims);
         var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
-        await http.SignInAsync(
-            CookieAuthenticationDefaults.AuthenticationScheme,
-            new ClaimsPrincipal(identity),
-            new AuthenticationProperties { IsPersistent = rememberMe }
-        );
+        await http.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(identity), properties);
     }
 
     public sealed record LoginRequest(string? Email, string? Password, bool? RememberMe);

@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Security.Claims;
 using System.Text.Json;
@@ -7,8 +9,11 @@ using Mediator;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Logging;
+using Raytha.Application.Common.Exceptions;
 using Raytha.Application.Common.Security;
 using Raytha.Application.Common.Utils;
+using Raytha.Application.Login;
 using Raytha.Application.Login.Queries;
 
 namespace Raytha.Web.Authentication;
@@ -16,10 +21,15 @@ namespace Raytha.Web.Authentication;
 public class CustomCookieAuthenticationEvents : CookieAuthenticationEvents
 {
     private readonly IMediator _mediator;
+    private readonly ILogger<CustomCookieAuthenticationEvents> _logger;
 
-    public CustomCookieAuthenticationEvents(IMediator mediator)
+    public CustomCookieAuthenticationEvents(
+        IMediator mediator,
+        ILogger<CustomCookieAuthenticationEvents> logger
+    )
     {
         _mediator = mediator;
+        _logger = logger;
     }
 
     /// <summary>
@@ -92,17 +102,59 @@ public class CustomCookieAuthenticationEvents : CookieAuthenticationEvents
         if (lastModifiedAsString == null || userIdAsString == null)
             return;
 
+        var impersonatorId = userPrincipal.FindFirstValue(RaythaClaimTypes.ImpersonatorId);
+        var impersonationStarted = userPrincipal.FindFirstValue(
+            RaythaClaimTypes.ImpersonationStarted
+        );
+        var impersonationExpires = userPrincipal.FindFirstValue(
+            RaythaClaimTypes.ImpersonationExpires
+        );
+
         var user = await _mediator.Send(
             new GetUserForAuthenticationById.Query { Id = userIdAsString }
         );
 
         if (user == null || !user.Success || !user.Result.IsActive)
         {
-            context.RejectPrincipal();
-            await context.HttpContext.SignOutAsync(
-                CookieAuthenticationDefaults.AuthenticationScheme
-            );
+            await Reject(context);
             return;
+        }
+
+        LoginDto? impersonator = null;
+        if (impersonatorId != null)
+        {
+            // The ticket expiry is the primary limit; the claim also holds when another path
+            // re-issues the cookie from this principal with fresh ticket properties.
+            if (
+                !DateTimeOffset.TryParse(
+                    impersonationExpires,
+                    CultureInfo.InvariantCulture,
+                    DateTimeStyles.RoundtripKind,
+                    out var expiresAt
+                )
+                || expiresAt <= DateTimeOffset.UtcNow
+            )
+            {
+                _logger.LogInformation("Ending impersonation session: expired");
+                await Reject(context);
+                return;
+            }
+
+            impersonator = await FindLogin(impersonatorId);
+            var denial =
+                impersonator == null
+                    ? ImpersonationRules.NotSignedIn
+                    : ImpersonationRules.Check(
+                        ImpersonationParty.Of(impersonator),
+                        ImpersonationParty.Of(user.Result),
+                        callerIsImpersonating: false
+                    );
+            if (denial != null)
+            {
+                _logger.LogInformation("Ending impersonation session: {Reason}", denial);
+                await Reject(context);
+                return;
+            }
         }
 
         List<Claim> claims = new List<Claim>
@@ -152,12 +204,45 @@ public class CustomCookieAuthenticationEvents : CookieAuthenticationEvents
             claims.Add(new Claim(RaythaClaimTypes.UserGroups, userGroup.DeveloperName));
         }
 
+        if (impersonator != null)
+        {
+            claims.Add(new Claim(RaythaClaimTypes.ImpersonatorId, impersonatorId));
+            claims.Add(
+                new Claim(RaythaClaimTypes.ImpersonationStarted, impersonationStarted ?? string.Empty)
+            );
+            claims.Add(new Claim(RaythaClaimTypes.ImpersonationExpires, impersonationExpires));
+            claims.Add(new Claim(RaythaClaimTypes.ImpersonatorEmail, impersonator.EmailAddress));
+            claims.Add(new Claim(RaythaClaimTypes.ImpersonatorName, impersonator.FullName));
+        }
+
         ClaimsIdentity identity = new ClaimsIdentity(
             claims,
             CookieAuthenticationDefaults.AuthenticationScheme
         );
         ClaimsPrincipal principal = new ClaimsPrincipal(identity);
         context.ReplacePrincipal(principal);
-        context.ShouldRenew = true;
+        // Renewing re-issues the ticket with a fresh expiry, which would let a session slide.
+        context.ShouldRenew = impersonator == null;
+    }
+
+    private async Task<LoginDto?> FindLogin(string userId)
+    {
+        try
+        {
+            var response = await _mediator.Send(
+                new GetUserForAuthenticationById.Query { Id = userId }
+            );
+            return response.Success ? response.Result : null;
+        }
+        catch (NotFoundException)
+        {
+            return null;
+        }
+    }
+
+    private static async Task Reject(CookieValidatePrincipalContext context)
+    {
+        context.RejectPrincipal();
+        await context.HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
     }
 }

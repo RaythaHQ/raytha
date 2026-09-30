@@ -2,16 +2,19 @@ import {
   adminApi,
   bootstrapSession,
   currentSession,
+  formatError,
   hasContentTypePermission,
   hasPermission,
   logout,
   platformPermissions,
+  type ImpersonationSession,
 } from "@raytha/api";
 import {
   Avatar,
   Breadcrumb,
   BreadcrumbItem,
   BreadcrumbSeparator,
+  Button,
   cn,
   CommandPalette,
   DropdownMenu,
@@ -20,10 +23,11 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
+  toast,
   Toaster,
   type CommandItem,
 } from "@raytha/ui";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, Outlet, useLocation, useNavigate } from "@tanstack/react-router";
 import {
   Activity,
@@ -53,6 +57,7 @@ import {
   UserRound,
   Users,
   UsersRound,
+  VenetianMask,
   Webhook,
   X,
   type LucideIcon,
@@ -473,6 +478,48 @@ function SidebarContent({
 
 const isMac = typeof navigator !== "undefined" && /Mac|iPhone|iPad/.test(navigator.userAgent);
 
+function ImpersonationStrip({
+  name,
+  email,
+  impersonation,
+}: {
+  name: string;
+  email: string;
+  impersonation: ImpersonationSession;
+}) {
+  const stop = useMutation({
+    mutationFn: () => adminApi.impersonation.stop(),
+    onSuccess: ({ redirectUrl }) => window.location.assign(redirectUrl),
+    onError: (error) => toast.error(formatError(error)),
+  });
+  const endsAt = new Date(impersonation.expiresAt);
+
+  return (
+    <div
+      role="status"
+      className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-2 border-b border-warning-border bg-warning-soft px-3 py-2 lg:px-5"
+    >
+      <VenetianMask aria-hidden className="size-4 shrink-0 text-warning" />
+      <p className="min-w-0 flex-1 text-[13px] leading-5 text-foreground">
+        You are signed in as <strong className="font-semibold">{name}</strong>{" "}
+        <span className="text-muted-foreground">({email})</span> · started by {impersonation.impersonatorName}
+        {Number.isNaN(endsAt.getTime())
+          ? null
+          : ` · ends at ${endsAt.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}`}
+      </p>
+      <Button
+        type="button"
+        size="sm"
+        variant="outline"
+        loading={stop.isPending || stop.isSuccess}
+        onClick={() => stop.mutate()}
+      >
+        Stop impersonating
+      </Button>
+    </div>
+  );
+}
+
 export function AppShell() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -650,116 +697,125 @@ export function AppShell() {
       )}
 
       <div className="flex min-h-screen min-w-0 flex-1 flex-col">
-        <header className="sticky top-0 z-20 flex h-14 min-w-0 items-center gap-2 border-b border-border bg-background/80 px-3 backdrop-blur-xl lg:px-5">
-          <button
-            type="button"
-            aria-label="Open navigation"
-            aria-expanded={mobileOpen}
-            aria-controls="mobile-navigation"
-            onClick={() => setMobileOpen(true)}
-            className="rounded-lg p-2 text-muted-foreground hover:bg-accent hover:text-foreground lg:hidden"
-          >
-            <Menu className="size-4.5" />
-          </button>
-          <button
-            type="button"
-            aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-            title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-            onClick={() => setCollapsed((c) => !c)}
-            className="hidden rounded-lg p-2 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground lg:block"
-          >
-            {collapsed ? <PanelLeftOpen className="size-4.5" /> : <PanelLeftClose className="size-4.5" />}
-          </button>
-          <span className="mx-1 hidden h-5 w-px bg-border md:block" aria-hidden />
-
-          <Breadcrumb className="hidden min-w-0 md:block">
-            {breadcrumbs.map((crumb, i) => {
-              const last = i === breadcrumbs.length - 1;
-              return [
-                i > 0 ? <BreadcrumbSeparator key={`sep-${i}`} /> : null,
-                <BreadcrumbItem key={i} current={last}>
-                  {crumb.to && !last ? (
-                    <AppLink href={crumb.to === "/" ? "/raytha" : `/raytha${crumb.to}`} className="transition-colors">
-                      {crumb.label}
-                    </AppLink>
-                  ) : (
-                    crumb.label
-                  )}
-                </BreadcrumbItem>,
-              ];
-            })}
-          </Breadcrumb>
-
-          <div className="ml-auto flex items-center gap-1.5">
+        <div className="sticky top-0 z-20">
+          {session?.impersonation && (
+            <ImpersonationStrip
+              name={session.fullName || session.email}
+              email={session.email}
+              impersonation={session.impersonation}
+            />
+          )}
+          <header className="flex h-14 min-w-0 items-center gap-2 border-b border-border bg-background/80 px-3 backdrop-blur-xl lg:px-5">
             <button
               type="button"
-              aria-expanded={paletteOpen}
-              aria-haspopup="dialog"
-              onClick={() => setPaletteOpen(true)}
-              className="hidden h-8 w-64 items-center gap-2 rounded-lg border border-border bg-card px-2.5 text-[13px] text-muted-foreground shadow-xs transition-colors hover:border-border-strong hover:text-foreground sm:flex"
+              aria-label="Open navigation"
+              aria-expanded={mobileOpen}
+              aria-controls="mobile-navigation"
+              onClick={() => setMobileOpen(true)}
+              className="rounded-lg p-2 text-muted-foreground hover:bg-accent hover:text-foreground lg:hidden"
             >
-              <Search className="size-3.5" aria-hidden />
-              <span className="flex-1 text-left">Search or jump to…</span>
-              <kbd className="rounded-md border border-border bg-muted px-1.5 py-px font-sans text-[10px] font-medium text-muted-foreground">
-                {isMac ? "⌘K" : "Ctrl K"}
-              </kbd>
+              <Menu className="size-4.5" />
             </button>
             <button
               type="button"
-              aria-label="Search"
-              aria-expanded={paletteOpen}
-              aria-haspopup="dialog"
-              onClick={() => setPaletteOpen(true)}
-              className="rounded-lg p-2 text-muted-foreground hover:bg-accent hover:text-foreground sm:hidden"
+              aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+              title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+              onClick={() => setCollapsed((c) => !c)}
+              className="hidden rounded-lg p-2 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground lg:block"
             >
-              <Search className="size-4.5" />
+              {collapsed ? <PanelLeftOpen className="size-4.5" /> : <PanelLeftClose className="size-4.5" />}
             </button>
-            <a
-              href="/"
-              target="_blank"
-              rel="noreferrer"
-              aria-label="View live site"
-              title="View live site"
-              className="rounded-lg p-2 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring"
-            >
-              <Globe className="size-4.5" aria-hidden />
-            </a>
+            <span className="mx-1 hidden h-5 w-px bg-border md:block" aria-hidden />
 
-            <DropdownMenu>
-              <DropdownMenuTrigger>
-                <button
-                  type="button"
-                  aria-label={`Account menu for ${displayName}`}
-                  className="ml-1 flex items-center gap-2 rounded-lg py-1 pr-1.5 pl-1 transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-ring"
-                >
-                  <Avatar name={displayName} className="size-7" />
-                  <span className="hidden max-w-36 truncate text-[13px] font-medium md:block">{displayName}</span>
-                  <ChevronsUpDown className="hidden size-3.5 text-muted-foreground md:block" aria-hidden />
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent className="min-w-60">
-                <div className="flex items-center gap-2.5 px-2.5 py-2">
-                  <Avatar name={displayName} />
-                  <div className="min-w-0">
-                    <p className="truncate text-[13px] font-medium text-foreground">{session?.fullName || "Signed in"}</p>
-                    <p className="truncate text-xs text-muted-foreground">{session?.email}</p>
+            <Breadcrumb className="hidden min-w-0 md:block">
+              {breadcrumbs.map((crumb, i) => {
+                const last = i === breadcrumbs.length - 1;
+                return [
+                  i > 0 ? <BreadcrumbSeparator key={`sep-${i}`} /> : null,
+                  <BreadcrumbItem key={i} current={last}>
+                    {crumb.to && !last ? (
+                      <AppLink href={crumb.to === "/" ? "/raytha" : `/raytha${crumb.to}`} className="transition-colors">
+                        {crumb.label}
+                      </AppLink>
+                    ) : (
+                      crumb.label
+                    )}
+                  </BreadcrumbItem>,
+                ];
+              })}
+            </Breadcrumb>
+
+            <div className="ml-auto flex items-center gap-1.5">
+              <button
+                type="button"
+                aria-expanded={paletteOpen}
+                aria-haspopup="dialog"
+                onClick={() => setPaletteOpen(true)}
+                className="hidden h-8 w-64 items-center gap-2 rounded-lg border border-border bg-card px-2.5 text-[13px] text-muted-foreground shadow-xs transition-colors hover:border-border-strong hover:text-foreground sm:flex"
+              >
+                <Search className="size-3.5" aria-hidden />
+                <span className="flex-1 text-left">Search or jump to…</span>
+                <kbd className="rounded-md border border-border bg-muted px-1.5 py-px font-sans text-[10px] font-medium text-muted-foreground">
+                  {isMac ? "⌘K" : "Ctrl K"}
+                </kbd>
+              </button>
+              <button
+                type="button"
+                aria-label="Search"
+                aria-expanded={paletteOpen}
+                aria-haspopup="dialog"
+                onClick={() => setPaletteOpen(true)}
+                className="rounded-lg p-2 text-muted-foreground hover:bg-accent hover:text-foreground sm:hidden"
+              >
+                <Search className="size-4.5" />
+              </button>
+              <a
+                href="/"
+                target="_blank"
+                rel="noreferrer"
+                aria-label="View live site"
+                title="View live site"
+                className="rounded-lg p-2 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring"
+              >
+                <Globe className="size-4.5" aria-hidden />
+              </a>
+
+              <DropdownMenu>
+                <DropdownMenuTrigger>
+                  <button
+                    type="button"
+                    aria-label={`Account menu for ${displayName}`}
+                    className="ml-1 flex items-center gap-2 rounded-lg py-1 pr-1.5 pl-1 transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-ring"
+                  >
+                    <Avatar name={displayName} className="size-7" />
+                    <span className="hidden max-w-36 truncate text-[13px] font-medium md:block">{displayName}</span>
+                    <ChevronsUpDown className="hidden size-3.5 text-muted-foreground md:block" aria-hidden />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="min-w-60">
+                  <div className="flex items-center gap-2.5 px-2.5 py-2">
+                    <Avatar name={displayName} />
+                    <div className="min-w-0">
+                      <p className="truncate text-[13px] font-medium text-foreground">{session?.fullName || "Signed in"}</p>
+                      <p className="truncate text-xs text-muted-foreground">{session?.email}</p>
+                    </div>
                   </div>
-                </div>
-                <DropdownMenuSeparator />
-                <DropdownMenuLabel>Account</DropdownMenuLabel>
-                <DropdownMenuItem onSelect={() => void navigate({ to: "/profile" })}>
-                  <UserRound />
-                  My profile
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onSelect={() => void handleLogout()}>
-                  <LogOut />
-                  Sign out
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        </header>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuLabel>Account</DropdownMenuLabel>
+                  <DropdownMenuItem onSelect={() => void navigate({ to: "/profile" })}>
+                    <UserRound />
+                    My profile
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onSelect={() => void handleLogout()}>
+                    <LogOut />
+                    Sign out
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          </header>
+        </div>
 
         <main id="main" tabIndex={-1} className="mx-auto w-full min-w-0 max-w-6xl flex-1 px-4 pt-7 pb-16 outline-none sm:px-6 lg:px-10">
           <Outlet />

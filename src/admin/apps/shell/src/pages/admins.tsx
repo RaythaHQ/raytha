@@ -23,6 +23,7 @@ import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tansta
 import { Link, useNavigate, useParams } from "@tanstack/react-router";
 import { Lock, ShieldCheck } from "lucide-react";
 import { useId, useMemo, useState, type FormEvent, type ReactNode } from "react";
+import { ImpersonateCard } from "../components/impersonate-card";
 import { ListBackLink } from "../components/list-back-link";
 import { useDocumentTitle } from "../lib/document-title";
 import {
@@ -373,6 +374,7 @@ function AdminEditForm({ admin }: { admin: EntityRef }) {
             onConfirm={() => removeAccess.mutate()}
             pending={removeAccess.isPending}
           />
+          <ImpersonateCard id={admin.id} name={name} kind="admin" isActive={isActive} />
           <Card>
             <CardHeader>
               <CardTitle>Reset password</CardTitle>

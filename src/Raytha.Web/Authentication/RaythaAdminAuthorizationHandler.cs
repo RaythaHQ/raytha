@@ -33,6 +33,8 @@ public class UploadMediaItemsRequirement : IAuthorizationRequirement { }
 
 public class ManageSitePagesRequirement : IAuthorizationRequirement { }
 
+public class SuperAdminRequirement : IAuthorizationRequirement { }
+
 public class ContentTypePermissionRequirement : IAuthorizationRequirement
 {
     public ContentTypePermissionRequirement(string permission) => Permission = permission;
@@ -177,6 +179,13 @@ public class RaythaAdminAuthorizationHandler : IAuthorizationHandler
                         BuiltInSystemPermission.MANAGE_SITE_PAGES_PERMISSION
                     )
                 )
+                {
+                    context.Succeed(requirement);
+                }
+            }
+            else if (requirement is SuperAdminRequirement)
+            {
+                if (context.User.HasClaim(ClaimTypes.Role, BuiltInRole.SuperAdmin.DeveloperName))
                 {
                     context.Succeed(requirement);
                 }

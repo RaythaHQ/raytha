@@ -210,7 +210,7 @@ public static class MediaItemsEndpoints
         var response = await mediator.Send(input);
         if (response.Success)
         {
-            var url = relativeUrlBuilder.MediaRedirectToFileUrl(objectKey);
+            var url = relativeUrlBuilder.MediaRedirectToFilePath(objectKey);
             return Results.Json(
                 new
                 {

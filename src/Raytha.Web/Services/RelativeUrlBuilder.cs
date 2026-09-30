@@ -43,8 +43,12 @@ public class RelativeUrlBuilder : IRelativeUrlBuilder
     public string MediaRedirectToFileUrl(string objectKey) =>
         ResolveUrlByRouteName("mediaitemsredirecttofileurlbyobjectkey", new { objectKey });
 
-    public string MediaPublicFileUrl(string objectKey) =>
-        ResolveUrlByRouteName("mediaitemsredirecttofileurlbyobjectkey", new { objectKey });
+    public string MediaRedirectToFilePath(string objectKey) =>
+        _httpContextAccessor.HttpContext is { } httpContext
+            ? _generator.GetPathByName(httpContext, "mediaitemsredirecttofileurlbyobjectkey", new { objectKey })
+                ?? string.Empty
+            : _currentOrganization.PathBase
+                + _generator.GetPathByName("mediaitemsredirecttofileurlbyobjectkey", new { objectKey });
 
     public string MediaCloudUploadPresignUrl() =>
         ResolveUrlByRouteName("mediaitemspresignuploadurl", null);

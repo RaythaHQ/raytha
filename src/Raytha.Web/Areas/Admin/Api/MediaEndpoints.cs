@@ -83,7 +83,7 @@ public static class MediaEndpoints
             objectKey = item.ObjectKey,
             fileStorageProvider = item.FileStorageProvider,
             creationTime = item.CreationTime,
-            url = urls.MediaRedirectToFileUrl(item.ObjectKey),
+            url = urls.MediaRedirectToFilePath(item.ObjectKey),
         };
     }
 }

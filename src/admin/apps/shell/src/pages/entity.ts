@@ -102,6 +102,21 @@ export function formatWhen(value: unknown): string {
   return date.toLocaleString();
 }
 
+export const DEFAULT_DATE_FORMAT = "MM/dd/yyyy";
+
+/**
+ * Formats a stored date field value (`yyyy-MM-dd`) with the organization's date pattern
+ * (`MM/dd/yyyy` or `dd/MM/yyyy`). Values that are not ISO dates are returned as stored.
+ */
+export function formatOrgDate(value: string, pattern: string): string {
+  const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(value);
+  if (!match) {
+    return value;
+  }
+  const [, year = "", month = "", day = ""] = match;
+  return pattern.replace("yyyy", year).replace("MM", month).replace("dd", day);
+}
+
 /** Light English pluralization for list chrome (search, counts, empty states). */
 export function pluralize(noun: string): string {
   const trimmed = noun.trim();

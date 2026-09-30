@@ -16,10 +16,12 @@ const metaSlot = cn(
 // the slot restyles any of them into one underline bar that closes the header.
 // Selection is read from aria-selected only: TanStack Router stamps aria-current="page"
 // on every prefix-matching link, so it cannot tell sibling tabs apart.
+// The baseline is an inset shadow, not a border: tabs paint their underline over it without
+// overflowing the strip, so the scroll container never gains a vertical scrollbar.
 const tabsSlot = cn(
-  "flex overflow-x-auto border-b border-border",
+  "flex overflow-x-auto overflow-y-hidden shadow-[inset_0_-1px_0_var(--color-border)]",
   "[&_[role=tablist]]:flex [&_[role=tablist]]:h-auto [&_[role=tablist]]:gap-6 [&_[role=tablist]]:rounded-none [&_[role=tablist]]:border-0 [&_[role=tablist]]:bg-transparent [&_[role=tablist]]:p-0",
-  "[&_[role=tab]]:-mb-px [&_[role=tab]]:h-auto [&_[role=tab]]:ring-0 [&_[role=tab]]:whitespace-nowrap [&_[role=tab]]:rounded-none [&_[role=tab]]:border-b-2 [&_[role=tab]]:border-transparent [&_[role=tab]]:bg-transparent [&_[role=tab]]:px-0.5 [&_[role=tab]]:pt-1 [&_[role=tab]]:pb-2.5 [&_[role=tab]]:text-sm [&_[role=tab]]:font-medium [&_[role=tab]]:text-muted-foreground [&_[role=tab]]:shadow-none",
+  "[&_[role=tab]]:h-auto [&_[role=tab]]:ring-0 [&_[role=tab]]:whitespace-nowrap [&_[role=tab]]:rounded-none [&_[role=tab]]:border-b-2 [&_[role=tab]]:border-transparent [&_[role=tab]]:bg-transparent [&_[role=tab]]:px-0.5 [&_[role=tab]]:pt-1 [&_[role=tab]]:pb-2.5 [&_[role=tab]]:text-sm [&_[role=tab]]:font-medium [&_[role=tab]]:text-muted-foreground [&_[role=tab]]:shadow-none",
   "[&_[role=tab]:hover]:border-border-strong [&_[role=tab]:hover]:text-foreground",
   "[&_[role=tab][aria-selected=true]]:border-foreground [&_[role=tab][aria-selected=true]]:text-foreground",
 );

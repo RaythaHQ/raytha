@@ -58,10 +58,7 @@ public class AccountActionViewResult : IActionResult
             PathBase = services.CurrentOrganization.PathBase,
         };
 
-        await using (var sw = new StreamWriter(httpContext.Response.Body))
-        {
-            var body = services.Renderer.RenderAsHtml(sourceWithParents, renderModel);
-            await sw.WriteAsync(body);
-        }
+        var body = services.Renderer.RenderAsHtml(sourceWithParents, renderModel);
+        await DbActionResultHelper.WriteHtmlAsync(httpContext, services, body);
     }
 }

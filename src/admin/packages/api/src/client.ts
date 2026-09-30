@@ -771,6 +771,15 @@ export const adminApi = {
     categories: () => apiFetch<string[]>("/raytha/api/admin/audit-logs/categories"),
   },
 
+  /** Each call swaps the session cookie; follow `redirectUrl` with a full page load. */
+  impersonation: {
+    startUser: (id: string) =>
+      apiFetch<{ redirectUrl: string }>(`/raytha/api/auth/impersonation/users/${id}`, { method: "POST", body: "{}" }),
+    startAdmin: (id: string) =>
+      apiFetch<{ redirectUrl: string }>(`/raytha/api/auth/impersonation/admins/${id}`, { method: "POST", body: "{}" }),
+    stop: () => apiFetch<{ redirectUrl: string }>("/raytha/api/auth/impersonation/stop", { method: "POST", body: "{}" }),
+  },
+
   profile: {
     get: () => apiFetch<Me>("/raytha/api/auth/me"),
     update: (input: { firstName: string; lastName: string }) =>

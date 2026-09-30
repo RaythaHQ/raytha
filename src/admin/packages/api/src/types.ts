@@ -12,6 +12,26 @@ export interface Me {
   isAdmin: boolean;
   /** Id of the view, content item, or site page serving `/`; null when unset. */
   homePageId: string | null;
+  organization: OrganizationSummary;
+  /** Present only while an admin is signed in as this account. */
+  impersonation: ImpersonationSession | null;
+}
+
+/** `dateFormat` is a .NET pattern from organization settings: `MM/dd/yyyy` or `dd/MM/yyyy`. */
+export interface OrganizationSummary {
+  name: string;
+  websiteUrl: string;
+  timeZone: string;
+  dateFormat: string;
+  pathBase: string;
+}
+
+export interface ImpersonationSession {
+  impersonatorId: string;
+  impersonatorName: string;
+  impersonatorEmail: string;
+  startedAt: string;
+  expiresAt: string;
 }
 
 export interface LoginResponse {

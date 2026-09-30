@@ -48,10 +48,11 @@ import {
 import { useEffect, useState, type ReactNode } from "react";
 import { BackgroundTaskStatus } from "../../components/background-task-status";
 import { CrudListPage, type ListColumn } from "../crud-list";
-import { entityFields, formatWhen, isRecord, readBoolean, readString } from "../entity";
+import { DEFAULT_DATE_FORMAT, entityFields, formatOrgDate, formatWhen, isRecord, readBoolean, readString } from "../entity";
 import { parseContentTypeSummary, parseNamedRefs, type ContentField } from "./fields-model";
 import { describeFilter, describeSort, parseViewModel, viewColumnOptions, type ViewModel } from "./filter-model";
 import { publicPath } from "./public-url";
+import { RelatedItemLink } from "./relationship-picker";
 
 const VIEWED_PREFIX = "raytha.contentview:";
 
@@ -246,6 +247,7 @@ export function ContentViewItemsPage() {
     fields: contentType.fields,
     primaryFieldLabel: contentType.fields.find((field) => field.id === contentType.primaryFieldId)?.label ?? "",
     templateLabels: new Map(parseNamedRefs(templatesQuery.data).map((ref) => [ref.id, ref.label])),
+    dateFormat: currentSession()?.organization.dateFormat ?? DEFAULT_DATE_FORMAT,
   };
   const columns = viewTableColumns(view, cellContext);
   const primaryFieldVisible = view.columns.length === 0 || view.columns.includes("PrimaryField");
@@ -601,6 +603,7 @@ type CellContext = {
   fields: ContentField[];
   primaryFieldLabel: string;
   templateLabels: Map<string, string>;
+  dateFormat: string;
 };
 
 /** One table column per view column, labeled and rendered by field kind. */
@@ -669,7 +672,16 @@ function renderCell(name: string, entity: EntityRef, ctx: CellContext): ReactNod
   const content = entityFields(entity).publishedContent;
   const raw = isRecord(content) ? content[name] : undefined;
   const field = ctx.fields.find((item) => item.developerName === name);
-  const text = formatFieldCell(field, raw);
+  if (field?.fieldType === "one_to_one_relationship") {
+    const related = isRecord(raw) && "value" in raw ? raw.value : raw;
+    const relatedId = isRecord(related) ? readString(related, "id") : "";
+    if (isRecord(related) && relatedId) {
+      return (
+        <RelatedItemLink field={field} id={relatedId} label={readString(related, "primaryField") || relatedId} />
+      );
+    }
+  }
+  const text = formatFieldCell(field, raw, ctx.dateFormat);
   if (field?.fieldType === "color" && text) {
     return (
       <span className="inline-flex items-center gap-2 font-mono text-xs">
@@ -685,12 +697,14 @@ function auditUserName(value: unknown): string {
   return (isRecord(value) && readString(value, "fullName")) || "—";
 }
 
-function formatFieldCell(field: ContentField | undefined, raw: unknown): string {
+function formatFieldCell(field: ContentField | undefined, raw: unknown, dateFormat: string): string {
   const value = isRecord(raw) && "value" in raw ? raw.value : raw;
   if (value === null || value === undefined) {
     return "";
   }
   switch (field?.fieldType) {
+    case "date":
+      return typeof value === "string" ? formatOrgDate(value, dateFormat) : displayText(value);
     case "checkbox":
       return value === true || value === "true" || value === "True" ? "Yes" : "No";
     case "multiple_select": {

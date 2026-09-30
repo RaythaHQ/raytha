@@ -5,6 +5,7 @@ import {
   Button,
   Card,
   CardContent,
+  CardDescription,
   CardHeader,
   CardTitle,
   Checkbox,
@@ -19,6 +20,7 @@ import {
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useNavigate, useParams } from "@tanstack/react-router";
 import { useState, type FormEvent } from "react";
+import { ImpersonateCard } from "../components/impersonate-card";
 import { ListBackLink } from "../components/list-back-link";
 import { useDocumentTitle } from "../lib/document-title";
 import { CrudListPage } from "./crud-list";
@@ -157,12 +159,12 @@ export function NewUserPage() {
 export function EditUserPage() {
   const params = useParams({ strict: false });
   const id = typeof params.id === "string" ? params.id : "";
-  useDocumentTitle(["Edit user"]);
   const query = useQuery({
     queryKey: ["users", id],
     queryFn: () => adminApi.users.get(id),
     enabled: id.length > 0,
   });
+  useDocumentTitle([query.data ? displayName(query.data) : "User", "Users"]);
 
   if (!id) {
     return (
@@ -173,12 +175,7 @@ export function EditUserPage() {
     );
   }
 
-  return (
-    <div className="space-y-6">
-      <PageHeader back={<ListBackLink to="/users" listKey="users" label="users" />} title="Edit user" />
-      <QueryGate query={query}>{(user) => <UserEditForm user={user} />}</QueryGate>
-    </div>
-  );
+  return <QueryGate query={query}>{(user) => <UserEditForm key={user.id} user={user} />}</QueryGate>;
 }
 
 function UserEditForm({ user }: { user: EntityRef }) {
@@ -246,6 +243,17 @@ function UserEditForm({ user }: { user: EntityRef }) {
 
   return (
     <div className="space-y-6">
+      <PageHeader
+        back={<ListBackLink to="/users" listKey="users" label="users" />}
+        title={displayName(user)}
+        meta={
+          <>
+            {isActive ? <Badge variant="success">Active</Badge> : <Badge variant="secondary">Suspended</Badge>}
+            {isSelf && <Badge variant="info">You</Badge>}
+            <span>Last login {formatWhen(fields.lastLoggedInTime) || "never"}</span>
+          </>
+        }
+      />
       <Card>
         <CardHeader>
           <CardTitle>Details</CardTitle>
@@ -272,31 +280,42 @@ function UserEditForm({ user }: { user: EntityRef }) {
               onChange={setGroupIds}
             />
             <Button type="submit" loading={mutation.isPending}>
-              Save
+              Save changes
             </Button>
           </form>
         </CardContent>
       </Card>
       <Card>
         <CardHeader>
-          <CardTitle>Account</CardTitle>
+          <CardTitle>Account access</CardTitle>
+          <CardDescription>
+            {isSelf
+              ? "You cannot suspend your own account."
+              : isActive
+                ? "Suspending blocks sign-in and keeps the account, its groups, and its history."
+                : "This account is suspended and cannot sign in. Restoring lets them sign in again."}
+          </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
-          {isActive ? <Badge variant="success">Active</Badge> : <Badge variant="secondary">Inactive</Badge>}
-          {isSelf ? (
-            <p className="text-sm text-muted-foreground">You cannot change the status of your own account.</p>
-          ) : (
+        {!isSelf && (
+          <CardContent>
             <Button type="button" variant="outline" loading={setActive.isPending} onClick={() => setActive.mutate()}>
               {isActive ? "Suspend" : "Restore"}
             </Button>
-          )}
-        </CardContent>
+          </CardContent>
+        )}
       </Card>
-      {isActive ? (
-        <Card>
-          <CardHeader>
-            <CardTitle>Reset password</CardTitle>
-          </CardHeader>
+      <ImpersonateCard
+        id={user.id}
+        name={displayName(user)}
+        kind={readBoolean(fields, "isAdmin") ? "admin" : "websiteUser"}
+        isActive={isActive}
+      />
+      <Card>
+        <CardHeader>
+          <CardTitle>Reset password</CardTitle>
+          {!isActive && <CardDescription>Restore this account before resetting the password.</CardDescription>}
+        </CardHeader>
+        {isActive && (
           <CardContent>
             <form
               className="space-y-4"
@@ -339,22 +358,18 @@ function UserEditForm({ user }: { user: EntityRef }) {
                 <Checkbox id="user-reset-send-email" checked={sendEmail} onCheckedChange={setSendEmail} />
                 <Label htmlFor="user-reset-send-email">Email the new password</Label>
               </div>
-              <Button type="submit" loading={resetPassword.isPending}>
+              <Button type="submit" variant="outline" loading={resetPassword.isPending}>
                 Reset password
               </Button>
             </form>
           </CardContent>
-        </Card>
-      ) : (
-        <p className="text-sm text-muted-foreground">Restore this account before resetting the password.</p>
-      )}
-      {isSelf ? (
-        <p className="text-sm text-muted-foreground">You cannot delete your own account.</p>
-      ) : (
+        )}
+      </Card>
+      {!isSelf && (
         <DangerZone
-          description="Delete this user. This cannot be undone."
+          description="Deletes the account. Audit history keeps their name. This cannot be undone."
           actionLabel="Delete user"
-          confirmTitle="Delete user?"
+          confirmTitle={`Delete ${displayName(user)}?`}
           confirmBody="This cannot be undone."
           onConfirm={() => remove.mutate()}
           pending={remove.isPending}
@@ -531,24 +546,26 @@ function UserFields({
   onEmail: (value: string) => void;
 }) {
   return (
-    <>
+    <div className="grid gap-4 sm:grid-cols-2">
       <FormField label="First name" required htmlFor="user-first">
         {(control) => <Input {...control} value={firstName} onChange={(event) => onFirstName(event.target.value)} />}
       </FormField>
       <FormField label="Last name" required htmlFor="user-last">
         {(control) => <Input {...control} value={lastName} onChange={(event) => onLastName(event.target.value)} />}
       </FormField>
-      <FormField label="Email" required htmlFor="user-email">
-        {(control) => (
-          <Input
-            {...control}
-            type="email"
-            value={emailAddress}
-            onChange={(event) => onEmail(event.target.value)}
-          />
-        )}
-      </FormField>
-    </>
+      <div className="sm:col-span-2">
+        <FormField label="Email" required htmlFor="user-email">
+          {(control) => (
+            <Input
+              {...control}
+              type="email"
+              value={emailAddress}
+              onChange={(event) => onEmail(event.target.value)}
+            />
+          )}
+        </FormField>
+      </div>
+    </div>
   );
 }
 

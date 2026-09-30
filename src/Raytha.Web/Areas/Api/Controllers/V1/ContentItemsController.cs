@@ -14,6 +14,7 @@ using Raytha.Web.Utils;
 
 namespace Raytha.Web.Areas.Api.Controllers.V1;
 
+[AbsoluteMediaUrls]
 public class ContentItemsController : BaseController
 {
     [HttpGet($"{{{RouteConstants.CONTENT_TYPE_DEVELOPER_NAME}}}", Name = "GetContentItems")]

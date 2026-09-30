@@ -207,6 +207,7 @@ export function AuditLogPage() {
 
 function AuditRow({ item, open, onToggle }: { item: EntityRef; open: boolean; onToggle: () => void }) {
   const fields = entityFields(item);
+  const impersonatorEmail = readString(fields, "impersonatorEmail");
   return (
     <>
       <TableRow>
@@ -223,7 +224,12 @@ function AuditRow({ item, open, onToggle }: { item: EntityRef; open: boolean; on
         </TableCell>
         <TableCell>{formatWhen(fields.creationTime) || "—"}</TableCell>
         <TableCell>{humanizeAuditCategory(readString(fields, "category") || "—")}</TableCell>
-        <TableCell>{readString(fields, "userEmail") || "—"}</TableCell>
+        <TableCell>
+          {readString(fields, "userEmail") || "—"}
+          {impersonatorEmail ? (
+            <span className="block text-xs text-muted-foreground">via {impersonatorEmail}</span>
+          ) : null}
+        </TableCell>
         <TableCell>{readString(fields, "ipAddress") || "—"}</TableCell>
       </TableRow>
       {open ? (

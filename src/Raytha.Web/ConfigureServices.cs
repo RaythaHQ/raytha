@@ -67,6 +67,10 @@ public static class ConfigureServices
                 policy => policy.Requirements.Add(new ManageAdministratorsRequirement())
             );
             options.AddPolicy(
+                BuiltInRole.SUPER_ADMIN_POLICY,
+                policy => policy.Requirements.Add(new SuperAdminRequirement())
+            );
+            options.AddPolicy(
                 BuiltInSystemPermission.MANAGE_TEMPLATES_PERMISSION,
                 policy => policy.Requirements.Add(new ManageTemplatesRequirement())
             );

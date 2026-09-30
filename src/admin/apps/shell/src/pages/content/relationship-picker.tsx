@@ -50,6 +50,36 @@ export function useRelatedItemSearch(relatedContentTypeId: string, query: string
   };
 }
 
+/** A related item's label linking to its editor, plus a button that opens it in a new tab. */
+export function RelatedItemLink({ field, id, label }: { field: RelationshipField; id: string; label: string }) {
+  const developerName = useRelatedDeveloperName(field.relatedContentTypeId);
+  if (!developerName) {
+    return <span>{label}</span>;
+  }
+  return (
+    <span className="inline-flex max-w-full items-center gap-1">
+      <Link
+        to="/content/$developerName/items/$id"
+        params={{ developerName, id }}
+        className="truncate text-primary hover:underline"
+      >
+        {label}
+      </Link>
+      <Link
+        to="/content/$developerName/items/$id"
+        params={{ developerName, id }}
+        target="_blank"
+        rel="noreferrer"
+        title="Open in a new tab"
+        className="inline-flex size-6 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring"
+      >
+        <ExternalLink className="size-3.5" aria-hidden />
+        <span className="sr-only">Open {label} in a new tab</span>
+      </Link>
+    </span>
+  );
+}
+
 export function RelationshipPicker({
   field,
   value,

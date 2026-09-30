@@ -15,6 +15,7 @@ namespace Raytha.Web.Areas.Api.Controllers.V1;
     Policy = RaythaApiAuthorizationHandler.POLICY_PREFIX
         + BuiltInSystemPermission.MANAGE_SITE_PAGES_PERMISSION
 )]
+[AbsoluteMediaUrls]
 public class SitePagesController : BaseController
 {
     [HttpGet("", Name = "GetSitePages")]

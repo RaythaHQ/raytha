@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System.Collections.Generic;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Raytha.Application.Common.Models;
@@ -17,6 +18,7 @@ namespace Raytha.Web.Areas.Api.Controllers.V1;
     Policy = RaythaApiAuthorizationHandler.POLICY_PREFIX
         + BuiltInSystemPermission.MANAGE_CONTENT_TYPES_PERMISSION
 )]
+[AbsoluteMediaUrls]
 public class MenusController : BaseController
 {
     [HttpGet("", Name = "GetMenus")]
@@ -61,7 +63,7 @@ public class MenusController : BaseController
         Name = "GetMenuItemsByMenuDeveloperName"
     )]
     public async Task<
-        ActionResult<IQueryResponseDto<ListResultDto<NavigationMenuItemDto>>>
+        ActionResult<IQueryResponseDto<IReadOnlyCollection<NavigationMenuItemDto>>>
     > GetMenuItemsByMenuDeveloperName(string menuDeveloperName)
     {
         var input = new GetNavigationMenuItemsByNavigationMenuDeveloperName.Query
@@ -70,7 +72,8 @@ public class MenusController : BaseController
         };
 
         var response =
-            await Mediator.Send(input) as QueryResponseDto<ListResultDto<NavigationMenuItemDto>>;
+            await Mediator.Send(input)
+            as QueryResponseDto<IReadOnlyCollection<NavigationMenuItemDto>>;
 
         return response;
     }

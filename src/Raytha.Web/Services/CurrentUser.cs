@@ -123,6 +123,19 @@ public class CurrentUser : ICurrentUser
             ?.HttpContext.User.Claims.Where(c => c.Type == RaythaClaimTypes.UserGroups)
             .Select(p => p.Value)
             .ToArray();
+    public ShortGuid? ImpersonatorId =>
+        IsAuthenticated
+        && ShortGuid.TryParse(
+            _httpContextAccessor.HttpContext.User.FindFirstValue(RaythaClaimTypes.ImpersonatorId),
+            out ShortGuid id
+        )
+            ? id
+            // A bare null would convert through ShortGuid's implicit string operator to Guid.Empty.
+            : (ShortGuid?)null;
+    public string? ImpersonatorEmailAddress =>
+        IsAuthenticated
+            ? _httpContextAccessor.HttpContext.User.FindFirstValue(RaythaClaimTypes.ImpersonatorEmail)
+            : null;
     public string[] SystemPermissions =>
         _httpContextAccessor
             ?.HttpContext.User.Claims.Where(c => c.Type == RaythaClaimTypes.SystemPermissions)
