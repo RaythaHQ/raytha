@@ -111,20 +111,6 @@ public abstract class BaseFieldType : ValueObject
         yield return DeveloperName;
     }
 
-    public virtual string OrderByExpression(params string[] args)
-    {
-        return $" COALESCE({args[0]}.\"{args[1]}\"->>'{args[2]}', '') {args[3]} ";
-    }
-
-    public virtual string SingleJsonValue(params string[] args)
-    {
-        return $" COALESCE({args[0]}.\"{args[1]}\"->>'{args[2]}', '')";
-    }
-
-    public virtual string LikeJsonValue(params string[] args)
-    {
-        return $" COALESCE({args[0]}.\"{args[1]}\"->>'{args[2]}', '') ILIKE '{args[3]}' ";
-    }
 }
 
 public abstract class EqualsOrNotEqualsFieldType : BaseFieldType
@@ -202,13 +188,4 @@ public abstract class NumericValueFieldType : BaseFieldType
         }
     }
 
-    public override string OrderByExpression(params string[] args)
-    {
-        return $" CASE WHEN ({args[0]}.\"{args[1]}\"->>'{args[2]}') ~ '^[0-9]+(\\.[0-9]+)?$' THEN ({args[0]}.\"{args[1]}\"->> '{args[2]}')::decimal ELSE NULL END {args[3]}, {args[0]}.\"{args[1]}\"->>'{args[2]}' {args[3]} ";
-    }
-
-    public override string SingleJsonValue(params string[] args)
-    {
-        return $" CASE WHEN ({args[0]}.\"{args[1]}\"->>'{args[2]}') ~ '^[0-9]+(\\.[0-9]+)?$' THEN ({args[0]}.\"{args[1]}\"->> '{args[2]}')::decimal(18, 2) ELSE NULL END";
-    }
 }

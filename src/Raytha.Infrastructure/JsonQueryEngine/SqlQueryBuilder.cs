@@ -9,6 +9,20 @@ internal class SqlQueryBuilder
     private readonly List<string> _whereClauses = new();
     private readonly List<string> _orderByClauses = new();
     private readonly List<string> _joinClauses = new();
+    private readonly Dictionary<string, object?> _parameters = new();
+
+    public IReadOnlyDictionary<string, object?> Parameters => _parameters;
+
+    /// <summary>
+    /// Registers a value and returns its SQL placeholder (<c>@p0</c>, <c>@p1</c>, ...). All
+    /// user-supplied filter values go through here so they are bound, never concatenated.
+    /// </summary>
+    public string AddParameter(object? value)
+    {
+        var name = $"p{_parameters.Count}";
+        _parameters[name] = value;
+        return $"@{name}";
+    }
 
     public SqlQueryBuilder Select(params string[] columns)
     {

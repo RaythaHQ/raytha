@@ -78,28 +78,5 @@ public class DateFieldTypeTests
         act.Should().Throw<FormatException>();
     }
 
-    [Test]
-    [TestCase("MM/DD/YYYY", "ASC")]
-    [TestCase("DD/MM/YYYY", "DESC")]
-    public void OrderByExpression_ShouldReturnCorrectSql(string dateFormat, string order)
-    {
-        // Arrange
-        var type = new DateFieldType();
-        var table = "t";
-        var column = "c";
-        var key = "k";
-
-        // Act
-        var result = type.OrderByExpression(table, column, key, dateFormat, order);
-
-        // Assert
-        var expected = $@"
-        TO_DATE(
-            NULLIF({table}.""{column}""->>'{key}', ''),
-            '{dateFormat}'
-        ) {order}";
-        
-        result.Should().Be(expected);
-    }
 }
 

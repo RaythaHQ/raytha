@@ -84,6 +84,13 @@ public class ExceptionsMiddleware
             case UnauthorizedAccessException:
                 problem = Create(HttpStatusCode.Unauthorized, "Unauthorized", "Unauthorized access.");
                 break;
+            case InvalidFilterException:
+                problem = Create(
+                    HttpStatusCode.BadRequest,
+                    "Invalid filter",
+                    "The filter expression is invalid."
+                );
+                break;
             case BusinessException business:
                 problem = Create(HttpStatusCode.BadRequest, "Request failed", business.Message);
                 break;
@@ -166,6 +173,10 @@ public class ExceptionsMiddleware
                 else if (error.Error is UnauthorizedAccessException)
                 {
                     statusCode = (int)HttpStatusCode.Forbidden;
+                }
+                else if (error.Error is InvalidFilterException)
+                {
+                    statusCode = (int)HttpStatusCode.BadRequest;
                 }
                 else
                 {

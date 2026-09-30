@@ -124,20 +124,4 @@ public class RepeaterFieldTypeTests
             .Throw<FormatException>();
     }
 
-    [Test]
-    public void Repeater_emptiness_sql_treats_missing_null_and_empty_array_as_empty()
-    {
-        var sql = BaseFieldType.Repeater.LikeJsonValue("t", "_PublishedContent", "faq", "[]");
-
-        sql.Should().Be("(COALESCE(t.\"_PublishedContent\"->'faq', '[]'::jsonb) IN ('[]'::jsonb, 'null'::jsonb, '\"\"'::jsonb))");
-    }
-
-    [Test]
-    public void Repeater_refuses_to_emit_a_text_filter()
-    {
-        FluentActions
-            .Invoking(() => BaseFieldType.Repeater.LikeJsonValue("t", "_PublishedContent", "faq", "%why%"))
-            .Should()
-            .Throw<NotSupportedException>();
-    }
 }

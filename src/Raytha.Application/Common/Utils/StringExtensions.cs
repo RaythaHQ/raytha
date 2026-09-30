@@ -241,17 +241,4 @@ public static class StringExtensions
         return (column, direction);
     }
 
-    public static string ApplySqlStringLikeOperator(this string input, string operation)
-    {
-        switch (operation.ToLower())
-        {
-            case "startswith":
-                return $"{input}%";
-            case "endswith":
-                return $"%{input}";
-            case "contains":
-                return $"%{input}%";
-        }
-        throw new NotImplementedException();
-    }
 }

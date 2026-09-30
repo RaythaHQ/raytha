@@ -43,11 +43,4 @@ public class RepeaterFieldType : BaseFieldType
         return new RepeaterFieldValue(value);
     }
 
-    public override string LikeJsonValue(params string[] args)
-    {
-        if (args[3] != "[]")
-            throw new NotSupportedException("A repeater can only be filtered by empty or not empty.");
-
-        return $"(COALESCE({args[0]}.\"{args[1]}\"->'{args[2]}', '[]'::jsonb) IN ('[]'::jsonb, 'null'::jsonb, '\"\"'::jsonb))";
-    }
 }

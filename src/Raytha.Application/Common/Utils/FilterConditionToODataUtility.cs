@@ -59,6 +59,7 @@ public class FilterConditionToODataUtility
     private string TranslateToODataExpression(FilterCondition condition)
     {
         StringBuilder expression = new StringBuilder();
+        var value = EscapeODataStringValue(condition.Value);
         var chosenColumnAsCustomField = _contentType.ContentTypeFields.FirstOrDefault(p =>
             p.DeveloperName == condition.Field
         );
@@ -137,7 +138,7 @@ public class FilterConditionToODataUtility
         )
         {
             expression.Append(
-                $"{ConditionOperator.CONTAINS}({condition.Field}, '{condition.Value}')"
+                $"{ConditionOperator.CONTAINS}({condition.Field}, '{value}')"
             );
         }
         else if (
@@ -146,31 +147,31 @@ public class FilterConditionToODataUtility
         )
         {
             expression.Append(
-                $"not {ConditionOperator.CONTAINS}({condition.Field}, '{condition.Value}')"
+                $"not {ConditionOperator.CONTAINS}({condition.Field}, '{value}')"
             );
         }
         else if (condition.ConditionOperator.DeveloperName == ConditionOperator.STARTS_WITH)
         {
             expression.Append(
-                $"{ConditionOperator.STARTS_WITH}({condition.Field}, '{condition.Value}')"
+                $"{ConditionOperator.STARTS_WITH}({condition.Field}, '{value}')"
             );
         }
         else if (condition.ConditionOperator.DeveloperName == ConditionOperator.NOT_STARTS_WITH)
         {
             expression.Append(
-                $"not {ConditionOperator.STARTS_WITH}({condition.Field}, '{condition.Value}')"
+                $"not {ConditionOperator.STARTS_WITH}({condition.Field}, '{value}')"
             );
         }
         else if (condition.ConditionOperator.DeveloperName == ConditionOperator.ENDS_WITH)
         {
             expression.Append(
-                $"{ConditionOperator.ENDS_WITH}({condition.Field}, '{condition.Value}')"
+                $"{ConditionOperator.ENDS_WITH}({condition.Field}, '{value}')"
             );
         }
         else if (condition.ConditionOperator.DeveloperName == ConditionOperator.NOT_ENDS_WITH)
         {
             expression.Append(
-                $"not {ConditionOperator.ENDS_WITH}({condition.Field}, '{condition.Value}')"
+                $"not {ConditionOperator.ENDS_WITH}({condition.Field}, '{value}')"
             );
         }
         else if (condition.ConditionOperator.DeveloperName == ConditionOperator.IS_TRUE)
@@ -186,7 +187,7 @@ public class FilterConditionToODataUtility
             if (condition.Field == BuiltInContentTypeField.Id)
             {
                 expression.Append(
-                    $"{condition.Field} {condition.ConditionOperator} 'guid_{condition.Value}'"
+                    $"{condition.Field} {condition.ConditionOperator} 'guid_{value}'"
                 );
             }
             else
@@ -197,13 +198,13 @@ public class FilterConditionToODataUtility
                 )
                 {
                     expression.Append(
-                        $"{condition.Field} {condition.ConditionOperator} {condition.Value}"
+                        $"{condition.Field} {condition.ConditionOperator} {value}"
                     );
                 }
                 else
                 {
                     expression.Append(
-                        $"{condition.Field} {condition.ConditionOperator} '{condition.Value}'"
+                        $"{condition.Field} {condition.ConditionOperator} '{value}'"
                     );
                 }
             }
@@ -211,4 +212,12 @@ public class FilterConditionToODataUtility
 
         return expression.ToString();
     }
+
+    /// <summary>
+    /// Doubles single quotes so a stored filter value is a well-formed OData string literal. The
+    /// engine re-parses this OData and binds the value as a SQL parameter, so a value containing a
+    /// quote (an apostrophe in a name, or a hostile payload) stays inert.
+    /// </summary>
+    private static string EscapeODataStringValue(string? value) =>
+        (value ?? string.Empty).Replace("'", "''");
 }

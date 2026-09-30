@@ -5,7 +5,9 @@ using Microsoft.EntityFrameworkCore;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Utils;
 using Raytha.Domain.Entities;
+using Raytha.Domain.ValueObjects;
 using Raytha.Domain.ValueObjects.FieldTypes;
+using Raytha.Infrastructure.JsonQueryEngine.Filtering;
 
 namespace Raytha.Infrastructure.JsonQueryEngine.Postgres;
 
@@ -106,11 +108,7 @@ internal class RaythaDbPostgresJsonQueryEngine
 
         var resultFromQuery =
             (IEnumerable<IDictionary<string, object>>)
-                _db.Query(
-                    rawSql,
-                    new { search = $"%{search}%", exactsearch = $"{search}" },
-                    transaction: transaction
-                );
+                _db.Query(rawSql, BuildParameters(sqlBuilder, search), transaction: transaction);
 
         var items = new List<ContentItem>();
         if (resultFromQuery == null)
@@ -204,14 +202,20 @@ internal class RaythaDbPostgresJsonQueryEngine
 
         var rawSql = sqlBuilder.Build();
 
-        var numResults = _db.Query(
-                rawSql,
-                new { search = $"%{search}%", exactsearch = $"{search}" },
-                transaction: transaction
-            )
+        var numResults = _db.Query(rawSql, BuildParameters(sqlBuilder, search), transaction: transaction)
             .First()
             .Count;
         return (int)numResults;
+    }
+
+    private static DynamicParameters BuildParameters(SqlQueryBuilder sqlBuilder, string search)
+    {
+        var parameters = new DynamicParameters();
+        parameters.Add("search", $"%{search}%");
+        parameters.Add("exactsearch", $"{search}");
+        foreach (var parameter in sqlBuilder.Parameters)
+            parameters.Add(parameter.Key, parameter.Value);
+        return parameters;
     }
 
     private SqlQueryBuilder PrepareODataFilters(SqlQueryBuilder sqlBuilder, string[] filters)
@@ -219,20 +223,39 @@ internal class RaythaDbPostgresJsonQueryEngine
         if (filters == null || !filters.Any())
             return sqlBuilder;
 
-        var oDataToSql = new ODataFilterToPostgres(
-            ContentType,
-            PrimaryFieldDeveloperName,
-            OneToOneRelationshipFields,
-            _currentOrganization.DateFormat
-        );
+        var compiler = new PostgresFilterCompiler(CreateFieldResolver());
         foreach (var filter in filters.Where(p => !string.IsNullOrEmpty(p)))
         {
-            string whereStatement = oDataToSql.GenerateSql(filter);
+            var node = ODataFilterParser.Parse(filter);
+            var whereStatement = compiler.Compile(node, sqlBuilder.AddParameter);
             if (!string.IsNullOrWhiteSpace(whereStatement))
                 sqlBuilder.AndWhere($"({whereStatement})");
         }
         return sqlBuilder;
     }
+
+    private static string OrderByForFieldType(
+        BaseFieldType fieldType,
+        string alias,
+        string jsonColumn,
+        string key,
+        string direction
+    )
+    {
+        if (fieldType.DeveloperName == BaseFieldType.Number)
+            return PostgresFieldSql.NumberOrderBy(alias, jsonColumn, key, direction);
+        if (fieldType.DeveloperName == BaseFieldType.MultipleSelect)
+            return PostgresFieldSql.MultiSelectOrderBy(alias, jsonColumn, key, direction);
+        return PostgresFieldSql.TextOrderBy(alias, jsonColumn, key, direction);
+    }
+
+    private ContentTypeFieldResolver CreateFieldResolver() =>
+        new(
+            ContentType,
+            PrimaryFieldDeveloperName,
+            OneToOneRelationshipFields,
+            _currentOrganization.DateFormat
+        );
 
     protected override SqlQueryBuilder PrepareContentItemsDataSelect(SqlQueryBuilder sqlBuilder)
     {
@@ -354,27 +377,26 @@ internal class RaythaDbPostgresJsonQueryEngine
         if (string.IsNullOrWhiteSpace(search))
             return sqlBuilder;
 
-        var oDataToSql = new ODataFilterToPostgres(
-            ContentType,
-            PrimaryFieldDeveloperName,
-            OneToOneRelationshipFields,
-            _currentOrganization.DateFormat
-        );
+        var resolver = CreateFieldResolver();
+        var compiler = new PostgresFilterCompiler(resolver);
 
         //If no columns specified, just search on Primary Field only
         if (searchOnColumns == null || !searchOnColumns.Any())
-            return sqlBuilder.AndWhere(
-                oDataToSql.GenerateSql(
-                    $"contains({BuiltInContentTypeField.PrimaryField.DeveloperName}, '{search}')"
-                )
+        {
+            var primaryMatch = compiler.Compile(
+                new MatchNode(
+                    BuiltInContentTypeField.PrimaryField.DeveloperName,
+                    MatchKind.Contains,
+                    search
+                ),
+                sqlBuilder.AddParameter
             );
-
-        string originalSearch = search;
-        search = search.ToLower();
+            return sqlBuilder.AndWhere(primaryMatch);
+        }
 
         var searchFilters = new List<string>();
 
-        //For each column specified, generate the appropriate OData filter or Raw Sql search clause
+        //For each column specified, generate the appropriate parameterized search clause
         foreach (var column in searchOnColumns)
         {
             var columnAsContentTypeField = ContentType.ContentTypeFields.FirstOrDefault(p =>
@@ -385,39 +407,16 @@ internal class RaythaDbPostgresJsonQueryEngine
                 if (!columnAsContentTypeField.FieldType.IsSearchable)
                     continue;
 
-                string columnAsContentTypeFieldDeveloperName =
-                    columnAsContentTypeField.DeveloperName.ToDeveloperName();
-
-                if (
+                FilterNode node =
                     columnAsContentTypeField.FieldType.DeveloperName == BaseFieldType.Number
-                    && decimal.TryParse(search, out var searchAsDecimal)
-                )
-                {
-                    searchFilters.Add(
-                        oDataToSql.GenerateSql(
-                            $"{columnAsContentTypeFieldDeveloperName} eq '{search}'"
-                        )
-                    );
-                }
-                else if (
-                    columnAsContentTypeField.FieldType.DeveloperName == BaseFieldType.Checkbox
-                    && bool.TryParse(search, out var searchAsBool)
-                )
-                {
-                    searchFilters.Add(
-                        oDataToSql.GenerateSql(
-                            $"{columnAsContentTypeFieldDeveloperName} eq '{search}'"
-                        )
-                    );
-                }
-                else
-                {
-                    searchFilters.Add(
-                        oDataToSql.GenerateSql(
-                            $"contains({columnAsContentTypeFieldDeveloperName}, '{search}')"
-                        )
-                    );
-                }
+                    && decimal.TryParse(search, out _)
+                        ? new ComparisonNode(column, ComparisonOperator.Equal, search)
+                        : columnAsContentTypeField.FieldType.DeveloperName == BaseFieldType.Checkbox
+                        && bool.TryParse(search, out _)
+                            ? new ComparisonNode(column, ComparisonOperator.Equal, search)
+                            : new MatchNode(column, MatchKind.Contains, search);
+
+                searchFilters.Add(compiler.Compile(node, sqlBuilder.AddParameter));
             }
             else
             {
@@ -425,72 +424,87 @@ internal class RaythaDbPostgresJsonQueryEngine
                     BuiltInContentTypeField.ReservedContentTypeFields.FirstOrDefault(p =>
                         p.DeveloperName == column
                     );
-                if (reservedField != null)
+                if (reservedField == null)
+                    continue;
+
+                if (
+                    reservedField.DeveloperName == BuiltInContentTypeField.Id
+                    && ShortGuid.TryParse(search.Trim(), out ShortGuid _)
+                )
                 {
-                    if (
-                        reservedField.DeveloperName == BuiltInContentTypeField.Id
-                        && ShortGuid.TryParse(
-                            originalSearch.Trim(),
-                            out ShortGuid searchAsShortGuid
+                    searchFilters.Add(
+                        compiler.Compile(
+                            new ComparisonNode(
+                                BuiltInContentTypeField.Id.DeveloperName,
+                                ComparisonOperator.Equal,
+                                $"guid_{search.Trim()}"
+                            ),
+                            sqlBuilder.AddParameter
                         )
-                    )
-                    {
-                        searchFilters.Add(
-                            oDataToSql.GenerateSql(
-                                $"{reservedField.DeveloperName} eq 'guid_{originalSearch.Trim()}'"
-                            )
-                        );
-                    }
-                    else if (
-                        reservedField.DeveloperName
-                        == BuiltInContentTypeField.CreatorUser.DeveloperName
-                    )
-                    {
-                        searchFilters.Add(
-                            $"{RawSqlColumn.SOURCE_CREATED_BY_COLUMN_NAME}.\"{RawSqlColumn.FirstName.Name}\" ILIKE @search"
-                        );
-                        searchFilters.Add(
-                            $"{RawSqlColumn.SOURCE_CREATED_BY_COLUMN_NAME}.\"{RawSqlColumn.LastName.Name}\" ILIKE @search"
-                        );
-                    }
-                    else if (
-                        reservedField.DeveloperName
-                        == BuiltInContentTypeField.LastModifierUser.DeveloperName
-                    )
-                    {
-                        searchFilters.Add(
-                            $"{RawSqlColumn.SOURCE_MODIFIED_BY_COLUMN_NAME}.\"{RawSqlColumn.FirstName.Name}\" ILIKE @search"
-                        );
-                        searchFilters.Add(
-                            $"{RawSqlColumn.SOURCE_MODIFIED_BY_COLUMN_NAME}.\"{RawSqlColumn.LastName.Name}\" ILIKE @search"
-                        );
-                    }
-                    else if (
-                        reservedField.DeveloperName
-                        == BuiltInContentTypeField.PrimaryField.DeveloperName
-                    )
-                    {
-                        searchFilters.Add(
-                            oDataToSql.GenerateSql(
-                                $"contains({reservedField.DeveloperName}, '{search}')"
-                            )
-                        );
-                    }
+                    );
+                }
+                else if (
+                    reservedField.DeveloperName == BuiltInContentTypeField.CreatorUser.DeveloperName
+                )
+                {
+                    searchFilters.AddRange(
+                        UserNameSearch(RawSqlColumn.SOURCE_CREATED_BY_COLUMN_NAME, search, sqlBuilder)
+                    );
+                }
+                else if (
+                    reservedField.DeveloperName
+                    == BuiltInContentTypeField.LastModifierUser.DeveloperName
+                )
+                {
+                    searchFilters.AddRange(
+                        UserNameSearch(
+                            RawSqlColumn.SOURCE_MODIFIED_BY_COLUMN_NAME,
+                            search,
+                            sqlBuilder
+                        )
+                    );
+                }
+                else if (
+                    reservedField.DeveloperName
+                    == BuiltInContentTypeField.PrimaryField.DeveloperName
+                )
+                {
+                    searchFilters.Add(
+                        compiler.Compile(
+                            new MatchNode(
+                                BuiltInContentTypeField.PrimaryField.DeveloperName,
+                                MatchKind.Contains,
+                                search
+                            ),
+                            sqlBuilder.AddParameter
+                        )
+                    );
                 }
             }
         }
 
         //Combine everything by OR operator
-        string oDataSearchWhereFilterClause = string.Join(
+        string searchWhereFilterClause = string.Join(
             " OR ",
             searchFilters.Where(p => !string.IsNullOrWhiteSpace(p))
         );
-        if (!string.IsNullOrEmpty(oDataSearchWhereFilterClause))
+        if (!string.IsNullOrEmpty(searchWhereFilterClause))
         {
-            sqlBuilder.AndWhere($"({oDataSearchWhereFilterClause})");
+            sqlBuilder.AndWhere($"({searchWhereFilterClause})");
         }
 
         return sqlBuilder;
+    }
+
+    private static IEnumerable<string> UserNameSearch(
+        string userAlias,
+        string search,
+        SqlQueryBuilder sqlBuilder
+    )
+    {
+        var parameter = sqlBuilder.AddParameter($"%{PostgresFieldSql.EscapeLike(search)}%");
+        yield return $"{userAlias}.\"{RawSqlColumn.FirstName.Name}\" ILIKE {parameter} ESCAPE '\\'";
+        yield return $"{userAlias}.\"{RawSqlColumn.LastName.Name}\" ILIKE {parameter} ESCAPE '\\'";
     }
 
     protected override SqlQueryBuilder PrepareOrderBy(SqlQueryBuilder sqlBuilder, string orderBy)
@@ -538,7 +552,7 @@ internal class RaythaDbPostgresJsonQueryEngine
                             )
                             .DeveloperName.ToDeveloperName();
                         sqlBuilder.OrderBy(
-                            columnAsContentTypeField.FieldType.OrderByExpression(
+                            PostgresFieldSql.TextOrderBy(
                                 $"{RawSqlColumn.RELATED_ITEM_COLUMN_NAME}_{indexOfRelatedObject}",
                                 RawSqlColumn.PublishedContent.Name,
                                 relatedObjPrimaryFieldName,
@@ -549,7 +563,7 @@ internal class RaythaDbPostgresJsonQueryEngine
                     else if (columnAsContentTypeField.FieldType.DeveloperName == BaseFieldType.Date)
                     {
                         sqlBuilder.OrderBy(
-                            columnAsContentTypeField.FieldType.OrderByExpression(
+                            PostgresFieldSql.DateOrderBy(
                                 RawSqlColumn.SOURCE_ITEM_COLUMN_NAME,
                                 RawSqlColumn.PublishedContent.Name,
                                 columnAsContentTypeField.DeveloperName,
@@ -561,7 +575,8 @@ internal class RaythaDbPostgresJsonQueryEngine
                     else
                     {
                         sqlBuilder.OrderBy(
-                            columnAsContentTypeField.FieldType.OrderByExpression(
+                            OrderByForFieldType(
+                                columnAsContentTypeField.FieldType,
                                 RawSqlColumn.SOURCE_ITEM_COLUMN_NAME,
                                 RawSqlColumn.PublishedContent.Name,
                                 columnAsContentTypeField.DeveloperName,
@@ -581,7 +596,7 @@ internal class RaythaDbPostgresJsonQueryEngine
                         if (reservedField.DeveloperName == BuiltInContentTypeField.PrimaryField)
                         {
                             sqlBuilder.OrderBy(
-                                reservedField.FieldType.OrderByExpression(
+                                PostgresFieldSql.TextOrderBy(
                                     RawSqlColumn.SOURCE_ITEM_COLUMN_NAME,
                                     RawSqlColumn.PublishedContent.Name,
                                     PrimaryFieldDeveloperName,

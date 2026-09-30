@@ -27,24 +27,4 @@ public class DateFieldType : BaseFieldType
         return new DateTimeFieldValue(value);
     }
 
-    public override string SingleJsonValue(params string[] args)
-    {
-        string dateFormat = args[3].ToUpper(); //US or UK format
-        return $@"
-        TO_DATE(
-            NULLIF({args[0]}.""{args[1]}""->>'{args[2]}', ''),
-            '{dateFormat}'
-        )";
-    }
-
-    public override string OrderByExpression(params string[] args)
-    {
-        string dateFormat = args[3].ToUpper(); //US or UK format
-        string sortOrder = args[4]?.ToUpper() == "DESC" ? "DESC" : "ASC"; // Default to ASC if not provided
-        return $@"
-        TO_DATE(
-            NULLIF({args[0]}.""{args[1]}""->>'{args[2]}', ''),
-            '{dateFormat}'
-        ) {sortOrder}";
-    }
 }

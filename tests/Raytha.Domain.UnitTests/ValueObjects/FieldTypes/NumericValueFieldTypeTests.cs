@@ -78,21 +78,5 @@ public class NumericValueFieldTypeTests
         act.Should().Throw<FormatException>();
     }
 
-    [Test]
-    public void OrderByExpression_ShouldReturnCorrectSql()
-    {
-        // Arrange
-        var type = new NumberFieldType();
-        var table = "t";
-        var column = "c";
-        var key = "k";
-        var order = "ASC";
-
-        // Act
-        var result = type.OrderByExpression(table, column, key, order);
-
-        // Assert
-        result.Should().Be($" CASE WHEN ({table}.\"{column}\"->>'{key}') ~ '^[0-9]+(\\.[0-9]+)?$' THEN ({table}.\"{column}\"->> '{key}')::decimal ELSE NULL END {order}, {table}.\"{column}\"->>'{key}' {order} ");
-    }
 }
 
