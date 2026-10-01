@@ -264,6 +264,19 @@ public class BuiltInSystemPermission : ValueObject
         }
     }
 
+    /// <summary>
+    /// Manage System Settings and Manage Administrators are full trust. Either one
+    /// includes every system permission, because functions and authentication
+    /// settings act with full access.
+    /// </summary>
+    public static SystemPermissions WithImplied(SystemPermissions permission) =>
+        (permission & (SystemPermissions.ManageSystemSettings | SystemPermissions.ManageAdministrators)) != 0
+            ? AllPermissionsAsEnum
+            : permission;
+
+    public static IEnumerable<string> WithImplied(IEnumerable<string> developerNames) =>
+        From(WithImplied(From(developerNames.ToArray()))).Select(p => p.DeveloperName);
+
     protected override IEnumerable<object> GetEqualityComponents()
     {
         yield return DeveloperName;

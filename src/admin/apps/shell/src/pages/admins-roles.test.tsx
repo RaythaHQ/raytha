@@ -122,6 +122,7 @@ describe("new role permissions", () => {
 
     const settings = await screen.findByRole("checkbox", { name: "Manage System Settings" });
     expect(settings).toBeDisabled();
-    expect(screen.getByText("Includes every permission. You do not have Manage Media.")).toBeTruthy();
+    expect(box("Manage Administrators")).toBeDisabled();
+    expect(screen.getAllByText("Includes every permission. You do not have Manage Media.")).toHaveLength(2);
   });
 });

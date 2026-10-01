@@ -55,7 +55,7 @@ public record RoleDto : BaseAuditableEntityDto
             LastModificationTime = entity.LastModificationTime,
             LastModifierUserId = entity.LastModifierUserId,
             SystemPermissions = BuiltInSystemPermission
-                .From(entity.SystemPermissions)
+                .From(BuiltInSystemPermission.WithImplied(entity.SystemPermissions))
                 .Select(p => p.DeveloperName),
             ContentTypePermissions = contentTypePermissions,
             ContentTypePermissionsFriendlyNames = contentTypePermissionsFriendlyNames,

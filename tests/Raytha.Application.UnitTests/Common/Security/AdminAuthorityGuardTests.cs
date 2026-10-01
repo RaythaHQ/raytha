@@ -8,8 +8,8 @@ public class AdminAuthorityGuardTests
 {
     private static readonly Guid Posts = Guid.NewGuid();
     private static readonly SystemPermissions All = BuiltInSystemPermission.AllPermissionsAsEnum;
-    private static readonly SystemPermissions PeopleOps =
-        SystemPermissions.ManageAdministrators | SystemPermissions.ManageSystemSettings;
+    private static readonly SystemPermissions ClerkPermissions =
+        SystemPermissions.ManageUsers | SystemPermissions.ManageAuditLogs;
 
     private static readonly RoleGrant SuperAdminRole = Role("super_admin", All);
     private static readonly RoleGrant AdminRole = Role("admin", All);
@@ -18,7 +18,7 @@ public class AdminAuthorityGuardTests
         SystemPermissions.ManageSitePages,
         (Posts, BuiltInContentTypePermission.AllPermissionsAsEnum)
     );
-    private static readonly RoleGrant PeopleOpsRole = Role("people_ops", PeopleOps);
+    private static readonly RoleGrant ClerkRole = Role("clerk", ClerkPermissions);
 
     private static RoleGrant Role(
         string developerName,
@@ -60,7 +60,7 @@ public class AdminAuthorityGuardTests
             .Should()
             .Be(AdminAuthorityGuard.NotSignedIn);
         AdminAuthorityGuard
-            .CheckRoleDeletion(null, PeopleOpsRole)
+            .CheckRoleDeletion(null, ClerkRole)
             .Should()
             .Be(AdminAuthorityGuard.NotSignedIn);
     }
@@ -123,21 +123,21 @@ public class AdminAuthorityGuardTests
     [Test]
     public void A_role_cannot_grant_more_than_the_caller_holds()
     {
-        var caller = Account(PeopleOpsRole);
+        var caller = Account(ClerkRole);
 
         AdminAuthorityGuard
             .CheckRoleDefinition(caller, null, Grant(All))
             .Should()
             .StartWith("You can only grant permissions you have yourself.")
             .And.Contain("Manage Templates")
-            .And.NotContain("Manage Administrators");
-        AdminAuthorityGuard.CheckRoleDefinition(caller, null, Grant(PeopleOps)).Should().BeNull();
+            .And.NotContain("Manage Users");
+        AdminAuthorityGuard.CheckRoleDefinition(caller, null, Grant(ClerkPermissions)).Should().BeNull();
     }
 
     [Test]
     public void A_role_cannot_grant_content_type_access_the_caller_lacks()
     {
-        var caller = Account(PeopleOpsRole);
+        var caller = Account(ClerkRole);
         var request = new PermissionGrant(
             SystemPermissions.None,
             [new(Posts, ContentTypePermissions.Read)]
@@ -154,7 +154,7 @@ public class AdminAuthorityGuardTests
     public void A_role_above_the_caller_cannot_be_edited_even_to_shrink_it()
     {
         AdminAuthorityGuard
-            .CheckRoleDefinition(Account(PeopleOpsRole), AdminRole, Grant(PeopleOps))
+            .CheckRoleDefinition(Account(ClerkRole), AdminRole, Grant(ClerkPermissions))
             .Should()
             .Be("You cannot edit the admin role because it grants permissions you do not have.");
     }
@@ -163,7 +163,7 @@ public class AdminAuthorityGuardTests
     public void A_role_above_the_caller_cannot_be_deleted()
     {
         AdminAuthorityGuard
-            .CheckRoleDeletion(Account(PeopleOpsRole), EditorRole)
+            .CheckRoleDeletion(Account(ClerkRole), EditorRole)
             .Should()
             .Be("You cannot delete the editor role because it grants permissions you do not have.");
         AdminAuthorityGuard.CheckRoleDeletion(Account(AdminRole), EditorRole).Should().BeNull();
@@ -184,22 +184,22 @@ public class AdminAuthorityGuardTests
     [Test]
     public void Only_roles_within_the_caller_may_be_assigned()
     {
-        var caller = Account(PeopleOpsRole);
+        var caller = Account(ClerkRole);
 
         AdminAuthorityGuard
             .CheckRoleAssignment(caller, null, [AdminRole], 1)
             .Should()
             .Be("You cannot assign the admin role because it grants permissions you do not have.");
-        AdminAuthorityGuard.CheckRoleAssignment(caller, null, [PeopleOpsRole], 1).Should().BeNull();
+        AdminAuthorityGuard.CheckRoleAssignment(caller, null, [ClerkRole], 1).Should().BeNull();
     }
 
     [Test]
     public void Keeping_a_role_already_held_is_not_an_assignment()
     {
-        var target = Account(PeopleOpsRole);
+        var target = Account(ClerkRole);
 
         AdminAuthorityGuard
-            .CheckRoleAssignment(Account(PeopleOpsRole), target, [PeopleOpsRole], 1)
+            .CheckRoleAssignment(Account(ClerkRole), target, [ClerkRole], 1)
             .Should()
             .BeNull();
     }
@@ -213,14 +213,14 @@ public class AdminAuthorityGuardTests
         AdminAccountAction action
     )
     {
-        var caller = Account(PeopleOpsRole);
+        var caller = Account(ClerkRole);
 
         AdminAuthorityGuard
             .CheckAccountAction(caller, Account(AdminRole), action, 1)
             .Should()
             .Be(AdminAuthorityGuard.AccountAboveCaller);
         AdminAuthorityGuard
-            .CheckAccountAction(caller, Account(PeopleOpsRole), action, 1)
+            .CheckAccountAction(caller, Account(ClerkRole), action, 1)
             .Should()
             .BeNull();
     }
@@ -270,7 +270,7 @@ public class AdminAuthorityGuardTests
     [TestCase(AdminAccountAction.ManageApiKeys)]
     public void You_may_manage_your_own_credentials(AdminAccountAction action)
     {
-        var self = Account(PeopleOpsRole);
+        var self = Account(ClerkRole);
 
         AdminAuthorityGuard.CheckAccountAction(self, self, action, 1).Should().BeNull();
     }
@@ -351,7 +351,7 @@ public class AdminAuthorityGuardTests
     {
         var caller = Account(SuperAdminRole);
 
-        AdminAuthorityGuard.CheckRoleDefinition(caller, AdminRole, Grant(PeopleOps)).Should().BeNull();
+        AdminAuthorityGuard.CheckRoleDefinition(caller, AdminRole, Grant(ClerkPermissions)).Should().BeNull();
         AdminAuthorityGuard
             .CheckRoleDefinition(caller, EditorRole, Grant(SystemPermissions.ManageSitePages))
             .Should()

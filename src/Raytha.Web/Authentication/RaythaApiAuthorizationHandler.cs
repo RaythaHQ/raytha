@@ -88,7 +88,7 @@ public class RaythaApiAuthorizationHandler : IAuthorizationHandler
 
         foreach (var role in user.Result.Roles)
         {
-            systemPermissions.AddRange(role.SystemPermissions);
+            systemPermissions.AddRange(BuiltInSystemPermission.WithImplied(role.SystemPermissions));
 
             foreach (var contentTypePermission in role.ContentTypePermissionsFriendlyNames)
             {

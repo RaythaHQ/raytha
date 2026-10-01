@@ -20,7 +20,8 @@ export const CONTENT_ACCESS: readonly { value: ContentAccess; label: string; des
 ];
 
 export const SYSTEM_PERMISSION_DESCRIPTIONS: Readonly<Record<string, string>> = {
-  system_settings: "Organization settings, SMTP, authentication methods, and maintenance.",
+  system_settings:
+    "Organization settings, SMTP, authentication methods, and maintenance. Includes every other permission, because functions and authentication settings act with full access.",
   administrators: "Admin accounts, roles, and API keys.",
   audit_logs: "View the audit log and email log.",
   content_types: "Create content types, and read, edit, and configure every one of them.",
@@ -30,11 +31,36 @@ export const SYSTEM_PERMISSION_DESCRIPTIONS: Readonly<Record<string, string>> = 
   media_items: "Browse and delete files in the media library.",
 };
 
-/** The server rejects a role that holds one of these without the other. */
-export const PAIRED_SYSTEM_PERMISSIONS: Readonly<Record<string, string>> = {
-  system_settings: "administrators",
-  administrators: "system_settings",
-};
+/** Mirrors BuiltInSystemPermission.WithImplied. Either one selects every system permission. */
+export const FULL_TRUST_PERMISSIONS = ["system_settings", "administrators"] as const;
+
+const SYSTEM_PERMISSIONS = [
+  "system_settings",
+  "administrators",
+  "audit_logs",
+  "content_types",
+  "templates",
+  "users",
+  "site_pages",
+  "media_items",
+] as const;
+
+export function isFullTrustPermission(permission: string): boolean {
+  return (FULL_TRUST_PERMISSIONS as readonly string[]).includes(permission);
+}
+
+export function withImpliedSystem(selected: readonly string[]): string[] {
+  if (selected.some(isFullTrustPermission)) {
+    return [...SYSTEM_PERMISSIONS];
+  }
+  const held = new Set(selected);
+  return SYSTEM_PERMISSIONS.filter((permission) => held.has(permission));
+}
+
+/** What the caller must already hold before this checkbox can change. */
+export function systemPermissionsRequired(permission: string): readonly string[] {
+  return isFullTrustPermission(permission) ? SYSTEM_PERMISSIONS : [permission];
+}
 
 export function withImpliedRead(access: readonly string[]): ContentAccess[] {
   const set = new Set(access.filter(isContentAccess));
@@ -119,7 +145,7 @@ export function readRoleSummary(entity: EntityRef): RoleSummary {
     id: entity.id,
     label: readString(fields, "label") || readString(fields, "developerName"),
     developerName: readString(fields, "developerName"),
-    systemPermissions: system,
+    systemPermissions: withImpliedSystem(system),
     contentTypes,
   };
 }

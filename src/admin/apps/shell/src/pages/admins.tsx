@@ -34,17 +34,20 @@ import {
   canGrantSystem,
   CONTENT_ACCESS,
   CONTENT_TYPES_PERMISSION,
+  FULL_TRUST_PERMISSIONS,
   impliedBy,
   isBuiltInRole,
+  isFullTrustPermission,
   isSuperAdminRole,
-  PAIRED_SYSTEM_PERMISSIONS,
   readRoleSummaries,
   readRoleSummary,
   roleAssignmentBlock,
   roleEditBlock,
   SUPER_ADMIN_ROLE,
   SYSTEM_PERMISSION_DESCRIPTIONS,
+  systemPermissionsRequired,
   withImpliedRead,
+  withImpliedSystem,
   type Ceiling,
   type ContentAccess,
   type RoleSummary,
@@ -694,7 +697,8 @@ function RolePermissionMatrix({
   });
   const catalog = useMemo(() => catalogQuery.data?.systemPermissions ?? [], [catalogQuery.data]);
   const labels = useMemo(() => new Map(catalog.map((option) => [option.developerName, option.label])), [catalog]);
-  const selected = useMemo(() => new Set(systemPermissions), [systemPermissions]);
+  const selected = useMemo(() => new Set(withImpliedSystem(systemPermissions)), [systemPermissions]);
+  const fullTrust = FULL_TRUST_PERMISSIONS.some((permission) => selected.has(permission));
   const allContentTypes = fullAccess || selected.has(CONTENT_TYPES_PERMISSION);
   const canBulkEdit = !readOnly && !fullAccess;
   const grantableSystem = useMemo(
@@ -703,17 +707,26 @@ function RolePermissionMatrix({
   );
   const grantableSystemSelected = grantableSystem.filter((permission) => selected.has(permission)).length;
 
+  const writeSystem = (next: Set<string>) => {
+    onSystem(withImpliedSystem([...next]));
+  };
+
   const toggleSystem = (permission: string, checked: boolean) => {
     const next = new Set(selected);
-    const partner = PAIRED_SYSTEM_PERMISSIONS[permission];
-    for (const value of partner ? [permission, partner] : [permission]) {
+    if (isFullTrustPermission(permission)) {
       if (checked) {
-        next.add(value);
+        next.add(permission);
       } else {
-        next.delete(value);
+        for (const trust of FULL_TRUST_PERMISSIONS) {
+          next.delete(trust);
+        }
       }
+    } else if (checked) {
+      next.add(permission);
+    } else {
+      next.delete(permission);
     }
-    onSystem(catalog.map((option) => option.developerName).filter((value) => next.has(value)));
+    writeSystem(next);
   };
 
   const toggleContent = (typeId: string, access: ContentAccess, checked: boolean) => {
@@ -731,10 +744,6 @@ function RolePermissionMatrix({
       updated[typeId] = nextAccess;
     }
     onContent(updated);
-  };
-
-  const writeSystem = (next: Set<string>) => {
-    onSystem(catalog.map((option) => option.developerName).filter((value) => next.has(value)));
   };
 
   const selectAllSystem = () => {
@@ -824,9 +833,19 @@ function RolePermissionMatrix({
                   <SystemPermissionTile
                     option={option}
                     checked={fullAccess || selected.has(option.developerName)}
-                    reason={systemLockReason(option.developerName, { ceiling, readOnly, fullAccess, labels })}
-                    pairedWith={labelFor(labels, PAIRED_SYSTEM_PERMISSIONS[option.developerName])}
-                    disabled={readOnly || fullAccess || !canToggleSystem(ceiling, option.developerName)}
+                    reason={systemLockReason(option.developerName, {
+                      ceiling,
+                      readOnly,
+                      fullAccess,
+                      labels,
+                      implied: fullTrust && !isFullTrustPermission(option.developerName),
+                    })}
+                    disabled={
+                      readOnly ||
+                      fullAccess ||
+                      (fullTrust && !isFullTrustPermission(option.developerName)) ||
+                      !canToggleSystem(ceiling, option.developerName)
+                    }
                     onChange={(checked) => toggleSystem(option.developerName, checked)}
                   />
                 </li>
@@ -977,14 +996,12 @@ function SystemPermissionTile({
   checked,
   disabled,
   reason,
-  pairedWith,
   onChange,
 }: {
   option: PermissionOption;
   checked: boolean;
   disabled: boolean;
   reason: string | null;
-  pairedWith: string | null;
   onChange: (checked: boolean) => void;
 }) {
   const id = `perm-${option.developerName}`;
@@ -1012,7 +1029,6 @@ function SystemPermissionTile({
         </Label>
         <div id={noteId} className="space-y-0.5 text-[13px] leading-5 text-muted-foreground">
           {description && <p>{description}</p>}
-          {pairedWith && <p>Always granted together with {pairedWith}.</p>}
           {reason && (
             <p className="flex items-center gap-1 text-xs font-medium text-foreground/70">
               <Lock aria-hidden className="size-3 shrink-0" />
@@ -1402,25 +1418,34 @@ function describeAccess(role: RoleSummary): string {
 }
 
 function canToggleSystem(ceiling: Ceiling, permission: string): boolean {
-  const partner = PAIRED_SYSTEM_PERMISSIONS[permission];
-  return canGrantSystem(ceiling, permission) && (partner === undefined || canGrantSystem(ceiling, partner));
+  return systemPermissionsRequired(permission).every((required) => canGrantSystem(ceiling, required));
 }
 
 function systemLockReason(
   permission: string,
-  context: { ceiling: Ceiling; readOnly: boolean; fullAccess: boolean; labels: Map<string, string> },
+  context: {
+    ceiling: Ceiling;
+    readOnly: boolean;
+    fullAccess: boolean;
+    labels: Map<string, string>;
+    implied: boolean;
+  },
 ): string | null {
   if (context.readOnly || context.fullAccess) {
     return null;
   }
-  if (!canGrantSystem(context.ceiling, permission)) {
-    return "You do not have this permission, so you cannot grant it.";
+  if (context.implied) {
+    return "Included with Manage System Settings";
   }
-  const partner = PAIRED_SYSTEM_PERMISSIONS[permission];
-  if (partner && !canGrantSystem(context.ceiling, partner)) {
-    return `Needs ${labelFor(context.labels, partner) ?? partner}, which you do not have.`;
+  const missing = systemPermissionsRequired(permission).filter((required) => !canGrantSystem(context.ceiling, required));
+  if (missing.length === 0) {
+    return null;
   }
-  return null;
+  if (isFullTrustPermission(permission)) {
+    const names = missing.map((required) => labelFor(context.labels, required) ?? required);
+    return `Includes every permission. You do not have ${names.join(", ")}.`;
+  }
+  return "You do not have this permission, so you cannot grant it.";
 }
 
 function labelFor(labels: Map<string, string>, permission: string | undefined): string | null {

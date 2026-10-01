@@ -15,6 +15,7 @@ using Raytha.Application.Common.Security;
 using Raytha.Application.Common.Utils;
 using Raytha.Application.Login;
 using Raytha.Application.Login.Queries;
+using Raytha.Domain.Entities;
 
 namespace Raytha.Web.Authentication;
 
@@ -178,7 +179,7 @@ public class CustomCookieAuthenticationEvents : CookieAuthenticationEvents
         foreach (var role in user.Result.Roles)
         {
             claims.Add(new Claim(ClaimTypes.Role, role.DeveloperName.ToString()));
-            systemPermissions.AddRange(role.SystemPermissions);
+            systemPermissions.AddRange(BuiltInSystemPermission.WithImplied(role.SystemPermissions));
 
             foreach (var contentTypePermission in role.ContentTypePermissionsFriendlyNames)
             {

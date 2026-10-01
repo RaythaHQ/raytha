@@ -20,7 +20,7 @@ public sealed class PermissionGrant
         IEnumerable<KeyValuePair<Guid, ContentTypePermissions>> contentTypes
     )
     {
-        System = system;
+        System = BuiltInSystemPermission.WithImplied(system);
         ContentTypes = contentTypes
             .GroupBy(p => p.Key)
             .Select(g => new KeyValuePair<Guid, ContentTypePermissions>(
