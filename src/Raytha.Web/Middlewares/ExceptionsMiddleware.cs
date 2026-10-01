@@ -57,11 +57,13 @@ public class ExceptionsMiddleware
                     Detail = validation.Message,
                 };
                 break;
-            case NotFoundException:
+            case NotFoundException notFound:
                 problem = Create(
                     HttpStatusCode.NotFound,
                     "Not found",
-                    "The resource you requested was not found."
+                    notFound.NamesEntity
+                        ? notFound.Message
+                        : "The resource you requested was not found."
                 );
                 break;
             case FormatException:
