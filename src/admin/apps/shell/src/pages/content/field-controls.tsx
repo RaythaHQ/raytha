@@ -137,13 +137,20 @@ export function ContentFieldControl({
       if (value.fieldType !== "date") {
         return null;
       }
+      const unreadable = value.value !== "" && !/^\d{4}-\d{2}-\d{2}$/.test(value.value);
       return (
-        <FormField label={label} required={field.isRequired} hint={hint} htmlFor={field.developerName}>
+        <FormField
+          label={label}
+          required={field.isRequired}
+          hint={hint}
+          error={unreadable ? `Stored as "${value.value}", which is not a date. Pick the date it means.` : undefined}
+          htmlFor={field.developerName}
+        >
           {(control) => (
             <Input
               {...control}
               type="date"
-              value={value.value}
+              value={unreadable ? "" : value.value}
               onChange={(event) => onChange({ fieldType: "date", value: event.target.value })}
             />
           )}

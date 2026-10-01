@@ -424,7 +424,11 @@ export function parseFieldValue(field: ContentField, raw: unknown): ContentField
     case "radio":
       return { fieldType: field.fieldType, value: scalarString(stored) };
     case "date":
-      return { fieldType: "date", value: toDateInput(scalarString(stored)) };
+      // A stored value the server cannot read as a date arrives as { value: null, text: <original> }.
+      return {
+        fieldType: "date",
+        value: toDateInput(scalarString(stored) || (isRecord(raw) ? readString(raw, "text") : "")),
+      };
     case "number":
       return { fieldType: "number", value: scalarString(stored) };
     case "one_to_one_relationship":
