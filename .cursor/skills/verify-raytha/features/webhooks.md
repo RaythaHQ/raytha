@@ -29,6 +29,8 @@ with retries and records each delivery.
 Preconditions:
 
 - Baseline from `README.md`.
+- The host started with `scripts/host.sh -- --ALLOW_INTERNAL_URL_IMPORTS=true`.
+  Without it the SSRF guard blocks loopback and the delivery fails.
 - A local receiver on a free loopback port that logs headers and body, e.g. a
   `python3 -m http.server`-style handler on `127.0.0.1:15299` that answers 200
   to POST. The webhook URL is the production boundary, so this is the one
@@ -43,7 +45,9 @@ Preconditions:
   or trigger a real event (create a user, publish an item).
 - **Receive.** Within a few seconds the receiver gets a POST with event
   `webhook.test` and the four `X-Raytha-*` headers. Verify the signature with
-  the secret before trusting it.
+  the secret before trusting it: `X-Raytha-Signature` is `sha256=` plus the hex
+  HMAC-SHA256 of `<X-Raytha-Timestamp>.<raw body>`. The header timestamp is the
+  attempt time, not the payload's event `timestamp`.
 - **Record.** `GET /raytha/api/admin/webhooks/deliveries` lists the delivery
   with `status: "succeeded"` and the same payload.
 

@@ -18,8 +18,8 @@ forgotten password by email, and sign out.
 
 - Visiting `/raytha` signed out → SPA route guard → sign-in.
 - `/raytha/setup` on a database with no admin (SPA page).
-- `/raytha/login` — the server-rendered Razor sign-in page (`Your email`,
-  `Your password`, `Sign in`).
+- `/raytha/login` — the SPA sign-in page (`Email`, `Password`, `Sign in`;
+  `Sign in with a one-time code` when magic link is enabled).
 - `/raytha/login/forgot-password` from the sign-in page.
 - `/raytha/logout`, or the user menu (`Verify Admin` at the top right) in the SPA.
 - Headless: `/raytha/api/auth/{setup,setup/status,login,logout,me,schemes,forgot-password,magic-link}`.
@@ -50,9 +50,13 @@ Preconditions:
 
 ## Gotchas
 
-- `/raytha/login` is the Razor page, not the SPA's `/login` route; on the
-  committed bundle the literal Razor route wins. Its labels are `Your email` /
-  `Your password`; `getByLabel(/email/i)` and `/password/i` work for both.
+- `/raytha/login` is the SPA page and posts to `/raytha/api/auth/login`;
+  `getByLabel(/email/i)` and `/password/i` find its fields.
+- The auth cookie is `SameSite=Lax` and `HttpOnly`; it is `Secure` only outside
+  Development, so the verify host's cookie has no `Secure`.
+- Magic link answers 204 for every address, known or not, and emails a code only
+  to an active account the scheme is enabled for. Prove "no code sent" from
+  MailHog, not from the response.
 - Auth endpoints share a 30/min per-IP limiter. A loop of sign-ins or recovery
   requests hits 429; wait for `Retry-After`.
 - MailHog is shared and keeps old messages for `admin@raytha.local`. Compare the

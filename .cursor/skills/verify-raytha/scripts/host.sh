@@ -1,12 +1,14 @@
 #!/usr/bin/env bash
 # Launch an isolated Raytha host for verification.
 #
-#   scripts/host.sh [--db NAME] [--port N] [--no-build] [--fresh]
+#   scripts/host.sh [--db NAME] [--port N] [--no-build] [--fresh] [-- --Key=value ...]
 #
 #   --db NAME    Postgres database (default raytha_verify). "raytha" is refused.
 #   --port N     Loopback port (default 15200). 5200 is refused.
 #   --no-build   Reuse the last snapshot in runs/bin instead of building.
 #   --fresh      Drop the database and the uploads dir first (true first run).
+#   -- ...       Extra host settings, e.g. -- --ALLOW_INTERNAL_URL_IMPORTS=true.
+#                The connection string and URLs cannot be overridden.
 #
 # Builds src/Raytha.Web, snapshots bin/Debug/net10.0 into runs/bin so a
 # concurrent `dotnet watch` cannot swap binaries under us, starts the snapshot
@@ -20,6 +22,7 @@ DB=raytha_verify
 PORT=15200
 BUILD=1
 FRESH=0
+EXTRA=()
 
 while [ $# -gt 0 ]; do
   case "$1" in
@@ -27,7 +30,13 @@ while [ $# -gt 0 ]; do
     --port) PORT="$2"; shift 2 ;;
     --no-build) BUILD=0; shift ;;
     --fresh) FRESH=1; shift ;;
+    --) shift; EXTRA=("$@"); break ;;
     *) echo "unknown argument: $1" >&2; exit 2 ;;
+  esac
+done
+for arg in ${EXTRA[@]+"${EXTRA[@]}"}; do
+  case "$arg" in
+    *ConnectionStrings*|--urls*|*ASPNETCORE_URLS*) echo "refusing extra setting: $arg" >&2; exit 2 ;;
   esac
 done
 
@@ -80,6 +89,7 @@ nohup "$RUNS/bin/Raytha.Web" \
   --SMTP_PORT=1025 \
   --FILE_STORAGE_PROVIDER=local \
   --FILE_STORAGE_LOCAL_DIRECTORY="$RUNS/uploads" \
+  ${EXTRA[@]+"${EXTRA[@]}"} \
   > "$LOG" 2>&1 &
 echo $! > "$PIDFILE"
 

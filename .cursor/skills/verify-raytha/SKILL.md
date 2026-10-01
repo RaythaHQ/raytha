@@ -42,7 +42,12 @@ $S/host.sh            # build, snapshot, start, wait for /healthz/ready
 $S/host.sh --fresh    # same, after dropping raytha_verify and uploads (true first run)
 $S/host.sh --no-build # restart the last snapshot without rebuilding
 $S/host.sh --db raytha_verify_seed --port 15201   # a second, independent instance
+$S/host.sh -- --ALLOW_INTERNAL_URL_IMPORTS=true   # extra host settings after --
 ```
+
+Webhooks and functions that call a loopback receiver need
+`--ALLOW_INTERNAL_URL_IMPORTS=true`; without it the SSRF guard blocks the
+request and the delivery records the block as its error.
 
 Ready looks like:
 `ready base=http://127.0.0.1:15200 db=raytha_verify pid=… version=2.0.0 log=…/runs/host-15200.log`
@@ -111,10 +116,11 @@ same variables.
 On the committed bundle the SPA owns every admin page. Measured on this host:
 `/raytha`, `/raytha/users`, `/raytha/webhooks`, `/raytha/settings/authentication`,
 `/raytha/content/posts`, and arbitrary deep paths all return the React shell.
-Only `/raytha/login*`, `/raytha/logout`, `/raytha/login-redirect`,
-`/raytha/error/*`, `/raytha/themes/export/*`, and `/raytha/functions/execute/*`
-are still server-rendered — so sign-in goes through the Razor login page, then
-lands in the SPA.
+Sign-in is the SPA's `/raytha/login` page, which posts to
+`/raytha/api/auth/login`. Only `/raytha/logout`, `/raytha/login-redirect`, the
+SAML/JWT handoffs under `/raytha/login/`, `/raytha/error/*`,
+`/raytha/themes/export/*`, and `/raytha/functions/execute/*` are still
+server-rendered.
 
 ```bash
 # Screenshot a list of pages, signed in
@@ -262,7 +268,7 @@ What stays:
 
 | Script | Does |
 |---|---|
-| `scripts/host.sh [--db N] [--port N] [--no-build] [--fresh]` | Build, snapshot, launch, wait for ready |
+| `scripts/host.sh [--db N] [--port N] [--no-build] [--fresh] [-- --Key=value ...]` | Build, snapshot, launch, wait for ready |
 | `scripts/doctor.sh [--port N]` | Read-only health, isolation, version, and bundle checks |
 | `scripts/session.sh [--port N]` | First-run setup or sign-in; writes `runs/cookies-PORT.txt` |
 | `scripts/browse.sh --out DIR [--port N] (--steps F.cjs \| PATH...)` | Headless Chromium, signed in; screenshots + ARIA snapshots + console log |
