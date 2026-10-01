@@ -111,7 +111,13 @@ public static class ConfigureServices
         }
         services.AddScoped<IBackgroundTaskQueue, BackgroundTaskQueue>();
 
-        services.AddHttpClient<IRaythaFunctionsHttpClient, RaythaFunctionsHttpClient>();
+        services
+            .AddHttpClient<IRaythaFunctionsHttpClient, RaythaFunctionsHttpClient>()
+            .ConfigurePrimaryHttpMessageHandler(sp =>
+                SafeUrlValidator.CreateHandler(
+                    sp.GetRequiredService<ISecurityConfiguration>().AllowInternalUrlImports
+                )
+            );
         services.AddSingleton<IV8EnginePool, V8EnginePool>();
         services.AddScoped<IRaythaFunctionScriptEngine, RaythaFunctionScriptEngine>();
         services.AddScoped<IRaythaFunctionApi_V1, RaythaFunctionApi_V1>();

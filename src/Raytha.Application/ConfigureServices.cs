@@ -3,7 +3,9 @@ using FluentValidation;
 using Mediator;
 using Microsoft.Extensions.DependencyInjection;
 using Raytha.Application.Common.Behaviors;
+using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Shared;
+using Raytha.Application.Common.Utils;
 using Raytha.Application.ContentItems;
 using Raytha.Application.ContentItems.Commands;
 using Raytha.Application.ContentItems.EventHandlers;
@@ -33,7 +35,23 @@ public static class ConfigureServices
         services.AddSingleton<IWebhookEventCatalog, WebhookEventCatalog>();
         services.AddScoped<IWebhookEventPublisher, WebhookEventPublisher>();
         services.AddScoped<DeliverWebhookTask>();
-        services.AddHttpClient(DeliverWebhookTask.HttpClientName);
+        foreach (
+            var userSuppliedUrlClient in new[]
+            {
+                DeliverWebhookTask.HttpClientName,
+                nameof(BeginImportThemeFromUrl),
+                nameof(BeginImportContentItemsFromCsv),
+            }
+        )
+        {
+            services
+                .AddHttpClient(userSuppliedUrlClient)
+                .ConfigurePrimaryHttpMessageHandler(sp =>
+                    SafeUrlValidator.CreateHandler(
+                        sp.GetRequiredService<ISecurityConfiguration>().AllowInternalUrlImports
+                    )
+                );
+        }
 
         services.AddScoped<BeginBatchCreateContentItems.BackgroundTask>();
         services.AddScoped<BeginExportContentItemsToCsv.BackgroundTask>();
