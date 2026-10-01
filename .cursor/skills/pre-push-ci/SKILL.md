@@ -61,8 +61,9 @@ If a check fails, fix it and re-run. Typical remediations:
 Notes:
 
 - A migration added under `src/Raytha.Infrastructure/Persistence/Migrations`
-  also needs the `db/Postgres/` SQL scripts refreshed (RFC-0012 §4). CI does not
-  check that; reviewers and operators do.
+  also needs the `db/Postgres/` SQL scripts refreshed (RFC-0012 §4).
+  `tools/check-sql-scripts.py` fails CI when they drift and prints the
+  regenerate commands.
 - Include the rebuilt bundle and the `VERSION` change in the same commit you are
   about to push. If the user already committed, make a **new** commit (amend only
   when the user's git rules allow it).
