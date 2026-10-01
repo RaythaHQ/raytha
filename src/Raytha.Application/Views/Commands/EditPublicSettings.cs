@@ -109,10 +109,7 @@ public class EditPublicSettings
                             );
                             return;
                         }
-                        var routePathExists = db.Routes.FirstOrDefault(p =>
-                            p.Path.ToLower() == slugifiedPath && p.ViewId != request.Id.Guid
-                        );
-                        if (routePathExists != null)
+                        if (RoutePaths.IsTaken(db, slugifiedPath, entity.RouteId))
                         {
                             context.AddFailure(
                                 "RoutePath",

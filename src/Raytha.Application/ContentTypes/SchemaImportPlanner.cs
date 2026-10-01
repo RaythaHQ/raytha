@@ -435,7 +435,7 @@ public static class SchemaImportPlanner
                     DeveloperName = typeName,
                     Label = $"All {documentType.LabelPlural?.ToLower()}",
                     IsPublished = true,
-                    RoutePath = usedPaths.Contains(typeName) ? null : typeName,
+                    RoutePath = RoutePaths.IsTaken(usedPaths, typeName) ? null : typeName,
                     Columns =
                     [
                         BuiltInContentTypeField.PrimaryField.DeveloperName,
@@ -659,7 +659,7 @@ public static class SchemaImportPlanner
             {
                 var viewName = viewPlan.DeveloperName;
                 var path = $"{typeName}/{viewName}".Truncate(200, string.Empty).ToUrlSlug();
-                if (usedPaths.Contains(path))
+                if (RoutePaths.IsTaken(usedPaths, path))
                 {
                     path = $"{typeName}/{(ShortGuid)viewPlan.Id}-{viewName}"
                         .Truncate(200, string.Empty)
@@ -684,7 +684,7 @@ public static class SchemaImportPlanner
         }
         if (string.Equals(slug, ownPath, StringComparison.OrdinalIgnoreCase))
             return;
-        if (usedPaths.Contains(slug))
+        if (RoutePaths.IsTaken(usedPaths, slug))
         {
             errors.Add($"{where}: routePath '{slug}' is already in use.");
             return;

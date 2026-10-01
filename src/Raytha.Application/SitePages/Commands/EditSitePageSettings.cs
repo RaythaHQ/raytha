@@ -62,14 +62,7 @@ public class EditSitePageSettings
                             return;
                         }
                         
-                        // Get the current SitePage's route ID to exclude it from the check
-                        var currentRouteId = entity.RouteId;
-                        
-                        // Check if any OTHER route has this path (case-insensitive)
-                        var routePathExists = db.Routes.Any(p =>
-                            p.Path.ToLower() == slugifiedPath.ToLower() && p.Id != currentRouteId
-                        );
-                        if (routePathExists)
+                        if (RoutePaths.IsTaken(db, slugifiedPath, entity.RouteId))
                         {
                             context.AddFailure(
                                 "RoutePath",

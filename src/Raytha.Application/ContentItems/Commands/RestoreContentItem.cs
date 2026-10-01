@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Raytha.Application.Common.Exceptions;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Models;
+using Raytha.Application.Common.Utils;
 using Raytha.Application.Webhooks;
 using Raytha.Domain.Entities;
 
@@ -43,10 +44,7 @@ public class RestoreContentItem
             );
 
             string path = string.Empty;
-            var routePathExists = _db.Routes.FirstOrDefault(p =>
-                p.Path.ToLower() == entity.RoutePath
-            );
-            if (routePathExists != null)
+            if (RoutePaths.IsTaken(_db, entity.RoutePath))
             {
                 path = $"{entity.ContentType.DeveloperName}/{(ShortGuid)entity.Id}";
             }

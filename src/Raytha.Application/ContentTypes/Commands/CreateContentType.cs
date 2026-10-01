@@ -130,6 +130,11 @@ public class CreateContentType
             _db.ContentTypeFields.Add(contentPageField);
 
             var newViewId = Guid.NewGuid();
+            var routePath = request.DeveloperName.ToDeveloperName();
+            if (RoutePaths.IsTaken(_db, routePath))
+            {
+                routePath = $"{(ShortGuid)newViewId}-{routePath}".Truncate(200, string.Empty);
+            }
             var newView = new View
             {
                 Id = newViewId,
@@ -139,7 +144,7 @@ public class CreateContentType
                 Route = new Route
                 {
                     ViewId = newViewId,
-                    Path = $"{request.DeveloperName.ToDeveloperName()}",
+                    Path = routePath,
                 },
                 Columns = new[]
                 {

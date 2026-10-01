@@ -241,7 +241,7 @@ public class CreateContentItem
 
             path = path.ToUrlSlug().Truncate(200, string.Empty);
 
-            if (_db.Routes.Any(p => p.Path == path))
+            if (RoutePaths.IsTaken(_db, path))
             {
                 path = $"{(ShortGuid)entityId}-{path}".Truncate(200, string.Empty);
             }

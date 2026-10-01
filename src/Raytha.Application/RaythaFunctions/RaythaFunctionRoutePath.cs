@@ -58,11 +58,9 @@ public static class RaythaFunctionRoutePath
         if (problem != null)
             return problem;
 
-        var lowered = path.ToLower();
-        var taken = db.Routes.Any(r =>
-            r.Path.ToLower() == lowered && (ownRouteId == null || r.Id != ownRouteId)
-        );
-        return taken ? $"The path \"{path}\" is already in use." : null;
+        return RoutePaths.IsTaken(db, path, ownRouteId)
+            ? $"The path \"{path}\" is already in use."
+            : null;
     }
 
     /// <summary>Creates, moves, or deletes the function's route so it matches path; empty means none.</summary>

@@ -109,8 +109,7 @@ public class CreateSitePage
                 path = ((ShortGuid)entityId).ToString();
             }
 
-            // Case-insensitive check for existing routes
-            if (_db.Routes.Any(p => p.Path.ToLower() == path.ToLower()))
+            if (RoutePaths.IsTaken(_db, path))
             {
                 path = $"{(ShortGuid)entityId}-{path}".Truncate(200, string.Empty);
             }

@@ -108,10 +108,7 @@ public class EditContentItemSettings
                             );
                             return;
                         }
-                        var routePathExists = db.Routes.Any(p =>
-                            p.Path.ToLower() == slugifiedPath && p.ContentItemId != request.Id.Guid
-                        );
-                        if (routePathExists)
+                        if (RoutePaths.IsTaken(db, slugifiedPath, entity.RouteId))
                         {
                             context.AddFailure(
                                 "RoutePath",
