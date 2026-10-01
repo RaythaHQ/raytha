@@ -232,6 +232,7 @@ public class RenderEngine : IRenderEngine
                             OrderBy = orderBy,
                             PageNumber = (int)pageNumber,
                             PageSize = (int)pageSize,
+                            PublishedOnly = true,
                         }
                     );
                     return new ObjectValue(result.Result);

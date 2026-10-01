@@ -20,6 +20,11 @@ public class GetContentItems
 
         public string? ContentType { get; init; }
         public string? Filter { get; init; }
+
+        /// <summary>
+        /// Leave out drafts and unpublished items, whatever the view or caller filter says.
+        /// </summary>
+        public bool PublishedOnly { get; init; }
     }
 
     public class Handler : IRequestHandler<Query, IQueryResponseDto<ListResultDto<ContentItemDto>>>
@@ -61,7 +66,7 @@ public class GetContentItems
                 );
 
                 var searchOnColumns = GetSearchForView(view);
-                var filters = GetFiltersForView(view, request);
+                var filters = WithPublishedOnly(GetFiltersForView(view, request), request);
                 string finalOrderBy = GetSortForView(view, request);
                 var queryResult = _db.QueryContentItems(
                     view.ContentTypeId,
@@ -92,8 +97,7 @@ public class GetContentItems
                         request.ContentType.ToDeveloperName()
                     );
 
-                var conditionToODataUtility = new FilterConditionToODataUtility(contentType);
-                var filters = new string[] { request.Filter };
+                var filters = WithPublishedOnly([request.Filter], request);
                 string finalOrderBy = !string.IsNullOrWhiteSpace(request.OrderBy)
                     ? request.OrderBy
                     : $"{BuiltInContentTypeField.CreationTime.DeveloperName} {SortOrder.DESCENDING}";
@@ -145,6 +149,13 @@ public class GetContentItems
                     }
                     : p
             );
+        }
+
+        private static string[] WithPublishedOnly(string[] filters, Query request)
+        {
+            return request.PublishedOnly
+                ? [.. filters, $"{BuiltInContentTypeField.IsPublished.DeveloperName} eq 'true'"]
+                : filters;
         }
 
         protected string[] GetSearchForView(View view)

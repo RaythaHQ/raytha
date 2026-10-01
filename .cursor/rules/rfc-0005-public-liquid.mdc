@@ -24,6 +24,10 @@ admin SPA rewrite (RFC-0006) does not extend to the public site, and MUST NOT.
   add a React island, a client-side router, or a JSON endpoint to render a public
   page.
 - Public controllers get data through `ISender` only (RFC-0002, RFC-0004).
+- Public content lists (view pages, Liquid `get_content_items`) MUST send
+  `GetContentItems.Query` with `PublishedOnly = true`. A view's filter is site
+  builder data and cannot be trusted to exclude drafts; an item whose own page
+  404s MUST NOT appear in a list. `PublicContentListTests` enforces both.
 
 ## 2. Rendering
 

@@ -152,6 +152,7 @@ public class MainController : BaseController
                 PageSize = normalizedPageSize,
                 OrderBy = orderBy,
                 Filter = filter,
+                PublishedOnly = true,
             }
         );
 
