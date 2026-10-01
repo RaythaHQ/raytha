@@ -165,8 +165,9 @@ The upgrade rewrites some existing data, not just the schema:
   disagree on the order (written under two server cultures), each value is read
   by its own numbers. A value that could be either order, or isn't a
   recognizable date, is left unchanged and reported as a `NOTICE`, which only
-  `psql` shows. Such a value reads as an empty date, and the admin editor shows
-  the stored text and asks for the date it means. To find what was left behind:
+  `psql` shows. 2.0 reads a leftover value in the server's culture, as 1.x did.
+  One it can't parse reads as an empty date, and the admin editor shows the
+  stored text and asks for the date it means. To find what was left behind:
 
   ```sql
   SELECT t."DeveloperName" AS content_type, f."DeveloperName" AS field, ci."Id",
