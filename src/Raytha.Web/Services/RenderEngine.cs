@@ -10,6 +10,7 @@ using Fluid;
 using Fluid.Filters;
 using Fluid.Values;
 using Mediator;
+using Raytha.Application.Common.Exceptions;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Utils;
 using Raytha.Application.ContentItems.Queries;
@@ -146,7 +147,7 @@ public class RenderEngine : IRenderEngine
         var downloadUrl = await fileStorageProvider
             .GetDownloadUrlAsync(input.ToStringValue(), FileStorageUtility.GetDefaultExpiry())
             .ConfigureAwait(false);
-        return new StringValue(downloadUrl);
+        return new StringValue(PublicAssetUrl.PreferRootRelative(downloadUrl));
     }
 
     private static async ValueTask<FluidValue> GroupBy(
@@ -190,10 +191,17 @@ public class RenderEngine : IRenderEngine
             async (args, context) =>
             {
                 var contentItemId = args.At(0).ToStringValue();
-                var result = await _mediator.Send(
-                    new GetContentItemById.Query { Id = contentItemId }
-                );
-                return new ObjectValue(result.Result);
+                try
+                {
+                    var result = await _mediator.Send(
+                        new GetContentItemById.Query { Id = contentItemId }
+                    );
+                    return new ObjectValue(result.Result);
+                }
+                catch (NotFoundException)
+                {
+                    return NilValue.Instance;
+                }
             }
         );
     }
@@ -269,23 +277,34 @@ public class RenderEngine : IRenderEngine
             async (args, _) =>
             {
                 var developerName = args.At(0).ToStringValue();
-                var menuResponse = await _mediator.Send(
-                    new GetNavigationMenuByDeveloperName.Query { DeveloperName = developerName }
-                );
+                try
+                {
+                    var menuResponse = await _mediator.Send(
+                        new GetNavigationMenuByDeveloperName.Query { DeveloperName = developerName }
+                    );
 
-                var menuItemsResponse = await _mediator.Send(
-                    new GetNavigationMenuItemsByNavigationMenuId.Query
-                    {
-                        NavigationMenuId = menuResponse.Result.Id,
-                    }
-                );
+                    var menuItemsResponse = await _mediator.Send(
+                        new GetNavigationMenuItemsByNavigationMenuId.Query
+                        {
+                            NavigationMenuId = menuResponse.Result.Id,
+                        }
+                    );
 
-                var menuItems = menuItemsResponse.Result.BuildTree<NavigationMenuItem_RenderModel>(
-                    NavigationMenuItem_RenderModel.GetProjection
-                );
-                var menu = NavigationMenu_RenderModel.GetProjection(menuResponse.Result, menuItems);
+                    var menuItems =
+                        menuItemsResponse.Result.BuildTree<NavigationMenuItem_RenderModel>(
+                            NavigationMenuItem_RenderModel.GetProjection
+                        );
+                    var menu = NavigationMenu_RenderModel.GetProjection(
+                        menuResponse.Result,
+                        menuItems
+                    );
 
-                return new ObjectValue(menu);
+                    return new ObjectValue(menu);
+                }
+                catch (NotFoundException)
+                {
+                    return NilValue.Instance;
+                }
             }
         );
     }

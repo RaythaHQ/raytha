@@ -44,7 +44,7 @@ public class GetContentTypeFields
 
             if (request.ContentTypeId != ShortGuid.Empty)
             {
-                query = query.Where(p => p.ContentTypeId == request.ContentTypeId);
+                query = query.Where(p => p.ContentTypeId == request.ContentTypeId.Guid);
             }
             else if (!string.IsNullOrEmpty(request.DeveloperName.ToDeveloperName()))
             {

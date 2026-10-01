@@ -1,8 +1,9 @@
-import { adminApi, formatError } from "@raytha/api";
+import { adminApi, formatError, hasPermission, platformPermissions } from "@raytha/api";
 import {
   Button,
   Card,
   CardContent,
+  DangerZone,
   FormField,
   Input,
   PageHeader,
@@ -12,7 +13,7 @@ import {
   toast,
 } from "@raytha/ui";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useParams } from "@tanstack/react-router";
+import { useNavigate, useParams } from "@tanstack/react-router";
 import { useState, type FormEvent } from "react";
 import { useDocumentTitle } from "../../lib/document-title";
 import { ListBackLink } from "../../components/list-back-link";
@@ -31,7 +32,9 @@ export function ContentTypeConfigurationPage() {
   const params = useParams({ strict: false });
   const developerName = typeof params.developerName === "string" ? params.developerName : "";
   useDocumentTitle(["Settings", developerName]);
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const canDelete = hasPermission(platformPermissions.contentTypes);
   const [form, setForm] = useState<SettingsForm | null>(null);
   const [formFor, setFormFor] = useState<string | null>(null);
 
@@ -60,6 +63,17 @@ export function ContentTypeConfigurationPage() {
       toast.success("Content type saved");
       void queryClient.invalidateQueries({ queryKey: ["content-type", developerName] });
       void queryClient.invalidateQueries({ queryKey: ["content-types"] });
+    },
+    onError: (error) => toast.error(formatError(error)),
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: () => adminApi.contentTypes.removeByDeveloperName(developerName),
+    onSuccess: () => {
+      toast.success("Content type deleted");
+      queryClient.removeQueries({ queryKey: ["content-type", developerName] });
+      void queryClient.invalidateQueries({ queryKey: ["content-types"] });
+      void navigate({ to: "/content-types" });
     },
     onError: (error) => toast.error(formatError(error)),
   });
@@ -99,7 +113,8 @@ export function ContentTypeConfigurationPage() {
       <QueryGate query={query}>
         {() =>
           form ? (
-            <Card>
+            <>
+              <Card>
               <CardContent className="pt-6">
                 <form className="space-y-4" onSubmit={handleSubmit}>
                   <FormField label="Singular label" required htmlFor="ct-label-singular">
@@ -162,6 +177,18 @@ export function ContentTypeConfigurationPage() {
                 </form>
               </CardContent>
             </Card>
+            {canDelete ? (
+              <DangerZone
+                description="Permanently deletes this content type, its fields, its content items including trash, its views, and their public routes."
+                actionLabel="Delete content type"
+                confirmTitle={`Delete ${contentType?.labelPlural || developerName}?`}
+                confirmBody="This cannot be undone. Delete is refused while this type owns the home page, or while another content type has a relationship field pointing at it."
+                confirmLabel="Delete content type"
+                onConfirm={() => deleteMutation.mutate()}
+                pending={deleteMutation.isPending}
+              />
+            ) : null}
+            </>
           ) : (
             <p className="text-sm text-muted-foreground">This content type could not be read.</p>
           )

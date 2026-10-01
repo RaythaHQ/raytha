@@ -35,6 +35,8 @@ public static class ContentTypesEndpoints
             .RequireAuthorization(BuiltInContentTypePermission.CONTENT_TYPE_READ_PERMISSION);
         types.MapPut($"/{Ct}", EditContentTypeHandler)
             .RequireAuthorization(BuiltInContentTypePermission.CONTENT_TYPE_CONFIG_PERMISSION);
+        types.MapDelete($"/{Ct}", DeleteContentTypeHandler)
+            .RequireAuthorization(BuiltInSystemPermission.MANAGE_CONTENT_TYPES_PERMISSION);
         types.MapGet($"/{Ct}/templates", ContentTypeTemplates)
             .RequireAuthorization(BuiltInContentTypePermission.CONTENT_TYPE_READ_PERMISSION);
 
@@ -129,6 +131,19 @@ public static class ContentTypesEndpoints
             return Results.NotFound();
         }
         return AdminResults.FromId(await mediator.Send(body with { Id = id.Value }));
+    }
+
+    private static async Task<IResult> DeleteContentTypeHandler(
+        string contentTypeDeveloperName,
+        ISender mediator
+    )
+    {
+        var id = await ResolveContentTypeId(contentTypeDeveloperName, mediator);
+        if (id is null)
+        {
+            return Results.NotFound();
+        }
+        return AdminResults.NoContent(await mediator.Send(new DeleteContentType.Command { Id = id.Value }));
     }
 
     /// <summary>Web templates in the active theme that a content item of this type may use.</summary>

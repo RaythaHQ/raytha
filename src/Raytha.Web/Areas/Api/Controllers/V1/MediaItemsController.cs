@@ -34,6 +34,26 @@ public class MediaItemsController : BaseController
         return response;
     }
 
+    [HttpDelete("{objectKey}", Name = "DeleteMediaItemByObjectKey")]
+    [Authorize(
+        Policy = RaythaApiAuthorizationHandler.POLICY_PREFIX
+            + BuiltInSystemPermission.MANAGE_MEDIA_ITEMS_PERMISSION
+    )]
+    public async Task<ActionResult<ICommandResponseDto<ShortGuid>>> DeleteMediaItemByObjectKey(
+        string objectKey
+    )
+    {
+        var mediaItem = await Mediator.Send(
+            new GetMediaItemByObjectKey.Query { ObjectKey = objectKey }
+        );
+        var response = await Mediator.Send(new DeleteMediaItem.Command { Id = mediaItem.Result.Id });
+        if (!response.Success)
+        {
+            return BadRequest(response);
+        }
+        return response;
+    }
+
     [HttpGet("{objectKey}", Name = "GetMediaItemUrlByObjectKey")]
     public async Task<ActionResult<IQueryResponseDto<MediaItemDto>>> GetMediaItemUrlByObjectKey(
         string objectKey

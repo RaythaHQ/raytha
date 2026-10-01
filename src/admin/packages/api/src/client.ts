@@ -466,6 +466,10 @@ export const adminApi = {
         method: "PUT",
         body: JSON.stringify(input),
       }),
+    removeByDeveloperName: (developerName: string) =>
+      apiFetch<void>(`/raytha/api/admin/content-types/${encodeURIComponent(developerName)}`, {
+        method: "DELETE",
+      }),
     fieldTypes: () => apiFetch<unknown>("/raytha/api/admin/content-types/field-types"),
     templates: (developerName: string) =>
       apiFetch<unknown>(`/raytha/api/admin/content-types/${encodeURIComponent(developerName)}/templates`),

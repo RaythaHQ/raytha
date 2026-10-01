@@ -38,12 +38,12 @@ public static class MediaItemsEndpoints
             .DisableAntiforgery();
 
         group
-            .MapGet("/objectkey/{objectKey}", RedirectToFileUrlByObjectKey)
+            .MapMethods("/objectkey/{objectKey}", [HttpMethods.Get, HttpMethods.Head], RedirectToFileUrlByObjectKey)
             .WithName("mediaitemsredirecttofileurlbyobjectkey")
             .AllowAnonymous();
 
         group
-            .MapGet("/id/{id}", RedirectToFileUrlById)
+            .MapMethods("/id/{id}", [HttpMethods.Get, HttpMethods.Head], RedirectToFileUrlById)
             .WithName("mediaitemsredirecttofileurlbyid")
             .AllowAnonymous();
 

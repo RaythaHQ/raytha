@@ -1,6 +1,7 @@
 using System.Globalization;
 using CSharpVitamins;
 using Raytha.Application.Common.Exceptions;
+using Raytha.Infrastructure.JsonQueryEngine;
 
 namespace Raytha.Infrastructure.JsonQueryEngine.Filtering;
 
@@ -48,10 +49,23 @@ internal sealed class PostgresFilterCompiler
     private string CompileComparison(ComparisonNode node, Func<object?, string> addParameter)
     {
         var field = _resolver.Resolve(node.Field);
-        if (field.Kind is FilterFieldKind.MultiSelect or FilterFieldKind.Repeater)
+        if (field.Kind == FilterFieldKind.Repeater)
             throw new InvalidFilterException(
                 $"Field '{node.Field}' cannot be used with this operator."
             );
+
+        if (field.Kind == FilterFieldKind.MultiSelect)
+            return CompileMultiSelectComparison(node, field, addParameter);
+
+        if (
+            field.Kind == FilterFieldKind.Relationship
+            && TryParseRelationshipId(node.Value, out var relatedId)
+        )
+        {
+            var idParameter = addParameter(relatedId);
+            var idSql = PostgresFieldSql.ReservedColumn(field.Alias, RawSqlColumn.Id.Name);
+            return $"({idSql} {Operator(node.Operator)} {idParameter})";
+        }
 
         var parameter = addParameter(ConvertValue(field, node.Value, _resolver.DateFormat));
         return $"({field.ScalarSql} {Operator(node.Operator)} {parameter})";
@@ -103,6 +117,51 @@ internal sealed class PostgresFilterCompiler
                     $"Field '{node.Field}' does not support text matching."
                 );
         }
+    }
+
+    /// <summary>
+    /// <c>eq</c>/<c>ne</c> on a multi-select means the array contains that choice. Text
+    /// <c>contains()</c> stays on the match path.
+    /// </summary>
+    private static string CompileMultiSelectComparison(
+        ComparisonNode node,
+        ResolvedField field,
+        Func<object?, string> addParameter
+    )
+    {
+        if (node.Operator is not ComparisonOperator.Equal and not ComparisonOperator.NotEqual)
+            throw new InvalidFilterException(
+                $"Field '{node.Field}' cannot be used with this operator. Use eq, ne, or contains."
+            );
+
+        var parameter = addParameter(node.Value);
+        var match = PostgresFieldSql.MultiSelectContains(
+            field.Alias,
+            field.JsonColumn,
+            field.ArrayKey,
+            parameter
+        );
+        return node.Operator == ComparisonOperator.NotEqual ? $"(NOT {match})" : match;
+    }
+
+    /// <summary>
+    /// A relationship filter value that is an id matches the related item. Anything else is
+    /// compared to that item's primary field text.
+    /// </summary>
+    private static bool TryParseRelationshipId(string value, out Guid guid)
+    {
+        var candidate = value.StartsWith("guid_", StringComparison.Ordinal)
+            ? value["guid_".Length..]
+            : value;
+        if (ShortGuid.TryParse(candidate, out ShortGuid shortGuid) && shortGuid != ShortGuid.Empty)
+        {
+            guid = shortGuid.Guid;
+            return true;
+        }
+        if (Guid.TryParse(candidate, out guid) && guid != Guid.Empty)
+            return true;
+        guid = Guid.Empty;
+        return false;
     }
 
     private static object ConvertValue(ResolvedField field, string value, string dateFormat)

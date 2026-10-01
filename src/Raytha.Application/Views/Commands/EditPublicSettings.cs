@@ -136,13 +136,28 @@ public class EditPublicSettings
                 .OrganizationSettings.Select(os => os.ActiveThemeId)
                 .FirstAsync(cancellationToken);
 
-            var webTemplateViewRelation = await _db.WebTemplateViewRelations.FirstAsync(
+            var webTemplateViewRelation = await _db.WebTemplateViewRelations.FirstOrDefaultAsync(
                 wtr => wtr.ViewId == entity.Id && wtr.WebTemplate!.ThemeId == activeThemeId,
                 cancellationToken
             );
 
-            webTemplateViewRelation.WebTemplateId = request.TemplateId.Guid;
-            _db.WebTemplateViewRelations.Update(webTemplateViewRelation);
+            if (webTemplateViewRelation == null)
+            {
+                webTemplateViewRelation = new WebTemplateViewRelation
+                {
+                    Id = Guid.NewGuid(),
+                    ViewId = entity.Id,
+                    WebTemplateId = request.TemplateId.Guid,
+                };
+                await _db.WebTemplateViewRelations.AddAsync(
+                    webTemplateViewRelation,
+                    cancellationToken
+                );
+            }
+            else
+            {
+                webTemplateViewRelation.WebTemplateId = request.TemplateId.Guid;
+            }
 
             await _db.SaveChangesAsync(cancellationToken);
             return new CommandResponseDto<ShortGuid>(entity.Id);

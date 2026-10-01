@@ -140,7 +140,9 @@ public record ContentItemListResult_RenderModel : IInsertTemplateVariable
                 .Items.Select(ci =>
                     ContentItem_RenderModel.GetProjection(
                         ci,
-                        webTemplateDeveloperNamesByContentItemId[ci.Id]
+                        webTemplateDeveloperNamesByContentItemId.TryGetValue(ci.Id, out var template)
+                            ? template
+                            : BuiltInWebTemplate.ContentItemDetailViewPage.DeveloperName
                     )
                 )
                 .ToArray(),

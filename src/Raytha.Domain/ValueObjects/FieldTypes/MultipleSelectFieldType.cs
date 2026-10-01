@@ -10,6 +10,10 @@ public class MultipleSelectFieldType : BaseFieldType
     {
         get
         {
+            yield return ConditionOperator.EQUALS;
+            yield return ConditionOperator.NOT_EQUALS;
+            yield return ConditionOperator.CONTAINS;
+            yield return ConditionOperator.NOT_CONTAINS;
             yield return ConditionOperator.HAS;
             yield return ConditionOperator.NOT_HAS;
             yield return ConditionOperator.IS_EMPTY;

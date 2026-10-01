@@ -68,6 +68,19 @@ public class WebTemplatesController : BaseController
         return response;
     }
 
+    [HttpPost("validate", Name = "ValidateWebTemplate")]
+    public async Task<ActionResult<IQueryResponseDto<ValidateWebTemplateSyntax.TemplateSyntaxResult>>> Validate(
+        [FromBody] ValidateWebTemplateSyntax.Query request
+    )
+    {
+        var response = await Mediator.Send(request);
+        if (!response.Result.IsValid)
+        {
+            return BadRequest(new { success = false, error = response.Result.Error });
+        }
+        return Ok(response);
+    }
+
     [HttpPost("theme/{themeDeveloperName}", Name = "CreateWebTemplate")]
     public async Task<ActionResult<ICommandResponseDto<ShortGuid>>> CreateWebTemplate(
         string themeDeveloperName,

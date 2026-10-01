@@ -121,6 +121,22 @@ public class ThemesController : BaseController
         return response;
     }
 
+    [HttpPost("{themeDeveloperName}/match-web-templates", Name = "MatchWebTemplates")]
+    public async Task<ActionResult<ICommandResponseDto<ShortGuid>>> MatchWebTemplates(
+        string themeDeveloperName,
+        [FromBody] BeginMatchWebTemplates.Command request
+    )
+    {
+        var themeId = await GetThemeId(themeDeveloperName);
+        var input = request with { Id = themeId };
+        var response = await Mediator.Send(input);
+        if (!response.Success)
+        {
+            return BadRequest(response);
+        }
+        return response;
+    }
+
     [HttpPost("{themeDeveloperName}/set-active", Name = "SetActiveTheme")]
     public async Task<ActionResult<ICommandResponseDto<ShortGuid>>> SetActiveTheme(
         string themeDeveloperName

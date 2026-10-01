@@ -225,6 +225,7 @@ public static class ConfigureServices
         services.AddScoped<IRelativeUrlBuilder, RelativeUrlBuilder>();
         services.AddScoped<ISitePageTemplateOptionsProvider, SitePageTemplateOptionsProvider>();
         services.AddScoped<IRenderEngine, RenderEngine>();
+        services.AddSingleton<ILiquidTemplateParser, LiquidTemplateParser>();
         services.AddScoped<IContentTypeInRoutePath, ContentTypeInRoutePath>();
         services.AddSingleton<IFileStorageProviderSettings, FileStorageProviderSettings>();
         services.AddSingleton<ICurrentVersion, CurrentVersion>();

@@ -162,12 +162,15 @@ internal sealed class ContentTypeFieldResolver
 
         var alias = $"{RawSqlColumn.RELATED_ITEM_COLUMN_NAME}_{index}";
         var relatedPrimary = PostgresFieldSql.TextScalar(alias, JsonColumnName, relatedPrimaryFieldName);
-        return Scalar(
+        return new ResolvedField(
             realName,
             FilterFieldKind.Relationship,
             FilterValueType.Text,
             relatedPrimary,
-            relatedPrimary
+            relatedPrimary,
+            alias,
+            string.Empty,
+            string.Empty
         );
     }
 

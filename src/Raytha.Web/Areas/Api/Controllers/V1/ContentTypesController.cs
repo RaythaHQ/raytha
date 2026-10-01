@@ -75,4 +75,25 @@ public class ContentTypesController : BaseController
             response
         );
     }
+
+    [HttpDelete(
+        $"{{{RouteConstants.CONTENT_TYPE_DEVELOPER_NAME}}}",
+        Name = "DeleteContentType"
+    )]
+    public async Task<ActionResult<ICommandResponseDto<ShortGuid>>> DeleteContentType(
+        string contentTypeDeveloperName
+    )
+    {
+        var contentType = await Mediator.Send(
+            new GetContentTypeByDeveloperName.Query { DeveloperName = contentTypeDeveloperName }
+        );
+        var response = await Mediator.Send(
+            new DeleteContentType.Command { Id = contentType.Result.Id }
+        );
+        if (!response.Success)
+        {
+            return BadRequest(response);
+        }
+        return response;
+    }
 }

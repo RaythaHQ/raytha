@@ -99,6 +99,10 @@ const NUMERIC_OPERATORS: ConditionOperator[] = [
 ];
 
 const MULTI_OPERATORS: ConditionOperator[] = [
+  { developerName: "eq", label: "equals", needsValue: true },
+  { developerName: "ne", label: "does not equal", needsValue: true },
+  { developerName: "contains", label: "contains", needsValue: true },
+  { developerName: "notcontains", label: "does not contain", needsValue: true },
   { developerName: "has", label: "has", needsValue: true },
   { developerName: "nothas", label: "does not have", needsValue: true },
   { developerName: "empty", label: "is empty", needsValue: false },

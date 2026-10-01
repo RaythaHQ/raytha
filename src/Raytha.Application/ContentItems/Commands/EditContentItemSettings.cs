@@ -146,13 +146,30 @@ public class EditContentItemSettings
                 .OrganizationSettings.Select(os => os.ActiveThemeId)
                 .FirstAsync(cancellationToken);
 
-            var webTemplateContentRelation = await _db.WebTemplateContentItemRelations.FirstAsync(
-                wtr => wtr.ContentItemId == entity.Id && wtr.WebTemplate!.ThemeId == activeThemeId,
-                cancellationToken
-            );
+            var webTemplateContentRelation =
+                await _db.WebTemplateContentItemRelations.FirstOrDefaultAsync(
+                    wtr =>
+                        wtr.ContentItemId == entity.Id && wtr.WebTemplate!.ThemeId == activeThemeId,
+                    cancellationToken
+                );
 
-            webTemplateContentRelation.WebTemplateId = request.TemplateId.Guid;
-            _db.WebTemplateContentItemRelations.Update(webTemplateContentRelation);
+            if (webTemplateContentRelation == null)
+            {
+                webTemplateContentRelation = new WebTemplateContentItemRelation
+                {
+                    Id = Guid.NewGuid(),
+                    ContentItemId = entity.Id,
+                    WebTemplateId = request.TemplateId.Guid,
+                };
+                await _db.WebTemplateContentItemRelations.AddAsync(
+                    webTemplateContentRelation,
+                    cancellationToken
+                );
+            }
+            else
+            {
+                webTemplateContentRelation.WebTemplateId = request.TemplateId.Guid;
+            }
 
             entity.AddDomainEvent(new ContentItemUpdatedEvent(entity));
             await _db.SaveChangesAsync(cancellationToken);

@@ -82,6 +82,11 @@ public class EditFilter
                             );
                             return;
                         }
+                        catch (FilterConditionTypeNotFoundException ex)
+                        {
+                            context.AddFailure(Constants.VALIDATION_SUMMARY, ex.Message);
+                            return;
+                        }
 
                         try
                         {

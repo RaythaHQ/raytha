@@ -47,7 +47,11 @@ public class AdminEndpointAuthorizationTests
         ["POST /raytha/api/auth/setup"] = "first-run setup; the endpoint answers 409 once InitialSetupComplete",
         ["GET /raytha/media-items/objectkey/{objectKey}"] =
             "public file redirect behind the attachment_redirect_url Liquid filter",
+        ["HEAD /raytha/media-items/objectkey/{objectKey}"] =
+            "same public file redirect; HEAD is what link checkers and CDNs send",
         ["GET /raytha/media-items/id/{id}"] = "public file redirect behind the attachment_redirect_url Liquid filter",
+        ["HEAD /raytha/media-items/id/{id}"] =
+            "same public file redirect; HEAD is what link checkers and CDNs send",
         ["GET /raytha/api/{documentName?}"] = "public Scalar reference for REST API v1 (v1.5.2 parity)",
         ["GET /raytha/api/{documentName}/swagger.json"] = "public OpenAPI document for REST API v1 (v1.5.2 parity)",
         ["GET /raytha/api/scalar.js"] = "Scalar reference asset",

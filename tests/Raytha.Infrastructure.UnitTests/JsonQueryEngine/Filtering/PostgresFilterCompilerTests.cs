@@ -193,12 +193,90 @@ public class PostgresFilterCompilerTests
     }
 
     [Test]
-    public void Comparing_a_multi_select_field_is_rejected()
+    public void Equality_on_a_multi_select_field_matches_an_array_element()
+    {
+        var (sql, parameters) = Compile("tags eq 'jan_feb'");
+
+        sql.Should().Contain("jsonb_array_elements_text");
+        sql.Should().Contain("item = @p0");
+        parameters.Single().Should().Be("jan_feb");
+    }
+
+    [Test]
+    public void A_range_comparison_on_a_multi_select_field_is_rejected()
     {
         FluentActions
-            .Invoking(() => Compile("tags eq 'x'"))
+            .Invoking(() => Compile("tags gt 'x'"))
             .Should()
             .Throw<InvalidFilterException>();
+    }
+
+    [Test]
+    public void Equality_on_a_relationship_field_with_an_id_matches_the_related_item()
+    {
+        var guid = Guid.NewGuid();
+        var (sql, parameters) = CompileRelationship($"lead_guide eq '{(ShortGuid)guid}'");
+
+        sql.Should().Contain("related_0.\"Id\"");
+        parameters.Single().Should().Be(guid);
+    }
+
+    [Test]
+    public void Equality_on_a_relationship_field_with_text_matches_the_related_primary_field()
+    {
+        var (sql, parameters) = CompileRelationship("lead_guide eq 'Ada'");
+
+        sql.Should().Contain("->>'name'");
+        sql.Should().NotContain("related_0.\"Id\"");
+        parameters.Single().Should().Be("Ada");
+    }
+
+    private static (string Sql, List<object?> Parameters) CompileRelationship(string filter)
+    {
+        var relatedPrimaryId = Guid.NewGuid();
+        var relatedType = new ContentType
+        {
+            Id = Guid.NewGuid(),
+            PrimaryFieldId = relatedPrimaryId,
+            ContentTypeFields = new List<ContentTypeField>
+            {
+                new()
+                {
+                    Id = relatedPrimaryId,
+                    DeveloperName = "name",
+                    FieldType = BaseFieldType.SingleLineText,
+                },
+            },
+        };
+        var relationship = new ContentTypeField
+        {
+            Id = Guid.NewGuid(),
+            DeveloperName = "lead_guide",
+            FieldType = BaseFieldType.OneToOneRelationship,
+            RelatedContentTypeId = relatedType.Id,
+            ContentType = relatedType,
+        };
+        var contentType = BuildContentType();
+        contentType.ContentTypeFields.Add(relationship);
+
+        var resolver = new ContentTypeFieldResolver(
+            contentType,
+            "title",
+            new List<ContentTypeField> { relationship },
+            "MM/dd/yyyy"
+        );
+        var compiler = new PostgresFilterCompiler(resolver);
+        var node = ODataFilterParser.Parse(filter);
+        var parameters = new List<object?>();
+        var sql = compiler.Compile(
+            node,
+            value =>
+            {
+                parameters.Add(value);
+                return $"@p{parameters.Count - 1}";
+            }
+        );
+        return (sql, parameters);
     }
 
     private static ContentType BuildContentType() =>

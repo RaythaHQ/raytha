@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Raytha.Application.Common.Exceptions;
+using Raytha.Domain.Exceptions;
 
 namespace Raytha.Web.Middlewares;
 
@@ -84,11 +85,14 @@ public class ExceptionsMiddleware
             case UnauthorizedAccessException:
                 problem = Create(HttpStatusCode.Unauthorized, "Unauthorized", "Unauthorized access.");
                 break;
-            case InvalidFilterException:
+            case InvalidFilterException invalidFilter:
+                problem = Create(HttpStatusCode.BadRequest, "Invalid filter", invalidFilter.Message);
+                break;
+            case FilterConditionTypeNotFoundException unknownFilterType:
                 problem = Create(
                     HttpStatusCode.BadRequest,
                     "Invalid filter",
-                    "The filter expression is invalid."
+                    unknownFilterType.Message
                 );
                 break;
             case BusinessException business:
@@ -223,9 +227,29 @@ public class ExceptionsMiddleware
                 else
                 {
                     context.Response.StatusCode = statusCode;
+                    var message = PublicErrorMessage(error.Error, env);
+                    if (message != null && !context.Response.HasStarted)
+                    {
+                        context.Response.ContentType = "text/plain; charset=utf-8";
+                        await context.Response.WriteAsync(message);
+                    }
                 }
             }
         };
+    }
+
+    /// <summary>
+    /// Filter mistakes are the caller's input, so the message is safe to return. Other failures
+    /// stay quiet outside Development, where the message can name a template or query.
+    /// </summary>
+    private static string? PublicErrorMessage(Exception exception, IHostEnvironment env)
+    {
+        if (exception is InvalidFilterException or FilterConditionTypeNotFoundException)
+        {
+            return exception.Message;
+        }
+
+        return env.IsDevelopment() ? exception.Message : null;
     }
 
     public class ErrorDetails

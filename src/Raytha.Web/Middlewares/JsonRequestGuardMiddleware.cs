@@ -20,7 +20,7 @@ public static class JsonRequestGuardMiddleware
         return app.Use(
             async (context, next) =>
             {
-                if (!RequiresJson(context.Request) || IsJson(context.Request))
+                if (!RequiresJson(context.Request) || IsJson(context.Request) || AllowEmptyPost(context.Request))
                 {
                     await next();
                     return;
@@ -68,5 +68,21 @@ public static class JsonRequestGuardMiddleware
                 mediaType.MediaType.Equals("application/json", StringComparison.OrdinalIgnoreCase)
                 || mediaType.Suffix.Equals("json", StringComparison.OrdinalIgnoreCase)
             );
+    }
+
+    /// <summary>
+    /// A POST with no body and no content type is how curl and API clients call endpoints that
+    /// take no input. A cross-site browser request sets <c>Sec-Fetch-Site: cross-site</c> (or a
+    /// form content type), so it still gets the 415. A form cannot omit its content type.
+    /// </summary>
+    private static bool AllowEmptyPost(HttpRequest request)
+    {
+        if (request.ContentLength is > 0 || !string.IsNullOrEmpty(request.ContentType))
+        {
+            return false;
+        }
+
+        var fetchSite = request.Headers["Sec-Fetch-Site"].ToString();
+        return !fetchSite.Equals("cross-site", StringComparison.OrdinalIgnoreCase);
     }
 }

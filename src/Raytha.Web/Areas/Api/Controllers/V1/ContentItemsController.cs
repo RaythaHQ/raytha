@@ -6,6 +6,7 @@ using Raytha.Application.Common.Models;
 using Raytha.Application.ContentItems;
 using Raytha.Application.ContentItems.Commands;
 using Raytha.Application.ContentItems.Queries;
+using Raytha.Application.ContentTypes.Queries;
 using Raytha.Application.Routes;
 using Raytha.Application.Routes.Queries;
 using Raytha.Domain.Entities;
@@ -168,6 +169,56 @@ public class ContentItemsController : BaseController
     )
     {
         var input = new UnpublishContentItem.Command { Id = contentItemId };
+        var response = await Mediator.Send(input);
+        if (!response.Success)
+        {
+            return BadRequest(response);
+        }
+        return response;
+    }
+
+    [HttpDelete(
+        $"{{{RouteConstants.CONTENT_TYPE_DEVELOPER_NAME}}}/items",
+        Name = "DeleteContentItems"
+    )]
+    [Authorize(
+        Policy = RaythaApiAuthorizationHandler.POLICY_PREFIX
+            + BuiltInContentTypePermission.CONTENT_TYPE_EDIT_PERMISSION
+    )]
+    public async Task<ActionResult<ICommandResponseDto<ShortGuid>>> DeleteContentItems(
+        string contentTypeDeveloperName
+    )
+    {
+        var contentType = await Mediator.Send(
+            new GetContentTypeByDeveloperName.Query { DeveloperName = contentTypeDeveloperName }
+        );
+        var response = await Mediator.Send(
+            new DeleteContentItems.Command { ContentTypeId = contentType.Result.Id }
+        );
+        if (!response.Success)
+        {
+            return BadRequest(response);
+        }
+        return response;
+    }
+
+    [HttpPost(
+        $"{{{RouteConstants.CONTENT_TYPE_DEVELOPER_NAME}}}/template",
+        Name = "AssignContentItemTemplates"
+    )]
+    [Authorize(
+        Policy = RaythaApiAuthorizationHandler.POLICY_PREFIX
+            + BuiltInContentTypePermission.CONTENT_TYPE_EDIT_PERMISSION
+    )]
+    public async Task<ActionResult<ICommandResponseDto<ShortGuid>>> AssignContentItemTemplates(
+        string contentTypeDeveloperName,
+        [FromBody] AssignContentItemTemplates.Command request
+    )
+    {
+        var contentType = await Mediator.Send(
+            new GetContentTypeByDeveloperName.Query { DeveloperName = contentTypeDeveloperName }
+        );
+        var input = request with { ContentTypeId = contentType.Result.Id };
         var response = await Mediator.Send(input);
         if (!response.Success)
         {
