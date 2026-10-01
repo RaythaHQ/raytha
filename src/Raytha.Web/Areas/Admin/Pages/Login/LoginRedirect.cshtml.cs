@@ -4,21 +4,16 @@ namespace Raytha.Web.Areas.Admin.Pages.Login;
 
 public class LoginRedirect : BaseAdminLoginPageModel
 {
-    public async Task<IActionResult> OnGet(string returnUrl = null)
+    public IActionResult OnGet(string returnUrl = null)
     {
-        if (returnUrl.StartsWith($"{CurrentOrganization.PathBase}/raytha"))
+        if (returnUrl == null || returnUrl.StartsWith($"{CurrentOrganization.PathBase}/raytha"))
         {
-            return RedirectToPage(
-                "/Login/LoginWithEmailAndPassword",
-                new { area = "Admin", returnUrl }
-            );
+            return RedirectToSpaLogin(returnUrl);
         }
-        else
-        {
-            return RedirectToPage(
-                "/Login/LoginWithEmailAndPassword",
-                new { area = "Public", returnUrl }
-            );
-        }
+
+        return RedirectToPage(
+            "/Login/LoginWithEmailAndPassword",
+            new { area = "Public", returnUrl }
+        );
     }
 }

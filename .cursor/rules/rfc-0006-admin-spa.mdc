@@ -106,27 +106,20 @@ New admin work goes into the SPA, not into the Razor admin pages.
 
 ## 6. Razor Admin
 
-The Razor admin pages under `Areas/Admin/Pages` still exist for parity during
-the 2.0 transition, and which one answers a given `/raytha` path is decided by
-route precedence, not by configuration:
+Every admin screen, including sign-in, password reset, and the one-time code
+flow, is a SPA route. The only Razor pages left under `Areas/Admin/Pages` are
+server endpoints with no screen of their own: SSO entry
+(`/raytha/login/sso/{developerName}`), the JWT and SAML callbacks, the cookie
+`LoginPath` redirect (`/raytha/login-redirect`), `/raytha/logout`, the error
+pages, function execute, and theme export.
 
-- In Development with Vite running, the dev proxy runs before routing and is
-  authoritative for every SPA path, so you see the React app.
-- Serving the committed bundle instead (`AdminSpa__AutoStart=false`, or any
-  non-Development environment), Razor wins wherever it has a route. That includes
-  `/raytha` itself, every literal Razor page, and — because `ContentItems` maps
-  `/raytha/{contentTypeDeveloperName}/{viewId?}` — every remaining one- and
-  two-segment path, since a parameter segment outranks the SPA's `{**path}`
-  catch-all. Measured against a signed-in admin on the bundle, `/raytha` returns
-  the Razor dashboard and `/raytha/webhooks` redirects to `/raytha/error/404`;
-  no current SPA route renders.
+Which handler answers a `/raytha` path is decided by route precedence, not by
+configuration. In Development with Vite running, the dev proxy runs before
+routing and answers every SPA path. Everywhere else the SPA fallback answers
+only paths no other endpoint matched, so a Razor page or controller route under
+`/raytha` silently outranks the SPA in production while `pnpm dev` still shows
+the React page. `AdminEndpointAuthorizationTests` asserts the sign-in paths stay
+free of server endpoints.
 
-Consequences to plan around: the SPA is a Development-through-Vite experience
-today, and a page that works under `pnpm dev` is shadowed in a built deployment.
-Retiring a Razor page (or narrowing that content-items route) is what hands a URL
-to the SPA. The `admin_spa` flag in the catalog (RFC-0009) is a placeholder for
-that cutover and gates nothing today — do not write code that assumes it does.
-
-Fixes MAY be applied to the Razor admin; new features MUST be built in the SPA.
-Do not add a Razor admin page for something the SPA should own, and remember that
-adding one silently takes a URL away from the SPA.
+New admin screens MUST be built in the SPA. Do not add a Razor admin page or a
+server route on a path the SPA owns.

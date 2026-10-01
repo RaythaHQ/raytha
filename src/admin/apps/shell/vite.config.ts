@@ -57,8 +57,6 @@ export default defineConfig({
       "/raytha/login/sso": "http://localhost:5200",
       "/raytha/login/jwt": "http://localhost:5200",
       "/raytha/login/saml": "http://localhost:5200",
-      "/raytha/login/magic-link/complete": "http://localhost:5200",
-      "/raytha/login/forgot-password/complete": "http://localhost:5200",
       "/raytha/login-redirect": "http://localhost:5200",
       "/raytha/logout": "http://localhost:5200",
       "/raytha/error": "http://localhost:5200",

@@ -191,11 +191,11 @@ export async function createFirstAdmin(input: {
   await bootstrapSession();
 }
 
-export async function login(email: string, password: string): Promise<LoginResponse> {
+export async function login(email: string, password: string, rememberMe = false): Promise<LoginResponse> {
   const response = await fetch("/raytha/api/auth/login", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email, password }),
+    body: JSON.stringify({ email, password, rememberMe }),
   });
 
   if (!response.ok) {
@@ -247,8 +247,21 @@ export async function requestForgotPassword(email: string): Promise<void> {
   }
 }
 
-export async function getEnabledAdminSchemes(): Promise<LoginScheme[]> {
-  const response = await fetch("/raytha/api/auth/schemes");
+export async function completeForgotPassword(token: string, newPassword: string, confirmNewPassword: string): Promise<void> {
+  const response = await fetch("/raytha/api/auth/forgot-password/complete", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ token, newPassword, confirmNewPassword }),
+  });
+
+  if (!response.ok) {
+    throw new ApiError(response.status, await readProblem(response, "Could not reset the password."));
+  }
+}
+
+export async function getEnabledAdminSchemes(returnUrl?: string): Promise<LoginScheme[]> {
+  const query = returnUrl ? `?${new URLSearchParams({ returnUrl }).toString()}` : "";
+  const response = await fetch(`/raytha/api/auth/schemes${query}`);
   if (!response.ok) {
     throw new ApiError(response.status, await readProblem(response, "Could not load sign-in methods."));
   }
@@ -281,6 +294,8 @@ async function fetchUnknown(path: string, init?: RequestInit): Promise<unknown> 
 
   if (response.status === 401) {
     currentUser = null;
+    // An unread body keeps the request open until garbage collection.
+    await response.body?.cancel();
     throw new ApiError(401, "Not authenticated");
   }
 
@@ -321,6 +336,8 @@ export async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> 
 
   if (response.status === 401) {
     currentUser = null;
+    // An unread body keeps the request open until garbage collection.
+    await response.body?.cancel();
     throw new ApiError(401, "Not authenticated");
   }
 

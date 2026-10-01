@@ -9,7 +9,8 @@ import {
 } from "@tanstack/react-router";
 import { AppShell } from "./components/app-shell";
 import { stringifyAdminSearch } from "./lib/list-query";
-import { LoginPage } from "./pages/login";
+import { adminHref } from "./lib/return-url";
+import { LoginPage, ResetPasswordPage } from "./pages/login";
 import {
   AdminsPage,
   AuditLogPage,
@@ -79,15 +80,37 @@ import { MediaDetailPage } from "./pages/media";
 
 const rootRoute = createRootRoute({ component: Outlet });
 
+const redirectSignedIn = () => {
+  if (isAuthenticated()) {
+    throw redirect({ to: "/", replace: true });
+  }
+};
+
 const loginRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/login",
-  beforeLoad: () => {
-    if (isAuthenticated()) {
-      throw redirect({ to: "/", replace: true });
-    }
-  },
+  beforeLoad: redirectSignedIn,
   component: LoginPage,
+});
+
+const forgotPasswordRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/login/forgot-password",
+  beforeLoad: redirectSignedIn,
+  component: () => <LoginPage initialMode="forgot" />,
+});
+
+const resetPasswordRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/login/forgot-password/complete/$token",
+  component: ResetPasswordPage,
+});
+
+const magicLinkRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/login/magic-link",
+  beforeLoad: redirectSignedIn,
+  component: () => <LoginPage initialMode="magic" />,
 });
 
 const setupRoute = createRoute({
@@ -104,9 +127,9 @@ const setupRoute = createRoute({
 const appRoute = createRoute({
   getParentRoute: () => rootRoute,
   id: "app",
-  beforeLoad: () => {
+  beforeLoad: ({ location }) => {
     if (!isAuthenticated()) {
-      throw redirect({ to: "/login", replace: true });
+      throw redirect({ to: "/login", search: { returnUrl: adminHref(location.href) }, replace: true });
     }
   },
   component: AppShell,
@@ -306,6 +329,9 @@ const editRoleRoute = createRoute({ getParentRoute: () => appRoute, path: "/sett
 
 const routeTree = rootRoute.addChildren([
   loginRoute,
+  forgotPasswordRoute,
+  resetPasswordRoute,
+  magicLinkRoute,
   setupRoute,
   appRoute.addChildren([
     dashboardRoute,

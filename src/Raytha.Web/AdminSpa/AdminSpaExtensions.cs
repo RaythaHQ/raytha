@@ -19,7 +19,7 @@ public static class AdminSpaExtensions
 
     /// <summary>
     /// Paths under <c>/raytha</c> that must keep hitting the server: JSON APIs, uploads, SSO
-    /// callbacks, links sent by email, and anything that sets a cookie then redirects.
+    /// callbacks, and anything that sets a cookie then redirects.
     /// </summary>
     public static readonly string[] ServerPathPrefixes =
     [
@@ -30,8 +30,6 @@ public static class AdminSpaExtensions
         $"{BasePath}/login/sso",
         $"{BasePath}/login/jwt",
         $"{BasePath}/login/saml",
-        $"{BasePath}/login/magic-link/complete",
-        $"{BasePath}/login/forgot-password/complete",
         $"{BasePath}/login-redirect",
         $"{BasePath}/logout",
         $"{BasePath}/error",
