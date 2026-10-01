@@ -28,6 +28,7 @@ public static class ConfigureServices
         });
         services.AddScoped(typeof(IPipelineBehavior<,>), typeof(UnhandledExceptionBehaviour<,>));
         services.AddScoped(typeof(IPipelineBehavior<,>), typeof(ValidationBehaviour<,>));
+        services.AddScoped(typeof(IPipelineBehavior<,>), typeof(TransactionBehavior<,>));
         services.AddScoped(typeof(IPipelineBehavior<,>), typeof(AuditBehavior<,>));
         services.AddScoped(typeof(IPipelineBehavior<,>), typeof(WebhookPublishBehavior<,>));
 

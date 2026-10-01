@@ -87,9 +87,20 @@ public class CreateUser
 ## 6. Pipeline
 
 `AddApplicationServices` registers behaviors in order: unhandled exception
-logging, validation, audit, webhook publish. New behaviors MUST be registered
-there and MUST be ordered deliberately — a behavior that runs after
-`ValidationBehavior` never sees an invalid request.
+logging, validation, transaction, audit, webhook publish. New behaviors MUST be
+registered there and MUST be ordered deliberately — a behavior that runs after
+`ValidationBehavior` never sees an invalid request, and a behavior that runs
+after `TransactionBehavior` runs inside the command's transaction.
+
+- `TransactionBehavior` wraps every `LoggableRequest`/`LoggableEntityRequest`
+  in one transaction, so the handler's writes, its after-save domain event
+  handlers, the audit row, and webhook deliveries commit or roll back together.
+  Queries pass through untouched.
+- A command sent while a transaction is already open joins it. A handler MUST
+  NOT begin its own transaction (RFC-0004 §4).
+- The transaction commits even when the response reports `Success == false`.
+  Rolling back is done by throwing.
+- `ApplicationConventionTests` asserts the registration order.
 
 ## 7. Callers
 
