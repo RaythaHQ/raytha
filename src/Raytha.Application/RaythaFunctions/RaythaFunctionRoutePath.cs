@@ -16,17 +16,6 @@ public static class RaythaFunctionRoutePath
 
     private static readonly Regex AllowedCharacters = new(@"^[A-Za-z0-9_./\-]+$", RegexOptions.Compiled);
 
-    /// <summary>First segments the host answers before the public catch-all, or serves from wwwroot.</summary>
-    private static readonly HashSet<string> ReservedRoots = new(StringComparer.OrdinalIgnoreCase)
-    {
-        "raytha",
-        "account",
-        "api",
-        "_static-files",
-        "healthz",
-        "favicon.ico",
-    };
-
     public static string Normalize(string? path) => (path ?? string.Empty).Trim().Trim('/');
 
     /// <summary>Why a normalized, non-empty path cannot be used, or null when it can.</summary>
@@ -41,8 +30,8 @@ public static class RaythaFunctionRoutePath
         if (path.Contains("..") || !path.IsValidRoutePath())
             return "Public path cannot contain '..' or a segment starting with '.', and only the last segment may contain a dot (for example llms.txt).";
 
-        var root = path.Split('/')[0];
-        if (ReservedRoots.Contains(root) || root.StartsWith("raytha_", StringComparison.OrdinalIgnoreCase))
+        var root = RoutePaths.ReservedRoot(path);
+        if (root != null)
             return $"Public path cannot start with \"{root}\"; Raytha reserves that path.";
 
         return null;

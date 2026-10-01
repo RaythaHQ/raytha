@@ -109,7 +109,7 @@ public class CreateSitePage
                 path = ((ShortGuid)entityId).ToString();
             }
 
-            if (RoutePaths.IsTaken(_db, path))
+            if (RoutePaths.IsUnavailable(_db, path))
             {
                 path = $"{(ShortGuid)entityId}-{path}".Truncate(200, string.Empty);
             }

@@ -61,7 +61,12 @@ public class EditSitePageSettings
                             );
                             return;
                         }
-                        
+                        var reservedRoot = RoutePaths.ReservedRoot(db, slugifiedPath, entity.RouteId);
+                        if (reservedRoot != null)
+                        {
+                            context.AddFailure("RoutePath", RoutePaths.ReservedMessage(reservedRoot));
+                            return;
+                        }
                         if (RoutePaths.IsTaken(db, slugifiedPath, entity.RouteId))
                         {
                             context.AddFailure(

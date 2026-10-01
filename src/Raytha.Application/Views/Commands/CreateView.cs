@@ -213,7 +213,7 @@ public class CreateView
             path = $"{contentType.DeveloperName}/{developerName}".Truncate(200, string.Empty);
 
             path = path.ToUrlSlug();
-            if (RoutePaths.IsTaken(_db, path))
+            if (RoutePaths.IsUnavailable(_db, path))
             {
                 path =
                     $"{contentType.DeveloperName}/{(ShortGuid)entityId}-{developerName}".Truncate(

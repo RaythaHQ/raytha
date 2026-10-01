@@ -597,7 +597,7 @@ public class BeginImportContentItemsFromCsv
 
             path = path.ToUrlSlug().Truncate(200, string.Empty);
 
-            if (RoutePaths.IsTaken(_db, path))
+            if (RoutePaths.IsUnavailable(_db, path))
             {
                 path = $"{entityId}-{path}".Truncate(200, string.Empty);
             }

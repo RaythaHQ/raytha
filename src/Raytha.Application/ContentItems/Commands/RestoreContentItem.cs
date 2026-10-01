@@ -44,7 +44,7 @@ public class RestoreContentItem
             );
 
             string path = string.Empty;
-            if (RoutePaths.IsTaken(_db, entity.RoutePath))
+            if (RoutePaths.IsUnavailable(_db, entity.RoutePath))
             {
                 path = $"{entity.ContentType.DeveloperName}/{(ShortGuid)entity.Id}";
             }

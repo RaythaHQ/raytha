@@ -131,7 +131,7 @@ public class CreateContentType
 
             var newViewId = Guid.NewGuid();
             var routePath = request.DeveloperName.ToDeveloperName();
-            if (RoutePaths.IsTaken(_db, routePath))
+            if (RoutePaths.IsUnavailable(_db, routePath))
             {
                 routePath = $"{(ShortGuid)newViewId}-{routePath}".Truncate(200, string.Empty);
             }
