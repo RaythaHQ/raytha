@@ -1,7 +1,6 @@
 using System.Text.Json;
 using CSharpVitamins;
 using FluentAssertions;
-using Microsoft.Extensions.Logging.Abstractions;
 using MockQueryable.Moq;
 using Moq;
 using Raytha.Application.Common.Interfaces;
@@ -55,11 +54,7 @@ public class WebhookDeliveryLeaseTests
     [Test]
     public async Task Publishing_creates_a_pending_delivery_leased_for_ten_minutes()
     {
-        var publisher = new WebhookEventPublisher(
-            _db.Object,
-            _queue.Object,
-            NullLogger<WebhookEventPublisher>.Instance
-        );
+        var publisher = new WebhookEventPublisher(_db.Object, _queue.Object);
         var before = DateTime.UtcNow;
 
         var deliveryId = await publisher.PublishToAsync(
