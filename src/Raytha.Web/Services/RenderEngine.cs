@@ -51,6 +51,7 @@ public class RenderEngine : IRenderEngine
         _templateOptions.MemberAccessStrategy = new UnsafeMemberAccessStrategy();
         _templateOptions.Filters.AddFilter("attachment_redirect_url", AttachmentRedirectUrl);
         _templateOptions.Filters.AddFilter("attachment_public_url", AttachmentPublicUrl);
+        _templateOptions.Filters.AddFilter("attachment_url", AttachmentRedirectUrl);
         _templateOptions.Filters.AddFilter("organization_time", LocalDateFilter);
         _templateOptions.Filters.AddFilter("groupby", GroupBy);
         _templateOptions.Filters.AddFilter("json", JsonFilter);
@@ -202,8 +203,9 @@ public class RenderEngine : IRenderEngine
                     );
                     return new ObjectValue(result.Result);
                 }
-                catch (NotFoundException)
+                catch (Exception ex) when (IsMissingLookup(ex))
                 {
+                    // A well-formed id nobody owns and a malformed id both mean "no such item".
                     return NilValue.Instance;
                 }
             }
@@ -220,17 +222,25 @@ public class RenderEngine : IRenderEngine
                 var orderBy = args["OrderBy"].ToStringValue();
                 var pageNumber = args["PageNumber"].ToNumberValue();
                 var pageSize = args["PageSize"].ToNumberValue();
-                var result = await _mediator.Send(
-                    new GetContentItems.Query
-                    {
-                        ContentType = contentType,
-                        Filter = filter,
-                        OrderBy = orderBy,
-                        PageNumber = (int)pageNumber,
-                        PageSize = (int)pageSize,
-                    }
-                );
-                return new ObjectValue(result.Result);
+                try
+                {
+                    var result = await _mediator.Send(
+                        new GetContentItems.Query
+                        {
+                            ContentType = contentType,
+                            Filter = filter,
+                            OrderBy = orderBy,
+                            PageNumber = (int)pageNumber,
+                            PageSize = (int)pageSize,
+                        }
+                    );
+                    return new ObjectValue(result.Result);
+                }
+                catch (NotFoundException)
+                {
+                    // An unknown content type. A bad filter or order-by is a template bug and still throws.
+                    return NilValue.Instance;
+                }
             }
         );
     }
@@ -241,13 +251,27 @@ public class RenderEngine : IRenderEngine
             async (args, context) =>
             {
                 var developerName = args.At(0).ToStringValue();
-                var result = await _mediator.Send(
-                    new GetContentTypeByDeveloperName.Query { DeveloperName = developerName }
-                );
-                return new ObjectValue(result.Result);
+                try
+                {
+                    var result = await _mediator.Send(
+                        new GetContentTypeByDeveloperName.Query { DeveloperName = developerName }
+                    );
+                    return new ObjectValue(result.Result);
+                }
+                catch (NotFoundException)
+                {
+                    return NilValue.Instance;
+                }
             }
         );
     }
+
+    /// <summary>
+    /// Lookups by id answer nil rather than failing the page: the id either belongs to nothing
+    /// (<see cref="NotFoundException"/>) or is not an id at all.
+    /// </summary>
+    private static bool IsMissingLookup(Exception exception) =>
+        exception is NotFoundException or FormatException or ArgumentException;
 
     public FunctionValue GetMainMenu()
     {

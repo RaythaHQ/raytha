@@ -132,6 +132,12 @@ public class ContentTypeConfigurationController : BaseController
         return response;
     }
 
+    /// <summary>
+    /// The views of a content type. By default (<c>compact=true</c>) each view's embedded
+    /// <c>contentType</c> carries its summary but not <c>contentTypeFields</c>, which repeats the
+    /// whole field model in every view; read that once from <c>GET contenttypes/{name}</c>, or pass
+    /// <c>compact=false</c> to get it inside each view.
+    /// </summary>
     [HttpGet($"{{{RouteConstants.CONTENT_TYPE_DEVELOPER_NAME}}}/views", Name = "GetViews")]
     [Authorize(Policy = READ_POLICY)]
     public async Task<ActionResult<IQueryResponseDto<ListResultDto<ViewDto>>>> GetViews(
@@ -139,7 +145,8 @@ public class ContentTypeConfigurationController : BaseController
         string search = "",
         string? orderBy = null,
         int pageNumber = 1,
-        int pageSize = 50
+        int pageSize = 50,
+        bool compact = true
     )
     {
         var input = new GetViews.Query
@@ -154,18 +161,32 @@ public class ContentTypeConfigurationController : BaseController
             input = input with { OrderBy = orderBy };
         }
         var response = await Mediator.Send(input) as QueryResponseDto<ListResultDto<ViewDto>>;
-        return response;
+        if (!compact || response is null || !response.Success)
+        {
+            return response;
+        }
+        return new QueryResponseDto<ListResultDto<ViewDto>>(
+            new ListResultDto<ViewDto>(
+                response.Result.Items.Select(Compacted).ToList(),
+                response.Result.TotalCount
+            )
+        );
     }
 
+    /// <summary>
+    /// One view. <c>compact=true</c> (the default) leaves <c>contentType.contentTypeFields</c> out,
+    /// as for the list; <c>compact=false</c> includes it.
+    /// </summary>
     [HttpGet($"{{{RouteConstants.CONTENT_TYPE_DEVELOPER_NAME}}}/views/{{id}}", Name = "GetViewById")]
     [Authorize(Policy = READ_POLICY)]
     public async Task<ActionResult<IQueryResponseDto<ViewDto>>> GetViewById(
         string contentTypeDeveloperName,
-        string id
+        string id,
+        bool compact = true
     )
     {
         var view = await GetView(contentTypeDeveloperName, id);
-        return new QueryResponseDto<ViewDto>(view);
+        return new QueryResponseDto<ViewDto>(compact ? Compacted(view) : view);
     }
 
     [HttpPost($"{{{RouteConstants.CONTENT_TYPE_DEVELOPER_NAME}}}/views", Name = "CreateView")]
@@ -336,6 +357,15 @@ public class ContentTypeConfigurationController : BaseController
         }
         return fieldId;
     }
+
+    /// <summary>The view without its content type's field definitions; the type's summary stays.</summary>
+    private static ViewDto Compacted(ViewDto view) =>
+        view.ContentType is null
+            ? view
+            : view with
+            {
+                ContentType = view.ContentType with { ContentTypeFields = null },
+            };
 
     private async Task<ViewDto> GetView(string contentTypeDeveloperName, string id)
     {

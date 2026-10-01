@@ -197,6 +197,19 @@ public class ThemesController : BaseController
         return new QueryResponseDto<IEnumerable<WidgetFieldTypeResponse>>(fieldTypes);
     }
 
+    /// <summary>
+    /// Which list views, content items, site pages and child templates are bound to each web
+    /// template in the theme: what deleting or replacing a template would break.
+    /// </summary>
+    [HttpGet("{themeDeveloperName}/usage", Name = "GetThemeTemplateUsage")]
+    public async Task<
+        ActionResult<IQueryResponseDto<GetThemeTemplateUsage.ThemeTemplateUsageDto>>
+    > GetThemeTemplateUsage(string themeDeveloperName)
+    {
+        var themeId = await GetThemeId(themeDeveloperName);
+        return Ok(await Mediator.Send(new GetThemeTemplateUsage.Query { ThemeId = themeId }));
+    }
+
     [HttpGet("{themeDeveloperName}/media", Name = "GetThemeMedia")]
     public async Task<
         ActionResult<IQueryResponseDto<IEnumerable<ThemeMediaItemResponse>>>

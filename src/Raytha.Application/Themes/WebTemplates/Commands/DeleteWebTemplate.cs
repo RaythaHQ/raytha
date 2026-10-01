@@ -54,6 +54,17 @@ public class DeleteWebTemplate
                             return;
                         }
 
+                        // The site page foreign key cascades, so without this check deleting a
+                        // template would silently delete every page that uses it.
+                        if (db.SitePages.Any(p => p.WebTemplateId == entity.Id))
+                        {
+                            context.AddFailure(
+                                Constants.VALIDATION_SUMMARY,
+                                "This template is currently being used by site pages. You must change the template those pages are using before deleting this one."
+                            );
+                            return;
+                        }
+
                         if (entity.IsBuiltInTemplate)
                         {
                             context.AddFailure(

@@ -12,6 +12,7 @@ import {
   parseMenuItems,
   parsePaged,
   parseRevision,
+  parseSchemaImportResult,
   parseThemeMediaItems,
   parseWebTemplate,
   parseWidgetDefinitions,
@@ -359,6 +360,21 @@ export function formatError(e: unknown): string {
   return e instanceof Error ? e.message : "Request failed.";
 }
 
+/** Every message from a 400 validation problem, in server order; empty for any other error. */
+export function problemMessages(e: unknown): string[] {
+  if (!(e instanceof ApiError) || e.status !== 400) {
+    return [];
+  }
+  try {
+    const problem = JSON.parse(e.message) as { errors?: Record<string, unknown> };
+    return Object.values(problem.errors ?? {})
+      .flatMap((messages) => (Array.isArray(messages) ? messages : []))
+      .filter((message): message is string => typeof message === "string" && message.length > 0);
+  } catch {
+    return [];
+  }
+}
+
 /**
  * Per-field messages from a 400 validation problem, keyed by the server property name
  * (`DeveloperName`); form-level failures are under `""`. Empty for any other error.
@@ -471,6 +487,14 @@ export const adminApi = {
         method: "DELETE",
       }),
     fieldTypes: () => apiFetch<unknown>("/raytha/api/admin/content-types/field-types"),
+    /** Every content type, field, choice, and view as one portable document. */
+    exportSchema: () => apiFetch<JsonObject>("/raytha/api/admin/content-types/schema/export"),
+    /** `dryRun` reports what would change and applies nothing. */
+    importSchema: (schema: JsonObject, dryRun: boolean) =>
+      apiFetch<unknown>(`/raytha/api/admin/content-types/schema/import${dryRun ? "?dryRun=true" : ""}`, {
+        method: "POST",
+        body: JSON.stringify(schema),
+      }).then((value) => requireValue(parseSchemaImportResult(value), "schema import result")),
     templates: (developerName: string) =>
       apiFetch<unknown>(`/raytha/api/admin/content-types/${encodeURIComponent(developerName)}/templates`),
   },

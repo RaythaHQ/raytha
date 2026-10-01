@@ -99,8 +99,15 @@ export const liquidTags: LiquidTerm[] = [
 ];
 
 export const raythaFilters: LiquidTerm[] = [
-  { name: "attachment_public_url", detail: "Public URL of a media object key" },
-  { name: "attachment_redirect_url", detail: "Redirect URL of a media object key" },
+  {
+    name: "attachment_public_url",
+    detail: "Direct URL of a media object key: root-relative for local storage, absolute for cloud storage",
+  },
+  {
+    name: "attachment_redirect_url",
+    detail: "Stable root-relative URL of a media object key that redirects to the file",
+  },
+  { name: "attachment_url", detail: "Alias of attachment_redirect_url; always root-relative" },
   {
     name: "organization_time",
     detail: "Convert to the organization time zone and format",

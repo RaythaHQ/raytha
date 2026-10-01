@@ -64,12 +64,23 @@ internal sealed class PostgresFilterCompiler
         {
             var idParameter = addParameter(relatedId);
             var idSql = PostgresFieldSql.ReservedColumn(field.Alias, RawSqlColumn.Id.Name);
-            return $"({idSql} {Operator(node.Operator)} {idParameter})";
+            return Predicate(idSql, node.Operator, idParameter);
         }
 
         var parameter = addParameter(ConvertValue(field, node.Value, _resolver.DateFormat));
-        return $"({field.ScalarSql} {Operator(node.Operator)} {parameter})";
+        return Predicate(field.ScalarSql, node.Operator, parameter);
     }
+
+    /// <summary>
+    /// A comparison that is never NULL. A missing value makes a bare SQL comparison NULL, and
+    /// <c>NOT NULL</c> is NULL too, so <c>ne</c> and <c>not contains()</c> would silently drop every
+    /// item that has no value. Folding NULL to false first makes NOT a real negation: "not equal to
+    /// Ana" includes the items nobody is assigned to, as it reads.
+    /// </summary>
+    private static string Predicate(string left, ComparisonOperator op, string parameter) =>
+        op == ComparisonOperator.NotEqual
+            ? $"(NOT COALESCE(({left} = {parameter}), FALSE))"
+            : $"COALESCE(({left} {Operator(op)} {parameter}), FALSE)";
 
     private string CompileMatch(MatchNode node, Func<object?, string> addParameter)
     {
@@ -86,7 +97,7 @@ internal sealed class PostgresFilterCompiler
                     PostgresFieldSql.EscapeLike(node.Value)
                 );
                 var parameter = addParameter(pattern);
-                return $"({field.TextSql} ILIKE {parameter} ESCAPE '\\')";
+                return $"COALESCE(({field.TextSql} ILIKE {parameter} ESCAPE '\\'), FALSE)";
             }
             case FilterFieldKind.MultiSelect:
                 if (node.Kind != MatchKind.Contains)

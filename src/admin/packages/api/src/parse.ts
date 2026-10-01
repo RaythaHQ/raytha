@@ -12,6 +12,8 @@ import type {
   PagedResult,
   RetainedLogKey,
   RetainedLogStats,
+  SchemaChange,
+  SchemaImportResult,
   SizeUsage,
   TaskMediaItem,
   TemplateRevision,
@@ -620,5 +622,43 @@ export function parseTaskMediaItem(statusInfo: string): TaskMediaItem | null {
       objectKey.length > 0
         ? `/raytha/media-items/objectkey/${encodeURIComponent(objectKey)}`
         : `/raytha/media-items/id/${encodeURIComponent(id)}`,
+  };
+}
+
+function stringList(value: unknown): string[] {
+  return Array.isArray(value) ? value.filter((item): item is string => typeof item === "string") : [];
+}
+
+function schemaChange(value: unknown): SchemaChange | null {
+  if (!isRecord(value)) {
+    return null;
+  }
+  const kind = value.kind;
+  const action = value.action;
+  if ((kind !== "content_type" && kind !== "field" && kind !== "view") || (action !== "created" && action !== "updated")) {
+    return null;
+  }
+  return {
+    kind,
+    action,
+    contentType: stringField(value, "contentType"),
+    name: typeof value.name === "string" ? value.name : null,
+    details: stringList(value.details),
+  };
+}
+
+export function parseSchemaImportResult(value: unknown): SchemaImportResult | null {
+  if (!isRecord(value)) {
+    return null;
+  }
+  return {
+    dryRun: booleanField(value, "dryRun"),
+    created: numberField(value, "created", 0),
+    updated: numberField(value, "updated", 0),
+    unchanged: numberField(value, "unchanged", 0),
+    changes: Array.isArray(value.changes)
+      ? value.changes.map(schemaChange).filter((change): change is SchemaChange => change !== null)
+      : [],
+    warnings: stringList(value.warnings),
   };
 }

@@ -38,7 +38,20 @@ public class CreateRaythaFunction
         {
             RuleFor(x => x.Name).NotEmpty();
             RuleFor(x => x.Code).NotEmpty();
-            RuleFor(x => x.TriggerType).NotEmpty();
+            RuleFor(x => x.TriggerType)
+                .Cascade(CascadeMode.Stop)
+                .NotEmpty()
+                .Must(type =>
+                    RaythaFunctionTriggerType.SupportedTypes.Any(t => t.DeveloperName == type)
+                )
+                .WithMessage(
+                    "Trigger type must be one of: "
+                        + string.Join(
+                            ", ",
+                            RaythaFunctionTriggerType.SupportedTypes.Select(t => t.DeveloperName)
+                        )
+                        + "."
+                );
             RuleFor(x => x.DeveloperName).NotEmpty();
             RuleFor(x => x)
                 .Custom(

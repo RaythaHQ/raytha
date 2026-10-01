@@ -17,6 +17,7 @@ export { Combobox, type ComboboxOption, type ComboboxProps } from "./combobox";
 export { Dialog, DialogHeader, DialogTitle, DialogContent, DialogFooter, type DialogProps } from "./dialog";
 export { AlertDialog, type AlertDialogProps } from "./alert-dialog";
 export { FileUpload, type FileUploadProps, type UploadedFile } from "./file-upload";
+export { FileDrop, type FileDropProps } from "./file-drop";
 export { QueryGate, type QueryLike } from "./query-gate";
 export { Avatar } from "./avatar";
 export { Skeleton } from "./skeleton";

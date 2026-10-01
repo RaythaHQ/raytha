@@ -3,6 +3,7 @@ using Mediator;
 using Microsoft.AspNetCore.Mvc;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Security;
+using Raytha.Application.ContentTypes;
 using Raytha.Application.ContentTypes.Commands;
 using Raytha.Application.ContentTypes.Queries;
 using Raytha.Application.Themes.WebTemplates.Queries;
@@ -30,6 +31,10 @@ public static class ContentTypesEndpoints
         types.MapGet("", ListContentTypes).RequireAuthorization(RaythaClaimTypes.IsAdmin);
         types.MapGet("/field-types", FieldTypes).RequireAuthorization(RaythaClaimTypes.IsAdmin);
         types.MapPost("", CreateContentTypeHandler)
+            .RequireAuthorization(BuiltInSystemPermission.MANAGE_CONTENT_TYPES_PERMISSION);
+        types.MapGet("/schema/export", ExportSchemaHandler)
+            .RequireAuthorization(BuiltInSystemPermission.MANAGE_CONTENT_TYPES_PERMISSION);
+        types.MapPost("/schema/import", ImportSchemaHandler)
             .RequireAuthorization(BuiltInSystemPermission.MANAGE_CONTENT_TYPES_PERMISSION);
         types.MapGet($"/{Ct}", GetContentType)
             .RequireAuthorization(BuiltInContentTypePermission.CONTENT_TYPE_READ_PERMISSION);
@@ -108,6 +113,23 @@ public static class ContentTypesEndpoints
             BaseFieldType.SupportedTypes.Select(t => new { label = t.Label, developerName = t.DeveloperName })
         );
     }
+
+    /// <summary>
+    /// Every content type, field, choice, and view as one portable document. Gated by the
+    /// system-wide content-types permission because the document spans every type.
+    /// </summary>
+    private static async Task<IResult> ExportSchemaHandler(ISender mediator) =>
+        AdminResults.From(await mediator.Send(new ExportSchema.Query()));
+
+    /// <summary>
+    /// Applies a schema document. <c>dryRun=true</c> reports what would change and applies nothing.
+    /// It can edit existing types, so it needs the same system-wide permission as creating one.
+    /// </summary>
+    private static async Task<IResult> ImportSchemaHandler(
+        [FromBody] SchemaDocument schema,
+        [FromQuery] bool? dryRun,
+        ISender mediator
+    ) => AdminResults.From(await mediator.Send(new ImportSchema.Command { Schema = schema, DryRun = dryRun ?? false }));
 
     private static async Task<IResult> GetContentType(string contentTypeDeveloperName, ISender mediator) =>
         AdminResults.From(

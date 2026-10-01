@@ -432,3 +432,23 @@ export interface ImportContentItemsFromCsvInput {
 export interface ExportContentItemsToCsvInput {
   exportOnlyColumnsFromView: boolean;
 }
+
+/** One content type, field, or view that a schema import created or would create/update. */
+export interface SchemaChange {
+  kind: "content_type" | "field" | "view";
+  contentType: string;
+  /** Field or view developer name; null for a content type. */
+  name: string | null;
+  action: "created" | "updated";
+  /** For an update, the properties that differ. */
+  details: string[];
+}
+
+export interface SchemaImportResult {
+  dryRun: boolean;
+  created: number;
+  updated: number;
+  unchanged: number;
+  changes: SchemaChange[];
+  warnings: string[];
+}

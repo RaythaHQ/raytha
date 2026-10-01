@@ -193,6 +193,26 @@ public class PostgresFilterCompilerTests
     }
 
     [Test]
+    [TestCase("title ne 'a'")]
+    [TestCase("not contains(title,'a')")]
+    [TestCase("not startswith(title,'a')")]
+    [TestCase("not endswith(title,'a')")]
+    public void Negations_keep_rows_that_have_no_value(string filter)
+    {
+        var (sql, _) = Compile(filter);
+
+        // A bare comparison is NULL for a missing value and NOT NULL is NULL, which drops the row.
+        sql.Should().Contain("NOT COALESCE(");
+    }
+
+    [Test]
+    public void Equality_and_range_comparisons_stay_false_for_a_missing_value()
+    {
+        Compile("title eq 'a'").Sql.Should().StartWith("COALESCE(").And.NotContain("NOT");
+        Compile("title gt 'a'").Sql.Should().StartWith("COALESCE(").And.NotContain("NOT");
+    }
+
+    [Test]
     public void Equality_on_a_multi_select_field_matches_an_array_element()
     {
         var (sql, parameters) = Compile("tags eq 'jan_feb'");

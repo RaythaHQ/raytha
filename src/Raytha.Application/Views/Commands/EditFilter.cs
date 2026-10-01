@@ -88,6 +88,14 @@ public class EditFilter
                             return;
                         }
 
+                        var shapeProblems = FilterConditionTree.Problems(request.Filter.ToList());
+                        if (shapeProblems.Count > 0)
+                        {
+                            foreach (var problem in shapeProblems)
+                                context.AddFailure(Constants.VALIDATION_SUMMARY, problem);
+                            return;
+                        }
+
                         try
                         {
                             var searchOnColumns =

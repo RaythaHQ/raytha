@@ -1,12 +1,28 @@
 import { adminApi, formatError, hasPermission, platformPermissions, problemFieldErrors } from "@raytha/api";
-import { Button, Card, CardContent, FormField, Input, PageHeader, Textarea, toast } from "@raytha/ui";
+import {
+  Button,
+  buttonVariants,
+  Card,
+  CardContent,
+  FormField,
+  Input,
+  PageHeader,
+  Tabs,
+  TabsList,
+  TabsTrigger,
+  Textarea,
+  toast,
+} from "@raytha/ui";
 import { useMutation } from "@tanstack/react-query";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useState, type FormEvent } from "react";
 import { CrudListPage } from "./crud-list";
 import { entityFields, pluralize, readString, toDeveloperName } from "./entity";
 import { DEFAULT_ROUTE_TEMPLATE, RouteTemplateField } from "./content/route-template";
+import { ExportSchemaButton } from "./content/schema-export";
+import { ImportSchemaPanel } from "./content/schema-import";
 import { ListBackLink } from "../components/list-back-link";
+import { PermissionRequired } from "../components/permission-required";
 import { useDocumentTitle } from "../lib/document-title";
 
 export function ContentTypesPage() {
@@ -66,12 +82,12 @@ export function ContentTypesPage() {
       }}
       actions={
         hasPermission(platformPermissions.contentTypes) ? (
-          <Link
-            to="/content-types/new"
-            className="inline-flex h-10 items-center rounded-lg bg-primary px-4 text-sm font-medium text-primary-foreground shadow-card hover:bg-brand-600"
-          >
-            New content type
-          </Link>
+          <>
+            <ExportSchemaButton />
+            <Link to="/content-types/new" className={buttonVariants()}>
+              New content type
+            </Link>
+          </>
         ) : undefined
       }
     />
@@ -88,8 +104,41 @@ type NewContentTypeForm = {
 
 const DEVELOPER_NAME_PATTERN = /^[a-z0-9]+(_[a-z0-9]+)*$/;
 
+type NewContentTypeMode = "create" | "import";
+
 export function NewContentTypePage() {
   useDocumentTitle(["New content type"]);
+  const [mode, setMode] = useState<NewContentTypeMode>("create");
+
+  if (!hasPermission(platformPermissions.contentTypes)) {
+    return <PermissionRequired title="New content type" permissionLabel="Manage Content Types" />;
+  }
+
+  return (
+    <div className="space-y-6">
+      <PageHeader
+        back={<ListBackLink to="/content-types" listKey="content-types" label="content types" />}
+        title="New content type"
+        description={
+          mode === "create"
+            ? "A content type is a kind of content, like blog posts or team members. It starts with a Title and a Content field and an “All” view."
+            : "Bring in content types, fields, and views from a schema file exported from another Raytha site."
+        }
+        tabs={
+          <Tabs value={mode} onValueChange={(value) => setMode(value === "import" ? "import" : "create")}>
+            <TabsList aria-label="How to add a content type">
+              <TabsTrigger value="create">Create</TabsTrigger>
+              <TabsTrigger value="import">Import schema</TabsTrigger>
+            </TabsList>
+          </Tabs>
+        }
+      />
+      {mode === "create" ? <CreateContentTypeForm /> : <ImportSchemaPanel />}
+    </div>
+  );
+}
+
+function CreateContentTypeForm() {
   const navigate = useNavigate();
   const [form, setForm] = useState<NewContentTypeForm>({
     labelSingular: "",
@@ -134,108 +183,101 @@ export function NewContentTypePage() {
   };
 
   return (
-    <div className="space-y-6">
-      <PageHeader
-        back={<ListBackLink to="/content-types" listKey="content-types" label="content types" />}
-        title="New content type"
-        description="A content type is a kind of content, like blog posts or team members. It starts with a Title and a Content field and an “All” view."
-      />
-      <Card className="max-w-3xl">
-        <CardContent className="pt-6">
-          <form className="space-y-5" onSubmit={handleSubmit} noValidate>
-            <div className="grid gap-5 sm:grid-cols-2">
-              <FormField
-                label="Singular label"
-                required
-                htmlFor="ct-label-singular"
-                hint="One item, e.g. Blog post."
-                error={serverErrors.LabelSingular}
-              >
-                {(control) => (
-                  <Input
-                    {...control}
-                    value={form.labelSingular}
-                    onChange={(event) => {
-                      const labelSingular = event.target.value;
-                      setForm((current) => ({ ...current, labelSingular }));
-                      if (!pluralTouched) {
-                        setLabelPlural(pluralize(labelSingular));
-                      }
-                    }}
-                  />
-                )}
-              </FormField>
-              <FormField
-                label="Plural label"
-                required
-                htmlFor="ct-label-plural"
-                hint="The list and sidebar name, e.g. Blog posts."
-                error={serverErrors.LabelPlural}
-              >
-                {(control) => (
-                  <Input
-                    {...control}
-                    value={form.labelPlural}
-                    onChange={(event) => {
-                      setPluralTouched(true);
-                      setLabelPlural(event.target.value);
-                    }}
-                  />
-                )}
-              </FormField>
-            </div>
+    <Card className="max-w-3xl">
+      <CardContent className="pt-6">
+        <form className="space-y-5" onSubmit={handleSubmit} noValidate>
+          <div className="grid gap-5 sm:grid-cols-2">
             <FormField
-              label="Developer name"
+              label="Singular label"
               required
-              htmlFor="ct-developer-name"
-              hint="Used in templates, the API, and URLs. It cannot be changed later."
-              error={developerFormatError ?? serverErrors.DeveloperName}
+              htmlFor="ct-label-singular"
+              hint="One item, e.g. Blog post."
+              error={serverErrors.LabelSingular}
             >
               {(control) => (
                 <Input
                   {...control}
-                  className="font-mono"
-                  value={form.developerName}
+                  value={form.labelSingular}
                   onChange={(event) => {
-                    setDeveloperTouched(true);
-                    setForm((current) => ({ ...current, developerName: event.target.value }));
+                    const labelSingular = event.target.value;
+                    setForm((current) => ({ ...current, labelSingular }));
+                    if (!pluralTouched) {
+                      setLabelPlural(pluralize(labelSingular));
+                    }
                   }}
                 />
               )}
             </FormField>
-            <FormField label="Description" htmlFor="ct-description" error={serverErrors.Description}>
+            <FormField
+              label="Plural label"
+              required
+              htmlFor="ct-label-plural"
+              hint="The list and sidebar name, e.g. Blog posts."
+              error={serverErrors.LabelPlural}
+            >
               {(control) => (
-                <Textarea
+                <Input
                   {...control}
-                  value={form.description}
-                  onChange={(event) => setForm((current) => ({ ...current, description: event.target.value }))}
+                  value={form.labelPlural}
+                  onChange={(event) => {
+                    setPluralTouched(true);
+                    setLabelPlural(event.target.value);
+                  }}
                 />
               )}
             </FormField>
-            <RouteTemplateField
-              id="ct-route"
-              value={form.defaultRouteTemplate}
-              onChange={(defaultRouteTemplate) => setForm((current) => ({ ...current, defaultRouteTemplate }))}
-              developerName={form.developerName}
-              error={serverErrors.DefaultRouteTemplate}
-            />
-            {serverErrors[""] && (
-              <p role="alert" className="rounded-lg border border-destructive/40 bg-destructive/5 px-3 py-2 text-sm text-destructive">
-                {serverErrors[""]}
-              </p>
+          </div>
+          <FormField
+            label="Developer name"
+            required
+            htmlFor="ct-developer-name"
+            hint="Used in templates, the API, and URLs. It cannot be changed later."
+            error={developerFormatError ?? serverErrors.DeveloperName}
+          >
+            {(control) => (
+              <Input
+                {...control}
+                className="font-mono"
+                value={form.developerName}
+                onChange={(event) => {
+                  setDeveloperTouched(true);
+                  setForm((current) => ({ ...current, developerName: event.target.value }));
+                }}
+              />
             )}
-            <div className="flex gap-2">
-              <Button type="submit" loading={mutation.isPending}>
-                Create content type
-              </Button>
-              <Button type="button" variant="outline" onClick={() => void navigate({ to: "/content-types" })}>
-                Cancel
-              </Button>
-            </div>
-          </form>
-        </CardContent>
-      </Card>
-    </div>
+          </FormField>
+          <FormField label="Description" htmlFor="ct-description" error={serverErrors.Description}>
+            {(control) => (
+              <Textarea
+                {...control}
+                value={form.description}
+                onChange={(event) => setForm((current) => ({ ...current, description: event.target.value }))}
+              />
+            )}
+          </FormField>
+          <RouteTemplateField
+            id="ct-route"
+            value={form.defaultRouteTemplate}
+            onChange={(defaultRouteTemplate) => setForm((current) => ({ ...current, defaultRouteTemplate }))}
+            developerName={form.developerName}
+            error={serverErrors.DefaultRouteTemplate}
+          />
+          {serverErrors[""] && (
+            <p role="alert" className="rounded-lg border border-destructive/40 bg-destructive/5 px-3 py-2 text-sm text-destructive">
+              {serverErrors[""]}
+            </p>
+          )}
+          <div className="flex gap-2">
+            <Button type="submit" loading={mutation.isPending}>
+              Create content type
+            </Button>
+            <Button type="button" variant="outline" onClick={() => void navigate({ to: "/content-types" })}>
+              Cancel
+            </Button>
+          </div>
+        </form>
+      </CardContent>
+    </Card>
   );
 }
 

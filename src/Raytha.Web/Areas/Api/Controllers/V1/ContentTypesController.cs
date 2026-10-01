@@ -59,6 +59,41 @@ public class ContentTypesController : BaseController
         return new QueryResponseDto<IEnumerable<ContentTypeFieldTypeResponse>>(fieldTypes);
     }
 
+    /// <summary>
+    /// The whole content model as one document: every content type with its fields, choices, and
+    /// views. Types are in developer name order and fields in display order, so two exports of
+    /// the same model are identical. Send the document back to <c>POST contenttypes/import</c> to
+    /// recreate the model on another site.
+    /// </summary>
+    [HttpGet("export", Name = "ExportSchema")]
+    public async Task<ActionResult<IQueryResponseDto<SchemaDocument>>> ExportSchema()
+    {
+        return Ok(await Mediator.Send(new ExportSchema.Query()));
+    }
+
+    /// <summary>
+    /// Applies a schema document (the body of <c>GET contenttypes/export</c>): content types,
+    /// fields, choices, and views are created when missing and updated when present, matched by
+    /// developer name. Nothing is deleted and a field's type never changes. It is applied
+    /// completely or not at all. With <c>dryRun=true</c> it reports what would change and applies
+    /// nothing.
+    /// </summary>
+    [HttpPost("import", Name = "ImportSchema")]
+    public async Task<ActionResult<ICommandResponseDto<ImportSchema.ImportResult>>> ImportSchema(
+        [FromBody] SchemaDocument schema,
+        [FromQuery] bool dryRun = false
+    )
+    {
+        var response = await Mediator.Send(
+            new ImportSchema.Command { Schema = schema, DryRun = dryRun }
+        );
+        if (!response.Success)
+        {
+            return BadRequest(response);
+        }
+        return response;
+    }
+
     [HttpPost("", Name = "CreateContentType")]
     public async Task<ActionResult<ICommandResponseDto<ShortGuid>>> CreateContentType(
         [FromBody] CreateContentType.Command request
