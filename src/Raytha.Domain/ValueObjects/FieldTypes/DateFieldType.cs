@@ -27,4 +27,9 @@ public class DateFieldType : BaseFieldType
         return new DateTimeFieldValue(value);
     }
 
+    public override BaseFieldValue StoredValueFrom(dynamic value)
+    {
+        return DateTimeFieldValue.FromStored(value);
+    }
+
 }

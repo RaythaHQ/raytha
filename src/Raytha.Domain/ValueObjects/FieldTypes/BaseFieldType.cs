@@ -106,6 +106,13 @@ public abstract class BaseFieldType : ValueObject
 
     public abstract BaseFieldValue FieldValueFrom(dynamic value);
 
+    /// <summary>
+    /// Reads a value already in the database. Unlike <see cref="FieldValueFrom"/>, which rejects
+    /// bad input, this must not throw on data an older release stored, or one bad value would
+    /// make every item of the content type unreadable.
+    /// </summary>
+    public virtual BaseFieldValue StoredValueFrom(dynamic value) => FieldValueFrom(value);
+
     protected override IEnumerable<object> GetEqualityComponents()
     {
         yield return DeveloperName;

@@ -3,11 +3,28 @@
 public record DateTimeFieldValue : BaseFieldValue
 {
     private DateTime? _value = null;
+    private string? _unparsedText = null;
 
     public DateTimeFieldValue(object value)
     {
         if (value != null && !string.IsNullOrEmpty(value.ToString()))
             _value = Convert.ToDateTime(value.ToString());
+    }
+
+    /// <summary>
+    /// A stored value that is not a date (a 1.x value the 2.0 upgrade could not convert) reads as
+    /// empty and keeps its text, so it can still be seen and corrected.
+    /// </summary>
+    public static DateTimeFieldValue FromStored(object value)
+    {
+        try
+        {
+            return new DateTimeFieldValue(value);
+        }
+        catch (FormatException)
+        {
+            return new DateTimeFieldValue(string.Empty) { _unparsedText = value.ToString() };
+        }
     }
 
     public override dynamic Value => _value;
@@ -27,6 +44,6 @@ public record DateTimeFieldValue : BaseFieldValue
 
     public override string ToString()
     {
-        return _value.HasValue ? _value.Value.ToString() : string.Empty;
+        return _value.HasValue ? _value.Value.ToString() : _unparsedText ?? string.Empty;
     }
 }
