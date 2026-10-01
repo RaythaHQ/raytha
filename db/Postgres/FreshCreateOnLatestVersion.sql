@@ -766,10 +766,10 @@ ALTER TABLE "AuthenticationSchemes" ADD CONSTRAINT "FK_AuthenticationSchemes_Use
 ALTER TABLE "AuthenticationSchemes" ADD CONSTRAINT "FK_AuthenticationSchemes_Users_LastModifierUserId" FOREIGN KEY ("LastModifierUserId") REFERENCES "Users" ("Id");
 
 INSERT INTO "Themes" ("Id", "Title", "DeveloperName", "IsExportable", "Description", "CreationTime")
-VALUES ('e31cb739-c764-4423-9f45-9dc6f3365766', 'Raytha default theme', 'raytha_default_theme', FALSE, 'Raytha default theme', TIMESTAMPTZ '2025-11-29T15:29:46.627125Z');
+VALUES ('df55dae5-98fc-4ace-a56a-f8b4d5e8611a', 'Raytha default theme', 'raytha_default_theme', FALSE, 'Raytha default theme', TIMESTAMPTZ '2026-10-01T15:52:25.330189Z');
 
 INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
-VALUES ('20241110181505_v1_4_0', '10.0.0');
+VALUES ('20241110181505_v1_4_0', '10.0.11');
 
 COMMIT;
 
@@ -781,7 +781,7 @@ START TRANSACTION;
             
 
 INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
-VALUES ('20241213092139_v1_4_1', '10.0.0');
+VALUES ('20241213092139_v1_4_1', '10.0.11');
 
 COMMIT;
 
@@ -903,7 +903,7 @@ CREATE INDEX "IX_WidgetTemplates_ThemeId" ON "WidgetTemplates" ("ThemeId");
             
 
 INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
-VALUES ('20251129000211_v1_5_0', '10.0.0');
+VALUES ('20251129000211_v1_5_0', '10.0.11');
 
 COMMIT;
 
@@ -920,16 +920,6 @@ CREATE TABLE "EmailLogs" (
     "DurationMs" bigint NOT NULL,
     "CreationTime" timestamp with time zone NOT NULL,
     CONSTRAINT "PK_EmailLogs" PRIMARY KEY ("Id")
-);
-
-CREATE TABLE "FeatureFlags" (
-    "Id" uuid NOT NULL,
-    "Key" text NOT NULL,
-    "IsEnabled" boolean NOT NULL,
-    "Scope" text NOT NULL,
-    "CreationTime" timestamp with time zone NOT NULL,
-    "LastModificationTime" timestamp with time zone,
-    CONSTRAINT "PK_FeatureFlags" PRIMARY KEY ("Id")
 );
 
 CREATE TABLE "Webhooks" (
@@ -976,8 +966,6 @@ CREATE INDEX "IX_EmailLogs_IsSuccess" ON "EmailLogs" ("IsSuccess");
 
 CREATE INDEX "IX_EmailLogs_ToAddress" ON "EmailLogs" ("ToAddress");
 
-CREATE UNIQUE INDEX "IX_FeatureFlags_Scope_Key" ON "FeatureFlags" ("Scope", "Key");
-
 CREATE INDEX "IX_WebhookDeliveries_CreationTime" ON "WebhookDeliveries" ("CreationTime");
 
 CREATE INDEX "IX_WebhookDeliveries_EventName" ON "WebhookDeliveries" ("EventName");
@@ -990,20 +978,6 @@ CREATE INDEX "IX_Webhooks_IsActive" ON "Webhooks" ("IsActive");
 
 CREATE INDEX "IX_Webhooks_LastModifierUserId" ON "Webhooks" ("LastModifierUserId");
 
-INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
-VALUES ('20260921002825_v2_0_0', '10.0.0');
-
-COMMIT;
-
-START TRANSACTION;
-DROP TABLE "FeatureFlags";
-
-INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
-VALUES ('20260921025511_v2_1_0', '10.0.0');
-
-COMMIT;
-
-START TRANSACTION;
 ALTER TABLE "OrganizationSettings" ADD "AuditLogRetentionDays" integer NOT NULL DEFAULT 180;
 
 ALTER TABLE "OrganizationSettings" ADD "BackgroundTaskRetentionDays" integer NOT NULL DEFAULT 180;
@@ -1012,14 +986,12 @@ ALTER TABLE "OrganizationSettings" ADD "EmailLogRetentionDays" integer NOT NULL 
 
 ALTER TABLE "OrganizationSettings" ADD "WebhookDeliveryRetentionDays" integer NOT NULL DEFAULT 180;
 
-UPDATE "Roles" SET "SystemPermissions" = "SystemPermissions" | 128 WHERE ("SystemPermissions" & 5) <> 0 OR EXISTS (SELECT 1 FROM "ContentTypeRolePermission" p WHERE p."RoleId" = "Roles"."Id" AND (p."ContentTypePermissions" & 2) <> 0);
+UPDATE "Roles" SET "SystemPermissions" = "SystemPermissions" | 128
+WHERE ("SystemPermissions" & 5) <> 0
+   OR EXISTS (
+       SELECT 1 FROM "ContentTypeRolePermission" p
+       WHERE p."RoleId" = "Roles"."Id" AND (p."ContentTypePermissions" & 2) <> 0);
 
-INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
-VALUES ('20260926222411_v2_2_0', '10.0.0');
-
-COMMIT;
-
-START TRANSACTION;
 ALTER TABLE "WidgetTemplates" ADD "_FieldsJson" jsonb NOT NULL DEFAULT '[]';
 
 ALTER TABLE "WidgetTemplateRevisions" ADD "_FieldsJson" jsonb NOT NULL DEFAULT '[]';
@@ -1092,12 +1064,6 @@ UPDATE "WidgetTemplateRevisions" AS r SET "_FieldsJson" = '[{"developerName":"he
 FROM "WidgetTemplates" AS t
 WHERE r."WidgetTemplateId" = t."Id" AND t."DeveloperName" = 'contentlist' AND r."_FieldsJson" = '[]'::jsonb;
 
-INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
-VALUES ('20260930003236_v2_3_0', '10.0.11');
-
-COMMIT;
-
-START TRANSACTION;
 INSERT INTO "EmailTemplateRevisions" ("Id", "Subject", "Content", "Cc", "Bcc", "EmailTemplateId", "CreationTime")
 SELECT gen_random_uuid(), "Subject", "Content", "Cc", "Bcc", "Id", now()
 FROM "EmailTemplates"
@@ -1163,12 +1129,6 @@ UPDATE "WebTemplates" SET "Content" = '<h3>Enter your code</h3>
 WHERE "DeveloperName" = 'raytha_html_login_magiclinksent'
   AND strpos(coalesce("Content", ''), 'magic-link/complete') = 0;
 
-INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
-VALUES ('20260930140823_v2_4_0', '10.0.11');
-
-COMMIT;
-
-START TRANSACTION;
 CREATE TEMP TABLE raytha_legacy_dates AS
 WITH stored AS (
     SELECT 'published' AS source, ci."Id" AS row_id, f."Id" AS field_id, f."DeveloperName" AS field,
@@ -1286,12 +1246,6 @@ DROP TABLE raytha_legacy_date_iso;
 DROP TABLE raytha_legacy_date_order;
 DROP TABLE raytha_legacy_dates;
 
-INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
-VALUES ('20260930161825_v2_5_0', '10.0.11');
-
-COMMIT;
-
-START TRANSACTION;
 ALTER TABLE "AuditLogs" ADD "ImpersonatorEmail" text;
 
 CREATE FUNCTION pg_temp.raytha_relative_media_urls(input text) RETURNS text
@@ -1345,7 +1299,7 @@ WHERE "_PublishedWidgetsJson"::text ~ 'https?://[^"\\]*/(raytha/media-items/obje
 DROP FUNCTION pg_temp.raytha_relative_media_urls(text);
 
 INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
-VALUES ('20260930172707_v2_6_0', '10.0.11');
+VALUES ('20260921002825_v2_0_0', '10.0.11');
 
 COMMIT;
 
