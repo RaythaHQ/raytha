@@ -90,7 +90,11 @@ public sealed class WebhookPublishBehavior<TMessage, TResponse>
         return (bool)(successProperty.GetValue(response) ?? false);
     }
 
-    private static object BuildPayload(TMessage message, TResponse response)
+    /// <summary>
+    /// The payload delivered for <paramref name="message"/>. Public so a background task that runs
+    /// the use case without the pipeline can publish the same event.
+    /// </summary>
+    public static object BuildPayload(TMessage message, TResponse response)
     {
         object? result = null;
         if (response is not null)

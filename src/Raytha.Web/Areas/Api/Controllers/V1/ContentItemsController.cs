@@ -201,6 +201,37 @@ public class ContentItemsController : BaseController
         return response;
     }
 
+    /// <summary>
+    /// Queues the creation of many items of this content type and returns the background task id
+    /// (202). Poll <c>GET /raytha/api/v1/BackgroundTasks/{id}</c> until <c>status</c> is
+    /// <c>complete</c> or <c>error</c>. Each item is created like a single create, so one failing
+    /// does not stop the rest. When the task is complete, <c>statusInfo</c> is JSON:
+    /// <c>{ total, created, failed, items: [{ index, success, id, errors: [{ field, message }] }] }</c>,
+    /// with <c>index</c> the item's position in the request.
+    /// A relationship field may hold an item id, a route path, or the primary field value of the
+    /// related item. An item may also reference another item of the same batch by its primary
+    /// field value; that item is created first. Items cannot be sent in more than
+    /// <c>500</c> per request.
+    /// </summary>
+    [HttpPost($"{{{RouteConstants.CONTENT_TYPE_DEVELOPER_NAME}}}/batch", Name = "BatchCreateContentItems")]
+    [Authorize(
+        Policy = RaythaApiAuthorizationHandler.POLICY_PREFIX
+            + BuiltInContentTypePermission.CONTENT_TYPE_EDIT_PERMISSION
+    )]
+    public async Task<ActionResult<ICommandResponseDto<ShortGuid>>> BatchCreateContentItems(
+        string contentTypeDeveloperName,
+        [FromBody] BeginBatchCreateContentItems.Command request
+    )
+    {
+        var input = request with { ContentTypeDeveloperName = contentTypeDeveloperName };
+        var response = await Mediator.Send(input);
+        if (!response.Success)
+        {
+            return BadRequest(response);
+        }
+        return Accepted(response);
+    }
+
     [HttpPost(
         $"{{{RouteConstants.CONTENT_TYPE_DEVELOPER_NAME}}}/template",
         Name = "AssignContentItemTemplates"

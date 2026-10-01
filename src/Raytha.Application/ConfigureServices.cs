@@ -35,6 +35,7 @@ public static class ConfigureServices
         services.AddScoped<DeliverWebhookTask>();
         services.AddHttpClient(DeliverWebhookTask.HttpClientName);
 
+        services.AddScoped<BeginBatchCreateContentItems.BackgroundTask>();
         services.AddScoped<BeginExportContentItemsToCsv.BackgroundTask>();
         services.AddScoped<BeginImportContentItemsFromCsv.BackgroundTask>();
         services.AddScoped<BeginImportThemeFromUrl.BackgroundTask>();

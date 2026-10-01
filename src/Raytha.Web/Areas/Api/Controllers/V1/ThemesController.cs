@@ -37,6 +37,8 @@ public record ThemeMediaItemResponse(
     string Url
 );
 
+public record DuplicateThemeRequest(string Title, string DeveloperName, string Description);
+
 [Authorize(
     Policy = RaythaApiAuthorizationHandler.POLICY_PREFIX
         + BuiltInSystemPermission.MANAGE_TEMPLATES_PERMISSION
@@ -145,6 +147,35 @@ public class ThemesController : BaseController
         var themeId = await GetThemeId(themeDeveloperName);
         var input = new SetAsActiveTheme.Command { Id = themeId };
         var response = await Mediator.Send(input);
+        if (!response.Success)
+        {
+            return BadRequest(response);
+        }
+        return response;
+    }
+
+    /// <summary>
+    /// Copies the theme in the background. The result id is the background task, not the new theme.
+    /// Poll <c>GET /raytha/api/v1/BackgroundTasks/{id}</c> for status.
+    /// </summary>
+    [HttpPost("{themeDeveloperName}/duplicate", Name = "DuplicateTheme")]
+    public async Task<ActionResult<ICommandResponseDto<ShortGuid>>> DuplicateTheme(
+        string themeDeveloperName,
+        [FromBody] DuplicateThemeRequest request,
+        [FromServices] IRelativeUrlBuilder urls
+    )
+    {
+        var themeId = await GetThemeId(themeDeveloperName);
+        var response = await Mediator.Send(
+            new BeginDuplicateTheme.Command
+            {
+                ThemeId = themeId,
+                Title = request.Title,
+                DeveloperName = request.DeveloperName,
+                Description = request.Description,
+                PathBase = urls.GetSiteRoot(),
+            }
+        );
         if (!response.Success)
         {
             return BadRequest(response);
