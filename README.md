@@ -19,14 +19,13 @@ REST API for whatever you modelled.
 - **The admin is a React SPA.** It lives in `src/admin` (pnpm workspace, Vite,
   TanStack Router and Query) and is served at `/raytha` from a committed bundle in
   `src/Raytha.Web/wwwroot/raytha`. It talks to `/raytha/api/admin` and
-  `/raytha/api/auth` over the same cookie session as the rest of the host. The
-  cutover is not finished: the Razor admin pages are still there and still win
-  most `/raytha` routes, so the SPA is what you see in development, where Vite is
-  proxied ahead of them.
+  `/raytha/api/auth` over the same cookie session as the rest of the host. Only
+  error pages, logout, the SAML/JWT sign-in handoffs, theme export, and the
+  function test runner are still Razor pages.
 - **.NET 10**, with `VERSION` at the repo root as the single source of the
   product version (currently `2.0.0`).
-- New in the platform: outbound webhooks with HMAC-signed deliveries, feature
-  flags, an email log, and `/healthz` plus `/healthz/ready`.
+- New in the platform: outbound webhooks with HMAC-signed deliveries, an email
+  log, and `/healthz` plus `/healthz/ready`.
 
 The public site is unchanged in shape: controllers rendering Liquid templates
 stored in the database.
@@ -155,6 +154,43 @@ Back up your database first. Then either:
 
 Both land on the same schema. If you were running Raytha on SQL Server, 2.0 has
 no upgrade path — migrate your data to Postgres on 1.5.0 first.
+
+The upgrade rewrites some existing data, not just the schema:
+
+- **Date fields become ISO dates.** 1.x stored them as `m/d/yyyy` or in the
+  server's culture. Each date field's day/month order is inferred from its own
+  values (a first number above 12 means day-first), and values are rewritten as
+  `YYYY-MM-DD`, or `YYYY-MM-DDTHH:MM:SS` when they carried a time. This covers
+  published content, drafts, and revisions. A field whose values disagree on the
+  order, or a value that isn't a recognizable date, is left unchanged and
+  reported as a `NOTICE` (visible when you apply the script with `psql`). To
+  find what was left behind:
+
+  ```sql
+  SELECT t."DeveloperName" AS content_type, f."DeveloperName" AS field, ci."Id",
+         ci."_PublishedContent" ->> f."DeveloperName" AS value
+  FROM "ContentItems" ci
+  JOIN "ContentTypes" t ON t."Id" = ci."ContentTypeId"
+  JOIN "ContentTypeFields" f ON f."ContentTypeId" = ci."ContentTypeId" AND f."FieldType" = 'date'
+  WHERE coalesce(ci."_PublishedContent" ->> f."DeveloperName", '') !~ '^([0-9]{4}-[0-9]{2}-[0-9]{2}.*)?$';
+  ```
+
+- **Media links become root-relative.** Rich text and page-builder widgets saved
+  absolute URLs such as `http://localhost:5200/raytha/media-items/objectkey/…`,
+  which broke when a site moved hosts. Links to media items in this database
+  lose the scheme and host (any path base is kept) in content, drafts,
+  revisions, trash, and site pages. Links to other sites and all templates are
+  left alone.
+- **Manage Media is its own permission.** Roles that could reach media before —
+  Manage Content Types, Manage System Settings, or Edit on any content type —
+  are granted it, so no one loses access.
+- **Magic-link sign-in uses a one-time code.** The magic-link email template
+  and the "magic link sent" page are replaced if they don't already use the code,
+  because the 1.x versions render a link that no longer works. Your previous
+  content is kept as a revision you can restore from or merge by hand. Links
+  emailed before the upgrade stop working.
+- **Built-in widget templates gain field definitions** for the 2.0 page builder.
+  Templates that already have fields are not touched.
 
 ## Architecture
 
