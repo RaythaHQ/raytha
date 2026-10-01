@@ -102,6 +102,27 @@ public class WebhookPublishBehaviorTests
     }
 
     [Test]
+    public async Task Handle_DoesNotPublish_WhenTheResponseDoesNotReportSuccess()
+    {
+        var behavior = new WebhookPublishBehavior<CreateUser.Command, object>(
+            _publisher.Object,
+            _db,
+            NullLogger<WebhookPublishBehavior<CreateUser.Command, object>>.Instance
+        );
+
+        await behavior.Handle(
+            new CreateUser.Command { EmailAddress = "a@b.com" },
+            (_, _) => ValueTask.FromResult<object>(new { Result = ShortGuid.NewGuid() }),
+            CancellationToken.None
+        );
+
+        _publisher.Verify(
+            p => p.PublishAsync(It.IsAny<string>(), It.IsAny<object>(), It.IsAny<CancellationToken>()),
+            Times.Never
+        );
+    }
+
+    [Test]
     public async Task Handle_IgnoresUnannotatedCommands()
     {
         var behavior = new WebhookPublishBehavior<TestWebhook.Command, CommandResponseDto<ShortGuid>>(

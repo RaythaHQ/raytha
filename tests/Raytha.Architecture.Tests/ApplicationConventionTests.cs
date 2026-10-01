@@ -77,6 +77,29 @@ public class ApplicationConventionTests
     }
 
     [Test]
+    public void Webhook_annotated_commands_return_a_response_that_reports_success()
+    {
+        // WebhookPublishBehavior publishes only when the response's Success is true, so a
+        // response type without it would never fire its event.
+        var annotated = Layers
+            .Application.SafeGetTypes()
+            .Where(t => t.GetCustomAttributes(typeof(WebhookEventAttribute), false).Any())
+            .ToList();
+
+        annotated.Should().NotBeEmpty();
+        foreach (var type in annotated)
+        {
+            var responseType = type.GetNestedType("Command")!
+                .GetInterfaces()
+                .Single(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IRequest<>))
+                .GetGenericArguments()[0];
+            var success = responseType.GetProperty("Success");
+            success.Should().NotBeNull($"{type.Name}.Command returns {responseType.Name}, which has no Success");
+            success!.PropertyType.Should().Be(typeof(bool), $"{type.Name}.Command returns {responseType.Name}");
+        }
+    }
+
+    [Test]
     public void Webhook_event_catalog_discovers_every_annotated_command()
     {
         var catalog = new WebhookEventCatalog();
