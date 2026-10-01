@@ -245,7 +245,7 @@ public static class MediaItemsEndpoints
             objectKey,
             FileStorageUtility.GetDefaultExpiry()
         );
-        return Results.Redirect(downloadUrl);
+        return Results.Redirect(PublicAssetUrl.PreferRootRelative(downloadUrl));
     }
 
     private static async Task<IResult> RedirectToFileUrlById(
@@ -261,7 +261,7 @@ public static class MediaItemsEndpoints
             response.Result.ObjectKey,
             FileStorageUtility.GetDefaultExpiry()
         );
-        return Results.Redirect(downloadUrl);
+        return Results.Redirect(PublicAssetUrl.PreferRootRelative(downloadUrl));
     }
 }
 

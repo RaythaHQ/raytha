@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using Fluid;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Utils;
@@ -10,7 +11,15 @@ public class LiquidTemplateParser : ILiquidTemplateParser
 
     public LiquidSyntaxError? GetSyntaxError(string? source)
     {
-        return Parser.TryParse(source ?? string.Empty, out _, out var error)
+        // {% renderbody %} is the child slot of a base layout. It is substituted as text before rendering
+        // and is not a Fluid tag, so blank it (same length, so line and column stay true) before parsing.
+        var parseable = Regex.Replace(
+            source ?? string.Empty,
+            WebTemplateExtensions.RENDERBODY_REGEX,
+            m => new string(' ', m.Length),
+            RegexOptions.IgnoreCase
+        );
+        return Parser.TryParse(parseable, out _, out var error)
             ? null
             : LiquidSyntaxError.FromParserMessage(error);
     }

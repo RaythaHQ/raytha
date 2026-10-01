@@ -6,6 +6,7 @@ using System.Text;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+using CSharpVitamins;
 using Fluid;
 using Fluid.Filters;
 using Fluid.Values;
@@ -49,6 +50,11 @@ public class RenderEngine : IRenderEngine
     {
         _templateOptions = new TemplateOptions();
         _templateOptions.MemberAccessStrategy = new UnsafeMemberAccessStrategy();
+        // Ids reach a template as strings on Target and as ShortGuid on related items. Fluid compares them
+        // by type, so without this {% if related.Id == Target.Id %} is never true.
+        _templateOptions.ValueConverters.Add(value =>
+            value is ShortGuid id ? new StringValue(id.ToString()) : null
+        );
         _templateOptions.Filters.AddFilter("attachment_redirect_url", AttachmentRedirectUrl);
         _templateOptions.Filters.AddFilter("attachment_public_url", AttachmentPublicUrl);
         _templateOptions.Filters.AddFilter("attachment_url", AttachmentRedirectUrl);
