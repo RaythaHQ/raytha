@@ -359,6 +359,22 @@ public class AdminAuthorityGuardTests
     }
 
     [Test]
+    public void Full_trust_counts_as_every_permission()
+    {
+        var caller = Account(Role("settings", SystemPermissions.ManageSystemSettings));
+
+        AdminAuthorityGuard.CheckRoleDefinition(caller, null, Grant(All)).Should().BeNull();
+        AdminAuthorityGuard
+            .CheckRoleDefinition(
+                Account(Role("clerk", SystemPermissions.ManageUsers)),
+                null,
+                Grant(SystemPermissions.ManageSystemSettings)
+            )
+            .Should()
+            .NotBeNull();
+    }
+
+    [Test]
     public void Built_in_roles_grant_the_media_library()
     {
         BuiltInRole.SuperAdmin.DefaultSystemPermission.Should().HaveFlag(SystemPermissions.ManageMediaItems);

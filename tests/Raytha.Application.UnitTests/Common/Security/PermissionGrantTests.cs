@@ -78,6 +78,23 @@ public class PermissionGrantTests
     }
 
     [Test]
+    public void System_settings_or_administrators_saves_every_system_permission()
+    {
+        var settings = PermissionGrant.FromRequest(
+            [BuiltInSystemPermission.MANAGE_SYSTEM_SETTINGS_PERMISSION],
+            null
+        );
+        var administrators = PermissionGrant.FromRequest(
+            [BuiltInSystemPermission.MANAGE_ADMINISTRATORS_PERMISSION],
+            null
+        );
+
+        settings.System.Should().Be(BuiltInSystemPermission.AllPermissionsAsEnum);
+        administrators.System.Should().Be(BuiltInSystemPermission.AllPermissionsAsEnum);
+        settings.CoversAllContentTypes.Should().BeTrue();
+    }
+
+    [Test]
     public void Union_merges_system_and_per_type_permissions()
     {
         var union = PermissionGrant.Union([
