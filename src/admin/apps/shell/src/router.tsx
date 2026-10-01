@@ -8,6 +8,7 @@ import {
   redirect,
 } from "@tanstack/react-router";
 import { AppShell } from "./components/app-shell";
+import { stringifyAdminSearch } from "./lib/list-query";
 import { LoginPage } from "./pages/login";
 import {
   AdminsPage,
@@ -400,6 +401,7 @@ export const router = createRouter({
   history,
   basepath: "/raytha",
   trailingSlash: "never",
+  stringifySearch: stringifyAdminSearch,
 });
 
 declare module "@tanstack/react-router" {

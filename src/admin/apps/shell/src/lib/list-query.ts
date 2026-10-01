@@ -1,3 +1,11 @@
+import { stringifySearchWith } from "@tanstack/react-router";
+
+/**
+ * Writes string search values raw. TanStack's default JSON-quotes strings that parse as JSON,
+ * so `pageNumber: "2"` became `?pageNumber=%222%22`, which the URLSearchParams readers reject.
+ */
+export const stringifyAdminSearch = stringifySearchWith(JSON.stringify);
+
 export type ListQuery = {
   search?: string;
   pageNumber?: number;

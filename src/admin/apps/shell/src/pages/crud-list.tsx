@@ -1,6 +1,7 @@
 import type { EntityRef, JsonObject, PagedResult } from "@raytha/api";
 import { hasPermission } from "@raytha/api";
 import {
+  Button,
   buttonVariants,
   Checkbox,
   EmptyState,
@@ -139,7 +140,8 @@ export function CrudListPage({
     queryFn: () => list(listApiParams(applied)),
     placeholderData: keepPreviousData,
   });
-
+  const pageCount = query.data ? Math.max(1, Math.ceil(query.data.totalCount / query.data.pageSize)) : 1;
+  const pageNumber = applied.pageNumber ?? 1;
 
   const canCreate = Boolean(createTo) && (createPermission ? hasPermission(createPermission) : true);
   const showActions = Boolean(rowActions);
@@ -231,6 +233,29 @@ export function CrudListPage({
           </ListPanel>
         )}
       </QueryGate>
+      {pageCount > 1 ? (
+        <div className="flex items-center justify-end gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            disabled={pageNumber <= 1}
+            onClick={() => writeListSearch(navigate, { ...applied, pageNumber: pageNumber - 1 })}
+          >
+            Previous
+          </Button>
+          <span className="text-sm text-muted-foreground">
+            Page {pageNumber} of {pageCount}
+          </span>
+          <Button
+            type="button"
+            variant="outline"
+            disabled={pageNumber >= pageCount}
+            onClick={() => writeListSearch(navigate, { ...applied, pageNumber: pageNumber + 1 })}
+          >
+            Next
+          </Button>
+        </div>
+      ) : null}
     </div>
   );
 }

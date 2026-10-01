@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { RouterProvider, createMemoryHistory, createRootRoute, createRoute, createRouter } from "@tanstack/react-router";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
+import { stringifyAdminSearch } from "../lib/list-query";
 import { CrudListPage } from "./crud-list";
 
 type Person = EntityRef & { name: string };
@@ -35,6 +36,7 @@ function renderPeople() {
   const router = createRouter({
     routeTree: rootRoute.addChildren([route]),
     history: createMemoryHistory({ initialEntries: ["/people"] }),
+    stringifySearch: stringifyAdminSearch,
   });
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   render(
@@ -57,6 +59,6 @@ describe("CrudListPage", () => {
 
     expect(await screen.findByText("Person 60")).toBeInTheDocument();
     expect(screen.getByText("Page 2 of 2")).toBeInTheDocument();
-    expect(router.state.location.search).toMatchObject({ pageNumber: "2" });
+    expect(router.state.location.searchStr).toBe("?pageNumber=2");
   });
 });
