@@ -1,10 +1,12 @@
 using FluentAssertions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Raytha.Web;
+using Raytha.Web.AdminSpa;
 using Raytha.Web.Authentication;
 
 namespace Raytha.Architecture.Tests;
@@ -166,6 +168,25 @@ public class AdminEndpointAuthorizationTests
                 ],
                 "the admin API, auth API, media endpoints, Razor pages, and REST API v1 are all discovered"
             );
+    }
+
+    [TestCase("/raytha/login")]
+    [TestCase("/raytha/login/forgot-password")]
+    [TestCase("/raytha/login/forgot-password/complete/token-from-email")]
+    [TestCase("/raytha/login/magic-link")]
+    public void Admin_sign_in_screens_are_served_by_the_spa(string path)
+    {
+        AdminSpaExtensions.IsSpaPath(new PathString(path)).Should().BeTrue("the SPA fallback 404s server paths");
+
+        var segments = path.TrimEnd('/').Split('/');
+        Endpoints
+            .Value.Where(e => !e.Route.Contains("**"))
+            .Select(e => e.Route.Split('/'))
+            .Where(route => route.Length == segments.Length
+                && route.Zip(segments).All(p => p.First.StartsWith('{') || p.First.Equals(p.Second, StringComparison.OrdinalIgnoreCase)))
+            .Select(route => string.Join('/', route))
+            .Should()
+            .BeEmpty("a server endpoint on this path outranks the SPA fallback outside Development");
     }
 
     [Test]
