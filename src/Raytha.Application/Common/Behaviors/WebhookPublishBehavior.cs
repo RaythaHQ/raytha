@@ -126,7 +126,7 @@ public sealed class WebhookPublishBehavior<TMessage, TResponse>
             .GetProperty("Success", BindingFlags.Public | BindingFlags.Instance);
         if (successProperty is null || successProperty.PropertyType != typeof(bool))
         {
-            return true;
+            return false;
         }
 
         return (bool)(successProperty.GetValue(response) ?? false);
