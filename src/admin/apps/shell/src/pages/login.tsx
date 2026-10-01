@@ -123,7 +123,7 @@ export function LoginPage({ initialMode = "password" }: { initialMode?: Mode }) 
       if (mode === "magic") {
         await requestMagicLink(email);
         setRequestedMode("magic-code");
-        setMessage("Check your email for a sign-in code.");
+        setMessage("If that address can sign in here, we emailed it a sign-in code.");
         return;
       }
       if (mode === "magic-code") {
@@ -151,7 +151,7 @@ export function LoginPage({ initialMode = "password" }: { initialMode?: Mode }) 
     setPending(true);
     try {
       await requestMagicLink(email);
-      setMessage("We sent a new code.");
+      setMessage("If that address can sign in here, we emailed it a new code.");
     } catch (err) {
       setError(formatError(err));
     } finally {
@@ -170,7 +170,7 @@ export function LoginPage({ initialMode = "password" }: { initialMode?: Mode }) 
           <Notices error={error} message={message} />
           {mode === "magic-code" ? (
             <p className="text-sm text-muted-foreground">
-              Code sent to <span className="font-medium text-foreground">{email}</span>
+              Enter the code emailed to <span className="font-medium text-foreground">{email}</span>
             </p>
           ) : (
             <div className="space-y-1.5">
