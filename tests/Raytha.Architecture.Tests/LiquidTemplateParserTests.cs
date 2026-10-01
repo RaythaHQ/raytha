@@ -21,6 +21,26 @@ public class LiquidTemplateParserTests
         error.Message.Should().Contain("if");
     }
 
+    [TestCase("{% renderbody %}")]
+    [TestCase("{%renderbody%}")]
+    [TestCase("{% RenderBody %}")]
+    public void A_base_layout_with_the_renderbody_slot_has_no_syntax_error(string slot)
+    {
+        var layout = $"<html>\n<body>{slot}</body>\n</html>";
+
+        new LiquidTemplateParser().GetSyntaxError(layout).Should().BeNull();
+    }
+
+    [Test]
+    public void An_error_after_the_renderbody_slot_keeps_its_line_and_column()
+    {
+        var error = new LiquidTemplateParser().GetSyntaxError("{% renderbody %} {% if %}");
+
+        error.Should().NotBeNull();
+        error!.Line.Should().Be(1);
+        error.Column.Should().Be(23);
+    }
+
     [Test]
     public void A_render_failure_names_the_template()
     {

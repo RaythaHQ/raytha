@@ -236,7 +236,7 @@ public static class MediaItemsEndpoints
         }
     }
 
-    private static async Task<IResult> RedirectToFileUrlByObjectKey(
+    internal static async Task<IResult> RedirectToFileUrlByObjectKey(
         string objectKey,
         [FromServices] IFileStorageProvider fileStorageProvider
     )
