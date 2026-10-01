@@ -130,7 +130,7 @@ export const raythaFunctions: LiquidTerm[] = [
   {
     name: "get_content_items",
     detail: "Query content items of a type",
-    template: 'get_content_items(ContentType: "${content_type}", Filter: "", OrderBy: "", PageNumber: 1, PageSize: ${25})',
+    template: 'get_content_items(ContentType="${content_type}", Filter="", OrderBy="", PageNumber=1, PageSize=${25})',
   },
   { name: "get_content_item_by_id", detail: "Load one content item", template: 'get_content_item_by_id("${id}")' },
   {
