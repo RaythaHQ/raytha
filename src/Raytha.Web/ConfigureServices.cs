@@ -27,13 +27,12 @@ public static class ConfigureServices
         IWebHostEnvironment environment
     )
     {
-        // In development, use less restrictive cookie settings to allow non-HTTPS access
-        // from non-localhost hosts (e.g., http://machinename:8888). SameSite=None requires
-        // Secure, and Secure cookies are rejected from non-secure origins except localhost.
+        // In development, allow non-HTTPS access from non-localhost hosts
+        // (e.g., http://machinename:8888); Secure cookies are rejected from non-secure
+        // origins except localhost.
         var cookieSecurePolicy = environment.IsDevelopment()
             ? CookieSecurePolicy.SameAsRequest
             : CookieSecurePolicy.Always;
-        var cookieSameSite = environment.IsDevelopment() ? SameSiteMode.Lax : SameSiteMode.None;
 
         services
             .AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
@@ -45,7 +44,7 @@ public static class ConfigureServices
                     options.Cookie.IsEssential = true;
                     options.Cookie.HttpOnly = true;
                     options.Cookie.SecurePolicy = cookieSecurePolicy;
-                    options.Cookie.SameSite = cookieSameSite;
+                    options.Cookie.SameSite = SameSiteMode.Lax;
                     options.AccessDeniedPath = new PathString("/raytha/error/403");
                     options.ExpireTimeSpan = TimeSpan.FromDays(30);
                     options.EventsType = typeof(CustomCookieAuthenticationEvents);

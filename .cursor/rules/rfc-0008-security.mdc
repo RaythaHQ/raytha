@@ -16,9 +16,11 @@ code.
 
 ## 1. Authorization
 
-- Authentication is a single cookie scheme (`HttpOnly`, `Secure` outside
-  Development, 30-day expiry), with claims hydrated per request by
-  `CustomCookieAuthenticationEvents`.
+- Authentication is a single cookie scheme (`HttpOnly`, `SameSite=Lax`,
+ `Secure` outside Development, 30-day expiry), with claims hydrated per request
+ by `CustomCookieAuthenticationEvents`. `Lax` still lets an IdP's cross-site
+ SAML POST set the cookie and the follow-up top-level GET send it; nothing
+ needs the session on a cross-site subrequest, so do not relax it to `None`.
 - Policies are registered once in `AddWebUIServices`:
   `RaythaClaimTypes.IsAdmin`, the `BuiltInSystemPermission.*` policies, the
   `BuiltInContentTypePermission.*` policies, and an `Api`-prefixed mirror of each
