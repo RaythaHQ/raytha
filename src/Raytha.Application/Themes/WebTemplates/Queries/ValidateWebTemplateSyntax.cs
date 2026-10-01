@@ -11,7 +11,7 @@ public class ValidateWebTemplateSyntax
         public string Content { get; init; } = string.Empty;
     }
 
-    public record TemplateSyntaxResult(bool IsValid, string? Error);
+    public record TemplateSyntaxResult(bool IsValid, string? Error, int? Line = null, int? Column = null);
 
     public class Handler : IRequestHandler<Query, IQueryResponseDto<TemplateSyntaxResult>>
     {
@@ -30,7 +30,9 @@ public class ValidateWebTemplateSyntax
             var error = _parser.GetSyntaxError(request.Content);
             return new ValueTask<IQueryResponseDto<TemplateSyntaxResult>>(
                 new QueryResponseDto<TemplateSyntaxResult>(
-                    new TemplateSyntaxResult(string.IsNullOrEmpty(error), error)
+                    error is null
+                        ? new TemplateSyntaxResult(true, null)
+                        : new TemplateSyntaxResult(false, error.Message, error.Line, error.Column)
                 )
             );
         }

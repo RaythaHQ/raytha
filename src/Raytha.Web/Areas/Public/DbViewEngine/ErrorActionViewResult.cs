@@ -72,7 +72,12 @@ public class ErrorActionViewResult : IActionResult
             PathBase = services.CurrentOrganization.PathBase,
         };
 
-        var body = services.Renderer.RenderAsHtml(sourceWithParents, renderModel);
+        var body = WebTemplateRenderer.Render(
+            services.Renderer,
+            template.Result.DeveloperName,
+            sourceWithParents,
+            renderModel
+        );
         await DbActionResultHelper.WriteHtmlAsync(httpContext, services, body);
     }
 }

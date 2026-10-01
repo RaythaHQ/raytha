@@ -30,6 +30,9 @@
     <PackageReference Include="Serilog.Sinks.OpenTelemetry" />
   </ItemGroup>
   <ItemGroup>
+    <InternalsVisibleTo Include="Raytha.Architecture.Tests" />
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="..\Raytha.Application\Raytha.Application.csproj" />
     <ProjectReference Include="..\Raytha.Infrastructure\Raytha.Infrastructure.csproj" />
   </ItemGroup>

@@ -12,7 +12,7 @@ public static class LiquidSyntaxValidation
     )
     {
         var error = parser.GetSyntaxError(content);
-        if (!string.IsNullOrEmpty(error))
-            context.AddFailure("Content", error);
+        if (error is not null)
+            context.AddFailure("Content", error.Describe());
     }
 }

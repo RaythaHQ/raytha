@@ -242,7 +242,7 @@ public class ExceptionsMiddleware
     /// Filter mistakes are the caller's input, so the message is safe to return. Other failures
     /// stay quiet outside Development, where the message can name a template or query.
     /// </summary>
-    private static string? PublicErrorMessage(Exception exception, IHostEnvironment env)
+    internal static string? PublicErrorMessage(Exception exception, IHostEnvironment env)
     {
         if (exception is InvalidFilterException or FilterConditionTypeNotFoundException)
         {

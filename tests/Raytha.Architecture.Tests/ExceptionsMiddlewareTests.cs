@@ -4,6 +4,7 @@ using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Hosting;
 using Raytha.Application.Common.Exceptions;
 using Raytha.Domain.Exceptions;
+using Raytha.Web.Areas.Public.DbViewEngine;
 using Raytha.Web.Middlewares;
 
 namespace Raytha.Architecture.Tests;
@@ -35,6 +36,24 @@ public class ExceptionsMiddlewareTests
 
         problem.Status.Should().Be((int)HttpStatusCode.BadRequest);
         problem.Detail.Should().Contain("seasons");
+    }
+
+    [Test]
+    public void Development_public_render_failures_name_the_template()
+    {
+        var error = new TemplateRenderException(
+            "raytha_html_base_layout",
+            new InvalidOperationException("Unknown tag 'endfor' at (1:10)")
+        );
+
+        ExceptionsMiddleware
+            .PublicErrorMessage(error, new TestHostEnvironment(Environments.Development))
+            .Should()
+            .Be("raytha_html_base_layout: Unknown tag 'endfor' at (1:10)");
+        ExceptionsMiddleware
+            .PublicErrorMessage(error, new TestHostEnvironment(Environments.Production))
+            .Should()
+            .BeNull();
     }
 
     private sealed class TestHostEnvironment : IHostEnvironment

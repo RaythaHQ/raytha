@@ -1,3 +1,5 @@
+using Raytha.Application.Common.Utils;
+
 namespace Raytha.Application.Common.Interfaces;
 
 /// <summary>
@@ -6,6 +8,6 @@ namespace Raytha.Application.Common.Interfaces;
 /// </summary>
 public interface ILiquidTemplateParser
 {
-    /// <summary>Null when <paramref name="source"/> parses. Otherwise the parser error text.</summary>
-    string? GetSyntaxError(string? source);
+    /// <summary>Null when <paramref name="source"/> parses. Otherwise the parser error and its position.</summary>
+    LiquidSyntaxError? GetSyntaxError(string? source);
 }

@@ -4,6 +4,7 @@ using MockQueryable.Moq;
 using Moq;
 using Raytha.Application.Common.Exceptions;
 using Raytha.Application.Common.Interfaces;
+using Raytha.Application.Common.Utils;
 using Raytha.Application.Themes.WidgetTemplates.Commands;
 using Raytha.Domain.Entities;
 using Raytha.Domain.ValueObjects;
@@ -17,6 +18,7 @@ public class WidgetTemplateCommandsTests
     private List<WidgetTemplate> _templates = null!;
     private List<WidgetTemplateRevision> _revisions = null!;
     private List<SitePage> _pages = null!;
+    private readonly ILiquidTemplateParser _liquid = Mock.Of<ILiquidTemplateParser>();
 
     private static readonly FieldDefinition[] CalloutFields =
     [
@@ -79,7 +81,7 @@ public class WidgetTemplateCommandsTests
     public async Task Create_stores_a_custom_template_with_its_fields()
     {
         var command = Create("My Callout");
-        new CreateWidgetTemplate.Validator(_db.Object).Validate(command).IsValid.Should().BeTrue();
+        new CreateWidgetTemplate.Validator(_db.Object, _liquid).Validate(command).IsValid.Should().BeTrue();
 
         var result = await new CreateWidgetTemplate.Handler(_db.Object).Handle(command, CancellationToken.None);
 
@@ -93,12 +95,12 @@ public class WidgetTemplateCommandsTests
     [Test]
     public void Create_rejects_a_built_in_or_taken_developer_name()
     {
-        Messages(new CreateWidgetTemplate.Validator(_db.Object).Validate(Create("hero")))
+        Messages(new CreateWidgetTemplate.Validator(_db.Object, _liquid).Validate(Create("hero")))
             .Should()
             .Contain("That developer name is reserved for a built-in widget.");
 
         _templates.Add(new WidgetTemplate { ThemeId = _themeId, DeveloperName = "callout", Label = "Callout", Content = "x" });
-        Messages(new CreateWidgetTemplate.Validator(_db.Object).Validate(Create("Callout")))
+        Messages(new CreateWidgetTemplate.Validator(_db.Object, _liquid).Validate(Create("Callout")))
             .Should()
             .Equal("A widget template with that developer name already exists in this theme.");
     }
@@ -108,9 +110,26 @@ public class WidgetTemplateCommandsTests
     {
         var command = Create() with { Label = "", Content = "", DeveloperName = "" };
 
-        Messages(new CreateWidgetTemplate.Validator(_db.Object).Validate(command))
+        Messages(new CreateWidgetTemplate.Validator(_db.Object, _liquid).Validate(command))
             .Should()
             .BeEquivalentTo("Label is required.", "Content is required.", "Developer name is required.");
+    }
+
+    [Test]
+    public void Create_rejects_liquid_that_does_not_parse()
+    {
+        var liquid = new Mock<ILiquidTemplateParser>();
+        liquid
+            .Setup(parser => parser.GetSyntaxError("{% if %}"))
+            .Returns(LiquidSyntaxError.FromParserMessage("Invalid 'if' tag at (1:6)"));
+
+        Messages(
+                new CreateWidgetTemplate.Validator(_db.Object, liquid.Object).Validate(
+                    Create() with { Content = "{% if %}" }
+                )
+            )
+            .Should()
+            .Contain(message => message.Contains("Line 1, column 6"));
     }
 
     [Test]
@@ -118,7 +137,7 @@ public class WidgetTemplateCommandsTests
     {
         var command = Create("callout", new FieldDefinition { DeveloperName = "bad-name", Label = "Bad", FieldType = "color" });
 
-        var result = new CreateWidgetTemplate.Validator(_db.Object).Validate(command);
+        var result = new CreateWidgetTemplate.Validator(_db.Object, _liquid).Validate(command);
 
         result.Errors.Should().ContainSingle().Which.PropertyName.Should().Be("Fields");
     }
@@ -126,7 +145,7 @@ public class WidgetTemplateCommandsTests
     [Test]
     public void Create_in_a_missing_theme_is_not_found()
     {
-        var act = () => new CreateWidgetTemplate.Validator(_db.Object).Validate(Create() with { ThemeId = Guid.NewGuid() });
+        var act = () => new CreateWidgetTemplate.Validator(_db.Object, _liquid).Validate(Create() with { ThemeId = Guid.NewGuid() });
 
         act.Should().Throw<NotFoundException>();
     }
@@ -143,7 +162,7 @@ public class WidgetTemplateCommandsTests
             Content = "<section></section>",
             Fields = CalloutFields,
         };
-        new EditWidgetTemplate.Validator(_db.Object).Validate(command).IsValid.Should().BeTrue();
+        new EditWidgetTemplate.Validator(_db.Object, _liquid).Validate(command).IsValid.Should().BeTrue();
 
         await new EditWidgetTemplate.Handler(_db.Object).Handle(command, CancellationToken.None);
 
@@ -176,7 +195,7 @@ public class WidgetTemplateCommandsTests
             Fields = [new FieldDefinition { DeveloperName = "size", Label = "Size", FieldType = "dropdown" }],
         };
 
-        Messages(new EditWidgetTemplate.Validator(_db.Object).Validate(command))
+        Messages(new EditWidgetTemplate.Validator(_db.Object, _liquid).Validate(command))
             .Should()
             .Equal("Field 'Size' needs at least one choice.");
     }

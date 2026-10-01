@@ -25,11 +25,13 @@ public class CreateWidgetTemplate
 
     public class Validator : AbstractValidator<Command>
     {
-        public Validator(IRaythaDbContext db)
+        public Validator(IRaythaDbContext db, ILiquidTemplateParser liquid)
         {
             RuleFor(x => x.ThemeId).NotEmpty();
             RuleFor(x => x.Label).NotEmpty().WithMessage("Label is required.");
             RuleFor(x => x.Content).NotEmpty().WithMessage("Content is required.");
+            RuleFor(x => x.Content)
+                .Custom((content, context) => LiquidSyntaxValidation.RejectInvalidLiquid(context, liquid, content));
             RuleFor(x => x.DeveloperName)
                 .Must(name => !string.IsNullOrEmpty(name.ToDeveloperName()))
                 .WithMessage("Developer name is required.");

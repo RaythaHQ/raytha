@@ -85,7 +85,9 @@ public class SitePageActionViewResult : IActionResult
         );
 
         // Use the overload that supports Site Page widgets
-        var body = services.Renderer.RenderAsHtml(
+        var body = WebTemplateRenderer.Render(
+            services.Renderer,
+            _webTemplate.DeveloperName,
             sourceWithParents,
             renderModel,
             services.CurrentOrganization.ActiveThemeId,
