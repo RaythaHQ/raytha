@@ -26,6 +26,31 @@ public class ExceptionsMiddlewareTests
     }
 
     [Test]
+    public void A_missing_entity_is_a_404_that_names_it()
+    {
+        var problem = ExceptionsMiddleware.ToProblemDetails(
+            new NotFoundException("Parent Template", "kk_base_layout"),
+            "/raytha/api/v1/themes/kk/web-templates",
+            new TestHostEnvironment(Environments.Production)
+        );
+
+        problem.Status.Should().Be((int)HttpStatusCode.NotFound);
+        problem.Detail.Should().Be("Entity \"Parent Template\" (kk_base_layout) was not found.");
+    }
+
+    [Test]
+    public void A_not_found_without_a_named_entity_keeps_the_generic_detail()
+    {
+        var problem = ExceptionsMiddleware.ToProblemDetails(
+            new NotFoundException(),
+            "/raytha/api/v1/x",
+            new TestHostEnvironment(Environments.Production)
+        );
+
+        problem.Detail.Should().Be("The resource you requested was not found.");
+    }
+
+    [Test]
     public void An_invalid_filter_returns_the_reason_instead_of_a_generic_detail()
     {
         var problem = ExceptionsMiddleware.ToProblemDetails(
