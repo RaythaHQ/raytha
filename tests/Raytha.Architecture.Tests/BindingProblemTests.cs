@@ -19,6 +19,8 @@ public class BindingProblemTests
         var problem = BindingProblem.Create(modelState, "/raytha/api/v1/contenttypes/posts/views/x/filter");
 
         problem.Status.Should().Be(400);
+        problem.Type.Should().NotBeNullOrEmpty();
+        problem.Title.Should().NotBeNullOrEmpty();
         problem.Instance.Should().Be("/raytha/api/v1/contenttypes/posts/views/x/filter");
         problem.Detail.Should().Be("filter[0].id must be a GUID.");
         problem.Errors.Keys.Should().BeEquivalentTo("$.filter[0].id");

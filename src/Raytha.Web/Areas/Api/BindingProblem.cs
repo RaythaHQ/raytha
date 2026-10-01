@@ -41,6 +41,8 @@ public static partial class BindingProblem
 
         return new ValidationProblemDetails(errors)
         {
+            Type = "https://tools.ietf.org/html/rfc9110#section-15.5.1",
+            Title = "One or more validation errors occurred.",
             Status = StatusCodes.Status400BadRequest,
             Detail = errors.Values.SelectMany(v => v).FirstOrDefault(),
             Instance = instance,
