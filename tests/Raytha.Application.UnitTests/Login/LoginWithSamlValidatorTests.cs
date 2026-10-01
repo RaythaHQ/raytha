@@ -125,6 +125,57 @@ public class LoginWithSamlValidatorTests
         result.Errors.Should().ContainSingle(e => e.ErrorMessage == "Failed authentication.");
     }
 
+    [Test]
+    public async Task Linked_account_keeps_its_email_when_the_assertion_carries_another_accounts_address_in_other_case()
+    {
+        var linked = new User
+        {
+            Id = Guid.NewGuid(),
+            EmailAddress = "old@example.com",
+            IsActive = true,
+            SsoId = "linked-subject",
+            AuthenticationSchemeId = _scheme.Id,
+        };
+        _users.Add(linked);
+        _users.Add(new User { Id = Guid.NewGuid(), EmailAddress = Email.ToUpper(), IsActive = true });
+
+        await Handle(SignedResponse(nameId: "linked-subject"));
+
+        linked.EmailAddress.Should().Be("old@example.com");
+    }
+
+    [Test]
+    public async Task Linked_account_takes_the_assertions_email_when_no_other_account_has_it()
+    {
+        var linked = new User
+        {
+            Id = Guid.NewGuid(),
+            EmailAddress = "old@example.com",
+            IsActive = true,
+            SsoId = "linked-subject",
+            AuthenticationSchemeId = _scheme.Id,
+        };
+        _users.Add(linked);
+
+        await Handle(SignedResponse(nameId: "linked-subject"));
+
+        linked.EmailAddress.Should().Be(Email);
+    }
+
+    private async Task Handle(string samlResponse)
+    {
+        var db = new Mock<IRaythaDbContext>();
+        db.Setup(x => x.AuthenticationSchemes)
+            .Returns(new List<AuthenticationScheme> { _scheme }.AsQueryable().BuildMockDbSet().Object);
+        db.Setup(x => x.Users).Returns(_users.AsQueryable().BuildMockDbSet().Object);
+        db.Setup(x => x.SaveChangesAsync(It.IsAny<CancellationToken>())).ReturnsAsync(1);
+
+        await new LoginWithSaml.Handler(db.Object).Handle(
+            new LoginWithSaml.Command { SAMLResponse = samlResponse, DeveloperName = _scheme.DeveloperName! },
+            CancellationToken.None
+        );
+    }
+
     private FluentValidation.Results.ValidationResult Validate(string samlResponse)
     {
         var db = new Mock<IRaythaDbContext>();

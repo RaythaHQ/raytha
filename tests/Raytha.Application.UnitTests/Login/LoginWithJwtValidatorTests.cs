@@ -86,6 +86,58 @@ public class LoginWithJwtValidatorTests
         result.Errors.Should().ContainSingle(e => e.ErrorMessage == "User has been deactivated.");
     }
 
+    [Test]
+    public async Task Linked_account_keeps_its_email_when_the_token_carries_another_accounts_address_in_other_case()
+    {
+        var linked = new User
+        {
+            Id = Guid.NewGuid(),
+            EmailAddress = "old@example.com",
+            IsActive = true,
+            SsoId = "linked-subject",
+            AuthenticationSchemeId = _scheme.Id,
+        };
+        _users.Add(linked);
+        _users.Add(new User { Id = Guid.NewGuid(), EmailAddress = Email.ToUpper(), IsActive = true });
+
+        await Handle(Token(sub: "linked-subject"));
+
+        linked.EmailAddress.Should().Be("old@example.com");
+    }
+
+    [Test]
+    public async Task Linked_account_takes_the_tokens_email_when_no_other_account_has_it()
+    {
+        var linked = new User
+        {
+            Id = Guid.NewGuid(),
+            EmailAddress = "old@example.com",
+            IsActive = true,
+            SsoId = "linked-subject",
+            AuthenticationSchemeId = _scheme.Id,
+        };
+        _users.Add(linked);
+
+        await Handle(Token(sub: "linked-subject"));
+
+        linked.EmailAddress.Should().Be(Email);
+    }
+
+    private async Task Handle(string token)
+    {
+        var db = new Mock<IRaythaDbContext>();
+        db.Setup(x => x.AuthenticationSchemes)
+            .Returns(new List<AuthenticationScheme> { _scheme }.AsQueryable().BuildMockDbSet().Object);
+        db.Setup(x => x.Users).Returns(_users.AsQueryable().BuildMockDbSet().Object);
+        db.Setup(x => x.JwtLogins).Returns(new List<JwtLogin>().AsQueryable().BuildMockDbSet().Object);
+        db.Setup(x => x.SaveChangesAsync(It.IsAny<CancellationToken>())).ReturnsAsync(1);
+
+        await new LoginWithJwt.Handler(db.Object).Handle(
+            new LoginWithJwt.Command { Token = token, DeveloperName = _scheme.DeveloperName! },
+            CancellationToken.None
+        );
+    }
+
     private FluentValidation.Results.ValidationResult Validate(string token)
     {
         var db = new Mock<IRaythaDbContext>();
