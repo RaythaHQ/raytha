@@ -75,6 +75,8 @@ services:
       # Security settings
       - ENFORCE_HTTPS=${ENFORCE_HTTPS:-true}
       - ALLOW_INTERNAL_URL_IMPORTS=${ALLOW_INTERNAL_URL_IMPORTS:-false}
+      - AUTH_RATE_LIMIT_PER_MINUTE=${AUTH_RATE_LIMIT_PER_MINUTE:-30}
+      - IMPERSONATION_MAX_MINUTES=${IMPERSONATION_MAX_MINUTES:-60}
 
       # Proxy trust. Port 5001 is published straight to Kestrel; if it is reachable from the
       # internet without a proxy in front, set TRUSTED_PROXIES=none. See .env.example.
@@ -83,6 +85,18 @@ services:
       
       # Maintenance mode (optional - redirects all traffic)
       - REDIRECT_WEBSITE=${REDIRECT_WEBSITE:-}
+
+      # Observability (optional - all off unless set)
+      - SENTRY_DSN=${SENTRY_DSN:-}
+      - SENTRY_TRACES_SAMPLE_RATE=${SENTRY_TRACES_SAMPLE_RATE:-0}
+      - OTEL_EXPORTER_OTLP_ENDPOINT=${OTEL_EXPORTER_OTLP_ENDPOINT:-}
+      - OTEL_EXPORTER_OTLP_PROTOCOL=${OTEL_EXPORTER_OTLP_PROTOCOL:-}
+      - OTEL_SERVICE_NAME=${OTEL_SERVICE_NAME:-raytha}
+      - OBSERVABILITY_LOGGING_ENABLE_CONSOLE=${OBSERVABILITY_LOGGING_ENABLE_CONSOLE:-true}
+      - OBSERVABILITY_LOGGING_ENABLE_LOKI=${OBSERVABILITY_LOGGING_ENABLE_LOKI:-false}
+      - LOKI_URL=${LOKI_URL:-}
+      - LOKI_USERNAME=${LOKI_USERNAME:-}
+      - LOKI_PASSWORD=${LOKI_PASSWORD:-}
     depends_on:
       db:
         condition: service_healthy

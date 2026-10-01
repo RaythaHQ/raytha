@@ -27,4 +27,8 @@ RUN dotnet publish "src/Raytha.Web/Raytha.Web.csproj" -c Release --no-restore -o
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app .
+# The admin SPA is served from the bundle committed under src/Raytha.Web/wwwroot/raytha. The
+# image has no src/admin or Node, so never try to start the Vite dev server (Development mode
+# does by default).
+ENV AdminSpa__AutoStart=false
 ENTRYPOINT ["dotnet", "Raytha.Web.dll"]
