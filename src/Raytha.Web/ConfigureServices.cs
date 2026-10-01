@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.OpenApi;
 using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi;
@@ -12,6 +13,7 @@ using Raytha.Application.Common.Security;
 using Raytha.Domain.Entities;
 using Raytha.Infrastructure.Persistence;
 using Raytha.Web.AdminSpa;
+using Raytha.Web.Areas.Api;
 using Raytha.Web.Authentication;
 using Raytha.Web.Filters;
 using Raytha.Web.Middlewares;
@@ -199,6 +201,15 @@ public static class ConfigureServices
         services.AddScoped<CustomCookieAuthenticationEvents>();
         services
             .AddControllersWithViews(options => { })
+            .ConfigureApiBehaviorOptions(options =>
+                options.InvalidModelStateResponseFactory = context =>
+                    new BadRequestObjectResult(
+                        BindingProblem.Create(context.ModelState, context.HttpContext.Request.Path)
+                    )
+                    {
+                        ContentTypes = { "application/problem+json" },
+                    }
+            )
             .AddJsonOptions(o =>
             {
                 o.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
