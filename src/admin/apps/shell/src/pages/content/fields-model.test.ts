@@ -29,6 +29,18 @@ describe("parseFieldValue", () => {
     expect(parseFieldValue(field("one_to_one_relationship"), null).value).toBe("");
   });
 
+  it("keeps a stored date that is not a date, so saving does not erase it", () => {
+    const value = parseFieldValue(field("date"), { value: null, text: "13/13/2026", hasValue: false });
+    expect(value).toEqual({ fieldType: "date", value: "13/13/2026" });
+    expect(fieldValueForSave(value)).toBe("13/13/2026");
+  });
+
+  it("reads a stored ISO date as the date input's value", () => {
+    expect(parseFieldValue(field("date"), { value: "2026-01-13T00:00:00", text: "1/13/2026", hasValue: true }).value).toBe(
+      "2026-01-13",
+    );
+  });
+
   it("keeps an attachment's object key", () => {
     const value = parseFieldValue(field("attachment"), { value: "abc_report.pdf", text: "abc_report.pdf" });
     expect(fieldValueForSave(value)).toBe("abc_report.pdf");
