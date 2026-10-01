@@ -44,7 +44,7 @@ public class RedeliverWebhookDelivery
 
             delivery.Status = WebhookDeliveryStatus.Pending;
             delivery.AttemptCount = 0;
-            delivery.NextRetryAt = null;
+            delivery.NextRetryAt = DateTime.UtcNow.Add(DeliverWebhookTask.InFlightLease);
             delivery.CompletionTime = null;
             delivery.ErrorMessage = null;
             delivery.ResponseCode = null;

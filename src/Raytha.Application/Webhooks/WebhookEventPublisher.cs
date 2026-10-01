@@ -84,6 +84,7 @@ public sealed class WebhookEventPublisher : IWebhookEventPublisher
             WebhookId = webhook.Id,
             EventName = eventName,
             Status = WebhookDeliveryStatus.Pending,
+            NextRetryAt = DateTime.UtcNow.Add(DeliverWebhookTask.InFlightLease),
         };
 
         delivery.Payload = JsonSerializer.Serialize(

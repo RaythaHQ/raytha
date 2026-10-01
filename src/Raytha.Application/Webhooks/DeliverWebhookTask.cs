@@ -9,14 +9,29 @@ using Raytha.Domain.Entities;
 namespace Raytha.Application.Webhooks;
 
 /// <summary>
-/// Delivers one <see cref="WebhookDelivery"/> over HTTP. Runs on the existing
-/// background task queue. Failed attempts are retried in-process with exponential
-/// backoff (capped) until <see cref="Webhook.MaxAttempts"/> is exhausted, at which
-/// point the delivery is marked failed and can be redelivered manually.
+/// Makes one HTTP attempt for one <see cref="WebhookDelivery"/> and returns the worker.
+/// A failed attempt with attempts remaining leaves the delivery pending and sets
+/// <see cref="WebhookDelivery.NextRetryAt"/> to now plus a capped exponential backoff; the
+/// scheduler enqueues a new run when that time arrives. The final failure (per
+/// <see cref="Webhook.MaxAttempts"/>) marks the delivery failed for manual redelivery.
+/// <para>
+/// <see cref="WebhookDelivery.NextRetryAt"/> doubles as the in-flight lease: whoever hands a
+/// delivery to a job sets it to now plus <see cref="InFlightLease"/>, so a delivery whose
+/// job died is retried once the lease lapses. Delivery is at-least-once; receivers dedupe
+/// on the X-Raytha-Delivery header. A run that finds the delivery already settled exits
+/// without a request.
+/// </para>
 /// </summary>
 public class DeliverWebhookTask : IExecuteBackgroundTask
 {
     public const string HttpClientName = "raytha-webhooks";
+
+    /// <summary>
+    /// How long a pending delivery is considered owned by an enqueued job before the
+    /// scheduler may hand it out again. Covers the longest allowed per-attempt timeout
+    /// (120 s) plus generous queue wait.
+    /// </summary>
+    public static readonly TimeSpan InFlightLease = TimeSpan.FromMinutes(10);
 
     public record Args
     {
@@ -65,17 +80,13 @@ public class DeliverWebhookTask : IExecuteBackgroundTask
 
         if (delivery is null)
         {
-            job.StatusInfo = $"Webhook delivery {deliveryId} no longer exists.";
-            job.PercentComplete = 100;
-            await _db.SaveChangesAsync(cancellationToken);
+            await FinishAsync(job, $"Webhook delivery {deliveryId} no longer exists.", cancellationToken);
             return;
         }
 
-        if (delivery.Status.Equals(WebhookDeliveryStatus.Succeeded))
+        if (!delivery.Status.Equals(WebhookDeliveryStatus.Pending))
         {
-            job.StatusInfo = "Delivery already succeeded.";
-            job.PercentComplete = 100;
-            await _db.SaveChangesAsync(cancellationToken);
+            await FinishAsync(job, $"Delivery already {delivery.Status.DeveloperName}.", cancellationToken);
             return;
         }
 
@@ -85,65 +96,67 @@ public class DeliverWebhookTask : IExecuteBackgroundTask
 
         if (webhook is null)
         {
-            delivery.Status = WebhookDeliveryStatus.Failed;
             delivery.ErrorMessage = "The webhook was deleted.";
-            delivery.CompletionTime = DateTime.UtcNow;
-            job.StatusInfo = delivery.ErrorMessage;
-            job.PercentComplete = 100;
-            await _db.SaveChangesAsync(cancellationToken);
+            Settle(delivery, WebhookDeliveryStatus.Failed);
+            await FinishAsync(job, delivery.ErrorMessage, cancellationToken);
             return;
         }
 
         var maxAttempts = Math.Max(1, webhook.MaxAttempts);
-        var attemptsThisRun = 0;
+        job.TaskStep = delivery.AttemptCount + 1;
+        job.StatusInfo = $"Attempt {delivery.AttemptCount + 1} of {maxAttempts}: {webhook.Url}";
+        await _db.SaveChangesAsync(cancellationToken);
 
-        while (!cancellationToken.IsCancellationRequested)
+        if (await AttemptAsync(webhook, delivery, cancellationToken))
         {
-            attemptsThisRun++;
-            job.TaskStep = delivery.AttemptCount + 1;
-            job.StatusInfo = $"Attempt {delivery.AttemptCount + 1} of {maxAttempts}: {webhook.Url}";
-            job.PercentComplete = (int)(100.0 * delivery.AttemptCount / maxAttempts);
-            await _db.SaveChangesAsync(cancellationToken);
-
-            var succeeded = await AttemptAsync(webhook, delivery, cancellationToken);
-
-            if (succeeded)
-            {
-                delivery.Status = WebhookDeliveryStatus.Succeeded;
-                delivery.NextRetryAt = null;
-                delivery.CompletionTime = DateTime.UtcNow;
-                job.StatusInfo = $"Delivered to {webhook.Url} (HTTP {delivery.ResponseCode}).";
-                job.PercentComplete = 100;
-                await _db.SaveChangesAsync(cancellationToken);
-                return;
-            }
-
-            if (delivery.AttemptCount >= maxAttempts)
-            {
-                delivery.Status = WebhookDeliveryStatus.Failed;
-                delivery.NextRetryAt = null;
-                delivery.CompletionTime = DateTime.UtcNow;
-                job.StatusInfo =
-                    $"Failed after {delivery.AttemptCount} attempt(s): {delivery.ErrorMessage}";
-                job.PercentComplete = 100;
-                await _db.SaveChangesAsync(cancellationToken);
-                _logger.LogWarning(
-                    "Webhook delivery {DeliveryId} to {WebhookName} failed permanently: {Error}",
-                    delivery.Id,
-                    webhook.Name,
-                    delivery.ErrorMessage
-                );
-                return;
-            }
-
-            var backoff = ComputeBackoff(attemptsThisRun);
-            delivery.NextRetryAt = DateTime.UtcNow.Add(backoff);
-            job.StatusInfo =
-                $"Attempt {delivery.AttemptCount} failed ({delivery.ErrorMessage}); retrying in {backoff.TotalSeconds:0}s.";
-            await _db.SaveChangesAsync(cancellationToken);
-
-            await Task.Delay(backoff, cancellationToken);
+            Settle(delivery, WebhookDeliveryStatus.Succeeded);
+            await FinishAsync(
+                job,
+                $"Delivered to {webhook.Url} (HTTP {delivery.ResponseCode}).",
+                cancellationToken
+            );
+            return;
         }
+
+        if (delivery.AttemptCount >= maxAttempts)
+        {
+            Settle(delivery, WebhookDeliveryStatus.Failed);
+            await FinishAsync(
+                job,
+                $"Failed after {delivery.AttemptCount} attempt(s): {delivery.ErrorMessage}",
+                cancellationToken
+            );
+            _logger.LogWarning(
+                "Webhook delivery {DeliveryId} to {WebhookName} failed permanently: {Error}",
+                delivery.Id,
+                webhook.Name,
+                delivery.ErrorMessage
+            );
+            return;
+        }
+
+        var backoff = ComputeBackoff(delivery.AttemptCount);
+        delivery.NextRetryAt = DateTime.UtcNow.Add(backoff);
+        await FinishAsync(
+            job,
+            $"Attempt {delivery.AttemptCount} of {maxAttempts} failed ({delivery.ErrorMessage}); "
+                + $"retry in {backoff.TotalSeconds:0}s at {delivery.NextRetryAt:yyyy-MM-dd HH:mm:ss} UTC.",
+            cancellationToken
+        );
+    }
+
+    private static void Settle(WebhookDelivery delivery, WebhookDeliveryStatus status)
+    {
+        delivery.Status = status;
+        delivery.NextRetryAt = null;
+        delivery.CompletionTime = DateTime.UtcNow;
+    }
+
+    private async Task FinishAsync(BackgroundTask job, string statusInfo, CancellationToken cancellationToken)
+    {
+        job.StatusInfo = statusInfo;
+        job.PercentComplete = 100;
+        await _db.SaveChangesAsync(cancellationToken);
     }
 
     private async Task<bool> AttemptAsync(
@@ -194,16 +207,19 @@ public class DeliverWebhookTask : IExecuteBackgroundTask
             delivery.ErrorMessage = $"Received HTTP {(int)response.StatusCode}.";
             return false;
         }
-        catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException)
+        // Host shutdown is not an attempt: let it propagate unsaved so the lease hands the
+        // delivery back to the scheduler.
+        catch (Exception ex)
+            when (ex is HttpRequestException or TaskCanceledException
+                && !cancellationToken.IsCancellationRequested
+            )
         {
             stopwatch.Stop();
             delivery.DurationMs = stopwatch.ElapsedMilliseconds;
             delivery.ResponseCode = null;
             delivery.ResponseBody = null;
             delivery.ErrorMessage =
-                ex is TaskCanceledException && !cancellationToken.IsCancellationRequested
-                    ? $"Timed out after {webhook.TimeoutSeconds}s."
-                    : ex.Message;
+                ex is TaskCanceledException ? $"Timed out after {webhook.TimeoutSeconds}s." : ex.Message;
             return false;
         }
     }
