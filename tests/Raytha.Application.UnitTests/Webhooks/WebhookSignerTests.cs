@@ -5,11 +5,13 @@ namespace Raytha.Application.UnitTests.Webhooks;
 
 public class WebhookSignerTests
 {
+    private const string Timestamp = "2026-10-01T20:00:00.0000000Z";
+
     [Test]
     public void Sign_ProducesHexSha256Prefix_AndIsDeterministic()
     {
-        var first = WebhookSigner.Sign("{\"a\":1}", "secret");
-        var second = WebhookSigner.Sign("{\"a\":1}", "secret");
+        var first = WebhookSigner.Sign(Timestamp, "{\"a\":1}", "secret");
+        var second = WebhookSigner.Sign(Timestamp, "{\"a\":1}", "secret");
 
         first.Should().StartWith("sha256=");
         first.Should().HaveLength("sha256=".Length + 64);
@@ -17,23 +19,25 @@ public class WebhookSignerTests
     }
 
     [Test]
-    public void Sign_ChangesWhenPayloadOrSecretChanges()
+    public void Sign_ChangesWhenTimestampPayloadOrSecretChanges()
     {
-        var baseline = WebhookSigner.Sign("payload", "secret");
+        var baseline = WebhookSigner.Sign(Timestamp, "payload", "secret");
 
-        WebhookSigner.Sign("payload!", "secret").Should().NotBe(baseline);
-        WebhookSigner.Sign("payload", "other").Should().NotBe(baseline);
+        WebhookSigner.Sign("2026-10-01T20:00:01.0000000Z", "payload", "secret").Should().NotBe(baseline);
+        WebhookSigner.Sign(Timestamp, "payload!", "secret").Should().NotBe(baseline);
+        WebhookSigner.Sign(Timestamp, "payload", "other").Should().NotBe(baseline);
     }
 
     [Test]
     public void Verify_AcceptsMatchingSignature_AndRejectsTamperedOnes()
     {
-        var signature = WebhookSigner.Sign("payload", "secret");
+        var signature = WebhookSigner.Sign(Timestamp, "payload", "secret");
 
-        WebhookSigner.Verify("payload", "secret", signature).Should().BeTrue();
-        WebhookSigner.Verify("payload2", "secret", signature).Should().BeFalse();
-        WebhookSigner.Verify("payload", "wrong", signature).Should().BeFalse();
-        WebhookSigner.Verify("payload", "secret", string.Empty).Should().BeFalse();
+        WebhookSigner.Verify(Timestamp, "payload", "secret", signature).Should().BeTrue();
+        WebhookSigner.Verify("2026-10-02T20:00:00.0000000Z", "payload", "secret", signature).Should().BeFalse();
+        WebhookSigner.Verify(Timestamp, "payload2", "secret", signature).Should().BeFalse();
+        WebhookSigner.Verify(Timestamp, "payload", "wrong", signature).Should().BeFalse();
+        WebhookSigner.Verify(Timestamp, "payload", "secret", string.Empty).Should().BeFalse();
     }
 
     [Test]

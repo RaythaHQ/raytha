@@ -49,13 +49,17 @@ Every delivery is a `POST` of the JSON payload with:
 
 | Header | Value |
 |---|---|
-| `X-Raytha-Signature` | `sha256=<lowercase hex>` — HMAC-SHA256 of the raw body, keyed by the webhook secret |
+| `X-Raytha-Signature` | `sha256=<lowercase hex>` — HMAC-SHA256 of `<X-Raytha-Timestamp>.<raw body>`, keyed by the webhook secret |
 | `X-Raytha-Event` | the event name |
 | `X-Raytha-Delivery` | the delivery id, for receiver-side idempotency |
 | `X-Raytha-Timestamp` | attempt time, round-trip format |
 
-- Signing MUST go through `WebhookSigner`. It signs the exact bytes that are
-  sent, so changing serialization after signing breaks verification.
+- Signing MUST go through `WebhookSigner`. It signs the exact timestamp header
+  value and the exact body bytes that are sent, so changing either after signing
+  breaks verification.
+- The timestamp is signed so a receiver can reject a captured delivery replayed
+  later. The signed string is a published contract like an event name; changing
+  it is a breaking change for every receiver.
 - Secrets are generated with `WebhookSigner.GenerateSecret()` (32 random bytes,
   hex) and returned once in `CreatedWebhookDto`. Never expose a secret again
   (RFC-0008 §7).

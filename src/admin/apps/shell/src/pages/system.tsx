@@ -131,8 +131,10 @@ function WebhookSecretReveal({ secret, onContinue }: { secret: string; onContinu
         </div>
         <CardDescription>
           Each delivery carries an <code className="font-mono text-foreground">X-Raytha-Signature</code> header, an
-          HMAC-SHA256 of the request body made with this secret. Your endpoint uses it to verify the request came from
-          Raytha.
+          HMAC-SHA256 made with this secret over the{" "}
+          <code className="font-mono text-foreground">X-Raytha-Timestamp</code> header value, a period, and the raw
+          request body. Your endpoint uses it to verify the request came from Raytha, and rejects a delivery whose
+          timestamp is too old as a replay.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">

@@ -178,13 +178,11 @@ public class DeliverWebhookTask : IExecuteBackgroundTask
             request.Content = new StringContent(delivery.Payload, Encoding.UTF8, "application/json");
             request.Headers.Add(WebhookSigner.EventHeader, delivery.EventName);
             request.Headers.Add(WebhookSigner.DeliveryHeader, delivery.Id.ToString());
-            request.Headers.Add(
-                WebhookSigner.TimestampHeader,
-                delivery.LastAttemptAt.Value.ToString("O")
-            );
+            var timestamp = delivery.LastAttemptAt.Value.ToString("O");
+            request.Headers.Add(WebhookSigner.TimestampHeader, timestamp);
             request.Headers.Add(
                 WebhookSigner.SignatureHeader,
-                WebhookSigner.Sign(delivery.Payload, webhook.Secret)
+                WebhookSigner.Sign(timestamp, delivery.Payload, webhook.Secret)
             );
 
             using var response = await client.SendAsync(request, cancellationToken);
