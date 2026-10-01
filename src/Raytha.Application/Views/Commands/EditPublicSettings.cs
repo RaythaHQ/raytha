@@ -54,6 +54,22 @@ public class EditPublicSettings
                         if (entity == null)
                             throw new NotFoundException("View", request.Id);
 
+                        if (
+                            !request.IsPublished
+                            && HomePageValidation.IsHomePage(
+                                db,
+                                request.Id.Guid,
+                                Route.VIEW_TYPE
+                            )
+                        )
+                        {
+                            context.AddFailure(
+                                Constants.VALIDATION_SUMMARY,
+                                HomePageValidation.CannotUnpublishMessage
+                            );
+                            return;
+                        }
+
                         var templateAccessToModelDefinitions = db
                             .WebTemplates.Include(wt => wt.TemplateAccessToModelDefinitions)
                             .Where(wt => wt.Id == request.TemplateId.Guid)
