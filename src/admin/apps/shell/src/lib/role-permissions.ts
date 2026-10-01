@@ -25,7 +25,7 @@ export const SYSTEM_PERMISSION_DESCRIPTIONS: Readonly<Record<string, string>> = 
   administrators: "Admin accounts, roles, and API keys.",
   audit_logs: "View the audit log and email log.",
   content_types: "Create content types, and read, edit, and configure every one of them.",
-  templates: "Themes, web templates, widget templates, email templates, and functions.",
+  templates: "Themes, web templates, widget templates, and email templates.",
   users: "Website user accounts and user groups.",
   site_pages: "Build site pages, menus, and navigation.",
   media_items: "Browse and delete files in the media library.",
