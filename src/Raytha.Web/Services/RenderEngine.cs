@@ -129,8 +129,12 @@ public class RenderEngine : IRenderEngine
         TemplateContext context
     )
     {
+        var objectKey = input.ToStringValue();
+        if (string.IsNullOrEmpty(objectKey))
+            return new StringValue(string.Empty);
+
         var relativeUrlBuilder = (IRelativeUrlBuilder)context.AmbientValues["RelativeUrlBuilder"];
-        return new StringValue(relativeUrlBuilder.MediaRedirectToFileUrl(input.ToStringValue()));
+        return new StringValue(relativeUrlBuilder.MediaRedirectToFilePath(objectKey));
     }
 
     private static async ValueTask<FluidValue> AttachmentPublicUrl(

@@ -250,6 +250,7 @@ public static class ConfigureServices
 
         services.AddOpenApi(options =>
         {
+            options.CreateSchemaReferenceId = OpenApiSchemaIds.Create;
             options.AddDocumentTransformer<ApiKeySecuritySchemeTransformer>();
         });
         services.AddRazorPages();

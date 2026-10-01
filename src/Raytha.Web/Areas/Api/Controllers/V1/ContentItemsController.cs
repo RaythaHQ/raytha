@@ -186,15 +186,14 @@ public class ContentItemsController : BaseController
             + BuiltInContentTypePermission.CONTENT_TYPE_EDIT_PERMISSION
     )]
     public async Task<ActionResult<ICommandResponseDto<ShortGuid>>> DeleteContentItems(
-        string contentTypeDeveloperName
+        string contentTypeDeveloperName,
+        [FromBody] DeleteContentItems.Command request
     )
     {
         var contentType = await Mediator.Send(
             new GetContentTypeByDeveloperName.Query { DeveloperName = contentTypeDeveloperName }
         );
-        var response = await Mediator.Send(
-            new DeleteContentItems.Command { ContentTypeId = contentType.Result.Id }
-        );
+        var response = await Mediator.Send(request with { ContentTypeId = contentType.Result.Id });
         if (!response.Success)
         {
             return BadRequest(response);

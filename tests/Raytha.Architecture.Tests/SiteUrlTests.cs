@@ -110,6 +110,9 @@ public class SiteUrlTests
         urls.MediaRedirectToFileUrl("k.png")
             .Should()
             .Be("https://cms.example.com/site/raytha/media-items/objectkey/k.png");
+        urls.MediaRedirectToFilePath("k.png")
+            .Should()
+            .Be("/site/raytha/media-items/objectkey/k.png");
         urls.MediaFileLocalStorageUrl("k.png").Should().Be("https://cms.example.com/site/_static-files/k.png");
     }
 
