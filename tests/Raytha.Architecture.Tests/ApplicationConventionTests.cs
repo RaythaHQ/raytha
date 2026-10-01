@@ -159,4 +159,26 @@ public class ApplicationConventionTests
             .Should()
             .Contain(typeof(Raytha.Application.Common.Behaviors.WebhookPublishBehavior<,>));
     }
+
+    [Test]
+    public void Pipeline_opens_the_command_transaction_after_validation_and_before_audit()
+    {
+        // Mediator runs behaviors in registration order. Validation stays outside the transaction
+        // so a rejected request never opens one; audit and webhook publish stay inside it so a
+        // command's row, its audit row, and its deliveries commit or roll back together.
+        var services = new ServiceCollection();
+        services.AddApplicationServices();
+
+        services
+            .Where(d => d.ServiceType == typeof(IPipelineBehavior<,>))
+            .Select(d => d.ImplementationType!.Name.Split('`')[0])
+            .Should()
+            .Equal(
+                "UnhandledExceptionBehaviour",
+                "ValidationBehaviour",
+                "TransactionBehavior",
+                "AuditBehavior",
+                "WebhookPublishBehavior"
+            );
+    }
 }
