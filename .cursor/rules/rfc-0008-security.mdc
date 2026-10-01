@@ -35,6 +35,13 @@ code.
   in a handler is FORBIDDEN.
 - Content-type permissions are per content type. A new content-scoped endpoint
   MUST use `ContentTypePermissionRequirement`, not a system-wide permission.
+- Manage System Settings and Manage Administrators are full trust. Holding
+  either MUST imply every system permission. The rule is
+  `BuiltInSystemPermission.WithImplied` in `src/Raytha.Domain/Entities/Role.cs`.
+  `PermissionGrant` applies it when a role is saved, and claim hydration in
+  `CustomCookieAuthenticationEvents` and `RaythaApiAuthorizationHandler` applies
+  it so a role still stored as only that pair authorizes everything. The admin
+  SPA mirrors the rule in `src/admin/apps/shell/src/lib/role-permissions.ts`.
 - Hiding a control in the SPA is presentation. The server policy is the control
   (RFC-0006 §4).
 

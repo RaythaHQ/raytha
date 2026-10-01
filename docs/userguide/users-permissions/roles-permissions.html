@@ -67,7 +67,7 @@ icon: bi-shield-check
   <tbody>
     <tr>
       <td><strong>Manage System Settings</strong></td>
-      <td>Edit site configuration, SMTP, authentication schemes</td>
+      <td>Edit site configuration, SMTP, and authentication schemes. Includes every other permission, because functions and authentication settings act with full access.</td>
     </tr>
     <tr>
       <td><strong>Manage Administrators</strong></td>
@@ -97,6 +97,11 @@ icon: bi-shield-check
 </table>
 
 <img src="../../images/system-permissions-checkboxes.png" alt="System Permissions" class="img-fluid my-3 border rounded">
+
+<h2>Permissions and trust</h2>
+<p><strong>Manage System Settings</strong> is full trust. Selecting it, or selecting <strong>Manage Administrators</strong>, selects every system permission. <strong>Manage Content Types</strong> is included, so the role can read, edit, and configure every content type, including types created later.</p>
+<p>The other permissions stay checked and locked, with the note <strong>Included with Manage System Settings</strong>. Clear <strong>Manage System Settings</strong> or <strong>Manage Administrators</strong> to unlock them. Clearing one clears both, and leaves the other permissions checked so you can remove the ones this role should not keep.</p>
+<p>Only an administrator with Manage System Settings can author a Raytha Function. A function runs with full access. It can create and edit content, and it can manage public users. <code>/raytha/functions/execute/{name}</code> is anonymous by design, and so is a public path on the function. Treat the request as public input.</p>
 
 <h2>Content Type Permissions</h2>
 <p>Control access to each content type separately:</p>
