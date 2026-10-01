@@ -18,6 +18,7 @@ namespace Raytha.Application.UnitTests.Login;
 public class LoginWithSamlValidatorTests
 {
     private const string Email = "person@example.com";
+    private const string SpEntityId = "https://raytha.test/sp";
 
     private RSA _rsa = null!;
     private X509Certificate2 _certificate = null!;
@@ -50,6 +51,7 @@ public class LoginWithSamlValidatorTests
             IsEnabledForUsers = true,
             IsEnabledForAdmins = false,
             SamlCertificate = _certificate.ExportCertificatePem(),
+            SamlIdpEntityId = SpEntityId,
         };
         _users = [];
     }
@@ -83,6 +85,46 @@ public class LoginWithSamlValidatorTests
         Validate(SignedResponse(nameId: "new-idp-subject")).IsValid.Should().BeTrue();
     }
 
+    [Test]
+    public void Assertion_issued_for_another_service_provider_is_refused()
+    {
+        _users.Add(new User { Id = Guid.NewGuid(), EmailAddress = Email, IsActive = true });
+
+        var result = Validate(SignedResponse(nameId: "subject", audience: "https://other-app.test/sp"));
+
+        result.Errors.Should().ContainSingle(e => e.ErrorMessage == "Failed authentication.");
+    }
+
+    [Test]
+    public void Assertion_without_an_audience_is_refused()
+    {
+        _users.Add(new User { Id = Guid.NewGuid(), EmailAddress = Email, IsActive = true });
+
+        var result = Validate(SignedResponse(nameId: "subject", audience: null));
+
+        result.Errors.Should().ContainSingle(e => e.ErrorMessage == "Failed authentication.");
+    }
+
+    [Test]
+    public void Assertion_without_an_expiry_is_refused()
+    {
+        _users.Add(new User { Id = Guid.NewGuid(), EmailAddress = Email, IsActive = true });
+
+        var result = Validate(SignedResponse(nameId: "subject", withExpiry: false));
+
+        result.Errors.Should().ContainSingle(e => e.ErrorMessage == "Failed authentication.");
+    }
+
+    [Test]
+    public void Unsigned_assertion_next_to_a_different_signed_element_is_refused()
+    {
+        _users.Add(new User { Id = Guid.NewGuid(), EmailAddress = Email, IsActive = true });
+
+        var result = Validate(WrappedResponse());
+
+        result.Errors.Should().ContainSingle(e => e.ErrorMessage == "Failed authentication.");
+    }
+
     private FluentValidation.Results.ValidationResult Validate(string samlResponse)
     {
         var db = new Mock<IRaythaDbContext>();
@@ -95,9 +137,13 @@ public class LoginWithSamlValidatorTests
         );
     }
 
-    private string SignedResponse(string nameId)
+    private string SignedResponse(string nameId, string? audience = SpEntityId, bool withExpiry = true)
     {
         var now = DateTime.UtcNow;
+        var expiry = withExpiry ? $" NotOnOrAfter=\"{now.AddMinutes(5):yyyy-MM-ddTHH:mm:ssZ}\"" : string.Empty;
+        var audienceRestriction = audience is null
+            ? string.Empty
+            : $"<saml:AudienceRestriction><saml:Audience>{audience}</saml:Audience></saml:AudienceRestriction>";
         var xml =
             "<samlp:Response xmlns:samlp=\"urn:oasis:names:tc:SAML:2.0:protocol\" xmlns:saml=\"urn:oasis:names:tc:SAML:2.0:assertion\" "
             + $"ID=\"_r1\" Version=\"2.0\" IssueInstant=\"{now:yyyy-MM-ddTHH:mm:ssZ}\">"
@@ -106,18 +152,43 @@ public class LoginWithSamlValidatorTests
             + $"<saml:Assertion ID=\"_a1\" Version=\"2.0\" IssueInstant=\"{now:yyyy-MM-ddTHH:mm:ssZ}\">"
             + "<saml:Issuer>https://idp.test</saml:Issuer>"
             + $"<saml:Subject><saml:NameID>{nameId}</saml:NameID></saml:Subject>"
-            + $"<saml:Conditions NotBefore=\"{now.AddMinutes(-1):yyyy-MM-ddTHH:mm:ssZ}\" NotOnOrAfter=\"{now.AddMinutes(5):yyyy-MM-ddTHH:mm:ssZ}\"/>"
+            + $"<saml:Conditions NotBefore=\"{now.AddMinutes(-1):yyyy-MM-ddTHH:mm:ssZ}\"{expiry}>{audienceRestriction}</saml:Conditions>"
             + $"<saml:AttributeStatement><saml:Attribute Name=\"email\"><saml:AttributeValue>{Email}</saml:AttributeValue></saml:Attribute></saml:AttributeStatement>"
             + "</saml:Assertion></samlp:Response>";
 
-        var doc = new XmlDocument { PreserveWhitespace = true };
-        doc.LoadXml(xml);
-        var ns = new XmlNamespaceManager(doc.NameTable);
-        ns.AddNamespace("saml", "urn:oasis:names:tc:SAML:2.0:assertion");
-        var assertion = (XmlElement)doc.SelectSingleNode("//saml:Assertion", ns)!;
+        var doc = Load(xml);
+        var assertion = (XmlElement)doc.SelectSingleNode("//saml:Assertion", Namespaces(doc))!;
+        Sign(doc, assertion, "_a1", insertAfter: assertion.SelectSingleNode("saml:Issuer", Namespaces(doc))!);
+        return Encode(doc);
+    }
 
+    private string WrappedResponse()
+    {
+        var now = DateTime.UtcNow;
+        var xml =
+            "<samlp:Response xmlns:samlp=\"urn:oasis:names:tc:SAML:2.0:protocol\" xmlns:saml=\"urn:oasis:names:tc:SAML:2.0:assertion\" "
+            + $"ID=\"_r1\" Version=\"2.0\" IssueInstant=\"{now:yyyy-MM-ddTHH:mm:ssZ}\">"
+            + "<saml:Issuer>https://idp.test</saml:Issuer>"
+            + "<samlp:Extensions ID=\"_e1\"><saml:Issuer>https://idp.test</saml:Issuer></samlp:Extensions>"
+            + "<samlp:Status><samlp:StatusCode Value=\"urn:oasis:names:tc:SAML:2.0:status:Success\"/></samlp:Status>"
+            + $"<saml:Assertion ID=\"_a1\" Version=\"2.0\" IssueInstant=\"{now:yyyy-MM-ddTHH:mm:ssZ}\">"
+            + "<saml:Issuer>https://idp.test</saml:Issuer>"
+            + "<saml:Subject><saml:NameID>forged</saml:NameID></saml:Subject>"
+            + $"<saml:Conditions NotBefore=\"{now.AddMinutes(-1):yyyy-MM-ddTHH:mm:ssZ}\" NotOnOrAfter=\"{now.AddMinutes(5):yyyy-MM-ddTHH:mm:ssZ}\">"
+            + $"<saml:AudienceRestriction><saml:Audience>{SpEntityId}</saml:Audience></saml:AudienceRestriction></saml:Conditions>"
+            + $"<saml:AttributeStatement><saml:Attribute Name=\"email\"><saml:AttributeValue>{Email}</saml:AttributeValue></saml:Attribute></saml:AttributeStatement>"
+            + "</saml:Assertion></samlp:Response>";
+
+        var doc = Load(xml);
+        var extensions = (XmlElement)doc.SelectSingleNode("//samlp:Extensions", Namespaces(doc))!;
+        Sign(doc, extensions, "_e1", insertAfter: extensions.FirstChild!);
+        return Encode(doc);
+    }
+
+    private void Sign(XmlDocument doc, XmlElement element, string id, XmlNode insertAfter)
+    {
         var signed = new SignedXml(doc) { SigningKey = _rsa };
-        var reference = new Reference("#_a1");
+        var reference = new Reference($"#{id}");
         reference.AddTransform(new XmlDsigEnvelopedSignatureTransform());
         reference.AddTransform(new XmlDsigExcC14NTransform());
         signed.AddReference(reference);
@@ -125,8 +196,23 @@ public class LoginWithSamlValidatorTests
         signed.KeyInfo = new KeyInfo();
         signed.KeyInfo.AddClause(new KeyInfoX509Data(_certificate));
         signed.ComputeSignature();
-        assertion.InsertAfter(doc.ImportNode(signed.GetXml(), true), assertion.SelectSingleNode("saml:Issuer", ns)!);
-
-        return Convert.ToBase64String(Encoding.ASCII.GetBytes(doc.OuterXml));
+        element.InsertAfter(doc.ImportNode(signed.GetXml(), true), insertAfter);
     }
+
+    private static XmlDocument Load(string xml)
+    {
+        var doc = new XmlDocument { PreserveWhitespace = true };
+        doc.LoadXml(xml);
+        return doc;
+    }
+
+    private static XmlNamespaceManager Namespaces(XmlDocument doc)
+    {
+        var ns = new XmlNamespaceManager(doc.NameTable);
+        ns.AddNamespace("saml", "urn:oasis:names:tc:SAML:2.0:assertion");
+        ns.AddNamespace("samlp", "urn:oasis:names:tc:SAML:2.0:protocol");
+        return ns;
+    }
+
+    private static string Encode(XmlDocument doc) => Convert.ToBase64String(Encoding.ASCII.GetBytes(doc.OuterXml));
 }
