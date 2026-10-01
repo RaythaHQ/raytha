@@ -1,4 +1,6 @@
 using System.Net;
+using System.Security.Cryptography;
+using System.Text;
 using System.Text.Json;
 using FluentAssertions;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -131,6 +133,24 @@ public class DeliverWebhookTaskTests
     }
 
     [Test]
+    public async Task The_signature_covers_the_timestamp_header_and_the_body()
+    {
+        _http.Respond(HttpStatusCode.OK);
+
+        await Execute();
+
+        var timestamp = _http.LastHeaders[WebhookSigner.TimestampHeader];
+        var expected = HMACSHA256.HashData(
+            Encoding.UTF8.GetBytes(_webhook.Secret),
+            Encoding.UTF8.GetBytes($"{timestamp}.{_http.LastBody}")
+        );
+        _http.LastBody.Should().Be(_delivery.Payload);
+        _http.LastHeaders[WebhookSigner.SignatureHeader]
+            .Should()
+            .Be($"sha256={Convert.ToHexStringLower(expected)}");
+    }
+
+    [Test]
     public async Task A_delivery_that_already_succeeded_makes_no_request()
     {
         _delivery.Status = WebhookDeliveryStatus.Succeeded;
@@ -192,6 +212,8 @@ public class DeliverWebhookTaskTests
         private string _body = string.Empty;
 
         public int Requests { get; private set; }
+        public Dictionary<string, string> LastHeaders { get; } = new();
+        public string LastBody { get; private set; } = string.Empty;
 
         public void Respond(HttpStatusCode status, string body = "")
         {
@@ -199,13 +221,21 @@ public class DeliverWebhookTaskTests
             _body = body;
         }
 
-        protected override Task<HttpResponseMessage> SendAsync(
+        protected override async Task<HttpResponseMessage> SendAsync(
             HttpRequestMessage request,
             CancellationToken cancellationToken
         )
         {
             Requests++;
-            return Task.FromResult(new HttpResponseMessage(_status) { Content = new StringContent(_body) });
+            LastHeaders.Clear();
+            foreach (var header in request.Headers)
+            {
+                LastHeaders[header.Key] = string.Join(",", header.Value);
+            }
+            LastBody = request.Content is null
+                ? string.Empty
+                : await request.Content.ReadAsStringAsync(cancellationToken);
+            return new HttpResponseMessage(_status) { Content = new StringContent(_body) };
         }
     }
 }
