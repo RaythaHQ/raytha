@@ -1146,6 +1146,11 @@ WITH stored AS (
     FROM "ContentItemRevisions" r
     JOIN "ContentItems" ci ON ci."Id" = r."ContentItemId"
     JOIN "ContentTypeFields" f ON f."ContentTypeId" = ci."ContentTypeId" AND f."FieldType" = 'date'
+    UNION ALL
+    SELECT 'deleted', d."Id", f."Id", f."DeveloperName",
+           NULLIF(d."_PublishedContent", '')::jsonb ->> f."DeveloperName"
+    FROM "DeletedContentItems" d
+    JOIN "ContentTypeFields" f ON f."ContentTypeId" = d."ContentTypeId" AND f."FieldType" = 'date'
 )
 SELECT source, row_id, field_id, field, raw,
        regexp_match(raw, '^[[:space:]\u00A0\u202F]*([0-9]{1,2})[/.-]([0-9]{1,2})[/.-]([0-9]{4})(?:[[:space:]\u00A0\u202F]+([0-9]{1,2}):([0-9]{2})(?::([0-9]{2}))?(?:[[:space:]\u00A0\u202F]*([AaPp])[Mm])?)?[[:space:]\u00A0\u202F]*$') AS parts
@@ -1163,11 +1168,21 @@ WHERE parts IS NOT NULL
 GROUP BY field_id;
 
 CREATE TEMP TABLE raytha_legacy_date_iso AS
-WITH split AS (
-    SELECT d.source, d.row_id, d.field_id, d.field,
+WITH oriented AS (
+    SELECT d.source, d.row_id, d.field_id, d.field, d.parts,
+           CASE WHEN NOT (o.day_first AND o.month_first) THEN o.day_first
+                WHEN d.parts[1]::int > 12 THEN true
+                WHEN d.parts[2]::int > 12 THEN false
+           END AS day_first
+    FROM raytha_legacy_dates d
+    JOIN raytha_legacy_date_order o ON o.field_id = d.field_id
+    WHERE d.parts IS NOT NULL
+),
+split AS (
+    SELECT source, row_id, field_id, field,
            parts[3]::int AS y,
-           CASE WHEN o.day_first THEN parts[2]::int ELSE parts[1]::int END AS m,
-           CASE WHEN o.day_first THEN parts[1]::int ELSE parts[2]::int END AS d,
+           CASE WHEN day_first THEN parts[2]::int ELSE parts[1]::int END AS m,
+           CASE WHEN day_first THEN parts[1]::int ELSE parts[2]::int END AS d,
            CASE
                WHEN parts[4] IS NULL THEN 0
                WHEN parts[7] IS NULL THEN parts[4]::int
@@ -1177,10 +1192,8 @@ WITH split AS (
            COALESCE(parts[5]::int, 0) AS mi,
            COALESCE(parts[6]::int, 0) AS s,
            parts[7] IS NOT NULL AND parts[4]::int NOT BETWEEN 1 AND 12 AS bad_clock
-    FROM raytha_legacy_dates d
-    JOIN raytha_legacy_date_order o ON o.field_id = d.field_id
-    WHERE d.parts IS NOT NULL
-      AND NOT (o.day_first AND o.month_first)
+    FROM oriented
+    WHERE day_first IS NOT NULL
 ),
 valid AS (
     SELECT * FROM split
@@ -1215,6 +1228,11 @@ SET "_PublishedContent" = (r."_PublishedContent"::jsonb || p.patch)::text
 FROM raytha_legacy_date_patch p
 WHERE p.source = 'revision' AND p.row_id = r."Id";
 
+UPDATE "DeletedContentItems" d
+SET "_PublishedContent" = (d."_PublishedContent"::jsonb || p.patch)::text
+FROM raytha_legacy_date_patch p
+WHERE p.source = 'deleted' AND p.row_id = d."Id";
+
 DO $$
 DECLARE
     skipped record;
@@ -1222,7 +1240,8 @@ BEGIN
     FOR skipped IN
         SELECT t."DeveloperName" AS content_type, f."DeveloperName" AS field,
                CASE WHEN d.parts IS NULL THEN 'unrecognized format'
-                    WHEN o.day_first AND o.month_first THEN 'mixed day/month order'
+                    WHEN o.day_first AND o.month_first AND d.parts[1]::int <= 12 AND d.parts[2]::int <= 12
+                        THEN 'ambiguous day/month in a mixed-order field'
                     ELSE 'not a valid date' END AS reason,
                count(*) AS value_count
         FROM raytha_legacy_dates d

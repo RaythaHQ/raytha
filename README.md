@@ -161,10 +161,12 @@ The upgrade rewrites some existing data, not just the schema:
   server's culture. Each date field's day/month order is inferred from its own
   values (a first number above 12 means day-first), and values are rewritten as
   `YYYY-MM-DD`, or `YYYY-MM-DDTHH:MM:SS` when they carried a time. This covers
-  published content, drafts, and revisions. A field whose values disagree on the
-  order, or a value that isn't a recognizable date, is left unchanged and
-  reported as a `NOTICE` (visible when you apply the script with `psql`). To
-  find what was left behind:
+  published content, drafts, revisions, and trash. In a field whose values
+  disagree on the order (written under two server cultures), each value is read
+  by its own numbers. A value that could be either order, or isn't a
+  recognizable date, is left unchanged and reported as a `NOTICE`, which only
+  `psql` shows. Such a value reads as an empty date, and the admin editor shows
+  the stored text and asks for the date it means. To find what was left behind:
 
   ```sql
   SELECT t."DeveloperName" AS content_type, f."DeveloperName" AS field, ci."Id",
@@ -191,6 +193,11 @@ The upgrade rewrites some existing data, not just the schema:
   emailed before the upgrade stop working.
 - **Built-in widget templates gain field definitions** for the 2.0 page builder.
   Templates that already have fields are not touched.
+
+These rewrites are not undone by rolling back the migration, and 1.5 cannot read
+the converted dates. To go back to 1.5, restore the backup. Check the Website URL
+in organization settings before upgrading too: 2.0 builds media and email links
+from it, so a stale value breaks images.
 
 ## Architecture
 
