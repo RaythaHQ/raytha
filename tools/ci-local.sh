@@ -29,6 +29,9 @@ dotnet build Raytha.sln --no-restore --configuration Release || fail "dotnet bui
 echo "==> backend: test"
 dotnet test Raytha.sln --no-build --configuration Release || fail "dotnet test"
 
+echo "==> backend: db/Postgres scripts match the migrations"
+python3 tools/check-sql-scripts.py --configuration Release --no-build || fail "db/Postgres scripts stale"
+
 if [ -d src/admin ]; then
   echo "==> admin: install"
   (

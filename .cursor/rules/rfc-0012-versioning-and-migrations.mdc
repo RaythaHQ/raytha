@@ -90,6 +90,10 @@ dotnet ef migrations script v1_5_0 v2_0_0 \
   `v<previous>_to_v<new>.sql`.
 - Operators who cannot run migrations at startup apply these by hand, so a
   missing or stale script is a broken upgrade, not a paperwork problem.
+- `tools/check-sql-scripts.py` regenerates `FreshCreateOnLatestVersion.sql` and
+  the upgrade into the latest migration, and fails CI if either is missing or
+  differs. It ignores only the EF version stamp and the `v1_4_0` default-theme
+  seed, which change on every generation.
 
 ## 5. Applying Migrations
 
