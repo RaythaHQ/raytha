@@ -50,6 +50,12 @@ New admin work goes into the SPA, not into the Razor admin pages.
 - Data loading is TanStack Query. Query keys MUST include every input that
   changes the result (ids, page, search, sort), and mutations MUST invalidate the
   lists they affect rather than mutating cache by hand.
+- Queries default to `placeholderData: keepPreviousData`, so a list keeps its
+  rows while the next page loads. For an entity page that would show, and let a
+  form submit, the previous entity's data under the next one's id. The router's
+  `defaultRemountDeps` remounts a route whenever its params change, so an
+  editor starts empty for each id. A route MUST NOT override `remountDeps` to
+  keep state across ids.
 
 ## 3. Admin API
 

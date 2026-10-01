@@ -77,6 +77,7 @@ import { EditMenuItemPage, MenuItemsPage, NewMenuItemPage } from "./pages/menus/
 import { SetupPage } from "./pages/setup";
 import { ContentTypeImportPage } from "./pages/content/import";
 import { MediaDetailPage } from "./pages/media";
+import { remountOnParamChange } from "./lib/router-options";
 
 const rootRoute = createRootRoute({ component: Outlet });
 
@@ -428,6 +429,7 @@ export const router = createRouter({
   basepath: "/raytha",
   trailingSlash: "never",
   stringifySearch: stringifyAdminSearch,
+  defaultRemountDeps: remountOnParamChange,
 });
 
 declare module "@tanstack/react-router" {
