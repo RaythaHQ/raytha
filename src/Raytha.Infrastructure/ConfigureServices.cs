@@ -109,6 +109,7 @@ public static class ConfigureServices
         {
             services.AddSingleton<IHostedService, QueuedHostedService>();
         }
+        services.AddHostedService<SchedulerHostedService>();
         services.AddScoped<IBackgroundTaskQueue, BackgroundTaskQueue>();
 
         services

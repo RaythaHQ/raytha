@@ -3,6 +3,7 @@ using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Moq;
 using Raytha.Application.Common.Interfaces;
+using Raytha.Application.Webhooks;
 using Raytha.Domain.Entities;
 using Raytha.Infrastructure.BackgroundTasks;
 
@@ -71,6 +72,25 @@ public class BackgroundTaskQueueTests
         await _queue.EnqueueAsync<TestBackgroundTask>(null!, CancellationToken.None);
 
         _added[0].Args.Should().Be("null");
+    }
+
+    [Test]
+    public void NewTask_builds_the_row_the_scheduler_inserts_for_a_webhook_delivery()
+    {
+        var deliveryId = Guid.NewGuid();
+
+        var task = BackgroundTaskQueue.NewTask<DeliverWebhookTask>(
+            new DeliverWebhookTask.Args { DeliveryId = deliveryId }
+        );
+
+        task.Name.Should().Be(typeof(DeliverWebhookTask).AssemblyQualifiedName);
+        task.Status.Should().Be(BackgroundTaskStatus.Enqueued);
+        JsonSerializer
+            .Deserialize<JsonElement>(task.Args!)
+            .GetProperty(nameof(DeliverWebhookTask.Args.DeliveryId))
+            .GetGuid()
+            .Should()
+            .Be(deliveryId);
     }
 
     [Test]

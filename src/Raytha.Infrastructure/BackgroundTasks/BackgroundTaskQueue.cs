@@ -21,14 +21,19 @@ public class BackgroundTaskQueue : IBackgroundTaskQueue
         _db = db;
     }
 
-    public async ValueTask<Guid> EnqueueAsync<T>(object args, CancellationToken cancellationToken)
+    public static BackgroundTask NewTask<T>(object args)
     {
-        var task = new BackgroundTask
+        return new BackgroundTask
         {
             Id = Guid.NewGuid(),
             Name = typeof(T).AssemblyQualifiedName!,
             Args = JsonSerializer.Serialize(args, ArgsJsonOptions),
         };
+    }
+
+    public async ValueTask<Guid> EnqueueAsync<T>(object args, CancellationToken cancellationToken)
+    {
+        var task = NewTask<T>(args);
         _db.BackgroundTasks.Add(task);
         await _db.SaveChangesAsync(cancellationToken);
         return task.Id;
