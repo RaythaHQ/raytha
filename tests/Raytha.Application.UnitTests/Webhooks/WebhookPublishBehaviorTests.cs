@@ -2,9 +2,13 @@ using System.Text.Json.Nodes;
 using CSharpVitamins;
 using FluentAssertions;
 using Mediator;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using Raytha.Application.Common.Behaviors;
+using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Models;
 using Raytha.Application.Users.Commands;
 using Raytha.Application.Webhooks;
@@ -15,11 +19,19 @@ namespace Raytha.Application.UnitTests.Webhooks;
 public class WebhookPublishBehaviorTests
 {
     private Mock<IWebhookEventPublisher> _publisher = null!;
+    private IRaythaDbContext _db = null!;
 
     [SetUp]
     public void Setup()
     {
         _publisher = new Mock<IWebhookEventPublisher>();
+        var context = new Mock<DbContext>();
+        var database = new Mock<DatabaseFacade>(context.Object);
+        database.Setup(d => d.CurrentTransaction).Returns((IDbContextTransaction?)null);
+        context.Setup(c => c.Database).Returns(database.Object);
+        var db = new Mock<IRaythaDbContext>();
+        db.Setup(d => d.DbContext).Returns(context.Object);
+        _db = db.Object;
     }
 
     [Test]
@@ -45,6 +57,7 @@ public class WebhookPublishBehaviorTests
     {
         var behavior = new WebhookPublishBehavior<CreateUser.Command, CommandResponseDto<ShortGuid>>(
             _publisher.Object,
+            _db,
             NullLogger<WebhookPublishBehavior<CreateUser.Command, CommandResponseDto<ShortGuid>>>.Instance
         );
         var id = ShortGuid.NewGuid();
@@ -72,6 +85,7 @@ public class WebhookPublishBehaviorTests
     {
         var behavior = new WebhookPublishBehavior<CreateUser.Command, CommandResponseDto<ShortGuid>>(
             _publisher.Object,
+            _db,
             NullLogger<WebhookPublishBehavior<CreateUser.Command, CommandResponseDto<ShortGuid>>>.Instance
         );
 
@@ -92,6 +106,7 @@ public class WebhookPublishBehaviorTests
     {
         var behavior = new WebhookPublishBehavior<TestWebhook.Command, CommandResponseDto<ShortGuid>>(
             _publisher.Object,
+            _db,
             NullLogger<WebhookPublishBehavior<TestWebhook.Command, CommandResponseDto<ShortGuid>>>.Instance
         );
 
@@ -112,6 +127,7 @@ public class WebhookPublishBehaviorTests
             .ThrowsAsync(new InvalidOperationException("boom"));
         var behavior = new WebhookPublishBehavior<CreateUser.Command, CommandResponseDto<ShortGuid>>(
             _publisher.Object,
+            _db,
             NullLogger<WebhookPublishBehavior<CreateUser.Command, CommandResponseDto<ShortGuid>>>.Instance
         );
         var id = ShortGuid.NewGuid();

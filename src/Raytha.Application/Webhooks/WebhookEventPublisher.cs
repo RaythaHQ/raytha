@@ -1,7 +1,6 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
 using Raytha.Application.Common.Exceptions;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Domain.Entities;
@@ -21,17 +20,11 @@ public sealed class WebhookEventPublisher : IWebhookEventPublisher
 
     private readonly IRaythaDbContext _db;
     private readonly IBackgroundTaskQueue _taskQueue;
-    private readonly ILogger<WebhookEventPublisher> _logger;
 
-    public WebhookEventPublisher(
-        IRaythaDbContext db,
-        IBackgroundTaskQueue taskQueue,
-        ILogger<WebhookEventPublisher> logger
-    )
+    public WebhookEventPublisher(IRaythaDbContext db, IBackgroundTaskQueue taskQueue)
     {
         _db = db;
         _taskQueue = taskQueue;
-        _logger = logger;
     }
 
     public async Task PublishAsync(
@@ -51,21 +44,12 @@ public sealed class WebhookEventPublisher : IWebhookEventPublisher
             return;
         }
 
+        // A failure here propagates so WebhookPublishBehavior can roll the whole publish back
+        // to its savepoint. Swallowing per webhook would leave the aborted transaction in place
+        // and the next webhook's insert would fail the same way.
         foreach (var webhook in targets)
         {
-            try
-            {
-                await CreateAndEnqueueAsync(webhook, eventName, payload, cancellationToken);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(
-                    ex,
-                    "Failed to enqueue webhook delivery for {EventName} to {WebhookName}",
-                    eventName,
-                    webhook.Name
-                );
-            }
+            await CreateAndEnqueueAsync(webhook, eventName, payload, cancellationToken);
         }
     }
 
