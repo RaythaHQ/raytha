@@ -263,4 +263,53 @@ public class CreateContentItemTests
         routePath.Should().NotBe("Casey");
         routePath.Should().EndWith("-Casey");
     }
+
+    [Test]
+    public async Task Generated_route_uses_fallback_when_the_path_is_reserved_by_the_host()
+    {
+        var primaryFieldId = Guid.NewGuid();
+        var contentType = new ContentType
+        {
+            Id = Guid.NewGuid(),
+            DeveloperName = "post",
+            PrimaryFieldId = primaryFieldId,
+            DefaultRouteTemplate = "{PrimaryField}",
+            ContentTypeFields =
+            [
+                new()
+                {
+                    Id = primaryFieldId,
+                    DeveloperName = "title",
+                    FieldType = BaseFieldType.SingleLineText,
+                },
+            ],
+        };
+        var contentItems = new List<ContentItem>().AsQueryable().BuildMockDbSet();
+        ContentItem? created = null;
+        contentItems
+            .Setup(x => x.Add(It.IsAny<ContentItem>()))
+            .Callback<ContentItem>(item => created = item);
+        _dbMock.Setup(x => x.ContentTypes)
+            .Returns(
+                new List<ContentType> { contentType }.AsQueryable().BuildMockDbSet().Object
+            );
+        _dbMock.Setup(x => x.ContentItems).Returns(contentItems.Object);
+        _dbMock.Setup(x => x.WebTemplateContentItemRelations)
+            .Returns(
+                new List<WebTemplateContentItemRelation>().AsQueryable().BuildMockDbSet().Object
+            );
+        _dbMock.Setup(x => x.Routes).Returns(new List<Route>().AsQueryable().BuildMockDbSet().Object);
+
+        await new CreateContentItem.Handler(_dbMock.Object).Handle(
+            new CreateContentItem.Command
+            {
+                ContentTypeDeveloperName = "post",
+                TemplateId = ShortGuid.NewGuid(),
+                Content = new Dictionary<string, dynamic> { ["title"] = "Healthz" },
+            },
+            CancellationToken.None
+        );
+
+        created!.Route.Path.Should().NotBe("Healthz").And.EndWith("-Healthz");
+    }
 }
