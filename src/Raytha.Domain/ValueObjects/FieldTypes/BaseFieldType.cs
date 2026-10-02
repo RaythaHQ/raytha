@@ -42,6 +42,8 @@ public abstract class BaseFieldType : ValueObject
     public static BaseFieldType Number => new NumberFieldType();
     public static BaseFieldType Attachment => new AttachmentFieldType();
     public static BaseFieldType OneToOneRelationship => new OneToOneRelationshipFieldType();
+    public static BaseFieldType Color => new ColorFieldType();
+    public static BaseFieldType Repeater => new RepeaterFieldType();
     public static BaseFieldType Id => new IdentifierFieldType();
 
     public string DeveloperName { get; private set; } = string.Empty;
@@ -82,48 +84,40 @@ public abstract class BaseFieldType : ValueObject
             yield return Number;
             yield return Attachment;
             yield return OneToOneRelationship;
+            yield return Color;
+            yield return Repeater;
         }
     }
 
     [NotMapped]
     public abstract IEnumerable<ConditionOperator> SupportedConditionOperators { get; }
 
+    [NotMapped]
+    public virtual bool IsSortable => true;
+
+    [NotMapped]
+    public virtual bool IsSearchable => true;
+
+    /// <summary>
+    /// The stored value is a JSON array, so emptiness means an empty array rather than an empty string.
+    /// </summary>
+    [NotMapped]
+    public virtual bool StoresJsonArray => false;
+
     public abstract BaseFieldValue FieldValueFrom(dynamic value);
+
+    /// <summary>
+    /// Reads a value already in the database. Unlike <see cref="FieldValueFrom"/>, which rejects
+    /// bad input, this must not throw on data an older release stored, or one bad value would
+    /// make every item of the content type unreadable.
+    /// </summary>
+    public virtual BaseFieldValue StoredValueFrom(dynamic value) => FieldValueFrom(value);
 
     protected override IEnumerable<object> GetEqualityComponents()
     {
         yield return DeveloperName;
     }
 
-    public virtual string SqlServerOrderByExpression(params string[] args)
-    {
-        return $" COALESCE(JSON_VALUE({args[0]}.{args[1]}, '$.{args[2]}'), '') {args[3]} ";
-    }
-
-    public virtual string SqlServerSingleJsonValue(params string[] args)
-    {
-        return $" COALESCE(JSON_VALUE({args[0]}.{args[1]}, '$.{args[2]}'), '') ";
-    }
-
-    public virtual string SqlServerLikeJsonValue(params string[] args)
-    {
-        return $" COALESCE(JSON_VALUE({args[0]}.{args[1]}, '$.{args[2]}'), '') COLLATE Latin1_General_CI_AS LIKE '{args[3]}' ";
-    }
-
-    public virtual string PostgresOrderByExpression(params string[] args)
-    {
-        return $" COALESCE({args[0]}.\"{args[1]}\"->>'{args[2]}', '') {args[3]} ";
-    }
-
-    public virtual string PostgresSingleJsonValue(params string[] args)
-    {
-        return $" COALESCE({args[0]}.\"{args[1]}\"->>'{args[2]}', '')";
-    }
-
-    public virtual string PostgresLikeJsonValue(params string[] args)
-    {
-        return $" COALESCE({args[0]}.\"{args[1]}\"->>'{args[2]}', '') ILIKE '{args[3]}' ";
-    }
 }
 
 public abstract class EqualsOrNotEqualsFieldType : BaseFieldType
@@ -201,23 +195,4 @@ public abstract class NumericValueFieldType : BaseFieldType
         }
     }
 
-    public override string SqlServerOrderByExpression(params string[] args)
-    {
-        return $" CASE WHEN ISNUMERIC(JSON_VALUE({args[0]}.{args[1]}, '$.{args[2]}')) = 1 THEN CAST(JSON_VALUE({args[0]}.{args[1]}, '$.{args[2]}') AS decimal) ELSE NULL END {args[3]}, JSON_VALUE({args[0]}.{args[1]}, '$.{args[2]}') {args[3]} ";
-    }
-
-    public override string SqlServerSingleJsonValue(params string[] args)
-    {
-        return $" TRY_CONVERT(decimal(18, 2), JSON_VALUE({args[0]}.{args[1]}, '$.{args[2]}')) ";
-    }
-
-    public override string PostgresOrderByExpression(params string[] args)
-    {
-        return $" CASE WHEN ({args[0]}.\"{args[1]}\"->>'{args[2]}') ~ '^[0-9]+(\\.[0-9]+)?$' THEN ({args[0]}.\"{args[1]}\"->> '{args[2]}')::decimal ELSE NULL END {args[3]}, {args[0]}.\"{args[1]}\"->>'{args[2]}' {args[3]} ";
-    }
-
-    public override string PostgresSingleJsonValue(params string[] args)
-    {
-        return $" CASE WHEN ({args[0]}.\"{args[1]}\"->>'{args[2]}') ~ '^[0-9]+(\\.[0-9]+)?$' THEN ({args[0]}.\"{args[1]}\"->> '{args[2]}')::decimal(18, 2) ELSE NULL END";
-    }
 }

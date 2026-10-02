@@ -29,6 +29,18 @@ public class ShortGuidConverter : JsonConverter<ShortGuid>
             writer.WriteStringValue(shortGuid.Value);
         }
     }
+
+    public override ShortGuid ReadAsPropertyName(
+        ref Utf8JsonReader reader,
+        Type typeToConvert,
+        JsonSerializerOptions options
+    ) => new ShortGuid(reader.GetString());
+
+    public override void WriteAsPropertyName(
+        Utf8JsonWriter writer,
+        ShortGuid value,
+        JsonSerializerOptions options
+    ) => writer.WritePropertyName(value.Value);
 }
 
 public class AuditableUserDtoConverter : JsonConverter<AuditableUserDto>

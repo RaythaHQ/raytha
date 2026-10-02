@@ -7,13 +7,11 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.WebUtilities;
 using Raytha.Application.AuthenticationSchemes;
 using Raytha.Application.AuthenticationSchemes.Queries;
 using Raytha.Application.Common.Models;
 using Raytha.Application.Common.Models.RenderModels;
 using Raytha.Application.Common.Security;
-using Raytha.Application.Common.Utils;
 using Raytha.Application.Login;
 using Raytha.Application.Login.Commands;
 using Raytha.Application.Login.Queries;
@@ -152,16 +150,13 @@ public class LoginController : BaseController
     )
     {
         var response = await Mediator.Send(
-            new BeginLoginWithMagicLink.Command
-            {
-                EmailAddress = model.EmailAddress,
-                ReturnUrl = returnUrl,
-            }
+            new BeginLoginWithMagicLink.Command { EmailAddress = model.EmailAddress }
         );
 
         if (response.Success)
         {
-            return RedirectToAction("LoginWithMagicLinkSent", "Login");
+            TempData["MagicLinkEmailAddress"] = model.EmailAddress;
+            return RedirectToAction("LoginWithMagicLinkSent", "Login", new { returnUrl });
         }
         else
         {
@@ -186,9 +181,14 @@ public class LoginController : BaseController
     }
 
     [Route("account/login/magic-link/sent", Name = "userloginmagiclinksent")]
-    public IActionResult LoginWithMagicLinkSent()
+    public IActionResult LoginWithMagicLinkSent(string returnUrl = null)
     {
-        var viewModel = new EmptyTarget_RenderModel();
+        var viewModel = new MagicLinkCompleteSubmit_RenderModel
+        {
+            EmailAddress = TempData["MagicLinkEmailAddress"] as string ?? string.Empty,
+            ReturnUrl = returnUrl,
+            RequestVerificationToken = Antiforgery.GetAndStoreTokens(HttpContext).RequestToken,
+        };
         return new AccountActionViewResult(
             BuiltInWebTemplate.LoginWithMagicLinkSentPage,
             viewModel,
@@ -196,23 +196,21 @@ public class LoginController : BaseController
         );
     }
 
-    [Route("account/login/magic-link/complete/{token?}", Name = "userloginmagiclinkcomplete")]
+    [Route("account/login/magic-link/complete", Name = "userloginmagiclinkcomplete")]
+    [HttpPost]
+    [ValidateAntiForgeryToken]
     public async Task<IActionResult> LoginWithMagicLinkComplete(
-        string token = null,
+        LoginWithMagicLinkCompleteViewModel model,
         string returnUrl = null
     )
     {
-        if (string.IsNullOrEmpty(token))
-        {
-            return new ErrorActionViewResult(
-                BuiltInWebTemplate.Error403,
-                403,
-                new GenericError_RenderModel(),
-                ViewData
-            );
-        }
-
-        var response = await Mediator.Send(new CompleteLoginWithMagicLink.Command { Id = token });
+        var response = await Mediator.Send(
+            new CompleteLoginWithMagicLink.Command
+            {
+                EmailAddress = model.EmailAddress ?? string.Empty,
+                Code = model.Code ?? string.Empty,
+            }
+        );
 
         if (response.Success)
         {
@@ -228,7 +226,22 @@ public class LoginController : BaseController
         }
         else
         {
-            return RedirectToAction("LoginWithMagicLink", "Login", new { returnUrl });
+            var viewModel = new MagicLinkCompleteSubmit_RenderModel
+            {
+                EmailAddress = model.EmailAddress ?? string.Empty,
+                ReturnUrl = returnUrl,
+                ValidationFailures = response
+                    .GetErrors()
+                    ?.ToDictionary(k => k.PropertyName, v => v.ErrorMessage),
+                RequestVerificationToken = Antiforgery
+                    .GetAndStoreTokens(HttpContext)
+                    .RequestToken,
+            };
+            return new AccountActionViewResult(
+                BuiltInWebTemplate.LoginWithMagicLinkSentPage,
+                viewModel,
+                ViewData
+            );
         }
     }
 
@@ -648,41 +661,22 @@ public class LoginController : BaseController
 
         if (authScheme.AuthenticationSchemeType == AuthenticationSchemeType.Jwt.DeveloperName)
         {
-            string callbackUrl = Url.ActionLink(
-                "Jwt",
-                "Login",
-                values: new { developerName = authScheme.DeveloperName }
+            return RelativeUrlBuilder.GetSingleSignOnCallbackJwtUrl(
+                "Public",
+                authScheme.DeveloperName,
+                authScheme.SignInUrl,
+                returnUrl
             );
-            if (!string.IsNullOrEmpty(returnUrl))
-            {
-                var parametersToAdd = new Dictionary<string, string> { { "returnUrl", returnUrl } };
-                callbackUrl = QueryHelpers.AddQueryString(callbackUrl, parametersToAdd);
-            }
-            var setCallbackParams = new Dictionary<string, string>
-            {
-                { "raytha_callback_url", callbackUrl },
-            };
-            var loginUrl = QueryHelpers.AddQueryString(authScheme.SignInUrl, setCallbackParams);
-            return loginUrl;
         }
         else if (authScheme.AuthenticationSchemeType == AuthenticationSchemeType.Saml.DeveloperName)
         {
-            var acsUrl = Url.ActionLink(
-                "Saml",
-                "Login",
-                values: new { developerName = authScheme.DeveloperName }
+            return RelativeUrlBuilder.GetSingleSignOnCallbackSamlUrl(
+                "Public",
+                authScheme.DeveloperName,
+                authScheme.SamlIdpEntityId,
+                authScheme.SignInUrl,
+                returnUrl
             );
-            var samlRequest = SamlUtility.GetSamlRequestAsBase64(
-                acsUrl,
-                authScheme.SamlIdpEntityId
-            );
-            var parametersToAdd = new Dictionary<string, string> { { "SAMLRequest", samlRequest } };
-
-            if (!string.IsNullOrEmpty(returnUrl))
-                parametersToAdd.Add("RelayState", returnUrl);
-
-            var loginUrl = QueryHelpers.AddQueryString(authScheme.SignInUrl, parametersToAdd);
-            return loginUrl;
         }
         else
             throw new Exception("Unknown Sso type");

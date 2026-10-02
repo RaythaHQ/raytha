@@ -1,0 +1,324 @@
+import { Checkbox, FileUpload, FormField, Input, Select, Textarea } from "@raytha/ui";
+import { RichTextEditor } from "../../components/rich-text-editor";
+import { attachmentUrl } from "../../lib/media-upload";
+import { DefinitionFieldControl } from "./definition-field-control";
+import {
+  fieldAsDefinition,
+  parseFieldValue,
+  type ChoiceField,
+  type ContentField,
+  type ContentFieldValue,
+} from "./fields-model";
+import { RelationshipPicker } from "./relationship-picker";
+
+export function ContentFieldControl({
+  field,
+  value,
+  onChange,
+}: {
+  field: ContentField;
+  value: ContentFieldValue;
+  onChange: (next: ContentFieldValue) => void;
+}) {
+  const label = field.label || field.developerName;
+  const hint = field.description || undefined;
+
+  switch (field.fieldType) {
+    case "single_line_text":
+      if (value.fieldType !== "single_line_text") {
+        return null;
+      }
+      return (
+        <FormField label={label} required={field.isRequired} hint={hint} htmlFor={field.developerName}>
+          {(control) => (
+            <Input
+              {...control}
+              value={value.value}
+              onChange={(event) => onChange({ fieldType: "single_line_text", value: event.target.value })}
+            />
+          )}
+        </FormField>
+      );
+    case "long_text":
+      if (value.fieldType !== "long_text") {
+        return null;
+      }
+      return (
+        <FormField label={label} required={field.isRequired} hint={hint} htmlFor={field.developerName}>
+          {(control) => (
+            <Textarea
+              {...control}
+              rows={6}
+              value={value.value}
+              onChange={(event) => onChange({ fieldType: "long_text", value: event.target.value })}
+            />
+          )}
+        </FormField>
+      );
+    case "wysiwyg":
+      if (value.fieldType !== "wysiwyg") {
+        return null;
+      }
+      return (
+        <FormField label={label} required={field.isRequired} hint={hint} htmlFor={field.developerName}>
+          {() => (
+            <RichTextEditor
+              content={value.value}
+              onHtmlChange={(html) => onChange({ fieldType: "wysiwyg", value: html })}
+              ariaLabel={label}
+            />
+          )}
+        </FormField>
+      );
+    case "checkbox":
+      if (value.fieldType !== "checkbox") {
+        return null;
+      }
+      return (
+        <div className="flex items-center gap-2">
+          <Checkbox
+            id={field.developerName}
+            checked={value.value}
+            onCheckedChange={(checked) => onChange({ fieldType: "checkbox", value: checked })}
+          />
+          <label htmlFor={field.developerName} className="text-sm">
+            {label}
+            {field.isRequired ? <span className="text-destructive"> *</span> : null}
+          </label>
+        </div>
+      );
+    case "radio":
+      if (value.fieldType !== "radio") {
+        return null;
+      }
+      return (
+        <RadioChoices
+          field={field}
+          value={value.value}
+          onChange={(next) => onChange({ fieldType: "radio", value: next })}
+        />
+      );
+    case "dropdown":
+      if (value.fieldType !== "dropdown") {
+        return null;
+      }
+      return (
+        <FormField label={label} required={field.isRequired} hint={hint} htmlFor={field.developerName}>
+          {(control) => (
+            <Select
+              {...control}
+              value={value.value}
+              onChange={(event) => onChange({ fieldType: "dropdown", value: event.target.value })}
+            >
+              <option value="">Select…</option>
+              {field.choices
+                .filter((choice) => !choice.disabled || choice.developerName === value.value)
+                .map((choice) => (
+                  <option key={choice.developerName} value={choice.developerName}>
+                    {choice.label || choice.developerName}
+                  </option>
+                ))}
+            </Select>
+          )}
+        </FormField>
+      );
+    case "multiple_select":
+      if (value.fieldType !== "multiple_select") {
+        return null;
+      }
+      return (
+        <MultipleChoices
+          field={field}
+          value={value.value}
+          onChange={(next) => onChange({ fieldType: "multiple_select", value: next })}
+        />
+      );
+    case "date":
+      if (value.fieldType !== "date") {
+        return null;
+      }
+      const unreadable = value.value !== "" && !/^\d{4}-\d{2}-\d{2}$/.test(value.value);
+      return (
+        <FormField
+          label={label}
+          required={field.isRequired}
+          hint={hint}
+          error={unreadable ? `Stored as "${value.value}", which is not a date. Pick the date it means.` : undefined}
+          htmlFor={field.developerName}
+        >
+          {(control) => (
+            <Input
+              {...control}
+              type="date"
+              value={unreadable ? "" : value.value}
+              onChange={(event) => onChange({ fieldType: "date", value: event.target.value })}
+            />
+          )}
+        </FormField>
+      );
+    case "number":
+      if (value.fieldType !== "number") {
+        return null;
+      }
+      return (
+        <FormField label={label} required={field.isRequired} hint={hint} htmlFor={field.developerName}>
+          {(control) => (
+            <Input
+              {...control}
+              type="number"
+              value={value.value}
+              onChange={(event) => onChange({ fieldType: "number", value: event.target.value })}
+            />
+          )}
+        </FormField>
+      );
+    case "attachment":
+      if (value.fieldType !== "attachment") {
+        return null;
+      }
+      return (
+        <div className="space-y-2">
+          <p className="text-sm font-medium">
+            {label}
+            {field.isRequired ? <span className="text-destructive"> *</span> : null}
+          </p>
+          {hint ? <p className="text-xs text-muted-foreground">{hint}</p> : null}
+          {value.value ? (
+            <div className="flex items-center gap-2 text-sm">
+              <a href={attachmentUrl(value.value)} className="text-primary hover:underline" target="_blank" rel="noreferrer">
+                Current file
+              </a>
+              <button
+                type="button"
+                className="text-muted-foreground hover:text-foreground"
+                onClick={() => onChange({ fieldType: "attachment", value: "" })}
+              >
+                Clear
+              </button>
+            </div>
+          ) : null}
+          <FileUpload
+            height={220}
+            onUploaded={(files) => {
+              const first = files[0];
+              if (first) {
+                onChange({ fieldType: "attachment", value: first.objectKey || first.url });
+              }
+            }}
+          />
+        </div>
+      );
+    case "one_to_one_relationship":
+      if (value.fieldType !== "one_to_one_relationship") {
+        return null;
+      }
+      return (
+        <RelationshipPicker
+          field={field}
+          value={value.value}
+          onChange={(next) => onChange({ fieldType: "one_to_one_relationship", value: next })}
+        />
+      );
+    case "color":
+    case "repeater": {
+      const definition = fieldAsDefinition(field);
+      return definition ? (
+        <DefinitionFieldControl
+          definition={definition}
+          value={value.value}
+          onChange={(next) => onChange(parseFieldValue(field, next))}
+        />
+      ) : null;
+    }
+    default: {
+      const _exhaustive: never = field;
+      return _exhaustive;
+    }
+  }
+}
+
+function RadioChoices({
+  field,
+  value,
+  onChange,
+}: {
+  field: ChoiceField;
+  value: string;
+  onChange: (next: string) => void;
+}) {
+  const label = field.label || field.developerName;
+  return (
+    <fieldset className="space-y-2">
+      <legend className="text-sm font-medium">
+        {label}
+        {field.isRequired ? <span className="text-destructive"> *</span> : null}
+      </legend>
+      {field.description ? <p className="text-xs text-muted-foreground">{field.description}</p> : null}
+      <div className="space-y-2">
+        {field.choices.map((choice) => {
+          const id = `${field.developerName}-${choice.developerName}`;
+          return (
+            <label key={choice.developerName} className="flex items-center gap-2 text-sm" htmlFor={id}>
+              <input
+                id={id}
+                type="radio"
+                name={field.developerName}
+                checked={value === choice.developerName}
+                disabled={choice.disabled && value !== choice.developerName}
+                onChange={() => onChange(choice.developerName)}
+                className="size-4"
+              />
+              {choice.label || choice.developerName}
+            </label>
+          );
+        })}
+      </div>
+    </fieldset>
+  );
+}
+
+function MultipleChoices({
+  field,
+  value,
+  onChange,
+}: {
+  field: ChoiceField;
+  value: string[];
+  onChange: (next: string[]) => void;
+}) {
+  const label = field.label || field.developerName;
+  return (
+    <fieldset className="space-y-2">
+      <legend className="text-sm font-medium">
+        {label}
+        {field.isRequired ? <span className="text-destructive"> *</span> : null}
+      </legend>
+      {field.description ? <p className="text-xs text-muted-foreground">{field.description}</p> : null}
+      <div className="space-y-2">
+        {field.choices.map((choice) => {
+          const id = `${field.developerName}-${choice.developerName}`;
+          const checked = value.includes(choice.developerName);
+          return (
+            <label key={choice.developerName} className="flex items-center gap-2 text-sm" htmlFor={id}>
+              <Checkbox
+                id={id}
+                checked={checked}
+                disabled={choice.disabled && !checked}
+                onCheckedChange={(next) => {
+                  const set = new Set(value);
+                  if (next) {
+                    set.add(choice.developerName);
+                  } else {
+                    set.delete(choice.developerName);
+                  }
+                  onChange([...set]);
+                }}
+              />
+              {choice.label || choice.developerName}
+            </label>
+          );
+        })}
+      </div>
+    </fieldset>
+  );
+}

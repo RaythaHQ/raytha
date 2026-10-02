@@ -5,10 +5,12 @@ using Microsoft.EntityFrameworkCore;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Models;
 using Raytha.Application.Common.Utils;
+using Raytha.Application.Webhooks;
 using Raytha.Domain.Entities;
 
 namespace Raytha.Application.SitePages.Commands;
 
+[WebhookEvent("site_page.created", DisplayName = "Site page created", Group = "Site pages")]
 public class CreateSitePage
 {
     public record Command : LoggableRequest<CommandResponseDto<ShortGuid>>
@@ -107,8 +109,7 @@ public class CreateSitePage
                 path = ((ShortGuid)entityId).ToString();
             }
 
-            // Case-insensitive check for existing routes
-            if (_db.Routes.Any(p => p.Path.ToLower() == path.ToLower()))
+            if (RoutePaths.IsUnavailable(_db, path))
             {
                 path = $"{(ShortGuid)entityId}-{path}".Truncate(200, string.Empty);
             }

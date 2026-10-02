@@ -5,9 +5,12 @@ using Microsoft.EntityFrameworkCore;
 using Raytha.Application.Common.Exceptions;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Models;
+using Raytha.Application.Common.Security;
+using Raytha.Application.Webhooks;
 
 namespace Raytha.Application.Admins.Commands;
 
+[WebhookEvent("admin.updated", DisplayName = "Administrator updated", Group = "Administrators")]
 public class EditAdmin
 {
     public record Command : LoggableEntityRequest<CommandResponseDto<ShortGuid>>
@@ -20,7 +23,7 @@ public class EditAdmin
 
     public class Validator : AbstractValidator<Command>
     {
-        public Validator(IRaythaDbContext db)
+        public Validator(IRaythaDbContext db, ICurrentUser currentUser)
         {
             RuleFor(x => x.FirstName).NotEmpty();
             RuleFor(x => x.LastName).NotEmpty();
@@ -50,6 +53,35 @@ public class EditAdmin
                                 return;
                             }
                         }
+
+                        var target = db.FindAdminAccount(request.Id.Guid);
+                        if (target == null)
+                            throw new NotFoundException("Admin", request.Id);
+
+                        var requestedIds = (request.Roles ?? []).Select(p => p.Guid).ToList();
+                        var requested = db.FindRoleGrants(requestedIds);
+                        if (requested.Count != requestedIds.Distinct().Count())
+                        {
+                            context.AddDenial(AdminAuthorityGuard.UnknownRole);
+                            return;
+                        }
+
+                        var caller = db.FindCaller(currentUser);
+                        var activeSuperAdmins = db.CountActiveSuperAdmins();
+                        context.AddDenial(
+                            AdminAuthorityGuard.CheckAccountAction(
+                                caller,
+                                target,
+                                AdminAccountAction.Edit,
+                                activeSuperAdmins
+                            )
+                            ?? AdminAuthorityGuard.CheckRoleAssignment(
+                                caller,
+                                target,
+                                requested,
+                                activeSuperAdmins
+                            )
+                        );
                     }
                 );
         }

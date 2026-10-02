@@ -1,4 +1,11 @@
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS base
+WORKDIR /app
+EXPOSE 8080
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends curl \
+  && rm -rf /var/lib/apt/lists/*
+HEALTHCHECK --interval=30s --timeout=5s --start-period=40s --retries=3 \
+  CMD curl -fsS http://127.0.0.1:8080/healthz || exit 1
 
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS publish
 WORKDIR /src
@@ -6,26 +13,22 @@ WORKDIR /src
 COPY ["src/Raytha.Domain/Raytha.Domain.csproj", "src/Raytha.Domain/"]
 COPY ["src/Raytha.Application/Raytha.Application.csproj", "src/Raytha.Application/"]
 COPY ["src/Raytha.Infrastructure/Raytha.Infrastructure.csproj", "src/Raytha.Infrastructure/"]
-COPY ["src/Raytha.Migrations.SqlServer/Raytha.Migrations.SqlServer.csproj", "src/Raytha.Migrations.SqlServer/"]
-COPY ["src/Raytha.Migrations.Postgres/Raytha.Migrations.Postgres.csproj", "src/Raytha.Migrations.Postgres/"]
 COPY ["src/Raytha.Web/Raytha.Web.csproj", "src/Raytha.Web/"]
-COPY ["tests/Raytha.Domain.UnitTests/Raytha.Domain.UnitTests.csproj", "tests/Raytha.Domain.UnitTests/"]
-COPY ["tests/Raytha.Application.UnitTests/Raytha.Application.UnitTests.csproj", "tests/Raytha.Application.UnitTests/"]
-COPY ["Raytha.sln", ""]
+COPY ["Directory.Build.props", ""]
+COPY ["Directory.Packages.props", ""]
+COPY ["VERSION", ""]
 
 ARG DOTNET_RESTORE_CLI_ARGS=
-RUN dotnet restore "Raytha.sln" $DOTNET_RESTORE_CLI_ARGS
+RUN dotnet restore "src/Raytha.Web/Raytha.Web.csproj" $DOTNET_RESTORE_CLI_ARGS
 
 COPY . .
-RUN dotnet build "Raytha.sln" -c Release --no-restore
-
-RUN dotnet publish -c Release --no-build -o /app "src/Raytha.Web/Raytha.Web.csproj"
+RUN dotnet publish "src/Raytha.Web/Raytha.Web.csproj" -c Release --no-restore -o /app
 
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app .
-
-ARG BUILD_NUMBER=
-ENV BUILD_NUMBER=$BUILD_NUMBER
-
+# The admin SPA is served from the bundle committed under src/Raytha.Web/wwwroot/raytha. The
+# image has no src/admin or Node, so never try to start the Vite dev server (Development mode
+# does by default).
+ENV AdminSpa__AutoStart=false
 ENTRYPOINT ["dotnet", "Raytha.Web.dll"]

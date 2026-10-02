@@ -15,7 +15,7 @@ public class GetNavigationMenuRevisionsByNavigationMenuId
             IRequest<IQueryResponseDto<ListResultDto<NavigationMenuRevisionDto>>>
     {
         public required ShortGuid NavigationMenuId { get; init; }
-        public override string OrderBy { get; init; } = $"CreationTime {SortOrder.Descending}";
+        public override string OrderBy { get; init; } = $"CreationTime {SortOrder.DESCENDING}";
     }
 
     public class Handler

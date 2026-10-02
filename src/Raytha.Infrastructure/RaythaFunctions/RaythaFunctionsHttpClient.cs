@@ -81,7 +81,7 @@ public class RaythaFunctionsHttpClient : IRaythaFunctionsHttpClient
         }
 
         // Use synchronous Send to avoid deadlocks in the V8 script engine context
-        var response = _httpClient.Send(request);
+        var response = _httpClient.Send(request, RaythaFunctionScriptEngine.ExecutionAborted);
 
         if (!response.IsSuccessStatusCode)
         {

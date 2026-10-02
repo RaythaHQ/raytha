@@ -1,4 +1,3 @@
-using System.Text.Json;
 using CSharpVitamins;
 using FluentValidation;
 using Mediator;
@@ -6,7 +5,6 @@ using Raytha.Application.Common.Exceptions;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Models;
 using Raytha.Application.Common.Utils;
-using Raytha.Application.SitePages.Widgets;
 
 namespace Raytha.Application.SitePages.Commands;
 
@@ -78,17 +76,18 @@ public class EditWidget
                             return;
                         }
 
-                        // Validate settings JSON
-                        if (!string.IsNullOrEmpty(request.SettingsJson))
+                        var fields = WidgetSettings
+                            .ActiveThemeFields(db)
+                            .GetValueOrDefault(widget.WidgetType, []);
+                        foreach (
+                            var error in WidgetSettings.Validate(
+                                request.SettingsJson,
+                                fields,
+                                [widget.SettingsJson]
+                            )
+                        )
                         {
-                            try
-                            {
-                                JsonDocument.Parse(request.SettingsJson);
-                            }
-                            catch
-                            {
-                                context.AddFailure("SettingsJson", "Invalid JSON format.");
-                            }
+                            context.AddFailure("SettingsJson", error);
                         }
                     }
                 );

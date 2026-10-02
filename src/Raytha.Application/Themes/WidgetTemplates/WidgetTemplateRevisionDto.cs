@@ -10,6 +10,7 @@ public record WidgetTemplateRevisionDto : BaseAuditableEntityDto
     public string Content { get; init; } = string.Empty;
     public ShortGuid WidgetTemplateId { get; init; }
     public string Label { get; init; } = string.Empty;
+    public IReadOnlyList<FieldDefinition> Fields { get; init; } = [];
     public AuditableUserDto? CreatorUser { get; init; }
     public WidgetTemplateDto? WidgetTemplate { get; init; }
 
@@ -29,6 +30,7 @@ public record WidgetTemplateRevisionDto : BaseAuditableEntityDto
             WidgetTemplateId = entity.WidgetTemplateId,
             Label = entity.Label,
             Content = entity.Content,
+            Fields = FieldDefinition.ListFromJson(entity._FieldsJson),
             CreatorUserId = entity.CreatorUserId,
             CreationTime = entity.CreationTime,
             CreatorUser = AuditableUserDto.GetProjection(entity.CreatorUser),

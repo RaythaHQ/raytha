@@ -53,34 +53,12 @@ public class ResetWidgetTemplatesToDefault
             {
                 if (existingByDeveloperName.TryGetValue(widgetType.DeveloperName, out var existing))
                 {
-                    // Create a revision before updating (to allow reverting)
-                    var revision = new WidgetTemplateRevision
-                    {
-                        Id = Guid.NewGuid(),
-                        WidgetTemplateId = existing.Id,
-                        Label = existing.Label,
-                        Content = existing.Content,
-                    };
-                    _db.WidgetTemplateRevisions.Add(revision);
-
-                    // Reset to default
-                    existing.Label = widgetType.DisplayName;
-                    existing.Content = widgetType.DefaultTemplateContent;
-                    existing.IsBuiltInTemplate = true;
+                    _db.WidgetTemplateRevisions.Add(existing.ToRevision());
+                    widgetType.ResetTemplate(existing);
                 }
                 else
                 {
-                    // Widget template is missing, add it
-                    var newTemplate = new WidgetTemplate
-                    {
-                        Id = Guid.NewGuid(),
-                        ThemeId = themeId.Guid,
-                        Label = widgetType.DisplayName,
-                        DeveloperName = widgetType.DeveloperName,
-                        Content = widgetType.DefaultTemplateContent,
-                        IsBuiltInTemplate = true,
-                    };
-                    _db.WidgetTemplates.Add(newTemplate);
+                    _db.WidgetTemplates.Add(widgetType.CreateTemplate(themeId.Guid));
                 }
             }
 

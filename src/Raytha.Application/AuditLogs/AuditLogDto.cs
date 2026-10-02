@@ -10,6 +10,7 @@ public record AuditLogDto : BaseAuditableEntityDto
     public string Category { get; init; } = null!;
     public string Request { get; init; } = null!;
     public string UserEmail { get; init; } = null!;
+    public string? ImpersonatorEmail { get; init; }
     public string IpAddress { get; set; } = null!;
 
     public ShortGuid? EntityId { get; init; }
@@ -27,6 +28,7 @@ public record AuditLogDto : BaseAuditableEntityDto
             CreationTime = auditLog.CreationTime,
             Category = auditLog.Category,
             UserEmail = auditLog.UserEmail,
+            ImpersonatorEmail = auditLog.ImpersonatorEmail,
             Request = auditLog.Request,
             IpAddress = auditLog.IpAddress,
             EntityId = auditLog.EntityId,

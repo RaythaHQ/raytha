@@ -14,6 +14,13 @@ public class LoginWithMagicLinkViewModel
     public string EmailAddress { get; set; }
 }
 
+public class LoginWithMagicLinkCompleteViewModel
+{
+    public string EmailAddress { get; set; }
+
+    public string Code { get; set; }
+}
+
 public class BeginForgotPasswordViewModel
 {
     public string EmailAddress { get; set; }

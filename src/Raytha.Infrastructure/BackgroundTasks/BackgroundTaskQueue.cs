@@ -8,54 +8,34 @@ namespace Raytha.Infrastructure.BackgroundTasks;
 
 public class BackgroundTaskQueue : IBackgroundTaskQueue
 {
-    static readonly object _lockObject = new object();
-    private readonly IRaythaDbContext _db;
-    private readonly IBackgroundTaskDb _backgroundTaskDb;
+    private static readonly JsonSerializerOptions ArgsJsonOptions = new()
+    {
+        ReferenceHandler = ReferenceHandler.IgnoreCycles,
+        Converters = { new ShortGuidConverter() },
+    };
 
-    public BackgroundTaskQueue(IRaythaDbContext db, IBackgroundTaskDb backgroundTaskDb)
+    private readonly IRaythaDbContext _db;
+
+    public BackgroundTaskQueue(IRaythaDbContext db)
     {
         _db = db;
-        _backgroundTaskDb = backgroundTaskDb;
+    }
+
+    public static BackgroundTask NewTask<T>(object args)
+    {
+        return new BackgroundTask
+        {
+            Id = Guid.NewGuid(),
+            Name = typeof(T).AssemblyQualifiedName!,
+            Args = JsonSerializer.Serialize(args, ArgsJsonOptions),
+        };
     }
 
     public async ValueTask<Guid> EnqueueAsync<T>(object args, CancellationToken cancellationToken)
     {
-        Guid jobId = Guid.NewGuid();
-
-        _db.BackgroundTasks.Add(
-            new BackgroundTask
-            {
-                Id = jobId,
-                Name = typeof(T).AssemblyQualifiedName,
-                Args = JsonSerializer.Serialize(
-                    args,
-                    new JsonSerializerOptions
-                    {
-                        ReferenceHandler = ReferenceHandler.IgnoreCycles,
-                        Converters = { new ShortGuidConverter() },
-                    }
-                ),
-            }
-        );
-
+        var task = NewTask<T>(args);
+        _db.BackgroundTasks.Add(task);
         await _db.SaveChangesAsync(cancellationToken);
-
-        return jobId;
-    }
-
-    public async ValueTask<BackgroundTask> DequeueAsync(CancellationToken cancellationToken)
-    {
-        lock (_lockObject)
-        {
-            try
-            {
-                var workItem = _backgroundTaskDb.DequeueBackgroundTask();
-                return workItem;
-            }
-            catch (Exception ex)
-            {
-                return null;
-            }
-        }
+        return task.Id;
     }
 }

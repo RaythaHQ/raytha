@@ -15,6 +15,8 @@ public class WidgetTemplateConfiguration : IEntityTypeConfiguration<WidgetTempla
         builder.HasOne(b => b.LastModifierUser).WithMany().HasForeignKey(b => b.LastModifierUserId);
 
         builder.HasOne(b => b.Theme).WithMany().HasForeignKey(b => b.ThemeId);
+
+        builder.Property(b => b._FieldsJson).HasColumnName("_FieldsJson").HasColumnType("jsonb");
     }
 }
 
@@ -30,6 +32,8 @@ public class WidgetTemplateRevisionConfiguration : IEntityTypeConfiguration<Widg
             .HasOne(b => b.WidgetTemplate)
             .WithMany(w => w.Revisions)
             .HasForeignKey(b => b.WidgetTemplateId);
+
+        builder.Property(b => b._FieldsJson).HasColumnName("_FieldsJson").HasColumnType("jsonb");
     }
 }
 

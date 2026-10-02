@@ -80,5 +80,41 @@ public class RevertContentItemTests
         _dbMock.Verify(x => x.ContentItemRevisions.Add(It.IsAny<ContentItemRevision>()), Times.Once);
         _dbMock.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
+
+    [Test]
+    public async Task Reverting_a_published_item_archives_the_live_version_it_replaces()
+    {
+        var contentItemId = Guid.NewGuid();
+        var revision = new ContentItemRevision
+        {
+            Id = Guid.NewGuid(),
+            ContentItemId = contentItemId,
+            _PublishedContent = "{\"title\":\"v1\"}",
+        };
+        var contentItem = new ContentItem
+        {
+            Id = contentItemId,
+            _PublishedContent = "{\"title\":\"v3\"}",
+            _DraftContent = "{\"title\":\"v3\"}",
+            IsDraft = false,
+            IsPublished = true,
+            ContentType = new ContentType { DeveloperName = "post" },
+        };
+
+        var revisions = new List<ContentItemRevision> { revision }.AsQueryable().BuildMockDbSet();
+        ContentItemRevision? archived = null;
+        revisions
+            .Setup(x => x.Add(It.IsAny<ContentItemRevision>()))
+            .Callback<ContentItemRevision>(added => archived = added);
+        _dbMock.Setup(x => x.ContentItemRevisions).Returns(revisions.Object);
+        _dbMock.Setup(x => x.ContentItems).Returns(new List<ContentItem> { contentItem }.AsQueryable().BuildMockDbSet().Object);
+
+        var handler = new RevertContentItem.Handler(_dbMock.Object, _contentTypeInRoutePathMock.Object);
+        await handler.Handle(new RevertContentItem.Command { Id = (ShortGuid)revision.Id }, CancellationToken.None);
+
+        archived.Should().NotBeNull();
+        archived!._PublishedContent.Should().Contain("v3");
+        contentItem._PublishedContent.Should().Contain("v1");
+    }
 }
 

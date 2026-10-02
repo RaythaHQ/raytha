@@ -19,6 +19,7 @@ public class EditContentTypeField
             new List<ContentTypeFieldChoiceInputDto>();
         public bool IsRequired { get; init; }
         public string Description { get; init; } = null!;
+        public IReadOnlyList<FieldDefinition> SubFields { get; init; } = [];
     }
 
     public class Validator : AbstractValidator<Command>
@@ -35,6 +36,14 @@ public class EditContentTypeField
                         );
                         if (entity == null)
                             throw new NotFoundException("Content Type Field", request.Id);
+
+                        if (entity.FieldType.DeveloperName == BaseFieldType.Repeater.DeveloperName)
+                        {
+                            foreach (var error in RepeaterSubFields.Errors(request.SubFields))
+                            {
+                                context.AddFailure("SubFields", error);
+                            }
+                        }
 
                         if (
                             BaseFieldType.From(entity.FieldType).HasChoices
@@ -117,6 +126,9 @@ public class EditContentTypeField
                     Disabled = p.Disabled,
                     Label = p.Label,
                 });
+
+            if (entity.FieldType.DeveloperName == BaseFieldType.Repeater.DeveloperName)
+                entity.SubFields = RepeaterSubFields.Normalize(request.SubFields);
 
             entity.Label = request.Label;
             entity.Description = request.Description;

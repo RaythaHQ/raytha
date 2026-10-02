@@ -5,10 +5,13 @@ using Microsoft.EntityFrameworkCore;
 using Raytha.Application.Common.Exceptions;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Models;
+using Raytha.Application.Common.Security;
+using Raytha.Application.Webhooks;
 using Raytha.Domain.Entities;
 
 namespace Raytha.Application.Roles.Commands;
 
+[WebhookEvent("role.updated", DisplayName = "Role updated", Group = "Roles")]
 public class EditRole
 {
     public record Command : LoggableEntityRequest<CommandResponseDto<ShortGuid>>
@@ -21,31 +24,28 @@ public class EditRole
 
     public class Validator : AbstractValidator<Command>
     {
-        public Validator(IRaythaDbContext db)
+        public Validator(IRaythaDbContext db, ICurrentUser currentUser)
         {
-            RuleFor(x => x.Id)
-                .Must(id =>
-                {
-                    var entity = db.Roles.FirstOrDefault(p => p.Id == id.Guid);
-                    return entity == null || entity.DeveloperName != BuiltInRole.SuperAdmin;
-                })
-                .WithMessage("The Super Admin role cannot be edited.");
             RuleFor(x => x.Label).NotEmpty();
-            RuleFor(x => x.SystemPermissions)
-                .Must(permissions =>
-                {
-                    var permissionsList = permissions?.ToList() ?? new List<string>();
-                    var hasSystemSettings = permissionsList.Contains(
-                        BuiltInSystemPermission.MANAGE_SYSTEM_SETTINGS_PERMISSION
-                    );
-                    var hasAdministrators = permissionsList.Contains(
-                        BuiltInSystemPermission.MANAGE_ADMINISTRATORS_PERMISSION
-                    );
-                    // Both must be selected together or neither
-                    return hasSystemSettings == hasAdministrators;
-                })
-                .WithMessage(
-                    "Manage System Settings and Manage Administrators permissions must be selected together."
+            RuleFor(x => x)
+                .Custom(
+                    (request, context) =>
+                    {
+                        var existing = db.FindRoleGrants([request.Id.Guid]).FirstOrDefault();
+                        if (existing is null)
+                            return;
+
+                        context.AddDenial(
+                            AdminAuthorityGuard.CheckRoleDefinition(
+                                db.FindCaller(currentUser),
+                                existing,
+                                PermissionGrant.FromRequest(
+                                    request.SystemPermissions,
+                                    request.ContentTypePermissions
+                                )
+                            )
+                        );
+                    }
                 );
         }
     }
@@ -70,27 +70,17 @@ public class EditRole
             if (entity == null)
                 throw new NotFoundException("Role", request.Id);
 
-            // Prevent any edits to the Super Admin role
-            if (entity.DeveloperName == BuiltInRole.SuperAdmin)
-                throw new InvalidOperationException("The Super Admin role cannot be edited.");
+            var grant = PermissionGrant.FromRequest(
+                request.SystemPermissions,
+                request.ContentTypePermissions
+            );
 
             entity.Label = request.Label;
-            entity.SystemPermissions = BuiltInSystemPermission.From(
-                request.SystemPermissions.ToArray()
-            );
+            entity.SystemPermissions = grant.System;
             entity.ContentTypeRolePermissions.Clear();
-
-            foreach (var permission in request.ContentTypePermissions)
+            foreach (var permission in grant.ToContentTypeRolePermissions())
             {
-                var permissionAsEnum = BuiltInContentTypePermission.From(
-                    permission.Value.ToArray()
-                );
-                var newContentTypePermission = new ContentTypeRolePermission
-                {
-                    ContentTypeId = (ShortGuid)permission.Key,
-                    ContentTypePermissions = permissionAsEnum,
-                };
-                entity.ContentTypeRolePermissions.Add(newContentTypePermission);
+                entity.ContentTypeRolePermissions.Add(permission);
             }
 
             await _db.SaveChangesAsync(cancellationToken);

@@ -1,7 +1,37 @@
-<div class="container">
-  <div class="d-flex justify-content-center">
-    <div class="col-lg-8">
-        <p>Please check your email for a link to login.</p>
-    </div>
+<h3>Enter your code</h3>
+<p>We emailed you a one-time code. Enter it below to login.</p>
+{% if Target.ValidationFailures["__ValidationSummary"] %}
+  <div class="alert alert-danger">
+    {{ Target.ValidationFailures["__ValidationSummary"] }}
   </div>
-</div>
+{% endif %}
+<form
+  action="{{ PathBase }}/account/login/magic-link/complete?returnUrl={{ Target.ReturnUrl }}"
+  method="post">
+  <div class="mb-3">
+    <label for="email" class="form-label">Email address</label>
+    <input
+      id="email"
+      type="email"
+      name="EmailAddress"
+      value="{{ Target.EmailAddress }}"
+      class="form-control">
+  </div>
+  <div class="mb-3">
+    <label for="code" class="form-label">One-time code</label>
+    <input
+      id="code"
+      type="text"
+      name="Code"
+      inputmode="numeric"
+      autocomplete="one-time-code"
+      class="form-control">
+  </div>
+  <div>
+    <button type="submit" class="btn btn-primary w-100">Login</button>
+  </div>
+  <input
+    name="__RequestVerificationToken"
+    type="hidden"
+    value="{{ Target.RequestVerificationToken }}" />
+</form>

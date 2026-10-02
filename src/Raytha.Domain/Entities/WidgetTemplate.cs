@@ -1,3 +1,5 @@
+using System.ComponentModel.DataAnnotations.Schema;
+
 namespace Raytha.Domain.Entities;
 
 /// <summary>
@@ -37,6 +39,19 @@ public class WidgetTemplate : BaseAuditableEntity
     /// Whether this is a built-in widget template (all widget templates are built-in in V1).
     /// </summary>
     public bool IsBuiltInTemplate { get; set; } = true;
+
+    public string _FieldsJson { get; set; } = "[]";
+
+    /// <summary>
+    /// The settings form for widgets of this type, in display order. Each field's DeveloperName is
+    /// the key it writes in the widget's SettingsJson and reads as widget.settings.&lt;name&gt; in Liquid.
+    /// </summary>
+    [NotMapped]
+    public IReadOnlyList<FieldDefinition> Fields
+    {
+        get => FieldDefinition.ListFromJson(_FieldsJson);
+        set => _FieldsJson = FieldDefinition.ListToJson(value);
+    }
 
     /// <summary>
     /// Revision history for this template.

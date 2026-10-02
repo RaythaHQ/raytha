@@ -6,10 +6,12 @@ using System.Text;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+using CSharpVitamins;
 using Fluid;
 using Fluid.Filters;
 using Fluid.Values;
 using Mediator;
+using Raytha.Application.Common.Exceptions;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Utils;
 using Raytha.Application.ContentItems.Queries;
@@ -48,8 +50,14 @@ public class RenderEngine : IRenderEngine
     {
         _templateOptions = new TemplateOptions();
         _templateOptions.MemberAccessStrategy = new UnsafeMemberAccessStrategy();
+        // Ids reach a template as strings on Target and as ShortGuid on related items. Fluid compares them
+        // by type, so without this {% if related.Id == Target.Id %} is never true.
+        _templateOptions.ValueConverters.Add(value =>
+            value is ShortGuid id ? new StringValue(id.ToString()) : null
+        );
         _templateOptions.Filters.AddFilter("attachment_redirect_url", AttachmentRedirectUrl);
         _templateOptions.Filters.AddFilter("attachment_public_url", AttachmentPublicUrl);
+        _templateOptions.Filters.AddFilter("attachment_url", AttachmentRedirectUrl);
         _templateOptions.Filters.AddFilter("organization_time", LocalDateFilter);
         _templateOptions.Filters.AddFilter("groupby", GroupBy);
         _templateOptions.Filters.AddFilter("json", JsonFilter);
@@ -128,8 +136,12 @@ public class RenderEngine : IRenderEngine
         TemplateContext context
     )
     {
+        var objectKey = input.ToStringValue();
+        if (string.IsNullOrEmpty(objectKey))
+            return new StringValue(string.Empty);
+
         var relativeUrlBuilder = (IRelativeUrlBuilder)context.AmbientValues["RelativeUrlBuilder"];
-        return new StringValue(relativeUrlBuilder.MediaRedirectToFileUrl(input.ToStringValue()));
+        return new StringValue(relativeUrlBuilder.MediaRedirectToFilePath(objectKey));
     }
 
     private static async ValueTask<FluidValue> AttachmentPublicUrl(
@@ -146,7 +158,7 @@ public class RenderEngine : IRenderEngine
         var downloadUrl = await fileStorageProvider
             .GetDownloadUrlAsync(input.ToStringValue(), FileStorageUtility.GetDefaultExpiry())
             .ConfigureAwait(false);
-        return new StringValue(downloadUrl);
+        return new StringValue(PublicAssetUrl.PreferRootRelative(downloadUrl));
     }
 
     private static async ValueTask<FluidValue> GroupBy(
@@ -190,10 +202,18 @@ public class RenderEngine : IRenderEngine
             async (args, context) =>
             {
                 var contentItemId = args.At(0).ToStringValue();
-                var result = await _mediator.Send(
-                    new GetContentItemById.Query { Id = contentItemId }
-                );
-                return new ObjectValue(result.Result);
+                try
+                {
+                    var result = await _mediator.Send(
+                        new GetContentItemById.Query { Id = contentItemId }
+                    );
+                    return new ObjectValue(result.Result);
+                }
+                catch (Exception ex) when (IsMissingLookup(ex))
+                {
+                    // A well-formed id nobody owns and a malformed id both mean "no such item".
+                    return NilValue.Instance;
+                }
             }
         );
     }
@@ -208,17 +228,26 @@ public class RenderEngine : IRenderEngine
                 var orderBy = args["OrderBy"].ToStringValue();
                 var pageNumber = args["PageNumber"].ToNumberValue();
                 var pageSize = args["PageSize"].ToNumberValue();
-                var result = await _mediator.Send(
-                    new GetContentItems.Query
-                    {
-                        ContentType = contentType,
-                        Filter = filter,
-                        OrderBy = orderBy,
-                        PageNumber = (int)pageNumber,
-                        PageSize = (int)pageSize,
-                    }
-                );
-                return new ObjectValue(result.Result);
+                try
+                {
+                    var result = await _mediator.Send(
+                        new GetContentItems.Query
+                        {
+                            ContentType = contentType,
+                            Filter = filter,
+                            OrderBy = orderBy,
+                            PageNumber = (int)pageNumber,
+                            PageSize = (int)pageSize,
+                            PublishedOnly = true,
+                        }
+                    );
+                    return new ObjectValue(result.Result);
+                }
+                catch (NotFoundException)
+                {
+                    // An unknown content type. A bad filter or order-by is a template bug and still throws.
+                    return NilValue.Instance;
+                }
             }
         );
     }
@@ -229,13 +258,27 @@ public class RenderEngine : IRenderEngine
             async (args, context) =>
             {
                 var developerName = args.At(0).ToStringValue();
-                var result = await _mediator.Send(
-                    new GetContentTypeByDeveloperName.Query { DeveloperName = developerName }
-                );
-                return new ObjectValue(result.Result);
+                try
+                {
+                    var result = await _mediator.Send(
+                        new GetContentTypeByDeveloperName.Query { DeveloperName = developerName }
+                    );
+                    return new ObjectValue(result.Result);
+                }
+                catch (NotFoundException)
+                {
+                    return NilValue.Instance;
+                }
             }
         );
     }
+
+    /// <summary>
+    /// Lookups by id answer nil rather than failing the page: the id either belongs to nothing
+    /// (<see cref="NotFoundException"/>) or is not an id at all.
+    /// </summary>
+    private static bool IsMissingLookup(Exception exception) =>
+        exception is NotFoundException or FormatException or ArgumentException;
 
     public FunctionValue GetMainMenu()
     {
@@ -269,30 +312,42 @@ public class RenderEngine : IRenderEngine
             async (args, _) =>
             {
                 var developerName = args.At(0).ToStringValue();
-                var menuResponse = await _mediator.Send(
-                    new GetNavigationMenuByDeveloperName.Query { DeveloperName = developerName }
-                );
+                try
+                {
+                    var menuResponse = await _mediator.Send(
+                        new GetNavigationMenuByDeveloperName.Query { DeveloperName = developerName }
+                    );
 
-                var menuItemsResponse = await _mediator.Send(
-                    new GetNavigationMenuItemsByNavigationMenuId.Query
-                    {
-                        NavigationMenuId = menuResponse.Result.Id,
-                    }
-                );
+                    var menuItemsResponse = await _mediator.Send(
+                        new GetNavigationMenuItemsByNavigationMenuId.Query
+                        {
+                            NavigationMenuId = menuResponse.Result.Id,
+                        }
+                    );
 
-                var menuItems = menuItemsResponse.Result.BuildTree<NavigationMenuItem_RenderModel>(
-                    NavigationMenuItem_RenderModel.GetProjection
-                );
-                var menu = NavigationMenu_RenderModel.GetProjection(menuResponse.Result, menuItems);
+                    var menuItems =
+                        menuItemsResponse.Result.BuildTree<NavigationMenuItem_RenderModel>(
+                            NavigationMenuItem_RenderModel.GetProjection
+                        );
+                    var menu = NavigationMenu_RenderModel.GetProjection(
+                        menuResponse.Result,
+                        menuItems
+                    );
 
-                return new ObjectValue(menu);
+                    return new ObjectValue(menu);
+                }
+                catch (NotFoundException)
+                {
+                    return NilValue.Instance;
+                }
             }
         );
     }
 
     /// <summary>
     /// Calls a Raytha Function from a Liquid template.
-    /// Usage: raytha_function("developer-name", "methodName", arg1: value1, arg2: value2)
+    /// Usage: raytha_function("developer-name", "methodName", name = value, other = value2)
+    /// Positional arguments arrive as arg1, arg2; mixing them with named arguments mislabels them.
     /// Only functions with trigger type "liquid_template" can be called.
     /// </summary>
     public FunctionValue RaythaFunction()
@@ -565,6 +620,7 @@ public class RenderEngine : IRenderEngine
                                 row = widget.Row,
                                 column = widget.Column,
                                 columnSpan = widget.ColumnSpan,
+                                column_span = widget.ColumnSpan,
                                 css_class = widget.CssClass,
                                 html_id = widget.HtmlId,
                                 custom_attributes = widget.CustomAttributes,
@@ -714,6 +770,7 @@ public class RenderEngine : IRenderEngine
                             row = widget.Row,
                             column = widget.Column,
                             columnSpan = widget.ColumnSpan,
+                            column_span = widget.ColumnSpan,
                             css_class = widget.CssClass,
                             html_id = widget.HtmlId,
                             custom_attributes = widget.CustomAttributes,

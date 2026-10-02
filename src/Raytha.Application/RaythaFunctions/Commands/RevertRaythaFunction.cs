@@ -11,7 +11,14 @@ namespace Raytha.Application.RaythaFunctions.Commands;
 
 public class RevertRaythaFunction
 {
-    public record Command : LoggableEntityRequest<CommandResponseDto<ShortGuid>> { }
+    public record Command : LoggableEntityRequest<CommandResponseDto<ShortGuid>>
+    {
+        /// <summary>
+        /// When set, the revision must belong to this function, so a caller authorized through one
+        /// function's route cannot revert another's.
+        /// </summary>
+        public ShortGuid? RaythaFunctionId { get; init; }
+    }
 
     public class Validator : AbstractValidator<Command>
     {
@@ -21,7 +28,13 @@ public class RevertRaythaFunction
                 .Custom(
                     (request, _) =>
                     {
-                        if (!db.RaythaFunctionRevisions.Any(p => p.Id == request.Id.Guid))
+                        var functionId = request.RaythaFunctionId?.Guid;
+                        if (
+                            !db.RaythaFunctionRevisions.Any(p =>
+                                p.Id == request.Id.Guid
+                                && (functionId == null || p.RaythaFunctionId == functionId)
+                            )
+                        )
                             throw new NotFoundException("Raytha Function Revision", request.Id);
                     }
                 );

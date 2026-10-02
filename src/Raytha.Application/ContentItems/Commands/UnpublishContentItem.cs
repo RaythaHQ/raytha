@@ -1,15 +1,46 @@
 ﻿using CSharpVitamins;
+using FluentValidation;
 using Mediator;
 using Microsoft.EntityFrameworkCore;
 using Raytha.Application.Common.Exceptions;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Models;
+using Raytha.Application.Common.Utils;
+using Raytha.Application.Webhooks;
+using Raytha.Domain.Entities;
 
 namespace Raytha.Application.ContentItems.Commands;
 
+[WebhookEvent("content_item.unpublished", DisplayName = "Content item unpublished", Group = "Content")]
 public class UnpublishContentItem
 {
     public record Command : LoggableEntityRequest<CommandResponseDto<ShortGuid>> { }
+
+    public class Validator : AbstractValidator<Command>
+    {
+        public Validator(IRaythaDbContext db)
+        {
+            RuleFor(x => x)
+                .Custom(
+                    (request, context) =>
+                    {
+                        if (
+                            HomePageValidation.IsHomePage(
+                                db,
+                                request.Id.Guid,
+                                Route.CONTENT_ITEM_TYPE
+                            )
+                        )
+                        {
+                            context.AddFailure(
+                                Constants.VALIDATION_SUMMARY,
+                                HomePageValidation.CannotUnpublishMessage
+                            );
+                        }
+                    }
+                );
+        }
+    }
 
     public class Handler : IRequestHandler<Command, CommandResponseDto<ShortGuid>>
     {

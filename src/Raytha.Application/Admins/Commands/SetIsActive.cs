@@ -4,7 +4,7 @@ using Mediator;
 using Raytha.Application.Common.Exceptions;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Models;
-using Raytha.Application.Common.Utils;
+using Raytha.Application.Common.Security;
 
 namespace Raytha.Application.Admins.Commands;
 
@@ -17,21 +17,20 @@ public class SetIsActive
 
     public class Validator : AbstractValidator<Command>
     {
-        public Validator(ICurrentUser currentUser)
+        public Validator(IRaythaDbContext db, ICurrentUser currentUser)
         {
             RuleFor(x => x)
                 .Custom(
                     (request, context) =>
-                    {
-                        if (request.Id == currentUser.UserId)
-                        {
-                            context.AddFailure(
-                                Constants.VALIDATION_SUMMARY,
-                                "You cannot change the status on your own account."
-                            );
-                            return;
-                        }
-                    }
+                        context.AddDenial(
+                            db.AccountActionDenial(
+                                currentUser,
+                                request.Id.Guid,
+                                request.IsActive
+                                    ? AdminAccountAction.Restore
+                                    : AdminAccountAction.Suspend
+                            )
+                        )
                 );
         }
     }

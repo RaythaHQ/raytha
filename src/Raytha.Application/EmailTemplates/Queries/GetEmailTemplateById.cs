@@ -1,8 +1,8 @@
 ﻿using Mediator;
-using Microsoft.EntityFrameworkCore;
 using Raytha.Application.Common.Exceptions;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Models;
+using Raytha.Application.Common.Utils;
 
 namespace Raytha.Application.EmailTemplates.Queries;
 
@@ -29,7 +29,13 @@ public class GetEmailTemplateById
             if (entity == null)
                 throw new NotFoundException("EmailTemplate", request.Id);
 
-            return new QueryResponseDto<EmailTemplateDto>(EmailTemplateDto.GetProjection(entity));
+            var dto = EmailTemplateDto.GetProjection(entity);
+            return new QueryResponseDto<EmailTemplateDto>(
+                dto with
+                {
+                    AvailableVariables = TemplateInsertVariables.ForEmail(entity.DeveloperName),
+                }
+            );
         }
     }
 }

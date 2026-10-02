@@ -19,56 +19,40 @@ public class FilterConditionToODataUtility
         if (filter == null || !filter.Any())
             return string.Empty;
 
-        FilterCondition baseFilterGroup = filter.First(p => p.ParentId == null);
+        var conditions = filter.ToList();
+        FilterCondition baseFilterGroup = conditions.First(p => p.ParentId == null);
 
-        return BuildODataFilter(filter.Where(p => p.ParentId != null), baseFilterGroup);
+        return BuildODataFilter(conditions, baseFilterGroup);
     }
 
-    private string BuildODataFilter(IEnumerable<FilterCondition> children, FilterCondition current)
+    private string BuildODataFilter(List<FilterCondition> conditions, FilterCondition current)
     {
-        if (children != null && children.Any())
+        if (current.Type.DeveloperName == FilterConditionType.FilterCondition)
         {
-            List<string> oDataSubtrees = new List<string>();
-            foreach (var child in children)
-            {
-                oDataSubtrees.Add(
-                    BuildODataFilter(children.ToList().Where(p => p.ParentId == child.Id), child)
-                );
-            }
-            string joinedSubtrees = string.Join(
-                $" {current.GroupOperator} ",
-                oDataSubtrees.Where(p => !string.IsNullOrEmpty(p))
-            );
-            if (!string.IsNullOrEmpty(joinedSubtrees))
-                return $"({joinedSubtrees})";
-            else
-                return string.Empty;
+            return TranslateToODataExpression(current);
         }
 
-        if (current != null && current.Type.DeveloperName == FilterConditionType.FilterCondition)
-        {
-            string translatedExpression = TranslateToODataExpression(current);
-            if (!string.IsNullOrEmpty(translatedExpression))
-                return $"{translatedExpression}";
-            else
-                return string.Empty;
-        }
-        return string.Empty;
+        string joinedSubtrees = string.Join(
+            $" {current.GroupOperator} ",
+            conditions
+                .Where(p => p.ParentId == current.Id)
+                .Select(child => BuildODataFilter(conditions, child))
+                .Where(p => !string.IsNullOrEmpty(p))
+        );
+        return string.IsNullOrEmpty(joinedSubtrees) ? string.Empty : $"({joinedSubtrees})";
     }
 
     private string TranslateToODataExpression(FilterCondition condition)
     {
         StringBuilder expression = new StringBuilder();
+        var value = EscapeODataStringValue(condition.Value);
         var chosenColumnAsCustomField = _contentType.ContentTypeFields.FirstOrDefault(p =>
             p.DeveloperName == condition.Field
         );
 
         if (condition.ConditionOperator.DeveloperName == ConditionOperator.IS_EMPTY)
         {
-            if (
-                chosenColumnAsCustomField != null
-                && chosenColumnAsCustomField.FieldType.DeveloperName == BaseFieldType.MultipleSelect
-            )
+            if (chosenColumnAsCustomField != null && chosenColumnAsCustomField.FieldType.StoresJsonArray)
             {
                 expression.Append($"{ConditionOperator.CONTAINS}({condition.Field}, '[]')");
             }
@@ -102,10 +86,7 @@ public class FilterConditionToODataUtility
         }
         else if (condition.ConditionOperator.DeveloperName == ConditionOperator.IS_NOT_EMPTY)
         {
-            if (
-                chosenColumnAsCustomField != null
-                && chosenColumnAsCustomField.FieldType.DeveloperName == BaseFieldType.MultipleSelect
-            )
+            if (chosenColumnAsCustomField != null && chosenColumnAsCustomField.FieldType.StoresJsonArray)
             {
                 expression.Append($"not {ConditionOperator.CONTAINS}({condition.Field}, '[]')");
             }
@@ -143,7 +124,7 @@ public class FilterConditionToODataUtility
         )
         {
             expression.Append(
-                $"{ConditionOperator.CONTAINS}({condition.Field}, '{condition.Value}')"
+                $"{ConditionOperator.CONTAINS}({condition.Field}, '{value}')"
             );
         }
         else if (
@@ -152,31 +133,31 @@ public class FilterConditionToODataUtility
         )
         {
             expression.Append(
-                $"not {ConditionOperator.CONTAINS}({condition.Field}, '{condition.Value}')"
+                $"not {ConditionOperator.CONTAINS}({condition.Field}, '{value}')"
             );
         }
         else if (condition.ConditionOperator.DeveloperName == ConditionOperator.STARTS_WITH)
         {
             expression.Append(
-                $"{ConditionOperator.STARTS_WITH}({condition.Field}, '{condition.Value}')"
+                $"{ConditionOperator.STARTS_WITH}({condition.Field}, '{value}')"
             );
         }
         else if (condition.ConditionOperator.DeveloperName == ConditionOperator.NOT_STARTS_WITH)
         {
             expression.Append(
-                $"not {ConditionOperator.STARTS_WITH}({condition.Field}, '{condition.Value}')"
+                $"not {ConditionOperator.STARTS_WITH}({condition.Field}, '{value}')"
             );
         }
         else if (condition.ConditionOperator.DeveloperName == ConditionOperator.ENDS_WITH)
         {
             expression.Append(
-                $"{ConditionOperator.ENDS_WITH}({condition.Field}, '{condition.Value}')"
+                $"{ConditionOperator.ENDS_WITH}({condition.Field}, '{value}')"
             );
         }
         else if (condition.ConditionOperator.DeveloperName == ConditionOperator.NOT_ENDS_WITH)
         {
             expression.Append(
-                $"not {ConditionOperator.ENDS_WITH}({condition.Field}, '{condition.Value}')"
+                $"not {ConditionOperator.ENDS_WITH}({condition.Field}, '{value}')"
             );
         }
         else if (condition.ConditionOperator.DeveloperName == ConditionOperator.IS_TRUE)
@@ -192,7 +173,7 @@ public class FilterConditionToODataUtility
             if (condition.Field == BuiltInContentTypeField.Id)
             {
                 expression.Append(
-                    $"{condition.Field} {condition.ConditionOperator} 'guid_{condition.Value}'"
+                    $"{condition.Field} {condition.ConditionOperator} 'guid_{value}'"
                 );
             }
             else
@@ -203,13 +184,13 @@ public class FilterConditionToODataUtility
                 )
                 {
                     expression.Append(
-                        $"{condition.Field} {condition.ConditionOperator} {condition.Value}"
+                        $"{condition.Field} {condition.ConditionOperator} {value}"
                     );
                 }
                 else
                 {
                     expression.Append(
-                        $"{condition.Field} {condition.ConditionOperator} '{condition.Value}'"
+                        $"{condition.Field} {condition.ConditionOperator} '{value}'"
                     );
                 }
             }
@@ -217,4 +198,12 @@ public class FilterConditionToODataUtility
 
         return expression.ToString();
     }
+
+    /// <summary>
+    /// Doubles single quotes so a stored filter value is a well-formed OData string literal. The
+    /// engine re-parses this OData and binds the value as a SQL parameter, so a value containing a
+    /// quote (an apostrophe in a name, or a hostile payload) stays inert.
+    /// </summary>
+    private static string EscapeODataStringValue(string? value) =>
+        (value ?? string.Empty).Replace("'", "''");
 }

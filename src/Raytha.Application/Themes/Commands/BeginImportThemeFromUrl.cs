@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Models;
 using Raytha.Application.Common.Utils;
+using Raytha.Application.Themes.WidgetTemplates;
 using Raytha.Domain.Entities;
 
 namespace Raytha.Application.Themes.Commands;
@@ -268,16 +269,7 @@ public class BeginImportThemeFromUrl
                 {
                     foreach (var widgetTemplateFromJson in themePackage.WidgetTemplates)
                     {
-                        var widgetTemplate = new WidgetTemplate
-                        {
-                            Id = Guid.NewGuid(),
-                            ThemeId = themeId,
-                            DeveloperName = widgetTemplateFromJson.DeveloperName,
-                            Label = widgetTemplateFromJson.Label,
-                            Content = widgetTemplateFromJson.Content,
-                            IsBuiltInTemplate = widgetTemplateFromJson.IsBuiltInTemplate,
-                        };
-                        widgetTemplates.Add(widgetTemplate);
+                        widgetTemplates.Add(widgetTemplateFromJson.ToWidgetTemplate(themeId));
                     }
                 }
 

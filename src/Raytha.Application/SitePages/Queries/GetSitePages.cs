@@ -13,7 +13,7 @@ public class GetSitePages
         : GetPagedEntitiesInputDto,
             IRequest<IQueryResponseDto<ListResultDto<SitePageDto>>>
     {
-        public override string OrderBy { get; init; } = $"Title {SortOrder.Ascending}";
+        public override string OrderBy { get; init; } = $"Title {SortOrder.ASCENDING}";
     }
 
     public class Handler : IRequestHandler<Query, IQueryResponseDto<ListResultDto<SitePageDto>>>

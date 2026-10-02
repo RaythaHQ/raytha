@@ -1,0 +1,18 @@
+---
+description: When the user asks to commit and push, push, or open a PR, run local CI first
+alwaysApply: false
+---
+
+# Pre-push CI
+
+When the user asks to **commit and push**, **push**, or **create a pull
+request**, follow `.cursor/skills/pre-push-ci/SKILL.md` before pushing.
+
+- Run `./tools/ci-local.sh` (the local stand-in for the `version`, `backend`,
+  and `admin` GitHub Actions jobs, plus a NuGet vulnerability check).
+- Fix failures and re-run until it passes.
+- Rebuild the admin bundle and stage `src/Raytha.Web/wwwroot/raytha` when
+  anything under `src/admin` changed (RFC-0006).
+- Bump `VERSION` in the same change (RFC-0012).
+- Do not push a red tree.
+- Commit-only requests do not require this.

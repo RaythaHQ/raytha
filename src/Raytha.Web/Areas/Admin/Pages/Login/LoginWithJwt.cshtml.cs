@@ -25,7 +25,7 @@ public class LoginWithJwt : BaseAdminLoginPageModel
                 return Redirect(returnUrl);
             }
 
-            return RedirectToPage(RouteNames.Dashboard.Index);
+            return RedirectToDashboard();
         }
         else
         {

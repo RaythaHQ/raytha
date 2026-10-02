@@ -15,7 +15,7 @@ public class GetRaythaFunctionRevisionsByRaythaFunctionId
             IRequest<IQueryResponseDto<ListResultDto<RaythaFunctionRevisionDto>>>
     {
         public ShortGuid Id { get; init; }
-        public override string OrderBy { get; init; } = $"CreationTime {SortOrder.Descending}";
+        public override string OrderBy { get; init; } = $"CreationTime {SortOrder.DESCENDING}";
     }
 
     public class Handler

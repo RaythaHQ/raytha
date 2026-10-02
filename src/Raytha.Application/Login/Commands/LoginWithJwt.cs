@@ -152,7 +152,7 @@ public class LoginWithJwt
                                 p.SsoId == sub && p.AuthenticationSchemeId == authScheme.Id
                             );
                         }
-                        else
+                        if (entity == null)
                         {
                             entity = db.Users.FirstOrDefault(p =>
                                 p.EmailAddress.ToLower() == email
@@ -302,7 +302,10 @@ public class LoginWithJwt
                 entity.SsoId = sub.IfNullOrEmpty(entity.SsoId);
                 entity.FirstName = givenName.IfNullOrEmpty(entity.FirstName);
                 entity.LastName = familyName.IfNullOrEmpty(entity.LastName);
-                entity.EmailAddress = email.Trim();
+                if (!EmailAddresses.IsTaken(_db, email, entity.Id))
+                {
+                    entity.EmailAddress = email.Trim();
+                }
 
                 if (foundUserGroups != null && foundUserGroups.Any())
                 {

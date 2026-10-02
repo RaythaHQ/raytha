@@ -1,0 +1,1424 @@
+{
+  "definitions": [
+    {
+      "developerName": "hero",
+      "displayName": "Hero",
+      "description": "Large banner with headline, subtext, and optional call-to-action button.",
+      "iconClass": "bi-card-heading",
+      "isBuiltInTemplate": true,
+      "fields": [
+        {
+          "developerName": "headline",
+          "label": "Headline",
+          "fieldType": "single_line_text",
+          "description": null,
+          "isRequired": false,
+          "defaultValue": null,
+          "choices": [],
+          "subFields": [],
+          "contentTypeField": null
+        },
+        {
+          "developerName": "subheadline",
+          "label": "Subheadline",
+          "fieldType": "single_line_text",
+          "description": null,
+          "isRequired": false,
+          "defaultValue": null,
+          "choices": [],
+          "subFields": [],
+          "contentTypeField": null
+        },
+        {
+          "developerName": "backgroundImage",
+          "label": "Background image",
+          "fieldType": "image",
+          "description": null,
+          "isRequired": false,
+          "defaultValue": null,
+          "choices": [],
+          "subFields": [],
+          "contentTypeField": null
+        },
+        {
+          "developerName": "backgroundColor",
+          "label": "Background color",
+          "fieldType": "color",
+          "description": null,
+          "isRequired": false,
+          "defaultValue": "#1e293b",
+          "choices": [],
+          "subFields": [],
+          "contentTypeField": null
+        },
+        {
+          "developerName": "textColor",
+          "label": "Text color",
+          "fieldType": "color",
+          "description": null,
+          "isRequired": false,
+          "defaultValue": "#ffffff",
+          "choices": [],
+          "subFields": [],
+          "contentTypeField": null
+        },
+        {
+          "developerName": "buttonText",
+          "label": "Button text",
+          "fieldType": "single_line_text",
+          "description": null,
+          "isRequired": false,
+          "defaultValue": null,
+          "choices": [],
+          "subFields": [],
+          "contentTypeField": null
+        },
+        {
+          "developerName": "buttonUrl",
+          "label": "Button URL",
+          "fieldType": "single_line_text",
+          "description": null,
+          "isRequired": false,
+          "defaultValue": null,
+          "choices": [],
+          "subFields": [],
+          "contentTypeField": null
+        },
+        {
+          "developerName": "buttonStyle",
+          "label": "Button style",
+          "fieldType": "dropdown",
+          "description": null,
+          "isRequired": false,
+          "defaultValue": "light",
+          "choices": [
+            {
+              "label": "Primary",
+              "developerName": "primary",
+              "disabled": false
+            },
+            {
+              "label": "Secondary",
+              "developerName": "secondary",
+              "disabled": false
+            },
+            {
+              "label": "Outline primary",
+              "developerName": "outline-primary",
+              "disabled": false
+            },
+            {
+              "label": "Outline light",
+              "developerName": "outline-light",
+              "disabled": false
+            },
+            {
+              "label": "Light",
+              "developerName": "light",
+              "disabled": false
+            },
+            {
+              "label": "Link",
+              "developerName": "link",
+              "disabled": false
+            },
+            {
+              "label": "Success",
+              "developerName": "success",
+              "disabled": false
+            },
+            {
+              "label": "Danger",
+              "developerName": "danger",
+              "disabled": false
+            },
+            {
+              "label": "Warning",
+              "developerName": "warning",
+              "disabled": false
+            },
+            {
+              "label": "Info",
+              "developerName": "info",
+              "disabled": false
+            },
+            {
+              "label": "Dark",
+              "developerName": "dark",
+              "disabled": false
+            },
+            {
+              "label": "Outline dark",
+              "developerName": "outline-dark",
+              "disabled": false
+            }
+          ],
+          "subFields": [],
+          "contentTypeField": null
+        },
+        {
+          "developerName": "alignment",
+          "label": "Alignment",
+          "fieldType": "dropdown",
+          "description": null,
+          "isRequired": false,
+          "defaultValue": "center",
+          "choices": [
+            {
+              "label": "Left",
+              "developerName": "left",
+              "disabled": false
+            },
+            {
+              "label": "Center",
+              "developerName": "center",
+              "disabled": false
+            },
+            {
+              "label": "Right",
+              "developerName": "right",
+              "disabled": false
+            }
+          ],
+          "subFields": [],
+          "contentTypeField": null
+        },
+        {
+          "developerName": "minHeight",
+          "label": "Minimum height",
+          "fieldType": "number",
+          "description": "In pixels.",
+          "isRequired": false,
+          "defaultValue": 400,
+          "choices": [],
+          "subFields": [],
+          "contentTypeField": null
+        }
+      ]
+    },
+    {
+      "developerName": "wysiwyg",
+      "displayName": "WYSIWYG",
+      "description": "Rich text content block with WYSIWYG editor.",
+      "iconClass": "bi-file-earmark-richtext",
+      "isBuiltInTemplate": true,
+      "fields": [
+        {
+          "developerName": "content",
+          "label": "Content",
+          "fieldType": "wysiwyg",
+          "description": null,
+          "isRequired": false,
+          "defaultValue": null,
+          "choices": [],
+          "subFields": [],
+          "contentTypeField": null
+        },
+        {
+          "developerName": "backgroundColor",
+          "label": "Background color",
+          "fieldType": "color",
+          "description": null,
+          "isRequired": false,
+          "defaultValue": null,
+          "choices": [],
+          "subFields": [],
+          "contentTypeField": null
+        },
+        {
+          "developerName": "padding",
+          "label": "Padding",
+          "fieldType": "dropdown",
+          "description": null,
+          "isRequired": false,
+          "defaultValue": "medium",
+          "choices": [
+            {
+              "label": "None",
+              "developerName": "none",
+              "disabled": false
+            },
+            {
+              "label": "Small",
+              "developerName": "small",
+              "disabled": false
+            },
+            {
+              "label": "Medium",
+              "developerName": "medium",
+              "disabled": false
+            },
+            {
+              "label": "Large",
+              "developerName": "large",
+              "disabled": false
+            }
+          ],
+          "subFields": [],
+          "contentTypeField": null
+        }
+      ]
+    },
+    {
+      "developerName": "imagetext",
+      "displayName": "Image + Text",
+      "description": "Image alongside text content with configurable layout.",
+      "iconClass": "bi-image",
+      "isBuiltInTemplate": true,
+      "fields": [
+        {
+          "developerName": "imageUrl",
+          "label": "Image",
+          "fieldType": "image",
+          "description": null,
+          "isRequired": false,
+          "defaultValue": null,
+          "choices": [],
+          "subFields": [],
+          "contentTypeField": null
+        },
+        {
+          "developerName": "imageAlt",
+          "label": "Image alt text",
+          "fieldType": "single_line_text",
+          "description": null,
+          "isRequired": false,
+          "defaultValue": null,
+          "choices": [],
+          "subFields": [],
+          "contentTypeField": null
+        },
+        {
+          "developerName": "headline",
+          "label": "Headline",
+          "fieldType": "single_line_text",
+          "description": null,
+          "isRequired": false,
+          "defaultValue": null,
+          "choices": [],
+          "subFields": [],
+          "contentTypeField": null
+        },
+        {
+          "developerName": "content",
+          "label": "Content",
+          "fieldType": "wysiwyg",
+          "description": null,
+          "isRequired": false,
+          "defaultValue": null,
+          "choices": [],
+          "subFields": [],
+          "contentTypeField": null
+        },
+        {
+          "developerName": "imagePosition",
+          "label": "Image position",
+          "fieldType": "dropdown",
+          "description": null,
+          "isRequired": false,
+          "defaultValue": "left",
+          "choices": [
+            {
+              "label": "Left",
+              "developerName": "left",
+              "disabled": false
+            },
+            {
+              "label": "Right",
+              "developerName": "right",
+              "disabled": false
+            }
+          ],
+          "subFields": [],
+          "contentTypeField": null
+        },
+        {
+          "developerName": "buttonText",
+          "label": "Button text",
+          "fieldType": "single_line_text",
+          "description": null,
+          "isRequired": false,
+          "defaultValue": null,
+          "choices": [],
+          "subFields": [],
+          "contentTypeField": null
+        },
+        {
+          "developerName": "buttonUrl",
+          "label": "Button URL",
+          "fieldType": "single_line_text",
+          "description": null,
+          "isRequired": false,
+          "defaultValue": null,
+          "choices": [],
+          "subFields": [],
+          "contentTypeField": null
+        },
+        {
+          "developerName": "buttonStyle",
+          "label": "Button style",
+          "fieldType": "dropdown",
+          "description": null,
+          "isRequired": false,
+          "defaultValue": "primary",
+          "choices": [
+            {
+              "label": "Primary",
+              "developerName": "primary",
+              "disabled": false
+            },
+            {
+              "label": "Secondary",
+              "developerName": "secondary",
+              "disabled": false
+            },
+            {
+              "label": "Outline primary",
+              "developerName": "outline-primary",
+              "disabled": false
+            },
+            {
+              "label": "Outline light",
+              "developerName": "outline-light",
+              "disabled": false
+            },
+            {
+              "label": "Light",
+              "developerName": "light",
+              "disabled": false
+            },
+            {
+              "label": "Link",
+              "developerName": "link",
+              "disabled": false
+            },
+            {
+              "label": "Success",
+              "developerName": "success",
+              "disabled": false
+            },
+            {
+              "label": "Danger",
+              "developerName": "danger",
+              "disabled": false
+            },
+            {
+              "label": "Warning",
+              "developerName": "warning",
+              "disabled": false
+            },
+            {
+              "label": "Info",
+              "developerName": "info",
+              "disabled": false
+            },
+            {
+              "label": "Dark",
+              "developerName": "dark",
+              "disabled": false
+            },
+            {
+              "label": "Outline dark",
+              "developerName": "outline-dark",
+              "disabled": false
+            }
+          ],
+          "subFields": [],
+          "contentTypeField": null
+        },
+        {
+          "developerName": "backgroundColor",
+          "label": "Background color",
+          "fieldType": "color",
+          "description": null,
+          "isRequired": false,
+          "defaultValue": null,
+          "choices": [],
+          "subFields": [],
+          "contentTypeField": null
+        }
+      ]
+    },
+    {
+      "developerName": "card",
+      "displayName": "Card",
+      "description": "A single card with image, title, description, and call-to-action.",
+      "iconClass": "bi-card-text",
+      "isBuiltInTemplate": true,
+      "fields": [
+        {
+          "developerName": "title",
+          "label": "Title",
+          "fieldType": "single_line_text",
+          "description": null,
+          "isRequired": false,
+          "defaultValue": null,
+          "choices": [],
+          "subFields": [],
+          "contentTypeField": null
+        },
+        {
+          "developerName": "description",
+          "label": "Description",
+          "fieldType": "wysiwyg",
+          "description": null,
+          "isRequired": false,
+          "defaultValue": null,
+          "choices": [],
+          "subFields": [],
+          "contentTypeField": null
+        },
+        {
+          "developerName": "imageUrl",
+          "label": "Image",
+          "fieldType": "image",
+          "description": null,
+          "isRequired": false,
+          "defaultValue": null,
+          "choices": [],
+          "subFields": [],
+          "contentTypeField": null
+        },
+        {
+          "developerName": "imageAlt",
+          "label": "Image alt text",
+          "fieldType": "single_line_text",
+          "description": null,
+          "isRequired": false,
+          "defaultValue": null,
+          "choices": [],
+          "subFields": [],
+          "contentTypeField": null
+        },
+        {
+          "developerName": "buttonText",
+          "label": "Button text",
+          "fieldType": "single_line_text",
+          "description": null,
+          "isRequired": false,
+          "defaultValue": null,
+          "choices": [],
+          "subFields": [],
+          "contentTypeField": null
+        },
+        {
+          "developerName": "buttonUrl",
+          "label": "Button URL",
+          "fieldType": "single_line_text",
+          "description": null,
+          "isRequired": false,
+          "defaultValue": null,
+          "choices": [],
+          "subFields": [],
+          "contentTypeField": null
+        },
+        {
+          "developerName": "buttonStyle",
+          "label": "Button style",
+          "fieldType": "dropdown",
+          "description": null,
+          "isRequired": false,
+          "defaultValue": "primary",
+          "choices": [
+            {
+              "label": "Primary",
+              "developerName": "primary",
+              "disabled": false
+            },
+            {
+              "label": "Secondary",
+              "developerName": "secondary",
+              "disabled": false
+            },
+            {
+              "label": "Outline primary",
+              "developerName": "outline-primary",
+              "disabled": false
+            },
+            {
+              "label": "Outline light",
+              "developerName": "outline-light",
+              "disabled": false
+            },
+            {
+              "label": "Light",
+              "developerName": "light",
+              "disabled": false
+            },
+            {
+              "label": "Link",
+              "developerName": "link",
+              "disabled": false
+            },
+            {
+              "label": "Success",
+              "developerName": "success",
+              "disabled": false
+            },
+            {
+              "label": "Danger",
+              "developerName": "danger",
+              "disabled": false
+            },
+            {
+              "label": "Warning",
+              "developerName": "warning",
+              "disabled": false
+            },
+            {
+              "label": "Info",
+              "developerName": "info",
+              "disabled": false
+            },
+            {
+              "label": "Dark",
+              "developerName": "dark",
+              "disabled": false
+            },
+            {
+              "label": "Outline dark",
+              "developerName": "outline-dark",
+              "disabled": false
+            }
+          ],
+          "subFields": [],
+          "contentTypeField": null
+        },
+        {
+          "developerName": "backgroundColor",
+          "label": "Background color",
+          "fieldType": "color",
+          "description": null,
+          "isRequired": false,
+          "defaultValue": null,
+          "choices": [],
+          "subFields": [],
+          "contentTypeField": null
+        }
+      ]
+    },
+    {
+      "developerName": "faq",
+      "displayName": "FAQ",
+      "description": "Expandable accordion of frequently asked questions.",
+      "iconClass": "bi-question-circle",
+      "isBuiltInTemplate": true,
+      "fields": [
+        {
+          "developerName": "headline",
+          "label": "Headline",
+          "fieldType": "single_line_text",
+          "description": null,
+          "isRequired": false,
+          "defaultValue": null,
+          "choices": [],
+          "subFields": [],
+          "contentTypeField": null
+        },
+        {
+          "developerName": "subheadline",
+          "label": "Subheadline",
+          "fieldType": "single_line_text",
+          "description": null,
+          "isRequired": false,
+          "defaultValue": null,
+          "choices": [],
+          "subFields": [],
+          "contentTypeField": null
+        },
+        {
+          "developerName": "expandFirst",
+          "label": "Expand first item",
+          "fieldType": "checkbox",
+          "description": null,
+          "isRequired": false,
+          "defaultValue": true,
+          "choices": [],
+          "subFields": [],
+          "contentTypeField": null
+        },
+        {
+          "developerName": "backgroundColor",
+          "label": "Background color",
+          "fieldType": "color",
+          "description": null,
+          "isRequired": false,
+          "defaultValue": null,
+          "choices": [],
+          "subFields": [],
+          "contentTypeField": null
+        },
+        {
+          "developerName": "items",
+          "label": "Questions",
+          "fieldType": "repeater",
+          "description": null,
+          "isRequired": false,
+          "defaultValue": null,
+          "choices": [],
+          "subFields": [
+            {
+              "developerName": "question",
+              "label": "Question",
+              "fieldType": "single_line_text",
+              "description": null,
+              "isRequired": false,
+              "defaultValue": null,
+              "choices": [],
+              "subFields": [],
+              "contentTypeField": null
+            },
+            {
+              "developerName": "answer",
+              "label": "Answer",
+              "fieldType": "wysiwyg",
+              "description": null,
+              "isRequired": false,
+              "defaultValue": null,
+              "choices": [],
+              "subFields": [],
+              "contentTypeField": null
+            }
+          ],
+          "contentTypeField": null
+        }
+      ]
+    },
+    {
+      "developerName": "cta",
+      "displayName": "Call to Action",
+      "description": "Prominent call-to-action block with heading and button.",
+      "iconClass": "bi-megaphone",
+      "isBuiltInTemplate": true,
+      "fields": [
+        {
+          "developerName": "headline",
+          "label": "Headline",
+          "fieldType": "single_line_text",
+          "description": null,
+          "isRequired": false,
+          "defaultValue": null,
+          "choices": [],
+          "subFields": [],
+          "contentTypeField": null
+        },
+        {
+          "developerName": "content",
+          "label": "Content",
+          "fieldType": "wysiwyg",
+          "description": null,
+          "isRequired": false,
+          "defaultValue": null,
+          "choices": [],
+          "subFields": [],
+          "contentTypeField": null
+        },
+        {
+          "developerName": "buttonText",
+          "label": "Button text",
+          "fieldType": "single_line_text",
+          "description": null,
+          "isRequired": false,
+          "defaultValue": null,
+          "choices": [],
+          "subFields": [],
+          "contentTypeField": null
+        },
+        {
+          "developerName": "buttonUrl",
+          "label": "Button URL",
+          "fieldType": "single_line_text",
+          "description": null,
+          "isRequired": false,
+          "defaultValue": null,
+          "choices": [],
+          "subFields": [],
+          "contentTypeField": null
+        },
+        {
+          "developerName": "buttonStyle",
+          "label": "Button style",
+          "fieldType": "dropdown",
+          "description": null,
+          "isRequired": false,
+          "defaultValue": "light",
+          "choices": [
+            {
+              "label": "Primary",
+              "developerName": "primary",
+              "disabled": false
+            },
+            {
+              "label": "Secondary",
+              "developerName": "secondary",
+              "disabled": false
+            },
+            {
+              "label": "Outline primary",
+              "developerName": "outline-primary",
+              "disabled": false
+            },
+            {
+              "label": "Outline light",
+              "developerName": "outline-light",
+              "disabled": false
+            },
+            {
+              "label": "Light",
+              "developerName": "light",
+              "disabled": false
+            },
+            {
+              "label": "Link",
+              "developerName": "link",
+              "disabled": false
+            },
+            {
+              "label": "Success",
+              "developerName": "success",
+              "disabled": false
+            },
+            {
+              "label": "Danger",
+              "developerName": "danger",
+              "disabled": false
+            },
+            {
+              "label": "Warning",
+              "developerName": "warning",
+              "disabled": false
+            },
+            {
+              "label": "Info",
+              "developerName": "info",
+              "disabled": false
+            },
+            {
+              "label": "Dark",
+              "developerName": "dark",
+              "disabled": false
+            },
+            {
+              "label": "Outline dark",
+              "developerName": "outline-dark",
+              "disabled": false
+            }
+          ],
+          "subFields": [],
+          "contentTypeField": null
+        },
+        {
+          "developerName": "backgroundColor",
+          "label": "Background color",
+          "fieldType": "color",
+          "description": null,
+          "isRequired": false,
+          "defaultValue": "#0d6efd",
+          "choices": [],
+          "subFields": [],
+          "contentTypeField": null
+        },
+        {
+          "developerName": "textColor",
+          "label": "Text color",
+          "fieldType": "color",
+          "description": null,
+          "isRequired": false,
+          "defaultValue": "#ffffff",
+          "choices": [],
+          "subFields": [],
+          "contentTypeField": null
+        },
+        {
+          "developerName": "alignment",
+          "label": "Alignment",
+          "fieldType": "dropdown",
+          "description": null,
+          "isRequired": false,
+          "defaultValue": "center",
+          "choices": [
+            {
+              "label": "Left",
+              "developerName": "left",
+              "disabled": false
+            },
+            {
+              "label": "Center",
+              "developerName": "center",
+              "disabled": false
+            },
+            {
+              "label": "Right",
+              "developerName": "right",
+              "disabled": false
+            }
+          ],
+          "subFields": [],
+          "contentTypeField": null
+        }
+      ]
+    },
+    {
+      "developerName": "embed",
+      "displayName": "Embed",
+      "description": "Embed external content via iframe or raw HTML.",
+      "iconClass": "bi-code-slash",
+      "isBuiltInTemplate": true,
+      "fields": [
+        {
+          "developerName": "embedType",
+          "label": "Embed type",
+          "fieldType": "dropdown",
+          "description": null,
+          "isRequired": false,
+          "defaultValue": "iframe",
+          "choices": [
+            {
+              "label": "Iframe",
+              "developerName": "iframe",
+              "disabled": false
+            },
+            {
+              "label": "HTML",
+              "developerName": "html",
+              "disabled": false
+            }
+          ],
+          "subFields": [],
+          "contentTypeField": null
+        },
+        {
+          "developerName": "iframeUrl",
+          "label": "Iframe URL",
+          "fieldType": "single_line_text",
+          "description": null,
+          "isRequired": false,
+          "defaultValue": null,
+          "choices": [],
+          "subFields": [],
+          "contentTypeField": null
+        },
+        {
+          "developerName": "htmlContent",
+          "label": "Embed HTML",
+          "fieldType": "long_text",
+          "description": "Rendered as raw HTML, scripts included.",
+          "isRequired": false,
+          "defaultValue": null,
+          "choices": [],
+          "subFields": [],
+          "contentTypeField": null
+        },
+        {
+          "developerName": "aspectRatio",
+          "label": "Aspect ratio",
+          "fieldType": "dropdown",
+          "description": null,
+          "isRequired": false,
+          "defaultValue": "16x9",
+          "choices": [
+            {
+              "label": "16:9",
+              "developerName": "16x9",
+              "disabled": false
+            },
+            {
+              "label": "4:3",
+              "developerName": "4x3",
+              "disabled": false
+            },
+            {
+              "label": "1:1",
+              "developerName": "1x1",
+              "disabled": false
+            },
+            {
+              "label": "21:9",
+              "developerName": "21x9",
+              "disabled": false
+            }
+          ],
+          "subFields": [],
+          "contentTypeField": null
+        },
+        {
+          "developerName": "maxWidth",
+          "label": "Max width",
+          "fieldType": "number",
+          "description": "In pixels. Leave empty for full width.",
+          "isRequired": false,
+          "defaultValue": null,
+          "choices": [],
+          "subFields": [],
+          "contentTypeField": null
+        },
+        {
+          "developerName": "caption",
+          "label": "Caption",
+          "fieldType": "single_line_text",
+          "description": null,
+          "isRequired": false,
+          "defaultValue": null,
+          "choices": [],
+          "subFields": [],
+          "contentTypeField": null
+        },
+        {
+          "developerName": "backgroundColor",
+          "label": "Background color",
+          "fieldType": "color",
+          "description": null,
+          "isRequired": false,
+          "defaultValue": null,
+          "choices": [],
+          "subFields": [],
+          "contentTypeField": null
+        }
+      ]
+    },
+    {
+      "developerName": "contentlist",
+      "displayName": "Content List",
+      "description": "Displays a list of content items from a content type.",
+      "iconClass": "bi-list-ul",
+      "isBuiltInTemplate": true,
+      "fields": [
+        {
+          "developerName": "headline",
+          "label": "Headline",
+          "fieldType": "single_line_text",
+          "description": null,
+          "isRequired": false,
+          "defaultValue": null,
+          "choices": [],
+          "subFields": [],
+          "contentTypeField": null
+        },
+        {
+          "developerName": "subheadline",
+          "label": "Subheadline",
+          "fieldType": "single_line_text",
+          "description": null,
+          "isRequired": false,
+          "defaultValue": null,
+          "choices": [],
+          "subFields": [],
+          "contentTypeField": null
+        },
+        {
+          "developerName": "contentType",
+          "label": "Content type",
+          "fieldType": "content_type",
+          "description": null,
+          "isRequired": true,
+          "defaultValue": null,
+          "choices": [],
+          "subFields": [],
+          "contentTypeField": null
+        },
+        {
+          "developerName": "viewId",
+          "label": "View",
+          "fieldType": "view",
+          "description": "Leave empty for the default view.",
+          "isRequired": false,
+          "defaultValue": null,
+          "choices": [],
+          "subFields": [],
+          "contentTypeField": "contentType"
+        },
+        {
+          "developerName": "filter",
+          "label": "Filter",
+          "fieldType": "single_line_text",
+          "description": "OData filter expression.",
+          "isRequired": false,
+          "defaultValue": "IsPublished eq 'true'",
+          "choices": [],
+          "subFields": [],
+          "contentTypeField": null
+        },
+        {
+          "developerName": "orderBy",
+          "label": "Order by",
+          "fieldType": "single_line_text",
+          "description": "OData order by expression. Overrides the view's sort.",
+          "isRequired": false,
+          "defaultValue": null,
+          "choices": [],
+          "subFields": [],
+          "contentTypeField": null
+        },
+        {
+          "developerName": "pageSize",
+          "label": "Page size",
+          "fieldType": "number",
+          "description": null,
+          "isRequired": false,
+          "defaultValue": 3,
+          "choices": [],
+          "subFields": [],
+          "contentTypeField": null
+        },
+        {
+          "developerName": "displayStyle",
+          "label": "Display style",
+          "fieldType": "dropdown",
+          "description": null,
+          "isRequired": false,
+          "defaultValue": "cards",
+          "choices": [
+            {
+              "label": "Cards",
+              "developerName": "cards",
+              "disabled": false
+            },
+            {
+              "label": "List",
+              "developerName": "list",
+              "disabled": false
+            },
+            {
+              "label": "Compact",
+              "developerName": "compact",
+              "disabled": false
+            }
+          ],
+          "subFields": [],
+          "contentTypeField": null
+        },
+        {
+          "developerName": "showImage",
+          "label": "Show image",
+          "fieldType": "checkbox",
+          "description": null,
+          "isRequired": false,
+          "defaultValue": true,
+          "choices": [],
+          "subFields": [],
+          "contentTypeField": null
+        },
+        {
+          "developerName": "showDate",
+          "label": "Show date",
+          "fieldType": "checkbox",
+          "description": null,
+          "isRequired": false,
+          "defaultValue": true,
+          "choices": [],
+          "subFields": [],
+          "contentTypeField": null
+        },
+        {
+          "developerName": "showExcerpt",
+          "label": "Show excerpt",
+          "fieldType": "checkbox",
+          "description": null,
+          "isRequired": false,
+          "defaultValue": true,
+          "choices": [],
+          "subFields": [],
+          "contentTypeField": null
+        },
+        {
+          "developerName": "linkText",
+          "label": "View all text",
+          "fieldType": "single_line_text",
+          "description": null,
+          "isRequired": false,
+          "defaultValue": null,
+          "choices": [],
+          "subFields": [],
+          "contentTypeField": null
+        },
+        {
+          "developerName": "linkUrl",
+          "label": "View all URL",
+          "fieldType": "single_line_text",
+          "description": null,
+          "isRequired": false,
+          "defaultValue": null,
+          "choices": [],
+          "subFields": [],
+          "contentTypeField": null
+        },
+        {
+          "developerName": "backgroundColor",
+          "label": "Background color",
+          "fieldType": "color",
+          "description": null,
+          "isRequired": false,
+          "defaultValue": null,
+          "choices": [],
+          "subFields": [],
+          "contentTypeField": null
+        }
+      ]
+    }
+  ],
+  "fieldTypes": [
+    {
+      "developerName": "single_line_text",
+      "label": "Single line text",
+      "hasChoices": false,
+      "allowedInRepeater": true
+    },
+    {
+      "developerName": "long_text",
+      "label": "Long text",
+      "hasChoices": false,
+      "allowedInRepeater": true
+    },
+    {
+      "developerName": "wysiwyg",
+      "label": "Wysiwyg",
+      "hasChoices": false,
+      "allowedInRepeater": true
+    },
+    {
+      "developerName": "number",
+      "label": "Number",
+      "hasChoices": false,
+      "allowedInRepeater": true
+    },
+    {
+      "developerName": "checkbox",
+      "label": "Checkbox",
+      "hasChoices": false,
+      "allowedInRepeater": true
+    },
+    {
+      "developerName": "date",
+      "label": "Date",
+      "hasChoices": false,
+      "allowedInRepeater": true
+    },
+    {
+      "developerName": "dropdown",
+      "label": "Dropdown",
+      "hasChoices": true,
+      "allowedInRepeater": true
+    },
+    {
+      "developerName": "radio",
+      "label": "Radio",
+      "hasChoices": true,
+      "allowedInRepeater": true
+    },
+    {
+      "developerName": "color",
+      "label": "Color",
+      "hasChoices": false,
+      "allowedInRepeater": true
+    },
+    {
+      "developerName": "repeater",
+      "label": "Repeater",
+      "hasChoices": false,
+      "allowedInRepeater": false
+    },
+    {
+      "developerName": "image",
+      "label": "Image",
+      "hasChoices": false,
+      "allowedInRepeater": true
+    },
+    {
+      "developerName": "content_type",
+      "label": "Content type",
+      "hasChoices": false,
+      "allowedInRepeater": true
+    },
+    {
+      "developerName": "view",
+      "label": "View",
+      "hasChoices": false,
+      "allowedInRepeater": true
+    }
+  ],
+  "widgets": [
+    {
+      "widgetType": "hero",
+      "settingsJson": "{\"headline\": \"Fixture hero\", \"subheadline\": \"Every hero setting\", \"backgroundImage\": \"/_static-files/hero.jpg\", \"backgroundColor\": \"#123456\", \"textColor\": \"#fedcba\", \"buttonText\": \"Go\", \"buttonUrl\": \"/go\", \"buttonStyle\": \"outline-light\", \"alignment\": \"left\", \"minHeight\": 520}"
+    },
+    {
+      "widgetType": "wysiwyg",
+      "settingsJson": "{\"content\": \"<p>Fixture <strong>rich</strong> text</p>\", \"backgroundColor\": \"#f0f0f0\", \"padding\": \"large\"}"
+    },
+    {
+      "widgetType": "imagetext",
+      "settingsJson": "{\"imageUrl\": \"/_static-files/side.jpg\", \"imageAlt\": \"Side\", \"headline\": \"Image and text\", \"content\": \"<p>Beside the image</p>\", \"imagePosition\": \"right\", \"buttonText\": \"More\", \"buttonUrl\": \"/more\", \"buttonStyle\": \"secondary\", \"backgroundColor\": \"#eeeeff\"}"
+    },
+    {
+      "widgetType": "card",
+      "settingsJson": "{\"title\": \"Fixture card\", \"description\": \"Card body\", \"imageUrl\": \"/_static-files/card.jpg\", \"imageAlt\": \"Card\", \"buttonText\": \"Open\", \"buttonUrl\": \"/open\", \"buttonStyle\": \"primary\", \"backgroundColor\": \"#ffeedd\"}"
+    },
+    {
+      "widgetType": "faq",
+      "settingsJson": "{\"headline\": \"Questions\", \"subheadline\": \"Answers\", \"backgroundColor\": \"#fafafa\", \"expandFirst\": false, \"items\": [{\"question\": \"First?\", \"answer\": \"Yes.\"}, {\"question\": \"Second?\", \"answer\": \"<em>Also</em> yes.\"}]}"
+    },
+    {
+      "widgetType": "cta",
+      "settingsJson": "{\"headline\": \"Act now\", \"content\": \"Limited time\", \"buttonText\": \"Sign up\", \"buttonUrl\": \"/signup\", \"buttonStyle\": \"light\", \"backgroundColor\": \"#0d6efd\", \"textColor\": \"#ffffff\", \"alignment\": \"right\"}"
+    },
+    {
+      "widgetType": "embed",
+      "settingsJson": "{\"embedType\": \"iframe\", \"iframeUrl\": \"https://example.com/embed\", \"htmlContent\": \"\", \"aspectRatio\": \"4x3\", \"maxWidth\": \"640px\", \"caption\": \"Iframe caption\", \"backgroundColor\": \"#000000\"}"
+    },
+    {
+      "widgetType": "embed",
+      "settingsJson": "{\"embedType\": \"html\", \"iframeUrl\": \"\", \"htmlContent\": \"<div class=\\\"qa4-embed\\\">raw html</div>\", \"aspectRatio\": \"16x9\", \"caption\": \"Html caption\"}"
+    },
+    {
+      "widgetType": "contentlist",
+      "settingsJson": "{\"headline\": \"Latest\", \"subheadline\": \"From posts\", \"contentType\": \"posts\", \"viewId\": \"tDofqaGRJESssWjQRZOmVw\", \"filter\": \"IsPublished eq 'true'\", \"orderBy\": \"CreationTime desc\", \"pageSize\": 2, \"displayStyle\": \"list\", \"showImage\": false, \"showDate\": true, \"showExcerpt\": true, \"linkText\": \"All posts\", \"linkUrl\": \"/posts\", \"backgroundColor\": \"#f8f9fa\"}"
+    },
+    {
+      "widgetType": "contentlist",
+      "settingsJson": "{\"contentType\": \"posts\", \"displayStyle\": \"compact\", \"pageSize\": 5}"
+    }
+  ],
+  "page": {
+    "title": "QA4 Widget Fixture",
+    "isPublished": true,
+    "isDraft": false,
+    "routeId": "uO-gAVR-1nywpKsW6vYaRw",
+    "routePath": "QA4-Widget-Fixture",
+    "webTemplateId": "sJpl2nvR30-RK6NGKVxpZw",
+    "webTemplate": {
+      "id": "sJpl2nvR30-RK6NGKVxpZw",
+      "label": "Page - Full Width",
+      "developerName": "raytha_html_page_fullwidth"
+    },
+    "creatorUser": {
+      "id": "user-1",
+      "fullName": "Fixture Admin"
+    },
+    "lastModifierUser": {
+      "id": "user-1",
+      "fullName": "Fixture Admin"
+    },
+    "widgets": {
+      "main": [
+        {
+          "id": "QL6OU9rEeEWyhmonus6BoA",
+          "widgetType": "hero",
+          "settingsJson": "{\"headline\": \"Fixture hero\", \"subheadline\": \"Every hero setting\", \"backgroundImage\": \"/_static-files/hero.jpg\", \"backgroundColor\": \"#123456\", \"textColor\": \"#fedcba\", \"buttonText\": \"Go\", \"buttonUrl\": \"/go\", \"buttonStyle\": \"outline-light\", \"alignment\": \"left\", \"minHeight\": 520}",
+          "row": 0,
+          "column": 0,
+          "columnSpan": 12,
+          "cssClass": "qa4-hero",
+          "htmlId": "qa4-hero",
+          "customAttributes": "data-qa=\"hero\""
+        },
+        {
+          "id": "QqMuv6lyp0CtGbHzAuXjtQ",
+          "widgetType": "wysiwyg",
+          "settingsJson": "{\"content\": \"<p>Fixture <strong>rich</strong> text</p>\", \"backgroundColor\": \"#f0f0f0\", \"padding\": \"large\"}",
+          "row": 1,
+          "column": 0,
+          "columnSpan": 12,
+          "cssClass": "",
+          "htmlId": "",
+          "customAttributes": ""
+        },
+        {
+          "id": "Zem_TxESGkWqnD5QAczRAg",
+          "widgetType": "imagetext",
+          "settingsJson": "{\"imageUrl\": \"/_static-files/side.jpg\", \"imageAlt\": \"Side\", \"headline\": \"Image and text\", \"content\": \"<p>Beside the image</p>\", \"imagePosition\": \"right\", \"buttonText\": \"More\", \"buttonUrl\": \"/more\", \"buttonStyle\": \"secondary\", \"backgroundColor\": \"#eeeeff\"}",
+          "row": 2,
+          "column": 0,
+          "columnSpan": 6,
+          "cssClass": "",
+          "htmlId": "",
+          "customAttributes": ""
+        },
+        {
+          "id": "Scym_2ODVU-3cqPq-w8cTQ",
+          "widgetType": "card",
+          "settingsJson": "{\"title\": \"Fixture card\", \"description\": \"Card body\", \"imageUrl\": \"/_static-files/card.jpg\", \"imageAlt\": \"Card\", \"buttonText\": \"Open\", \"buttonUrl\": \"/open\", \"buttonStyle\": \"primary\", \"backgroundColor\": \"#ffeedd\"}",
+          "row": 3,
+          "column": 0,
+          "columnSpan": 4,
+          "cssClass": "",
+          "htmlId": "",
+          "customAttributes": ""
+        },
+        {
+          "id": "2eZcUMj43kiQuzOjZwspaA",
+          "widgetType": "faq",
+          "settingsJson": "{\"headline\": \"Questions\", \"subheadline\": \"Answers\", \"backgroundColor\": \"#fafafa\", \"expandFirst\": false, \"items\": [{\"question\": \"First?\", \"answer\": \"Yes.\"}, {\"question\": \"Second?\", \"answer\": \"<em>Also</em> yes.\"}]}",
+          "row": 4,
+          "column": 0,
+          "columnSpan": 12,
+          "cssClass": "",
+          "htmlId": "",
+          "customAttributes": ""
+        },
+        {
+          "id": "Ar1zsR7W9EytsOaP99afBg",
+          "widgetType": "cta",
+          "settingsJson": "{\"headline\": \"Act now\", \"content\": \"Limited time\", \"buttonText\": \"Sign up\", \"buttonUrl\": \"/signup\", \"buttonStyle\": \"light\", \"backgroundColor\": \"#0d6efd\", \"textColor\": \"#ffffff\", \"alignment\": \"right\"}",
+          "row": 5,
+          "column": 0,
+          "columnSpan": 12,
+          "cssClass": "",
+          "htmlId": "",
+          "customAttributes": ""
+        },
+        {
+          "id": "QO7ZjNPGmUqmP2ay3-zRQQ",
+          "widgetType": "embed",
+          "settingsJson": "{\"embedType\": \"iframe\", \"iframeUrl\": \"https://example.com/embed\", \"htmlContent\": \"\", \"aspectRatio\": \"4x3\", \"maxWidth\": \"640px\", \"caption\": \"Iframe caption\", \"backgroundColor\": \"#000000\"}",
+          "row": 6,
+          "column": 0,
+          "columnSpan": 12,
+          "cssClass": "",
+          "htmlId": "",
+          "customAttributes": ""
+        },
+        {
+          "id": "rI_MRmP5GEqIvuIRtH_glQ",
+          "widgetType": "embed",
+          "settingsJson": "{\"embedType\": \"html\", \"iframeUrl\": \"\", \"htmlContent\": \"<div class=\\\"qa4-embed\\\">raw html</div>\", \"aspectRatio\": \"16x9\", \"caption\": \"Html caption\"}",
+          "row": 7,
+          "column": 0,
+          "columnSpan": 12,
+          "cssClass": "",
+          "htmlId": "",
+          "customAttributes": ""
+        },
+        {
+          "id": "nvqmpKGBXUqmx9ZZ4J09Iw",
+          "widgetType": "contentlist",
+          "settingsJson": "{\"headline\": \"Latest\", \"subheadline\": \"From posts\", \"contentType\": \"posts\", \"viewId\": \"tDofqaGRJESssWjQRZOmVw\", \"filter\": \"IsPublished eq 'true'\", \"orderBy\": \"CreationTime desc\", \"pageSize\": 2, \"displayStyle\": \"list\", \"showImage\": false, \"showDate\": true, \"showExcerpt\": true, \"linkText\": \"All posts\", \"linkUrl\": \"/posts\", \"backgroundColor\": \"#f8f9fa\"}",
+          "row": 8,
+          "column": 0,
+          "columnSpan": 12,
+          "cssClass": "",
+          "htmlId": "",
+          "customAttributes": ""
+        },
+        {
+          "id": "KZTXVRVMAEOEFPxfKiZ_1Q",
+          "widgetType": "contentlist",
+          "settingsJson": "{\"contentType\": \"posts\", \"displayStyle\": \"compact\", \"pageSize\": 5}",
+          "row": 9,
+          "column": 0,
+          "columnSpan": 12,
+          "cssClass": "",
+          "htmlId": "",
+          "customAttributes": ""
+        }
+      ]
+    },
+    "templateSections": [
+      "main"
+    ],
+    "creationTime": "2026-09-30T00:30:40.726636Z",
+    "creatorUserId": "user-1",
+    "lastModifierUserId": "user-1",
+    "lastModificationTime": "2026-09-30T00:30:40.905515Z",
+    "id": "GKp44i1TmUC7SDzBtoa5iw"
+  }
+}

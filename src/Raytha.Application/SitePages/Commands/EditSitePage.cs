@@ -6,10 +6,12 @@ using Raytha.Application.Common.Exceptions;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Models;
 using Raytha.Application.Common.Utils;
+using Raytha.Application.Webhooks;
 using Raytha.Domain.Entities;
 
 namespace Raytha.Application.SitePages.Commands;
 
+[WebhookEvent("site_page.updated", DisplayName = "Site page updated", Group = "Site pages")]
 public class EditSitePage
 {
     public record Command : LoggableEntityRequest<CommandResponseDto<ShortGuid>>

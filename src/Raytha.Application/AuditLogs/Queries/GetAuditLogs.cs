@@ -20,7 +20,7 @@ public class GetAuditLogs
         public string Category { get; init; } = null!;
         public ShortGuid? EntityId { get; init; }
         public string EmailAddress { get; init; } = null!;
-        public override string OrderBy { get; init; } = $"CreationTime {SortOrder.Descending}";
+        public override string OrderBy { get; init; } = $"CreationTime {SortOrder.DESCENDING}";
     }
 
     public class Validator : AbstractValidator<Query>

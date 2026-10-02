@@ -17,4 +17,8 @@ public interface ICurrentUser
     bool IsAdmin { get; }
     public string[] Roles { get; }
     public string[] UserGroups { get; }
+
+    /// <summary>The admin signed in as this user, while an impersonation session lasts.</summary>
+    ShortGuid? ImpersonatorId { get; }
+    string? ImpersonatorEmailAddress { get; }
 }

@@ -1,0 +1,221 @@
+@import "tailwindcss";
+
+@source "../../../packages/ui/src";
+
+/*
+ * Raytha design tokens.
+ * One accent (brand indigo #646ECB) over cool neutrals. Surfaces layer
+ * sidebar -> canvas -> card; borders do the separating, shadows stay faint.
+ */
+:root {
+  --brand-50: #f3f4fc;
+  --brand-100: #e7e9f9;
+  --brand-200: #d0d3f3;
+  --brand-300: #aeb3e8;
+  --brand-400: #8990dc;
+  --brand-500: #646ecb;
+  --brand-600: #5760c2;
+  --brand-700: #474fa6;
+  --brand-800: #3b4185;
+  --brand-900: #313665;
+  --brand-950: #1e203d;
+
+  --background: #fafafb;
+  --foreground: #18181b;
+  --card: #ffffff;
+  --card-foreground: #18181b;
+  --primary: #646ecb;
+  --primary-foreground: #ffffff;
+  --secondary: #f1f1f4;
+  --secondary-foreground: #27272a;
+  --muted: #f1f1f4;
+  --muted-foreground: #62626d;
+  --accent: #f1f1f4;
+  --accent-foreground: #18181b;
+  --destructive: #e11d48;
+  --destructive-foreground: #ffffff;
+  --destructive-soft: #fff1f3;
+  --destructive-soft-foreground: #be123c;
+  --destructive-border: #fecdd6;
+  --success: #067647;
+  --success-foreground: #ffffff;
+  --success-soft: #ecfdf3;
+  --success-border: #abefc6;
+  --warning: #b54708;
+  --warning-foreground: #ffffff;
+  --warning-soft: #fffaeb;
+  --warning-border: #fedf89;
+  --info: #474fa6;
+  --info-foreground: #ffffff;
+  --info-soft: #f3f4fc;
+  --info-border: #d0d3f3;
+  --border: #e6e6eb;
+  --border-strong: #d6d6de;
+  --input: #d6d6de;
+  --ring: #646ecb;
+  --sidebar: #f4f4f6;
+  --sidebar-foreground: #52525c;
+  --sidebar-muted: #8b8b96;
+  --sidebar-accent: rgb(24 24 27 / 0.05);
+  --sidebar-active: #ffffff;
+  --sidebar-border: #e6e6eb;
+  --tertiary: #31316a;
+  --volt: #1f2937;
+
+  --shadow-xs: 0 1px 2px 0 rgb(24 24 32 / 0.05);
+  --shadow-card: 0 1px 2px 0 rgb(24 24 32 / 0.04), 0 1px 3px 0 rgb(24 24 32 / 0.03);
+  --shadow-pop: 0 16px 36px -12px rgb(24 24 32 / 0.2), 0 4px 10px -4px rgb(24 24 32 / 0.08);
+
+  --font-sans: "Geist", "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-display: "Geist", "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "Geist Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+  --radius: 0.5rem;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-destructive-soft: var(--destructive-soft);
+  --color-destructive-soft-foreground: var(--destructive-soft-foreground);
+  --color-destructive-border: var(--destructive-border);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-success-soft: var(--success-soft);
+  --color-success-border: var(--success-border);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-warning-soft: var(--warning-soft);
+  --color-warning-border: var(--warning-border);
+  --color-info: var(--info);
+  --color-info-foreground: var(--info-foreground);
+  --color-info-soft: var(--info-soft);
+  --color-info-border: var(--info-border);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-muted: var(--sidebar-muted);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-active: var(--sidebar-active);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-tertiary: var(--tertiary);
+  --color-volt: var(--volt);
+  --color-brand-50: var(--brand-50);
+  --color-brand-100: var(--brand-100);
+  --color-brand-200: var(--brand-200);
+  --color-brand-300: var(--brand-300);
+  --color-brand-400: var(--brand-400);
+  --color-brand-500: var(--brand-500);
+  --color-brand-600: var(--brand-600);
+  --color-brand-700: var(--brand-700);
+  --color-brand-800: var(--brand-800);
+  --color-brand-900: var(--brand-900);
+  --color-brand-950: var(--brand-950);
+  --font-sans: var(--font-sans);
+  --font-display: var(--font-display);
+  --font-mono: var(--font-mono);
+  --shadow-xs: var(--shadow-xs);
+  --shadow-card: var(--shadow-card);
+  --shadow-pop: var(--shadow-pop);
+
+  --animate-pop: raytha-pop 140ms cubic-bezier(0.16, 1, 0.3, 1);
+  --animate-fade: raytha-fade 140ms ease-out;
+  --animate-slide-in-right: raytha-slide-in-right 200ms cubic-bezier(0.16, 1, 0.3, 1);
+
+  @keyframes raytha-pop {
+    from {
+      opacity: 0;
+      transform: translateY(4px) scale(0.98);
+    }
+  }
+  @keyframes raytha-fade {
+    from {
+      opacity: 0;
+    }
+  }
+  @keyframes raytha-slide-in-right {
+    from {
+      transform: translateX(16px);
+      opacity: 0;
+    }
+  }
+}
+
+html {
+  scrollbar-gutter: stable;
+}
+
+body {
+  @apply bg-background text-foreground antialiased;
+  font-family: var(--font-sans);
+  font-feature-settings: "ss01", "cv11";
+  text-rendering: optimizeLegibility;
+}
+
+h1, h2, h3, .font-display {
+  font-family: var(--font-display);
+  letter-spacing: -0.015em;
+}
+
+code, kbd, pre, samp {
+  font-family: var(--font-mono);
+}
+
+::selection {
+  background: var(--brand-200);
+  color: var(--brand-950);
+}
+
+:focus-visible {
+  outline-color: var(--ring);
+}
+
+button:not(:disabled),
+[role="button"]:not([aria-disabled="true"]) {
+  cursor: pointer;
+}
+
+@media (forced-colors: active) {
+  button,
+  input,
+  select,
+  textarea {
+    outline: 1px solid ButtonText;
+  }
+
+  :focus-visible {
+    outline: 3px solid Highlight;
+    outline-offset: 2px;
+  }
+}
+
+.sidebar-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+}
+
+.sidebar-scroll:hover {
+  scrollbar-color: var(--border-strong) transparent;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

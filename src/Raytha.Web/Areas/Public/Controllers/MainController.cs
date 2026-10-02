@@ -8,15 +8,18 @@ using Raytha.Application.Common.Models.RenderModels;
 using Raytha.Application.ContentItems;
 using Raytha.Application.ContentItems.Queries;
 using Raytha.Application.ContentTypes;
+using Raytha.Application.RaythaFunctions.Queries;
 using Raytha.Application.Routes.Queries;
 using Raytha.Application.SitePages.Queries;
 using Raytha.Application.Themes.Queries;
+using Raytha.Application.Themes.WebTemplates;
 using Raytha.Application.Themes.WebTemplates.Queries;
 using Raytha.Application.Views;
 using Raytha.Application.Views.Queries;
 using Raytha.Domain.Entities;
 using Raytha.Web.Areas.Public.DbViewEngine;
 using Raytha.Web.Authentication;
+using Raytha.Web.Services;
 
 namespace Raytha.Web.Areas.Public.Controllers;
 
@@ -81,8 +84,23 @@ public class MainController : BaseController
                 ),
             Domain.Entities.Route.SITE_PAGE_TYPE =>
                 await RenderSitePageAsync(response.Result.SitePageId.Value),
+            Domain.Entities.Route.RAYTHA_FUNCTION_TYPE =>
+                await RunFunctionAsync(response.Result.RaythaFunctionId),
             _ => throw new Exception("Unknown content type"),
         };
+    }
+
+    private async Task<IActionResult> RunFunctionAsync(ShortGuid raythaFunctionId)
+    {
+        var function = await Mediator.Send(new GetRaythaFunctionById.Query { Id = raythaFunctionId });
+        var input = await RaythaFunctionHttp.ReadCommand(Request, function.Result.DeveloperName);
+        if (input is null)
+        {
+            return RaythaFunctionHttp.MethodNotAllowed(Response);
+        }
+
+        var response = await Mediator.Send(input, HttpContext.RequestAborted);
+        return RaythaFunctionHttp.ToActionResult(Request, response, notFound: BuildNotFoundResult());
     }
 
     private async Task<IActionResult> RenderContentItemAsync(ShortGuid contentItemId)
@@ -96,27 +114,16 @@ public class MainController : BaseController
             return BuildNotFoundResult();
         }
 
-        var webTemplateResponse = await Mediator.Send(
-            new GetWebTemplateByContentItemId.Query
-            {
-                ThemeId = CurrentOrganization.ActiveThemeId,
-                ContentItemId = response.Result.Id,
-            }
-        );
+        var webTemplate = await GetContentItemTemplateOrBuiltIn(response.Result.Id);
 
         var model = ContentItem_RenderModel.GetProjection(
             response.Result,
-            webTemplateResponse.Result.DeveloperName,
+            webTemplate.DeveloperName,
             previewDraft
         );
         var contentType = ContentType_RenderModel.GetProjection(response.Result.ContentType);
 
-        return new ContentItemActionViewResult(
-            webTemplateResponse.Result,
-            model,
-            contentType,
-            ViewData
-        );
+        return new ContentItemActionViewResult(webTemplate, model, contentType, ViewData);
     }
 
     private async Task<IActionResult> RenderViewAsync(
@@ -145,6 +152,7 @@ public class MainController : BaseController
                 PageSize = normalizedPageSize,
                 OrderBy = orderBy,
                 Filter = filter,
+                PublishedOnly = true,
             }
         );
 
@@ -174,20 +182,59 @@ public class MainController : BaseController
         );
         var contentType = ContentType_RenderModel.GetProjection(view.Result.ContentType);
 
-        var webTemplateResponse = await Mediator.Send(
-            new GetWebTemplateByViewId.Query
+        var webTemplate = await GetViewTemplateOrBuiltIn(view.Result.Id);
+
+        return new ContentItemActionViewResult(webTemplate, modelAsList, contentType, ViewData);
+    }
+
+    private async Task<WebTemplateDto> GetContentItemTemplateOrBuiltIn(ShortGuid contentItemId)
+    {
+        try
+        {
+            var response = await Mediator.Send(
+                new GetWebTemplateByContentItemId.Query
+                {
+                    ThemeId = CurrentOrganization.ActiveThemeId,
+                    ContentItemId = contentItemId,
+                }
+            );
+            return response.Result;
+        }
+        catch (NotFoundException)
+        {
+            return await BuiltInTemplate(BuiltInWebTemplate.ContentItemDetailViewPage.DeveloperName);
+        }
+    }
+
+    private async Task<WebTemplateDto> GetViewTemplateOrBuiltIn(ShortGuid viewId)
+    {
+        try
+        {
+            var response = await Mediator.Send(
+                new GetWebTemplateByViewId.Query
+                {
+                    ThemeId = CurrentOrganization.ActiveThemeId,
+                    ViewId = viewId,
+                }
+            );
+            return response.Result;
+        }
+        catch (NotFoundException)
+        {
+            return await BuiltInTemplate(BuiltInWebTemplate.ContentItemListViewPage.DeveloperName);
+        }
+    }
+
+    private async Task<WebTemplateDto> BuiltInTemplate(string developerName)
+    {
+        var response = await Mediator.Send(
+            new GetWebTemplateByDeveloperName.Query
             {
                 ThemeId = CurrentOrganization.ActiveThemeId,
-                ViewId = view.Result.Id,
+                DeveloperName = developerName,
             }
         );
-
-        return new ContentItemActionViewResult(
-            webTemplateResponse.Result,
-            modelAsList,
-            contentType,
-            ViewData
-        );
+        return response.Result;
     }
 
     private async Task<IActionResult> RenderSitePageAsync(ShortGuid sitePageId)

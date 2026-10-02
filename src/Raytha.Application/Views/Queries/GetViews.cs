@@ -14,7 +14,7 @@ public class GetViews
         : GetPagedEntitiesInputDto,
             IRequest<IQueryResponseDto<ListResultDto<ViewDto>>>
     {
-        public override string OrderBy { get; init; } = $"Label {SortOrder.Ascending}";
+        public override string OrderBy { get; init; } = $"Label {SortOrder.ASCENDING}";
         public ShortGuid? ContentTypeId { get; init; }
         public string ContentTypeDeveloperName { get; init; } = null!;
     }

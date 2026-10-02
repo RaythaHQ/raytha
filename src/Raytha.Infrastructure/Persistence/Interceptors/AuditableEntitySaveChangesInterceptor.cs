@@ -54,11 +54,18 @@ public class AuditableEntitySaveChangesInterceptor : SaveChangesInterceptor
         }
         foreach (
             var entry in context
-                .ChangeTracker.Entries<IModificationAuditable>()
+                .ChangeTracker.Entries<IHasModificationTime>()
                 .Where(p => p.State == EntityState.Modified)
         )
         {
             entry.Entity.LastModificationTime = DateTime.UtcNow;
+        }
+        foreach (
+            var entry in context
+                .ChangeTracker.Entries<IModificationAuditable>()
+                .Where(p => p.State == EntityState.Modified)
+        )
+        {
             entry.Entity.LastModifierUserId =
                 _currentUserService?.UserId != Guid.Empty
                     ? _currentUserService?.UserId?.Guid

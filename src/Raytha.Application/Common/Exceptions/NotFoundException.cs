@@ -12,5 +12,13 @@ public class NotFoundException : Exception
         : base(message, innerException) { }
 
     public NotFoundException(string name, object key)
-        : base($"Entity \"{name}\" ({key}) was not found.") { }
+        : base($"Entity \"{name}\" ({key}) was not found.")
+    {
+        NamesEntity = true;
+    }
+
+    /// <summary>
+    /// True when the message says which entity and key were missing, so it is safe and useful to return.
+    /// </summary>
+    public bool NamesEntity { get; }
 }

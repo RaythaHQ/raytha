@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.OpenApi;
 using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi;
@@ -11,11 +12,12 @@ using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Security;
 using Raytha.Domain.Entities;
 using Raytha.Infrastructure.Persistence;
+using Raytha.Web.AdminSpa;
+using Raytha.Web.Areas.Api;
 using Raytha.Web.Authentication;
 using Raytha.Web.Filters;
 using Raytha.Web.Middlewares;
 using Raytha.Web.Services;
-using Raytha.Web.Areas.Admin.Pages.SitePages;
 using RaythaZero.Web.Services;
 
 namespace Microsoft.Extensions.DependencyInjection;
@@ -27,13 +29,12 @@ public static class ConfigureServices
         IWebHostEnvironment environment
     )
     {
-        // In development, use less restrictive cookie settings to allow non-HTTPS access
-        // from non-localhost hosts (e.g., http://machinename:8888). SameSite=None requires
-        // Secure, and Secure cookies are rejected from non-secure origins except localhost.
+        // In development, allow non-HTTPS access from non-localhost hosts
+        // (e.g., http://machinename:8888); Secure cookies are rejected from non-secure
+        // origins except localhost.
         var cookieSecurePolicy = environment.IsDevelopment()
             ? CookieSecurePolicy.SameAsRequest
             : CookieSecurePolicy.Always;
-        var cookieSameSite = environment.IsDevelopment() ? SameSiteMode.Lax : SameSiteMode.None;
 
         services
             .AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
@@ -45,8 +46,8 @@ public static class ConfigureServices
                     options.Cookie.IsEssential = true;
                     options.Cookie.HttpOnly = true;
                     options.Cookie.SecurePolicy = cookieSecurePolicy;
-                    options.Cookie.SameSite = cookieSameSite;
-                    options.AccessDeniedPath = new PathString("/raytha/403");
+                    options.Cookie.SameSite = SameSiteMode.Lax;
+                    options.AccessDeniedPath = new PathString("/raytha/error/403");
                     options.ExpireTimeSpan = TimeSpan.FromDays(30);
                     options.EventsType = typeof(CustomCookieAuthenticationEvents);
                 }
@@ -67,6 +68,10 @@ public static class ConfigureServices
                 policy => policy.Requirements.Add(new ManageAdministratorsRequirement())
             );
             options.AddPolicy(
+                BuiltInRole.SUPER_ADMIN_POLICY,
+                policy => policy.Requirements.Add(new SuperAdminRequirement())
+            );
+            options.AddPolicy(
                 BuiltInSystemPermission.MANAGE_TEMPLATES_PERMISSION,
                 policy => policy.Requirements.Add(new ManageTemplatesRequirement())
             );
@@ -83,8 +88,12 @@ public static class ConfigureServices
                 policy => policy.Requirements.Add(new ManageSystemSettingsRequirement())
             );
             options.AddPolicy(
-                BuiltInSystemPermission.MANAGE_MEDIA_ITEMS,
+                BuiltInSystemPermission.MANAGE_MEDIA_ITEMS_PERMISSION,
                 policy => policy.Requirements.Add(new ManageMediaItemsRequirement())
+            );
+            options.AddPolicy(
+                BuiltInSystemPermission.UPLOAD_MEDIA_ITEMS_POLICY,
+                policy => policy.Requirements.Add(new UploadMediaItemsRequirement())
             );
             options.AddPolicy(
                 BuiltInSystemPermission.MANAGE_SITE_PAGES_PERMISSION,
@@ -139,8 +148,13 @@ public static class ConfigureServices
             );
             options.AddPolicy(
                 RaythaApiAuthorizationHandler.POLICY_PREFIX
-                    + BuiltInSystemPermission.MANAGE_MEDIA_ITEMS,
+                    + BuiltInSystemPermission.MANAGE_MEDIA_ITEMS_PERMISSION,
                 policy => policy.Requirements.Add(new ApiManageMediaItemsRequirement())
+            );
+            options.AddPolicy(
+                RaythaApiAuthorizationHandler.POLICY_PREFIX
+                    + BuiltInSystemPermission.UPLOAD_MEDIA_ITEMS_POLICY,
+                policy => policy.Requirements.Add(new ApiUploadMediaItemsRequirement())
             );
             options.AddPolicy(
                 RaythaApiAuthorizationHandler.POLICY_PREFIX
@@ -187,6 +201,15 @@ public static class ConfigureServices
         services.AddScoped<CustomCookieAuthenticationEvents>();
         services
             .AddControllersWithViews(options => { })
+            .ConfigureApiBehaviorOptions(options =>
+                options.InvalidModelStateResponseFactory = context =>
+                    new BadRequestObjectResult(
+                        BindingProblem.Create(context.ModelState, context.HttpContext.Request.Path)
+                    )
+                    {
+                        ContentTypes = { "application/problem+json" },
+                    }
+            )
             .AddJsonOptions(o =>
             {
                 o.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
@@ -196,11 +219,23 @@ public static class ConfigureServices
                 o.JsonSerializerOptions.Converters.Add(new ShortGuidConverter());
                 o.JsonSerializerOptions.Converters.Add(new AuditableUserDtoConverter());
             });
+        // Minimal APIs (admin SPA API, media endpoints) serialize through Http.Json, not MVC.
+        services.ConfigureHttpJsonOptions(o =>
+        {
+            o.SerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
+            // No DictionaryKeyPolicy: dictionary keys are data here (IANA time zone ids,
+            // field developer names, permission keys) and must round-trip verbatim.
+            o.SerializerOptions.PropertyNameCaseInsensitive = true;
+            o.SerializerOptions.Converters.Add(new ShortGuidConverter());
+            o.SerializerOptions.Converters.Add(new AuditableUserDtoConverter());
+        });
+        services.AddAdminSpa(environment);
         services.AddScoped<ICurrentUser, CurrentUser>();
         services.AddScoped<ICurrentOrganization, CurrentOrganization>();
         services.AddScoped<IRelativeUrlBuilder, RelativeUrlBuilder>();
         services.AddScoped<ISitePageTemplateOptionsProvider, SitePageTemplateOptionsProvider>();
         services.AddScoped<IRenderEngine, RenderEngine>();
+        services.AddSingleton<ILiquidTemplateParser, LiquidTemplateParser>();
         services.AddScoped<IContentTypeInRoutePath, ContentTypeInRoutePath>();
         services.AddSingleton<IFileStorageProviderSettings, FileStorageProviderSettings>();
         services.AddSingleton<ICurrentVersion, CurrentVersion>();
@@ -225,6 +260,7 @@ public static class ConfigureServices
 
         services.AddOpenApi(options =>
         {
+            options.CreateSchemaReferenceId = OpenApiSchemaIds.Create;
             options.AddDocumentTransformer<ApiKeySecuritySchemeTransformer>();
         });
         services.AddRazorPages();

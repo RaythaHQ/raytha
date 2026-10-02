@@ -6,6 +6,9 @@ public class AuditLog : BaseEntity, IHasCreationTime
     public string Category { get; set; } = string.Empty;
     public string Request { get; set; } = string.Empty;
     public string UserEmail { get; set; } = string.Empty;
+
+    /// <summary>The admin acting as <see cref="UserEmail"/> during an impersonation session.</summary>
+    public string? ImpersonatorEmail { get; set; }
     public string IpAddress { get; set; } = string.Empty;
     public DateTime CreationTime { get; set; } = DateTime.UtcNow;
 }

@@ -78,6 +78,38 @@ public static class SafeUrlValidator
         return true;
     }
 
+    /// <summary>
+    /// A primary handler that checks the address it actually connects to, so redirects and
+    /// DNS answers that change between validation and connection cannot reach an internal host.
+    /// </summary>
+    public static SocketsHttpHandler CreateHandler(bool allowInternal) =>
+        new()
+        {
+            ConnectCallback = async (context, cancellationToken) =>
+            {
+                var host = context.DnsEndPoint.Host;
+                var addresses = await Dns.GetHostAddressesAsync(host, cancellationToken);
+                if (!allowInternal && addresses.Any(IsBlockedIpAddress))
+                {
+                    throw new HttpRequestException(
+                        $"Request to {host} blocked because it resolves to an internal network address. Set ALLOW_INTERNAL_URL_IMPORTS=true to allow it."
+                    );
+                }
+
+                var socket = new Socket(SocketType.Stream, ProtocolType.Tcp) { NoDelay = true };
+                try
+                {
+                    await socket.ConnectAsync(addresses, context.DnsEndPoint.Port, cancellationToken);
+                    return new NetworkStream(socket, ownsSocket: true);
+                }
+                catch
+                {
+                    socket.Dispose();
+                    throw;
+                }
+            },
+        };
+
     private static bool IsBlockedHostname(string host)
     {
         // Block localhost variations
@@ -125,12 +157,23 @@ public static class SafeUrlValidator
             if (bytes[0] == 169 && bytes[1] == 254)
                 return true;
 
-            // Block 0.0.0.0
-            if (bytes[0] == 0 && bytes[1] == 0 && bytes[2] == 0 && bytes[3] == 0)
+            // Block 0.0.0.0/8
+            if (bytes[0] == 0)
+                return true;
+
+            // Block 100.64.0.0/10 (carrier-grade NAT, used by Tailscale)
+            if (bytes[0] == 100 && (bytes[1] & 0xC0) == 64)
                 return true;
         }
         else if (address.AddressFamily == AddressFamily.InterNetworkV6)
         {
+            if (address.Equals(IPAddress.IPv6Any))
+                return true;
+
+            // Block IPv6 unique local (fc00::/7)
+            if ((address.GetAddressBytes()[0] & 0xFE) == 0xFC)
+                return true;
+
             // Block IPv6 link-local (fe80::/10)
             if (address.IsIPv6LinkLocal)
                 return true;

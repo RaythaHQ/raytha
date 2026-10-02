@@ -1,0 +1,41 @@
+:root {
+  --tt-input-placeholder: var(--tt-gray-light-a-400);
+  --tt-input-border: var(--tt-gray-light-a-200);
+  --tt-input-border-focus: var(--tt-gray-light-a-300);
+}
+
+.dark {
+  --tt-input-placeholder: var(--tt-gray-dark-a-400);
+  --tt-input-border: var(--tt-gray-dark-a-200);
+  --tt-input-border-focus: var(--tt-gray-dark-a-300);
+}
+
+.tiptap-input {
+  width: 100%;
+  min-width: 0;
+  height: 2rem;
+  padding: 0.25rem 0.625rem;
+  border-radius: var(--tt-radius-md);
+  border: 1px solid var(--tt-input-border);
+  background: transparent;
+  font-size: 1rem;
+  outline: none;
+  transition:
+    color,
+    background-color,
+    border-color 150ms;
+
+  &::placeholder {
+    color: var(--tt-input-placeholder);
+  }
+}
+
+.tiptap-input:focus-visible {
+  border-color: var(--tt-input-border-focus);
+}
+
+@media (min-width: 768px) {
+  .tiptap-input {
+    font-size: 0.875rem;
+  }
+}

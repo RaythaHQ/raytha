@@ -1,4 +1,5 @@
 using Mediator;
+using Microsoft.EntityFrameworkCore;
 using Raytha.Application.Common.Exceptions;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Models;
@@ -28,9 +29,9 @@ public class GetRaythaFunctionByDeveloperName
         )
         {
             var developerName = request.DeveloperName.ToDeveloperName(allowDot: true);
-            var entity = _db.RaythaFunctions.FirstOrDefault(
-                rf => rf.DeveloperName == developerName
-            );
+            var entity = _db
+                .RaythaFunctions.Include(rf => rf.Route)
+                .FirstOrDefault(rf => rf.DeveloperName == developerName);
 
             if (entity == null)
                 throw new NotFoundException("Raytha Function", request.DeveloperName);

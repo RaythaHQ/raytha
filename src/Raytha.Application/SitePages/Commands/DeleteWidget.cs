@@ -95,6 +95,10 @@ public class DeleteWidget
 
             // Remove the widget
             sectionWidgets.RemoveAll(w => w.Id == request.WidgetId.Guid);
+            if (sectionWidgets.Count == 0)
+            {
+                widgets.Remove(request.SectionName);
+            }
 
             // Save back
             entity.Widgets = widgets;

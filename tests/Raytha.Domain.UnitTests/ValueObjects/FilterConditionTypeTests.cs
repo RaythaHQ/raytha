@@ -38,7 +38,8 @@ public class FilterConditionTypeTests
         FluentActions
             .Invoking(() => FilterConditionType.From("BadValue"))
             .Should()
-            .Throw<FilterConditionTypeNotFoundException>();
+            .Throw<FilterConditionTypeNotFoundException>()
+            .WithMessage("*filter_condition*filter_condition_group*");
     }
 
     [Test]

@@ -84,17 +84,16 @@ public class SitePageActionViewResult : IActionResult
                     .ToList()
         );
 
-        await using (var sw = new StreamWriter(httpContext.Response.Body))
-        {
-            // Use the overload that supports Site Page widgets
-            var body = services.Renderer.RenderAsHtml(
-                sourceWithParents,
-                renderModel,
-                services.CurrentOrganization.ActiveThemeId,
-                widgetsForRender
-            );
-            await sw.WriteAsync(body);
-        }
+        // Use the overload that supports Site Page widgets
+        var body = WebTemplateRenderer.Render(
+            services.Renderer,
+            _webTemplate.DeveloperName,
+            sourceWithParents,
+            renderModel,
+            services.CurrentOrganization.ActiveThemeId,
+            widgetsForRender
+        );
+        await DbActionResultHelper.WriteHtmlAsync(httpContext, services, body);
     }
 
 }

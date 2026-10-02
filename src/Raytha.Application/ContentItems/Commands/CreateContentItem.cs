@@ -7,11 +7,13 @@ using Raytha.Application.Common.Exceptions;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Models;
 using Raytha.Application.Common.Utils;
+using Raytha.Application.Webhooks;
 using Raytha.Domain.Entities;
 using Raytha.Domain.Events;
 
 namespace Raytha.Application.ContentItems.Commands;
 
+[WebhookEvent("content_item.created", DisplayName = "Content item created", Group = "Content")]
 public class CreateContentItem
 {
     public record Command : LoggableRequest<CommandResponseDto<ShortGuid>>
@@ -128,6 +130,16 @@ public class CreateContentItem
                                             $"'{fieldDefinition.Label}' field is required."
                                         );
                                     }
+                                    foreach (
+                                        var error in FieldDefinitionValues.RowErrors(
+                                            fieldDefinition,
+                                            fieldValue,
+                                            !request.SaveAsDraft
+                                        )
+                                    )
+                                    {
+                                        context.AddFailure(fieldDefinition.DeveloperName, error);
+                                    }
                                 }
                                 catch (Exception ex)
                                 {
@@ -163,13 +175,17 @@ public class CreateContentItem
 
             var newEntityId = Guid.NewGuid();
             var path = GetRoutePath(request.Content, newEntityId, contentTypeDefinition.Id);
+            var content = FieldDefinitionValues.ToStoredContent(
+                contentTypeDefinition.ContentTypeFields,
+                request.Content
+            );
             var entity = new ContentItem
             {
                 Id = newEntityId,
                 IsDraft = request.SaveAsDraft,
                 IsPublished = request.SaveAsDraft == false,
-                DraftContent = request.Content,
-                PublishedContent = request.Content,
+                DraftContent = content,
+                PublishedContent = content,
                 ContentTypeId = contentTypeDefinition.Id,
                 Route = new Route { Path = path, ContentItemId = newEntityId },
             };
@@ -203,11 +219,14 @@ public class CreateContentItem
 
             var routePathTemplate = contentType.DefaultRouteTemplate;
 
-            string primaryFieldDeveloperName = contentType
-                .ContentTypeFields.First(p => p.Id == contentType.PrimaryFieldId)
-                .DeveloperName;
-            var primaryField =
-                ((IDictionary<string, dynamic>)content)[primaryFieldDeveloperName] as string;
+            var primaryFieldDefinition = contentType.ContentTypeFields.First(p =>
+                p.Id == contentType.PrimaryFieldId
+            );
+            ((IDictionary<string, dynamic>)content).TryGetValue(
+                primaryFieldDefinition.DeveloperName,
+                out var primaryFieldRaw
+            );
+            string primaryField = primaryFieldDefinition.FieldType.FieldValueFrom(primaryFieldRaw).Text;
 
             string path = routePathTemplate
                 .IfNullOrEmpty($"{BuiltInContentTypeField.PrimaryField.DeveloperName}")
@@ -222,7 +241,7 @@ public class CreateContentItem
 
             path = path.ToUrlSlug().Truncate(200, string.Empty);
 
-            if (_db.Routes.Any(p => p.Path == path))
+            if (RoutePaths.IsUnavailable(_db, path))
             {
                 path = $"{(ShortGuid)entityId}-{path}".Truncate(200, string.Empty);
             }

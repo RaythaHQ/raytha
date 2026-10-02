@@ -28,12 +28,26 @@ public class ContentTypeInRoutePath : IContentTypeInRoutePath
         bool throwExceptionOnFailure = true
     )
     {
-        //contentType will exist outside admin or the api
-        var path = _httpContextAccessor.HttpContext.Request.Path.Value.ToLower();
+        // Content-type routes under /raytha carry the developer name. A route that does not
+        // (template preview, functions) has nothing to mismatch.
+        var httpContext = _httpContextAccessor.HttpContext;
+        var path = httpContext.Request.Path.Value?.ToLower() ?? string.Empty;
         if (!path.StartsWith("/raytha") || path.StartsWith("/raytha/functions/execute/"))
             return true;
 
-        bool isMatch = ContentTypeDeveloperName == developerName;
+        if (
+            !httpContext.Request.RouteValues.TryGetValue(
+                RouteConstants.CONTENT_TYPE_DEVELOPER_NAME,
+                out var raw
+            )
+            || raw is not string routeName
+            || string.IsNullOrEmpty(routeName)
+        )
+        {
+            return true;
+        }
+
+        bool isMatch = routeName.ToDeveloperName() == developerName;
         return isMatch ? true
             : throwExceptionOnFailure
                 ? throw new UnauthorizedAccessException(

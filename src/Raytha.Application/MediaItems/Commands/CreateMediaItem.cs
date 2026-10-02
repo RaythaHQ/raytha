@@ -4,10 +4,12 @@ using Mediator;
 using Raytha.Application.Common.Exceptions;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Models;
+using Raytha.Application.Webhooks;
 using Raytha.Domain.Entities;
 
 namespace Raytha.Application.MediaItems.Commands;
 
+[WebhookEvent("media_item.created", DisplayName = "Media item created", Group = "Media")]
 public class CreateMediaItem
 {
     public record Command : LoggableEntityRequest<CommandResponseDto<ShortGuid>>

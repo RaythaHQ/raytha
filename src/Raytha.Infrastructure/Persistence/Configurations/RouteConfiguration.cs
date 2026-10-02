@@ -26,6 +26,12 @@ public class RouteConfiguration : IEntityTypeConfiguration<Route>
             .HasForeignKey<SitePage>(b => b.RouteId)
             .OnDelete(DeleteBehavior.ClientCascade);
 
+        builder
+            .HasOne(p => p.RaythaFunction)
+            .WithOne(p => p.Route)
+            .HasForeignKey<RaythaFunction>(b => b.RouteId)
+            .OnDelete(DeleteBehavior.SetNull);
+
         builder.HasIndex(b => b.Path).IsUnique();
     }
 }

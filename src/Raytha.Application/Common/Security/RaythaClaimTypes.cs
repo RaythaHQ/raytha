@@ -9,4 +9,9 @@ public static class RaythaClaimTypes
     public const string ContentTypePermissions = "ContentTypePermissions";
     public const string AuthenticationScheme = "AuthenticationScheme";
     public const string UserGroups = "groups"; //https://www.rfc-editor.org/rfc/rfc9068.html
+    public const string ImpersonatorId = "ImpersonatorId";
+    public const string ImpersonationStarted = "ImpersonationStarted";
+    public const string ImpersonationExpires = "ImpersonationExpires";
+    public const string ImpersonatorEmail = "ImpersonatorEmail";
+    public const string ImpersonatorName = "ImpersonatorName";
 }

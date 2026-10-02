@@ -10,6 +10,8 @@ public class WebTemplateConfiguration : IEntityTypeConfiguration<WebTemplate>
     {
         builder.HasIndex(b => new { b.DeveloperName, b.ThemeId }).IsUnique();
 
+        builder.HasMany(p => p.UserFavorites).WithMany(p => p.FavoriteWebTemplates);
+
         builder.HasOne(b => b.CreatorUser).WithMany().HasForeignKey(b => b.CreatorUserId);
 
         builder.HasOne(b => b.LastModifierUser).WithMany().HasForeignKey(b => b.LastModifierUserId);
