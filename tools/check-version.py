@@ -45,11 +45,57 @@ def format_version(version: tuple[int, int, int]) -> str:
     return ".".join(map(str, version))
 
 
+def problem(
+    old: tuple[int, int, int],
+    new: tuple[int, int, int],
+    migration_added: bool,
+    override: bool,
+) -> str | None:
+    """Why `new` is not an acceptable VERSION after `old`, or None if it is."""
+    expected = expected_version(old, migration_added)
+    if new != expected:
+        kind = "MINOR" if migration_added else "PATCH"
+        return (
+            f"VERSION must be {format_version(expected)} ({kind} bump from "
+            f"{format_version(old)}) in the same change; found {format_version(new)}."
+        )
+    return None
+
+
+def self_test() -> int:
+    cases = [
+        ("exact patch bump", (2, 0, 0), (2, 0, 1), False, False, False),
+        ("exact minor bump for a migration", (2, 0, 4), (2, 1, 0), True, False, False),
+        ("no bump is a problem", (2, 0, 1), (2, 0, 1), False, False, True),
+        ("downgrade is a problem", (2, 0, 1), (2, 0, 0), False, False, True),
+        ("downgrade passes with the override", (2, 0, 1), (2, 0, 0), False, True, False),
+        ("skipping ahead passes with the override", (2, 0, 1), (2, 3, 0), False, True, False),
+    ]
+    failures = 0
+    for name, old, new, migration, override, should_fail in cases:
+        failed = problem(old, new, migration, override) is not None
+        if failed != should_fail:
+            failures += 1
+            print(f"FAIL: {name}")
+    print("self-test failed" if failures else "self-test ok")
+    return 1 if failures else 0
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--before", required=True, help="base Git revision")
-    parser.add_argument("--after", required=True, help="code Git revision")
+    parser.add_argument("--before", help="base Git revision")
+    parser.add_argument("--after", help="code Git revision")
+    parser.add_argument(
+        "--override",
+        action="store_true",
+        help="break glass: accept any well-formed VERSION (CI sets this from the version-override label)",
+    )
+    parser.add_argument("--self-test", action="store_true")
     args = parser.parse_args()
+    if args.self_test:
+        return self_test()
+    if not args.before or not args.after:
+        parser.error("--before and --after are required")
 
     files = changed_files(args.before, args.after)
     releasable = [path for path in files if path not in NON_RELEASE_FILES]
@@ -65,13 +111,9 @@ def main() -> int:
         and git("diff", "--diff-filter=A", "--name-only", args.before, args.after, "--", path)
         for path in releasable
     )
-    expected = expected_version(old, migration_added)
-    if new != expected:
-        kind = "MINOR" if migration_added else "PATCH"
-        raise SystemExit(
-            f"VERSION must be {format_version(expected)} ({kind} bump from "
-            f"{format_version(old)}) in the same change; found {format_version(new)}."
-        )
+    reason = problem(old, new, migration_added, args.override)
+    if reason:
+        raise SystemExit(reason)
 
     print(
         f"VERSION {format_version(old)} -> {format_version(new)} is valid "
