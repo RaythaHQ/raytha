@@ -39,6 +39,7 @@ python3 tools/bump-version.py --kind patch --write   # or --kind minor
 python3 tools/bump-version.py --before <sha> --after <sha> --print-kind
 python3 tools/check-version.py --before origin/dev --after HEAD
 python3 tools/bump-version.py --self-test
+python3 tools/check-version.py --self-test
 ```
 
 - The bumped `VERSION` MUST be committed with the change it describes. CI's
@@ -46,6 +47,13 @@ python3 tools/bump-version.py --self-test
   `./tools/ci-local.sh` runs it against `origin/dev` before you push.
 - If `check-version.py` says the expected version is 2.0.5 and you wrote 2.1.0,
   fix `VERSION` — do not edit the script.
+- **Break glass.** A maintainer can accept a `VERSION` the bump rules reject (a
+  downgrade before a release, a deliberate skip) by adding the `version-override`
+  label to the pull request. CI then runs `check-version.py --override`, which
+  still requires a well-formed `MAJOR.MINOR.PATCH` and prints that the override
+  was used. The label is the audit trail: say in the PR description why.
+  Locally, `VERSION_OVERRIDE=1 ./tools/ci-local.sh` does the same. Remove the
+  label and the normal rules apply again.
 
 ## 3. Migration Naming
 
