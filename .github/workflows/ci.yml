@@ -67,8 +67,12 @@ jobs:
       - name: Build image
         run: docker build -t raytha:ci .
       - name: Trivy vulnerability scan
-        uses: aquasecurity/trivy-action@18f2510ee396bbf400402947b394f2dd8c87dbb0 # v0.29.0
+        # v0.36.0+ after the 2026 trivy-action compromise. Pin the scanner too: Aqua deleted
+        # release assets for scanner v0.27.0-v0.69.1, and v0.29.0 of the action pulled an
+        # unresolvable setup-trivy. Avoid scanner v0.69.4.
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
           image-ref: raytha:ci
+          version: v0.72.0
           severity: CRITICAL,HIGH
           exit-code: "1"
