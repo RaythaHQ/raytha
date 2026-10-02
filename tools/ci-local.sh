@@ -13,7 +13,9 @@ fail() {
 if git rev-parse --verify origin/dev >/dev/null 2>&1 && git cat-file -e origin/dev:VERSION 2>/dev/null; then
   if ! git diff --quiet origin/dev...HEAD; then
     echo "==> version: committed VERSION matches this change"
-    python3 tools/check-version.py --before origin/dev --after HEAD || fail "VERSION"
+    python3 tools/check-version.py --self-test || fail "VERSION self-test"
+    # Set VERSION_OVERRIDE=1 when the PR will carry the version-override label.
+    python3 tools/check-version.py --before origin/dev --after HEAD ${VERSION_OVERRIDE:+--override} || fail "VERSION"
   fi
 else
   echo "==> version: skipped (no VERSION on origin/dev yet)"

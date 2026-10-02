@@ -52,6 +52,8 @@ def problem(
     override: bool,
 ) -> str | None:
     """Why `new` is not an acceptable VERSION after `old`, or None if it is."""
+    if override:
+        return None
     expected = expected_version(old, migration_added)
     if new != expected:
         kind = "MINOR" if migration_added else "PATCH"
@@ -114,6 +116,13 @@ def main() -> int:
     reason = problem(old, new, migration_added, args.override)
     if reason:
         raise SystemExit(reason)
+
+    if args.override and new != expected_version(old, migration_added):
+        print(
+            f"VERSION {format_version(old)} -> {format_version(new)} accepted by override, "
+            "not by the bump rules."
+        )
+        return 0
 
     print(
         f"VERSION {format_version(old)} -> {format_version(new)} is valid "

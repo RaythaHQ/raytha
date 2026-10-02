@@ -39,6 +39,7 @@ python3 tools/bump-version.py --kind patch --write   # or --kind minor
 python3 tools/bump-version.py --before <sha> --after <sha> --print-kind
 python3 tools/check-version.py --before origin/dev --after HEAD
 python3 tools/bump-version.py --self-test
+python3 tools/check-version.py --self-test
 ```
 
 - The bumped `VERSION` MUST be committed with the change it describes. CI's

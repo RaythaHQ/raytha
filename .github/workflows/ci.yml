@@ -5,6 +5,8 @@ on:
     branches: [main, dev]
   pull_request:
     branches: [main, dev]
+    # labeled/unlabeled re-run the version check when version-override is added or removed.
+    types: [opened, synchronize, reopened, labeled, unlabeled]
 
 jobs:
   version:
@@ -15,9 +17,14 @@ jobs:
           fetch-depth: 0
       - name: Check VERSION
         if: github.event_name == 'pull_request'
+        env:
+          # Break glass: a maintainer labels the PR version-override to accept a VERSION the
+          # bump rules would reject (RFC-0012 section 2). The label is visible on the PR.
+          OVERRIDE: ${{ contains(github.event.pull_request.labels.*.name, 'version-override') && '--override' || '' }}
         run: |
+          python3 tools/check-version.py --self-test
           if git cat-file -e origin/${{ github.base_ref }}:VERSION 2>/dev/null; then
-            python3 tools/check-version.py --before origin/${{ github.base_ref }} --after HEAD
+            python3 tools/check-version.py --before origin/${{ github.base_ref }} --after HEAD $OVERRIDE
           else
             echo "No VERSION on base branch yet; skipping"
           fi
