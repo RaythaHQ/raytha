@@ -20,6 +20,11 @@ public class GetContentItems
 
         public string? ContentType { get; init; }
         public string? Filter { get; init; }
+
+        /// <summary>
+        /// Leave out drafts and unpublished items, whatever the view or caller filter says.
+        /// </summary>
+        public bool PublishedOnly { get; init; }
     }
 
     public class Handler : IRequestHandler<Query, IQueryResponseDto<ListResultDto<ContentItemDto>>>
@@ -50,6 +55,7 @@ public class GetContentItems
             {
                 View view = _entityFrameworkDb
                     .Views.Include(p => p.ContentType)
+                    .ThenInclude(p => p.ContentTypeFields)
                     .FirstOrDefault(p => p.Id == request.ViewId.Value.Guid);
 
                 if (view == null)
@@ -60,7 +66,7 @@ public class GetContentItems
                 );
 
                 var searchOnColumns = GetSearchForView(view);
-                var filters = GetFiltersForView(view, request);
+                var filters = WithPublishedOnly(GetFiltersForView(view, request), request);
                 string finalOrderBy = GetSortForView(view, request);
                 var queryResult = _db.QueryContentItems(
                     view.ContentTypeId,
@@ -91,8 +97,7 @@ public class GetContentItems
                         request.ContentType.ToDeveloperName()
                     );
 
-                var conditionToODataUtility = new FilterConditionToODataUtility(contentType);
-                var filters = new string[] { request.Filter };
+                var filters = WithPublishedOnly([request.Filter], request);
                 string finalOrderBy = !string.IsNullOrWhiteSpace(request.OrderBy)
                     ? request.OrderBy
                     : $"{BuiltInContentTypeField.CreationTime.DeveloperName} {SortOrder.DESCENDING}";
@@ -109,9 +114,48 @@ public class GetContentItems
                 count = _db.CountContentItems(contentType.Id, null, request.Search, filters);
                 items = queryResult.Select(p => ContentItemDto.GetProjection(p));
             }
+            items = await WithWebTemplateIds(items, cancellationToken);
             return new QueryResponseDto<ListResultDto<ContentItemDto>>(
                 new ListResultDto<ContentItemDto>(items, count)
             );
+        }
+
+        /// <summary>
+        /// The json query engine materializes items without template relations, so a
+        /// view's Template column would always be empty. Batch-fill them for the page,
+        /// matching GetContentItemById's per-item lookup.
+        /// </summary>
+        private async Task<IEnumerable<ContentItemDto>> WithWebTemplateIds(
+            IEnumerable<ContentItemDto> items,
+            CancellationToken cancellationToken
+        )
+        {
+            var itemsList = items.ToList();
+            var itemIds = itemsList.Select(p => p.Id.Guid).ToArray();
+            var relationPairs = await _entityFrameworkDb
+                .WebTemplateContentItemRelations.Where(relation =>
+                    itemIds.Contains(relation.ContentItemId)
+                )
+                .Select(relation => new { relation.ContentItemId, relation.WebTemplateId })
+                .ToListAsync(cancellationToken);
+            var templateIdsByItemId = relationPairs
+                .GroupBy(pair => pair.ContentItemId)
+                .ToDictionary(group => group.Key, group => group.First().WebTemplateId);
+            return itemsList.Select(p =>
+                templateIdsByItemId.TryGetValue(p.Id.Guid, out var templateId)
+                    ? p with
+                    {
+                        WebTemplateId = templateId,
+                    }
+                    : p
+            );
+        }
+
+        private static string[] WithPublishedOnly(string[] filters, Query request)
+        {
+            return request.PublishedOnly
+                ? [.. filters, $"{BuiltInContentTypeField.IsPublished.DeveloperName} eq 'true'"]
+                : filters;
         }
 
         protected string[] GetSearchForView(View view)

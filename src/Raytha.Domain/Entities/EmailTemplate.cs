@@ -58,7 +58,7 @@ public class BuiltInEmailTemplate : ValueObject
 
     public static BuiltInEmailTemplate LoginBeginLoginWithMagicLinkEmail =>
         new(
-            "[{{ CurrentOrganization.OrganizationName }}] Website login access link",
+            "[{{ CurrentOrganization.OrganizationName }}] Website login code",
             "raytha_email_login_beginloginwithmagiclink",
             false
         );

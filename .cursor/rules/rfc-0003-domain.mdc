@@ -1,0 +1,79 @@
+---
+description: Domain entities, value objects, and domain events in Raytha.Domain
+globs: "src/Raytha.Domain/**/*.cs"
+alwaysApply: false
+---
+
+# RFC-0003: Domain
+
+Status: Active
+
+## Abstract
+
+`Raytha.Domain` holds entities, value objects, and domain events. It has no
+dependency on EF Core, Npgsql, or ASP.NET Core, and no knowledge of how it is
+persisted or rendered.
+
+## 1. Entities
+
+- Entities live in `Raytha.Domain/Entities`, one type per file, and derive from
+  one of:
+
+| Base | Adds |
+|---|---|
+| `BaseEntity` | `Guid Id`, domain-event list |
+| `BaseAuditableEntity` | creation/modification timestamps and user ids |
+| `BaseFullAuditableEntity` | soft delete on top of auditable |
+
+- `Id` is a `Guid`. It is surfaced to clients as a `ShortGuid` (`CSharpVitamins`)
+  and MUST be parsed back to `Guid` at the boundary, not stored as a string.
+- Pick the narrowest base that fits. Choosing `BaseFullAuditableEntity` for
+  something that is never soft-deleted adds columns and query filters for
+  nothing.
+- Entity properties MUST be plain CLR types, value objects, or navigation
+  properties. Attributes from `Microsoft.EntityFrameworkCore` MUST NOT appear
+  here; mapping lives in `Persistence/Configurations` (RFC-0004).
+- Behavior that belongs to one entity (computing a route path, deciding whether
+  a revision is publishable) SHOULD be a method or computed property on the
+  entity rather than repeated in handlers.
+- New entities MUST be exposed on `IRaythaDbContext`; `PersistenceConventionTests`
+  enforces it.
+
+## 2. Value Objects
+
+- Value objects live in `Raytha.Domain/ValueObjects` and derive from
+  `ValueObject`, which defines equality by components.
+- Value objects MUST be immutable and MUST validate in the constructor or
+  factory. An instance that exists is valid.
+- A closed set of named options (`AuthenticationSchemeType`, `SortOrder`,
+  `BuiltInWidgetType`, field types) is modelled as a value object with static
+  members and a `DeveloperName`, not as a C# `enum`. `DeveloperName` is the
+  persisted and API-visible token; changing one is a breaking change that needs
+  a migration.
+- Field types and field values under `ValueObjects/FieldTypes` and
+  `ValueObjects/FieldValues` define how custom content-type fields validate,
+  serialize, and render. New field types MUST be added there and MUST round-trip
+  through JSON.
+
+## 3. Domain Events
+
+- Events live in `Raytha.Domain/Events` and derive from `BaseEvent`.
+- Entities raise events with `AddDomainEvent`; they MUST NOT dispatch them.
+  Dispatch happens on save.
+- Events carry data, not services. An event handler that needs infrastructure
+  belongs in `Raytha.Application`.
+
+## 4. Exceptions
+
+Domain invariant violations throw from `Raytha.Domain/Exceptions`. Input
+validation is not a domain concern — it belongs in a FluentValidation validator
+(RFC-0002).
+
+## 5. Forbidden Here
+
+- No `DbContext`, `DbSet`, LINQ-to-Entities, or connection strings.
+- No `HttpContext`, `IUrlHelper`, or anything from ASP.NET Core.
+- No `DateTime.UtcNow` in business logic where the caller can pass the time;
+  entities take timestamps from the auditing interceptor.
+- No JSON serialization attributes beyond the converters already in
+  `Raytha.Domain/JsonConverters`, which exist for field values.

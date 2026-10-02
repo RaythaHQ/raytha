@@ -12,8 +12,8 @@ public class EditTheme
 {
     public record Command : LoggableEntityRequest<CommandResponseDto<ShortGuid>>
     {
-        public required string Title { get; set; }
-        public required string Description { get; set; }
+        public required string Title { get; init; }
+        public required string Description { get; init; }
 
         public static Command Empty() => new() { Title = string.Empty, Description = string.Empty };
     }
@@ -38,12 +38,10 @@ public class EditTheme
     public class Handler : IRequestHandler<Command, CommandResponseDto<ShortGuid>>
     {
         private readonly IRaythaDbContext _db;
-        private readonly IMediator _mediator;
 
-        public Handler(IRaythaDbContext db, IMediator mediator)
+        public Handler(IRaythaDbContext db)
         {
             _db = db;
-            _mediator = mediator;
         }
 
         public async ValueTask<CommandResponseDto<ShortGuid>> Handle(

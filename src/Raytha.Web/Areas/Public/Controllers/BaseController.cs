@@ -10,7 +10,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Utils;
-using Raytha.Web.Areas.Admin.Pages.Shared;
 
 namespace Raytha.Web.Areas.Public.Controllers;
 
@@ -24,6 +23,7 @@ public class BaseController : Controller
     private IAntiforgery _antiforgery;
     private IWebHostEnvironment _environment;
     private ILogger _logger;
+    private IRelativeUrlBuilder _relativeUrlBuilder;
 
     protected ISender Mediator =>
         _mediator ??= HttpContext.RequestServices.GetRequiredService<ISender>();
@@ -38,6 +38,9 @@ public class BaseController : Controller
         _environment ??= HttpContext.RequestServices.GetRequiredService<IWebHostEnvironment>();
     protected ILogger Logger =>
         _logger ??= HttpContext.RequestServices.GetRequiredService<ILogger<BaseController>>();
+    protected IRelativeUrlBuilder RelativeUrlBuilder =>
+        _relativeUrlBuilder ??=
+            HttpContext.RequestServices.GetRequiredService<IRelativeUrlBuilder>();
 
     public const string ErrorMessageKey = "ErrorMessage";
     public const string SuccessMessageKey = "SuccessMessage";
@@ -106,10 +109,7 @@ public class BaseController : Controller
         }
         if (!CurrentOrganization.InitialSetupComplete)
         {
-            context.Result = new RedirectToPageResult(
-                RouteNames.Setup.Index,
-                new { area = "Admin" }
-            );
+            context.Result = new RedirectResult($"{CurrentOrganization.PathBase}/raytha/setup");
         }
     }
 }

@@ -17,5 +17,7 @@ public class ContentTypeConfiguration : IEntityTypeConfiguration<ContentType>
         builder.HasOne(b => b.CreatorUser).WithMany().HasForeignKey(b => b.CreatorUserId);
 
         builder.HasOne(b => b.LastModifierUser).WithMany().HasForeignKey(b => b.LastModifierUserId);
+
+        builder.HasQueryFilter(b => !b.IsDeleted);
     }
 }

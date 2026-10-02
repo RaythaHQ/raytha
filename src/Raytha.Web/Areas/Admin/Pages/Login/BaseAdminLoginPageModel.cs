@@ -2,55 +2,21 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
-using Raytha.Application.AuthenticationSchemes;
-using Raytha.Application.Common.Models;
+using Microsoft.AspNetCore.Http.Extensions;
+using Microsoft.AspNetCore.Mvc;
 using Raytha.Application.Common.Security;
 using Raytha.Application.Login;
-using Raytha.Domain.ValueObjects;
 using Raytha.Web.Areas.Admin.Pages.Shared.Models;
 
 namespace Raytha.Web.Areas.Admin.Pages.Login;
 
+/// <summary>
+/// Server-side sign-in endpoints: SSO entry and the JWT and SAML callbacks. The interactive
+/// sign-in screens are SPA routes under <c>/raytha/login</c>.
+/// </summary>
 [AllowAnonymous]
 public class BaseAdminLoginPageModel : BaseAdminPageModel
 {
-    public bool ShowOrLoginWithSection => HasLoginByMagicLink || HasLoginBySingleSignOn;
-    public bool HasLoginByEmailAndPassword =>
-        AuthenticationSchemes.Any(p =>
-            p.AuthenticationSchemeType == AuthenticationSchemeType.EmailAndPassword
-        );
-    public bool HasLoginByMagicLink =>
-        AuthenticationSchemes.Any(p =>
-            p.AuthenticationSchemeType == AuthenticationSchemeType.MagicLink
-        );
-    public bool HasLoginBySingleSignOn =>
-        AuthenticationSchemes.Any(p =>
-            p.AuthenticationSchemeType == AuthenticationSchemeType.Jwt
-            || p.AuthenticationSchemeType == AuthenticationSchemeType.Saml
-        );
-
-    public LoginAuthenticationSchemeChoiceItemViewModel EmailAndPassword =>
-        HasLoginByEmailAndPassword
-            ? AuthenticationSchemes.First(p =>
-                p.AuthenticationSchemeType == AuthenticationSchemeType.EmailAndPassword
-            )
-            : null;
-    public LoginAuthenticationSchemeChoiceItemViewModel MagicLink =>
-        HasLoginByMagicLink
-            ? AuthenticationSchemes.First(p =>
-                p.AuthenticationSchemeType == AuthenticationSchemeType.MagicLink
-            )
-            : null;
-    public IEnumerable<LoginAuthenticationSchemeChoiceItemViewModel> SingleSignOns =>
-        HasLoginBySingleSignOn
-            ? AuthenticationSchemes.Where(p =>
-                p.AuthenticationSchemeType == AuthenticationSchemeType.Jwt
-                || p.AuthenticationSchemeType == AuthenticationSchemeType.Saml
-            )
-            : null;
-    public IEnumerable<LoginAuthenticationSchemeChoiceItemViewModel> AuthenticationSchemes { get; set; } =
-        new List<LoginAuthenticationSchemeChoiceItemViewModel>();
-
     protected async Task LoginWithClaims(LoginDto result, bool rememberMe = true)
     {
         List<Claim> claims = new List<Claim>();
@@ -75,37 +41,19 @@ public class BaseAdminLoginPageModel : BaseAdminPageModel
         return !string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl);
     }
 
-    protected bool OnlyHasSingleSignOnEnabled(ListResultDto<AuthenticationSchemeDto> result)
+    /// <summary>
+    /// The admin dashboard is served by the React SPA at /raytha, not a Razor page.
+    /// </summary>
+    protected IActionResult RedirectToDashboard()
     {
-        return result.TotalCount == 1 && !result.Items.First().IsBuiltInAuth;
+        return Redirect($"{CurrentOrganization.PathBase}/raytha");
     }
 
-    protected bool BuiltInAuthIsMagicLinkOnly(ListResultDto<AuthenticationSchemeDto> result)
+    protected IActionResult RedirectToSpaLogin(string returnUrl = null)
     {
-        return !result.Items.Any(p =>
-                p.AuthenticationSchemeType
-                == AuthenticationSchemeType.EmailAndPassword.DeveloperName
-            )
-            && result.Items.Any(p =>
-                p.AuthenticationSchemeType == AuthenticationSchemeType.MagicLink.DeveloperName
-            );
+        var query = HasLocalRedirect(returnUrl)
+            ? new QueryBuilder { { "returnUrl", returnUrl } }.ToString()
+            : string.Empty;
+        return Redirect($"{CurrentOrganization.PathBase}/raytha/login{query}");
     }
-
-    protected bool BuiltInAuthIsEmailAndPasswordOnly(ListResultDto<AuthenticationSchemeDto> result)
-    {
-        return result.Items.Any(p =>
-                p.AuthenticationSchemeType
-                == AuthenticationSchemeType.EmailAndPassword.DeveloperName
-            )
-            && !result.Items.Any(p =>
-                p.AuthenticationSchemeType == AuthenticationSchemeType.MagicLink.DeveloperName
-            );
-    }
-}
-
-public record LoginAuthenticationSchemeChoiceItemViewModel
-{
-    public string AuthenticationSchemeType { get; init; }
-    public string DeveloperName { get; init; }
-    public string LoginButtonText { get; init; }
 }

@@ -11,6 +11,7 @@ public record WidgetTemplateListItemDto : BaseAuditableEntityDto
     public string Label { get; init; } = string.Empty;
     public string DeveloperName { get; init; } = string.Empty;
     public bool IsBuiltInTemplate { get; init; }
+    public IReadOnlyList<FieldDefinition> Fields { get; init; } = [];
 
     public static Expression<Func<WidgetTemplate, WidgetTemplateListItemDto>> GetProjection()
     {
@@ -29,6 +30,7 @@ public record WidgetTemplateListItemDto : BaseAuditableEntityDto
             Label = entity.Label,
             DeveloperName = entity.DeveloperName,
             IsBuiltInTemplate = entity.IsBuiltInTemplate,
+            Fields = entity.Fields,
             CreatorUserId = entity.CreatorUserId,
             CreationTime = entity.CreationTime,
             LastModificationTime = entity.LastModificationTime,

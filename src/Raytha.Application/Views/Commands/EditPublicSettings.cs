@@ -54,6 +54,22 @@ public class EditPublicSettings
                         if (entity == null)
                             throw new NotFoundException("View", request.Id);
 
+                        if (
+                            !request.IsPublished
+                            && HomePageValidation.IsHomePage(
+                                db,
+                                request.Id.Guid,
+                                Route.VIEW_TYPE
+                            )
+                        )
+                        {
+                            context.AddFailure(
+                                Constants.VALIDATION_SUMMARY,
+                                HomePageValidation.CannotUnpublishMessage
+                            );
+                            return;
+                        }
+
                         var templateAccessToModelDefinitions = db
                             .WebTemplates.Include(wt => wt.TemplateAccessToModelDefinitions)
                             .Where(wt => wt.Id == request.TemplateId.Guid)
@@ -93,10 +109,13 @@ public class EditPublicSettings
                             );
                             return;
                         }
-                        var routePathExists = db.Routes.FirstOrDefault(p =>
-                            p.Path.ToLower() == slugifiedPath && p.ViewId != request.Id.Guid
-                        );
-                        if (routePathExists != null)
+                        var reservedRoot = RoutePaths.ReservedRoot(db, slugifiedPath, entity.RouteId);
+                        if (reservedRoot != null)
+                        {
+                            context.AddFailure("RoutePath", RoutePaths.ReservedMessage(reservedRoot));
+                            return;
+                        }
+                        if (RoutePaths.IsTaken(db, slugifiedPath, entity.RouteId))
                         {
                             context.AddFailure(
                                 "RoutePath",
@@ -136,13 +155,28 @@ public class EditPublicSettings
                 .OrganizationSettings.Select(os => os.ActiveThemeId)
                 .FirstAsync(cancellationToken);
 
-            var webTemplateViewRelation = await _db.WebTemplateViewRelations.FirstAsync(
+            var webTemplateViewRelation = await _db.WebTemplateViewRelations.FirstOrDefaultAsync(
                 wtr => wtr.ViewId == entity.Id && wtr.WebTemplate!.ThemeId == activeThemeId,
                 cancellationToken
             );
 
-            webTemplateViewRelation.WebTemplateId = request.TemplateId.Guid;
-            _db.WebTemplateViewRelations.Update(webTemplateViewRelation);
+            if (webTemplateViewRelation == null)
+            {
+                webTemplateViewRelation = new WebTemplateViewRelation
+                {
+                    Id = Guid.NewGuid(),
+                    ViewId = entity.Id,
+                    WebTemplateId = request.TemplateId.Guid,
+                };
+                await _db.WebTemplateViewRelations.AddAsync(
+                    webTemplateViewRelation,
+                    cancellationToken
+                );
+            }
+            else
+            {
+                webTemplateViewRelation.WebTemplateId = request.TemplateId.Guid;
+            }
 
             await _db.SaveChangesAsync(cancellationToken);
             return new CommandResponseDto<ShortGuid>(entity.Id);

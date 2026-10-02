@@ -53,4 +53,32 @@ public class DateTimeFieldValueTests
         fieldValue = type.FieldValueFrom(string.Empty);
         fieldValue.HasValue.Should().BeFalse();
     }
+
+    [TestCase("2/30/2026")]
+    [TestCase("sometime in spring")]
+    public void A_stored_date_that_does_not_parse_reads_as_empty_and_keeps_its_text(string stored)
+    {
+        var fieldValue = BaseFieldType.Date.StoredValueFrom(stored);
+
+        fieldValue.Should().BeOfType<DateTimeFieldValue>();
+        fieldValue.HasValue.Should().BeFalse();
+        ((DateTime?)fieldValue.Value).Should().BeNull();
+        fieldValue.Text.Should().Be(stored);
+    }
+
+    [Test]
+    public void A_stored_date_that_parses_reads_like_a_written_one()
+    {
+        var fieldValue = BaseFieldType.Date.StoredValueFrom("2026-01-13");
+
+        ((DateTime?)fieldValue.Value).Should().Be(new DateTime(2026, 1, 13));
+    }
+
+    [Test]
+    public void A_date_that_does_not_parse_is_still_rejected_when_written()
+    {
+        var act = () => BaseFieldType.Date.FieldValueFrom("2/30/2026");
+
+        act.Should().Throw<FormatException>();
+    }
 }

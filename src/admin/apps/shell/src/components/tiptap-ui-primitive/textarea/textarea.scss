@@ -1,0 +1,42 @@
+:root {
+  --tt-textarea-placeholder: var(--tt-gray-light-a-400);
+  --tt-textarea-border: var(--tt-gray-light-a-200);
+  --tt-textarea-border-focus: var(--tt-gray-light-a-300);
+}
+
+.dark {
+  --tt-textarea-placeholder: var(--tt-gray-dark-a-400);
+  --tt-textarea-border: var(--tt-gray-dark-a-200);
+  --tt-textarea-border-focus: var(--tt-gray-dark-a-300);
+}
+
+.tiptap-textarea {
+  display: flex;
+  width: 100%;
+  min-height: 4rem;
+  padding: 0.5rem 0.625rem;
+  border-radius: 0.5rem;
+  border: 1px solid var(--tt-textarea-border);
+  background: transparent;
+  font-size: 1rem;
+  field-sizing: content;
+  outline: none;
+  transition:
+    color,
+    background-color,
+    border-color 150ms;
+}
+
+.tiptap-textarea::placeholder {
+  color: var(--tt-textarea-placeholder);
+}
+
+.tiptap-textarea:focus-visible {
+  border-color: var(--tt-textarea-border-focus);
+}
+
+@media (min-width: 768px) {
+  .tiptap-textarea {
+    font-size: 0.875rem;
+  }
+}

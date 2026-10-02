@@ -7,12 +7,14 @@ using Raytha.Application.Common.Exceptions;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Models;
 using Raytha.Application.Common.Utils;
+using Raytha.Application.Webhooks;
 using Raytha.Domain.Entities;
 using Raytha.Domain.Events;
 using Raytha.Domain.ValueObjects.FieldValues;
 
 namespace Raytha.Application.ContentItems.Commands;
 
+[WebhookEvent("content_item.deleted", DisplayName = "Content item deleted", Group = "Content")]
 public class DeleteContentItem
 {
     public record Command : LoggableEntityRequest<CommandResponseDto<ShortGuid>> { }

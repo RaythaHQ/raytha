@@ -1,20 +1,22 @@
 <Project>
   <PropertyGroup>
-    <!-- Suppress all warnings, only show errors -->
+    <RaythaVersionFile>$(MSBuildThisFileDirectory)VERSION</RaythaVersionFile>
+    <Version Condition="Exists('$(RaythaVersionFile)')">$([System.IO.File]::ReadAllText('$(RaythaVersionFile)').Trim())</Version>
+    <Version Condition="'$(Version)' == ''">0.0.0</Version>
+    <AssemblyVersion>$(Version)</AssemblyVersion>
+    <FileVersion>$(Version)</FileVersion>
+    <InformationalVersion>$(Version)</InformationalVersion>
+    <TargetFramework>net10.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
     <WarningLevel>0</WarningLevel>
-    
-    <!-- Enable parallel compilation -->
     <BuildInParallel>true</BuildInParallel>
-    
-    <!-- Faster incremental builds -->
     <Deterministic>true</Deterministic>
-    
-    <!-- Skip analyzers during build (run separately in CI) -->
     <RunAnalyzersDuringBuild>false</RunAnalyzersDuringBuild>
     <RunAnalyzersDuringLiveAnalysis>true</RunAnalyzersDuringLiveAnalysis>
-    
-    <!-- Disable XML doc generation in Debug -->
     <GenerateDocumentationFile Condition="'$(Configuration)' == 'Debug'">false</GenerateDocumentationFile>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
   </PropertyGroup>
 </Project>
-

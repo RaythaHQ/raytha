@@ -5,10 +5,10 @@ namespace Raytha.Application.Common.Models.RenderModels;
 
 public record Wrapper_RenderModel : IInsertTemplateVariable
 {
-    public ContentType_RenderModel ContentType { get; init; }
+    public ContentType_RenderModel? ContentType { get; init; }
     public CurrentOrganization_RenderModel CurrentOrganization { get; init; }
     public CurrentUser_RenderModel CurrentUser { get; init; }
-    public object Target { get; init; }
+    public object? Target { get; init; }
     public Dictionary<string, string> QueryParams { get; init; } = new Dictionary<string, string>();
 
     public string? RequestVerificationToken { get; set; }

@@ -39,7 +39,7 @@ public class CreateWebTemplateByDeveloperName
 
     public class Validator : AbstractValidator<Command>
     {
-        public Validator(IRaythaDbContext db)
+        public Validator(IRaythaDbContext db, ILiquidTemplateParser liquid)
         {
             RuleFor(x => x.ThemeDeveloperName).NotEmpty();
             RuleFor(x => x.Label).NotEmpty();
@@ -53,6 +53,11 @@ public class CreateWebTemplateByDeveloperName
                 .Must(WebTemplateExtensions.HasRenderBodyTag)
                 .When(p => p.IsBaseLayout)
                 .WithMessage("Content must have the {% renderbody %} tag if it is a base layout.");
+            RuleFor(x => x.Content)
+                .Custom(
+                    (content, context) =>
+                        LiquidSyntaxValidation.RejectInvalidLiquid(context, liquid, content)
+                );
             RuleFor(x => x)
                 .Custom(
                     (request, context) =>

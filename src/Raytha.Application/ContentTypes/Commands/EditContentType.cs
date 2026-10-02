@@ -5,10 +5,12 @@ using Raytha.Application.Common.Exceptions;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Models;
 using Raytha.Application.Common.Utils;
+using Raytha.Application.Webhooks;
 using Raytha.Domain.ValueObjects.FieldTypes;
 
 namespace Raytha.Application.ContentTypes.Commands;
 
+[WebhookEvent("content_type.updated", DisplayName = "Content type updated", Group = "Content types")]
 public class EditContentType
 {
     public record Command : LoggableEntityRequest<CommandResponseDto<ShortGuid>>

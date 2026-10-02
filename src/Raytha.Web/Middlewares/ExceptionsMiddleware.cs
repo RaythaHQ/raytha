@@ -1,21 +1,141 @@
 ﻿using System;
 using System.Net;
-using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Raytha.Application.Common.Exceptions;
+using Raytha.Domain.Exceptions;
 
 namespace Raytha.Web.Middlewares;
 
 public class ExceptionsMiddleware
 {
     public const string ERROR_DETAILS_KEY = "Raytha.ErrorDetails";
+    public const string ProblemJsonContentType = "application/problem+json";
+
+    private static readonly JsonSerializerOptions ProblemJsonOptions = new(
+        JsonSerializerDefaults.Web
+    )
+    {
+        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+    };
+
+    public static bool IsApiPath(PathString path, string pathBase)
+    {
+        var lowerPath = path.Value?.ToLower() ?? string.Empty;
+        return lowerPath.StartsWith($"{pathBase}/raytha/api");
+    }
+
+    /// <summary>
+    /// Maps an exception to RFC 7807 problem details. Validation failures become
+    /// <see cref="ValidationProblemDetails"/> with a per-field <c>errors</c> map. The legacy
+    /// <c>success</c>/<c>error</c> members are kept as extensions so v1 API clients that
+    /// read them keep working.
+    /// </summary>
+    public static ProblemDetails ToProblemDetails(
+        Exception exception,
+        string? instance,
+        IHostEnvironment env
+    )
+    {
+        ProblemDetails problem;
+
+        switch (exception)
+        {
+            case ValidationException validation:
+                problem = new ValidationProblemDetails(validation.Errors)
+                {
+                    Status = (int)HttpStatusCode.BadRequest,
+                    Title = "One or more validation errors occurred.",
+                    Detail = validation.Message,
+                };
+                break;
+            case NotFoundException notFound:
+                problem = Create(
+                    HttpStatusCode.NotFound,
+                    "Not found",
+                    notFound.NamesEntity
+                        ? notFound.Message
+                        : "The resource you requested was not found."
+                );
+                break;
+            case FormatException:
+                problem = Create(
+                    HttpStatusCode.UnprocessableEntity,
+                    "Invalid identifier",
+                    "Invalid format of identifier."
+                );
+                break;
+            case InvalidApiKeyException:
+                // Security: never distinguish missing from invalid keys.
+                problem = Create(HttpStatusCode.Unauthorized, "Unauthorized", "Invalid API key.");
+                break;
+            case ForbiddenAccessException:
+                problem = Create(
+                    HttpStatusCode.Forbidden,
+                    "Forbidden",
+                    "You do not have permission to perform this action."
+                );
+                break;
+            case UnauthorizedAccessException:
+                problem = Create(HttpStatusCode.Unauthorized, "Unauthorized", "Unauthorized access.");
+                break;
+            case InvalidFilterException invalidFilter:
+                problem = Create(HttpStatusCode.BadRequest, "Invalid filter", invalidFilter.Message);
+                break;
+            case FilterConditionTypeNotFoundException unknownFilterType:
+                problem = Create(
+                    HttpStatusCode.BadRequest,
+                    "Invalid filter",
+                    unknownFilterType.Message
+                );
+                break;
+            case BusinessException business:
+                problem = Create(HttpStatusCode.BadRequest, "Request failed", business.Message);
+                break;
+            case BadHttpRequestException bad:
+                problem = Create(
+                    (HttpStatusCode)bad.StatusCode,
+                    "Bad request",
+                    env.IsDevelopment() ? bad.Message : "The request body could not be read."
+                );
+                break;
+            default:
+                problem = Create(
+                    HttpStatusCode.InternalServerError,
+                    "Server error",
+                    env.IsDevelopment() ? exception.Message : "An unknown error has occurred."
+                );
+                if (env.IsDevelopment() && exception.StackTrace is not null)
+                {
+                    problem.Extensions["stackTrace"] = exception.StackTrace;
+                }
+                break;
+        }
+
+        problem.Type ??= $"https://httpstatuses.io/{problem.Status}";
+        problem.Instance = instance;
+        problem.Extensions["success"] = false;
+        problem.Extensions["error"] = problem.Detail;
+        return problem;
+    }
+
+    private static ProblemDetails Create(HttpStatusCode status, string title, string detail)
+    {
+        return new ProblemDetails
+        {
+            Status = (int)status,
+            Title = title,
+            Detail = detail,
+        };
+    }
 
     public static RequestDelegate ErrorHandlerDelegate(string pathBase, IWebHostEnvironment env)
     {
@@ -29,42 +149,18 @@ public class ExceptionsMiddleware
 
             var path = context.Request.Path;
 
-            if (path.Value?.ToLower().StartsWith($"{pathBase}/raytha/api") == true)
+            if (IsApiPath(path, pathBase))
             {
-                byte[] errorBytes;
-                if (error.Error is NotFoundException)
-                {
-                    errorBytes = GetErrorMessageAsByteArray(
-                        "The resource you requested was not found."
-                    );
-                    context.Response.StatusCode = (int)HttpStatusCode.NotFound;
-                }
-                else if (error.Error is FormatException)
-                {
-                    errorBytes = GetErrorMessageAsByteArray("Invalid format of identifier.");
-                    context.Response.StatusCode = (int)HttpStatusCode.UnprocessableEntity;
-                }
-                else if (error.Error is UnauthorizedAccessException)
-                {
-                    errorBytes = GetErrorMessageAsByteArray("Unauthorized access.");
-                    context.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
-                }
-                else if (error.Error is InvalidApiKeyException)
-                {
-                    // Security: Avoid leaking detailed API key validation reasons and return a proper 401,
-                    // so callers cannot distinguish between missing/invalid keys while still receiving a clear,
-                    // generic error message that does not expose internal implementation details.
-                    errorBytes = GetErrorMessageAsByteArray("Invalid API key.");
-                    context.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
-                }
-                else
-                {
-                    errorBytes = GetErrorMessageAsByteArray("An unknown error has occured.");
-                    context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
-                }
-
-                context.Response.ContentType = "application/json";
-                await context.Response.Body.WriteAsync(errorBytes, 0, errorBytes.Length);
+                // Every /raytha/api/* path answers with RFC 7807 problem details so the admin SPA
+                // and API clients share one machine-readable error shape. Public/Razor paths keep
+                // the HTML flow below.
+                var problem = ToProblemDetails(error.Error, path.Value, env);
+                context.Response.StatusCode =
+                    problem.Status ?? (int)HttpStatusCode.InternalServerError;
+                context.Response.ContentType = ProblemJsonContentType;
+                await context.Response.WriteAsync(
+                    JsonSerializer.Serialize(problem, problem.GetType(), ProblemJsonOptions)
+                );
                 await context.Response.CompleteAsync();
             }
             else
@@ -83,6 +179,10 @@ public class ExceptionsMiddleware
                 else if (error.Error is UnauthorizedAccessException)
                 {
                     statusCode = (int)HttpStatusCode.Forbidden;
+                }
+                else if (error.Error is InvalidFilterException)
+                {
+                    statusCode = (int)HttpStatusCode.BadRequest;
                 }
                 else
                 {
@@ -129,15 +229,29 @@ public class ExceptionsMiddleware
                 else
                 {
                     context.Response.StatusCode = statusCode;
+                    var message = PublicErrorMessage(error.Error, env);
+                    if (message != null && !context.Response.HasStarted)
+                    {
+                        context.Response.ContentType = "text/plain; charset=utf-8";
+                        await context.Response.WriteAsync(message);
+                    }
                 }
             }
         };
     }
 
-    private static byte[] GetErrorMessageAsByteArray(string message)
+    /// <summary>
+    /// Filter mistakes are the caller's input, so the message is safe to return. Other failures
+    /// stay quiet outside Development, where the message can name a template or query.
+    /// </summary>
+    internal static string? PublicErrorMessage(Exception exception, IHostEnvironment env)
     {
-        string json = JsonSerializer.Serialize(new { success = false, error = message });
-        return Encoding.UTF8.GetBytes(json);
+        if (exception is InvalidFilterException or FilterConditionTypeNotFoundException)
+        {
+            return exception.Message;
+        }
+
+        return env.IsDevelopment() ? exception.Message : null;
     }
 
     public class ErrorDetails

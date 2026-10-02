@@ -1,0 +1,11 @@
+---
+description: Feature flags were removed. This RFC is superseded.
+globs: ""
+alwaysApply: false
+---
+
+# RFC-0009: Feature Flags
+
+Status: Superseded
+
+Feature flags were removed. WebhookPublishBehavior always publishes, and the FeatureFlags table is dropped.

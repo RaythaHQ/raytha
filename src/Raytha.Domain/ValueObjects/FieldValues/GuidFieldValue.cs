@@ -1,4 +1,6 @@
-﻿namespace Raytha.Domain.ValueObjects.FieldValues;
+﻿using CSharpVitamins;
+
+namespace Raytha.Domain.ValueObjects.FieldValues;
 
 public record GuidFieldValue : BaseFieldValue
 {
@@ -6,8 +8,13 @@ public record GuidFieldValue : BaseFieldValue
 
     public GuidFieldValue(object value)
     {
-        if (value != null && !string.IsNullOrEmpty(value.ToString()))
-            Guid.TryParse(value.ToString(), out _value);
+        var text = value?.ToString();
+        if (string.IsNullOrEmpty(text))
+            return;
+        if (Guid.TryParse(text, out _value))
+            return;
+        if (ShortGuid.TryParse(text, out ShortGuid shortGuid))
+            _value = shortGuid.Guid;
     }
 
     public override dynamic Value => _value;

@@ -3,11 +3,14 @@ using FluentValidation;
 using Mediator;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Models;
+using Raytha.Application.Common.Security;
 using Raytha.Application.Common.Utils;
+using Raytha.Application.Webhooks;
 using Raytha.Domain.Entities;
 
 namespace Raytha.Application.Roles.Commands;
 
+[WebhookEvent("role.created", DisplayName = "Role created", Group = "Roles")]
 public class CreateRole
 {
     public record Command : LoggableRequest<CommandResponseDto<ShortGuid>>
@@ -21,7 +24,7 @@ public class CreateRole
 
     public class Validator : AbstractValidator<Command>
     {
-        public Validator(IRaythaDbContext db)
+        public Validator(IRaythaDbContext db, ICurrentUser currentUser)
         {
             RuleFor(x => x.Label).NotEmpty();
             RuleFor(x => x.DeveloperName)
@@ -38,21 +41,19 @@ public class CreateRole
                     }
                 )
                 .WithMessage("A role with that developer name already exists.");
-            RuleFor(x => x.SystemPermissions)
-                .Must(permissions =>
-                {
-                    var permissionsList = permissions?.ToList() ?? new List<string>();
-                    var hasSystemSettings = permissionsList.Contains(
-                        BuiltInSystemPermission.MANAGE_SYSTEM_SETTINGS_PERMISSION
-                    );
-                    var hasAdministrators = permissionsList.Contains(
-                        BuiltInSystemPermission.MANAGE_ADMINISTRATORS_PERMISSION
-                    );
-                    // Both must be selected together or neither
-                    return hasSystemSettings == hasAdministrators;
-                })
-                .WithMessage(
-                    "Manage System Settings and Manage Administrators permissions must be selected together."
+            RuleFor(x => x)
+                .Custom(
+                    (request, context) =>
+                        context.AddDenial(
+                            AdminAuthorityGuard.CheckRoleDefinition(
+                                db.FindCaller(currentUser),
+                                null,
+                                PermissionGrant.FromRequest(
+                                    request.SystemPermissions,
+                                    request.ContentTypePermissions
+                                )
+                            )
+                        )
                 );
         }
     }
@@ -71,30 +72,17 @@ public class CreateRole
             CancellationToken cancellationToken
         )
         {
-            var contentTypeRolePermissions = new List<ContentTypeRolePermission>();
-
-            var builtInSystemPermissions = BuiltInSystemPermission.From(
-                request.SystemPermissions.ToArray()
+            var grant = PermissionGrant.FromRequest(
+                request.SystemPermissions,
+                request.ContentTypePermissions
             );
-
-            foreach (var contentTypePermission in request.ContentTypePermissions)
-            {
-                var contentTypeRolePermission = new ContentTypeRolePermission
-                {
-                    ContentTypeId = (ShortGuid)contentTypePermission.Key,
-                    ContentTypePermissions = BuiltInContentTypePermission.From(
-                        contentTypePermission.Value.ToArray()
-                    ),
-                };
-                contentTypeRolePermissions.Add(contentTypeRolePermission);
-            }
 
             Role entity = new Role
             {
                 Label = request.Label,
                 DeveloperName = request.DeveloperName.ToDeveloperName(),
-                SystemPermissions = builtInSystemPermissions,
-                ContentTypeRolePermissions = contentTypeRolePermissions,
+                SystemPermissions = grant.System,
+                ContentTypeRolePermissions = grant.ToContentTypeRolePermissions().ToList(),
             };
 
             _db.Roles.Add(entity);

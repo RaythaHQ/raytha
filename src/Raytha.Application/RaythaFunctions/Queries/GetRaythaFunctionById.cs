@@ -1,4 +1,5 @@
 ﻿using Mediator;
+using Microsoft.EntityFrameworkCore;
 using Raytha.Application.Common.Exceptions;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Models;
@@ -23,7 +24,9 @@ public class GetRaythaFunctionById
             CancellationToken cancellationToken
         )
         {
-            var entity = _db.RaythaFunctions.FirstOrDefault(rf => rf.Id == request.Id.Guid);
+            var entity = _db
+                .RaythaFunctions.Include(rf => rf.Route)
+                .FirstOrDefault(rf => rf.Id == request.Id.Guid);
             if (entity == null)
                 throw new NotFoundException("Raytha Function", request.Id);
 

@@ -16,7 +16,7 @@ public class EditEmailTemplate
         public string Subject { get; init; } = null!;
         public string Content { get; init; } = null!;
         public string Bcc { get; init; } = string.Empty;
-        public string Cc { get; set; } = string.Empty;
+        public string Cc { get; init; } = string.Empty;
     }
 
     public class Validator : AbstractValidator<Command>

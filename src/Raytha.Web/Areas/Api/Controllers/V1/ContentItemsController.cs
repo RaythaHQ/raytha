@@ -6,6 +6,7 @@ using Raytha.Application.Common.Models;
 using Raytha.Application.ContentItems;
 using Raytha.Application.ContentItems.Commands;
 using Raytha.Application.ContentItems.Queries;
+using Raytha.Application.ContentTypes.Queries;
 using Raytha.Application.Routes;
 using Raytha.Application.Routes.Queries;
 using Raytha.Domain.Entities;
@@ -14,6 +15,7 @@ using Raytha.Web.Utils;
 
 namespace Raytha.Web.Areas.Api.Controllers.V1;
 
+[AbsoluteMediaUrls]
 public class ContentItemsController : BaseController
 {
     [HttpGet($"{{{RouteConstants.CONTENT_TYPE_DEVELOPER_NAME}}}", Name = "GetContentItems")]
@@ -176,6 +178,86 @@ public class ContentItemsController : BaseController
     }
 
     [HttpDelete(
+        $"{{{RouteConstants.CONTENT_TYPE_DEVELOPER_NAME}}}/items",
+        Name = "DeleteContentItems"
+    )]
+    [Authorize(
+        Policy = RaythaApiAuthorizationHandler.POLICY_PREFIX
+            + BuiltInContentTypePermission.CONTENT_TYPE_EDIT_PERMISSION
+    )]
+    public async Task<ActionResult<ICommandResponseDto<ShortGuid>>> DeleteContentItems(
+        string contentTypeDeveloperName,
+        [FromBody] DeleteContentItems.Command request
+    )
+    {
+        var contentType = await Mediator.Send(
+            new GetContentTypeByDeveloperName.Query { DeveloperName = contentTypeDeveloperName }
+        );
+        var response = await Mediator.Send(request with { ContentTypeId = contentType.Result.Id });
+        if (!response.Success)
+        {
+            return BadRequest(response);
+        }
+        return response;
+    }
+
+    /// <summary>
+    /// Queues the creation of many items of this content type and returns the background task id
+    /// (202). Poll <c>GET /raytha/api/v1/BackgroundTasks/{id}</c> until <c>status</c> is
+    /// <c>complete</c> or <c>error</c>. Each item is created like a single create, so one failing
+    /// does not stop the rest. When the task is complete, <c>statusInfo</c> is JSON:
+    /// <c>{ total, created, failed, items: [{ index, success, id, errors: [{ field, message }] }] }</c>,
+    /// with <c>index</c> the item's position in the request.
+    /// A relationship field may hold an item id, a route path, or the primary field value of the
+    /// related item. An item may also reference another item of the same batch by its primary
+    /// field value; that item is created first. Items cannot be sent in more than
+    /// <c>500</c> per request.
+    /// </summary>
+    [HttpPost($"{{{RouteConstants.CONTENT_TYPE_DEVELOPER_NAME}}}/batch", Name = "BatchCreateContentItems")]
+    [Authorize(
+        Policy = RaythaApiAuthorizationHandler.POLICY_PREFIX
+            + BuiltInContentTypePermission.CONTENT_TYPE_EDIT_PERMISSION
+    )]
+    public async Task<ActionResult<ICommandResponseDto<ShortGuid>>> BatchCreateContentItems(
+        string contentTypeDeveloperName,
+        [FromBody] BeginBatchCreateContentItems.Command request
+    )
+    {
+        var input = request with { ContentTypeDeveloperName = contentTypeDeveloperName };
+        var response = await Mediator.Send(input);
+        if (!response.Success)
+        {
+            return BadRequest(response);
+        }
+        return Accepted(response);
+    }
+
+    [HttpPost(
+        $"{{{RouteConstants.CONTENT_TYPE_DEVELOPER_NAME}}}/template",
+        Name = "AssignContentItemTemplates"
+    )]
+    [Authorize(
+        Policy = RaythaApiAuthorizationHandler.POLICY_PREFIX
+            + BuiltInContentTypePermission.CONTENT_TYPE_EDIT_PERMISSION
+    )]
+    public async Task<ActionResult<ICommandResponseDto<ShortGuid>>> AssignContentItemTemplates(
+        string contentTypeDeveloperName,
+        [FromBody] AssignContentItemTemplates.Command request
+    )
+    {
+        var contentType = await Mediator.Send(
+            new GetContentTypeByDeveloperName.Query { DeveloperName = contentTypeDeveloperName }
+        );
+        var input = request with { ContentTypeId = contentType.Result.Id };
+        var response = await Mediator.Send(input);
+        if (!response.Success)
+        {
+            return BadRequest(response);
+        }
+        return response;
+    }
+
+    [HttpDelete(
         $"{{{RouteConstants.CONTENT_TYPE_DEVELOPER_NAME}}}/{{contentItemId}}",
         Name = "DeleteContentItem"
     )]
@@ -189,6 +271,94 @@ public class ContentItemsController : BaseController
     )
     {
         var input = new DeleteContentItem.Command { Id = contentItemId };
+        var response = await Mediator.Send(input);
+        if (!response.Success)
+        {
+            return BadRequest(response);
+        }
+        return response;
+    }
+
+    [HttpPut(
+        $"{{{RouteConstants.CONTENT_TYPE_DEVELOPER_NAME}}}/{{contentItemId}}/set-as-home-page",
+        Name = "SetContentItemAsHomePage"
+    )]
+    [Authorize(
+        Policy = RaythaApiAuthorizationHandler.POLICY_PREFIX
+            + BuiltInContentTypePermission.CONTENT_TYPE_EDIT_PERMISSION
+    )]
+    public async Task<ActionResult<ICommandResponseDto<ShortGuid>>> SetContentItemAsHomePage(
+        string contentTypeDeveloperName,
+        string contentItemId
+    )
+    {
+        var input = new SetAsHomePage.Command { Id = contentItemId };
+        var response = await Mediator.Send(input);
+        if (!response.Success)
+        {
+            return BadRequest(response);
+        }
+        return response;
+    }
+
+    [HttpPut(
+        $"{{{RouteConstants.CONTENT_TYPE_DEVELOPER_NAME}}}/{{contentItemId}}/discard-draft",
+        Name = "DiscardDraftContentItem"
+    )]
+    [Authorize(
+        Policy = RaythaApiAuthorizationHandler.POLICY_PREFIX
+            + BuiltInContentTypePermission.CONTENT_TYPE_EDIT_PERMISSION
+    )]
+    public async Task<ActionResult<ICommandResponseDto<ShortGuid>>> DiscardDraftContentItem(
+        string contentTypeDeveloperName,
+        string contentItemId
+    )
+    {
+        var input = new DiscardDraftContentItem.Command { Id = contentItemId };
+        var response = await Mediator.Send(input);
+        if (!response.Success)
+        {
+            return BadRequest(response);
+        }
+        return response;
+    }
+
+    [HttpPut(
+        $"{{{RouteConstants.CONTENT_TYPE_DEVELOPER_NAME}}}/{{contentItemId}}/restore",
+        Name = "RestoreContentItem"
+    )]
+    [Authorize(
+        Policy = RaythaApiAuthorizationHandler.POLICY_PREFIX
+            + BuiltInContentTypePermission.CONTENT_TYPE_CONFIG_PERMISSION
+    )]
+    public async Task<ActionResult<ICommandResponseDto<ShortGuid>>> RestoreContentItem(
+        string contentTypeDeveloperName,
+        string contentItemId
+    )
+    {
+        var input = new RestoreContentItem.Command { Id = contentItemId };
+        var response = await Mediator.Send(input);
+        if (!response.Success)
+        {
+            return BadRequest(response);
+        }
+        return response;
+    }
+
+    [HttpDelete(
+        $"{{{RouteConstants.CONTENT_TYPE_DEVELOPER_NAME}}}/trash/{{contentItemId}}",
+        Name = "DeleteAlreadyDeletedContentItem"
+    )]
+    [Authorize(
+        Policy = RaythaApiAuthorizationHandler.POLICY_PREFIX
+            + BuiltInContentTypePermission.CONTENT_TYPE_CONFIG_PERMISSION
+    )]
+    public async Task<ActionResult<ICommandResponseDto<ShortGuid>>> DeleteAlreadyDeletedContentItem(
+        string contentTypeDeveloperName,
+        string contentItemId
+    )
+    {
+        var input = new DeleteAlreadyDeletedContentItem.Command { Id = contentItemId };
         var response = await Mediator.Send(input);
         if (!response.Success)
         {

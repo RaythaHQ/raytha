@@ -1,6 +1,5 @@
 using FluentValidation;
 using Mediator;
-using Microsoft.EntityFrameworkCore;
 using Raytha.Application.Common.Exceptions;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Models;
@@ -25,18 +24,12 @@ public class GetUserForAuthenticationById
             CancellationToken cancellationToken
         )
         {
-            var entity = _db
-                .Users.Include(p => p.Roles)
-                .ThenInclude(p => p.ContentTypeRolePermissions)
-                .ThenInclude(p => p.ContentType)
-                .Include(p => p.UserGroups)
-                .Include(p => p.AuthenticationScheme)
-                .FirstOrDefault(p => p.Id == request.Id.Guid);
+            var login = _db.FindLogin(request.Id.Guid);
 
-            if (entity == null)
+            if (login == null)
                 throw new NotFoundException("User", request.Id);
 
-            return new QueryResponseDto<LoginDto>(LoginDto.GetProjection(entity));
+            return new QueryResponseDto<LoginDto>(login);
         }
     }
 }

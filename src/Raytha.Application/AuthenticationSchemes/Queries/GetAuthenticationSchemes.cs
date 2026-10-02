@@ -16,7 +16,7 @@ public class GetAuthenticationSchemes
     {
         public bool? IsEnabledForAdmins { get; init; }
         public bool? IsEnabledForUsers { get; init; }
-        public override string OrderBy { get; init; } = $"Label {SortOrder.Ascending}";
+        public override string OrderBy { get; init; } = $"Label {SortOrder.ASCENDING}";
     }
 
     public class Handler

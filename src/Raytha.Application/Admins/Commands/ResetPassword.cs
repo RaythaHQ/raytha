@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using Raytha.Application.Common.Exceptions;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Models;
+using Raytha.Application.Common.Security;
 using Raytha.Application.Common.Utils;
 using Raytha.Domain.Events;
 using Raytha.Domain.ValueObjects;
@@ -26,7 +27,7 @@ public class ResetPassword
 
     public class Validator : AbstractValidator<Command>
     {
-        public Validator(IRaythaDbContext db)
+        public Validator(IRaythaDbContext db, ICurrentUser currentUser)
         {
             RuleFor(x => x)
                 .Custom(
@@ -82,6 +83,14 @@ public class ResetPassword
                             );
                             return;
                         }
+
+                        context.AddDenial(
+                            db.AccountActionDenial(
+                                currentUser,
+                                entity.Id,
+                                AdminAccountAction.ResetPassword
+                            )
+                        );
                     }
                 );
         }

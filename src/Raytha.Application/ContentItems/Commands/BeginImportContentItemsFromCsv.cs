@@ -497,6 +497,16 @@ public class BeginImportContentItemsFromCsv
                                 errorMessage =
                                     $"Value is empty for required field: {fieldDefinition.DeveloperName}";
                             }
+
+                            var rowErrors = FieldDefinitionValues.RowErrors(
+                                fieldDefinition,
+                                fieldValue,
+                                !importAsDraft
+                            );
+                            if (string.IsNullOrEmpty(errorMessage) && rowErrors.Count > 0)
+                            {
+                                errorMessage = string.Join(" ", rowErrors);
+                            }
                         }
                         catch (Exception ex)
                         {
@@ -518,10 +528,14 @@ public class BeginImportContentItemsFromCsv
                     }
                 }
 
+                var storedContent = FieldDefinitionValues.ToStoredContent(
+                    contentType.ContentTypeFields,
+                    content
+                );
                 var contentItem = new ContentItem
                 {
-                    PublishedContent = content,
-                    DraftContent = content,
+                    PublishedContent = storedContent,
+                    DraftContent = storedContent,
                     IsPublished = importAsDraft == false,
                     IsDraft = importAsDraft,
                     ContentTypeId = contentType.Id,
@@ -561,11 +575,14 @@ public class BeginImportContentItemsFromCsv
         {
             var routePathTemplate = contentType.DefaultRouteTemplate;
 
-            string primaryFieldDeveloperName = contentType
-                .ContentTypeFields.First(p => p.Id == contentType.PrimaryFieldId)
-                .DeveloperName;
-            var primaryField =
-                ((IDictionary<string, dynamic>)content)[primaryFieldDeveloperName] as string;
+            var primaryFieldDefinition = contentType.ContentTypeFields.First(p =>
+                p.Id == contentType.PrimaryFieldId
+            );
+            ((IDictionary<string, dynamic>)content).TryGetValue(
+                primaryFieldDefinition.DeveloperName,
+                out var primaryFieldRaw
+            );
+            string primaryField = primaryFieldDefinition.FieldType.FieldValueFrom(primaryFieldRaw).Text;
 
             string path = routePathTemplate
                 .IfNullOrEmpty($"{BuiltInContentTypeField.PrimaryField.DeveloperName}")
@@ -580,7 +597,7 @@ public class BeginImportContentItemsFromCsv
 
             path = path.ToUrlSlug().Truncate(200, string.Empty);
 
-            if (_db.Routes.Any(p => p.Path == path))
+            if (RoutePaths.IsUnavailable(_db, path))
             {
                 path = $"{entityId}-{path}".Truncate(200, string.Empty);
             }

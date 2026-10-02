@@ -308,24 +308,10 @@ public class CreateTheme
             CancellationToken cancellationToken
         )
         {
-            var defaultWidgetTemplates = new List<WidgetTemplate>();
-
-            foreach (var widgetType in BuiltInWidgetType.WidgetTypes)
-            {
-                var widgetTemplate = new WidgetTemplate
-                {
-                    Id = Guid.NewGuid(),
-                    ThemeId = themeId,
-                    Label = widgetType.DisplayName,
-                    DeveloperName = widgetType.DeveloperName,
-                    Content = widgetType.DefaultTemplateContent,
-                    IsBuiltInTemplate = true,
-                };
-
-                defaultWidgetTemplates.Add(widgetTemplate);
-            }
-
-            await _db.WidgetTemplates.AddRangeAsync(defaultWidgetTemplates, cancellationToken);
+            await _db.WidgetTemplates.AddRangeAsync(
+                BuiltInWidgetType.WidgetTypes.Select(t => t.CreateTemplate(themeId)),
+                cancellationToken
+            );
         }
     }
 }

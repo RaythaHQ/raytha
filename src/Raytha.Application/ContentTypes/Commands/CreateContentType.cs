@@ -5,11 +5,13 @@ using Microsoft.EntityFrameworkCore;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Models;
 using Raytha.Application.Common.Utils;
+using Raytha.Application.Webhooks;
 using Raytha.Domain.Entities;
 using Raytha.Domain.ValueObjects.FieldTypes;
 
 namespace Raytha.Application.ContentTypes.Commands;
 
+[WebhookEvent("content_type.created", DisplayName = "Content type created", Group = "Content types")]
 public class CreateContentType
 {
     public record Command : LoggableRequest<CommandResponseDto<ShortGuid>>
@@ -128,6 +130,11 @@ public class CreateContentType
             _db.ContentTypeFields.Add(contentPageField);
 
             var newViewId = Guid.NewGuid();
+            var routePath = request.DeveloperName.ToDeveloperName();
+            if (RoutePaths.IsUnavailable(_db, routePath))
+            {
+                routePath = $"{(ShortGuid)newViewId}-{routePath}".Truncate(200, string.Empty);
+            }
             var newView = new View
             {
                 Id = newViewId,
@@ -137,7 +144,7 @@ public class CreateContentType
                 Route = new Route
                 {
                     ViewId = newViewId,
-                    Path = $"{request.DeveloperName.ToDeveloperName()}",
+                    Path = routePath,
                 },
                 Columns = new[]
                 {
@@ -150,31 +157,11 @@ public class CreateContentType
 
             _db.Views.Add(newView);
 
-            var activeThemeId = await _db
-                .OrganizationSettings.Select(os => os.ActiveThemeId)
-                .FirstAsync(cancellationToken);
-
-            var defaultWebTemplates = await _db
-                .WebTemplates.Where(wt =>
-                    wt.ThemeId == activeThemeId
-                    && !wt.IsBaseLayout
-                    && wt.AllowAccessForNewContentTypes
-                )
-                .ToArrayAsync(cancellationToken);
-
-            foreach (var webTemplate in defaultWebTemplates)
-            {
-                var templateAccessModel = new WebTemplateAccessToModelDefinition
-                {
-                    ContentTypeId = newContentTypeId,
-                    WebTemplateId = webTemplate.Id,
-                };
-
-                await _db.WebTemplateAccessToModelDefinitions.AddAsync(
-                    templateAccessModel,
-                    cancellationToken
-                );
-            }
+            var defaultWebTemplates = await ContentTypeProvisioning.GrantDefaultTemplateAccessAsync(
+                _db,
+                newContentTypeId,
+                cancellationToken
+            );
 
             var defaultContentListView =
                 defaultWebTemplates.FirstOrDefault(p =>
@@ -190,19 +177,7 @@ public class CreateContentType
 
             await _db.WebTemplateViewRelations.AddAsync(webTemplateViewRelation, cancellationToken);
 
-            var roles = _db
-                .Roles.Include(p => p.ContentTypeRolePermissions)
-                .Where(p => p.SystemPermissions.HasFlag(SystemPermissions.ManageContentTypes));
-            foreach (var role in roles)
-            {
-                role.ContentTypeRolePermissions.Add(
-                    new ContentTypeRolePermission
-                    {
-                        ContentTypeId = newContentTypeId,
-                        ContentTypePermissions = BuiltInContentTypePermission.AllPermissionsAsEnum,
-                    }
-                );
-            }
+            ContentTypeProvisioning.GrantRolePermissions(_db, newContentTypeId);
 
             await _db.SaveChangesAsync(cancellationToken);
 

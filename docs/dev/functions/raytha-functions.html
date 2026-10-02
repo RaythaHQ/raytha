@@ -241,6 +241,12 @@ context.log(`User ID: ${userId}`);</code></pre>
   <li>External HTTP requests may be restricted based on configuration</li>
 </ul>
 
+<h2>Permissions and trust</h2>
+<p>Only an administrator with <strong>Manage System Settings</strong> can create or edit a function.</p>
+<p>A function runs with full access. It can create and edit content of any content type, and it can manage public users.</p>
+<p>HTTP functions are anonymous by design. <code>/raytha/functions/execute/{developer_name}</code> does not require a sign-in, and neither does a public path on the function. Treat the request body, query, and headers as public input.</p>
+<p><strong>Manage System Settings</strong> includes every other permission, because functions and authentication settings act with that full access. Selecting it on a role selects every permission.</p>
+
 <h2>Security Considerations</h2>
 <ul>
   <li>Validate all input data</li>

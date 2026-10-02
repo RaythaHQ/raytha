@@ -1,0 +1,46 @@
+name: raytha-dev
+
+services:
+  postgres:
+    image: postgres:17
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: changeme
+      POSTGRES_DB: raytha
+    ports:
+      - "5433:5432"
+    volumes:
+      - raytha-pg-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # Dev SMTP catch-all. Browse caught mail at http://localhost:8025.
+  mailhog:
+    image: mailhog/mailhog
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+
+  minio:
+    image: minio/minio
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: raytha
+      MINIO_ROOT_PASSWORD: DevPassw0rd!
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - raytha-minio-data:/data
+
+  azurite:
+    image: mcr.microsoft.com/azure-storage/azurite
+    ports:
+      - "10000:10000"
+
+volumes:
+  raytha-pg-data:
+  raytha-minio-data:

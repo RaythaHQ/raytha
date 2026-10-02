@@ -7,6 +7,7 @@ using Microsoft.EntityFrameworkCore;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Models;
 using Raytha.Application.Common.Utils;
+using Raytha.Application.Themes.Commands;
 using Raytha.Domain.Entities;
 using Raytha.Domain.ValueObjects;
 using Raytha.Domain.ValueObjects.FieldTypes;
@@ -61,6 +62,9 @@ public class InitialSetup
                 .Must(DateTimeExtensions.IsValidTimeZone)
                 .WithMessage(p => $"{p.TimeZone} timezone is unrecognized.");
             RuleFor(x => x.WebsiteUrl)
+                .Cascade(CascadeMode.Stop)
+                .NotEmpty()
+                .WithMessage("Enter the website URL, for example https://www.example.com.")
                 .Must(StringExtensions.IsValidUriFormat)
                 .WithMessage(p => $"{p.WebsiteUrl} must be a valid URI format.");
             RuleFor(x => x.SmtpDefaultFromAddress).EmailAddress();
@@ -92,16 +96,19 @@ public class InitialSetup
         private readonly IRaythaDbContext _db;
         private readonly IEmailerConfiguration _emailerConfiguration;
         private readonly IFileStorageProvider _fileStorageProvider;
+        private readonly ISender _sender;
 
         public Handler(
             IRaythaDbContext db,
             IEmailerConfiguration emailerConfiguration,
-            IFileStorageProvider fileStorageProvider
+            IFileStorageProvider fileStorageProvider,
+            ISender sender
         )
         {
             _db = db;
             _emailerConfiguration = emailerConfiguration;
             _fileStorageProvider = fileStorageProvider;
+            _sender = sender;
         }
 
         public async ValueTask<CommandResponseDto<ShortGuid>> Handle(
@@ -133,6 +140,8 @@ public class InitialSetup
             SetPrimaryFieldsOnContentTypes();
             SetHomePage();
             await _db.SaveChangesAsync(cancellationToken);
+
+            await _sender.Send(new EnsureDefaultThemeContent.Command(), cancellationToken);
 
             return new CommandResponseDto<ShortGuid>(orgSettingsGuid);
         }
@@ -361,6 +370,11 @@ public class InitialSetup
             Guid defaultThemeId
         )
         {
+            if (_db.WebTemplates.Any(wt => wt.ThemeId == defaultThemeId))
+            {
+                return;
+            }
+
             var baseLayoutFileNames = new[]
             {
                 "favicon.ico",
@@ -485,23 +499,14 @@ public class InitialSetup
 
         protected void InsertDefaultWidgetTemplates(Guid defaultThemeId)
         {
-            var list = new List<WidgetTemplate>();
-
-            foreach (var widgetType in BuiltInWidgetType.WidgetTypes)
+            if (_db.WidgetTemplates.Any(wt => wt.ThemeId == defaultThemeId))
             {
-                var template = new WidgetTemplate
-                {
-                    Id = Guid.NewGuid(),
-                    ThemeId = defaultThemeId,
-                    Label = widgetType.DisplayName,
-                    DeveloperName = widgetType.DeveloperName,
-                    Content = widgetType.DefaultTemplateContent,
-                    IsBuiltInTemplate = true,
-                };
-                list.Add(template);
+                return;
             }
 
-            _db.WidgetTemplates.AddRange(list);
+            _db.WidgetTemplates.AddRange(
+                BuiltInWidgetType.WidgetTypes.Select(t => t.CreateTemplate(defaultThemeId))
+            );
         }
 
         protected void InsertDefaultEmailTemplates()
@@ -548,7 +553,7 @@ public class InitialSetup
                     IsEnabledForAdmins = false,
                     IsEnabledForUsers = false,
                     AuthenticationSchemeType = AuthenticationSchemeType.MagicLink,
-                    LoginButtonText = "Email me a login link",
+                    LoginButtonText = "Email me a login code",
                     MagicLinkExpiresInSeconds = 900,
                 },
             };
@@ -891,14 +896,15 @@ public class InitialSetup
             dynamic post1Content = new ExpandoObject();
             post1Content.title = "Hello World!";
             post1Content.content =
-                @"
-<div><!--block-->If you're reading this, it means you've successfully installed your CMS and created your first blog post. Congratulations!<br><br></div>
-<div><!--block-->This is the ""Hello World"" of the blogging world - the first post that many bloggers create to test out their new platform. Now that everything is up and running, it's time to start creating and sharing your content with the world.<br><br></div>
-<div><!--block-->To get started, you might want to familiarize yourself with the features and tools of your CMS. Some things you might want to explore include:<br><br></div>
-<ul><li><!--block-->Adding content, pages, and posts</li><li><!--block-->Customizing the look and feel of your blog by modifying the templates</li><li><!--block-->Setting up user accounts and permissions for other contributors</li></ul>
-<div><!--block--><br></div>
-<div><!--block-->As you start to use your CMS and create more posts, don't be afraid to experiment and try out new things. The best way to learn is by doing, so have fun and see what you can create!</div>
-";
+                "<p>If you're reading this, it means you've successfully installed your CMS and created your first blog post. Congratulations!</p>"
+                + "<p>This is the \"Hello World\" of the blogging world - the first post that many bloggers create to test out their new platform. Now that everything is up and running, it's time to start creating and sharing your content with the world.</p>"
+                + "<p>To get started, you might want to familiarize yourself with the features and tools of your CMS. Some things you might want to explore include:</p>"
+                + "<ul>"
+                + "<li><p>Adding content, pages, and posts</p></li>"
+                + "<li><p>Customizing the look and feel of your blog by modifying the templates</p></li>"
+                + "<li><p>Setting up user accounts and permissions for other contributors</p></li>"
+                + "</ul>"
+                + "<p>As you start to use your CMS and create more posts, don't be afraid to experiment and try out new things. The best way to learn is by doing, so have fun and see what you can create!</p>";
             var post1Id = Guid.NewGuid();
             var post1 = new ContentItem
             {
@@ -928,20 +934,17 @@ public class InitialSetup
             dynamic post2Content = new ExpandoObject();
             post2Content.title = "Getting Started with Raytha";
             post2Content.content =
-                @"
-<div><!--block-->Welcome to Raytha! This guide will help you get up and running quickly with your new content management system.<br><br></div>
-<h3><!--block-->Key Concepts</h3>
-<div><!--block-->Raytha is built around a few core concepts:<br><br></div>
-<ul>
-<li><!--block--><strong>Content Types</strong> - Define the structure of your content (like Posts, Products, or Events)</li>
-<li><!--block--><strong>Views</strong> - Create different ways to display your content lists</li>
-<li><!--block--><strong>Templates</strong> - Control the look and feel using Liquid templates</li>
-<li><!--block--><strong>Site Pages</strong> - Build standalone pages with drag-and-drop widgets</li>
-</ul>
-<div><!--block--><br></div>
-<h3><!--block-->Next Steps</h3>
-<div><!--block-->Explore the admin panel to discover all the features available to you. Start by creating a new content type or customizing the default templates to match your brand.</div>
-";
+                "<p>Welcome to Raytha! This guide will help you get up and running quickly with your new content management system.</p>"
+                + "<h3>Key Concepts</h3>"
+                + "<p>Raytha is built around a few core concepts:</p>"
+                + "<ul>"
+                + "<li><p><strong>Content Types</strong> - Define the structure of your content (like Posts, Products, or Events)</p></li>"
+                + "<li><p><strong>Views</strong> - Create different ways to display your content lists</p></li>"
+                + "<li><p><strong>Templates</strong> - Control the look and feel using Liquid templates</p></li>"
+                + "<li><p><strong>Site Pages</strong> - Build standalone pages with drag-and-drop widgets</p></li>"
+                + "</ul>"
+                + "<h3>Next Steps</h3>"
+                + "<p>Explore the admin panel to discover all the features available to you. Start by creating a new content type or customizing the default templates to match your brand.</p>";
             var post2Id = Guid.NewGuid();
             var post2 = new ContentItem
             {
@@ -971,20 +974,17 @@ public class InitialSetup
             dynamic post3Content = new ExpandoObject();
             post3Content.title = "Customizing Your Templates";
             post3Content.content =
-                @"
-<div><!--block-->Raytha uses the Liquid templating language, making it easy to customize how your content is displayed.<br><br></div>
-<h3><!--block-->Template Basics</h3>
-<div><!--block-->Templates in Raytha consist of:<br><br></div>
-<ul>
-<li><!--block--><strong>Base Layouts</strong> - The overall page structure (header, footer, navigation)</li>
-<li><!--block--><strong>Page Templates</strong> - Templates for content item detail views and list views</li>
-<li><!--block--><strong>Widget Templates</strong> - Templates for individual widgets on Site Pages</li>
-</ul>
-<div><!--block--><br></div>
-<h3><!--block-->Getting Started with Customization</h3>
-<div><!--block-->Navigate to <strong>Design &gt; Templates</strong> in the admin panel to view and edit your templates. You can use Liquid tags like <code>{{ Target.Title }}</code> to output content fields, and <code>{% if condition %}</code> for conditional logic.<br><br></div>
-<div><!--block-->For more advanced customization, check out the <a href=""https://shopify.github.io/liquid/"" target=""_blank"">Liquid documentation</a>.</div>
-";
+                "<p>Raytha uses the Liquid templating language, making it easy to customize how your content is displayed.</p>"
+                + "<h3>Template Basics</h3>"
+                + "<p>Templates in Raytha consist of:</p>"
+                + "<ul>"
+                + "<li><p><strong>Base Layouts</strong> - The overall page structure (header, footer, navigation)</p></li>"
+                + "<li><p><strong>Page Templates</strong> - Templates for content item detail views and list views</p></li>"
+                + "<li><p><strong>Widget Templates</strong> - Templates for individual widgets on Site Pages</p></li>"
+                + "</ul>"
+                + "<h3>Getting Started with Customization</h3>"
+                + "<p>Navigate to <strong>Design &gt; Templates</strong> in the admin panel to view and edit your templates. You can use Liquid tags like <code>{{ Target.Title }}</code> to output content fields, and <code>{% if condition %}</code> for conditional logic.</p>"
+                + "<p>For more advanced customization, check out the <a target=\"_blank\" rel=\"noopener noreferrer nofollow\" href=\"https://shopify.github.io/liquid/\">Liquid documentation</a>.</p>";
             var post3Id = Guid.NewGuid();
             var post3 = new ContentItem
             {
@@ -1014,22 +1014,19 @@ public class InitialSetup
             dynamic post4Content = new ExpandoObject();
             post4Content.title = "Managing Content Types";
             post4Content.content =
-                @"
-<div><!--block-->Content Types are the building blocks of your Raytha site. They define what kind of content you can create and manage.<br><br></div>
-<h3><!--block-->What is a Content Type?</h3>
-<div><!--block-->A Content Type is like a blueprint for your content. For example, a ""Blog Post"" content type might have fields for Title, Content, Featured Image, and Author. An ""Event"" content type might have Date, Location, and Description fields.<br><br></div>
-<h3><!--block-->Creating a Content Type</h3>
-<div><!--block-->To create a new Content Type:<br><br></div>
-<ol>
-<li><!--block-->Go to <strong>Content</strong> in the admin panel</li>
-<li><!--block-->Click <strong>Create Content Type</strong></li>
-<li><!--block-->Give it a name and developer name</li>
-<li><!--block-->Add the fields you need</li>
-</ol>
-<div><!--block--><br></div>
-<h3><!--block-->Field Types</h3>
-<div><!--block-->Raytha supports many field types including Single Line Text, Long Text, WYSIWYG Editor, Number, Date, Checkbox, Dropdown, Attachment, and more. Choose the right field type based on the kind of data you want to store.</div>
-";
+                "<p>Content Types are the building blocks of your Raytha site. They define what kind of content you can create and manage.</p>"
+                + "<h3>What is a Content Type?</h3>"
+                + "<p>A Content Type is like a blueprint for your content. For example, a \"Blog Post\" content type might have fields for Title, Content, Featured Image, and Author. An \"Event\" content type might have Date, Location, and Description fields.</p>"
+                + "<h3>Creating a Content Type</h3>"
+                + "<p>To create a new Content Type:</p>"
+                + "<ol>"
+                + "<li><p>Go to <strong>Content</strong> in the admin panel</p></li>"
+                + "<li><p>Click <strong>Create Content Type</strong></p></li>"
+                + "<li><p>Give it a name and developer name</p></li>"
+                + "<li><p>Add the fields you need</p></li>"
+                + "</ol>"
+                + "<h3>Field Types</h3>"
+                + "<p>Raytha supports many field types including Single Line Text, Long Text, WYSIWYG Editor, Number, Date, Checkbox, Dropdown, Attachment, and more. Choose the right field type based on the kind of data you want to store.</p>";
             var post4Id = Guid.NewGuid();
             var post4 = new ContentItem
             {

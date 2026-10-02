@@ -7,40 +7,34 @@ icon: bi-shield-lock
 -->
 
 <h1>SAML Authentication</h1>
-<p class="lead">Configure SAML 2.0 single sign-on to integrate with enterprise identity providers like Okta, Azure AD, OneLogin, and others.</p>
+<p class="lead">Let an identity provider such as Okta, Microsoft Entra ID, or Google Workspace sign people in to Raytha with SAML 2.0.</p>
 
-<h2>What is SAML?</h2>
-<p>SAML (Security Assertion Markup Language) is an enterprise standard for exchanging authentication data. It enables:</p>
-<ul>
-  <li>Single sign-on from corporate identity providers</li>
-  <li>Centralized user management</li>
-  <li>Enterprise-grade security</li>
-</ul>
+<p>The admin shows a live setup guide next to the SAML scheme editor, with copyable ACS URLs built from your Website URL and the scheme's developer name. This page covers the same ground.</p>
 
 <h2>How It Works</h2>
 <ol>
-  <li>User clicks "Login with [Provider]" on Raytha</li>
-  <li>Raytha redirects to your Identity Provider (IdP)</li>
-  <li>User authenticates with IdP (if not already logged in)</li>
-  <li>IdP sends SAML assertion back to Raytha</li>
-  <li>Raytha validates assertion and creates session</li>
+  <li>Someone clicks the scheme's button (the public login page, or <em>Continue with …</em> on the admin sign-in page), or follows a start sign-in link:
+    <ul>
+      <li>Users: <code>https://yoursite.com/account/login/sso/{developer_name}</code></li>
+      <li>Admins: <code>https://yoursite.com/raytha/login/sso/{developer_name}</code></li>
+    </ul>
+  </li>
+  <li>Raytha redirects to your <strong>Sign in URL</strong> with <code>SAMLRequest</code>, and <code>RelayState</code> when there is a return path. The request names the ACS URL for that audience, carries the service provider entity ID as its <code>Issuer</code>, and asks for the unspecified NameID format.</li>
+  <li>The IdP signs the person in and posts a signed <code>SAMLResponse</code>, with <code>RelayState</code>, to the ACS URL (HTTP-POST).</li>
+  <li>Raytha verifies the response, finds or creates the account, and sets its session cookie. It redirects to <code>RelayState</code> when that is a local path, otherwise to the home page (users) or the admin dashboard (admins).</li>
 </ol>
-
-<img src="https://placehold.co/800x400?text=SAML+Authentication+Flow" alt="SAML Authentication Flow" class="img-fluid my-3 border rounded">
+<p>Raytha does not track request ids, so IdP-initiated sign-in works too. Set the IdP's default RelayState to a local path to pick the landing page.</p>
 
 <h2>Creating a SAML Authentication Scheme</h2>
 <ol>
-  <li>Go to <strong>Settings</strong> &gt; <strong>Authentication Schemes</strong></li>
-  <li>Click <strong>Create Authentication Scheme</strong></li>
-  <li>Select <strong>SAML</strong> as the type</li>
-  <li>Configure the settings below</li>
-  <li>Click <strong>Create</strong></li>
+  <li>Go to <strong>Settings</strong> &gt; <strong>Authentication</strong></li>
+  <li>Click <strong>New scheme</strong> and choose <strong>SAML</strong></li>
+  <li>Fill in the settings below and click <strong>Create</strong></li>
 </ol>
 
 <img src="../../images/saml-configuration-form.png" alt="SAML Configuration Form" class="img-fluid my-3 border rounded">
 
 <h2>Configuration Settings</h2>
-
 <table class="table">
   <thead>
     <tr>
@@ -51,46 +45,40 @@ icon: bi-shield-lock
   <tbody>
     <tr>
       <td><strong>Label</strong></td>
-      <td>Display name on login page (e.g., "Login with Okta")</td>
+      <td>Names the scheme in the admin list and on the admin sign-in page (<em>Continue with …</em>). Required.</td>
     </tr>
     <tr>
-      <td><strong>Developer Name</strong></td>
-      <td>Unique identifier for this scheme</td>
+      <td><strong>Developer name</strong></td>
+      <td>Part of the ACS and sign-in URLs. Lowercased, and every character other than a letter or digit becomes <code>_</code>. Cannot be changed after creation.</td>
     </tr>
     <tr>
-      <td><strong>IdP Entity ID</strong></td>
-      <td>Identity provider's entity identifier</td>
+      <td><strong>Login button text</strong></td>
+      <td>The label of the scheme's button on the public login page. Required.</td>
     </tr>
     <tr>
-      <td><strong>Sign-In URL</strong></td>
-      <td>IdP's SSO login endpoint</td>
+      <td><strong>Sign in URL</strong></td>
+      <td>The IdP's SAML single sign-on URL (HTTP-Redirect). Required.</td>
     </tr>
     <tr>
-      <td><strong>Sign-Out URL</strong></td>
-      <td>IdP's logout endpoint (optional)</td>
+      <td><strong>Sign out URL</strong></td>
+      <td>Optional. Raytha never calls it: signing out of Raytha ends only the Raytha session. Site templates can read it from <code>CurrentOrganization.AuthenticationSchemes</code>.</td>
     </tr>
     <tr>
-      <td><strong>Certificate</strong></td>
-      <td>X.509 certificate from IdP for signature validation</td>
+      <td><strong>Enabled for users / admins</strong></td>
+      <td>Who may sign in, by account type. Admin accounts need <em>Enabled for admins</em>; everyone else needs <em>Enabled for users</em>. The ACS URL only decides where people land.</td>
     </tr>
     <tr>
-      <td><strong>Enabled for Admins</strong></td>
-      <td>Allow admin panel login</td>
+      <td><strong>SAML certificate</strong></td>
+      <td>The IdP's X.509 signing certificate as PEM. Required.</td>
     </tr>
     <tr>
-      <td><strong>Enabled for Users</strong></td>
-      <td>Allow public user login</td>
-    </tr>
-    <tr>
-      <td><strong>Login Button Text</strong></td>
-      <td>Text displayed on login button</td>
+      <td><strong>Service provider entity ID (sent as Issuer)</strong></td>
+      <td>Raytha's own identifier, not the IdP's. Raytha sends it as the <code>Issuer</code> of every SAML request, so it must equal the Entity ID, Audience URI, or Identifier you give the IdP. Any unique URI works. Older versions of the admin labelled this field <em>IdP entity id</em>.</td>
     </tr>
   </tbody>
 </table>
 
-<h2>Raytha Service Provider Details</h2>
-<p>Provide these values to your Identity Provider:</p>
-
+<h2>Values for Your Identity Provider</h2>
 <table class="table">
   <thead>
     <tr>
@@ -100,175 +88,169 @@ icon: bi-shield-lock
   </thead>
   <tbody>
     <tr>
-      <td><strong>SP Entity ID</strong></td>
-      <td><code>https://yoursite.com</code></td>
+      <td><strong>ACS URL</strong> (Reply URL, Single sign-on URL)</td>
+      <td>Users: <code>https://yoursite.com/account/login/saml/{developer_name}</code><br>Admins: <code>https://yoursite.com/raytha/login/saml/{developer_name}</code><br>Register one for every audience you enable.</td>
     </tr>
     <tr>
-      <td><strong>ACS URL</strong></td>
-      <td><code>https://yoursite.com/account/login/saml/{developer_name}/acs</code></td>
+      <td><strong>SP entity ID</strong> (Audience URI, Identifier)</td>
+      <td>The value of the <em>Service provider entity ID</em> field, exactly.</td>
     </tr>
     <tr>
-      <td><strong>Name ID Format</strong></td>
-      <td><code>urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress</code></td>
+      <td><strong>NameID</strong></td>
+      <td>Any format; Raytha asks for unspecified. Pick a value that never changes for the person. Required.</td>
+    </tr>
+    <tr>
+      <td><strong>Binding</strong></td>
+      <td>HTTP-POST to the ACS URL.</td>
+    </tr>
+    <tr>
+      <td><strong>Signing</strong></td>
+      <td>Sign the response, the assertion, or both. Do not encrypt the assertion.</td>
     </tr>
   </tbody>
 </table>
 
-<h2>Required SAML Attributes</h2>
-<p>Your IdP must send these attributes in the SAML assertion:</p>
-
+<h2>Attributes</h2>
+<p>Raytha matches the attribute <code>Name</code> exactly and ignores <code>NameFormat</code>. A claim URI such as <code>http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress</code>, or <code>Email</code> with a capital E, is not read.</p>
 <table class="table table-sm">
   <thead>
     <tr>
       <th>Attribute</th>
-      <th>Description</th>
+      <th>Required</th>
+      <th>What Raytha does with it</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <td><code>NameID</code></td>
-      <td>User's email address (or unique identifier)</td>
+      <td><code>NameID</code> (Subject)</td>
+      <td>Required</td>
+      <td>Raytha links it to the account and matches on it first, within this scheme. A response without it fails.</td>
+    </tr>
+    <tr>
+      <td><code>email</code></td>
+      <td>Required</td>
+      <td>Must be a valid address. Finds the account when NameID doesn't, and becomes the account's email on every sign-in.</td>
+    </tr>
+    <tr>
+      <td><code>given_name</code></td>
+      <td>Optional</td>
+      <td>First name. New accounts without it are named <em>SsoVisitor</em>.</td>
+    </tr>
+    <tr>
+      <td><code>family_name</code></td>
+      <td>Optional</td>
+      <td>Last name. New accounts without it get a random last name.</td>
+    </tr>
+    <tr>
+      <td><code>groups</code></td>
+      <td>Optional</td>
+      <td>One <code>AttributeValue</code> per user group developer name. When at least one matches, the account's groups become exactly the matched set.</td>
     </tr>
   </tbody>
 </table>
 
-<h3>Optional Attributes</h3>
-<table class="table table-sm">
-  <thead>
-    <tr>
-      <th>Attribute</th>
-      <th>Description</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td><code>firstName</code> or <code>givenName</code></td>
-      <td>User's first name</td>
-    </tr>
-    <tr>
-      <td><code>lastName</code> or <code>surname</code></td>
-      <td>User's last name</td>
-    </tr>
-  </tbody>
-</table>
+<h2>What Raytha Verifies</h2>
+<ul>
+  <li>The response holds exactly one plain <code>Assertion</code>. An encrypted assertion counts as none.</li>
+  <li>It carries an XML signature. Raytha checks the first signature in the document against the certificate.</li>
+  <li>The assertion's <code>NotBefore</code> and <code>NotOnOrAfter</code> hold against the server clock, with no skew allowance.</li>
+  <li>Raytha does not check <code>Audience</code>, <code>Recipient</code>, <code>Destination</code>, <code>InResponseTo</code>, or the response <code>Issuer</code>.</li>
+</ul>
 
-<h2>Provider-Specific Setup</h2>
+<h2>Certificate Format</h2>
+<p>Paste the whole PEM file, including the BEGIN and END lines. The bare base64 body without them does not load. The admin trims surrounding whitespace when you save, because leading spaces also stop it loading.</p>
+<pre><code>-----BEGIN CERTIFICATE-----
+MIIDpDCCAoygAwIBAgIGAX...
+-----END CERTIFICATE-----</code></pre>
+<p>When the IdP rotates its signing certificate, paste the new one.</p>
+
+<h2>Provider Recipes</h2>
 
 <h3>Okta</h3>
 <ol>
-  <li>In Okta Admin, go to <strong>Applications</strong> &gt; <strong>Create App Integration</strong></li>
-  <li>Select <strong>SAML 2.0</strong></li>
-  <li>Configure:
-    <ul>
-      <li><strong>Single sign-on URL</strong>: Your Raytha ACS URL</li>
-      <li><strong>Audience URI</strong>: Your Raytha SP Entity ID</li>
-      <li><strong>Name ID format</strong>: EmailAddress</li>
-    </ul>
-  </li>
-  <li>Copy the IdP metadata to configure Raytha</li>
+  <li>Admin Console → <strong>Applications</strong> → <strong>Applications</strong> → <strong>Create App Integration</strong> → <strong>SAML 2.0</strong>.</li>
+  <li><strong>Single sign-on URL</strong>: the ACS URL. Keep <em>Use this for Recipient URL and Destination URL</em> checked. To enable both audiences, add the other ACS URL under <em>Show Advanced Settings</em> → <em>Other Requestable SSO URLs</em>.</li>
+  <li><strong>Audience URI (SP Entity ID)</strong>: the service provider entity ID.</li>
+  <li><strong>Name ID format</strong>: Unspecified or EmailAddress.</li>
+  <li><strong>Attribute Statements</strong>: <code>email</code> = <code>user.email</code>, <code>given_name</code> = <code>user.firstName</code>, <code>family_name</code> = <code>user.lastName</code>.</li>
+  <li>Optional <strong>Group Attribute Statement</strong> named <code>groups</code>, filtered to Okta groups named exactly like Raytha user group developer names.</li>
+  <li>Leave the signatures on <em>Signed</em> and assertion encryption off.</li>
+  <li>On the <strong>Sign On</strong> tab, open <em>View SAML setup instructions</em>. <em>Identity Provider Single Sign-On URL</em> goes in Sign in URL; <em>X.509 Certificate</em> goes in SAML certificate.</li>
+  <li>Assign people or groups to the app.</li>
 </ol>
 
-<img src="https://placehold.co/800x400?text=Okta+SAML+Configuration" alt="Okta Configuration" class="img-fluid my-3 border rounded">
-
-<h3>Azure AD (Microsoft Entra ID)</h3>
+<h3>Microsoft Entra ID</h3>
 <ol>
-  <li>In Azure Portal, go to <strong>Enterprise Applications</strong></li>
-  <li>Create a new application &gt; <strong>Non-gallery application</strong></li>
-  <li>Go to <strong>Single sign-on</strong> &gt; <strong>SAML</strong></li>
-  <li>Configure:
-    <ul>
-      <li><strong>Identifier (Entity ID)</strong>: Your Raytha SP Entity ID</li>
-      <li><strong>Reply URL</strong>: Your Raytha ACS URL</li>
-    </ul>
-  </li>
-  <li>Download the Certificate (Base64) and copy the Login URL</li>
+  <li>Entra admin center → <strong>Enterprise applications</strong> → <strong>New application</strong> → <strong>Create your own application</strong> → <em>Integrate any other application you don't find in the gallery</em>.</li>
+  <li><strong>Single sign-on</strong> → <strong>SAML</strong> → <strong>Basic SAML Configuration</strong>.</li>
+  <li><strong>Identifier (Entity ID)</strong>: the service provider entity ID.</li>
+  <li><strong>Reply URL (Assertion Consumer Service URL)</strong>: the ACS URL. Add both when you enable both audiences.</li>
+  <li><strong>Attributes &amp; Claims</strong> → add claims with an empty namespace: <code>email</code> = <code>user.mail</code>, <code>given_name</code> = <code>user.givenname</code>, <code>family_name</code> = <code>user.surname</code>. The default claims use long URIs that Raytha does not read.</li>
+  <li>Optional groups: Entra sends group object ids, which never match a developer name. Add a claim named <code>groups</code> with source <code>user.assignedroles</code> instead, and give the app roles values equal to Raytha user group developer names.</li>
+  <li><strong>SAML Certificates</strong>: download <em>Certificate (Base64)</em> and paste it into SAML certificate. Copy <em>Login URL</em> into Sign in URL.</li>
+  <li>Assign users and groups.</li>
 </ol>
-
-<img src="https://placehold.co/800x400?text=Azure+AD+SAML+Configuration" alt="Azure AD Configuration" class="img-fluid my-3 border rounded">
-
-<h3>OneLogin</h3>
-<ol>
-  <li>In OneLogin, go to <strong>Applications</strong> &gt; <strong>Add App</strong></li>
-  <li>Search for "SAML Test Connector (IdP)"</li>
-  <li>Configure:
-    <ul>
-      <li><strong>Audience</strong>: Your Raytha SP Entity ID</li>
-      <li><strong>ACS URL</strong>: Your Raytha ACS URL</li>
-    </ul>
-  </li>
-  <li>Go to <strong>SSO</strong> tab to get IdP details</li>
-</ol>
+<p><code>AADSTS75011</code> means Raytha's request asked for password authentication and the person's Entra session used another method. Launching the app from My Apps is IdP-initiated and avoids it.</p>
 
 <h3>Google Workspace</h3>
 <ol>
-  <li>In Google Admin Console, go to <strong>Apps</strong> &gt; <strong>SAML Apps</strong></li>
-  <li>Click <strong>Add App</strong> &gt; <strong>Add custom SAML app</strong></li>
-  <li>Configure:
-    <ul>
-      <li><strong>ACS URL</strong>: Your Raytha ACS URL</li>
-      <li><strong>Entity ID</strong>: Your Raytha SP Entity ID</li>
-      <li><strong>Name ID format</strong>: EMAIL</li>
-    </ul>
-  </li>
+  <li>Admin console → <strong>Apps</strong> → <strong>Web and mobile apps</strong> → <strong>Add app</strong> → <strong>Add custom SAML app</strong>.</li>
+  <li><strong>Google Identity Provider details</strong>: <em>SSO URL</em> goes in Sign in URL; download <em>Certificate</em> and paste it into SAML certificate.</li>
+  <li><strong>ACS URL</strong>: Google accepts one per app. To serve both audiences, create two Raytha schemes, each with its own Google app and entity ID.</li>
+  <li><strong>Entity ID</strong>: the service provider entity ID.</li>
+  <li><strong>Name ID format</strong>: EMAIL or UNSPECIFIED; <strong>Name ID</strong>: Primary email.</li>
+  <li><strong>Attribute mapping</strong>: Primary email → <code>email</code>, First name → <code>given_name</code>, Last name → <code>family_name</code>. Optional group membership → <code>groups</code>.</li>
+  <li>Turn the app on for the people who should sign in.</li>
 </ol>
 
-<h2>Certificate Format</h2>
-<p>Paste the X.509 certificate including the BEGIN and END markers:</p>
-<pre><code>-----BEGIN CERTIFICATE-----
-MIIDpDCCAoygAwIBAgIGAX...
-...certificate content...
------END CERTIFICATE-----</code></pre>
-
-<h2>User Provisioning</h2>
-<p>When a SAML login occurs:</p>
+<h2>Accounts and Groups</h2>
 <ul>
-  <li>If user exists (by SSO ID or email): Session is created</li>
-  <li>If user doesn't exist: User is created with SAML attribute data</li>
+  <li>Raytha looks for the account by NameID within this scheme first, then by email across all accounts. An existing account with the same email, including a password account, is linked to this scheme.</li>
+  <li>No match creates a new public user with a random password. SAML sign-in never creates an admin or grants admin access: add the admin in Raytha first, with the same email.</li>
+  <li>Deactivated accounts are refused.</li>
+  <li>The brute-force lockout settings apply only to email and password. Every sign-in path, SAML included, shares the per-IP limit of <code>AUTH_RATE_LIMIT_PER_MINUTE</code> (default 30).</li>
 </ul>
-
-<h2>Testing</h2>
-<ol>
-  <li>Create the SAML authentication scheme</li>
-  <li>Enable it for admins or users</li>
-  <li>Go to the login page</li>
-  <li>Click the SAML login button</li>
-  <li>Authenticate with your IdP</li>
-  <li>Verify you're logged in to Raytha</li>
-</ol>
 
 <h2>Troubleshooting</h2>
-
-<h3>Invalid signature</h3>
-<ul>
-  <li>Verify certificate is correctly copied</li>
-  <li>Check certificate hasn't expired</li>
-  <li>Ensure no whitespace issues in certificate</li>
-</ul>
-
-<h3>User not found/created</h3>
-<ul>
-  <li>Verify NameID is being sent as email</li>
-  <li>Check attribute mapping in IdP</li>
-</ul>
-
-<h3>Redirect loop</h3>
-<ul>
-  <li>Verify ACS URL is correct</li>
-  <li>Check Entity ID matches exactly</li>
-</ul>
-
-<h3>Certificate errors</h3>
-<ul>
-  <li>Use Base64-encoded certificate (not binary)</li>
-  <li>Include BEGIN/END markers</li>
-  <li>Check for hidden characters</li>
-</ul>
-
-<h2>Security Considerations</h2>
-<ul>
-  <li>Use HTTPS for all SAML endpoints</li>
-  <li>Regularly rotate IdP certificates</li>
-  <li>Review and audit SAML assertions</li>
-  <li>Configure session timeouts appropriately</li>
-</ul>
-
+<table class="table table-sm">
+  <thead>
+    <tr>
+      <th>Symptom</th>
+      <th>Cause</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Failed authentication.</td>
+      <td>The signature didn't verify with the pasted certificate, the response is unsigned, it holds an encrypted or second assertion, or it is outside <code>NotBefore</code>/<code>NotOnOrAfter</code>. Check the server clock.</td>
+    </tr>
+    <tr>
+      <td>Missing 'email' attribute from saml assertion payload.</td>
+      <td>Add an attribute whose Name is exactly <code>email</code>.</td>
+    </tr>
+    <tr>
+      <td>An error page instead of a message</td>
+      <td>The certificate can't be parsed, or the assertion has no NameID.</td>
+    </tr>
+    <tr>
+      <td>The IdP can't find the application (Entra <code>AADSTS700016</code>)</td>
+      <td>The service provider entity ID doesn't match the IdP's Entity ID, Identifier, or Audience URI.</td>
+    </tr>
+    <tr>
+      <td>The IdP rejects the reply URL (Entra <code>AADSTS50011</code>)</td>
+      <td>Register the exact ACS URLs. Raytha builds the admin one from the Website URL in Configuration and the user one from the address the browser used.</td>
+    </tr>
+    <tr>
+      <td>The IdP says the request is malformed</td>
+      <td>Raytha base64-encodes its request without DEFLATE compression. If your IdP insists on compressed redirects, set Sign in URL to the IdP's app launch URL (IdP-initiated), which Raytha accepts.</td>
+    </tr>
+    <tr>
+      <td>Authentication scheme disabled for administrators. / … for public users.</td>
+      <td>The account's type isn't enabled on this scheme.</td>
+    </tr>
+    <tr>
+      <td>Admin sign-in shows a bare 403 page</td>
+      <td>The admin ACS hides the reason. Sign in through the users start link to read it; the checks are identical.</td>
+    </tr>
+  </tbody>
+</table>

@@ -47,7 +47,14 @@ public class EditContentItemTests
             IsDraft = false,
             IsPublished = true,
             _PublishedContent = "{\"title\": \"Old Title\"}",
-            _DraftContent = "{\"title\": \"Old Title\"}"
+            _DraftContent = "{\"title\": \"Old Title\"}",
+            ContentType = new ContentType
+            {
+                ContentTypeFields =
+                [
+                    new ContentTypeField { DeveloperName = "title", FieldType = BaseFieldType.SingleLineText },
+                ],
+            },
         };
 
         var contentItems = new List<ContentItem> { contentItem }.AsQueryable().BuildMockDbSet();

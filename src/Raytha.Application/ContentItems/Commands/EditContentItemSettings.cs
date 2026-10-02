@@ -6,11 +6,13 @@ using Raytha.Application.Common.Exceptions;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Models;
 using Raytha.Application.Common.Utils;
+using Raytha.Application.Webhooks;
 using Raytha.Domain.Entities;
 using Raytha.Domain.Events;
 
 namespace Raytha.Application.ContentItems.Commands;
 
+[WebhookEvent("content_item.settings_updated", DisplayName = "Content item settings updated", Group = "Content")]
 public class EditContentItemSettings
 {
     public record Command : LoggableEntityRequest<CommandResponseDto<ShortGuid>>
@@ -106,10 +108,13 @@ public class EditContentItemSettings
                             );
                             return;
                         }
-                        var routePathExists = db.Routes.Any(p =>
-                            p.Path.ToLower() == slugifiedPath && p.ContentItemId != request.Id.Guid
-                        );
-                        if (routePathExists)
+                        var reservedRoot = RoutePaths.ReservedRoot(db, slugifiedPath, entity.RouteId);
+                        if (reservedRoot != null)
+                        {
+                            context.AddFailure("RoutePath", RoutePaths.ReservedMessage(reservedRoot));
+                            return;
+                        }
+                        if (RoutePaths.IsTaken(db, slugifiedPath, entity.RouteId))
                         {
                             context.AddFailure(
                                 "RoutePath",
@@ -144,13 +149,30 @@ public class EditContentItemSettings
                 .OrganizationSettings.Select(os => os.ActiveThemeId)
                 .FirstAsync(cancellationToken);
 
-            var webTemplateContentRelation = await _db.WebTemplateContentItemRelations.FirstAsync(
-                wtr => wtr.ContentItemId == entity.Id && wtr.WebTemplate!.ThemeId == activeThemeId,
-                cancellationToken
-            );
+            var webTemplateContentRelation =
+                await _db.WebTemplateContentItemRelations.FirstOrDefaultAsync(
+                    wtr =>
+                        wtr.ContentItemId == entity.Id && wtr.WebTemplate!.ThemeId == activeThemeId,
+                    cancellationToken
+                );
 
-            webTemplateContentRelation.WebTemplateId = request.TemplateId.Guid;
-            _db.WebTemplateContentItemRelations.Update(webTemplateContentRelation);
+            if (webTemplateContentRelation == null)
+            {
+                webTemplateContentRelation = new WebTemplateContentItemRelation
+                {
+                    Id = Guid.NewGuid(),
+                    ContentItemId = entity.Id,
+                    WebTemplateId = request.TemplateId.Guid,
+                };
+                await _db.WebTemplateContentItemRelations.AddAsync(
+                    webTemplateContentRelation,
+                    cancellationToken
+                );
+            }
+            else
+            {
+                webTemplateContentRelation.WebTemplateId = request.TemplateId.Guid;
+            }
 
             entity.AddDomainEvent(new ContentItemUpdatedEvent(entity));
             await _db.SaveChangesAsync(cancellationToken);

@@ -9,7 +9,6 @@ namespace Raytha.Infrastructure.RaythaFunctions;
 
 public class V8EnginePool : IV8EnginePool
 {
-    private readonly V8Runtime _runtime;
     private readonly ConcurrentBag<V8ScriptEngine> _engines;
     private readonly int _maxPoolSize;
     private volatile bool _disposed;
@@ -17,7 +16,6 @@ public class V8EnginePool : IV8EnginePool
     public V8EnginePool(int maxPoolSize = 10)
     {
         _maxPoolSize = maxPoolSize;
-        _runtime = new V8Runtime();
         _engines = new ConcurrentBag<V8ScriptEngine>();
 
         // Pre-warm the pool with a few engines
@@ -58,7 +56,9 @@ public class V8EnginePool : IV8EnginePool
 
     private V8ScriptEngine CreateConfiguredEngine()
     {
-        var engine = _runtime.CreateScriptEngine();
+        // Engines on a shared V8Runtime share one isolate and run one at a time, so a function
+        // blocked in a host call (HttpClient, API_V1.ExecuteRaythaFunction) would stall every other.
+        var engine = new V8ScriptEngine();
         LoadHostTypes(engine);
         LoadResultClasses(engine);
         return engine;
@@ -137,6 +137,21 @@ public class V8EnginePool : IV8EnginePool
             this.body = error;
             this.contentType = 'statusCode';
           }
+        }
+
+        class ContentResult {
+          constructor(body, contentType = 'text/plain; charset=utf-8', statusCode = 200) {
+            this.body = body;
+            this.contentType = contentType;
+            this.statusCode = statusCode;
+            this.kind = 'content';
+          }
+        }
+
+        class TextResult extends ContentResult {
+          constructor(text) {
+            super(text);
+          }
         }"
         );
     }
@@ -152,7 +167,5 @@ public class V8EnginePool : IV8EnginePool
         {
             engine.Dispose();
         }
-
-        _runtime.Dispose();
     }
 }

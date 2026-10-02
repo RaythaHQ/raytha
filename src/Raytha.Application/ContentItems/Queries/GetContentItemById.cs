@@ -1,4 +1,5 @@
 ﻿using Mediator;
+using Microsoft.EntityFrameworkCore;
 using Raytha.Application.Common.Exceptions;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Models;
@@ -12,11 +13,17 @@ public class GetContentItemById
     public class Handler : IRequestHandler<Query, IQueryResponseDto<ContentItemDto>>
     {
         private readonly IRaythaDbJsonQueryEngine _db;
+        private readonly IRaythaDbContext _context;
         private readonly IContentTypeInRoutePath _contentTypeInRoutePath;
 
-        public Handler(IRaythaDbJsonQueryEngine db, IContentTypeInRoutePath contentTypeInRoutePath)
+        public Handler(
+            IRaythaDbJsonQueryEngine db,
+            IRaythaDbContext context,
+            IContentTypeInRoutePath contentTypeInRoutePath
+        )
         {
             _db = db;
+            _context = context;
             _contentTypeInRoutePath = contentTypeInRoutePath;
         }
 
@@ -34,7 +41,18 @@ public class GetContentItemById
                 entity.ContentType.DeveloperName
             );
 
-            return new QueryResponseDto<ContentItemDto>(ContentItemDto.GetProjection(entity));
+            var templateId = await _context
+                .WebTemplateContentItemRelations.Where(relation => relation.ContentItemId == request.Id.Guid)
+                .Select(relation => relation.WebTemplateId)
+                .FirstOrDefaultAsync(cancellationToken);
+
+            var dto = ContentItemDto.GetProjection(entity);
+            if (templateId != Guid.Empty)
+            {
+                dto = dto with { WebTemplateId = templateId };
+            }
+
+            return new QueryResponseDto<ContentItemDto>(dto);
         }
     }
 }

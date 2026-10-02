@@ -1,8 +1,10 @@
 using CSharpVitamins;
+using FluentValidation;
 using Mediator;
 using Raytha.Application.Common.Exceptions;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Models;
+using Raytha.Application.Common.Utils;
 using Raytha.Domain.Entities;
 
 namespace Raytha.Application.SitePages.Commands;
@@ -10,6 +12,32 @@ namespace Raytha.Application.SitePages.Commands;
 public class SetSitePageAsHomePage
 {
     public record Command : LoggableEntityRequest<CommandResponseDto<ShortGuid>> { }
+
+    public class Validator : AbstractValidator<Command>
+    {
+        public Validator(IRaythaDbContext db)
+        {
+            RuleFor(x => x)
+                .Custom(
+                    (request, context) =>
+                    {
+                        if (
+                            !HomePageValidation.IsPublished(
+                                db,
+                                request.Id.Guid,
+                                Route.SITE_PAGE_TYPE
+                            )
+                        )
+                        {
+                            context.AddFailure(
+                                Constants.VALIDATION_SUMMARY,
+                                HomePageValidation.CannotSetUnpublishedMessage
+                            );
+                        }
+                    }
+                );
+        }
+    }
 
     public class Handler : IRequestHandler<Command, CommandResponseDto<ShortGuid>>
     {

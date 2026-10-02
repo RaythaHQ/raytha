@@ -35,7 +35,7 @@ public class LoginWithSaml : BaseAdminLoginPageModel
                 return Redirect(returnUrl);
             }
 
-            return RedirectToPage(RouteNames.Dashboard.Index);
+            return RedirectToDashboard();
         }
         else
         {

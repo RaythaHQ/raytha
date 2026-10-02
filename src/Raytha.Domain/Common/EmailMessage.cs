@@ -15,6 +15,13 @@ public record EmailMessage
     public IEnumerable<EmailMessageAttachment> Attachments { get; init; } =
         new List<EmailMessageAttachment>();
 
+    /// <summary>
+    /// Secret values embedded in the rendered subject or body (one-time sign-in
+    /// codes). The message is sent as-is; anything persisting or logging it must
+    /// redact these first.
+    /// </summary>
+    public IEnumerable<string> SensitiveContent { get; init; } = new List<string>();
+
     public EmailMessage() { }
 
     private EmailMessage(

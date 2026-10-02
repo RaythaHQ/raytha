@@ -23,7 +23,7 @@ public class LoginWithSaml
     {
         [JsonIgnore]
         public string SAMLResponse { get; init; } = null!;
-        public string DeveloperName { get; set; } = null!;
+        public string DeveloperName { get; init; } = null!;
     }
 
     public class Validator : AbstractValidator<Command>
@@ -63,7 +63,7 @@ public class LoginWithSaml
                             authScheme.SamlCertificate
                         );
 
-                        if (!payload.IsValid)
+                        if (!payload.IsValidFor(authScheme.SamlIdpEntityId))
                         {
                             context.AddFailure(
                                 Constants.VALIDATION_SUMMARY,
@@ -100,7 +100,7 @@ public class LoginWithSaml
                                 && p.AuthenticationSchemeId == authScheme.Id
                             );
                         }
-                        else
+                        if (entity == null)
                         {
                             entity = db.Users.FirstOrDefault(p =>
                                 p.EmailAddress.ToLower() == email
@@ -209,6 +209,7 @@ public class LoginWithSaml
                     IsActive = true,
                     Salt = salt,
                     PasswordHash = PasswordUtility.Hash(PasswordUtility.RandomPassword(12), salt),
+                    SsoId = nameID,
                     UserGroups = foundUserGroups,
                 };
             }
@@ -217,7 +218,10 @@ public class LoginWithSaml
                 entity.SsoId = nameID.IfNullOrEmpty(entity.SsoId);
                 entity.FirstName = givenName.IfNullOrEmpty(entity.FirstName);
                 entity.LastName = familyName.IfNullOrEmpty(entity.LastName);
-                entity.EmailAddress = email.Trim();
+                if (!EmailAddresses.IsTaken(_db, email, entity.Id))
+                {
+                    entity.EmailAddress = email.Trim();
+                }
 
                 if (foundUserGroups != null && foundUserGroups.Any())
                 {
@@ -301,41 +305,74 @@ public class LoginWithSaml
         public string LastName => GetSingleAttribute(JwtRegisteredClaimNames.FamilyName);
         public string[] UserGroups => GetArrayAttribute(RaythaClaimTypes.UserGroups);
 
-        public bool IsValid
+        public bool IsValidFor(string audience)
         {
-            get
+            var manager = GetNamespaceManager();
+
+            // Enforce single assertion rule to prevent injection attacks
+            XmlNodeList allAssertions = xmlDoc.SelectNodes("//saml:Assertion", manager);
+            if (allAssertions == null || allAssertions.Count != 1)
             {
-                var manager = GetNamespaceManager();
-
-                // Enforce single assertion rule to prevent injection attacks
-                XmlNodeList allAssertions = xmlDoc.SelectNodes("//saml:Assertion", manager);
-                if (allAssertions == null || allAssertions.Count != 1)
-                {
-                    return false; // Reject: zero assertions or multiple assertions
-                }
-
-                // Verify signature exists
-                XmlNodeList nodeList = xmlDoc.SelectNodes("//ds:Signature", manager);
-                if (nodeList == null || nodeList.Count == 0)
-                {
-                    return false; // No signature found
-                }
-
-                bool status = true;
-
-                SignedXml signedXml = new SignedXml(xmlDoc);
-                signedXml.LoadXml((XmlElement)nodeList[0]);
-
-                status &= signedXml.CheckSignature(certificate.cert, true);
-
-                var notBefore = NotBefore();
-                status &= !notBefore.HasValue || (notBefore <= DateTime.Now);
-
-                var notOnOrAfter = NotOnOrAfter();
-                status &= !notOnOrAfter.HasValue || (notOnOrAfter > DateTime.Now);
-
-                return status;
+                return false; // Reject: zero assertions or multiple assertions
             }
+
+            var assertion = (XmlElement)allAssertions[0];
+            var response = xmlDoc.DocumentElement;
+            if (assertion.ParentNode != response)
+            {
+                return false;
+            }
+
+            // Verify signature exists
+            XmlNodeList nodeList = xmlDoc.SelectNodes("//ds:Signature", manager);
+            if (nodeList == null || nodeList.Count == 0)
+            {
+                return false; // No signature found
+            }
+
+            // The signature must envelope the assertion or the response that carries it,
+            // and reference that element by ID, or a signed sibling can vouch for a forged assertion.
+            var signature = (XmlElement)nodeList[0];
+            if (signature.ParentNode is not XmlElement signedElement
+                || (signedElement != assertion && signedElement != response))
+            {
+                return false;
+            }
+
+            SignedXml signedXml = new SignedXml(xmlDoc);
+            signedXml.LoadXml(signature);
+            if (
+                signedXml.SignedInfo.References.Count != 1
+                || ((Reference)signedXml.SignedInfo.References[0]).Uri
+                    != $"#{signedElement.GetAttribute("ID")}"
+            )
+            {
+                return false;
+            }
+
+            if (!signedXml.CheckSignature(certificate.cert, true))
+            {
+                return false;
+            }
+
+            var notBefore = NotBefore();
+            if (notBefore.HasValue && notBefore > DateTime.Now)
+            {
+                return false;
+            }
+
+            var notOnOrAfter = NotOnOrAfter();
+            if (!notOnOrAfter.HasValue || notOnOrAfter <= DateTime.Now)
+            {
+                return false;
+            }
+
+            var audiences = xmlDoc.SelectNodes(
+                "/samlp:Response/saml:Assertion/saml:Conditions/saml:AudienceRestriction/saml:Audience",
+                manager
+            );
+            return audiences != null
+                && audiences.Cast<XmlNode>().Any(a => a.InnerText.Trim() == audience?.Trim());
         }
 
         private string GetSingleAttribute(string attr)

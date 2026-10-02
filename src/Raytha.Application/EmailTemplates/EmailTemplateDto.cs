@@ -1,6 +1,7 @@
 using System.Linq.Expressions;
 using CSharpVitamins;
 using Raytha.Application.Common.Models;
+using Raytha.Application.Common.Utils;
 using Raytha.Domain.Entities;
 
 namespace Raytha.Application.EmailTemplates;
@@ -14,6 +15,7 @@ public record EmailTemplateDto : BaseAuditableEntityDto
     public AuditableUserDto? LastModifierUser { get; init; }
     public string Bcc { get; init; } = string.Empty;
     public string Cc { get; init; } = string.Empty;
+    public IReadOnlyList<TemplateVariableGroupDto>? AvailableVariables { get; init; }
 
     public static Expression<Func<EmailTemplate, EmailTemplateDto>> GetProjection()
     {

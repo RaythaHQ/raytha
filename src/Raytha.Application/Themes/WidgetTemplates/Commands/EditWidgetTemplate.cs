@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Raytha.Application.Common.Exceptions;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Models;
+using Raytha.Application.Common.Utils;
 using Raytha.Domain.Entities;
 
 namespace Raytha.Application.Themes.WidgetTemplates.Commands;
@@ -16,16 +17,21 @@ public class EditWidgetTemplate
         public required string Label { get; init; }
         public required string Content { get; init; }
 
+        /// <summary>The settings form in display order. Null leaves the fields unchanged.</summary>
+        public IReadOnlyList<FieldDefinition>? Fields { get; init; }
+
         public static Command Empty() =>
             new() { Label = string.Empty, Content = string.Empty };
     }
 
     public class Validator : AbstractValidator<Command>
     {
-        public Validator(IRaythaDbContext db)
+        public Validator(IRaythaDbContext db, ILiquidTemplateParser liquid)
         {
             RuleFor(x => x.Label).NotEmpty().WithMessage("Label is required.");
             RuleFor(x => x.Content).NotEmpty().WithMessage("Content is required.");
+            RuleFor(x => x.Content)
+                .Custom((content, context) => LiquidSyntaxValidation.RejectInvalidLiquid(context, liquid, content));
             RuleFor(x => x)
                 .Custom(
                     (request, context) =>
@@ -36,6 +42,12 @@ public class EditWidgetTemplate
 
                         if (entity == null)
                             throw new NotFoundException("Widget Template", request.Id);
+
+                        if (request.Fields != null)
+                        {
+                            foreach (var error in WidgetFieldDefinitions.Validate(request.Fields))
+                                context.AddFailure("Fields", error);
+                        }
                     }
                 );
         }
@@ -58,18 +70,14 @@ public class EditWidgetTemplate
             var entity = await _db
                 .WidgetTemplates.FirstAsync(wt => wt.Id == request.Id.Guid, cancellationToken);
 
-            // Create revision before updating
-            var revision = new WidgetTemplateRevision
-            {
-                WidgetTemplateId = entity.Id,
-                Content = entity.Content,
-                Label = entity.Label,
-            };
-
-            _db.WidgetTemplateRevisions.Add(revision);
+            _db.WidgetTemplateRevisions.Add(entity.ToRevision());
 
             entity.Label = request.Label;
             entity.Content = request.Content;
+            if (request.Fields != null)
+            {
+                entity.Fields = request.Fields;
+            }
 
             await _db.SaveChangesAsync(cancellationToken);
 
@@ -77,4 +85,3 @@ public class EditWidgetTemplate
         }
     }
 }
-

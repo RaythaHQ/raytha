@@ -3,6 +3,7 @@ using FluentValidation;
 using Mediator;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Models;
+using Raytha.Application.Common.Security;
 using Raytha.Application.Common.Utils;
 using Raytha.Domain.Entities;
 
@@ -17,7 +18,7 @@ public class CreateApiKey
 
     public class Validator : AbstractValidator<Command>
     {
-        public Validator(IRaythaDbContext db)
+        public Validator(IRaythaDbContext db, ICurrentUser currentUser)
         {
             RuleFor(x => x)
                 .Custom(
@@ -43,6 +44,14 @@ public class CreateApiKey
                             );
                             return;
                         }
+
+                        context.AddDenial(
+                            db.AccountActionDenial(
+                                currentUser,
+                                user.Id,
+                                AdminAccountAction.ManageApiKeys
+                            )
+                        );
                     }
                 );
         }

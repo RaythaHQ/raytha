@@ -12,6 +12,9 @@ public record RaythaFunctionDto : BaseAuditableEntityDto
     public required RaythaFunctionTriggerType TriggerType { get; init; }
     public bool IsActive { get; init; }
     public required string Code { get; init; }
+
+    /// <summary>Public path without a leading slash, or empty when the function has none.</summary>
+    public string RoutePath { get; init; } = string.Empty;
     public AuditableUserDto? CreatorUser { get; init; }
     public AuditableUserDto? LastModifierUser { get; init; }
 
@@ -30,6 +33,7 @@ public record RaythaFunctionDto : BaseAuditableEntityDto
             TriggerType = entity.TriggerType,
             IsActive = entity.IsActive,
             Code = entity.Code,
+            RoutePath = entity.Route?.Path ?? string.Empty,
             CreatorUserId = entity.CreatorUserId,
             CreationTime = entity.CreationTime,
             LastModificationTime = entity.LastModificationTime,

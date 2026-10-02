@@ -28,7 +28,10 @@ public class GetRaythaFunctions
             CancellationToken cancellationToken
         )
         {
-            var query = _db.RaythaFunctions.Include(rf => rf.LastModifierUser).AsQueryable();
+            var query = _db
+                .RaythaFunctions.Include(rf => rf.LastModifierUser)
+                .Include(rf => rf.Route)
+                .AsQueryable();
 
             if (!string.IsNullOrEmpty(request.Search))
             {

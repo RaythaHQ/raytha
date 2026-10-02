@@ -1,0 +1,86 @@
+:root {
+  --tiptap-switch-track: var(--tt-gray-light-a-300);
+  --tiptap-switch-track-checked: var(--tt-brand-color-500);
+  --tiptap-switch-thumb: var(--white);
+  --tiptap-switch-ring: var(--tt-brand-color-500);
+}
+
+.dark {
+  --tiptap-switch-track: var(--tt-gray-dark-a-300);
+  --tiptap-switch-track-checked: var(--tt-brand-color-500);
+  --tiptap-switch-thumb: var(--white);
+  --tiptap-switch-ring: var(--tt-brand-color-500);
+}
+
+.tiptap-switch {
+  position: relative;
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  border: 1px solid transparent;
+  border-radius: 9999px;
+  background-color: var(--tiptap-switch-track);
+  outline: none;
+  cursor: pointer;
+  transition:
+    background-color 150ms ease,
+    box-shadow 150ms ease,
+    border-color 150ms ease;
+
+  /* Enlarged invisible hit area (after:-inset-x-3 after:-inset-y-2). */
+  &::after {
+    content: "";
+    position: absolute;
+    inset: -0.5rem -0.75rem;
+  }
+
+  &[data-size="default"] {
+    width: 32px;
+    height: 18.4px;
+  }
+
+  &[data-size="sm"] {
+    width: 24px;
+    height: 14px;
+  }
+
+  &[data-checked] {
+    background-color: var(--tiptap-switch-track-checked);
+  }
+
+  &:focus-visible {
+    border-color: var(--tiptap-switch-ring);
+    box-shadow: 0 0 0 3px
+      color-mix(in srgb, var(--tiptap-switch-ring) 50%, transparent);
+  }
+
+  &[data-disabled] {
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
+}
+
+.tiptap-switch-thumb {
+  pointer-events: none;
+  display: block;
+  border-radius: 9999px;
+  background-color: var(--tiptap-switch-thumb);
+  transform: translateX(0);
+  transition: transform 150ms ease;
+
+  .tiptap-switch[data-size="default"] & {
+    width: 16px;
+    height: 16px;
+  }
+
+  .tiptap-switch[data-size="sm"] & {
+    width: 12px;
+    height: 12px;
+  }
+
+  /* Slide to the opposite end; relative to the thumb's own width so it works
+     at every size (matches translate-x-[calc(100%-2px)]). */
+  .tiptap-switch[data-checked] & {
+    transform: translateX(calc(100% - 2px));
+  }
+}

@@ -94,7 +94,7 @@ public class BaseFieldTypeTests
     [Test]
     public void ShouldMatchNumberOfSupportedTypes()
     {
-        BaseFieldType.SupportedTypes.Count().Should().Be(11);
+        BaseFieldType.SupportedTypes.Count().Should().Be(13);
     }
 
     [Test]
@@ -128,7 +128,9 @@ public class BaseFieldTypeTests
     {
         BaseFieldType type = BaseFieldType.From(developerName);
         type.Should().BeOfType<MultipleSelectFieldType>();
-        type.SupportedConditionOperators.Count().Should().Be(4);
+        type.SupportedConditionOperators.Select(o => o.DeveloperName)
+            .Should()
+            .BeEquivalentTo("eq", "ne", "contains", "notcontains", "has", "nothas", "empty", "notempty");
     }
 
     [Test]

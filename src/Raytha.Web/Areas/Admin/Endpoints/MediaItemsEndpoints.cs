@@ -24,26 +24,26 @@ public static class MediaItemsEndpoints
         group
             .MapPost("/presign", CloudUploadPresignRequest)
             .WithName("mediaitemspresignuploadurl")
-            .RequireAuthorization(BuiltInSystemPermission.MANAGE_MEDIA_ITEMS);
+            .RequireAuthorization(BuiltInSystemPermission.UPLOAD_MEDIA_ITEMS_POLICY);
 
         group
             .MapPost("/create-after-upload", CloudUploadCreateAfterUpload)
             .WithName("mediaitemscreateafterupload")
-            .RequireAuthorization(BuiltInSystemPermission.MANAGE_MEDIA_ITEMS);
+            .RequireAuthorization(BuiltInSystemPermission.UPLOAD_MEDIA_ITEMS_POLICY);
 
         group
             .MapPost("/upload", DirectUpload)
             .WithName("mediaitemslocalstorageupload")
-            .RequireAuthorization(BuiltInSystemPermission.MANAGE_MEDIA_ITEMS)
+            .RequireAuthorization(BuiltInSystemPermission.UPLOAD_MEDIA_ITEMS_POLICY)
             .DisableAntiforgery();
 
         group
-            .MapGet("/objectkey/{objectKey}", RedirectToFileUrlByObjectKey)
+            .MapMethods("/objectkey/{objectKey}", [HttpMethods.Get, HttpMethods.Head], RedirectToFileUrlByObjectKey)
             .WithName("mediaitemsredirecttofileurlbyobjectkey")
             .AllowAnonymous();
 
         group
-            .MapGet("/id/{id}", RedirectToFileUrlById)
+            .MapMethods("/id/{id}", [HttpMethods.Get, HttpMethods.Head], RedirectToFileUrlById)
             .WithName("mediaitemsredirecttofileurlbyid")
             .AllowAnonymous();
 
@@ -210,7 +210,7 @@ public static class MediaItemsEndpoints
         var response = await mediator.Send(input);
         if (response.Success)
         {
-            var url = relativeUrlBuilder.MediaRedirectToFileUrl(objectKey);
+            var url = relativeUrlBuilder.MediaRedirectToFilePath(objectKey);
             return Results.Json(
                 new
                 {
@@ -236,7 +236,7 @@ public static class MediaItemsEndpoints
         }
     }
 
-    private static async Task<IResult> RedirectToFileUrlByObjectKey(
+    internal static async Task<IResult> RedirectToFileUrlByObjectKey(
         string objectKey,
         [FromServices] IFileStorageProvider fileStorageProvider
     )
@@ -245,7 +245,7 @@ public static class MediaItemsEndpoints
             objectKey,
             FileStorageUtility.GetDefaultExpiry()
         );
-        return Results.Redirect(downloadUrl);
+        return Results.Redirect(PublicAssetUrl.PreferRootRelative(downloadUrl));
     }
 
     private static async Task<IResult> RedirectToFileUrlById(
@@ -261,7 +261,7 @@ public static class MediaItemsEndpoints
             response.Result.ObjectKey,
             FileStorageUtility.GetDefaultExpiry()
         );
-        return Results.Redirect(downloadUrl);
+        return Results.Redirect(PublicAssetUrl.PreferRootRelative(downloadUrl));
     }
 }
 

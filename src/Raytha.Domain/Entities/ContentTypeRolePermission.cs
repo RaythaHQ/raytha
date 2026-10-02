@@ -123,6 +123,12 @@ public class BuiltInContentTypePermission : ValueObject
         get { return Read.Permission | Edit.Permission | Config.Permission; }
     }
 
+    /// <summary>Editing or configuring a content type is meaningless without reading it.</summary>
+    public static ContentTypePermissions WithImplied(ContentTypePermissions permission) =>
+        (permission & (ContentTypePermissions.Edit | ContentTypePermissions.Config)) != 0
+            ? permission | ContentTypePermissions.Read
+            : permission;
+
     protected override IEnumerable<object> GetEqualityComponents()
     {
         yield return DeveloperName;

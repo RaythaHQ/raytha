@@ -9,6 +9,7 @@ using Raytha.Application.Common.Exceptions;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Models;
 using Raytha.Application.Common.Utils;
+using Raytha.Application.Themes.WidgetTemplates;
 using Raytha.Domain.Entities;
 
 namespace Raytha.Application.Themes.Commands;
@@ -42,7 +43,6 @@ public class BeginDuplicateTheme
             RuleFor(x => x.Title).NotEmpty();
             RuleFor(x => x.Description).NotEmpty();
             RuleFor(x => x.DeveloperName).NotEmpty();
-            RuleFor(x => x.PathBase).NotEmpty();
             RuleFor(x => x)
                 .Custom(
                     (request, context) =>
@@ -91,16 +91,19 @@ public class BeginDuplicateTheme
     {
         private readonly IRaythaDbContext _db;
         private readonly IFileStorageProvider _fileStorageProvider;
+        private readonly IFileStorageProviderSettings _fileStorageSettings;
         private readonly IHttpClientFactory _httpClientFactory;
 
         public BackgroundTask(
             IRaythaDbContext db,
             IFileStorageProvider fileStorageProvider,
+            IFileStorageProviderSettings fileStorageSettings,
             IHttpClientFactory httpClientFactory
         )
         {
             _db = db;
             _fileStorageProvider = fileStorageProvider;
+            _fileStorageSettings = fileStorageSettings;
             _httpClientFactory = httpClientFactory;
         }
 
@@ -110,7 +113,9 @@ public class BeginDuplicateTheme
             var title = args.GetProperty("Title").GetString()!;
             var developerName = args.GetProperty("DeveloperName").GetString()!.ToDeveloperName();
             var description = args.GetProperty("Description").GetString()!;
-            var pathBase = args.GetProperty("PathBase").GetString()!;
+            var pathBase = args.TryGetProperty("PathBase", out var pathBaseArg)
+                ? pathBaseArg.GetString() ?? string.Empty
+                : string.Empty;
 
             var job = await _db.BackgroundTasks.FirstAsync(p => p.Id == jobId, cancellationToken);
 
@@ -136,14 +141,22 @@ public class BeginDuplicateTheme
                 .ToArrayAsync(cancellationToken);
 
             var originalThemeWebTemplates = await _db
-                .WebTemplates.Include(wt => wt.TemplateAccessToModelDefinitions)
+                .WebTemplates.AsNoTracking()
+                .Include(wt => wt.TemplateAccessToModelDefinitions)
                 .Include(wt => wt.ParentTemplate)
                 .Where(wt => wt.ThemeId == themeId.Guid)
                 .ToArrayAsync(cancellationToken);
 
             var originalThemeWidgetTemplates = await _db
-                .WidgetTemplates.Where(wt => wt.ThemeId == themeId.Guid)
+                .WidgetTemplates.AsNoTracking()
+                .Where(wt => wt.ThemeId == themeId.Guid)
                 .ToArrayAsync(cancellationToken);
+
+            // Source templates must stay untracked: a SaveChanges in the media loop would repoint the original theme at the copy's files.
+            var duplicateWebTemplateContent = originalThemeWebTemplates.ToDictionary(
+                wt => wt.Id,
+                wt => wt.Content ?? string.Empty
+            );
 
             job.TaskStep = 2;
             job.StatusInfo = "Duplicate media items";
@@ -154,34 +167,14 @@ public class BeginDuplicateTheme
                 originalThemeMediaItems.Length + originalThemeWebTemplates.Length;
             var currentIndex = 1;
 
-            var mediaDownloadClient = _httpClientFactory.CreateClient(nameof(BeginDuplicateTheme));
-
             foreach (var originalThemeMediaItem in originalThemeMediaItems)
             {
-                var downloadUrl = await _fileStorageProvider.GetDownloadUrlAsync(
-                    originalThemeMediaItem.ObjectKey,
-                    FileStorageUtility.GetDefaultExpiry()
-                );
-                if (_fileStorageProvider.GetName() == FileStorageUtility.LOCAL)
-                {
-                    downloadUrl = $"{pathBase}{downloadUrl}";
-                }
-
-                var fileInfo = await FileDownloadUtility.DownloadFile(
-                    mediaDownloadClient,
-                    downloadUrl,
-                    cancellationToken
-                );
-                if (fileInfo == null)
-                {
-                    throw new Exception($"Unable to download file from {downloadUrl}.");
-                }
                 var id = ShortGuid.NewGuid();
                 var objectKey = FileStorageUtility.CreateObjectKeyFromIdAndFileName(
                     id,
                     originalThemeMediaItem.FileName
                 );
-                var data = fileInfo.FileMemoryStream.ToArray();
+                var data = await ReadMediaBytes(originalThemeMediaItem.ObjectKey, pathBase, cancellationToken);
                 await _fileStorageProvider.SaveAndGetDownloadUrlAsync(
                     data,
                     objectKey,
@@ -207,16 +200,16 @@ public class BeginDuplicateTheme
                     ThemeId = entity.Id,
                 };
 
-                var originalWebTemplate = originalThemeWebTemplates.FirstOrDefault(wt =>
-                    wt.Content!.Contains(originalThemeMediaItem.ObjectKey)
-                );
-
-                if (originalWebTemplate != null)
+                foreach (var templateId in duplicateWebTemplateContent.Keys.ToArray())
                 {
-                    originalWebTemplate.Content = originalWebTemplate.Content!.Replace(
-                        originalThemeMediaItem.ObjectKey,
-                        mediaItem.ObjectKey
-                    );
+                    var content = duplicateWebTemplateContent[templateId];
+                    if (content.Contains(originalThemeMediaItem.ObjectKey))
+                    {
+                        duplicateWebTemplateContent[templateId] = content.Replace(
+                            originalThemeMediaItem.ObjectKey,
+                            mediaItem.ObjectKey
+                        );
+                    }
                 }
 
                 mediaItems.Add(mediaItem);
@@ -270,7 +263,7 @@ public class BeginDuplicateTheme
                     ThemeId = entity.Id,
                     Label = originalThemeWebTemplate.Label,
                     DeveloperName = originalThemeWebTemplate.DeveloperName,
-                    Content = originalThemeWebTemplate.Content,
+                    Content = duplicateWebTemplateContent[originalThemeWebTemplate.Id],
                     AllowAccessForNewContentTypes =
                         originalThemeWebTemplate.AllowAccessForNewContentTypes,
                     IsBaseLayout = originalThemeWebTemplate.IsBaseLayout,
@@ -367,16 +360,7 @@ public class BeginDuplicateTheme
             var widgetTemplates = new List<WidgetTemplate>();
             foreach (var originalWidgetTemplate in originalThemeWidgetTemplates)
             {
-                var widgetTemplate = new WidgetTemplate
-                {
-                    Id = Guid.NewGuid(),
-                    ThemeId = entity.Id,
-                    Label = originalWidgetTemplate.Label,
-                    DeveloperName = originalWidgetTemplate.DeveloperName,
-                    Content = originalWidgetTemplate.Content,
-                    IsBuiltInTemplate = originalWidgetTemplate.IsBuiltInTemplate,
-                };
-                widgetTemplates.Add(widgetTemplate);
+                widgetTemplates.Add(originalWidgetTemplate.CopyToTheme(entity.Id));
             }
 
             await _db.WidgetTemplates.AddRangeAsync(widgetTemplates, cancellationToken);
@@ -386,6 +370,41 @@ public class BeginDuplicateTheme
             _db.BackgroundTasks.Update(job);
 
             await _db.SaveChangesAsync(cancellationToken);
+        }
+
+        private async Task<byte[]> ReadMediaBytes(
+            string objectKey,
+            string pathBase,
+            CancellationToken cancellationToken
+        )
+        {
+            if (_fileStorageProvider.GetName() == FileStorageUtility.LOCAL)
+            {
+                var filePath = Path.Combine(_fileStorageSettings.LocalDirectory, objectKey);
+                if (File.Exists(filePath))
+                {
+                    return await File.ReadAllBytesAsync(filePath, cancellationToken);
+                }
+            }
+
+            var downloadUrl = await _fileStorageProvider.GetDownloadUrlAsync(
+                objectKey,
+                FileStorageUtility.GetDefaultExpiry()
+            );
+            if (!downloadUrl.StartsWith("http", StringComparison.OrdinalIgnoreCase))
+            {
+                var prefix = pathBase.TrimEnd('/');
+                var path = downloadUrl.StartsWith('/') ? downloadUrl : $"/{downloadUrl}";
+                downloadUrl = $"{prefix}{path}";
+            }
+
+            var client = _httpClientFactory.CreateClient(nameof(BeginDuplicateTheme));
+            var fileInfo = await FileDownloadUtility.DownloadFile(client, downloadUrl, cancellationToken);
+            if (fileInfo == null)
+            {
+                throw new Exception($"Unable to download file from {downloadUrl}.");
+            }
+            return fileInfo.FileMemoryStream.ToArray();
         }
     }
 }

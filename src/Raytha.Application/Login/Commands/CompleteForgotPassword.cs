@@ -3,6 +3,7 @@ using CSharpVitamins;
 using FluentValidation;
 using Mediator;
 using Microsoft.EntityFrameworkCore;
+using Raytha.Application.Common.Attributes;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Models;
 using Raytha.Application.Common.Utils;
@@ -13,6 +14,7 @@ namespace Raytha.Application.Login.Commands;
 
 public class CompleteForgotPassword
 {
+    [AuditCredentialIdentifier]
     public record Command : LoggableEntityRequest<CommandResponseDto<ShortGuid>>
     {
         [JsonIgnore]

@@ -10,6 +10,9 @@ public class WidgetTemplateJson
     public required string Content { get; init; }
     public bool IsBuiltInTemplate { get; init; }
 
+    /// <summary>Null in theme packages exported before widget templates had fields.</summary>
+    public IReadOnlyList<FieldDefinition>? Fields { get; init; }
+
     public static Expression<Func<WidgetTemplate, WidgetTemplateJson>> GetProjection()
     {
         return entity => GetProjection(entity);
@@ -23,6 +26,7 @@ public class WidgetTemplateJson
             Content = entity.Content!,
             DeveloperName = entity.DeveloperName!,
             IsBuiltInTemplate = entity.IsBuiltInTemplate,
+            Fields = entity.Fields,
         };
     }
 }

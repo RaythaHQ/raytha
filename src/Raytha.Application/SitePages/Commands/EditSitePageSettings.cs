@@ -61,15 +61,13 @@ public class EditSitePageSettings
                             );
                             return;
                         }
-                        
-                        // Get the current SitePage's route ID to exclude it from the check
-                        var currentRouteId = entity.RouteId;
-                        
-                        // Check if any OTHER route has this path (case-insensitive)
-                        var routePathExists = db.Routes.Any(p =>
-                            p.Path.ToLower() == slugifiedPath.ToLower() && p.Id != currentRouteId
-                        );
-                        if (routePathExists)
+                        var reservedRoot = RoutePaths.ReservedRoot(db, slugifiedPath, entity.RouteId);
+                        if (reservedRoot != null)
+                        {
+                            context.AddFailure("RoutePath", RoutePaths.ReservedMessage(reservedRoot));
+                            return;
+                        }
+                        if (RoutePaths.IsTaken(db, slugifiedPath, entity.RouteId))
                         {
                             context.AddFailure(
                                 "RoutePath",

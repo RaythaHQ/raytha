@@ -5,9 +5,11 @@ using Raytha.Application.Common.Exceptions;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Models;
 using Raytha.Application.Common.Utils;
+using Raytha.Application.Webhooks;
 
 namespace Raytha.Application.Users.Commands;
 
+[WebhookEvent("user.deleted", DisplayName = "User deleted", Group = "Users")]
 public class DeleteUser
 {
     public record Command : LoggableEntityRequest<CommandResponseDto<ShortGuid>> { }

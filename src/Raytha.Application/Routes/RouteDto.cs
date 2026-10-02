@@ -11,6 +11,7 @@ public record RouteDto : BaseEntityDto
     public ShortGuid ViewId { get; init; }
     public ShortGuid ContentItemId { get; init; }
     public ShortGuid SitePageId { get; init; }
+    public ShortGuid RaythaFunctionId { get; init; }
     public string PathType
     {
         get
@@ -26,6 +27,10 @@ public record RouteDto : BaseEntityDto
             else if (SitePageId != ShortGuid.Empty)
             {
                 return Route.SITE_PAGE_TYPE;
+            }
+            else if (RaythaFunctionId != ShortGuid.Empty)
+            {
+                return Route.RAYTHA_FUNCTION_TYPE;
             }
             else
             {
@@ -50,6 +55,7 @@ public record RouteDto : BaseEntityDto
             ViewId = entity.ViewId,
             ContentItemId = entity.ContentItemId,
             SitePageId = entity.SitePageId,
+            RaythaFunctionId = entity.RaythaFunctionId ?? Guid.Empty,
             Path = entity.Path,
         };
     }

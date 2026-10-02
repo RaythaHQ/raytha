@@ -29,6 +29,15 @@ public class ContentTypeField : BaseFullAuditableEntity
         }
         set { _Choices = JsonSerializer.Serialize(value); }
     }
+
+    public string _SubFieldsJson { get; set; } = "[]";
+
+    [NotMapped]
+    public IReadOnlyList<FieldDefinition> SubFields
+    {
+        get => FieldDefinition.ListFromJson(_SubFieldsJson);
+        set => _SubFieldsJson = FieldDefinition.ListToJson(value);
+    }
 }
 
 public class BuiltInContentTypeField : ValueObject

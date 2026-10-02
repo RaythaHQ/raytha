@@ -85,7 +85,7 @@ icon: bi-key
 <h2>SAML Configuration</h2>
 <p>For enterprise identity providers (Okta, Azure AD, etc.):</p>
 <ul>
-  <li><strong>IdP Entity ID</strong>: Identity provider identifier</li>
+  <li><strong>Service provider entity ID (sent as Issuer)</strong>: Raytha's own identifier, sent as the Issuer of every SAML request. Enter the exact value you registered with your identity provider as the app's Entity ID, Audience URI, or Identifier.</li>
   <li><strong>Sign-In URL</strong>: SSO login endpoint</li>
   <li><strong>Sign-Out URL</strong>: SSO logout endpoint</li>
   <li><strong>Certificate</strong>: X.509 certificate from IdP</li>

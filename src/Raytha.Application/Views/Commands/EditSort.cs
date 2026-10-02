@@ -43,15 +43,23 @@ public class EditSort
                         }
                         catch (ReservedContentTypeFieldNotFoundException)
                         {
-                            var exists = entity.ContentType.ContentTypeFields.Any(p =>
+                            var field = entity.ContentType.ContentTypeFields.FirstOrDefault(p =>
                                 p.DeveloperName == request.DeveloperName
                             );
-                            if (!exists)
+                            if (field == null)
                             {
                                 context.AddFailure(
                                     Constants.VALIDATION_SUMMARY,
                                     $"Developer name not recognized: {request.DeveloperName}"
                                 );
+                            }
+                            else if (request.ShowColumn && !field.FieldType.IsSortable)
+                            {
+                                context.AddFailure(
+                                    Constants.VALIDATION_SUMMARY,
+                                    $"{field.Label} is a {field.FieldType.Label.ToLower()} field and cannot be sorted."
+                                );
+                                return;
                             }
                         }
 

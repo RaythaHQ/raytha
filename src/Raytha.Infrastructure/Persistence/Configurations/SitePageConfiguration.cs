@@ -14,19 +14,8 @@ public class SitePageConfiguration : IEntityTypeConfiguration<SitePage>
 
         builder.HasOne(b => b.WebTemplate).WithMany().HasForeignKey(b => b.WebTemplateId);
 
-        builder.Property(b => b._DraftWidgetsJson).HasColumnName("_DraftWidgetsJson");
-        builder.Property(b => b._PublishedWidgetsJson).HasColumnName("_PublishedWidgetsJson");
-    }
-}
-
-public class SitePagePostgresConfiguration
-    : IEntityTypeConfiguration<SitePage>,
-        IPostgresConfiguration
-{
-    public void Configure(EntityTypeBuilder<SitePage> builder)
-    {
-        builder.Property(b => b._DraftWidgetsJson).HasColumnType("jsonb");
-        builder.Property(b => b._PublishedWidgetsJson).HasColumnType("jsonb");
+        builder.Property(b => b._DraftWidgetsJson).HasColumnName("_DraftWidgetsJson").HasColumnType("jsonb");
+        builder.Property(b => b._PublishedWidgetsJson).HasColumnName("_PublishedWidgetsJson").HasColumnType("jsonb");
     }
 }
 
@@ -40,16 +29,6 @@ public class SitePageRevisionConfiguration : IEntityTypeConfiguration<SitePageRe
 
         builder.HasOne(b => b.SitePage).WithMany().HasForeignKey(b => b.SitePageId);
 
-        builder.Property(b => b._PublishedWidgetsJson).HasColumnName("_PublishedWidgetsJson");
-    }
-}
-
-public class SitePageRevisionPostgresConfiguration
-    : IEntityTypeConfiguration<SitePageRevision>,
-        IPostgresConfiguration
-{
-    public void Configure(EntityTypeBuilder<SitePageRevision> builder)
-    {
-        builder.Property(b => b._PublishedWidgetsJson).HasColumnType("jsonb");
+        builder.Property(b => b._PublishedWidgetsJson).HasColumnName("_PublishedWidgetsJson").HasColumnType("jsonb");
     }
 }

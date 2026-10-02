@@ -72,10 +72,12 @@ public class ErrorActionViewResult : IActionResult
             PathBase = services.CurrentOrganization.PathBase,
         };
 
-        await using (var sw = new StreamWriter(httpContext.Response.Body))
-        {
-            var body = services.Renderer.RenderAsHtml(sourceWithParents, renderModel);
-            await sw.WriteAsync(body);
-        }
+        var body = WebTemplateRenderer.Render(
+            services.Renderer,
+            template.Result.DeveloperName,
+            sourceWithParents,
+            renderModel
+        );
+        await DbActionResultHelper.WriteHtmlAsync(httpContext, services, body);
     }
 }

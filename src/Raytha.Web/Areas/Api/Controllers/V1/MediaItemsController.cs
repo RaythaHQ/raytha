@@ -16,14 +16,14 @@ namespace Raytha.Web.Areas.Api.Controllers.V1;
 
 [Authorize(
     Policy = RaythaApiAuthorizationHandler.POLICY_PREFIX
-        + BuiltInSystemPermission.MANAGE_MEDIA_ITEMS
+        + BuiltInSystemPermission.UPLOAD_MEDIA_ITEMS_POLICY
 )]
 public class MediaItemsController : BaseController
 {
     [HttpGet("", Name = "GetMediaItems")]
     [Authorize(
         Policy = RaythaApiAuthorizationHandler.POLICY_PREFIX
-            + BuiltInSystemPermission.MANAGE_SYSTEM_SETTINGS_PERMISSION
+            + BuiltInSystemPermission.MANAGE_MEDIA_ITEMS_PERMISSION
     )]
     public async Task<ActionResult<IQueryResponseDto<ListResultDto<MediaItemDto>>>> GetMediaItems(
         [FromQuery] GetMediaItems.Query request
@@ -31,6 +31,26 @@ public class MediaItemsController : BaseController
     {
         var response =
             await Mediator.Send(request) as QueryResponseDto<ListResultDto<MediaItemDto>>;
+        return response;
+    }
+
+    [HttpDelete("{objectKey}", Name = "DeleteMediaItemByObjectKey")]
+    [Authorize(
+        Policy = RaythaApiAuthorizationHandler.POLICY_PREFIX
+            + BuiltInSystemPermission.MANAGE_MEDIA_ITEMS_PERMISSION
+    )]
+    public async Task<ActionResult<ICommandResponseDto<ShortGuid>>> DeleteMediaItemByObjectKey(
+        string objectKey
+    )
+    {
+        var mediaItem = await Mediator.Send(
+            new GetMediaItemByObjectKey.Query { ObjectKey = objectKey }
+        );
+        var response = await Mediator.Send(new DeleteMediaItem.Command { Id = mediaItem.Result.Id });
+        if (!response.Success)
+        {
+            return BadRequest(response);
+        }
         return response;
     }
 

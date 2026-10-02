@@ -1,4 +1,5 @@
-﻿using FluentAssertions;
+﻿using CSharpVitamins;
+using FluentAssertions;
 using Raytha.Domain.ValueObjects.FieldTypes;
 using Raytha.Domain.ValueObjects.FieldValues;
 
@@ -53,5 +54,26 @@ public class GuidFieldValueTests
 
         fieldValue = type.FieldValueFrom(string.Empty);
         fieldValue.HasValue.Should().BeFalse();
+    }
+
+    [Test]
+    public void ShouldParseShortGuidToTheSameGuid()
+    {
+        var shortGuid = new ShortGuid(guidValue!.Value).Value;
+
+        var fieldValue = BaseFieldType.OneToOneRelationship.FieldValueFrom(shortGuid);
+
+        fieldValue.HasValue.Should().BeTrue();
+        ((Guid)fieldValue.Value).Should().Be(guidValue.Value);
+        fieldValue.Text.Should().Be(guidValueAsString);
+    }
+
+    [Test]
+    public void ShouldTreatUnparseableTextAsEmpty()
+    {
+        var fieldValue = BaseFieldType.OneToOneRelationship.FieldValueFrom("not-an-id");
+
+        fieldValue.HasValue.Should().BeFalse();
+        fieldValue.Text.Should().Be(string.Empty);
     }
 }

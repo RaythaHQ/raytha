@@ -1,7 +1,7 @@
+using System.Text.Json.Serialization;
 using CSharpVitamins;
 using FluentValidation;
 using Mediator;
-using Microsoft.EntityFrameworkCore;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Models;
 using Raytha.Application.Common.Utils;
@@ -11,16 +11,32 @@ namespace Raytha.Application.Login.Commands;
 
 public class CompleteLoginWithMagicLink
 {
-    public record Command : LoggableEntityRequest<CommandResponseDto<LoginDto>> { }
+    public record Command : LoggableRequest<CommandResponseDto<LoginDto>>
+    {
+        public string EmailAddress { get; init; } = null!;
+
+        [JsonIgnore]
+        public string Code { get; init; } = null!;
+    }
 
     public class Validator : AbstractValidator<Command>
     {
         public Validator(IRaythaDbContext db)
         {
+            RuleFor(x => x.EmailAddress).NotEmpty().EmailAddress();
+            RuleFor(x => x.Code).NotEmpty();
             RuleFor(x => x)
                 .Custom(
                     (request, context) =>
                     {
+                        if (
+                            string.IsNullOrWhiteSpace(request.EmailAddress)
+                            || string.IsNullOrWhiteSpace(request.Code)
+                        )
+                        {
+                            return;
+                        }
+
                         var authScheme = db.AuthenticationSchemes.First(p =>
                             p.AuthenticationSchemeType
                             == AuthenticationSchemeType.MagicLink.DeveloperName
@@ -35,14 +51,26 @@ public class CompleteLoginWithMagicLink
                             return;
                         }
 
-                        var entity = db
-                            .OneTimePasswords.Include(p => p.User)
-                            .ThenInclude(p => p.AuthenticationScheme)
-                            .FirstOrDefault(p => p.Id == PasswordUtility.Hash(request.Id));
+                        var emailAddress = request.EmailAddress.ToLower().Trim();
+                        var user = db.Users.FirstOrDefault(p =>
+                            p.EmailAddress.ToLower() == emailAddress
+                        );
+
+                        if (user == null)
+                        {
+                            context.AddFailure(Constants.VALIDATION_SUMMARY, "Invalid code.");
+                            return;
+                        }
+
+                        var otpId = MagicLinkCode.OtpId(
+                            user.Id,
+                            MagicLinkCode.Normalize(request.Code)
+                        );
+                        var entity = db.OneTimePasswords.FirstOrDefault(p => p.Id == otpId);
 
                         if (entity == null)
                         {
-                            context.AddFailure(Constants.VALIDATION_SUMMARY, "Invalid token.");
+                            context.AddFailure(Constants.VALIDATION_SUMMARY, "Invalid code.");
                             return;
                         }
 
@@ -50,12 +78,12 @@ public class CompleteLoginWithMagicLink
                         {
                             context.AddFailure(
                                 Constants.VALIDATION_SUMMARY,
-                                "Token is consumed or expired."
+                                "Code is consumed or expired."
                             );
                             return;
                         }
 
-                        if (!entity.User.IsActive)
+                        if (!user.IsActive)
                         {
                             context.AddFailure(
                                 Constants.VALIDATION_SUMMARY,
@@ -64,7 +92,7 @@ public class CompleteLoginWithMagicLink
                             return;
                         }
 
-                        if (entity.User.IsAdmin && !authScheme.IsEnabledForAdmins)
+                        if (user.IsAdmin && !authScheme.IsEnabledForAdmins)
                         {
                             context.AddFailure(
                                 Constants.VALIDATION_SUMMARY,
@@ -73,7 +101,7 @@ public class CompleteLoginWithMagicLink
                             return;
                         }
 
-                        if (!entity.User.IsAdmin && !authScheme.IsEnabledForUsers)
+                        if (!user.IsAdmin && !authScheme.IsEnabledForUsers)
                         {
                             context.AddFailure(
                                 Constants.VALIDATION_SUMMARY,
@@ -105,25 +133,29 @@ public class CompleteLoginWithMagicLink
                 == AuthenticationSchemeType.EmailAndPassword.DeveloperName
             );
 
-            var entity = _db
-                .OneTimePasswords.Include(p => p.User)
-                .ThenInclude(p => p.AuthenticationScheme)
-                .First(p => p.Id == PasswordUtility.Hash(request.Id));
+            var emailAddress = request.EmailAddress.ToLower().Trim();
+            var user = _db.Users.First(p => p.EmailAddress.ToLower() == emailAddress);
+
+            var otpId = MagicLinkCode.OtpId(user.Id, MagicLinkCode.Normalize(request.Code));
+            var entity = _db.OneTimePasswords.First(p => p.Id == otpId);
 
             entity.IsUsed = true;
-            entity.User.LastLoggedInTime = DateTime.UtcNow;
-            entity.User.AuthenticationSchemeId = authScheme.Id;
-            entity.User.SsoId = (ShortGuid)entity.UserId;
+            user.LastLoggedInTime = DateTime.UtcNow;
+            user.AuthenticationSchemeId = authScheme.Id;
+            user.SsoId = (ShortGuid)user.Id;
 
             await _db.SaveChangesAsync(cancellationToken);
             return new CommandResponseDto<LoginDto>(
                 new LoginDto
                 {
-                    Id = entity.User.Id,
-                    FirstName = entity.User.FirstName,
-                    LastName = entity.User.LastName,
-                    EmailAddress = entity.User.EmailAddress,
-                    LastModificationTime = entity.User.LastModificationTime,
+                    Id = user.Id,
+                    FirstName = user.FirstName,
+                    LastName = user.LastName,
+                    EmailAddress = user.EmailAddress,
+                    LastModificationTime = user.LastModificationTime,
+                    AuthenticationScheme = authScheme.DeveloperName,
+                    SsoId = user.SsoId,
+                    IsAdmin = user.IsAdmin,
                 }
             );
         }

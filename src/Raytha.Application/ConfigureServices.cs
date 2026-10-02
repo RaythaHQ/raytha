@@ -3,11 +3,14 @@ using FluentValidation;
 using Mediator;
 using Microsoft.Extensions.DependencyInjection;
 using Raytha.Application.Common.Behaviors;
+using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Shared;
+using Raytha.Application.Common.Utils;
 using Raytha.Application.ContentItems;
 using Raytha.Application.ContentItems.Commands;
 using Raytha.Application.ContentItems.EventHandlers;
 using Raytha.Application.Themes.Commands;
+using Raytha.Application.Webhooks;
 using static Raytha.Application.ContentItems.EventHandlers.ContentItemCreatedEventHandler;
 
 namespace Raytha.Application;
@@ -25,7 +28,33 @@ public static class ConfigureServices
         });
         services.AddScoped(typeof(IPipelineBehavior<,>), typeof(UnhandledExceptionBehaviour<,>));
         services.AddScoped(typeof(IPipelineBehavior<,>), typeof(ValidationBehaviour<,>));
+        services.AddScoped(typeof(IPipelineBehavior<,>), typeof(TransactionBehavior<,>));
         services.AddScoped(typeof(IPipelineBehavior<,>), typeof(AuditBehavior<,>));
+        services.AddScoped(typeof(IPipelineBehavior<,>), typeof(WebhookPublishBehavior<,>));
+
+        // Webhooks
+        services.AddSingleton<IWebhookEventCatalog, WebhookEventCatalog>();
+        services.AddScoped<IWebhookEventPublisher, WebhookEventPublisher>();
+        services.AddScoped<DeliverWebhookTask>();
+        foreach (
+            var userSuppliedUrlClient in new[]
+            {
+                DeliverWebhookTask.HttpClientName,
+                nameof(BeginImportThemeFromUrl),
+                nameof(BeginImportContentItemsFromCsv),
+            }
+        )
+        {
+            services
+                .AddHttpClient(userSuppliedUrlClient)
+                .ConfigurePrimaryHttpMessageHandler(sp =>
+                    SafeUrlValidator.CreateHandler(
+                        sp.GetRequiredService<ISecurityConfiguration>().AllowInternalUrlImports
+                    )
+                );
+        }
+
+        services.AddScoped<BeginBatchCreateContentItems.BackgroundTask>();
         services.AddScoped<BeginExportContentItemsToCsv.BackgroundTask>();
         services.AddScoped<BeginImportContentItemsFromCsv.BackgroundTask>();
         services.AddScoped<BeginImportThemeFromUrl.BackgroundTask>();

@@ -52,7 +52,7 @@ public class RevertContentItem
                     new ContentItemRevision
                     {
                         ContentItemId = entity.ContentItemId,
-                        PublishedContent = entity.PublishedContent,
+                        PublishedContent = contentItem.PublishedContent,
                     }
                 );
                 contentItem.PublishedContent = entity.PublishedContent;

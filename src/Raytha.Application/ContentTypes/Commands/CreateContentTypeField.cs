@@ -23,6 +23,7 @@ public class CreateContentTypeField
         public IEnumerable<ContentTypeFieldChoiceInputDto> Choices { get; init; } =
             new List<ContentTypeFieldChoiceInputDto>();
         public ShortGuid? RelatedContentTypeId { get; init; } = null!;
+        public IReadOnlyList<FieldDefinition> SubFields { get; init; } = [];
     }
 
     public class Validator : AbstractValidator<Command>
@@ -117,6 +118,14 @@ public class CreateContentTypeField
                             }
                         }
 
+                        if (request.FieldType == BaseFieldType.Repeater)
+                        {
+                            foreach (var error in RepeaterSubFields.Errors(request.SubFields))
+                            {
+                                context.AddFailure("SubFields", error);
+                            }
+                        }
+
                         if (
                             request.FieldType == BaseFieldType.OneToOneRelationship
                             && request.RelatedContentTypeId.HasValue
@@ -188,6 +197,10 @@ public class CreateContentTypeField
                 IsRequired = request.IsRequired,
                 Description = request.Description,
                 RelatedContentTypeId = relatedContentTypeId,
+                SubFields =
+                    fieldType.DeveloperName == BaseFieldType.Repeater.DeveloperName
+                        ? RepeaterSubFields.Normalize(request.SubFields)
+                        : [],
             };
             _db.ContentTypeFields.Add(entity);
 

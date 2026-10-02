@@ -31,7 +31,11 @@ public record RoleDto : BaseAuditableEntityDto
             foreach (var contentTypePerm in entity.ContentTypeRolePermissions)
             {
                 var listOfPermissions = BuiltInContentTypePermission
-                    .From(contentTypePerm.ContentTypePermissions)
+                    .From(
+                        BuiltInContentTypePermission.WithImplied(
+                            contentTypePerm.ContentTypePermissions
+                        )
+                    )
                     .Select(p => p.DeveloperName);
                 contentTypePermissions.Add(contentTypePerm.ContentTypeId, listOfPermissions);
                 contentTypePermissionsFriendlyNames.Add(
@@ -51,7 +55,7 @@ public record RoleDto : BaseAuditableEntityDto
             LastModificationTime = entity.LastModificationTime,
             LastModifierUserId = entity.LastModifierUserId,
             SystemPermissions = BuiltInSystemPermission
-                .From(entity.SystemPermissions)
+                .From(BuiltInSystemPermission.WithImplied(entity.SystemPermissions))
                 .Select(p => p.DeveloperName),
             ContentTypePermissions = contentTypePermissions,
             ContentTypePermissionsFriendlyNames = contentTypePermissionsFriendlyNames,

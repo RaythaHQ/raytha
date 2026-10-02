@@ -208,7 +208,7 @@ internal abstract class AbstractRaythaDbJsonQueryEngine
             {
                 contentAsAssembled.Add(
                     keyValue.Key,
-                    contentTypeField.FieldType.FieldValueFrom(keyValue.Value)
+                    contentTypeField.FieldType.StoredValueFrom(keyValue.Value)
                 );
             }
         }

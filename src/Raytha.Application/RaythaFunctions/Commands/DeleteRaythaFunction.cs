@@ -1,6 +1,7 @@
 ﻿using CSharpVitamins;
 using FluentValidation;
 using Mediator;
+using Microsoft.EntityFrameworkCore;
 using Raytha.Application.Common.Exceptions;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Models;
@@ -40,8 +41,11 @@ public class DeleteRaythaFunction
             CancellationToken cancellationToken
         )
         {
-            var function = _db.RaythaFunctions.First(rf => rf.Id == request.Id.Guid);
+            var function = await _db
+                .RaythaFunctions.Include(rf => rf.Route)
+                .FirstAsync(rf => rf.Id == request.Id.Guid, cancellationToken);
 
+            RaythaFunctionRoutePath.Apply(_db, function, string.Empty);
             _db.RaythaFunctions.Remove(function);
             await _db.SaveChangesAsync(cancellationToken);
 
