@@ -1,4 +1,5 @@
 ﻿using Mediator;
+using Microsoft.EntityFrameworkCore;
 using Raytha.Application.Common.Exceptions;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Models;
@@ -24,7 +25,10 @@ public class GetEmailTemplateById
             CancellationToken cancellationToken
         )
         {
-            var entity = _db.EmailTemplates.FirstOrDefault(p => p.Id == request.Id.Guid);
+            var entity = await _db.EmailTemplates.AsNoTracking().FirstOrDefaultAsync(
+                p => p.Id == request.Id.Guid,
+                cancellationToken
+            );
 
             if (entity == null)
                 throw new NotFoundException("EmailTemplate", request.Id);

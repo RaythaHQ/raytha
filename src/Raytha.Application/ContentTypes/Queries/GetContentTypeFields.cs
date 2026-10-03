@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Models;
 using Raytha.Application.Common.Utils;
+using Raytha.Domain.Entities;
 using Raytha.Domain.ValueObjects;
 
 namespace Raytha.Application.ContentTypes.Queries;
@@ -35,7 +36,9 @@ public class GetContentTypeFields
             CancellationToken cancellationToken
         )
         {
-            var query = _db.ContentTypeFields.Include(p => p.ContentType).AsQueryable();
+            IQueryable<ContentTypeField> query = _db
+                .ContentTypeFields.AsNoTracking()
+                .Include(p => p.ContentType);
 
             if (request.ShowDeletedOnly)
             {
@@ -64,11 +67,11 @@ public class GetContentTypeFields
                 );
             }
 
-            var total = await query.CountAsync();
-            var items = query
+            var total = await query.CountAsync(cancellationToken);
+            var items = await query
                 .ApplyPaginationInput(request)
                 .Select(ContentTypeFieldDto.GetProjection())
-                .ToArray();
+                .ToArrayAsync(cancellationToken);
 
             return new QueryResponseDto<ListResultDto<ContentTypeFieldDto>>(
                 new ListResultDto<ContentTypeFieldDto>(items, total)

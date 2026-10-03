@@ -24,9 +24,10 @@ public class GetContentTypeById
             CancellationToken cancellationToken
         )
         {
-            var entity = _db
-                .ContentTypes.Include(p => p.ContentTypeFields.OrderBy(c => c.FieldOrder))
-                .FirstOrDefault(p => p.Id == request.Id.Guid);
+            var entity = await _db
+                .ContentTypes.AsNoTracking()
+                .Include(p => p.ContentTypeFields.OrderBy(c => c.FieldOrder))
+                .FirstOrDefaultAsync(p => p.Id == request.Id.Guid, cancellationToken);
 
             if (entity == null)
                 throw new NotFoundException("Content type", request.Id);

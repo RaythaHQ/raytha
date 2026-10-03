@@ -31,7 +31,8 @@ public class GetWebTemplateByContentItemId
         )
         {
             var webTemplate = await _db
-                .WebTemplateContentItemRelations.Where(wtr =>
+                .WebTemplateContentItemRelations.AsNoTracking()
+                .Where(wtr =>
                     wtr.ContentItemId == request.ContentItemId.Guid
                     && wtr.WebTemplate!.ThemeId == request.ThemeId.Guid
                 )

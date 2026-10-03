@@ -28,7 +28,8 @@ public class GetThemes
         )
         {
             var query = _db
-                .Themes.Include(t => t.CreatorUser)
+                .Themes.AsNoTracking()
+                .Include(t => t.CreatorUser)
                 .Include(t => t.LastModifierUser)
                 .AsQueryable();
 

@@ -33,7 +33,8 @@ public class GetRoles
         )
         {
             var query = _db
-                .Roles.Include(p => p.ContentTypeRolePermissions)
+                .Roles.AsNoTracking()
+                .Include(p => p.ContentTypeRolePermissions)
                 .ThenInclude(p => p.ContentType)
                 .AsQueryable();
 
@@ -46,11 +47,11 @@ public class GetRoles
                 );
             }
 
-            var total = await query.CountAsync();
-            var items = query
+            var total = await query.CountAsync(cancellationToken);
+            var items = await query
                 .ApplyPaginationInput(request)
                 .Select(RoleDto.GetProjection())
-                .ToArray();
+                .ToArrayAsync(cancellationToken);
 
             return new QueryResponseDto<ListResultDto<RoleDto>>(
                 new ListResultDto<RoleDto>(items, total)

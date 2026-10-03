@@ -28,7 +28,8 @@ public class GetWebTemplateDeveloperNamesByThemeId
         )
         {
             var webTemplateDeveloperNameItems = await _db
-                .WebTemplates.Where(wt => wt.ThemeId == request.ThemeId.Guid)
+                .WebTemplates.AsNoTracking()
+                .Where(wt => wt.ThemeId == request.ThemeId.Guid)
                 .Select(wt => wt.DeveloperName!)
                 .ToArrayAsync(cancellationToken);
 

@@ -33,7 +33,7 @@ public class GetBackgroundTasks
             CancellationToken cancellationToken
         )
         {
-            var query = _db.BackgroundTasks.AsQueryable();
+            var query = _db.BackgroundTasks.AsNoTracking();
 
             if (!string.IsNullOrWhiteSpace(request.Status))
             {

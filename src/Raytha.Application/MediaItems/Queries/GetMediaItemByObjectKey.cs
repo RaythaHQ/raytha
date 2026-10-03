@@ -1,5 +1,6 @@
 ﻿using CSharpVitamins;
 using Mediator;
+using Microsoft.EntityFrameworkCore;
 using Raytha.Application.Common.Exceptions;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Models;
@@ -27,7 +28,10 @@ public class GetMediaItemByObjectKey
             CancellationToken cancellationToken
         )
         {
-            var entity = _db.MediaItems.FirstOrDefault(p => p.ObjectKey == request.ObjectKey);
+            var entity = await _db.MediaItems.AsNoTracking().FirstOrDefaultAsync(
+                p => p.ObjectKey == request.ObjectKey,
+                cancellationToken
+            );
 
             if (entity == null)
                 throw new NotFoundException("Media item", request.ObjectKey);

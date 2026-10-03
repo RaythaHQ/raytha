@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Models;
 using Raytha.Application.Common.Utils;
+using Raytha.Domain.Entities;
 using Raytha.Domain.ValueObjects;
 
 namespace Raytha.Application.AuthenticationSchemes.Queries;
@@ -34,7 +35,9 @@ public class GetAuthenticationSchemes
             CancellationToken cancellationToken
         )
         {
-            var query = _db.AuthenticationSchemes.Include(p => p.LastModifierUser).AsQueryable();
+            IQueryable<AuthenticationScheme> query = _db
+                .AuthenticationSchemes.AsNoTracking()
+                .Include(p => p.LastModifierUser);
 
             if (request.IsEnabledForUsers.HasValue)
                 query = query.Where(p => p.IsEnabledForUsers);
@@ -51,11 +54,11 @@ public class GetAuthenticationSchemes
                 );
             }
 
-            var total = await query.CountAsync();
-            var items = query
+            var total = await query.CountAsync(cancellationToken);
+            var items = await query
                 .ApplyPaginationInput(request)
                 .Select(AuthenticationSchemeDto.GetProjection())
-                .ToArray();
+                .ToArrayAsync(cancellationToken);
 
             return new QueryResponseDto<ListResultDto<AuthenticationSchemeDto>>(
                 new ListResultDto<AuthenticationSchemeDto>(items, total)

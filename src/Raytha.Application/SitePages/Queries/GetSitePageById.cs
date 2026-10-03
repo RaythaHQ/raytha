@@ -28,12 +28,13 @@ public class GetSitePageById
             CancellationToken cancellationToken
         )
         {
-            var entity = _db
-                .SitePages.Include(p => p.Route)
+            var entity = await _db
+                .SitePages.AsNoTracking()
+                .Include(p => p.Route)
                 .IncludeParentTemplates(p => p.WebTemplate)
                 .Include(p => p.CreatorUser)
                 .Include(p => p.LastModifierUser)
-                .FirstOrDefault(p => p.Id == request.Id.Guid);
+                .FirstOrDefaultAsync(p => p.Id == request.Id.Guid, cancellationToken);
 
             if (entity == null)
                 throw new NotFoundException("Site Page", request.Id);

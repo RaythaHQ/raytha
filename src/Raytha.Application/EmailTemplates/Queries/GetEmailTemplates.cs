@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Models;
 using Raytha.Application.Common.Utils;
+using Raytha.Domain.Entities;
 using Raytha.Domain.ValueObjects;
 
 namespace Raytha.Application.EmailTemplates.Queries;
@@ -31,7 +32,9 @@ public class GetEmailTemplates
             CancellationToken cancellationToken
         )
         {
-            var query = _db.EmailTemplates.Include(p => p.LastModifierUser).AsQueryable();
+            IQueryable<EmailTemplate> query = _db
+                .EmailTemplates.AsNoTracking()
+                .Include(p => p.LastModifierUser);
 
             if (!string.IsNullOrEmpty(request.Search))
             {
@@ -44,11 +47,11 @@ public class GetEmailTemplates
                 );
             }
 
-            var total = await query.CountAsync();
-            var items = query
+            var total = await query.CountAsync(cancellationToken);
+            var items = await query
                 .ApplyPaginationInput(request)
                 .Select(EmailTemplateDto.GetProjection())
-                .ToArray();
+                .ToArrayAsync(cancellationToken);
 
             return new QueryResponseDto<ListResultDto<EmailTemplateDto>>(
                 new ListResultDto<EmailTemplateDto>(items, total)

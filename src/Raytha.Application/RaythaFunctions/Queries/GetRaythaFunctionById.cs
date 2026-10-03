@@ -24,9 +24,10 @@ public class GetRaythaFunctionById
             CancellationToken cancellationToken
         )
         {
-            var entity = _db
-                .RaythaFunctions.Include(rf => rf.Route)
-                .FirstOrDefault(rf => rf.Id == request.Id.Guid);
+            var entity = await _db
+                .RaythaFunctions.AsNoTracking()
+                .Include(rf => rf.Route)
+                .FirstOrDefaultAsync(rf => rf.Id == request.Id.Guid, cancellationToken);
             if (entity == null)
                 throw new NotFoundException("Raytha Function", request.Id);
 

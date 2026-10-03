@@ -26,9 +26,13 @@ public class GetDashboardMetrics
             CancellationToken cancellationToken
         )
         {
-            int totalContentItems = await _db.ContentItems.CountAsync();
-            int totalUsers = await _db.Users.CountAsync();
-            long totalFileStorageSize = await _db.MediaItems.SumAsync(p => p.Length);
+            int totalContentItems = await _db
+                .ContentItems.AsNoTracking()
+                .CountAsync(cancellationToken);
+            int totalUsers = await _db.Users.AsNoTracking().CountAsync(cancellationToken);
+            long totalFileStorageSize = await _db
+                .MediaItems.AsNoTracking()
+                .SumAsync(p => p.Length, cancellationToken);
             var dbSize = _rawSqlDb.GetDatabaseSize();
 
             decimal numericValueOfReserved = Convert.ToDecimal(dbSize.reserved.Split(" ").First());

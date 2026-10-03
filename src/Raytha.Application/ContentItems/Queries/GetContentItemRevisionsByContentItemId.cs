@@ -34,9 +34,10 @@ public class GetContentItemRevisionsByContentItemId
             CancellationToken cancellationToken
         )
         {
-            var entity = _db
-                .ContentItems.Include(p => p.ContentType)
-                .FirstOrDefault(p => p.Id == request.Id.Guid);
+            var entity = await _db
+                .ContentItems.AsNoTracking()
+                .Include(p => p.ContentType)
+                .FirstOrDefaultAsync(p => p.Id == request.Id.Guid, cancellationToken);
 
             if (entity == null)
                 throw new NotFoundException("Content Item", request.Id);
@@ -46,16 +47,16 @@ public class GetContentItemRevisionsByContentItemId
             );
 
             var query = _db
-                .ContentItemRevisions.AsQueryable()
+                .ContentItemRevisions.AsNoTracking()
                 .Include(p => p.LastModifierUser)
                 .Include(p => p.CreatorUser)
                 .Where(p => p.ContentItemId == request.Id.Guid);
 
-            var total = await query.CountAsync();
-            var items = query
+            var total = await query.CountAsync(cancellationToken);
+            var items = await query
                 .ApplyPaginationInput(request)
                 .Select(ContentItemRevisionDto.GetProjection())
-                .ToArray();
+                .ToArrayAsync(cancellationToken);
 
             return new QueryResponseDto<ListResultDto<ContentItemRevisionDto>>(
                 new ListResultDto<ContentItemRevisionDto>(items, total)

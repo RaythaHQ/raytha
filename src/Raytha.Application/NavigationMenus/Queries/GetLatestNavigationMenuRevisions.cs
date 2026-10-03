@@ -27,7 +27,8 @@ public class GetLatestNavigationMenuRevisions
         )
         {
             var latestNavigationMenuRevisions = await _db
-                .NavigationMenuRevisions.GroupBy(nmr => nmr.NavigationMenuId)
+                .NavigationMenuRevisions.AsNoTracking()
+                .GroupBy(nmr => nmr.NavigationMenuId)
                 .Select(g =>
                     g.FirstOrDefault(r => r.CreationTime == g.Max(nmr => nmr.CreationTime))
                 )
