@@ -15,13 +15,13 @@ internal static class PostgresFieldSql
         + $"THEN ({alias}.\"{jsonColumn}\"->> '{key}')::decimal(18, 2) ELSE NULL END";
 
     /// <summary>
-    /// A stored date as <c>date</c>. The admin SPA and API clients store ISO dates; the Razor admin
-    /// stored the organization's format, so both are read.
+    /// A stored date as <c>date</c>. Dates are stored as ISO (<c>YYYY-MM-DD</c>, optionally with a
+    /// time); a value the 2.0.0 migration could not convert reads as NULL rather than failing the query.
     /// </summary>
-    public static string DateScalar(string alias, string jsonColumn, string key, string dateFormat) =>
+    public static string DateScalar(string alias, string jsonColumn, string key) =>
         $"CASE WHEN ({alias}.\"{jsonColumn}\"->>'{key}') ~ '^[0-9]{{4}}-[0-9]{{2}}-[0-9]{{2}}' "
         + $"THEN TO_DATE(LEFT({alias}.\"{jsonColumn}\"->>'{key}', 10), 'YYYY-MM-DD') "
-        + $"ELSE TO_DATE(NULLIF({alias}.\"{jsonColumn}\"->>'{key}', ''), '{Format(dateFormat)}') END";
+        + "ELSE NULL END";
 
     public static string ReservedColumn(string alias, string columnName) =>
         $"{alias}.\"{columnName}\"";
@@ -61,14 +61,8 @@ internal static class PostgresFieldSql
         + $"THEN ({alias}.\"{jsonColumn}\"->> '{key}')::decimal ELSE NULL END {direction}, "
         + $"{alias}.\"{jsonColumn}\"->>'{key}' {direction}";
 
-    public static string DateOrderBy(
-        string alias,
-        string jsonColumn,
-        string key,
-        string dateFormat,
-        string direction
-    ) =>
-        $"{DateScalar(alias, jsonColumn, key, dateFormat)} "
+    public static string DateOrderBy(string alias, string jsonColumn, string key, string direction) =>
+        $"{DateScalar(alias, jsonColumn, key)} "
         + $"{(direction.ToUpperInvariant() == "DESC" ? "DESC" : "ASC")}";
 
     public static string MultiSelectOrderBy(
@@ -90,6 +84,4 @@ internal static class PostgresFieldSql
             MatchKind.EndsWith => $"%{escaped}",
             _ => $"%{escaped}%",
         };
-
-    private static string Format(string dateFormat) => (dateFormat ?? string.Empty).ToUpperInvariant();
 }
