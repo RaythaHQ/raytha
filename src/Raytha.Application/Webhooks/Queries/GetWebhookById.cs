@@ -24,10 +24,9 @@ public class GetWebhookById
             CancellationToken cancellationToken
         )
         {
-            var entity = await _db.Webhooks.FirstOrDefaultAsync(
-                p => p.Id == request.Id.Guid,
-                cancellationToken
-            );
+            var entity = await _db
+                .Webhooks.AsNoTracking()
+                .FirstOrDefaultAsync(p => p.Id == request.Id.Guid, cancellationToken);
 
             if (entity == null)
                 throw new NotFoundException("Webhook", request.Id);

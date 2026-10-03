@@ -1,5 +1,6 @@
 ﻿using CSharpVitamins;
 using Mediator;
+using Microsoft.EntityFrameworkCore;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Models;
 using Raytha.Application.Common.Utils;
@@ -31,13 +32,13 @@ public class GetApiKeysForAdmin
             CancellationToken cancellationToken
         )
         {
-            var query = _db.ApiKeys.Where(p => p.UserId == request.UserId.Guid).AsQueryable();
+            var query = _db.ApiKeys.AsNoTracking().Where(p => p.UserId == request.UserId.Guid);
 
-            var total = query.Count();
-            var items = query
+            var total = await query.CountAsync(cancellationToken);
+            var items = await query
                 .ApplyPaginationInput(request)
                 .Select(ApiKeyDto.GetProjection())
-                .ToArray();
+                .ToArrayAsync(cancellationToken);
 
             return new QueryResponseDto<ListResultDto<ApiKeyDto>>(
                 new ListResultDto<ApiKeyDto>(items, total)

@@ -38,7 +38,9 @@ public class GetWebhookDeliveries
             CancellationToken cancellationToken
         )
         {
-            var query = _db.WebhookDeliveries.Include(p => p.Webhook).AsQueryable();
+            IQueryable<WebhookDelivery> query = _db
+                .WebhookDeliveries.AsNoTracking()
+                .Include(p => p.Webhook);
 
             if (request.WebhookId.HasValue && request.WebhookId != ShortGuid.Empty)
                 query = query.Where(p => p.WebhookId == request.WebhookId.Value.Guid);

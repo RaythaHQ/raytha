@@ -415,6 +415,20 @@ public class V8EnginePoolTests
     }
 
     [Test]
+    public void RentedEngine_JavaScriptMath_IsNotShadowedByDotNetMath()
+    {
+        using var pool = new V8EnginePool();
+        var engine = pool.Rent();
+
+        engine.Execute("var floored = Math.floor(2.7); var net = DotNetMath.Floor(2.7);");
+
+        Convert.ToDouble(engine.Evaluate("floored")).Should().Be(2);
+        Convert.ToDouble(engine.Evaluate("net")).Should().Be(2);
+
+        pool.Return(engine);
+    }
+
+    [Test]
     public void RentedEngine_StatusCodeResultClass_ShouldHaveCorrectProperties()
     {
         // Arrange

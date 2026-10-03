@@ -25,11 +25,12 @@ public class GetViewById
             CancellationToken cancellationToken
         )
         {
-            var entity = _db
-                .Views.Include(p => p.Route)
+            var entity = await _db
+                .Views.AsNoTracking()
+                .Include(p => p.Route)
                 .Include(p => p.ContentType)
                 .ThenInclude(p => p.ContentTypeFields)
-                .FirstOrDefault(p => p.Id == request.Id.Guid);
+                .FirstOrDefaultAsync(p => p.Id == request.Id.Guid, cancellationToken);
 
             if (entity == null)
                 throw new NotFoundException("View", request.Id);

@@ -67,7 +67,7 @@ internal sealed class PostgresFilterCompiler
             return Predicate(idSql, node.Operator, idParameter);
         }
 
-        var parameter = addParameter(ConvertValue(field, node.Value, _resolver.DateFormat));
+        var parameter = addParameter(ConvertValue(field, node.Value));
         return Predicate(field.ScalarSql, node.Operator, parameter);
     }
 
@@ -175,7 +175,7 @@ internal sealed class PostgresFilterCompiler
         return false;
     }
 
-    private static object ConvertValue(ResolvedField field, string value, string dateFormat)
+    private static object ConvertValue(ResolvedField field, string value)
     {
         switch (field.ValueType)
         {
@@ -200,7 +200,7 @@ internal sealed class PostgresFilterCompiler
                 return flag;
             case FilterValueType.Date:
                 return DateTime.SpecifyKind(
-                    ParseDate(field, value, dateFormat, DateTimeStyles.None).Date,
+                    ParseDate(field, value, DateTimeStyles.None).Date,
                     DateTimeKind.Unspecified
                 );
             case FilterValueType.Timestamp:
@@ -208,7 +208,6 @@ internal sealed class PostgresFilterCompiler
                     ParseDate(
                         field,
                         value,
-                        dateFormat,
                         DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal
                     ),
                     DateTimeKind.Utc
@@ -218,30 +217,10 @@ internal sealed class PostgresFilterCompiler
         }
     }
 
-    /// <summary>
-    /// Accepts the organization's date format (what the Razor admin wrote) or an ISO date (what the
-    /// admin SPA and API clients send).
-    /// </summary>
-    private static DateTime ParseDate(
-        ResolvedField field,
-        string value,
-        string dateFormat,
-        DateTimeStyles styles
-    )
+    /// <summary>An ISO date or any invariant-culture date, which is what the admin SPA and API clients send.</summary>
+    private static DateTime ParseDate(ResolvedField field, string value, DateTimeStyles styles)
     {
-        var trimmed = value.Trim();
-        if (
-            !string.IsNullOrEmpty(dateFormat)
-            && DateTime.TryParseExact(
-                trimmed,
-                dateFormat,
-                CultureInfo.InvariantCulture,
-                styles,
-                out var inOrganizationFormat
-            )
-        )
-            return inOrganizationFormat;
-        if (DateTime.TryParse(trimmed, CultureInfo.InvariantCulture, styles, out var parsed))
+        if (DateTime.TryParse(value.Trim(), CultureInfo.InvariantCulture, styles, out var parsed))
             return parsed;
         throw new InvalidFilterException($"Field '{field.Name}' expects a date.");
     }

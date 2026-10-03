@@ -28,6 +28,10 @@ public class RaythaFunctionRoutePathTests
     [TestCase("api-v2/items_list")]
     [TestCase("Robots.TXT")]
     [TestCase("accounts")]
+    [TestCase("docs.v1/index")]
+    [TestCase("docs/v1.2/install")]
+    [TestCase(".well-known/security.txt")]
+    [TestCase(".WELL-KNOWN/acme-challenge/token")]
     public void Accepts_a_well_formed_path(string path) =>
         RaythaFunctionRoutePath.Problem(path).Should().BeNull();
 
@@ -38,7 +42,8 @@ public class RaythaFunctionRoutePathTests
     [TestCase("a/../b", "'..'")]
     [TestCase("a..b", "'..'")]
     [TestCase(".env", "'..'")]
-    [TestCase("docs.v1/index", "'..'")]
+    [TestCase("docs/.hidden", "'..'")]
+    [TestCase("docs/.well-known/x", "'..'")]
     public void Rejects_a_malformed_path(string path, string reason) =>
         RaythaFunctionRoutePath.Problem(path).Should().Contain(reason);
 

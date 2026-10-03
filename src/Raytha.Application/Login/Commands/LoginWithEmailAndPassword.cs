@@ -55,11 +55,14 @@ public class LoginWithEmailAndPassword
                             return;
                         }
 
-                        if (string.IsNullOrEmpty(request.Password))
+                        if (
+                            string.IsNullOrWhiteSpace(request.EmailAddress)
+                            || string.IsNullOrEmpty(request.Password)
+                        )
                         {
                             context.AddFailure(
                                 Constants.VALIDATION_SUMMARY,
-                                "Password is required."
+                                "Email address and password are required."
                             );
                             return;
                         }

@@ -79,6 +79,12 @@ public static class RaythaFunctionHttp
             return response.GetErrors().First().PropertyName switch
             {
                 "IsActive" => notFound ?? new ObjectResult(response.Error) { StatusCode = 404 },
+                "Functions" => new ContentResult
+                {
+                    Content = "Functions are disabled",
+                    ContentType = "text/plain; charset=utf-8",
+                    StatusCode = StatusCodes.Status403Forbidden,
+                },
                 "Queue of functions" => new ObjectResult(response.Error) { StatusCode = 503 },
                 _ => new ObjectResult(response.Error) { StatusCode = 500 },
             };

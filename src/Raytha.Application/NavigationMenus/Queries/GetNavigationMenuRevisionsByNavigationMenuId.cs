@@ -34,7 +34,8 @@ public class GetNavigationMenuRevisionsByNavigationMenuId
         )
         {
             var query = _db
-                .NavigationMenuRevisions.Include(nmr => nmr.CreatorUser)
+                .NavigationMenuRevisions.AsNoTracking()
+                .Include(nmr => nmr.CreatorUser)
                 .Where(nmr => nmr.NavigationMenuId == request.NavigationMenuId.Guid);
 
             var total = await query.CountAsync(cancellationToken);

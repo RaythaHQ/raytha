@@ -14,6 +14,7 @@ import {
   parseRevision,
   parseSchemaImportResult,
   parseThemeMediaItems,
+  parseWebhookEventGroups,
   parseWebTemplate,
   parseWidgetDefinitions,
   parseWidgetFieldTypeOptions,
@@ -50,9 +51,11 @@ import type {
   PlatformVersion,
   RetainedLogKey,
   RolePermissionCatalog,
+  SentTestEmail,
   SitePageWidgetDefinition,
   ThemeMediaItem,
   UpdateWidgetTemplateInput,
+  WebhookEventGroup,
   WidgetFieldTypeOption,
 } from "./types";
 
@@ -851,7 +854,15 @@ export const adminApi = {
 
   webhooks: {
     ...crud<EntityRef>("/raytha/api/admin/webhooks"),
-    events: () => apiFetch<unknown>("/raytha/api/admin/webhooks/events"),
+    /** Every event the running build can emit, grouped for the picker. */
+    events: (): Promise<WebhookEventGroup[]> =>
+      fetchUnknown("/raytha/api/admin/webhooks/events").then(parseWebhookEventGroups),
+    /** Fires a synthetic `webhook.test` delivery regardless of subscriptions; returns the delivery id. */
+    test: (id: string): Promise<IdResponse> =>
+      fetchUnknown(`/raytha/api/admin/webhooks/${id}/test`, { method: "POST" }).then(parseIdResponse),
+    deliveries: (params?: Record<string, string | number | boolean | undefined>) =>
+      apiFetch<PagedResult<EntityRef>>(listQuery("/raytha/api/admin/webhooks/deliveries", params)),
+    delivery: (id: string) => apiFetch<EntityRef>(`/raytha/api/admin/webhooks/deliveries/${id}`),
   },
   emailLog: {
     list: (params?: Record<string, string | number | boolean | undefined>) =>
@@ -867,6 +878,12 @@ export const adminApi = {
     /** Deletes every row of a log now (finished tasks only for background tasks). */
     clearLog: (key: RetainedLogKey): Promise<ClearedLog> =>
       fetchUnknown(CLEAR_LOG_PATH[key], { method: "DELETE" }).then(parseClearedLog),
+    /** Sends one message through the configured SMTP settings; the attempt lands in the email log. */
+    sendTestEmail: (emailAddress: string) =>
+      apiFetch<SentTestEmail>("/raytha/api/admin/maintenance/test-email", {
+        method: "POST",
+        body: JSON.stringify({ emailAddress }),
+      }),
   },
   version: () => apiFetch<PlatformVersion>("/raytha/api/admin/version"),
 };

@@ -30,7 +30,8 @@ public class GetWebTemplateByDeveloperNames
         )
         {
             var theme = await _db
-                .Themes.Where(t => t.DeveloperName == request.ThemeDeveloperName.ToDeveloperName())
+                .Themes.AsNoTracking()
+                .Where(t => t.DeveloperName == request.ThemeDeveloperName.ToDeveloperName())
                 .Select(t => new { t.Id })
                 .FirstOrDefaultAsync(cancellationToken);
 
@@ -38,7 +39,8 @@ public class GetWebTemplateByDeveloperNames
                 throw new NotFoundException("Theme", request.ThemeDeveloperName);
 
             var webTemplate = await _db
-                .WebTemplates.Include(wt => wt.TemplateAccessToModelDefinitions)
+                .WebTemplates.AsNoTracking()
+                .Include(wt => wt.TemplateAccessToModelDefinitions)
                 .ThenInclude(p => p.ContentType)
                 .IncludeParentTemplates(wt => wt.ParentTemplate)
                 .FirstOrDefaultAsync(

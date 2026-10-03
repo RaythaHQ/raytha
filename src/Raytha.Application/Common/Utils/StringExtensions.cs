@@ -156,8 +156,8 @@ public static class StringExtensions
     /// Validates that a route path is secure and well-formed.
     /// Rules:
     /// - No ".." segments (directory traversal)
-    /// - No segment starting with "." except in the last segment's filename
-    /// - Dots are only allowed in the last path segment
+    /// - No segment starting with "." (hidden paths), except a leading ".well-known" segment
+    /// - Dots are allowed anywhere else (docs/v1.2/install, robots.txt)
     /// </summary>
     public static bool IsValidRoutePath(this string path)
     {
@@ -169,23 +169,21 @@ public static class StringExtensions
         for (int i = 0; i < segments.Length; i++)
         {
             var segment = segments[i];
-            bool isLastSegment = i == segments.Length - 1;
 
-            // No empty segments after trimming
             if (string.IsNullOrWhiteSpace(segment))
                 return false;
 
-            // No ".." segments (directory traversal)
             if (segment == "..")
                 return false;
 
-            // No segment starting with "." (hidden files/folders) except in last segment's filename
             if (segment.StartsWith('.'))
-                return false;
-
-            // Dots only allowed in the last segment (for file extensions like .txt, .xml)
-            if (!isLastSegment && segment.Contains('.'))
-                return false;
+            {
+                var isWellKnownRoot =
+                    i == 0
+                    && string.Equals(segment, RoutePaths.WellKnownRoot, StringComparison.OrdinalIgnoreCase);
+                if (!isWellKnownRoot)
+                    return false;
+            }
         }
 
         return true;

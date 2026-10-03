@@ -31,7 +31,7 @@ public class GetContentTypesAsListItems
             CancellationToken cancellationToken
         )
         {
-            var query = _db.ContentTypes.AsQueryable();
+            var query = _db.ContentTypes.AsNoTracking();
 
             if (!string.IsNullOrEmpty(request.Search))
             {
@@ -44,11 +44,11 @@ public class GetContentTypesAsListItems
                 );
             }
 
-            var total = await query.CountAsync();
-            var items = query
+            var total = await query.CountAsync(cancellationToken);
+            var items = await query
                 .ApplyPaginationInput(request)
                 .Select(ContentTypeListItemDto.GetProjection())
-                .ToArray();
+                .ToArrayAsync(cancellationToken);
 
             return new QueryResponseDto<ListResultDto<ContentTypeListItemDto>>(
                 new ListResultDto<ContentTypeListItemDto>(items, total)

@@ -32,10 +32,11 @@ public class GetThemesAsListItems
         )
         {
             var activeThemeId = await _db
-                .OrganizationSettings.Select(os => os.ActiveThemeId)
+                .OrganizationSettings.AsNoTracking()
+                .Select(os => os.ActiveThemeId)
                 .FirstAsync(cancellationToken);
 
-            var query = _db.Themes.AsQueryable();
+            var query = _db.Themes.AsNoTracking();
 
             if (!string.IsNullOrEmpty(request.Search))
             {

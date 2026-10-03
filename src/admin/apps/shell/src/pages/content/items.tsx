@@ -250,8 +250,6 @@ export function ContentViewItemsPage() {
     dateFormat: currentSession()?.organization.dateFormat ?? DEFAULT_DATE_FORMAT,
   };
   const columns = viewTableColumns(view, cellContext);
-  const primaryFieldVisible = view.columns.length === 0 || view.columns.includes("PrimaryField");
-
   return (
     <CrudListPage
       key={view.id}
@@ -268,18 +266,15 @@ export function ContentViewItemsPage() {
       createParams={{ developerName }}
       createLabel={`New ${contentType.labelSingular || "item"}`}
       columns={columns}
-      rowActions={
-        primaryFieldVisible
-          ? undefined
-          : (entity) => [
-              {
-                id: "edit",
-                label: "Edit",
-                to: "/content/$developerName/items/$id",
-                params: { developerName, id: entity.id },
-              },
-            ]
-      }
+      density="compact"
+      rowActions={(entity) => [
+        {
+          id: "edit",
+          label: canEdit ? "Edit" : "Open",
+          to: "/content/$developerName/items/$id",
+          params: { developerName, id: entity.id },
+        },
+      ]}
       meta={
         <ViewSummary
           developerName={developerName}

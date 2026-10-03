@@ -16,12 +16,7 @@ public class PostgresFilterCompilerTests
 
     private static (string Sql, List<object?> Parameters) Compile(string filter)
     {
-        var resolver = new ContentTypeFieldResolver(
-            BuildContentType(),
-            "title",
-            new List<ContentTypeField>(),
-            "MM/dd/yyyy"
-        );
+        var resolver = new ContentTypeFieldResolver(BuildContentType(), "title", new List<ContentTypeField>());
         var compiler = new PostgresFilterCompiler(resolver);
         var node = ODataFilterParser.Parse(filter);
         var parameters = new List<object?>();
@@ -107,7 +102,7 @@ public class PostgresFilterCompilerTests
     [Test]
     [TestCase("2024-01-15")]
     [TestCase("01/15/2024")]
-    public void A_date_comparison_binds_a_date_in_iso_or_organization_format(string value)
+    public void A_date_comparison_binds_a_date_in_iso_or_invariant_format(string value)
     {
         var (sql, parameters) = Compile($"published_on gt '{value}'");
 
@@ -117,12 +112,21 @@ public class PostgresFilterCompilerTests
     }
 
     [Test]
-    public void Stored_dates_are_read_in_iso_or_organization_format()
+    public void Stored_dates_are_read_as_iso_and_anything_else_is_null()
     {
         var (sql, _) = Compile("published_on gt '2024-01-15'");
 
         sql.Should().Contain("'YYYY-MM-DD'");
-        sql.Should().Contain("'MM/DD/YYYY'");
+        sql.Should().Contain("ELSE NULL END");
+        sql.Should().NotContain("MM/DD/YYYY");
+    }
+
+    [Test]
+    public void A_date_comparison_rejects_text_that_is_not_a_date()
+    {
+        var act = () => Compile("published_on gt 'yesterday'");
+
+        act.Should().Throw<InvalidFilterException>().WithMessage("*expects a date*");
     }
 
     [Test]
@@ -282,8 +286,7 @@ public class PostgresFilterCompilerTests
         var resolver = new ContentTypeFieldResolver(
             contentType,
             "title",
-            new List<ContentTypeField> { relationship },
-            "MM/dd/yyyy"
+            new List<ContentTypeField> { relationship }
         );
         var compiler = new PostgresFilterCompiler(resolver);
         var node = ODataFilterParser.Parse(filter);

@@ -28,7 +28,7 @@ public class GetThemeByDeveloperName
             CancellationToken cancellationToken
         )
         {
-            var entity = await _db.Themes.FirstOrDefaultAsync(
+            var entity = await _db.Themes.AsNoTracking().FirstOrDefaultAsync(
                 t => t.DeveloperName == request.DeveloperName.ToDeveloperName(),
                 cancellationToken
             );

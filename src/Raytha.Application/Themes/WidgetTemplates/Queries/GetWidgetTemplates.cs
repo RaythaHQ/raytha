@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Models;
 using Raytha.Application.Common.Utils;
+using Raytha.Domain.Entities;
 using Raytha.Domain.ValueObjects;
 
 namespace Raytha.Application.Themes.WidgetTemplates.Queries;
@@ -32,9 +33,9 @@ public class GetWidgetTemplates
             CancellationToken cancellationToken
         )
         {
-            var query = _db
-                .WidgetTemplates.Include(wt => wt.LastModifierUser)
-                .AsQueryable();
+            IQueryable<WidgetTemplate> query = _db
+                .WidgetTemplates.AsNoTracking()
+                .Include(wt => wt.LastModifierUser);
 
             if (request.ThemeId.HasValue)
             {

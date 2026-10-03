@@ -250,12 +250,7 @@ internal class RaythaDbPostgresJsonQueryEngine
     }
 
     private ContentTypeFieldResolver CreateFieldResolver() =>
-        new(
-            ContentType,
-            PrimaryFieldDeveloperName,
-            OneToOneRelationshipFields,
-            _currentOrganization.DateFormat
-        );
+        new(ContentType, PrimaryFieldDeveloperName, OneToOneRelationshipFields);
 
     protected override SqlQueryBuilder PrepareContentItemsDataSelect(SqlQueryBuilder sqlBuilder)
     {
@@ -567,7 +562,6 @@ internal class RaythaDbPostgresJsonQueryEngine
                                 RawSqlColumn.SOURCE_ITEM_COLUMN_NAME,
                                 RawSqlColumn.PublishedContent.Name,
                                 columnAsContentTypeField.DeveloperName,
-                                _currentOrganization.DateFormat,
                                 direction.DeveloperName
                             )
                         );
@@ -616,6 +610,13 @@ internal class RaythaDbPostgresJsonQueryEngine
                         {
                             sqlBuilder.OrderBy(
                                 $"{RawSqlColumn.SOURCE_MODIFIED_BY_COLUMN_NAME}.\"{RawSqlColumn.FirstName.Name}\" {direction.DeveloperName}"
+                            );
+                        }
+                        else if (reservedField.DeveloperName == BuiltInContentTypeField.Template)
+                        {
+                            var themeId = _currentOrganization.ActiveThemeId.Guid;
+                            sqlBuilder.OrderBy(
+                                $"(SELECT wt.\"Label\" FROM \"WebTemplateContentItemRelations\" rel INNER JOIN \"WebTemplates\" wt ON wt.\"Id\" = rel.\"WebTemplateId\" WHERE rel.\"ContentItemId\" = {RawSqlColumn.SOURCE_ITEM_COLUMN_NAME}.\"Id\" AND wt.\"ThemeId\" = '{themeId}' LIMIT 1) {direction.DeveloperName}"
                             );
                         }
                         else

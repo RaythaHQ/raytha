@@ -33,7 +33,7 @@ public class GetMediaItems
             CancellationToken cancellationToken
         )
         {
-            var query = _db.MediaItems.AsQueryable();
+            var query = _db.MediaItems.AsNoTracking();
 
             if (!string.IsNullOrEmpty(request.Search))
             {
@@ -48,10 +48,10 @@ public class GetMediaItems
             }
 
             var total = await query.CountAsync(cancellationToken);
-            var items = query
+            var items = await query
                 .ApplyPaginationInput(request)
                 .Select(MediaItemDto.GetProjection())
-                .ToArray();
+                .ToArrayAsync(cancellationToken);
 
             return new QueryResponseDto<ListResultDto<MediaItemDto>>(
                 new ListResultDto<MediaItemDto>(items, total)

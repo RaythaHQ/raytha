@@ -53,10 +53,14 @@ public class GetContentItems
             int count = 0;
             if (request.ViewId.HasValue && request.ViewId.Value != ShortGuid.Empty)
             {
-                View view = _entityFrameworkDb
-                    .Views.Include(p => p.ContentType)
+                View view = await _entityFrameworkDb
+                    .Views.AsNoTracking()
+                    .Include(p => p.ContentType)
                     .ThenInclude(p => p.ContentTypeFields)
-                    .FirstOrDefault(p => p.Id == request.ViewId.Value.Guid);
+                    .FirstOrDefaultAsync(
+                        p => p.Id == request.ViewId.Value.Guid,
+                        cancellationToken
+                    );
 
                 if (view == null)
                     throw new NotFoundException("View", request.ViewId);
@@ -87,9 +91,12 @@ public class GetContentItems
             }
             else
             {
-                ContentType contentType = _entityFrameworkDb.ContentTypes.FirstOrDefault(p =>
-                    p.DeveloperName == request.ContentType.ToDeveloperName()
-                );
+                ContentType contentType = await _entityFrameworkDb
+                    .ContentTypes.AsNoTracking()
+                    .FirstOrDefaultAsync(
+                        p => p.DeveloperName == request.ContentType.ToDeveloperName(),
+                        cancellationToken
+                    );
 
                 if (contentType == null)
                     throw new NotFoundException(
@@ -131,10 +138,16 @@ public class GetContentItems
         )
         {
             var itemsList = items.ToList();
+            var activeThemeId = await _entityFrameworkDb
+                .OrganizationSettings.AsNoTracking()
+                .Select(os => os.ActiveThemeId)
+                .FirstAsync(cancellationToken);
             var itemIds = itemsList.Select(p => p.Id.Guid).ToArray();
             var relationPairs = await _entityFrameworkDb
-                .WebTemplateContentItemRelations.Where(relation =>
+                .WebTemplateContentItemRelations.AsNoTracking()
+                .Where(relation =>
                     itemIds.Contains(relation.ContentItemId)
+                    && relation.WebTemplate!.ThemeId == activeThemeId
                 )
                 .Select(relation => new { relation.ContentItemId, relation.WebTemplateId })
                 .ToListAsync(cancellationToken);

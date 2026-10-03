@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Models;
 using Raytha.Application.Common.Utils;
+using Raytha.Domain.Entities;
 using Raytha.Domain.ValueObjects;
 
 namespace Raytha.Application.Views.Queries;
@@ -33,12 +34,12 @@ public class GetViews
             CancellationToken cancellationToken
         )
         {
-            var query = _db
-                .Views.Include(p => p.Route)
+            IQueryable<View> query = _db
+                .Views.AsNoTracking()
+                .Include(p => p.Route)
                 .Include(p => p.ContentType)
                 .ThenInclude(p => p.ContentTypeFields)
-                .Include(p => p.LastModifierUser)
-                .AsQueryable();
+                .Include(p => p.LastModifierUser);
 
             if (request.ContentTypeId.HasValue)
             {
@@ -65,11 +66,11 @@ public class GetViews
                 );
             }
 
-            var total = await query.CountAsync();
-            var items = query
+            var total = await query.CountAsync(cancellationToken);
+            var items = await query
                 .ApplyPaginationInput(request)
                 .Select(v => ViewDto.GetProjection(v))
-                .ToArray();
+                .ToArrayAsync(cancellationToken);
 
             return new QueryResponseDto<ListResultDto<ViewDto>>(
                 new ListResultDto<ViewDto>(items, total)

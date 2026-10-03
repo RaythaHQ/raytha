@@ -88,6 +88,11 @@ public class ExecuteRaythaFunction
             CancellationToken cancellationToken
         )
         {
+            if (!_raythaFunctionConfiguration.IsEnabled)
+            {
+                return new CommandResponseDto<object>("Functions", "Functions are disabled");
+            }
+
             var developerName = request.DeveloperName.ToDeveloperName(allowDot: true);
             var code = await _db
                 .RaythaFunctions.Where(rf =>

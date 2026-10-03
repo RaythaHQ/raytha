@@ -24,6 +24,10 @@ public class GetContentItemByIdTests
         _contentTypeInRoutePathMock = new Mock<IContentTypeInRoutePath>();
         var relations = new List<WebTemplateContentItemRelation>().AsQueryable().BuildMockDbSet();
         _contextMock.Setup(x => x.WebTemplateContentItemRelations).Returns(relations.Object);
+        var settings = new List<Raytha.Domain.Entities.OrganizationSettings> { new() { ActiveThemeId = Guid.NewGuid() } }
+            .AsQueryable()
+            .BuildMockDbSet();
+        _contextMock.Setup(x => x.OrganizationSettings).Returns(settings.Object);
     }
 
     [Test]

@@ -30,7 +30,8 @@ public class GetMediaItemsByThemeId
         )
         {
             var mediaItems = await _db
-                .ThemeAccessToMediaItems.Where(tmi => tmi.ThemeId == request.ThemeId.Guid)
+                .ThemeAccessToMediaItems.AsNoTracking()
+                .Where(tmi => tmi.ThemeId == request.ThemeId.Guid)
                 .Select(tmi => tmi.MediaItem)
                 .ToArrayAsync(cancellationToken);
 

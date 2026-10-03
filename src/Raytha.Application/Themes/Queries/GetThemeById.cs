@@ -24,7 +24,7 @@ public class GetThemeById
             CancellationToken cancellationToken
         )
         {
-            var entity = await _db.Themes.FirstOrDefaultAsync(
+            var entity = await _db.Themes.AsNoTracking().FirstOrDefaultAsync(
                 t => t.Id == request.Id.Guid,
                 cancellationToken
             );

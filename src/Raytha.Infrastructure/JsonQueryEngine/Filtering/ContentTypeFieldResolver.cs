@@ -53,7 +53,6 @@ internal sealed class ContentTypeFieldResolver
     private readonly ContentType _contentType;
     private readonly string _primaryFieldDeveloperName;
     private readonly List<ContentTypeField> _relatedObjectFields;
-    private readonly string _dateFormat;
 
     private const string Source = RawSqlColumn.SOURCE_ITEM_COLUMN_NAME;
 
@@ -62,18 +61,13 @@ internal sealed class ContentTypeFieldResolver
     public ContentTypeFieldResolver(
         ContentType contentType,
         string primaryFieldDeveloperName,
-        IEnumerable<ContentTypeField> relatedObjectFields,
-        string dateFormat
+        IEnumerable<ContentTypeField> relatedObjectFields
     )
     {
         _contentType = contentType;
         _primaryFieldDeveloperName = primaryFieldDeveloperName;
         _relatedObjectFields = relatedObjectFields.ToList();
-        _dateFormat = dateFormat;
     }
-
-    /// <summary>The organization's .NET date format, which stored and filtered dates may use.</summary>
-    public string DateFormat => _dateFormat;
 
     public ResolvedField Resolve(string name)
     {
@@ -132,7 +126,7 @@ internal sealed class ContentTypeFieldResolver
                 realName,
                 FilterFieldKind.Date,
                 FilterValueType.Date,
-                PostgresFieldSql.DateScalar(Source, JsonColumnName, realName, _dateFormat),
+                PostgresFieldSql.DateScalar(Source, JsonColumnName, realName),
                 storedText
             );
         if (typeName == BaseFieldType.MultipleSelect)

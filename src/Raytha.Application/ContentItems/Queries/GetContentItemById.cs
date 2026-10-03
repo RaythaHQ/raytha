@@ -41,8 +41,16 @@ public class GetContentItemById
                 entity.ContentType.DeveloperName
             );
 
+            var activeThemeId = await _context
+                .OrganizationSettings.AsNoTracking()
+                .Select(os => os.ActiveThemeId)
+                .FirstAsync(cancellationToken);
             var templateId = await _context
-                .WebTemplateContentItemRelations.Where(relation => relation.ContentItemId == request.Id.Guid)
+                .WebTemplateContentItemRelations.AsNoTracking()
+                .Where(relation =>
+                    relation.ContentItemId == request.Id.Guid
+                    && relation.WebTemplate!.ThemeId == activeThemeId
+                )
                 .Select(relation => relation.WebTemplateId)
                 .FirstOrDefaultAsync(cancellationToken);
 

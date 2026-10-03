@@ -22,6 +22,8 @@ import type {
   ThemeMediaItem,
   JsonValue,
   SitePageWidgetDefinition,
+  WebhookEventDescriptor,
+  WebhookEventGroup,
   WebTemplateDetail,
   WidgetField,
   WidgetFieldChoice,
@@ -556,6 +558,34 @@ export function parseMaintenanceSnapshot(value: unknown): MaintenanceSnapshot {
       error: numberField(tasks, "error", 0),
     },
   };
+}
+
+export function parseWebhookEventGroups(value: unknown): WebhookEventGroup[] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+  const groups: WebhookEventGroup[] = [];
+  for (const entry of value) {
+    if (!isRecord(entry) || !Array.isArray(entry.events)) {
+      continue;
+    }
+    const group = stringField(entry, "group");
+    const events: WebhookEventDescriptor[] = [];
+    for (const item of entry.events) {
+      if (!isRecord(item)) {
+        continue;
+      }
+      const eventName = stringField(item, "eventName");
+      if (eventName.length === 0) {
+        continue;
+      }
+      events.push({ eventName, displayName: stringField(item, "displayName") || eventName, group });
+    }
+    if (events.length > 0) {
+      groups.push({ group, events });
+    }
+  }
+  return groups;
 }
 
 export function parseClearedLog(value: unknown): ClearedLog {

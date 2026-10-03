@@ -4,6 +4,7 @@ import {
   Button,
   buttonVariants,
   Checkbox,
+  cn,
   EmptyState,
   FormField,
   Input,
@@ -92,6 +93,7 @@ export function CrudListPage({
   meta,
   tabs,
   belowHeader,
+  density = "default",
 }: {
   title: string;
   titleAccessory?: ReactNode;
@@ -111,6 +113,8 @@ export function CrudListPage({
   meta?: ReactNode;
   tabs?: ReactNode;
   belowHeader?: ReactNode;
+  /** Compact tightens row height so more rows fit; the action column stays pinned on the right. */
+  density?: "default" | "compact";
 }) {
   useDocumentTitle([title]);
   const navigate = useNavigate();
@@ -145,6 +149,11 @@ export function CrudListPage({
 
   const canCreate = Boolean(createTo) && (createPermission ? hasPermission(createPermission) : true);
   const showActions = Boolean(rowActions);
+  const compact = density === "compact";
+  // Pinned so a wide view never scrolls the actions out of sight. The background follows the row hover.
+  const actionCell = "sticky right-0 z-[1] w-12 bg-card shadow-[-6px_0_6px_-6px_rgba(0,0,0,0.15)] group-hover:bg-[#f8f8fa]";
+  const headCell = compact ? "h-8" : undefined;
+  const bodyCell = compact ? "py-1.5" : undefined;
 
   return (
     <div className="space-y-6">
@@ -204,23 +213,31 @@ export function CrudListPage({
             ) : (
               <Table flush aria-label={title}>
                 <TableHeader>
-                  <TableRow>
+                  <TableRow className="group">
                     {columns.map((column) => (
-                      <TableHead key={column.header}>{column.header}</TableHead>
+                      <TableHead key={column.header} className={headCell}>
+                        {column.header}
+                      </TableHead>
                     ))}
-                    {showActions ? <TableHead className="w-12"><span className="sr-only">Actions</span></TableHead> : null}
+                    {showActions ? (
+                      <TableHead className={cn(headCell, actionCell, "bg-[#fafafb] group-hover:bg-[#fafafb]")}>
+                        <span className="sr-only">Actions</span>
+                      </TableHead>
+                    ) : null}
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {data.items.map((item) => {
                     const actions = rowActions?.(item) ?? [];
                     return (
-                      <TableRow key={item.id}>
+                      <TableRow key={item.id} className="group">
                         {columns.map((column) => (
-                          <TableCell key={column.header}>{column.cell(item)}</TableCell>
+                          <TableCell key={column.header} className={bodyCell}>
+                            {column.cell(item)}
+                          </TableCell>
                         ))}
                         {showActions ? (
-                          <TableCell>
+                          <TableCell className={cn(bodyCell, actionCell)}>
                             <RowActions actions={actions} />
                           </TableCell>
                         ) : null}

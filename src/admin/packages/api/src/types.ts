@@ -403,6 +403,22 @@ export interface ClearedLog {
   deleted: number | null;
 }
 
+export interface WebhookEventDescriptor {
+  eventName: string;
+  displayName: string;
+  group: string;
+}
+
+export interface WebhookEventGroup {
+  group: string;
+  events: WebhookEventDescriptor[];
+}
+
+export interface SentTestEmail {
+  emailAddress: string;
+  sentAt: string;
+}
+
 export interface TaskMediaItem {
   id: string;
   fileName: string;

@@ -34,7 +34,8 @@ public class GetWebTemplateRevisionsByTemplateId
         )
         {
             var query = _db
-                .WebTemplateRevisions.Include(p => p.WebTemplate)
+                .WebTemplateRevisions.AsNoTracking()
+                .Include(p => p.WebTemplate)
                 .Include(p => p.CreatorUser)
                 .Where(p => p.WebTemplateId == request.Id.Guid);
 

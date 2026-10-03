@@ -31,7 +31,7 @@ public class GetWebhooks
             CancellationToken cancellationToken
         )
         {
-            var query = _db.Webhooks.AsQueryable();
+            var query = _db.Webhooks.AsNoTracking();
 
             if (request.IsActive.HasValue)
                 query = query.Where(p => p.IsActive == request.IsActive.Value);

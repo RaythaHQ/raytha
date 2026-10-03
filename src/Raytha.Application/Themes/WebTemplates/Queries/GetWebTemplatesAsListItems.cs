@@ -42,7 +42,8 @@ public class GetWebTemplatesAsListItems
             if (!string.IsNullOrEmpty(request.ThemeDeveloperName))
             {
                 var theme = await _db
-                    .Themes.Where(t =>
+                    .Themes.AsNoTracking()
+                    .Where(t =>
                         t.DeveloperName == request.ThemeDeveloperName.ToDeveloperName()
                     )
                     .Select(t => new { t.Id })
@@ -56,11 +57,12 @@ public class GetWebTemplatesAsListItems
             else
             {
                 themeId = await _db
-                    .OrganizationSettings.Select(os => os.ActiveThemeId)
+                    .OrganizationSettings.AsNoTracking()
+                    .Select(os => os.ActiveThemeId)
                     .FirstAsync(cancellationToken);
             }
 
-            var query = _db.WebTemplates.Where(wt => wt.ThemeId == themeId);
+            var query = _db.WebTemplates.AsNoTracking().Where(wt => wt.ThemeId == themeId);
 
             if (!string.IsNullOrEmpty(request.Search))
             {

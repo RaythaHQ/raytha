@@ -1,4 +1,3 @@
-using System.Text.RegularExpressions;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Utils;
 using Raytha.Domain.Entities;
@@ -12,30 +11,13 @@ namespace Raytha.Application.RaythaFunctions;
 /// </summary>
 public static class RaythaFunctionRoutePath
 {
-    public const int MaxLength = 200;
+    public const int MaxLength = RoutePaths.MaxLength;
 
-    private static readonly Regex AllowedCharacters = new(@"^[A-Za-z0-9_./\-]+$", RegexOptions.Compiled);
-
-    public static string Normalize(string? path) => (path ?? string.Empty).Trim().Trim('/');
+    public static string Normalize(string? path) => RoutePaths.Normalize(path);
 
     /// <summary>Why a normalized, non-empty path cannot be used, or null when it can.</summary>
-    public static string? Problem(string path)
-    {
-        if (path.Length > MaxLength)
-            return $"Public path must be {MaxLength} characters or fewer.";
-        if (!AllowedCharacters.IsMatch(path))
-            return "Public path may contain only letters, numbers, and - _ . /";
-        if (path.Contains("//"))
-            return "Public path cannot contain an empty segment (//).";
-        if (path.Contains("..") || !path.IsValidRoutePath())
-            return "Public path cannot contain '..' or a segment starting with '.', and only the last segment may contain a dot (for example llms.txt).";
-
-        var root = RoutePaths.ReservedRoot(path);
-        if (root != null)
-            return $"Public path cannot start with \"{root}\"; Raytha reserves that path.";
-
-        return null;
-    }
+    public static string? Problem(string path) =>
+        RoutePaths.Problem(path)?.Replace("Route path", "Public path");
 
     /// <summary>Why the path cannot be saved for this function, or null when it can.</summary>
     public static string? Problem(IRaythaDbContext db, string path, string triggerType, Guid? ownRouteId)
