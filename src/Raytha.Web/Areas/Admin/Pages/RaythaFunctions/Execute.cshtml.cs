@@ -1,12 +1,14 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Raytha.Web.Areas.Admin.Pages.Shared.Models;
+using Raytha.Web.Filters;
 using Raytha.Web.Services;
 
 namespace Raytha.Web.Areas.Admin.Pages.RaythaFunctions;
 
 [AllowAnonymous]
 [IgnoreAntiforgeryToken]
+[ServiceFilter(typeof(ForbidAccessIfRaythaFunctionsAreDisabledFilterAttribute))]
 public class Execute : BaseAdminPageModel
 {
     public async Task<IActionResult> OnGet(string developerName)
