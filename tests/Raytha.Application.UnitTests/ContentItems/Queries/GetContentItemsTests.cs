@@ -54,6 +54,13 @@ public class GetContentItemsTests
         _db.Setup(x => x.Views).Returns(new[] { _view }.AsQueryable().BuildMockDbSet().Object);
         _db.Setup(x => x.WebTemplateContentItemRelations)
             .Returns(new List<WebTemplateContentItemRelation>().AsQueryable().BuildMockDbSet().Object);
+        _db.Setup(x => x.OrganizationSettings)
+            .Returns(
+                new List<Raytha.Domain.Entities.OrganizationSettings> { new() { ActiveThemeId = Guid.NewGuid() } }
+                    .AsQueryable()
+                    .BuildMockDbSet()
+                    .Object
+            );
     }
 
     [Test]
