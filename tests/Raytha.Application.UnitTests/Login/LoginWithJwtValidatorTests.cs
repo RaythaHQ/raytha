@@ -60,6 +60,39 @@ public class LoginWithJwtValidatorTests
     }
 
     [Test]
+    public void Unknown_email_is_refused_when_the_scheme_is_admin_only()
+    {
+        _scheme.IsEnabledForUsers = false;
+        _scheme.IsEnabledForAdmins = true;
+
+        var result = Validate(Token(sub: "new-idp-subject"));
+
+        result.IsValid.Should().BeFalse();
+        result.Errors.Should().ContainSingle(e => e.ErrorMessage == "Authentication scheme disabled for public users.");
+    }
+
+    [Test]
+    public async Task Unknown_email_on_an_admin_only_scheme_creates_no_account()
+    {
+        _scheme.IsEnabledForUsers = false;
+        _scheme.IsEnabledForAdmins = true;
+        var db = new Mock<IRaythaDbContext>();
+        db.Setup(x => x.AuthenticationSchemes)
+            .Returns(new List<AuthenticationScheme> { _scheme }.AsQueryable().BuildMockDbSet().Object);
+        db.Setup(x => x.Users).Returns(_users.AsQueryable().BuildMockDbSet().Object);
+        db.Setup(x => x.JwtLogins).Returns(new List<JwtLogin>().AsQueryable().BuildMockDbSet().Object);
+
+        var response = await new LoginWithJwt.Handler(db.Object).Handle(
+            new LoginWithJwt.Command { Token = Token(sub: "new-idp-subject"), DeveloperName = _scheme.DeveloperName! },
+            CancellationToken.None
+        );
+
+        response.Success.Should().BeFalse();
+        response.GetErrors().Should().ContainSingle(e => e.ErrorMessage == "Authentication scheme disabled for public users.");
+        db.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Test]
     public void Active_user_with_unlinked_sub_is_accepted()
     {
         _users.Add(new User { Id = Guid.NewGuid(), EmailAddress = Email, IsActive = true });

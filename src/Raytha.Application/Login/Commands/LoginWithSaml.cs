@@ -107,7 +107,18 @@ public class LoginWithSaml
                             );
                         }
 
-                        if (entity != null)
+                        if (entity == null)
+                        {
+                            if (!authScheme.IsEnabledForUsers)
+                            {
+                                context.AddFailure(
+                                    Constants.VALIDATION_SUMMARY,
+                                    "Authentication scheme disabled for public users."
+                                );
+                                return;
+                            }
+                        }
+                        else
                         {
                             if (entity.IsAdmin && !authScheme.IsEnabledForAdmins)
                             {
@@ -193,9 +204,18 @@ public class LoginWithSaml
                     .ToList();
             }
 
+            // A new account is a public user. An admin-only scheme must not provision one.
             bool firstTime = false;
             if (entity == null)
             {
+                if (!authScheme.IsEnabledForUsers)
+                {
+                    return new CommandResponseDto<LoginDto>(
+                        Constants.VALIDATION_SUMMARY,
+                        "Authentication scheme disabled for public users."
+                    );
+                }
+
                 firstTime = true;
                 var id = Guid.NewGuid();
                 ShortGuid shortGuid = id;

@@ -159,7 +159,18 @@ public class LoginWithJwt
                             );
                         }
 
-                        if (entity != null)
+                        if (entity == null)
+                        {
+                            if (!authScheme.IsEnabledForUsers)
+                            {
+                                context.AddFailure(
+                                    Constants.VALIDATION_SUMMARY,
+                                    "Authentication scheme disabled for public users."
+                                );
+                                return;
+                            }
+                        }
+                        else
                         {
                             if (entity.IsAdmin && !authScheme.IsEnabledForAdmins)
                             {
@@ -276,10 +287,18 @@ public class LoginWithJwt
                     .ToList();
             }
 
-            //no user found at all, create a new user on the fly
+            // A new account is a public user. An admin-only scheme must not provision one.
             bool firstTime = false;
             if (entity == null)
             {
+                if (!authScheme.IsEnabledForUsers)
+                {
+                    return new CommandResponseDto<LoginDto>(
+                        Constants.VALIDATION_SUMMARY,
+                        "Authentication scheme disabled for public users."
+                    );
+                }
+
                 firstTime = true;
                 var id = Guid.NewGuid();
                 ShortGuid shortGuid = id;
