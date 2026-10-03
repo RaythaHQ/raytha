@@ -54,7 +54,8 @@ const HTTP_STARTER = `/**
  * Set a public path (for example llms.txt) to answer at that URL as well.
  *
  * query:   array of { Key, Value } pairs, where Value is an array of strings
- * payload: the parsed JSON body, or { Key, Value } pairs for a form post
+ * payload: parsed JSON, a string when the body is not JSON, null when it is empty,
+ *          or { Key, Value } pairs for a form post
  * Return a JsonResult, TextResult, ContentResult, HtmlResult, XmlResult,
  * RedirectResult, or StatusCodeResult.
  */
@@ -120,7 +121,7 @@ export const FUNCTION_TRIGGERS: readonly FunctionTrigger[] = [
       },
       {
         signature: "post(payload, query)",
-        when: "POST request. payload is the parsed JSON body, or [{ Key, Value }] pairs for a form.",
+        when: "POST request. payload is parsed JSON, a string when the body is not JSON, null when it is empty, or [{ Key, Value }] pairs for a form.",
         returns: "Same result helpers as get. Anything else is a 500.",
       },
     ],

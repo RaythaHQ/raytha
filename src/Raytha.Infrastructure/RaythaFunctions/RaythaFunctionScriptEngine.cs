@@ -1,4 +1,5 @@
 ﻿using System.Text.Json;
+using System.Text.RegularExpressions;
 using Microsoft.ClearScript;
 using Microsoft.ClearScript.JavaScript;
 using Microsoft.ClearScript.V8;
@@ -39,16 +40,39 @@ public class RaythaFunctionScriptEngine : IRaythaFunctionScriptEngine
         _httpClient = httpClient;
     }
 
+    // Parses request data that arrived as text. Empty is null; JSON becomes a value; anything else
+    // stays a string. The text is a host property, never a piece of the script, so a body cannot
+    // become code that runs with API_V1.
+    private const string BindRequestData = """
+        function __raythaParse(raw) {
+            if (raw === null || raw === undefined) return null;
+            var text = String(raw);
+            if (text.trim() === '') return null;
+            try { return JSON.parse(text); } catch (e) { return text; }
+        }
+        var __raytha_payload = __raythaParse(__raytha_payload_json);
+        var __raytha_query = __raythaParse(__raytha_query_json);
+        var __raytha_args = __raythaParse(__raytha_args_json);
+        """;
+
+    private static readonly Regex MethodName = new(
+        @"^[A-Za-z_$][A-Za-z0-9_$]*$",
+        RegexOptions.Compiled | RegexOptions.CultureInvariant
+    );
+
     public async Task<object> Evaluate(
         string code,
         string method,
+        string? payloadJson,
+        string? queryJson,
+        string? argsJson,
         TimeSpan executeTimeout,
         CancellationToken cancellationToken
     )
     {
         V8ScriptEngine engine = _enginePool.Rent();
         engine.AddHostObject("API_V1", _raythaFunctionApiV1);
-        engine.AddHostObject("CurrentOrganization", _currentOrganization);
+        engine.AddHostObject("CurrentOrganization", FunctionCurrentOrganization.From(_currentOrganization));
         engine.AddHostObject("CurrentUser", _currentUser);
         engine.AddHostObject("Emailer", _emailer);
         engine.AddHostObject("HttpClient", _httpClient);
@@ -56,7 +80,9 @@ public class RaythaFunctionScriptEngine : IRaythaFunctionScriptEngine
         var abort = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
         abort.CancelAfter(executeTimeout);
         var interruptOnAbort = abort.Token.Register(engine.Interrupt);
-        var execution = Task.Run(() => Run(engine, code, method, abort.Token));
+        var execution = Task.Run(
+            () => Run(engine, code, method, payloadJson, queryJson, argsJson, abort.Token)
+        );
         try
         {
             return await execution.WaitAsync(abort.Token);
@@ -85,6 +111,9 @@ public class RaythaFunctionScriptEngine : IRaythaFunctionScriptEngine
         V8ScriptEngine engine,
         string code,
         string method,
+        string? payloadJson,
+        string? queryJson,
+        string? argsJson,
         CancellationToken abort
     )
     {
@@ -92,6 +121,10 @@ public class RaythaFunctionScriptEngine : IRaythaFunctionScriptEngine
         // Interrupt only stops a script that is already running, so an abort that fired before
         // this task was scheduled has to be honored here.
         abort.ThrowIfCancellationRequested();
+        engine.Script.__raytha_payload_json = payloadJson ?? "";
+        engine.Script.__raytha_query_json = queryJson ?? "";
+        engine.Script.__raytha_args_json = argsJson ?? "";
+        engine.Execute(BindRequestData);
         engine.Execute(code);
         var result = engine.Evaluate(method);
 
@@ -237,8 +270,15 @@ public class RaythaFunctionScriptEngine : IRaythaFunctionScriptEngine
         CancellationToken cancellationToken
     )
     {
-        var result = await Evaluate(code, $"get({query})", executeTimeout, cancellationToken);
-        return result;
+        return await Evaluate(
+            code,
+            "get(__raytha_query)",
+            payloadJson: null,
+            query,
+            argsJson: null,
+            executeTimeout,
+            cancellationToken
+        );
     }
 
     public async Task<object> EvaluatePost(
@@ -249,7 +289,15 @@ public class RaythaFunctionScriptEngine : IRaythaFunctionScriptEngine
         CancellationToken cancellationToken
     )
     {
-        return await Evaluate(code, $"post({payload}, {query})", executeTimeout, cancellationToken);
+        return await Evaluate(
+            code,
+            "post(__raytha_payload, __raytha_query)",
+            payload,
+            query,
+            argsJson: null,
+            executeTimeout,
+            cancellationToken
+        );
     }
 
     public async Task EvaluateRun(
@@ -259,7 +307,15 @@ public class RaythaFunctionScriptEngine : IRaythaFunctionScriptEngine
         CancellationToken cancellationToken
     )
     {
-        await Evaluate(code, $"run({payload})", executeTimeout, cancellationToken);
+        await Evaluate(
+            code,
+            "run(__raytha_payload)",
+            payload,
+            queryJson: null,
+            argsJson: null,
+            executeTimeout,
+            cancellationToken
+        );
     }
 
     public async Task<object> EvaluateInternal(
@@ -270,6 +326,19 @@ public class RaythaFunctionScriptEngine : IRaythaFunctionScriptEngine
         CancellationToken cancellationToken
     )
     {
-        return await Evaluate(code, $"{methodName}({argsJson})", executeTimeout, cancellationToken);
+        if (string.IsNullOrEmpty(methodName) || !MethodName.IsMatch(methodName))
+        {
+            throw new RaythaFunctionScriptException($"'{methodName}' is not a function name.");
+        }
+
+        return await Evaluate(
+            code,
+            $"{methodName}(__raytha_args)",
+            payloadJson: null,
+            queryJson: null,
+            argsJson,
+            executeTimeout,
+            cancellationToken
+        );
     }
 }
