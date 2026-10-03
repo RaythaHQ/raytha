@@ -30,8 +30,9 @@ runs on push to `main`/`dev`. If `ci.yml` changes, update the script to match.
 
 What it actually does, in order:
 
-1. `python3 tools/check-version.py --before origin/dev --after HEAD` — skipped
-   when `origin/dev` has no `VERSION` or the branch has no diff.
+1. `python3 tools/check-version.py --self-test`. The comparison against
+   `origin/main` runs only when `VERSION_BASE=origin/main` or the open pull
+   request targets `main`. A pull request into `dev` does not bump `VERSION`.
 2. `dotnet restore` / `dotnet build --configuration Release` / `dotnet test` on
    `Raytha.sln`.
 3. `src/admin`: `pnpm install --frozen-lockfile`, `pnpm lint`, `pnpm test`,
@@ -41,7 +42,7 @@ What it actually does, in order:
 5. `dotnet list package --vulnerable --include-transitive` must report nothing.
 
 Requirements: .NET 10 SDK, Node 24, pnpm 11.9, Docker only for the image job.
-`origin/dev` needs to be fetched for step 1 to run at all.
+`origin/main` needs to be fetched when step 1 compares against it.
 
 ## Fix loop
 
@@ -49,7 +50,7 @@ If a check fails, fix it and re-run. Typical remediations:
 
 | Failure | Fix |
 |---|---|
-| `VERSION` | Set `VERSION` to what `check-version.py` says: MINOR + reset PATCH if the change adds an EF migration, otherwise PATCH (RFC-0012). Do not edit the script. |
+| `VERSION` | Only on a pull request into `main`. Set `VERSION` to what `check-version.py --before origin/main` says: MINOR + reset PATCH if the release adds an EF migration, otherwise PATCH (RFC-0012). Do not edit the script, and do not bump on a pull request into `dev`. |
 | `dotnet build` | Fix the error. Do not silence it with a pragma. |
 | `dotnet test` | Fix the code. Architecture-test failures mean a rule in `.cursor/rules/` was broken — fix the code, not the test (RFC-0007). |
 | admin `pnpm lint` | Fix the reported rule. Do not disable it unless there is existing precedent in the file. |
@@ -64,9 +65,10 @@ Notes:
   also needs the `db/Postgres/` SQL scripts refreshed (RFC-0012 §4).
   `tools/check-sql-scripts.py` fails CI when they drift and prints the
   regenerate commands.
-- Include the rebuilt bundle and the `VERSION` change in the same commit you are
-  about to push. If the user already committed, make a **new** commit (amend only
-  when the user's git rules allow it).
+- Include the rebuilt bundle in the same commit you are about to push. Include
+  the `VERSION` change only when the pull request targets `main`. If the user
+  already committed, make a **new** commit (amend only when the user's git rules
+  allow it).
 
 Do not push, and do not skip hooks, until `./tools/ci-local.sh` exits 0. Then
 follow the user's existing commit/push/PR rules.

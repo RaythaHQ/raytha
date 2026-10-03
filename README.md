@@ -126,8 +126,10 @@ fails on a stale bundle.
 ./tools/ci-local.sh     # what CI runs: version, backend, admin, NuGet audit
 ```
 
-`VERSION` must describe the code in the same commit: a new EF migration means a
-MINOR bump, anything else a PATCH. `tools/check-version.py` enforces it and
+`VERSION` is the public release. It changes once, in the pull request into
+`main`, for everything since the previous release: a new EF migration means a
+MINOR bump, anything else a PATCH. Pull requests into `dev` do not bump it.
+`tools/check-version.py` enforces the release pull request and
 `tools/bump-version.py` does the arithmetic.
 
 ### Migrations

@@ -23,10 +23,16 @@ jobs:
           OVERRIDE: ${{ contains(github.event.pull_request.labels.*.name, 'version-override') && '--override' || '' }}
         run: |
           python3 tools/check-version.py --self-test
-          if git cat-file -e origin/${{ github.base_ref }}:VERSION 2>/dev/null; then
-            python3 tools/check-version.py --before origin/${{ github.base_ref }} --after HEAD $OVERRIDE
+          # VERSION is the public release. Only a pull request into main bumps it.
+          # Work merging to dev keeps the last released version.
+          if [ "${{ github.base_ref }}" != "main" ]; then
+            echo "Pull request base is ${{ github.base_ref }}; VERSION check skipped."
+            exit 0
+          fi
+          if git cat-file -e origin/main:VERSION 2>/dev/null; then
+            python3 tools/check-version.py --before origin/main --after HEAD $OVERRIDE
           else
-            echo "No VERSION on base branch yet; skipping"
+            echo "No VERSION on main yet; skipping"
           fi
 
   backend:

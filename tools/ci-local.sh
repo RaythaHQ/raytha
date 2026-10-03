@@ -10,15 +10,31 @@ fail() {
   status=1
 }
 
-if git rev-parse --verify origin/dev >/dev/null 2>&1 && git cat-file -e origin/dev:VERSION 2>/dev/null; then
-  if ! git diff --quiet origin/dev...HEAD; then
-    echo "==> version: committed VERSION matches this change"
-    python3 tools/check-version.py --self-test || fail "VERSION self-test"
-    # Set VERSION_OVERRIDE=1 when the PR will carry the version-override label.
-    python3 tools/check-version.py --before origin/dev --after HEAD ${VERSION_OVERRIDE:+--override} || fail "VERSION"
+echo "==> version: self-test"
+python3 tools/check-version.py --self-test || fail "VERSION self-test"
+
+# VERSION is the public release and changes only on a pull request into main.
+# Set VERSION_BASE=origin/main to check before that PR exists. An open PR into
+# main is detected on its own. Day-to-day work toward dev does not bump.
+version_base="${VERSION_BASE:-}"
+if [ -z "$version_base" ] && command -v gh >/dev/null 2>&1; then
+  pr_base="$(gh pr view --json baseRefName --jq .baseRefName 2>/dev/null || true)"
+  if [ "$pr_base" = "main" ]; then
+    version_base="origin/main"
+  fi
+fi
+if [ -n "$version_base" ]; then
+  if git rev-parse --verify "$version_base" >/dev/null 2>&1 && git cat-file -e "${version_base}:VERSION" 2>/dev/null; then
+    if ! git diff --quiet "${version_base}...HEAD"; then
+      echo "==> version: committed VERSION matches the release into main"
+      # Set VERSION_OVERRIDE=1 when the PR will carry the version-override label.
+      python3 tools/check-version.py --before "$version_base" --after HEAD ${VERSION_OVERRIDE:+--override} || fail "VERSION"
+    fi
+  else
+    fail "VERSION base ${version_base} is missing; fetch it"
   fi
 else
-  echo "==> version: skipped (no VERSION on origin/dev yet)"
+  echo "==> version: skipped (only a pull request into main bumps VERSION)"
 fi
 
 echo "==> backend: restore"

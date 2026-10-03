@@ -13,6 +13,7 @@ request**, follow `.cursor/skills/pre-push-ci/SKILL.md` before pushing.
 - Fix failures and re-run until it passes.
 - Rebuild the admin bundle and stage `src/Raytha.Web/wwwroot/raytha` when
   anything under `src/admin` changed (RFC-0006).
-- Bump `VERSION` in the same change (RFC-0012).
+- Bump `VERSION` only when the pull request targets `main` (RFC-0012). A pull
+  request into `dev` does not.
 - Do not push a red tree.
 - Commit-only requests do not require this.
