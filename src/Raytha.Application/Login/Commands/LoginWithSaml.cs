@@ -281,10 +281,15 @@ public class LoginWithSaml
             xmlDoc.XmlResolver = null;
             if (isBase64payload)
             {
-                System.Text.ASCIIEncoding enc = new System.Text.ASCIIEncoding();
-                xmlPayload = enc.GetString(Convert.FromBase64String(xmlPayload));
+                // Load the decoded bytes so the XML declaration's encoding is honored.
+                // ASCII decoding replaces non-ASCII names with '?' and breaks the signature.
+                using var stream = new MemoryStream(Convert.FromBase64String(xmlPayload));
+                xmlDoc.Load(stream);
             }
-            xmlDoc.LoadXml(xmlPayload);
+            else
+            {
+                xmlDoc.LoadXml(xmlPayload);
+            }
         }
 
         public string NameID
