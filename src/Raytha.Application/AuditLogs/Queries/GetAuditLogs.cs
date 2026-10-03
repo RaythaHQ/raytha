@@ -47,15 +47,18 @@ public class GetAuditLogs
             CancellationToken cancellationToken
         )
         {
-            var query = _db.AuditLogs.AsQueryable();
+            var query = _db.AuditLogs.AsNoTracking();
 
             if (request.StartDateAsUtc.HasValue)
-                query = query.Where(p => p.CreationTime >= request.StartDateAsUtc);
+            {
+                var start = AsUtcDate(request.StartDateAsUtc.Value);
+                query = query.Where(p => p.CreationTime >= start);
+            }
 
             if (request.EndDateAsUtc.HasValue)
             {
-                var endOfEndDateAsUtc = request.EndDateAsUtc.Value.AddDays(1).AddMilliseconds(-1);
-                query = query.Where(p => p.CreationTime <= endOfEndDateAsUtc);
+                var end = AsUtcDate(request.EndDateAsUtc.Value).AddDays(1).AddMilliseconds(-1);
+                query = query.Where(p => p.CreationTime <= end);
             }
 
             if (request.EntityId.HasValue && request.EntityId != Guid.Empty)
@@ -71,15 +74,18 @@ public class GetAuditLogs
                 query = query.Where(d => d.Category == request.Category);
             }
 
-            var total = await query.CountAsync();
-            var items = query
+            var total = await query.CountAsync(cancellationToken);
+            var items = await query
                 .ApplyPaginationInput(request)
                 .Select(AuditLogDto.GetProjection())
-                .ToArray();
+                .ToArrayAsync(cancellationToken);
 
             return new QueryResponseDto<ListResultDto<AuditLogDto>>(
                 new ListResultDto<AuditLogDto>(items, total)
             );
         }
+
+        private static DateTime AsUtcDate(DateTime value) =>
+            DateTime.SpecifyKind(value.Date, DateTimeKind.Utc);
     }
 }
