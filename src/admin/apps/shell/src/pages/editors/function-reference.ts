@@ -621,9 +621,9 @@ export const REFERENCE_GROUPS: readonly ReferenceGroup[] = [
         example: 'const stamp = DateTime.UtcNow.ToString("o");',
       },
       {
-        signature: "Math.Round(value, digits) · Math.Max(a, b)",
-        description: "Math is System.Math here, so Math.max and Math.random do not exist.",
-        example: "const total = Math.Round(price * 1.08, 2);",
+        signature: "DotNetMath.Round(value, digits) · Math.floor(value)",
+        description: "JavaScript Math is unchanged. .NET System.Math is DotNetMath.",
+        example: "const total = DotNetMath.Round(price * 1.08, 2);",
       },
       {
         signature: "new Random().Next(max) · Convert · Regex · StringBuilder · Encoding · Uri",
@@ -777,7 +777,7 @@ function get(query) {
     description: 'Use in a template as {{ raytha_function("{developerName}", "price", amount=item.PublishedContent.price) }}.',
     code: `function price(args) {
     const amount = Number(args.amount || 0);
-    return "$" + Math.Round(amount, 2).toFixed(2);
+    return "$" + DotNetMath.Round(amount, 2).toFixed(2);
 }
 `,
   },

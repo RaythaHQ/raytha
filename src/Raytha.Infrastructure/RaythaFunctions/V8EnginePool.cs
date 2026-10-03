@@ -83,7 +83,8 @@ public class V8EnginePool : IV8EnginePool
         engine.AddHostType(typeof(DateOnly));
         engine.AddHostType(typeof(TimeOnly));
         engine.AddHostType(typeof(TimeSpan));
-        engine.AddHostType(typeof(Math));
+        // System.Math must not occupy the JavaScript Math global (Math.floor, Math.random).
+        engine.AddHostType("DotNetMath", typeof(Math));
         engine.AddHostType(typeof(decimal));
         engine.AddHostType(typeof(char));
         engine.AddHostType(typeof(Random));
