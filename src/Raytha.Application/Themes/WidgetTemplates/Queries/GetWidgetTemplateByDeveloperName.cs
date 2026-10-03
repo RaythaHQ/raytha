@@ -37,7 +37,8 @@ public class GetWidgetTemplateByDeveloperName
         )
         {
             var entity = await _db
-                .WidgetTemplates.Include(p => p.LastModifierUser)
+                .WidgetTemplates.AsNoTracking()
+                .Include(p => p.LastModifierUser)
                 .Include(p => p.CreatorUser)
                 .FirstOrDefaultAsync(
                     p =>

@@ -107,7 +107,18 @@ public class LoginWithSaml
                             );
                         }
 
-                        if (entity != null)
+                        if (entity == null)
+                        {
+                            if (!authScheme.IsEnabledForUsers)
+                            {
+                                context.AddFailure(
+                                    Constants.VALIDATION_SUMMARY,
+                                    "Authentication scheme disabled for public users."
+                                );
+                                return;
+                            }
+                        }
+                        else
                         {
                             if (entity.IsAdmin && !authScheme.IsEnabledForAdmins)
                             {
@@ -193,9 +204,18 @@ public class LoginWithSaml
                     .ToList();
             }
 
+            // A new account is a public user. An admin-only scheme must not provision one.
             bool firstTime = false;
             if (entity == null)
             {
+                if (!authScheme.IsEnabledForUsers)
+                {
+                    return new CommandResponseDto<LoginDto>(
+                        Constants.VALIDATION_SUMMARY,
+                        "Authentication scheme disabled for public users."
+                    );
+                }
+
                 firstTime = true;
                 var id = Guid.NewGuid();
                 ShortGuid shortGuid = id;
@@ -281,10 +301,15 @@ public class LoginWithSaml
             xmlDoc.XmlResolver = null;
             if (isBase64payload)
             {
-                System.Text.ASCIIEncoding enc = new System.Text.ASCIIEncoding();
-                xmlPayload = enc.GetString(Convert.FromBase64String(xmlPayload));
+                // Load the decoded bytes so the XML declaration's encoding is honored.
+                // ASCII decoding replaces non-ASCII names with '?' and breaks the signature.
+                using var stream = new MemoryStream(Convert.FromBase64String(xmlPayload));
+                xmlDoc.Load(stream);
             }
-            xmlDoc.LoadXml(xmlPayload);
+            else
+            {
+                xmlDoc.LoadXml(xmlPayload);
+            }
         }
 
         public string NameID

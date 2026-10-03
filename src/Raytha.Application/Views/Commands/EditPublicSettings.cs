@@ -92,34 +92,18 @@ public class EditPublicSettings
                             return;
                         }
 
-                        var slugifiedPath = request.RoutePath.ToUrlSlug();
-                        if (string.IsNullOrWhiteSpace(slugifiedPath))
+                        var path = RoutePaths.Normalize(request.RoutePath);
+                        var problem = RoutePaths.Problem(db, path, entity.RouteId);
+                        if (problem != null)
+                        {
+                            context.AddFailure("RoutePath", problem);
+                            return;
+                        }
+                        if (RoutePaths.IsTaken(db, path, entity.RouteId))
                         {
                             context.AddFailure(
                                 "RoutePath",
-                                "Invalid route path. Must be letters, numbers, dashes, and dots (dots only allowed in the last segment for file extensions like .txt or .xml)"
-                            );
-                            return;
-                        }
-                        if (!slugifiedPath.IsValidRoutePath())
-                        {
-                            context.AddFailure(
-                                "RoutePath",
-                                "Invalid route path. Dots are only allowed in the last segment (e.g., robots.txt). No '..' segments or leading dots allowed."
-                            );
-                            return;
-                        }
-                        var reservedRoot = RoutePaths.ReservedRoot(db, slugifiedPath, entity.RouteId);
-                        if (reservedRoot != null)
-                        {
-                            context.AddFailure("RoutePath", RoutePaths.ReservedMessage(reservedRoot));
-                            return;
-                        }
-                        if (RoutePaths.IsTaken(db, slugifiedPath, entity.RouteId))
-                        {
-                            context.AddFailure(
-                                "RoutePath",
-                                $"The route path {slugifiedPath} already exists."
+                                $"The route path {path} already exists."
                             );
                             return;
                         }
@@ -144,7 +128,7 @@ public class EditPublicSettings
         {
             var entity = _db.Views.Include(p => p.Route).First(p => p.Id == request.Id.Guid);
 
-            entity.Route.Path = request.RoutePath.ToUrlSlug();
+            entity.Route.Path = RoutePaths.Normalize(request.RoutePath);
             entity.IsPublished = request.IsPublished;
             entity.DefaultNumberOfItemsPerPage = request.DefaultNumberOfItemsPerPage;
             entity.MaxNumberOfItemsPerPage = request.MaxNumberOfItemsPerPage;

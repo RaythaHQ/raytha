@@ -1,4 +1,5 @@
 using Mediator;
+using Microsoft.EntityFrameworkCore;
 using Raytha.Application.Common.Exceptions;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Models;
@@ -26,7 +27,9 @@ public class GetAuthenticationSchemeById
             CancellationToken cancellationToken
         )
         {
-            var entity = _db.AuthenticationSchemes.FirstOrDefault(p => p.Id == request.Id.Guid);
+            var entity = await _db
+                .AuthenticationSchemes.AsNoTracking()
+                .FirstOrDefaultAsync(p => p.Id == request.Id.Guid, cancellationToken);
 
             if (entity == null)
                 throw new NotFoundException("Authentication Scheme", request.Id);

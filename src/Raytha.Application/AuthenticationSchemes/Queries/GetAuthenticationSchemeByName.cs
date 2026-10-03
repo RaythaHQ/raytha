@@ -1,5 +1,6 @@
 using FluentValidation;
 using Mediator;
+using Microsoft.EntityFrameworkCore;
 using Raytha.Application.Common.Exceptions;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Models;
@@ -28,9 +29,12 @@ public class GetAuthenticationSchemeByName
             CancellationToken cancellationToken
         )
         {
-            var entity = _db.AuthenticationSchemes.FirstOrDefault(p =>
-                p.DeveloperName == request.DeveloperName.ToDeveloperName()
-            );
+            var entity = await _db
+                .AuthenticationSchemes.AsNoTracking()
+                .FirstOrDefaultAsync(
+                    p => p.DeveloperName == request.DeveloperName.ToDeveloperName(),
+                    cancellationToken
+                );
 
             if (entity == null)
                 throw new NotFoundException(

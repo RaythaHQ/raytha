@@ -80,6 +80,7 @@ public static class SettingsEndpoints
         maintenance.MapGet("", Maintenance);
         maintenance.MapGet("/retention", GetRetention);
         maintenance.MapPut("/retention", EditRetention);
+        maintenance.MapPost("/test-email", SendTestEmailHandler);
 
         // ---- audit_logs ----
         var audit = admin.MapGroup("/audit-logs").WithTags("Admin audit logs");
@@ -497,6 +498,9 @@ public static class SettingsEndpoints
         AdminResults.From(await mediator.Send(new GetLogRetention.Query()));
 
     private static async Task<IResult> EditRetention([FromBody] EditLogRetention.Command body, ISender mediator) =>
+        AdminResults.From(await mediator.Send(body));
+
+    private static async Task<IResult> SendTestEmailHandler([FromBody] SendTestEmail.Command body, ISender mediator) =>
         AdminResults.From(await mediator.Send(body));
 
     /// <summary>Returns <c>{ key, deleted }</c>.</summary>

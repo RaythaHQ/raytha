@@ -2,6 +2,7 @@
 using Mediator;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Models.RenderModels;
+using Raytha.Application.Users;
 using Raytha.Domain.Common;
 using Raytha.Domain.Entities;
 using Raytha.Domain.Events;
@@ -38,19 +39,36 @@ public class AdminPasswordChangedEventHandler : INotificationHandler<AdminPasswo
     {
         if (notification.SendEmail)
         {
+            var isAdmin = notification.User.IsAdmin;
             EmailTemplate renderTemplate = _db.EmailTemplates.First(p =>
-                p.DeveloperName == BuiltInEmailTemplate.AdminPasswordChangedEmail
+                p.DeveloperName
+                    == (
+                        isAdmin
+                            ? BuiltInEmailTemplate.AdminPasswordChangedEmail
+                            : BuiltInEmailTemplate.UserPasswordChangedEmail
+                    )
             );
-            SendAdminPasswordChanged_RenderModel entity = new SendAdminPasswordChanged_RenderModel
-            {
-                Id = (ShortGuid)notification.User.Id,
-                FirstName = notification.User.FirstName,
-                LastName = notification.User.LastName,
-                EmailAddress = notification.User.EmailAddress,
-                LoginUrl = _relativeUrlBuilderService.AdminLoginUrl(),
-                SsoId = notification.User.SsoId,
-                AuthenticationScheme = notification.User.AuthenticationScheme.DeveloperName,
-            };
+            BaseSendPasswordChanged_RenderModel entity = isAdmin
+                ? new SendAdminPasswordChanged_RenderModel
+                {
+                    Id = (ShortGuid)notification.User.Id,
+                    FirstName = notification.User.FirstName,
+                    LastName = notification.User.LastName,
+                    EmailAddress = notification.User.EmailAddress,
+                    LoginUrl = _relativeUrlBuilderService.AdminLoginUrl(),
+                    SsoId = notification.User.SsoId,
+                    AuthenticationScheme = notification.User.AuthenticationScheme.DeveloperName,
+                }
+                : new SendUserPasswordChanged_RenderModel
+                {
+                    Id = (ShortGuid)notification.User.Id,
+                    FirstName = notification.User.FirstName,
+                    LastName = notification.User.LastName,
+                    EmailAddress = notification.User.EmailAddress,
+                    LoginUrl = _relativeUrlBuilderService.UserLoginUrl(),
+                    SsoId = notification.User.SsoId,
+                    AuthenticationScheme = notification.User.AuthenticationScheme.DeveloperName,
+                };
 
             var wrappedModel = new Wrapper_RenderModel
             {

@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using FluentAssertions;
 using Moq;
+using Raytha.Application.AuthenticationSchemes;
 using Raytha.Application.Common.Exceptions;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Infrastructure.RaythaFunctions;
@@ -136,7 +137,7 @@ public class RaythaFunctionScriptEngineTests
             _engine
                 .EvaluateGet(
                     "function get(query) { return 'inner ' + query.n; }",
-                    "{ n: 1 }",
+                    """{"n":1}""",
                     Generous,
                     CancellationToken.None
                 )
@@ -208,6 +209,110 @@ public class RaythaFunctionScriptEngineTests
             .WaitAsync(Generous);
 
         (await handler.Cancelled.Task.WaitAsync(Generous)).Should().BeTrue();
+    }
+
+    [Test]
+    public async Task A_post_body_is_data_even_when_it_reads_as_javascript()
+    {
+        const string crafted = "); return 'pwned'; //";
+
+        var result = await _engine.EvaluatePost(
+            "function post(payload, query) { return payload; }",
+            crafted,
+            "[]",
+            Generous,
+            CancellationToken.None
+        );
+
+        result.Should().Be(crafted);
+    }
+
+    [Test]
+    public async Task An_empty_post_body_arrives_as_null_and_json_arrives_parsed()
+    {
+        var empty = await _engine.EvaluatePost(
+            "function post(payload, query) { return payload === null ? 'empty' : 'present'; }",
+            "  ",
+            "[]",
+            Generous,
+            CancellationToken.None
+        );
+        var parsed = await _engine.EvaluatePost(
+            "function post(payload, query) { return payload.name; }",
+            """{"name":"ada"}""",
+            "[]",
+            Generous,
+            CancellationToken.None
+        );
+
+        empty.Should().Be("empty");
+        parsed.Should().Be("ada");
+    }
+
+    [Test]
+    public async Task An_internal_call_rejects_a_method_name_that_is_not_an_identifier()
+    {
+        var call = () =>
+            _engine.EvaluateInternal(
+                "function get(args) { return args; }",
+                "get(); return",
+                "{}",
+                Generous,
+                CancellationToken.None
+            );
+
+        await call.Should().ThrowAsync<RaythaFunctionScriptException>();
+    }
+
+    [Test]
+    public async Task A_function_cannot_read_the_jwt_secret_or_the_saml_certificate()
+    {
+        var organization = new Mock<ICurrentOrganization>();
+        organization.Setup(x => x.OrganizationName).Returns("Example");
+        organization
+            .Setup(x => x.AuthenticationSchemes)
+            .Returns(
+                [
+                    new AuthenticationSchemeDto
+                    {
+                        Label = "Customer SSO",
+                        DeveloperName = "customer_sso",
+                        JwtSecretKey = "super-secret",
+                        SamlCertificate = "cert-body",
+                        SignOutUrl = "https://idp.example/logout",
+                    },
+                ]
+            );
+        var engine = new RaythaFunctionScriptEngine(
+            _pool,
+            Mock.Of<IRaythaFunctionApi_V1>(),
+            Mock.Of<IEmailer>(),
+            organization.Object,
+            Mock.Of<ICurrentUser>(),
+            _httpClient
+        );
+        const string probe = """
+            function get(query) {
+                var scheme = CurrentOrganization.AuthenticationSchemes[0];
+                var leaked = false;
+                try { leaked = scheme.JwtSecretKey === 'super-secret'; } catch (e) {}
+                try { leaked = leaked || scheme.SamlCertificate === 'cert-body'; } catch (e) {}
+                return leaked ? 'leaked' : scheme.DeveloperName;
+            }
+            """;
+
+        (await engine.EvaluateGet(probe, "[]", Generous, CancellationToken.None))
+            .Should()
+            .Be("customer_sso");
+
+        var dumped = await engine.EvaluateGet(
+            "function get(query) { return CurrentOrganization; }",
+            "[]",
+            Generous,
+            CancellationToken.None
+        );
+        dumped.ToString().Should().NotContain("super-secret").And.NotContain("cert-body");
+        dumped.ToString().Should().Contain("https://idp.example/logout");
     }
 
     private Task<object> EvaluatePlain() =>

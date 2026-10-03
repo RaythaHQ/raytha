@@ -32,22 +32,24 @@ public class GetSitePageRevisionsBySitePageId
             CancellationToken cancellationToken
         )
         {
-            var entity = _db.SitePages.FirstOrDefault(p => p.Id == request.Id.Guid);
+            var entity = await _db
+                .SitePages.AsNoTracking()
+                .FirstOrDefaultAsync(p => p.Id == request.Id.Guid, cancellationToken);
 
             if (entity == null)
                 throw new NotFoundException("Site Page", request.Id);
 
             var query = _db
-                .SitePageRevisions.AsQueryable()
+                .SitePageRevisions.AsNoTracking()
                 .Include(p => p.LastModifierUser)
                 .Include(p => p.CreatorUser)
                 .Where(p => p.SitePageId == request.Id.Guid);
 
             var total = await query.CountAsync(cancellationToken);
-            var items = query
+            var items = await query
                 .ApplyPaginationInput(request)
                 .Select(SitePageRevisionDto.GetProjection())
-                .ToArray();
+                .ToArrayAsync(cancellationToken);
 
             return new QueryResponseDto<ListResultDto<SitePageRevisionDto>>(
                 new ListResultDto<SitePageRevisionDto>(items, total)

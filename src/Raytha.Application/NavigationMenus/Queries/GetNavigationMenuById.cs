@@ -24,7 +24,7 @@ public class GetNavigationMenuById
             CancellationToken cancellationToken
         )
         {
-            var entity = await _db.NavigationMenus.FirstOrDefaultAsync(
+            var entity = await _db.NavigationMenus.AsNoTracking().FirstOrDefaultAsync(
                 nm => nm.Id == request.Id.Guid,
                 cancellationToken
             );

@@ -34,14 +34,15 @@ public class GetRaythaFunctionRevisionsByRaythaFunctionId
         )
         {
             var query = _db
-                .RaythaFunctionRevisions.Include(rfr => rfr.CreatorUser)
+                .RaythaFunctionRevisions.AsNoTracking()
+                .Include(rfr => rfr.CreatorUser)
                 .Where(rfr => rfr.RaythaFunctionId == request.Id.Guid);
 
-            var total = await query.CountAsync();
-            var items = query
+            var total = await query.CountAsync(cancellationToken);
+            var items = await query
                 .ApplyPaginationInput(request)
                 .Select(RaythaFunctionRevisionDto.GetProjection())
-                .ToArray();
+                .ToArrayAsync(cancellationToken);
 
             return new QueryResponseDto<ListResultDto<RaythaFunctionRevisionDto>>(
                 new ListResultDto<RaythaFunctionRevisionDto>(items, total)

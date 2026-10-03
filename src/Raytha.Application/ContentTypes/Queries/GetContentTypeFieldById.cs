@@ -27,9 +27,10 @@ public class GetContentTypeFieldById
             CancellationToken cancellationToken
         )
         {
-            var entity = _db
-                .ContentTypeFields.Include(p => p.ContentType)
-                .FirstOrDefault(p => p.Id == request.Id.Guid);
+            var entity = await _db
+                .ContentTypeFields.AsNoTracking()
+                .Include(p => p.ContentType)
+                .FirstOrDefaultAsync(p => p.Id == request.Id.Guid, cancellationToken);
 
             if (entity == null)
                 throw new NotFoundException("Content Type Field", request.Id);

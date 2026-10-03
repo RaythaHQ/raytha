@@ -10,9 +10,10 @@ Status: Active
 ## Abstract
 
 `VERSION` at the repo root is the product version. MSBuild reads it into the
-assembly version, `/healthz` reports it, and `tools/check-version.py` requires it
-to describe the code in the same commit. Adding an EF migration bumps MINOR;
-everything else bumps PATCH.
+assembly version, `/healthz` reports it, and `tools/check-version.py` requires
+the pull request into `main` to bump it once for everything since the last
+release. Adding an EF migration bumps MINOR; everything else bumps PATCH.
+Pull requests into `dev` do not bump it.
 
 ## 1. The VERSION File
 
@@ -26,25 +27,32 @@ everything else bumps PATCH.
 
 ## 2. Bump Rules
 
-- **MINOR + reset PATCH** when the change adds a new migration file under
+- **MINOR + reset PATCH** when the release adds a new migration file under
   `**/Persistence/Migrations/*.cs` (ignoring `*.Designer.cs` and
   `*ModelSnapshot.cs`).
 - **PATCH** for every other releasable change.
 - **MAJOR** is a human decision. The scripts never touch it.
 - `VERSION` itself and `docs/supply-chain/sbom.cdx.json` do not count as
   releasable changes; a commit touching only those skips validation.
+- **Only a pull request into `main` bumps `VERSION`.** That one bump covers
+  every releasable change since `origin/main`. Pull requests into `dev` keep
+  the last released version. CI's `version` job enforces this by running
+  `check-version.py` only when the pull request base is `main`.
+  `./tools/ci-local.sh` does the same: it compares against `origin/main` when
+  `VERSION_BASE=origin/main` or the open pull request targets `main`, and
+  skips otherwise.
 
 ```bash
 python3 tools/bump-version.py --kind patch --write   # or --kind minor
-python3 tools/bump-version.py --before <sha> --after <sha> --print-kind
-python3 tools/check-version.py --before origin/dev --after HEAD
+python3 tools/bump-version.py --before origin/main --after HEAD --print-kind
+python3 tools/check-version.py --before origin/main --after HEAD
 python3 tools/bump-version.py --self-test
 python3 tools/check-version.py --self-test
+VERSION_BASE=origin/main ./tools/ci-local.sh
 ```
 
-- The bumped `VERSION` MUST be committed with the change it describes. CI's
-  `version` job runs `check-version.py` on pull requests, and
-  `./tools/ci-local.sh` runs it against `origin/dev` before you push.
+- The bumped `VERSION` MUST be committed in the pull request into `main` that
+  releases it, not in each pull request into `dev`.
 - If `check-version.py` says the expected version is 2.0.5 and you wrote 2.1.0,
   fix `VERSION` — do not edit the script.
 - **Break glass.** A maintainer can accept a `VERSION` the bump rules reject (a
@@ -52,8 +60,10 @@ python3 tools/check-version.py --self-test
   label to the pull request. CI then runs `check-version.py --override`, which
   still requires a well-formed `MAJOR.MINOR.PATCH` and prints that the override
   was used. The label is the audit trail: say in the PR description why.
-  Locally, `VERSION_OVERRIDE=1 ./tools/ci-local.sh` does the same. Remove the
-  label and the normal rules apply again.
+  Locally, `VERSION_OVERRIDE=1 VERSION_BASE=origin/main ./tools/ci-local.sh` does
+  the same. Remove the label and the normal rules apply again. A pull request
+  into `dev` does not need the label: that check does not run, and the fix is
+  to leave `VERSION` at the last release rather than bump it.
 
 ## 3. Migration Naming
 
@@ -68,8 +78,10 @@ dotnet ef migrations add v2_1_0 \
   --startup-project src/Raytha.Web
 ```
 
-- Because a new migration forces the MINOR bump, the migration name and the new
-  `VERSION` MUST agree. `v2_1_0` with `VERSION` 2.0.6 is wrong.
+- Because a new migration forces the MINOR bump, the migration name and the
+  `VERSION` on the pull request into `main` MUST agree. `v2_1_0` released as
+  2.0.6 is wrong. On `dev`, `VERSION` stays at the last release until that
+  pull request.
 - `PersistenceConventionTests` asserts the `v2_0_0` migration exists. That is the
   2.0 baseline; do not delete or rewrite it to tidy history.
 - Migrations MUST be additive and safe to run against a live 1.5.0 database.

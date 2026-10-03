@@ -119,6 +119,14 @@ public class ChangePassword
                             context.AddFailure("CurrentPassword", "Invalid current password.");
                             return;
                         }
+
+                        if (request.NewPassword == request.CurrentPassword)
+                        {
+                            context.AddFailure(
+                                "NewPassword",
+                                "New password must be different from your current password."
+                            );
+                        }
                     }
                 );
         }

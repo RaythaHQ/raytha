@@ -28,11 +28,13 @@ public class GetWebTemplateDeveloperNamesWithoutRelation
         )
         {
             var activeThemeId = await _db
-                .OrganizationSettings.Select(os => os.ActiveThemeId)
+                .OrganizationSettings.AsNoTracking()
+                .Select(os => os.ActiveThemeId)
                 .FirstAsync(cancellationToken);
 
             var activeThemeWebTemplateContentItemRelations = await _db
-                .WebTemplateContentItemRelations.Where(wtr =>
+                .WebTemplateContentItemRelations.AsNoTracking()
+                .Where(wtr =>
                     wtr.WebTemplate!.ThemeId == activeThemeId
                 )
                 .Select(wtr => new
@@ -43,7 +45,8 @@ public class GetWebTemplateDeveloperNamesWithoutRelation
                 .ToArrayAsync(cancellationToken);
 
             var activeThemeWebTemplateViewRelations = await _db
-                .WebTemplateViewRelations.Where(wtr => wtr.WebTemplate!.ThemeId == activeThemeId)
+                .WebTemplateViewRelations.AsNoTracking()
+                .Where(wtr => wtr.WebTemplate!.ThemeId == activeThemeId)
                 .Select(wtr => new
                 {
                     wtr.ViewId,
@@ -52,14 +55,16 @@ public class GetWebTemplateDeveloperNamesWithoutRelation
                 .ToArrayAsync(cancellationToken);
 
             var newActiveThemeRelationsContentItemIds = await _db
-                .WebTemplateContentItemRelations.Where(wtr =>
+                .WebTemplateContentItemRelations.AsNoTracking()
+                .Where(wtr =>
                     wtr.WebTemplate!.ThemeId == request.ThemeId.Guid
                 )
                 .Select(wtr => wtr.ContentItemId)
                 .ToArrayAsync(cancellationToken);
 
             var newActiveThemeRelationViewIds = await _db
-                .WebTemplateViewRelations.Where(wtr =>
+                .WebTemplateViewRelations.AsNoTracking()
+                .Where(wtr =>
                     wtr.WebTemplate!.ThemeId == request.ThemeId.Guid
                 )
                 .Select(wtr => wtr.ViewId)

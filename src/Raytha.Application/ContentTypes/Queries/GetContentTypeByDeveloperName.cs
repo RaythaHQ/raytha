@@ -31,9 +31,13 @@ public class GetContentTypeByDeveloperName
             CancellationToken cancellationToken
         )
         {
-            var entity = _db
-                .ContentTypes.Include(p => p.ContentTypeFields.OrderBy(c => c.FieldOrder))
-                .FirstOrDefault(p => p.DeveloperName == request.DeveloperName.ToDeveloperName());
+            var entity = await _db
+                .ContentTypes.AsNoTracking()
+                .Include(p => p.ContentTypeFields.OrderBy(c => c.FieldOrder))
+                .FirstOrDefaultAsync(
+                    p => p.DeveloperName == request.DeveloperName.ToDeveloperName(),
+                    cancellationToken
+                );
 
             if (entity == null)
                 throw new NotFoundException(

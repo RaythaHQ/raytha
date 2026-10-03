@@ -1,4 +1,5 @@
 ﻿using Mediator;
+using Microsoft.EntityFrameworkCore;
 using Raytha.Application.Common.Exceptions;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Models;
@@ -23,7 +24,9 @@ public class GetBackgroundTaskById
             CancellationToken cancellationToken
         )
         {
-            var entity = _db.BackgroundTasks.FirstOrDefault(p => p.Id == request.Id.Guid);
+            var entity = await _db
+                .BackgroundTasks.AsNoTracking()
+                .FirstOrDefaultAsync(p => p.Id == request.Id.Guid, cancellationToken);
 
             if (entity == null)
                 throw new NotFoundException("Background Task", request.Id);

@@ -31,7 +31,8 @@ public class GetSitePages
         )
         {
             var query = _db
-                .SitePages.Include(p => p.Route)
+                .SitePages.AsNoTracking()
+                .Include(p => p.Route)
                 .Include(p => p.WebTemplate)
                 .Include(p => p.CreatorUser)
                 .Include(p => p.LastModifierUser)
@@ -47,10 +48,10 @@ public class GetSitePages
             }
 
             var total = await query.CountAsync(cancellationToken);
-            var items = query
+            var items = await query
                 .ApplyPaginationInput(request)
                 .Select(sp => SitePageDto.GetProjection(sp))
-                .ToArray();
+                .ToArrayAsync(cancellationToken);
 
             return new QueryResponseDto<ListResultDto<SitePageDto>>(
                 new ListResultDto<SitePageDto>(items, total)

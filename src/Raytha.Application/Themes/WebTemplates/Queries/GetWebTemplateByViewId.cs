@@ -31,7 +31,8 @@ public class GetWebTemplateByViewId
         )
         {
             var webTemplate = await _db
-                .WebTemplateViewRelations.Where(wtr =>
+                .WebTemplateViewRelations.AsNoTracking()
+                .Where(wtr =>
                     wtr.ViewId == request.ViewId.Guid
                     && wtr.WebTemplate!.ThemeId == request.ThemeId.Guid
                 )

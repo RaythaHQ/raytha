@@ -40,6 +40,7 @@ stored in the database.
 - **Audit logs** — every change, with the admin who made it
 - **Single sign-on** — SAML and JWT for admins and users
 - **Flexible storage** — local disk, Azure Blob, or anything S3-compatible
+- **Command-line interface** — [`raytha`](https://github.com/RaythaHQ/raytha-cli) manages a whole site from a shell or an LLM agent
 
 ## Run it with Docker
 
@@ -75,6 +76,33 @@ Behind a proxy, `TRUSTED_PROXIES` decides who may set the client IP and scheme:
 
 Emailed links and API media URLs are built from the Website URL in organization
 settings, never from the request's host.
+
+## Raytha CLI
+
+[`raytha`](https://github.com/RaythaHQ/raytha-cli) is a command-line interface
+for the 2.0 admin and REST API. It manages themes, templates, widgets, site
+pages, content types, content, media, and menus with an administrator's API key,
+so a site can be built from a script, a theme pulled and pushed as plain files,
+or the whole thing driven by an LLM agent. Every command prints JSON with stable
+exit codes, and the guides ship inside the binary.
+
+```sh
+# Linux and macOS
+curl -fsSL https://github.com/RaythaHQ/raytha-cli/releases/latest/download/install.sh | sh
+# Windows (PowerShell)
+irm https://github.com/RaythaHQ/raytha-cli/releases/latest/download/install.ps1 | iex
+```
+
+```sh
+export RAYTHA_URL=https://your-site.example.com
+export RAYTHA_API_KEY=...        # Settings > Administrators > (admin) > API Keys
+raytha doctor                    # connectivity, key, permissions
+raytha guide build-a-site        # the agent playbook (markdown)
+```
+
+The CLI targets Raytha 2.0 and later. Command reference, output contract, and
+the full agent walkthrough live in the
+[raytha-cli README](https://github.com/RaythaHQ/raytha-cli#readme).
 
 ## Develop
 
@@ -126,8 +154,10 @@ fails on a stale bundle.
 ./tools/ci-local.sh     # what CI runs: version, backend, admin, NuGet audit
 ```
 
-`VERSION` must describe the code in the same commit: a new EF migration means a
-MINOR bump, anything else a PATCH. `tools/check-version.py` enforces it and
+`VERSION` is the public release. It changes once, in the pull request into
+`main`, for everything since the previous release: a new EF migration means a
+MINOR bump, anything else a PATCH. Pull requests into `dev` do not bump it.
+`tools/check-version.py` enforces the release pull request and
 `tools/bump-version.py` does the arithmetic.
 
 ### Migrations

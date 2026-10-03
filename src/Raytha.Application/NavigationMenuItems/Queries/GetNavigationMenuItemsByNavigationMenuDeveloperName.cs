@@ -28,7 +28,8 @@ public class GetNavigationMenuItemsByNavigationMenuDeveloperName
         )
         {
             var navigationMenuItems = await _db
-                .NavigationMenuItems.Where(nmi =>
+                .NavigationMenuItems.AsNoTracking()
+                .Where(nmi =>
                     nmi.NavigationMenu!.DeveloperName == request.NavigationMenuDeveloperName
                 )
                 .OrderBy(nmi => nmi.CreationTime)

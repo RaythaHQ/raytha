@@ -32,7 +32,7 @@ public class GetAdmins
             CancellationToken cancellationToken
         )
         {
-            var query = _db.Users.AsQueryable().Include(p => p.Roles).Where(p => p.IsAdmin);
+            var query = _db.Users.AsNoTracking().Include(p => p.Roles).Where(p => p.IsAdmin);
 
             if (!string.IsNullOrEmpty(request.Search))
             {
@@ -47,11 +47,11 @@ public class GetAdmins
                     );
             }
 
-            var total = await query.CountAsync();
-            var items = query
+            var total = await query.CountAsync(cancellationToken);
+            var items = await query
                 .ApplyPaginationInput(request)
                 .Select(AdminDto.GetProjection())
-                .ToArray();
+                .ToArrayAsync(cancellationToken);
 
             return new QueryResponseDto<ListResultDto<AdminDto>>(
                 new ListResultDto<AdminDto>(items, total)

@@ -31,7 +31,8 @@ public class GetWebTemplateByDeveloperName
         )
         {
             var webTemplate = await _db
-                .WebTemplates.Include(wt => wt.TemplateAccessToModelDefinitions)
+                .WebTemplates.AsNoTracking()
+                .Include(wt => wt.TemplateAccessToModelDefinitions)
                 .ThenInclude(p => p.ContentType)
                 .IncludeParentTemplates(wt => wt.ParentTemplate)
                 .FirstOrDefaultAsync(

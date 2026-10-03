@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Models;
 using Raytha.Application.Common.Utils;
+using Raytha.Domain.Entities;
 
 namespace Raytha.Application.Views.Queries;
 
@@ -32,12 +33,12 @@ public class GetFavoriteViewsForAdmin
             CancellationToken cancellationToken
         )
         {
-            var query = _db
-                .Views.Include(p => p.Route)
+            IQueryable<View> query = _db
+                .Views.AsNoTracking()
+                .Include(p => p.Route)
                 .Include(p => p.ContentType)
                 .Include(p => p.LastModifierUser)
-                .Include(p => p.UserFavorites)
-                .AsQueryable();
+                .Include(p => p.UserFavorites);
 
             if (request.ContentTypeId.HasValue)
             {
@@ -67,10 +68,10 @@ public class GetFavoriteViewsForAdmin
             query = query.Where(p => p.UserFavorites.Any(p => p.Id == request.UserId.Guid));
 
             var total = await query.CountAsync(cancellationToken);
-            var items = query
+            var items = await query
                 .ApplyPaginationInput(request)
                 .Select(v => ViewDto.GetProjection(v))
-                .ToArray();
+                .ToArrayAsync(cancellationToken);
 
             return new QueryResponseDto<ListResultDto<ViewDto>>(
                 new ListResultDto<ViewDto>(items, total)

@@ -30,7 +30,8 @@ public class GetWidgetTemplateByDeveloperNames
         )
         {
             var theme = await _db
-                .Themes.Where(t => t.DeveloperName == request.ThemeDeveloperName.ToDeveloperName())
+                .Themes.AsNoTracking()
+                .Where(t => t.DeveloperName == request.ThemeDeveloperName.ToDeveloperName())
                 .Select(t => new { t.Id })
                 .FirstOrDefaultAsync(cancellationToken);
 
@@ -38,7 +39,8 @@ public class GetWidgetTemplateByDeveloperNames
                 throw new NotFoundException("Theme", request.ThemeDeveloperName);
 
             var widgetTemplate = await _db
-                .WidgetTemplates.Include(wt => wt.LastModifierUser)
+                .WidgetTemplates.AsNoTracking()
+                .Include(wt => wt.LastModifierUser)
                 .Include(wt => wt.CreatorUser)
                 .FirstOrDefaultAsync(
                     wt =>

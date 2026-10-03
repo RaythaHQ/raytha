@@ -28,7 +28,7 @@ public class GetNavigationMenus
             CancellationToken cancellationToken
         )
         {
-            var query = _db.NavigationMenus.AsQueryable();
+            var query = _db.NavigationMenus.AsNoTracking();
 
             if (!string.IsNullOrEmpty(request.Search))
             {

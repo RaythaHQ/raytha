@@ -25,8 +25,9 @@ public class GetForgotPasswordTokenValidity
             CancellationToken cancellationToken
         )
         {
-            var authScheme = _db.AuthenticationSchemes.First(p =>
-                p.AuthenticationSchemeType == AuthenticationSchemeType.EmailAndPassword
+            var authScheme = await _db.AuthenticationSchemes.AsNoTracking().FirstAsync(
+                p => p.AuthenticationSchemeType == AuthenticationSchemeType.EmailAndPassword,
+                cancellationToken
             );
 
             if (!authScheme.IsEnabledForUsers && !authScheme.IsEnabledForAdmins)
@@ -35,10 +36,14 @@ public class GetForgotPasswordTokenValidity
                     "Authentication scheme is disabled"
                 );
 
-            var entity = _db
-                .OneTimePasswords.Include(p => p.User)
+            var entity = await _db
+                .OneTimePasswords.AsNoTracking()
+                .Include(p => p.User)
                 .ThenInclude(p => p.AuthenticationScheme)
-                .FirstOrDefault(p => p.Id == PasswordUtility.Hash(request.Id));
+                .FirstOrDefaultAsync(
+                    p => p.Id == PasswordUtility.Hash(request.Id),
+                    cancellationToken
+                );
 
             if (entity == null)
                 return new QueryResponseDto<bool>(Constants.VALIDATION_SUMMARY, "Invalid token.");

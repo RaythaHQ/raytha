@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Models;
 using Raytha.Application.Common.Utils;
+using Raytha.Domain.Entities;
 using Raytha.Domain.ValueObjects;
 
 namespace Raytha.Application.Users.Queries;
@@ -30,7 +31,7 @@ public class GetUsers
             CancellationToken cancellationToken
         )
         {
-            var query = _db.Users.Include(p => p.UserGroups).AsQueryable();
+            IQueryable<User> query = _db.Users.AsNoTracking().Include(p => p.UserGroups);
 
             if (!string.IsNullOrEmpty(request.Search))
             {
@@ -43,11 +44,11 @@ public class GetUsers
                 );
             }
 
-            var total = await query.CountAsync();
-            var items = query
+            var total = await query.CountAsync(cancellationToken);
+            var items = await query
                 .ApplyPaginationInput(request)
                 .Select(UserDto.GetProjection())
-                .ToArray();
+                .ToArrayAsync(cancellationToken);
 
             return new QueryResponseDto<ListResultDto<UserDto>>(
                 new ListResultDto<UserDto>(items, total)

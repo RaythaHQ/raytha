@@ -34,16 +34,16 @@ public class GetEmailTemplateRevisionsByTemplateId
         )
         {
             var query = _db
-                .EmailTemplateRevisions.AsQueryable()
+                .EmailTemplateRevisions.AsNoTracking()
                 .Include(p => p.EmailTemplate)
                 .Include(p => p.CreatorUser)
                 .Where(p => p.EmailTemplateId == request.Id.Guid);
 
-            var total = await query.CountAsync();
-            var items = query
+            var total = await query.CountAsync(cancellationToken);
+            var items = await query
                 .ApplyPaginationInput(request)
                 .Select(EmailTemplateRevisionDto.GetProjection())
-                .ToArray();
+                .ToArrayAsync(cancellationToken);
 
             return new QueryResponseDto<ListResultDto<EmailTemplateRevisionDto>>(
                 new ListResultDto<EmailTemplateRevisionDto>(items, total)

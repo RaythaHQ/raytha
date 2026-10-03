@@ -1,4 +1,5 @@
 using Mediator;
+using Microsoft.EntityFrameworkCore;
 using Raytha.Application.Common.Exceptions;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Models;
@@ -27,7 +28,9 @@ public class GetRouteByPath
         )
         {
             var path = string.IsNullOrEmpty(request.Path) ? string.Empty : request.Path.ToLower();
-            var entity = _db.Routes.FirstOrDefault(p => p.Path.ToLower() == path);
+            var entity = await _db
+                .Routes.AsNoTracking()
+                .FirstOrDefaultAsync(p => p.Path.ToLower() == path, cancellationToken);
 
             if (entity == null)
                 throw new NotFoundException("Route", $"{request.Path} did not match any Route");

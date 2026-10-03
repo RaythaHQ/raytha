@@ -49,6 +49,21 @@ public class StringExtensionsTests
     }
 
     [Test]
+    [TestCase("robots.txt", true)]
+    [TestCase("docs/v1.2/install", true)]
+    [TestCase("api/v2.0/spec.json", true)]
+    [TestCase(".well-known/security.txt", true)]
+    [TestCase("a/../b", false)]
+    [TestCase(".env", false)]
+    [TestCase("docs/.hidden", false)]
+    [TestCase("docs/.well-known/x", false)]
+    [TestCase("", false)]
+    public void IsValidRoutePath_allows_dots_in_any_segment_but_not_hidden_segments(string input, bool expected)
+    {
+        input.IsValidRoutePath().Should().Be(expected);
+    }
+
+    [Test]
     [TestCase("raytha", true)]
     [TestCase("raytha/admin", true)]
     [TestCase("account/login", true)]

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Bump the repo-root VERSION file after a merge to main.
+"""Bump the repo-root VERSION file for a pull request into main.
 
 A newly added EF migration under **/Persistence/Migrations/*.cs (excluding
 *.Designer.cs and *ModelSnapshot.cs) bumps MINOR and resets PATCH.

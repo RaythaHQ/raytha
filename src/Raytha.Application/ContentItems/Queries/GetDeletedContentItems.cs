@@ -35,10 +35,10 @@ public class GetDeletedContentItems
         )
         {
             var query = _db
-                .DeletedContentItems.Include(p => p.ContentType)
+                .DeletedContentItems.AsNoTracking()
+                .Include(p => p.ContentType)
                 .Include(p => p.CreatorUser)
-                .Where(p => p.ContentType.DeveloperName == request.DeveloperName.ToDeveloperName())
-                .AsQueryable();
+                .Where(p => p.ContentType.DeveloperName == request.DeveloperName.ToDeveloperName());
 
             if (!string.IsNullOrEmpty(request.Search))
             {
@@ -52,11 +52,11 @@ public class GetDeletedContentItems
                 );
             }
 
-            var total = await query.CountAsync();
-            var items = query
+            var total = await query.CountAsync(cancellationToken);
+            var items = await query
                 .ApplyPaginationInput(request)
                 .Select(DeletedContentItemDto.GetProjection())
-                .ToArray();
+                .ToArrayAsync(cancellationToken);
 
             return new QueryResponseDto<ListResultDto<DeletedContentItemDto>>(
                 new ListResultDto<DeletedContentItemDto>(items, total)

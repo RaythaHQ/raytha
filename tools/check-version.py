@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
-"""Require VERSION to describe the code in the same Git revision."""
+"""Require VERSION on a pull request into main to describe that release.
+
+Pull requests into dev do not bump VERSION. Callers decide when this applies;
+the comparison itself is always one bump from --before to --after.
+"""
 
 from __future__ import annotations
 

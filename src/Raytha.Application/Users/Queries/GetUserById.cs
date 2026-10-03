@@ -24,9 +24,10 @@ public class GetUserById
             CancellationToken cancellationToken
         )
         {
-            var entity = _db
-                .Users.Include(p => p.UserGroups)
-                .FirstOrDefault(p => p.Id == request.Id.Guid);
+            var entity = await _db
+                .Users.AsNoTracking()
+                .Include(p => p.UserGroups)
+                .FirstOrDefaultAsync(p => p.Id == request.Id.Guid, cancellationToken);
 
             if (entity == null)
                 throw new NotFoundException("User", request.Id);

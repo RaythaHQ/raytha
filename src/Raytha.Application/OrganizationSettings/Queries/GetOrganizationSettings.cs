@@ -1,4 +1,5 @@
 ﻿using Mediator;
+using Microsoft.EntityFrameworkCore;
 using Raytha.Application.Common.Interfaces;
 using Raytha.Application.Common.Models;
 
@@ -22,7 +23,9 @@ public class GetOrganizationSettings
             CancellationToken cancellationToken
         )
         {
-            var settings = _db.OrganizationSettings.FirstOrDefault();
+            var settings = await _db.OrganizationSettings.AsNoTracking().FirstOrDefaultAsync(
+                cancellationToken
+            );
 
             return new QueryResponseDto<OrganizationSettingsDto>(
                 OrganizationSettingsDto.GetProjection(settings)

@@ -28,7 +28,7 @@ public class GetNavigationMenuByDeveloperName
             CancellationToken cancellationToken
         )
         {
-            var entity = await _db.NavigationMenus.FirstOrDefaultAsync(
+            var entity = await _db.NavigationMenus.AsNoTracking().FirstOrDefaultAsync(
                 p => p.DeveloperName == request.DeveloperName.ToDeveloperName(),
                 cancellationToken
             );

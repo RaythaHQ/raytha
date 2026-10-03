@@ -34,7 +34,8 @@ public class GetWidgetTemplateRevisionsByTemplateId
         )
         {
             var query = _db
-                .WidgetTemplateRevisions.Include(p => p.WidgetTemplate)
+                .WidgetTemplateRevisions.AsNoTracking()
+                .Include(p => p.WidgetTemplate)
                 .Include(p => p.CreatorUser)
                 .Where(p => p.WidgetTemplateId == request.Id.Guid);
 
