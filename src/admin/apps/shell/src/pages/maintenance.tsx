@@ -110,6 +110,7 @@ function MaintenanceContent() {
             <>
               <UsageCards snapshot={snapshot} />
               <RetentionSection logs={snapshot.logs.filter((log) => log !== tasksLog)} retention={retention} />
+              <TestEmailSection />
               <BackgroundTasksSection snapshot={snapshot} tasksLog={tasksLog} retention={retention} />
             </>
           );
@@ -378,6 +379,87 @@ function retentionHint(draft: string, valid: boolean, days: number): string {
     return "Kept forever.";
   }
   return `Deletes entries older than ${days} ${days === 1 ? "day" : "days"}.`;
+}
+
+const EMAIL_SHAPE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+/** Sends one message through the configured SMTP settings so an operator can prove email works. */
+function TestEmailSection() {
+  const [address, setAddress] = useState("");
+  const [touched, setTouched] = useState(false);
+  const trimmed = address.trim();
+  const valid = EMAIL_SHAPE.test(trimmed);
+  const showInvalid = touched && trimmed.length > 0 && !valid;
+
+  const send = useMutation({
+    mutationFn: (to: string) => adminApi.maintenance.sendTestEmail(to),
+    onSuccess: (result) => toast.success(`Test email sent to ${result.emailAddress}`),
+    onError: (error) => toast.error(formatError(error)),
+  });
+
+  const handleSubmit = (event: FormEvent) => {
+    event.preventDefault();
+    setTouched(true);
+    if (valid) {
+      send.mutate(trimmed);
+    }
+  };
+
+  return (
+    <section className="space-y-3" aria-labelledby="test-email-heading">
+      <div className="space-y-1">
+        <h2 id="test-email-heading" className="font-display text-lg font-semibold tracking-tight">
+          Test email
+        </h2>
+        <p className="text-sm text-muted-foreground">
+          Sends one message with the SMTP settings in use. The attempt is recorded in the{" "}
+          <Link to="/email-log" className="underline-offset-4 hover:underline">
+            email log
+          </Link>{" "}
+          either way.
+        </p>
+      </div>
+      <Card>
+        <CardContent className="pt-6">
+          <form className="flex flex-wrap items-start gap-2" onSubmit={handleSubmit} noValidate>
+            <div className="w-full max-w-sm space-y-1">
+              <label htmlFor="test-email-address" className="sr-only">
+                Recipient email address
+              </label>
+              <Input
+                id="test-email-address"
+                type="email"
+                inputMode="email"
+                autoComplete="email"
+                placeholder="you@example.com"
+                value={address}
+                aria-invalid={showInvalid}
+                aria-describedby="test-email-hint"
+                onChange={(event) => setAddress(event.target.value)}
+                onBlur={() => setTouched(true)}
+              />
+              <p id="test-email-hint" className={cn("text-xs", showInvalid ? "text-destructive" : "text-muted-foreground")}>
+                {showInvalid ? "Enter a valid email address." : "Where to send the test message."}
+              </p>
+            </div>
+            <Button type="submit" disabled={!valid} loading={send.isPending}>
+              <Mail aria-hidden />
+              Send test email
+            </Button>
+          </form>
+          {send.isError ? (
+            <p className="mt-3 text-sm text-destructive" role="alert">
+              {formatError(send.error)}
+            </p>
+          ) : send.isSuccess ? (
+            <p className="mt-3 text-sm text-success" role="status">
+              Sent to {send.data.emailAddress}. Check the inbox, or the email log if it does not arrive.
+            </p>
+          ) : null}
+        </CardContent>
+      </Card>
+    </section>
+  );
 }
 
 function BackgroundTasksSection({
