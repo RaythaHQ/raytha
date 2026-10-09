@@ -11,6 +11,14 @@ REST API for whatever you modelled.
 
 **[Website](https://raytha.com) · [Documentation](https://docs.raytha.com) · [User Guide](https://raytha.com/user-guide) · [YouTube](https://www.youtube.com/channel/UCuQtF2WwODs2DfZ4pV-2SfA)**
 
+## Deploy on Railway
+
+[![Deploy on Railway](https://railway.com/button.svg)](https://raytha.com/go/railway?from=github-raytha-readme)
+
+One click deploys Raytha and PostgreSQL 17 into your own Railway project, with a volume for uploads. Open the
+new site and finish the setup wizard. Details: [raytha.com/railway](https://raytha.com/railway). To run it
+yourself instead, see [Run it with Docker](#run-it-with-docker).
+
 ## What changed in 2.0
 
 - **PostgreSQL only.** SQL Server support is gone. There is one provider, one set
@@ -54,8 +62,7 @@ docker compose --env-file .env up
 Open [http://localhost:5001](http://localhost:5001) and complete the setup
 wizard. Migrations are applied on first run.
 
-One-click hosting is also available:
-[![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/deploy/raytha-cms?referralCode=RU52It&utm_medium=integration&utm_source=template&utm_campaign=generic)
+For one-click hosting instead, see [Deploy on Railway](#deploy-on-railway) above.
 
 HTTPS is enforced by default. `.env.example` ships with
 `ASPNETCORE_ENVIRONMENT=Development` so you can use plain HTTP locally; set
